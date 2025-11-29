@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate": "npx tsx scripts/migrate-to-sanity.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
