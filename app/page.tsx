@@ -15,6 +15,7 @@ const FEATURED_COCKTAILS_QUERY = `*[_type == "cocktail"] | order(isPopular desc,
   slug,
   description,
   image,
+  externalImageUrl,
   primarySpirit,
   isPopular,
   "ingredientCount": count(ingredients)
@@ -117,7 +118,7 @@ export default async function HomePage() {
 }
 
 function FeaturedCocktailCard({ cocktail }: { cocktail: SanityCocktail & { ingredientCount?: number } }) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 400, height: 300 });
+  const imageUrl = getImageUrl(cocktail.image, { width: 400, height: 300 }) || cocktail.externalImageUrl;
 
   return (
     <Link

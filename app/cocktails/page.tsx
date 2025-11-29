@@ -13,6 +13,7 @@ const COCKTAILS_QUERY = `*[_type == "cocktail"] | order(name asc) {
   slug,
   description,
   image,
+  externalImageUrl,
   glass,
   method,
   primarySpirit,
@@ -80,7 +81,8 @@ export default async function CocktailsPage() {
 }
 
 function CocktailCard({ cocktail }: { cocktail: SanityCocktail }) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 600, height: 400 });
+  // Use uploaded Sanity image, or fall back to external URL
+  const imageUrl = getImageUrl(cocktail.image, { width: 600, height: 400 }) || cocktail.externalImageUrl;
   const ingredientCount = cocktail.ingredients?.length || 0;
 
   return (

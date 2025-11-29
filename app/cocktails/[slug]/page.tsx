@@ -15,6 +15,7 @@ const COCKTAIL_QUERY = `*[_type == "cocktail" && slug.current == $slug][0] {
   slug,
   description,
   image,
+  externalImageUrl,
   glass,
   method,
   primarySpirit,
@@ -53,7 +54,8 @@ export default async function CocktailDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const imageUrl = getImageUrl(cocktail.image, { width: 800, height: 600 });
+  // Use uploaded Sanity image, or fall back to external URL
+  const imageUrl = getImageUrl(cocktail.image, { width: 800, height: 600 }) || cocktail.externalImageUrl;
 
   return (
     <div className="py-10">

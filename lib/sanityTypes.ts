@@ -70,6 +70,7 @@ export type SanityCocktail = {
   slug: SanitySlug;
   description?: string;
   image?: SanityImage;
+  externalImageUrl?: string;
   glass?: string;
   method?: "shaken" | "stirred" | "built" | "blended" | "muddled" | "layered";
   instructions?: SanityBlock[];
