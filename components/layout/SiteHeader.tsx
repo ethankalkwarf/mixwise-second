@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HeaderAuth } from "@/components/HeaderAuth";
 
 export interface NavItem {
   label: string;
@@ -59,9 +58,8 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
-          <HeaderAuth />
-        </div>
+        {/* Auth section placeholder - can add login button here later */}
+        <div className="flex items-center gap-3" />
       </div>
     </header>
   );
