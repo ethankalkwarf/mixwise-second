@@ -38,9 +38,16 @@ const ingredient = {
     },
     {
       name: "image",
-      title: "Image",
+      title: "Image (Upload)",
       type: "image",
-      options: { hotspot: true }
+      options: { hotspot: true },
+      description: "Upload a custom image, or use External Image URL below"
+    },
+    {
+      name: "externalImageUrl",
+      title: "External Image URL",
+      type: "url",
+      description: "URL to an external image (e.g., from TheCocktailDB)"
     },
     {
       name: "description",

@@ -189,7 +189,15 @@ export function MixInventoryPanel({ ingredients, selectedIds, onChange }: Props)
                         : "bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:border-slate-600"
                     }`}
                   >
-                    <span className="text-2xl mb-1.5">🥃</span>
+                    {ing.imageUrl ? (
+                      <img 
+                        src={ing.imageUrl} 
+                        alt={ing.name}
+                        className="w-10 h-10 object-contain mb-1.5"
+                      />
+                    ) : (
+                      <span className="text-2xl mb-1.5">🥃</span>
+                    )}
                     <span className="text-[10px] font-semibold leading-tight">
                       {ing.name}
                     </span>
@@ -272,7 +280,16 @@ export function MixInventoryPanel({ ingredients, selectedIds, onChange }: Props)
                                     : "bg-slate-950/40 border-transparent text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                                 }`}
                               >
-                                <span className="truncate pr-2">{ing.name}</span>
+                                <span className="flex items-center gap-2 truncate pr-2">
+                                  {ing.imageUrl ? (
+                                    <img 
+                                      src={ing.imageUrl} 
+                                      alt=""
+                                      className="w-5 h-5 object-contain flex-shrink-0"
+                                    />
+                                  ) : null}
+                                  <span className="truncate">{ing.name}</span>
+                                </span>
                                 {isSelected && <span className="text-lime-500">✓</span>}
                               </button>
                             );

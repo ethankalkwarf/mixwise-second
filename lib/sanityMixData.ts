@@ -12,6 +12,7 @@ const INGREDIENTS_QUERY = `*[_type == "ingredient"] | order(name asc) {
   name,
   "type": type,
   image,
+  externalImageUrl,
   isStaple
 }`;
 
@@ -64,7 +65,7 @@ export async function fetchMixIngredients(): Promise<MixIngredient[]> {
     id: item._id,
     name: item.name,
     category: TYPE_TO_CATEGORY[item.type] || "Other",
-    imageUrl: getImageUrl(item.image, { width: 100, height: 100 }),
+    imageUrl: getImageUrl(item.image, { width: 100, height: 100 }) || item.externalImageUrl || null,
     isStaple: item.isStaple || false
   }));
 }
