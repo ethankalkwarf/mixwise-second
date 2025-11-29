@@ -1,92 +1,73 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
-import { InventoryPanel } from "@/components/InventoryPanel";
-import { ResultsPanel } from "@/components/ResultsPanel";
-import { Ingredient, Cocktail } from "@/lib/types";
-import { loadInventory, saveInventory } from "@/lib/inventoryApi";
+import { MixInventoryPanel } from "@/components/mix/MixInventoryPanel";
+import { MixResultsPanel } from "@/components/mix/MixResultsPanel";
+import { fetchMixData } from "@/lib/sanityMixData";
+import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
+
+const STORAGE_KEY = "mixwise-bar-inventory";
 
 export default function MixPage() {
-  const supabase = useSupabaseClient();
-
-  const [allIngredients, setAllIngredients] = useState<Ingredient[]>([]);
-  const [allCocktails, setAllCocktails] = useState<Cocktail[]>([]);
+  const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
+  const [allCocktails, setAllCocktails] = useState<MixCocktail[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [inventoryIds, setInventoryIds] = useState<number[]>([]);
-  const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const [inventoryIds, setInventoryIds] = useState<string[]>([]);
 
+  // Load data from Sanity
   useEffect(() => {
-    async function fetchData() {
-      const { data: ingData } = await supabase
-        .from("ingredients")
-        .select("*")
-        .order("name");
-      if (ingData) setAllIngredients(ingData as Ingredient[]);
-
-      const { data: drinkData } = await supabase
-        .from("cocktails")
-        .select(`
-          *,
-          cocktail_ingredients!inner (
-            measure,
-            ingredient:ingredients ( id, name )
-          )
-        `);
-
-      if (drinkData) {
-        const formatted: Cocktail[] = (drinkData as any[]).map((d) => ({
-          id: d.id,
-          name: d.name,
-          instructions: d.instructions,
-          category: d.category,
-          image_url: d.image_url,
-          glass: d.glass,
-          is_popular: d.is_popular,
-          ingredients: d.cocktail_ingredients.map((ci: any) => ({
-            id: ci.ingredient.id,
-            name: ci.ingredient.name,
-            measure: ci.measure
-          }))
-        }));
-        setAllCocktails(formatted);
+    async function loadData() {
+      try {
+        const { ingredients, cocktails } = await fetchMixData();
+        setAllIngredients(ingredients);
+        setAllCocktails(cocktails);
+      } catch (error) {
+        console.error("Failed to load data from Sanity:", error);
+      } finally {
+        setDataLoading(false);
       }
-      setDataLoading(false);
     }
-    fetchData();
-  }, [supabase]);
+    loadData();
+  }, []);
 
+  // Load inventory from localStorage
   useEffect(() => {
-    async function loadLocal() {
-      const { ingredientIds } = await loadInventory(supabase);
-      setInventoryIds(ingredientIds);
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setInventoryIds(parsed);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load inventory from localStorage:", error);
     }
-    loadLocal();
-  }, [supabase]);
+  }, []);
 
-  const handleInventoryChange = async (newIds: number[]) => {
+  // Save inventory to localStorage
+  const handleInventoryChange = (newIds: string[]) => {
     setInventoryIds(newIds);
-    // if you store per-user inventories in Supabase, replace 0 with the real inventoryId
-    await saveInventory(supabase, 0, newIds);
-  };
-
-  const handleAddToInventory = (id: number) => {
-    if (!inventoryIds.includes(id)) {
-      const next = [...inventoryIds, id];
-      handleInventoryChange(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newIds));
+    } catch (error) {
+      console.error("Failed to save inventory to localStorage:", error);
     }
   };
 
-  const handleToggleFavorite = (id: number) => {
-    setFavoriteIds((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    );
+  const handleAddToInventory = (id: string) => {
+    if (!inventoryIds.includes(id)) {
+      handleInventoryChange([...inventoryIds, id]);
+    }
   };
 
   if (dataLoading) {
     return (
-      <div className="text-white text-center py-20 animate-pulse">
-        Loading MixWise...
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="text-5xl mb-4 animate-bounce">🍸</div>
+          <p className="text-slate-400 animate-pulse">Loading MixWise...</p>
+        </div>
       </div>
     );
   }
@@ -95,19 +76,17 @@ export default function MixPage() {
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8 items-start">
         <div className="lg:sticky lg:top-24">
-          <InventoryPanel
+          <MixInventoryPanel
             ingredients={allIngredients}
             selectedIds={inventoryIds}
             onChange={handleInventoryChange}
           />
         </div>
         <div>
-          <ResultsPanel
+          <MixResultsPanel
             inventoryIds={inventoryIds}
             allCocktails={allCocktails}
             allIngredients={allIngredients}
-            favoriteIds={favoriteIds}
-            onToggleFavorite={handleToggleFavorite}
             onAddToInventory={handleAddToInventory}
           />
         </div>
@@ -115,4 +94,3 @@ export default function MixPage() {
     </div>
   );
 }
-
