@@ -28,15 +28,26 @@ export function MixResultsPanel({
   }, [allIngredients]);
 
   // Run matching engine
-  const { makeNow, almostThere, all } = useMemo(
-    () =>
-      getMixMatchGroups({
-        cocktails: allCocktails,
-        ownedIngredientIds: inventoryIds,
-        stapleIngredientIds: stapleIds
-      }),
-    [allCocktails, inventoryIds, stapleIds]
-  );
+  const { makeNow, almostThere, all } = useMemo(() => {
+    const result = getMixMatchGroups({
+      cocktails: allCocktails,
+      ownedIngredientIds: inventoryIds,
+      stapleIngredientIds: stapleIds
+    });
+    
+    // Debug logging
+    if (typeof window !== 'undefined') {
+      console.log('[Mix Debug] Inventory IDs:', inventoryIds.length, inventoryIds.slice(0, 3));
+      console.log('[Mix Debug] Total cocktails:', allCocktails.length);
+      console.log('[Mix Debug] Make Now:', result.makeNow.length);
+      console.log('[Mix Debug] Almost There:', result.almostThere.length);
+      if (allCocktails[0]) {
+        console.log('[Mix Debug] Sample cocktail ingredients:', allCocktails[0].name, allCocktails[0].ingredients.map(i => i.id));
+      }
+    }
+    
+    return result;
+  }, [allCocktails, inventoryIds, stapleIds]);
 
   // Get available categories
   const availableCategories = useMemo(() => {
