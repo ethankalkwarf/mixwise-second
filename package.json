@@ -1,0 +1,39 @@
+{
+  "name": "mixwise-next-sanity",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.1.1",
+    "@portabletext/react": "^2.0.2",
+    "@sanity/client": "^6.21.1",
+    "@sanity/image-url": "^1.0.2",
+    "@sanity/vision": "^3.99.0",
+    "@supabase/auth-helpers-nextjs": "0.10.0",
+    "@supabase/auth-helpers-react": "0.5.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "clsx": "^2.1.1",
+    "dotenv": "^16.4.5",
+    "next": "14.2.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "sanity": "^4.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "10.4.14",
+    "eslint": "8.50.0",
+    "eslint-config-next": "14.2.0",
+    "postcss": "8.4.21",
+    "tailwindcss": "3.3.5",
+    "typescript": "5.2.2"
+  }
+}
