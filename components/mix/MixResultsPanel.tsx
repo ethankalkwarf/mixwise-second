@@ -28,26 +28,15 @@ export function MixResultsPanel({
   }, [allIngredients]);
 
   // Run matching engine
-  const { makeNow, almostThere, all } = useMemo(() => {
-    const result = getMixMatchGroups({
-      cocktails: allCocktails,
-      ownedIngredientIds: inventoryIds,
-      stapleIngredientIds: stapleIds
-    });
-    
-    // Debug logging
-    if (typeof window !== 'undefined') {
-      console.log('[Mix Debug] Inventory IDs:', inventoryIds.length, inventoryIds.slice(0, 3));
-      console.log('[Mix Debug] Total cocktails:', allCocktails.length);
-      console.log('[Mix Debug] Make Now:', result.makeNow.length);
-      console.log('[Mix Debug] Almost There:', result.almostThere.length);
-      if (allCocktails[0]) {
-        console.log('[Mix Debug] Sample cocktail ingredients:', allCocktails[0].name, allCocktails[0].ingredients.map(i => i.id));
-      }
-    }
-    
-    return result;
-  }, [allCocktails, inventoryIds, stapleIds]);
+  const { makeNow, almostThere, all } = useMemo(
+    () =>
+      getMixMatchGroups({
+        cocktails: allCocktails,
+        ownedIngredientIds: inventoryIds,
+        stapleIngredientIds: stapleIds
+      }),
+    [allCocktails, inventoryIds, stapleIds]
+  );
 
   // Get available categories
   const availableCategories = useMemo(() => {
@@ -124,15 +113,17 @@ export function MixResultsPanel({
             <h2 className="text-2xl font-serif font-bold text-white">
               {searchQuery ? "Search Results" : "Ready to Mix"}
             </h2>
-            <div
-              className={`px-3 py-0.5 rounded-full text-sm font-bold font-mono border ${
-                searchQuery
-                  ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
-                  : "bg-lime-500/10 border-lime-500/20 text-lime-400"
-              }`}
-            >
-              {displayedDrinks.length}
-            </div>
+            {displayedDrinks.length > 0 && (
+              <div
+                className={`px-3 py-0.5 rounded-full text-sm font-bold font-mono border ${
+                  searchQuery
+                    ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
+                    : "bg-lime-500/10 border-lime-500/20 text-lime-400"
+                }`}
+              >
+                {displayedDrinks.length}
+              </div>
+            )}
           </div>
 
           <div className="relative w-full sm:w-64">
@@ -147,8 +138,8 @@ export function MixResultsPanel({
           </div>
         </div>
 
-        {/* Category Filters */}
-        {availableCategories.length > 0 && (
+        {/* Category Filters - only show when there are results */}
+        {displayedDrinks.length > 0 && availableCategories.length > 0 && (
           <div className="flex gap-2 overflow-x-auto scrollbar-none pb-4 -mx-1 px-1">
             <button
               onClick={() => setActiveCategory(null)}
@@ -176,20 +167,29 @@ export function MixResultsPanel({
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Show when no ingredients selected or no matches */}
         {displayedDrinks.length === 0 && (
-          <div className="flex flex-col items-center justify-center p-12 border border-dashed border-slate-800 rounded-2xl bg-slate-900/30 text-center">
-            <div className="text-5xl mb-4 opacity-80">🍸</div>
-            <h3 className="text-slate-200 font-semibold mb-2 text-lg">
-              {searchQuery ? "No matches found" : allCocktails.length === 0 ? "No cocktails yet" : "Your bar is looking a bit dry"}
+          <div className="flex flex-col items-center justify-center p-16 border border-dashed border-slate-700/50 rounded-2xl bg-gradient-to-b from-slate-900/50 to-slate-950/50 text-center min-h-[400px]">
+            <div className="text-6xl mb-6 opacity-70">🍹</div>
+            <h3 className="text-slate-100 font-serif font-bold mb-3 text-2xl">
+              {searchQuery 
+                ? "No matches found" 
+                : inventoryIds.length === 0 
+                ? "What's in your bar?" 
+                : "Almost there!"}
             </h3>
-            <p className="text-slate-500 text-sm max-w-sm leading-relaxed mx-auto">
+            <p className="text-slate-400 text-sm max-w-md leading-relaxed mx-auto">
               {searchQuery
-                ? "Try adjusting your search terms."
-                : allCocktails.length === 0
-                ? "Add cocktails and ingredients in Sanity Studio to get started."
-                : "Add ingredients from the panel on the left to discover what you can make."}
+                ? "Try adjusting your search terms or clear the search to see available drinks."
+                : inventoryIds.length === 0
+                ? "Select the ingredients you have from the panel on the left. We'll show you all the cocktails you can make."
+                : "Add a few more ingredients to unlock your first cocktails. Check the suggestions below!"}
             </p>
+            {!searchQuery && inventoryIds.length > 0 && (
+              <div className="mt-6 text-xs text-slate-500">
+                <span className="text-lime-400 font-bold">{inventoryIds.length}</span> ingredient{inventoryIds.length !== 1 ? 's' : ''} selected
+              </div>
+            )}
           </div>
         )}
 
