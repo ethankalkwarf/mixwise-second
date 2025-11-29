@@ -20,6 +20,7 @@ export default async function RootLayout({
 }) {
   const navItems: NavItem[] = [
     { label: "Home", href: "/" },
+    { label: "Cocktails", href: "/cocktails" },
     { label: "Mix", href: "/mix" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" }
