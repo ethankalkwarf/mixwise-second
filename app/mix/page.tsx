@@ -8,7 +8,7 @@ import { getMixMatchGroups } from "@/lib/mixMatching";
 import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
 
 const STORAGE_KEY = "mixwise-bar-inventory";
-const DEBUG_MODE = true; // Set to true to show debug panel
+const DEBUG_MODE = false; // Set to true to show debug panel
 
 export default function MixPage() {
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);

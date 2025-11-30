@@ -22,10 +22,20 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   const all: MixMatchResult[] = [];
 
   for (const cocktail of cocktails) {
+    // Skip cocktails with no ingredients (bad data)
+    if (!cocktail.ingredients || cocktail.ingredients.length === 0) {
+      continue;
+    }
+
     // Filter to required ingredients (not optional, not staples)
     const requiredIngredients = cocktail.ingredients.filter(
-      (ing) => !ing.isOptional && !staples.has(ing.id)
+      (ing) => ing.id && !ing.isOptional && !staples.has(ing.id)
     );
+
+    // Skip cocktails with no valid required ingredients
+    if (requiredIngredients.length === 0) {
+      continue;
+    }
 
     const requiredTotal = requiredIngredients.length;
     let requiredCovered = 0;
@@ -41,7 +51,7 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
       }
     }
 
-    const score = requiredTotal === 0 ? 1 : requiredCovered / Math.max(requiredTotal, 1);
+    const score = requiredCovered / requiredTotal;
 
     const result: MixMatchResult = {
       cocktail,
@@ -52,7 +62,8 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
 
     all.push(result);
 
-    if (missingIds.length === 0) {
+    // Only add to makeNow if user has ALL required ingredients
+    if (missingIds.length === 0 && requiredCovered > 0) {
       makeNow.push(result);
     } else if (missingIds.length === 1) {
       almostThere.push(result);
