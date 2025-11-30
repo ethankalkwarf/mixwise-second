@@ -49,12 +49,18 @@ export function MixResultsPanel({
   const displayedDrinks = useMemo(() => {
     let results = searchQuery ? [...all] : [...makeNow];
 
-    // Filter by search
+    // Filter by search - searches cocktail name and ingredient names
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      results = results.filter((r) =>
-        r.cocktail.name.toLowerCase().includes(q)
-      );
+      results = results.filter((r) => {
+        // Match cocktail name
+        if (r.cocktail.name.toLowerCase().includes(q)) return true;
+        // Match ingredient names
+        if (r.cocktail.ingredients.some(ing => ing.name.toLowerCase().includes(q))) return true;
+        // Match primary spirit
+        if (r.cocktail.primarySpirit?.toLowerCase().includes(q)) return true;
+        return false;
+      });
     }
 
     // Filter by category

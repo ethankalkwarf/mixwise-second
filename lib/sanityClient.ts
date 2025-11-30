@@ -18,7 +18,8 @@ const apiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION || "2024-01-01";
 export const sanityClient = createClient({
   projectId,
   dataset,
-  useCdn: process.env.NODE_ENV === "production",
+  // Disable CDN to ensure fresh data for the Mix tool
+  useCdn: false,
   apiVersion
 });
 
