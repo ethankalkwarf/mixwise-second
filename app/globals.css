@@ -8,6 +8,27 @@ body {
   margin: 0;
 }
 
+@layer base {
+  html {
+    font-size: 16px;
+  }
+  
+  /* Improved base typography for better readability */
+  body {
+    @apply text-[16px] leading-relaxed antialiased;
+  }
+  
+  /* Focus states for accessibility */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-lime-500;
+  }
+  
+  /* Skip link for accessibility */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-lime-500 focus:text-slate-900 focus:rounded-lg focus:font-bold;
+  }
+}
+
 @layer utilities {
   .font-sans {
     font-family: var(--font-inter), system-ui, sans-serif;
@@ -17,13 +38,64 @@ body {
   }
 }
 
+/* Mix page specific typography override */
+.mix-page {
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.mix-page h1, .mix-page h2, .mix-page h3 {
+  line-height: 1.3;
+}
+
+/* Improved scrollbar styling */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 4px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Skeleton loading animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, 
+    rgba(51, 65, 85, 0.4) 0%, 
+    rgba(71, 85, 105, 0.6) 50%, 
+    rgba(51, 65, 85, 0.4) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* Improved tap target size for mobile */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }

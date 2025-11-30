@@ -3,12 +3,14 @@
 import { useEffect, useState, useMemo } from "react";
 import { MixInventoryPanel } from "@/components/mix/MixInventoryPanel";
 import { MixResultsPanel } from "@/components/mix/MixResultsPanel";
+import { MixSelectedBar } from "@/components/mix/MixSelectedBar";
+import { MixSkeleton } from "@/components/mix/MixSkeleton";
 import { fetchMixData } from "@/lib/sanityMixData";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 const STORAGE_KEY = "mixwise-bar-inventory";
-const DEBUG_MODE = false; // Set to true to show debug panel
 
 export default function MixPage() {
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
@@ -21,17 +23,7 @@ export default function MixPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        console.log("[Mix] Fetching data from Sanity...");
         const { ingredients, cocktails } = await fetchMixData();
-        console.log("[Mix] Loaded:", ingredients.length, "ingredients,", cocktails.length, "cocktails");
-        
-        // Debug: Check a sample cocktail's ingredients
-        const sampleCocktail = cocktails.find(c => c.ingredients.length > 0);
-        if (sampleCocktail) {
-          console.log("[Mix] Sample cocktail:", sampleCocktail.name, 
-            "ingredients:", sampleCocktail.ingredients.map(i => `${i.name}(${i.id})`));
-        }
-        
         setAllIngredients(ingredients);
         setAllCocktails(cocktails);
       } catch (error) {
@@ -75,79 +67,131 @@ export default function MixPage() {
     }
   };
 
-  // Debug: Calculate match stats
-  const debugStats = useMemo(() => {
-    if (!DEBUG_MODE) return null;
-    const stapleIds = allIngredients.filter(i => i.isStaple).map(i => i.id);
+  const handleRemoveFromInventory = (id: string) => {
+    handleInventoryChange(inventoryIds.filter((i) => i !== id));
+  };
+
+  const handleClearAll = () => {
+    handleInventoryChange([]);
+  };
+
+  // Get selected ingredient objects
+  const selectedIngredients = useMemo(() => {
+    return inventoryIds
+      .map((id) => allIngredients.find((i) => i.id === id))
+      .filter((i): i is MixIngredient => i !== undefined);
+  }, [inventoryIds, allIngredients]);
+
+  // Get match counts for display
+  const matchCounts = useMemo(() => {
+    const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
     const result = getMixMatchGroups({
       cocktails: allCocktails,
       ownedIngredientIds: inventoryIds,
-      stapleIngredientIds: stapleIds
+      stapleIngredientIds: stapleIds,
     });
     return {
-      totalCocktails: allCocktails.length,
-      totalIngredients: allIngredients.length,
-      selectedCount: inventoryIds.length,
-      makeNow: result.makeNow.length,
+      canMake: result.makeNow.length,
       almostThere: result.almostThere.length,
-      sampleIds: inventoryIds.slice(0, 3),
-      sampleMakeNow: result.makeNow.slice(0, 3).map(m => m.cocktail.name)
     };
   }, [allCocktails, allIngredients, inventoryIds]);
 
   if (dataLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="text-5xl mb-4 animate-bounce">🍸</div>
-          <p className="text-slate-400 animate-pulse">Loading MixWise...</p>
-        </div>
-      </div>
-    );
+    return <MixSkeleton />;
   }
 
   if (dataError) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="text-5xl mb-4">⚠️</div>
-          <p className="text-red-400">Error loading data: {dataError}</p>
+      <div className="mix-page flex items-center justify-center min-h-[60vh]">
+        <div className="text-center max-w-md px-4">
+          <div className="text-6xl mb-6">⚠️</div>
+          <h2 className="text-2xl font-serif font-bold text-slate-100 mb-3">
+            Unable to Load Data
+          </h2>
+          <p className="text-slate-400 text-lg">{dataError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 px-6 py-3 bg-lime-500 text-slate-900 rounded-xl font-bold hover:bg-lime-400 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      {/* Debug Panel */}
-      {DEBUG_MODE && debugStats && (
-        <div className="mb-6 p-4 bg-slate-800 rounded-lg border border-slate-700 text-xs font-mono text-slate-300">
-          <div className="font-bold text-lime-400 mb-2">🔧 Debug Panel</div>
-          <div>Cocktails: {debugStats.totalCocktails} | Ingredients: {debugStats.totalIngredients}</div>
-          <div>Selected: {debugStats.selectedCount} → {debugStats.sampleIds.join(", ") || "none"}</div>
-          <div className="text-lime-400">Make Now: {debugStats.makeNow} | Almost: {debugStats.almostThere}</div>
-          {debugStats.sampleMakeNow.length > 0 && (
-            <div>Can make: {debugStats.sampleMakeNow.join(", ")}</div>
+    <div className="mix-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Page Header with Instructions */}
+      <header className="mb-8" role="banner">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-serif font-bold text-slate-50 mb-2">
+              Mix Tool
+            </h1>
+            <p className="text-lg text-slate-400 max-w-xl">
+              Discover cocktails you can make with ingredients you already have.
+            </p>
+          </div>
+          {inventoryIds.length > 0 && (
+            <div className="flex items-center gap-4 text-base">
+              <span className="text-slate-400">
+                <span className="font-bold text-lime-400 text-xl">{matchCounts.canMake}</span>{" "}
+                cocktails ready
+              </span>
+              {matchCounts.almostThere > 0 && (
+                <span className="text-slate-500">
+                  <span className="font-bold text-amber-400">{matchCounts.almostThere}</span> almost
+                </span>
+              )}
+            </div>
           )}
         </div>
+
+        {/* Helper Instructions */}
+        <div
+          className="flex items-start gap-3 p-4 bg-slate-900/60 border border-slate-800 rounded-xl text-base"
+          role="note"
+          aria-label="How to use the Mix tool"
+        >
+          <InformationCircleIcon className="w-6 h-6 text-lime-400 flex-shrink-0 mt-0.5" />
+          <div className="text-slate-400">
+            <span className="font-semibold text-slate-300">How it works:</span>{" "}
+            Select the ingredients you have in your bar from the panel below. We&apos;ll instantly show you
+            all the cocktails you can make, plus suggestions for ingredients that unlock the most new recipes.
+          </div>
+        </div>
+      </header>
+
+      {/* Selected Ingredients Bar */}
+      {selectedIngredients.length > 0 && (
+        <MixSelectedBar
+          selectedIngredients={selectedIngredients}
+          onRemove={handleRemoveFromInventory}
+          onClearAll={handleClearAll}
+        />
       )}
-      
-      <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8 items-start">
-        <div className="lg:sticky lg:top-24">
+
+      {/* Main Content Grid */}
+      <div className="grid lg:grid-cols-[380px_1fr] gap-8 items-start">
+        {/* Inventory Panel */}
+        <aside className="lg:sticky lg:top-24" role="complementary" aria-label="Ingredient selection">
           <MixInventoryPanel
             ingredients={allIngredients}
             selectedIds={inventoryIds}
             onChange={handleInventoryChange}
           />
-        </div>
-        <div>
+        </aside>
+
+        {/* Results Panel */}
+        <main role="main" aria-label="Cocktail results">
           <MixResultsPanel
             inventoryIds={inventoryIds}
             allCocktails={allCocktails}
             allIngredients={allIngredients}
             onAddToInventory={handleAddToInventory}
           />
-        </div>
+        </main>
       </div>
     </div>
   );

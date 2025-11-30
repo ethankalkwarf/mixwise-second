@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import type { MixIngredient, MixCocktail, MixMatchResult } from "@/lib/mixTypes";
-import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/20/solid";
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
+import Image from "next/image";
 
 type Props = {
   inventoryIds: string[];
@@ -49,11 +50,10 @@ export function MixResultsPanel({
   const displayedDrinks = useMemo(() => {
     let results = searchQuery ? [...all] : [...makeNow];
 
-    // Filter by search - searches cocktail name, ingredients, categories, and keywords
+    // Filter by search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       
-      // Keyword mappings for special searches
       const keywordFilters: Record<string, (c: MixCocktail) => boolean> = {
         popular: (c) => c.isPopular === true,
         featured: (c) => c.isPopular === true,
@@ -61,30 +61,17 @@ export function MixResultsPanel({
         favourites: (c) => c.isFavorite === true,
         trending: (c) => c.isTrending === true,
         hot: (c) => c.isTrending === true,
-        easy: (c) => c.difficulty === "easy",
-        moderate: (c) => c.difficulty === "moderate",
-        advanced: (c) => c.difficulty === "advanced",
-        hard: (c) => c.difficulty === "advanced",
       };
       
       results = results.filter((r) => {
         const c = r.cocktail;
-        
-        // Check for keyword match
         const keywordFilter = keywordFilters[q];
         if (keywordFilter && keywordFilter(c)) return true;
-        
-        // Match cocktail name
         if (c.name.toLowerCase().includes(q)) return true;
-        // Match ingredient names
         if (c.ingredients.some(ing => ing.name.toLowerCase().includes(q))) return true;
-        // Match primary spirit
         if (c.primarySpirit?.toLowerCase().includes(q)) return true;
-        // Match drink categories
         if (c.drinkCategories?.some(cat => cat.toLowerCase().includes(q))) return true;
-        // Match tags
         if (c.tags?.some(tag => tag.toLowerCase().includes(q))) return true;
-        
         return false;
       });
     }
@@ -94,7 +81,7 @@ export function MixResultsPanel({
       results = results.filter((r) => r.cocktail.primarySpirit === activeCategory);
     }
 
-    // Sort: ready first, then popular, then alphabetical
+    // Sort
     return results.sort((a, b) => {
       if (searchQuery) {
         const aReady = a.missingIngredientIds.length === 0;
@@ -108,7 +95,7 @@ export function MixResultsPanel({
     });
   }, [makeNow, all, searchQuery, activeCategory]);
 
-  // Smart additions (ingredients that unlock the most cocktails)
+  // Smart additions
   const unlockPotential = useMemo(() => {
     const immediateUnlockCounts = new Map<string, { count: number; drinks: string[] }>();
     
@@ -137,45 +124,63 @@ export function MixResultsPanel({
   }, [almostThere, allIngredients]);
 
   return (
-    <section className="space-y-12 pb-24">
+    <section className="space-y-10 pb-24" aria-label="Cocktail results">
       {/* Header & Search */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-serif font-bold text-white">
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white">
               {searchQuery ? "Search Results" : "Ready to Mix"}
             </h2>
             {displayedDrinks.length > 0 && (
-              <div
-                className={`px-3 py-0.5 rounded-full text-sm font-bold font-mono border ${
+              <span
+                className={`px-3 py-1 rounded-full text-base font-bold font-mono border ${
                   searchQuery
                     ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
                     : "bg-lime-500/10 border-lime-500/20 text-lime-400"
                 }`}
+                aria-label={`${displayedDrinks.length} cocktails`}
               >
                 {displayedDrinks.length}
-              </div>
+              </span>
             )}
           </div>
 
-          <div className="relative w-full sm:w-64">
+          {/* Search Input */}
+          <div className="relative w-full sm:w-72">
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
             <input
               type="text"
               placeholder="Search all recipes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-lime-500/50 transition-all"
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-11 pr-10 py-3 text-base text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500/50 transition-all"
+              aria-label="Search cocktail recipes"
             />
-            <MagnifyingGlassIcon className="absolute left-3 top-2.5 w-4 h-4 text-slate-600" />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-300 transition-colors"
+                aria-label="Clear search"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Category Filters - only show when there are results */}
+        {/* Category Filters */}
         {displayedDrinks.length > 0 && availableCategories.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-4 -mx-1 px-1">
+          <div 
+            className="flex gap-2 overflow-x-auto scrollbar-none pb-4 -mx-1 px-1"
+            role="tablist"
+            aria-label="Filter by spirit"
+          >
             <button
               onClick={() => setActiveCategory(null)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+              role="tab"
+              aria-selected={activeCategory === null}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold border transition-all ${
                 activeCategory === null
                   ? "bg-lime-500 text-slate-900 border-lime-500"
                   : "bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800"
@@ -187,7 +192,9 @@ export function MixResultsPanel({
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat === activeCategory ? null : cat)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-all capitalize ${
+                role="tab"
+                aria-selected={activeCategory === cat}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold border transition-all capitalize ${
                   activeCategory === cat
                     ? "bg-lime-500 text-slate-900 border-lime-500"
                     : "bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800"
@@ -199,18 +206,21 @@ export function MixResultsPanel({
           </div>
         )}
 
-        {/* Empty State - Show when no ingredients selected or no matches */}
+        {/* Empty State */}
         {displayedDrinks.length === 0 && (
-          <div className="flex flex-col items-center justify-center p-16 border border-dashed border-slate-700/50 rounded-2xl bg-gradient-to-b from-slate-900/50 to-slate-950/50 text-center min-h-[400px]">
-            <div className="text-6xl mb-6 opacity-70">🍹</div>
-            <h3 className="text-slate-100 font-serif font-bold mb-3 text-2xl">
+          <div 
+            className="flex flex-col items-center justify-center p-12 sm:p-16 border border-dashed border-slate-700/50 rounded-2xl bg-gradient-to-b from-slate-900/50 to-slate-950/50 text-center min-h-[350px]"
+            role="status"
+          >
+            <div className="text-7xl mb-6 opacity-70" aria-hidden="true">🍹</div>
+            <h3 className="text-slate-100 font-serif font-bold mb-4 text-2xl sm:text-3xl">
               {searchQuery 
                 ? "No matches found" 
                 : inventoryIds.length === 0 
                 ? "What's in your bar?" 
                 : "Almost there!"}
             </h3>
-            <p className="text-slate-400 text-sm max-w-md leading-relaxed mx-auto">
+            <p className="text-slate-400 text-base sm:text-lg max-w-md leading-relaxed mx-auto">
               {searchQuery
                 ? "Try adjusting your search terms or clear the search to see available drinks."
                 : inventoryIds.length === 0
@@ -218,45 +228,51 @@ export function MixResultsPanel({
                 : "Add a few more ingredients to unlock your first cocktails. Check the suggestions below!"}
             </p>
             {!searchQuery && inventoryIds.length > 0 && (
-              <div className="mt-6 text-xs text-slate-500">
-                <span className="text-lime-400 font-bold">{inventoryIds.length}</span> ingredient{inventoryIds.length !== 1 ? 's' : ''} selected
+              <div className="mt-6 text-base text-slate-500">
+                <span className="text-lime-400 font-bold">{inventoryIds.length}</span>{" "}
+                ingredient{inventoryIds.length !== 1 ? "s" : ""} selected
               </div>
             )}
           </div>
         )}
 
         {/* Cocktail Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {displayedDrinks.map(({ cocktail, missingIngredientIds }) => (
-            <CocktailCard
-              key={cocktail.id}
-              cocktail={cocktail}
-              missingCount={missingIngredientIds.length}
-            />
-          ))}
-        </div>
+        {displayedDrinks.length > 0 && (
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3" role="list">
+            {displayedDrinks.map(({ cocktail, missingIngredientIds }) => (
+              <CocktailCard
+                key={cocktail.id}
+                cocktail={cocktail}
+                missingCount={missingIngredientIds.length}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Smart Additions */}
       {!searchQuery && unlockPotential.length > 0 && (
-        <div className="border-t border-slate-800/50 pt-10">
-          <div className="flex items-center gap-3 mb-6">
-            <h2 className="text-2xl font-serif font-bold text-white">Smart Additions</h2>
-            <span className="text-sm text-slate-500">Unlocks new recipes</span>
+        <div className="border-t border-slate-800/50 pt-10" aria-labelledby="smart-additions-title">
+          <div className="flex items-center gap-4 mb-6">
+            <h2 id="smart-additions-title" className="text-2xl sm:text-3xl font-serif font-bold text-white">
+              Smart Additions
+            </h2>
+            <span className="text-base text-slate-500">Unlocks new recipes</span>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2" role="list">
             {unlockPotential.map((item) => (
               <div
                 key={item.id}
-                className="group flex flex-col p-4 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-lime-500/30 transition-all h-full"
+                className="group flex flex-col p-5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-lime-500/30 transition-all h-full"
+                role="listitem"
               >
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="flex-shrink-0 w-14 h-14 bg-slate-800 rounded-xl flex flex-col items-center justify-center border border-white/5">
-                    <span className="text-xl font-bold text-lime-400 leading-none">
+                  <div className="flex-shrink-0 w-16 h-16 bg-slate-800 rounded-xl flex flex-col items-center justify-center border border-white/5">
+                    <span className="text-2xl font-bold text-lime-400 leading-none">
                       +{item.count}
                     </span>
-                    <span className="text-[9px] font-bold text-slate-500 uppercase mt-0.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase mt-1">
                       Drinks
                     </span>
                   </div>
@@ -265,11 +281,11 @@ export function MixResultsPanel({
                     <h4 className="font-bold text-slate-100 text-lg leading-tight break-words">
                       {item.name}
                     </h4>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">
                       {item.category}
                     </span>
                     {item.drinks.length > 0 && (
-                      <p className="text-xs text-slate-400 mt-2 line-clamp-2">
+                      <p className="text-sm text-slate-400 mt-2 line-clamp-2">
                         Unlocks: {item.drinks.join(", ")}
                       </p>
                     )}
@@ -278,9 +294,10 @@ export function MixResultsPanel({
 
                 <button
                   onClick={() => onAddToInventory(item.id)}
-                  className="mt-auto w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-lime-500/10 text-lime-400 border border-lime-500/20 hover:bg-lime-500 hover:text-slate-900 hover:border-lime-500 transition-all font-bold text-xs uppercase tracking-wide"
+                  className="mt-auto w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-lime-500/10 text-lime-400 border border-lime-500/20 hover:bg-lime-500 hover:text-slate-900 hover:border-lime-500 transition-all font-bold text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-lime-500/50"
+                  aria-label={`Add ${item.name} to your bar`}
                 >
-                  <PlusIcon className="w-4 h-4" />
+                  <PlusIcon className="w-5 h-5" aria-hidden="true" />
                   Add to Bar
                 </button>
               </div>
@@ -304,55 +321,58 @@ function CocktailCard({
   return (
     <Link
       href={`/cocktails/${cocktail.slug}`}
-      className={`cursor-pointer group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 ${
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-lime-500/50 ${
         isReady
           ? "bg-slate-900 border-slate-800 hover:border-lime-500/40 hover:shadow-xl hover:shadow-lime-900/10"
           : "bg-slate-900/40 border-slate-800/60 opacity-80 hover:opacity-100 hover:border-slate-700"
       }`}
+      role="listitem"
+      aria-label={`${cocktail.name}${isReady ? ", ready to make" : `, missing ${missingCount} ingredient${missingCount > 1 ? "s" : ""}`}`}
     >
-      <div className="relative h-56 w-full overflow-hidden bg-slate-800">
+      <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-slate-800">
         {cocktail.imageUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={cocktail.imageUrl}
-              alt={cocktail.name}
+              alt=""
               className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${
                 isReady ? "opacity-90 group-hover:opacity-100" : "opacity-60 grayscale-[0.5]"
               }`}
+              loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
           </>
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-700 text-4xl">
+          <div className="h-full w-full flex items-center justify-center text-slate-700 text-5xl" aria-hidden="true">
             🥃
           </div>
         )}
 
         {/* Status Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1 z-20 items-start">
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20 items-start">
           {!isReady && (
-            <div className="bg-red-500/90 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg backdrop-blur-sm">
+            <div className="bg-red-500/90 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-lg backdrop-blur-sm">
               MISSING {missingCount}
             </div>
           )}
           {cocktail.isPopular && (
-            <div className="bg-amber-500 text-slate-950 text-[10px] font-bold px-2 py-1 rounded shadow-lg backdrop-blur-sm tracking-wider">
+            <div className="bg-amber-500 text-slate-950 text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-lg backdrop-blur-sm tracking-wider">
               ★ FEATURED
             </div>
           )}
         </div>
       </div>
 
-      <div className="p-5 flex-1 flex flex-col relative z-10 -mt-16">
+      <div className="p-5 flex-1 flex flex-col relative z-10 -mt-14">
         <div
           className={`backdrop-blur-md rounded-xl p-4 border border-white/10 shadow-lg flex-1 flex flex-col ${
             isReady ? "bg-slate-950/80" : "bg-slate-950/60"
           }`}
         >
-          <div className="mb-2">
+          <div className="mb-3">
             {cocktail.primarySpirit && (
-              <p className="text-[10px] text-lime-400 font-bold tracking-widest uppercase mb-1">
+              <p className="text-xs text-lime-400 font-bold tracking-widest uppercase mb-1.5">
                 {cocktail.primarySpirit}
               </p>
             )}
@@ -364,7 +384,7 @@ function CocktailCard({
               {cocktail.name}
             </h3>
           </div>
-          <p className="text-xs text-slate-400 line-clamp-2 mt-auto">
+          <p className="text-sm text-slate-400 line-clamp-2 mt-auto leading-relaxed">
             {cocktail.ingredients.map((i) => i.name).join(", ")}
           </p>
         </div>
@@ -372,4 +392,3 @@ function CocktailCard({
     </Link>
   );
 }
-
