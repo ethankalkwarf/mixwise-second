@@ -160,7 +160,7 @@ export default function AccountPage() {
               <div className="flex items-center gap-4">
                 <div className="relative w-16 h-16 rounded-full overflow-hidden">
                   <Image
-                    src={avatarUrl || "/placeholder-avatar.jpg"}
+                    src={avatarUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiMwYTBmMWEiLz4KPHN2ZyB4PSIxNiIgeT0iMTYiIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2EzYWYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgo8cGF0aCBkPSJNMTIgMTJDMxMy44IDEyIDE1IDEzLjggMTUgMTVDMTUgMTYuMiAxMy44IDE4IDEyIDE4QzEwLjIgMTggOSAxNi4yIDkgMTVDOSAxMy44IDEwLjIgMTIgMTIgMTJaIi8+CjxwYXRoIGQ9Ik0yMSAyMWgzVjIwQzIxIDE4LjkgMjAgMTcuOSAyMCAxN0gxOFYyMEgzVjIxWk0xNiAyMEgzVjE5QzE2IDE4LjkgMTYuOSAxOCA4IDE4VjIwSDR2MWMwIDEuMS0uOSAyLTIgMkgxNXYtMWMwLTEuMS45LTItMi0ySDE2VjIwWk0xNiAyMEgzVjE5QzE2IDE4LjkgMTYuOSAxOCA4IDE4VjIwSDR2MWMwIDEuMS0uOSAyLTIgMkgxNXYtMWMwLTEuMS45LTItMi0ySDE2VjIwWiIvPgo8L3N2Zz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2EzYWYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgo8Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIyIi8+Cjwvc3ZnPgo8L3N2Zz4K"}
                     alt={displayName}
                     width={64}
                     height={64}

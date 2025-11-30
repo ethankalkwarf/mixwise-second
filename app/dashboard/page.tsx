@@ -133,14 +133,21 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchIngredients() {
       try {
-        const ingredients = await sanityClient.fetch<MixIngredient[]>(`
+        console.log("Fetching ingredients from Sanity...");
+        const ingredients = await sanityClient.fetch<any[]>(`
           *[_type == "ingredient"] {
-            _id as id,
+            _id,
             name,
-            category
+            "category": type
           }
         `);
-        setAllIngredients(ingredients);
+        // Map to expected format
+        const mappedIngredients = ingredients.map(ing => ({
+          id: ing._id,
+          name: ing.name,
+          category: ing.category
+        }));
+        setAllIngredients(mappedIngredients);
       } catch (error) {
         console.error("Error fetching ingredients:", error);
       }
@@ -314,13 +321,13 @@ export default function DashboardPage() {
                         className="flex items-center gap-4 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors group"
                       >
                         <Image
-                          src={cocktail.externalImageUrl || "/placeholder-cocktail.jpg"}
+                          src={cocktail.externalImageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg=="}
                           alt={cocktail.name}
                           width={56}
                           height={56}
                           className="w-14 h-14 rounded-lg object-cover"
                           onError={(e) => {
-                            e.currentTarget.src = "/placeholder-cocktail.jpg";
+                            e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg==";
                           }}
                         />
                         <div className="flex-1 min-w-0">
@@ -422,13 +429,13 @@ export default function DashboardPage() {
                           className="flex-shrink-0 w-32 group"
                         >
                           <Image
-                            src={fav.cocktail_image_url || "/placeholder-cocktail.jpg"}
+                            src={fav.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg=="}
                             alt={fav.cocktail_name || "Cocktail"}
                             width={128}
                             height={96}
                             className="w-32 h-24 rounded-lg object-cover mb-2"
                             onError={(e) => {
-                              e.currentTarget.src = "/placeholder-cocktail.jpg";
+                              e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg==";
                             }}
                           />
                           <p className="text-sm text-slate-300 group-hover:text-lime-400 truncate transition-colors">
@@ -461,13 +468,13 @@ export default function DashboardPage() {
                           className="flex-shrink-0 w-32 group"
                         >
                           <Image
-                            src={item.cocktail_image_url || "/placeholder-cocktail.jpg"}
+                            src={item.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg=="}
                             alt={item.cocktail_name || "Cocktail"}
                             width={128}
                             height={96}
                             className="w-32 h-24 rounded-lg object-cover mb-2"
                             onError={(e) => {
-                              e.currentTarget.src = "/placeholder-cocktail.jpg";
+                              e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg==";
                             }}
                           />
                           <p className="text-sm text-slate-300 group-hover:text-lime-400 truncate transition-colors">
