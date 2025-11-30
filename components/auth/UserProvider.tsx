@@ -212,12 +212,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, fetchProfile]); // Include dependencies for proper cleanup
 
+  // Get the correct redirect URL for auth
+  // In production, always use the canonical domain to avoid redirect issues
+  const getAuthRedirectUrl = () => {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    // Use configured site URL if available, otherwise fall back to window.location.origin
+    // This ensures production OAuth redirects go to the correct domain
+    if (siteUrl) {
+      return `${siteUrl}/auth/callback`;
+    }
+    // Fallback for local development
+    return `${window.location.origin}/auth/callback`;
+  };
+
   // Sign in with Google OAuth
   const signInWithGoogle = async () => {
+    const redirectUrl = getAuthRedirectUrl();
+    console.log("OAuth redirect URL:", redirectUrl);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: redirectUrl,
       },
     });
     
@@ -229,10 +245,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with email (magic link)
   const signInWithEmail = async (email: string): Promise<{ error?: string }> => {
+    const redirectUrl = getAuthRedirectUrl();
+    
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: redirectUrl,
       },
     });
     

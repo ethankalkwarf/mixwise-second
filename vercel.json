@@ -22,17 +22,6 @@
       ],
       "destination": "https://getmixwise.com/:path*",
       "permanent": true
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.getmixwise.com"
-        }
-      ],
-      "destination": "https://getmixwise.com/:path*",
-      "permanent": true
     }
   ],
   "headers": [
@@ -55,4 +44,3 @@
     }
   ]
 }
-
