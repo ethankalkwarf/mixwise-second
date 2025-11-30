@@ -106,7 +106,7 @@ In your Supabase dashboard:
 1. Go to **Authentication** → **Providers** → **Google**
 2. Enable Google provider
 3. Add your Google OAuth credentials (from Google Cloud Console)
-4. Add redirect URL: `https://your-domain.com/auth/callback`
+4. Add redirect URL: `https://getmixwise.com/auth/callback`
 
 #### Email (Magic Link)
 1. Go to **Authentication** → **Providers** → **Email**
@@ -129,7 +129,7 @@ In Supabase dashboard → **Authentication** → **URL Configuration**:
 
 Add these to **Redirect URLs**:
 - `http://localhost:3000/auth/callback` (development)
-- `https://your-production-domain.com/auth/callback` (production)
+- `https://getmixwise.com/auth/callback` (production)
 
 ## Usage
 

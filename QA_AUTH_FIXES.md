@@ -173,9 +173,10 @@ This document describes the fixes applied to resolve broken auth flows and relat
 
 - [ ] Supabase Auth providers configured (Google OAuth, Email)
 - [ ] Redirect URLs configured in Supabase dashboard:
-  - `https://your-domain.com/auth/callback`
+  - `https://getmixwise.com/auth/callback`
 - [ ] Google OAuth Client ID and Secret set in Supabase
 - [ ] Environment variables set on Vercel/hosting:
+  - `NEXT_PUBLIC_SITE_URL=https://getmixwise.com`
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `NEXT_PUBLIC_SANITY_PROJECT_ID`

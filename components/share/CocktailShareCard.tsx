@@ -208,7 +208,7 @@ export function CocktailShareCard({ cocktail }: CocktailShareCardProps) {
                 </div>
                 <div>
                   <p className="text-white font-bold text-sm">MixWise</p>
-                  <p className="text-slate-400 text-xs">mixwise.app</p>
+                  <p className="text-slate-400 text-xs">getmixwise.com</p>
                 </div>
               </div>
             </div>

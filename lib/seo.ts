@@ -5,7 +5,7 @@ export const SITE_CONFIG = {
   name: "MixWise",
   tagline: "A smarter way to make cocktails at home",
   description: "MixWise is a cocktail platform designed to help people make better drinks at home. Curated recipes, clear instructions, and tools that make cocktail discovery easy.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://mixwise.app",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://getmixwise.com",
   ogImage: "/og-image.jpg",
   twitterHandle: "@mixwise",
 };

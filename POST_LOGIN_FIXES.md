@@ -106,12 +106,13 @@ All hooks now use the shared Supabase client from `useSessionContext()` instead 
 1. Deploy to Vercel (or your hosting)
 
 2. Verify environment variables are set:
+   - `NEXT_PUBLIC_SITE_URL=https://getmixwise.com`
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 3. In Supabase Dashboard, verify:
-   - Google OAuth redirect URL: `https://your-domain.com/auth/callback`
-   - Email auth redirect URL: `https://your-domain.com/auth/callback`
+   - Google OAuth redirect URL: `https://getmixwise.com/auth/callback`
+   - Email auth redirect URL: `https://getmixwise.com/auth/callback`
 
 4. Run through the same test flows as local development
 
