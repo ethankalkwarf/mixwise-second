@@ -87,8 +87,9 @@ export function useRatings(cocktailId: string): UseRatingsResult {
   const setRating = useCallback(async (newRating: number) => {
     if (!isAuthenticated || !user) {
       openAuthDialog({
+        mode: "signup",
         title: "Rate this cocktail",
-        subtitle: "Create a free account to rate cocktails and see personalized recommendations.",
+        subtitle: "Log in or create a free account to rate cocktails and see personalized recommendations.",
       });
       return;
     }

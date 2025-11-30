@@ -64,8 +64,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       openAuthDialog({
+        mode: "login",
         title: "Sign in to view your dashboard",
-        subtitle: "Create a free account to track your progress and get recommendations.",
+        subtitle: "Log in or create a free account to track your progress and get recommendations.",
       });
     }
   }, [authLoading, isAuthenticated, openAuthDialog]);

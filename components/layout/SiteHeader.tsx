@@ -105,7 +105,7 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
             </div>
 
             {/* Desktop Auth */}
-            <div className="hidden md:flex items-center">
+            <div className="hidden md:flex items-center gap-2">
               {isLoading ? (
                 <div className="w-8 h-8 rounded-full bg-slate-800 animate-pulse" />
               ) : isAuthenticated ? (
@@ -116,12 +116,20 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
                   onSignOut={handleSignOut}
                 />
               ) : (
-                <button
-                  onClick={() => openAuthDialog()}
-                  className="px-4 py-2 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold text-sm rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-                >
-                  Create Free Account
-                </button>
+                <>
+                  <button
+                    onClick={() => openAuthDialog({ mode: "login" })}
+                    className="px-4 py-2 text-slate-300 hover:text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500"
+                  >
+                    Log In
+                  </button>
+                  <button
+                    onClick={() => openAuthDialog({ mode: "signup" })}
+                    className="px-4 py-2 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold text-sm rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                  >
+                    Create Free Account
+                  </button>
+                </>
               )}
             </div>
 
@@ -208,15 +216,26 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    openAuthDialog();
-                  }}
-                  className="w-full px-4 py-3 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold rounded-lg transition-colors"
-                >
-                  Create Free Account
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openAuthDialog({ mode: "signup" });
+                    }}
+                    className="w-full px-4 py-3 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold rounded-lg transition-colors"
+                  >
+                    Create Free Account
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openAuthDialog({ mode: "login" });
+                    }}
+                    className="w-full px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors text-center"
+                  >
+                    Log In
+                  </button>
+                </div>
               )}
             </div>
           </div>

@@ -92,8 +92,9 @@ export function useFavorites(): UseFavoritesResult {
     // Require authentication
     if (!isAuthenticated || !user) {
       openAuthDialog({
+        mode: "signup",
         title: "Save your favorites",
-        subtitle: "Create a free account to save favorite cocktails and access them anytime.",
+        subtitle: "Log in or create a free account to save favorite cocktails and access them anytime.",
       });
       return;
     }

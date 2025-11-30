@@ -5,6 +5,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon, EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useUser } from "./UserProvider";
 import { useToast } from "@/components/ui/toast";
+import type { AuthDialogMode } from "./AuthDialogProvider";
 
 // Google icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -21,17 +22,21 @@ function GoogleIcon({ className }: { className?: string }) {
 interface AuthDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: AuthDialogMode;
   title?: string;
   subtitle?: string;
   onSuccess?: () => void;
+  onModeChange?: (mode: AuthDialogMode) => void;
 }
 
 export function AuthDialog({ 
   isOpen, 
   onClose, 
-  title = "Create your free MixWise account",
+  mode = "signup",
+  title,
   subtitle,
-  onSuccess 
+  onSuccess,
+  onModeChange,
 }: AuthDialogProps) {
   const { signInWithGoogle, signInWithEmail, isAuthenticated } = useUser();
   const toast = useToast();
@@ -40,6 +45,13 @@ export function AuthDialog({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Default titles based on mode
+  const defaultTitle = mode === "login" 
+    ? "Welcome back to MixWise" 
+    : "Create your free MixWise account";
+  
+  const displayTitle = title || defaultTitle;
 
   // Close dialog if user becomes authenticated
   React.useEffect(() => {
@@ -154,10 +166,12 @@ export function AuthDialog({
                         <span className="text-slate-900 font-serif font-bold text-xl">MW</span>
                       </div>
                       <Dialog.Title className="text-xl font-serif font-bold text-slate-100 mb-2">
-                        {title}
+                        {displayTitle}
                       </Dialog.Title>
                       <p className="text-slate-400 text-sm">
-                        {subtitle || "Save your bar, favorite cocktails, and get personalized recommendations."}
+                        {subtitle || (mode === "login" 
+                          ? "Sign in to access your saved cocktails, bar inventory, and more."
+                          : "Save your bar, favorite cocktails, and get personalized recommendations.")}
                       </p>
                     </div>
 
@@ -218,27 +232,54 @@ export function AuthDialog({
                       </button>
                     </form>
 
-                    {/* Benefits list */}
-                    <div className="mt-6 pt-6 border-t border-slate-800">
-                      <p className="text-xs text-slate-500 text-center mb-3">Free accounts include:</p>
-                      <ul className="space-y-2 text-sm text-slate-400">
-                        <li className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 bg-lime-400 rounded-full" />
-                          Save your home bar ingredients
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 bg-lime-400 rounded-full" />
-                          Favorite cocktails to find later
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 bg-lime-400 rounded-full" />
-                          Track your cocktail history
-                        </li>
-                      </ul>
+                    {/* Benefits list (only for signup mode) */}
+                    {mode === "signup" && (
+                      <div className="mt-6 pt-6 border-t border-slate-800">
+                        <p className="text-xs text-slate-500 text-center mb-3">Free accounts include:</p>
+                        <ul className="space-y-2 text-sm text-slate-400">
+                          <li className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full" />
+                            Save your home bar ingredients
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full" />
+                            Favorite cocktails to find later
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full" />
+                            Track your cocktail history
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Mode switcher */}
+                    <div className="mt-6 pt-6 border-t border-slate-800 text-center">
+                      {mode === "signup" ? (
+                        <p className="text-sm text-slate-400">
+                          Already have an account?{" "}
+                          <button
+                            onClick={() => onModeChange?.("login")}
+                            className="text-lime-400 hover:text-lime-300 font-medium transition-colors"
+                          >
+                            Log in
+                          </button>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-slate-400">
+                          Don&apos;t have an account?{" "}
+                          <button
+                            onClick={() => onModeChange?.("signup")}
+                            className="text-lime-400 hover:text-lime-300 font-medium transition-colors"
+                          >
+                            Create one for free
+                          </button>
+                        </p>
+                      )}
                     </div>
 
                     {/* Terms */}
-                    <p className="mt-6 text-xs text-slate-500 text-center">
+                    <p className="mt-4 text-xs text-slate-500 text-center">
                       By continuing, you agree to our Terms of Service and Privacy Policy.
                     </p>
                   </>

@@ -266,8 +266,9 @@ export function useBarIngredients(): UseBarIngredientsResult {
   // Prompt user to sign in to save
   const promptToSave = useCallback(() => {
     openAuthDialog({
+      mode: "signup",
       title: "Save your bar",
-      subtitle: "Create a free account to save your bar ingredients and never lose them.",
+      subtitle: "Log in or create a free account to save your bar ingredients and never lose them.",
     });
   }, [openAuthDialog]);
 
