@@ -163,7 +163,41 @@ hooks/useUserPreferences.ts
 app/dashboard/page.tsx
 components/share/CocktailShareCard.tsx
 components/onboarding/OnboardingFlow.tsx
+components/home/PersonalizedSections.tsx
 ```
+
+---
+
+## Additional Fix: Skeleton Loading States for Anonymous Users
+
+### Issue
+When clicking "Create Free Account", the homepage would show skeleton loading states even though the user was still anonymous.
+
+### Cause
+The `PersonalizedSections` component was checking `isAuthenticated` and `isLoading` separately, allowing a race condition where skeletons could appear during auth state transitions.
+
+### Fix
+Updated the conditional rendering logic in `PersonalizedSections`:
+
+```typescript
+// OLD (broken)
+if (!isAuthenticated) {
+  return null;
+}
+if (isLoading) {
+  return <Skeleton />;
+}
+
+// NEW (fixed)
+if (authLoading || !isAuthenticated) {
+  return null;  // Exit early if auth is still loading OR user is not authenticated
+}
+if (dataLoading) {
+  return <Skeleton />;  // Only show skeleton when DEFINITELY authenticated
+}
+```
+
+This ensures skeleton states only appear for users who are definitively authenticated, not during auth state transitions.
 
 ---
 
