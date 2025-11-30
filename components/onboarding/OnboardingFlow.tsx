@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSessionContext } from "@supabase/auth-helpers-react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -76,9 +77,19 @@ interface OnboardingFlowProps {
  */
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const router = useRouter();
-  const { user } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const { user, session } = useUser();
+  const { supabaseClient: contextSupabase } = useSessionContext();
   const toast = useToast();
+  
+  // Use context client if available, otherwise create a new one
+  // This ensures we have a working client even if session context isn't ready
+  const getSupabaseClient = () => {
+    if (contextSupabase) {
+      return contextSupabase;
+    }
+    console.log("[Onboarding] Creating fallback Supabase client");
+    return createClientComponentClient();
+  };
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -126,10 +137,32 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
     setIsSubmitting(true);
     console.log("[Onboarding] Starting save for user:", user.id);
+    console.log("[Onboarding] Session available:", !!session);
+    console.log("[Onboarding] Context supabase available:", !!contextSupabase);
 
     try {
+      const supabase = getSupabaseClient();
+      
+      // Verify we have an authenticated session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("[Onboarding] Session check error:", sessionError);
+        toast.error("Session expired. Please log in again.");
+        router.push("/");
+        return;
+      }
+      
+      if (!sessionData.session) {
+        console.error("[Onboarding] No active session found");
+        toast.error("You need to be logged in. Please sign in again.");
+        router.push("/");
+        return;
+      }
+      
+      console.log("[Onboarding] Verified session for:", sessionData.session.user.email);
+
       // Save preferences to database
-      // First, try to insert. If the row exists, update it.
       const preferencesData = {
         user_id: user.id,
         preferred_spirits: selectedSpirits,
@@ -141,14 +174,22 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       
       console.log("[Onboarding] Saving preferences:", preferencesData);
       
-      const { error: upsertError } = await supabase
+      const { data, error: upsertError } = await supabase
         .from("user_preferences")
         .upsert(preferencesData, {
           onConflict: "user_id",
-        });
+        })
+        .select();
+
+      console.log("[Onboarding] Upsert response - data:", data, "error:", upsertError);
 
       if (upsertError) {
-        console.error("[Onboarding] Preferences upsert error:", upsertError);
+        console.error("[Onboarding] Preferences upsert error:", {
+          message: upsertError.message,
+          code: upsertError.code,
+          details: upsertError.details,
+          hint: upsertError.hint,
+        });
         
         // If the table doesn't exist, skip onboarding gracefully
         if (upsertError.code === "42P01") {
@@ -157,13 +198,24 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           router.replace("/dashboard");
           return;
         }
+        
         // Permission error - user should re-login
         if (upsertError.code === "42501") {
           toast.error("Permission denied. Please try logging out and back in.");
           return;
         }
         
-        throw upsertError;
+        // RLS policy violation - common error code
+        if (upsertError.code === "42501" || upsertError.code === "PGRST301" || 
+            upsertError.message?.toLowerCase().includes("policy") ||
+            upsertError.message?.toLowerCase().includes("permission")) {
+          toast.error("Access denied. Please try logging out and back in.");
+          return;
+        }
+        
+        // Show the actual error message from Supabase
+        toast.error(`Failed to save preferences: ${upsertError.message || "Database error"}`);
+        return;
       }
 
       console.log("[Onboarding] Preferences saved successfully");
@@ -182,7 +234,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           });
 
         if (badgeError) {
-          console.warn("[Onboarding] Badge award failed (non-critical):", badgeError);
+          console.warn("[Onboarding] Badge award failed (non-critical):", badgeError.message);
         } else {
           console.log("[Onboarding] Badge awarded successfully");
         }
@@ -198,9 +250,32 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         // Use replace to avoid back-button returning to onboarding
         router.replace("/dashboard");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("[Onboarding] Critical error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      console.error("[Onboarding] Error type:", typeof err);
+      console.error("[Onboarding] Error constructor:", err?.constructor?.name);
+      
+      // Better error message extraction
+      let errorMessage = "An unexpected error occurred";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null) {
+        const errObj = err as Record<string, unknown>;
+        if (errObj.message) {
+          errorMessage = String(errObj.message);
+        } else if (errObj.error) {
+          errorMessage = String(errObj.error);
+        } else {
+          try {
+            errorMessage = JSON.stringify(err);
+          } catch {
+            errorMessage = "Failed to serialize error";
+          }
+        }
+      } else if (typeof err === "string") {
+        errorMessage = err;
+      }
+      
       toast.error(`Something went wrong: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
