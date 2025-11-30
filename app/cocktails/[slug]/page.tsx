@@ -126,11 +126,6 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                   ❤️ Favorite
                 </span>
               )}
-              {cocktail.difficulty && (
-                <span className="bg-slate-900/90 backdrop-blur text-slate-200 text-xs font-medium px-3 py-1.5 rounded-full">
-                  {cocktail.difficulty.charAt(0).toUpperCase() + cocktail.difficulty.slice(1)}
-                </span>
-              )}
             </div>
           </div>
 
