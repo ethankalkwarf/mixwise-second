@@ -5,13 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Transition } from "@headlessui/react";
 import { 
-  Menu as MenuIcon,
-  X,
-  User,
-  Settings,
-  LogOut,
-  LayoutDashboard
-} from "lucide-react";
+  Bars3Icon,
+  XMarkIcon,
+  UserIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  Squares2X2Icon
+} from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 
@@ -122,9 +122,9 @@ export function BrutalHeader({ navItems }: BrutalHeaderProps) {
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {mobileMenuOpen ? (
-                <X className="h-6 w-6" strokeWidth={3} aria-hidden="true" />
+                <XMarkIcon className="h-6 w-6" aria-hidden="true" />
               ) : (
-                <MenuIcon className="h-6 w-6" strokeWidth={3} aria-hidden="true" />
+                <Bars3Icon className="h-6 w-6" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -175,7 +175,7 @@ export function BrutalHeader({ navItems }: BrutalHeaderProps) {
                     className="flex items-center gap-2 py-3 font-bold text-brutal-black hover:text-brutal-blue"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <LayoutDashboard className="w-5 h-5" strokeWidth={2.5} />
+                    <Squares2X2Icon className="w-5 h-5" />
                     Dashboard
                   </Link>
                   <Link
@@ -183,14 +183,14 @@ export function BrutalHeader({ navItems }: BrutalHeaderProps) {
                     className="flex items-center gap-2 py-3 font-bold text-brutal-black hover:text-brutal-blue"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Settings className="w-5 h-5" strokeWidth={2.5} />
+                    <Cog6ToothIcon className="w-5 h-5" />
                     My Account
                   </Link>
                   <button
                     onClick={handleSignOut}
                     className="flex items-center gap-2 w-full py-3 font-bold text-red-600 hover:text-red-700 text-left"
                   >
-                    <LogOut className="w-5 h-5" strokeWidth={2.5} />
+                    <ArrowRightOnRectangleIcon className="w-5 h-5" />
                     Sign out
                   </button>
                 </div>
@@ -269,7 +269,7 @@ function BrutalUserMenu({
                     active ? "bg-brutal-yellow text-brutal-black" : "text-brutal-black"
                   }`}
                 >
-                  <LayoutDashboard className="w-4 h-4" strokeWidth={2.5} />
+                  <Squares2X2Icon className="w-4 h-4" />
                   Dashboard
                 </Link>
               )}
@@ -282,7 +282,7 @@ function BrutalUserMenu({
                     active ? "bg-brutal-yellow text-brutal-black" : "text-brutal-black"
                   }`}
                 >
-                  <User className="w-4 h-4" strokeWidth={2.5} />
+                  <UserIcon className="w-4 h-4" />
                   My Account
                 </Link>
               )}
@@ -298,7 +298,7 @@ function BrutalUserMenu({
                     active ? "bg-red-100 text-red-600" : "text-red-600"
                   }`}
                 >
-                  <LogOut className="w-4 h-4" strokeWidth={2.5} />
+                  <ArrowRightOnRectangleIcon className="w-4 h-4" />
                   Sign out
                 </button>
               )}
