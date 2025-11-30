@@ -9,7 +9,7 @@
           "value": "mw.phase5digital.com"
         }
       ],
-      "destination": "https://getmixwise.com/:path*",
+      "destination": "https://www.getmixwise.com/:path*",
       "permanent": true
     },
     {
@@ -20,7 +20,7 @@
           "value": "mw2.phase5digital.com"
         }
       ],
-      "destination": "https://getmixwise.com/:path*",
+      "destination": "https://www.getmixwise.com/:path*",
       "permanent": true
     },
     {
@@ -31,8 +31,19 @@
           "value": "mixwise-next-git-main-ethan-kalkwarfs-projects.vercel.app"
         }
       ],
-      "destination": "https://getmixwise.com/:path*",
+      "destination": "https://www.getmixwise.com/:path*",
       "permanent": false
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "getmixwise.com"
+        }
+      ],
+      "destination": "https://www.getmixwise.com/:path*",
+      "permanent": true
     }
   ],
   "headers": [
