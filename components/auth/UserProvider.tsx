@@ -1,11 +1,23 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
 import { User, Session } from "@supabase/supabase-js";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import type { Profile } from "@/lib/supabase/database.types";
 import { trackUserSignup } from "@/lib/analytics";
+
+/**
+ * UserProvider - Single Source of Truth for Auth State
+ * 
+ * This provider is the ONLY place that manages authentication state.
+ * All components should use useUser() to access user data.
+ * 
+ * Architecture:
+ * 1. Uses the shared Supabase client from SessionContextProvider
+ * 2. Subscribes to onAuthStateChange for real-time auth updates
+ * 3. Fetches profile data from the profiles table
+ * 4. Provides loading, authenticated, and error states
+ */
 
 // Types for the user context
 interface UserContextType {
@@ -14,6 +26,7 @@ interface UserContextType {
   session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  error: Error | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -24,46 +37,52 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Provider component
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  // Use session from SessionContextProvider (which has the server-side initial session)
-  const { session: contextSession, supabaseClient, isLoading: sessionLoading } = useSessionContext();
-  const searchParams = useSearchParams();
+  // Get the shared Supabase client from SessionContextProvider
+  const { supabaseClient: supabase, isLoading: sessionContextLoading } = useSessionContext();
   
-  const [user, setUser] = useState<User | null>(contextSession?.user ?? null);
+  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [session, setSession] = useState<Session | null>(contextSession);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   
-  // Track if we've already processed the initial session to prevent duplicate fetches
-  const initializedRef = useRef(false);
-  const fetchingProfileRef = useRef(false);
-  const authSuccessHandledRef = useRef(false);
-  
-  const supabase = supabaseClient;
+  // Ref to track if we've done the initial auth check
+  const initialCheckDone = useRef(false);
+  // Ref to prevent duplicate profile fetches
+  const fetchingProfile = useRef<string | null>(null);
 
   // Fetch user profile from database
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    // Prevent duplicate fetches for the same user
+    if (fetchingProfile.current === userId) {
+      return null;
+    }
+    fetchingProfile.current = userId;
+    
     try {
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
       
-      if (error) {
-        // PGRST116 means no rows found - this is expected for new users
-        if (error.code !== "PGRST116") {
-          console.error("Error fetching profile:", error);
+      if (fetchError) {
+        // PGRST116 means no rows found - expected for new users
+        if (fetchError.code !== "PGRST116") {
+          console.error("[UserProvider] Profile fetch error:", fetchError);
         }
         return null;
       }
       return data as Profile;
     } catch (err) {
-      console.error("Profile fetch exception:", err);
+      console.error("[UserProvider] Profile fetch exception:", err);
       return null;
+    } finally {
+      fetchingProfile.current = null;
     }
   }, [supabase]);
 
-  // Refresh profile data
+  // Refresh profile data (can be called after profile updates)
   const refreshProfile = useCallback(async () => {
     if (user) {
       const newProfile = await fetchProfile(user.id);
@@ -71,261 +90,194 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, fetchProfile]);
 
-  // Sync with context session changes - this handles the initial load and OAuth redirects
+  // Main auth state initialization and subscription
   useEffect(() => {
-    // Don't do anything while session is still loading
-    if (sessionLoading) {
+    let mounted = true;
+
+    // Wait for session context to be ready
+    if (sessionContextLoading) {
       return;
     }
 
-    // Update session and user from context
-    setSession(contextSession);
-    setUser(contextSession?.user ?? null);
-
-    // If there's no user, we're done loading
-    if (!contextSession?.user) {
-      setProfile(null);
-      setIsLoading(false);
-      initializedRef.current = true;
-      return;
-    }
-
-    // If we have a user, fetch their profile (if not already fetching)
-    if (!fetchingProfileRef.current) {
-      fetchingProfileRef.current = true;
+    // Function to update auth state
+    const updateAuthState = async (newSession: Session | null) => {
+      if (!mounted) return;
       
-      fetchProfile(contextSession.user.id)
-        .then((userProfile) => {
-          setProfile(userProfile);
-        })
-        .catch((err) => {
-          console.error("Profile fetch error:", err);
-        })
-        .finally(() => {
-          fetchingProfileRef.current = false;
-          setIsLoading(false);
-          initializedRef.current = true;
-        });
-    }
-  }, [contextSession, sessionLoading, fetchProfile]);
-
-  // Listen for auth changes (login/logout events)
-  // This handles client-side auth events like signInWithOAuth completing
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        console.log("Auth state change:", event, newSession?.user?.email);
-        
-        if (event === "SIGNED_IN" && newSession?.user) {
-          // Update state immediately
-          setSession(newSession);
-          setUser(newSession.user);
-          setIsLoading(true);
-          
-          // Fetch profile
-          const userProfile = await fetchProfile(newSession.user.id);
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+      
+      if (newSession?.user) {
+        // Fetch profile for authenticated user
+        const userProfile = await fetchProfile(newSession.user.id);
+        if (mounted) {
           setProfile(userProfile);
           
-          // Track new signups
+          // Track new signups (users created in last minute)
           if (userProfile) {
             const createdAt = new Date(userProfile.created_at);
             const now = new Date();
             const isNewUser = (now.getTime() - createdAt.getTime()) < 60000;
-            
-            if (isNewUser) {
+            if (isNewUser && !initialCheckDone.current) {
               trackUserSignup(newSession.user.id, newSession.user.email);
             }
           }
-          setIsLoading(false);
-        } else if (event === "SIGNED_OUT") {
-          setSession(null);
-          setUser(null);
+        }
+      } else {
+        if (mounted) {
           setProfile(null);
+        }
+      }
+      
+      if (mounted) {
+        setIsLoading(false);
+        initialCheckDone.current = true;
+      }
+    };
+
+    // Initial session check
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("[UserProvider] Initial session error:", sessionError);
+          setError(sessionError);
           setIsLoading(false);
-        } else if (event === "TOKEN_REFRESHED" && newSession?.user) {
-          // Update session on token refresh
-          setSession(newSession);
-          setUser(newSession.user);
-        } else if (event === "INITIAL_SESSION") {
-          // Handle initial session - this fires when onAuthStateChange is first set up
-          if (newSession?.user && !initializedRef.current) {
-            setSession(newSession);
-            setUser(newSession.user);
+          return;
+        }
+        
+        await updateAuthState(currentSession);
+      } catch (err) {
+        console.error("[UserProvider] Initialize auth error:", err);
+        if (mounted) {
+          setError(err instanceof Error ? err : new Error("Auth initialization failed"));
+          setIsLoading(false);
+        }
+      }
+    };
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        console.log("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
+        
+        // Handle different auth events
+        switch (event) {
+          case "SIGNED_IN":
+          case "TOKEN_REFRESHED":
+            await updateAuthState(newSession);
+            break;
             
-            const userProfile = await fetchProfile(newSession.user.id);
-            setProfile(userProfile);
-            setIsLoading(false);
-            initializedRef.current = true;
-          } else if (!newSession && !initializedRef.current) {
-            // No session on initial load
-            setIsLoading(false);
-            initializedRef.current = true;
-          }
+          case "SIGNED_OUT":
+            if (mounted) {
+              setSession(null);
+              setUser(null);
+              setProfile(null);
+              setIsLoading(false);
+            }
+            break;
+            
+          case "INITIAL_SESSION":
+            // Only process if we haven't done the initial check yet
+            if (!initialCheckDone.current) {
+              await updateAuthState(newSession);
+            }
+            break;
+            
+          case "USER_UPDATED":
+            // User data was updated, refresh profile
+            if (newSession?.user && mounted) {
+              setUser(newSession.user);
+              const userProfile = await fetchProfile(newSession.user.id);
+              if (mounted) {
+                setProfile(userProfile);
+              }
+            }
+            break;
+            
+          case "PASSWORD_RECOVERY":
+            // Handle password recovery if needed
+            break;
         }
       }
     );
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase, fetchProfile]);
+    // Run initial auth check
+    initializeAuth();
 
-  // Handle auth_success URL parameter - this fires after OAuth callback redirects
-  // This is the KEY fix for the login UI not updating issue
-  useEffect(() => {
-    const authSuccess = searchParams.get("auth_success");
-    
-    if (authSuccess === "true" && !authSuccessHandledRef.current) {
-      authSuccessHandledRef.current = true;
-      console.log("[UserProvider] Detected auth_success, forcing session refresh");
-      
-      // Force a fresh session check from Supabase
-      const refreshSession = async () => {
-        try {
-          const { data: { session: freshSession }, error } = await supabase.auth.getSession();
-          
-          if (error) {
-            console.error("[UserProvider] Session refresh error:", error);
-            return;
-          }
-          
-          if (freshSession?.user) {
-            console.log("[UserProvider] Session refreshed for:", freshSession.user.email);
-            setSession(freshSession);
-            setUser(freshSession.user);
-            
-            // Fetch profile
-            const userProfile = await fetchProfile(freshSession.user.id);
-            setProfile(userProfile);
-            setIsLoading(false);
-            initializedRef.current = true;
-            
-            // Clean up URL parameter without triggering navigation
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete("auth_success");
-            window.history.replaceState({}, "", newUrl.toString());
-          }
-        } catch (err) {
-          console.error("[UserProvider] Session refresh exception:", err);
-        }
-      };
-      
-      refreshSession();
-    }
-  }, [searchParams, supabase, fetchProfile]);
-
-  // Fallback: Force session check on mount to handle OAuth redirect edge cases
-  // This runs once after mount to catch any missed session updates
-  useEffect(() => {
-    let mounted = true;
-    
-    const checkSession = async () => {
-      // Wait a brief moment for other effects to settle
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      if (!mounted) return;
-      
-      // Skip if we already handled auth_success
-      if (authSuccessHandledRef.current) {
-        return;
-      }
-      
-      // If still loading after mount, do an explicit session check
-      if (!initializedRef.current) {
-        try {
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          
-          if (!mounted) return;
-          
-          if (currentSession?.user) {
-            console.log("[UserProvider] Mount check found session for:", currentSession.user.email);
-            setSession(currentSession);
-            setUser(currentSession.user);
-            
-            const userProfile = await fetchProfile(currentSession.user.id);
-            if (mounted) {
-              setProfile(userProfile);
-            }
-          }
-        } catch (err) {
-          console.error("[UserProvider] Session check error:", err);
-        } finally {
-          if (mounted) {
-            setIsLoading(false);
-            initializedRef.current = true;
-          }
-        }
-      }
-    };
-    
-    checkSession();
-    
+    // Cleanup
     return () => {
       mounted = false;
+      subscription.unsubscribe();
     };
-  }, [supabase, fetchProfile]); // Include dependencies for proper cleanup
+  }, [supabase, sessionContextLoading, fetchProfile]);
 
   // Get the correct redirect URL for auth
-  // In production, always use the canonical domain to avoid redirect issues
-  const getAuthRedirectUrl = () => {
+  const getAuthRedirectUrl = useCallback(() => {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-    // Use configured site URL if available, otherwise fall back to window.location.origin
-    // This ensures production OAuth redirects go to the correct domain
     if (siteUrl) {
       return `${siteUrl}/auth/callback`;
     }
-    // Fallback for local development
-    return `${window.location.origin}/auth/callback`;
-  };
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/auth/callback`;
+    }
+    return "/auth/callback";
+  }, []);
 
   // Sign in with Google OAuth
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = useCallback(async () => {
     const redirectUrl = getAuthRedirectUrl();
-    console.log("OAuth redirect URL:", redirectUrl);
+    console.log("[UserProvider] Starting Google OAuth, redirect:", redirectUrl);
     
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: redirectUrl,
       },
     });
     
-    if (error) {
-      console.error("Google sign-in error:", error);
-      throw error;
+    if (signInError) {
+      console.error("[UserProvider] Google sign-in error:", signInError);
+      setError(signInError);
+      throw signInError;
     }
-  };
+  }, [supabase, getAuthRedirectUrl]);
 
   // Sign in with email (magic link)
-  const signInWithEmail = async (email: string): Promise<{ error?: string }> => {
+  const signInWithEmail = useCallback(async (email: string): Promise<{ error?: string }> => {
     const redirectUrl = getAuthRedirectUrl();
     
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: redirectUrl,
       },
     });
     
-    if (error) {
-      console.error("Email sign-in error:", error);
-      return { error: error.message };
+    if (signInError) {
+      console.error("[UserProvider] Email sign-in error:", signInError);
+      return { error: signInError.message };
     }
     
     return {};
-  };
+  }, [supabase, getAuthRedirectUrl]);
 
   // Sign out
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Sign-out error:", error);
-      throw error;
+  const signOut = useCallback(async () => {
+    console.log("[UserProvider] Signing out");
+    const { error: signOutError } = await supabase.auth.signOut();
+    
+    if (signOutError) {
+      console.error("[UserProvider] Sign-out error:", signOutError);
+      setError(signOutError);
+      throw signOutError;
     }
+    
+    // Clear state immediately
     setUser(null);
     setProfile(null);
     setSession(null);
-  };
+  }, [supabase]);
 
   const value: UserContextType = {
     user,
@@ -333,6 +285,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     session,
     isLoading,
     isAuthenticated: !!user,
+    error,
     signInWithGoogle,
     signInWithEmail,
     signOut,
@@ -355,3 +308,5 @@ export function useUser() {
   return context;
 }
 
+// Alias for consistency with the task requirements
+export const useCurrentUser = useUser;

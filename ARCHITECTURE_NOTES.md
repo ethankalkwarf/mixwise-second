@@ -122,6 +122,135 @@ All core tables are properly implemented with RLS policies:
 - Session handling works across server and client components
 - Auth callbacks handle new user onboarding flow
 
+## Auth and Personalization
+
+### Single Source of Truth
+
+The `UserProvider` component (`components/auth/UserProvider.tsx`) is the **single source of truth** for all authentication state in the app.
+
+**Location:** `components/auth/UserProvider.tsx`
+**Hook:** `useUser()` or `useCurrentUser()` (exported from `hooks/useUser.ts`)
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         app/layout.tsx                          │
+│                               │                                 │
+│                    ┌──────────▼──────────┐                      │
+│                    │  SupabaseProvider   │                      │
+│                    │   (providers.tsx)   │                      │
+│                    └──────────┬──────────┘                      │
+│                               │                                 │
+│              ┌────────────────▼────────────────┐                │
+│              │  SessionContextProvider         │                │
+│              │  (provides shared Supabase      │                │
+│              │   client to all children)       │                │
+│              └────────────────┬────────────────┘                │
+│                               │                                 │
+│                    ┌──────────▼──────────┐                      │
+│                    │    UserProvider     │  ◄── SINGLE SOURCE   │
+│                    │ (manages auth state)│      OF TRUTH        │
+│                    └──────────┬──────────┘                      │
+│                               │                                 │
+│           ┌───────────────────┼───────────────────┐             │
+│           ▼                   ▼                   ▼             │
+│     ┌─────────┐        ┌─────────────┐    ┌─────────────┐       │
+│     │ Header  │        │  Features   │    │   Pages     │       │
+│     │ (auth UI│        │ (useRatings │    │ (useUser)   │       │
+│     │  menu)  │        │  useFavorites    │             │       │
+│     └─────────┘        │  etc.)      │    └─────────────┘       │
+│                        └─────────────┘                          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### How It Works
+
+1. **Initialization**: On mount, `UserProvider` calls `supabase.auth.getSession()` to check for an existing session
+2. **Real-time updates**: Subscribes to `onAuthStateChange` to handle login/logout events immediately
+3. **Profile loading**: When a user is authenticated, their profile is fetched from the `profiles` table
+4. **State exposure**: Provides `user`, `profile`, `isLoading`, `isAuthenticated`, and `error` to all children
+
+### Usage in Components
+
+```typescript
+import { useUser } from "@/hooks/useUser";
+// or
+import { useCurrentUser } from "@/hooks/useUser";
+
+function MyComponent() {
+  const { user, profile, isLoading, isAuthenticated, error } = useUser();
+  
+  // Always check loading state first
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+  
+  // Then check authentication
+  if (!isAuthenticated) {
+    return <LoginPrompt />;
+  }
+  
+  // Render authenticated content
+  return <UserContent user={user} profile={profile} />;
+}
+```
+
+### Context Values Provided
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `user` | `User \| null` | Supabase auth user object |
+| `profile` | `Profile \| null` | User's profile from `profiles` table |
+| `session` | `Session \| null` | Current auth session |
+| `isLoading` | `boolean` | True while auth state is being determined |
+| `isAuthenticated` | `boolean` | True if user is logged in |
+| `error` | `Error \| null` | Any auth error that occurred |
+| `signInWithGoogle` | `() => Promise<void>` | Start Google OAuth flow |
+| `signInWithEmail` | `(email: string) => Promise<{error?: string}>` | Send magic link email |
+| `signOut` | `() => Promise<void>` | Sign out current user |
+| `refreshProfile` | `() => Promise<void>` | Reload profile from database |
+
+### Feature Hooks
+
+All feature hooks use `useUser()` internally and share the same Supabase client:
+
+| Hook | Table | Description |
+|------|-------|-------------|
+| `useRatings(cocktailId)` | `ratings` | Manages cocktail ratings |
+| `useFavorites()` | `favorites` | Manages saved cocktails |
+| `useShoppingList()` | `shopping_list` | Manages shopping list items |
+| `useBarIngredients()` | `bar_ingredients` | Manages bar inventory |
+| `useUserPreferences()` | `user_preferences` | Manages onboarding data |
+
+### RLS Policies
+
+All user data tables have Row Level Security enabled:
+
+- **profiles**: Users can only read/write their own profile
+- **ratings**: Anyone can read (for averages), users can only write their own
+- **favorites**: Users can only access their own favorites
+- **shopping_list**: Users can only access their own list
+- **bar_ingredients**: Users can only access their own inventory
+- **user_preferences**: Users can only access their own preferences
+- **user_badges**: Users can read all badges (for public profiles), write only their own
+
+### Auth Flow
+
+1. **Login**: User clicks "Log In" → `AuthDialog` opens → User authenticates via Google/Email
+2. **Callback**: Supabase redirects to `/auth/callback` → Code exchanged for session → Cookies set
+3. **Detection**: `onAuthStateChange` fires `SIGNED_IN` event → `UserProvider` updates state
+4. **Profile**: Profile is fetched from `profiles` table (auto-created on first login via trigger)
+5. **Onboarding**: If `user_preferences.onboarding_completed` is false, redirect to `/onboarding`
+
+### Debugging
+
+The `UserProvider` logs auth state changes to the console:
+- `[UserProvider] Auth state change: SIGNED_IN user@example.com`
+- `[UserProvider] Auth state change: SIGNED_OUT no user`
+
+Check browser console for these logs when debugging auth issues.
+
 ### Legacy Cleanup
 - Old Vercel preview domains properly redirected in `vercel.json`
 - Documentation updated with correct production URLs

@@ -9,10 +9,10 @@
  * 2. Supabase redirects here with a `code` parameter
  * 3. We exchange the code for a session
  * 4. Cookies are automatically set by the Supabase client
- * 5. User is redirected to the intended page with auth_success flag
+ * 5. User is redirected to the intended page
  * 
- * IMPORTANT: The redirect URL MUST use the canonical production domain
- * to avoid redirecting users to Vercel preview URLs.
+ * The client-side UserProvider will automatically detect the session
+ * via onAuthStateChange and update the UI accordingly.
  */
 
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
@@ -23,17 +23,13 @@ export const dynamic = "force-dynamic";
 
 /**
  * Get the canonical base URL for redirects.
- * ALWAYS use the production domain (getmixwise.com) in production,
- * regardless of what URL the request came from.
+ * Always use the production domain in production environments.
  */
 function getCanonicalBaseUrl(requestUrl: URL): string {
-  // In production, ALWAYS redirect to the canonical domain
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (siteUrl) {
     return siteUrl;
   }
-  
-  // Fallback for local development
   return requestUrl.origin;
 }
 
@@ -44,7 +40,6 @@ export async function GET(request: NextRequest) {
   const error = requestUrl.searchParams.get("error");
   const errorDescription = requestUrl.searchParams.get("error_description");
   
-  // Get the canonical base URL for all redirects
   const baseUrl = getCanonicalBaseUrl(requestUrl);
   
   console.log("[Auth Callback] Processing request", {
@@ -93,7 +88,6 @@ export async function GET(request: NextRequest) {
             .eq("user_id", data.user.id)
             .single();
           
-          // If no preferences row or onboarding not completed, redirect to onboarding
           if (prefError?.code === "PGRST116") {
             // No row found - new user, needs onboarding
             needsOnboarding = true;
@@ -106,18 +100,15 @@ export async function GET(request: NextRequest) {
             needsOnboarding = true;
             console.log("[Auth Callback] Existing user, onboarding not completed");
           } else if (prefError) {
-            // Some other error - log but don't block the user
             console.error("[Auth Callback] Preferences check error:", prefError);
           }
         } catch (prefCheckError) {
-          // Table might not exist - don't block the user
           console.error("[Auth Callback] Preferences table check failed:", prefCheckError);
         }
         
         if (needsOnboarding) {
           const redirectUrl = new URL("/onboarding", baseUrl);
-          // Add auth_success flag so client knows to refresh session state
-          redirectUrl.searchParams.set("auth_success", "true");
+          console.log("[Auth Callback] Redirecting to onboarding:", redirectUrl.toString());
           return NextResponse.redirect(redirectUrl);
         }
       }
@@ -130,15 +121,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Redirect to the intended destination or home
-  // Use a validated URL to prevent open redirect vulnerabilities
+  // Redirect to the intended destination
   const redirectPath = next.startsWith("/") ? next : "/";
   const finalUrl = new URL(redirectPath, baseUrl);
-  
-  // Add auth_success flag so client knows to refresh session state
-  finalUrl.searchParams.set("auth_success", "true");
   
   console.log("[Auth Callback] Redirecting to:", finalUrl.toString());
   return NextResponse.redirect(finalUrl);
 }
-
