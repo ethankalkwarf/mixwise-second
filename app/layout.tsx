@@ -70,15 +70,9 @@ export default async function RootLayout({
     { label: "Mix", href: "/mix" },
   ];
 
-  // Fetch session server-side for proper hydration
-  let initialSession = null;
-  try {
-    const supabase = createServerComponentClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-    initialSession = session;
-  } catch (error) {
-    console.error('Error fetching initial session:', error);
-  }
+  // Don't fetch session server-side to avoid static generation issues
+  // Let client-side providers handle session fetching
+  const initialSession = null;
 
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>

@@ -12,6 +12,7 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 // GROQ query to fetch a single cocktail by slug
 const COCKTAIL_QUERY = `*[_type == "cocktail" && slug.current == $slug][0] {

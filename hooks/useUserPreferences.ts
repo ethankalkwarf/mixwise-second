@@ -3,18 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
-
-export interface UserPreferences {
-  id: string;
-  user_id: string;
-  preferred_spirits: string[];
-  flavor_profiles: string[];
-  skill_level: string;
-  onboarding_completed: boolean;
-  onboarding_completed_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import { UserPreferences } from "@/lib/supabase/database.types";
 
 /**
  * Hook to manage user preferences

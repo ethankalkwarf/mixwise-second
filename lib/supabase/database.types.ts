@@ -213,6 +213,64 @@ export interface Database {
           added_at?: string;
         };
       };
+      user_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          preferred_spirits: string[] | null;
+          flavor_profiles: string[] | null;
+          skill_level: string;
+          onboarding_completed: boolean;
+          onboarding_completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          preferred_spirits?: string[] | null;
+          flavor_profiles?: string[] | null;
+          skill_level?: string;
+          onboarding_completed?: boolean;
+          onboarding_completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          preferred_spirits?: string[] | null;
+          flavor_profiles?: string[] | null;
+          skill_level?: string;
+          onboarding_completed?: boolean;
+          onboarding_completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      user_badges: {
+        Row: {
+          id: string;
+          user_id: string;
+          badge_id: string;
+          earned_at: string;
+          metadata: Json;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          badge_id: string;
+          earned_at?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          badge_id?: string;
+          earned_at?: string;
+          metadata?: Json;
+        };
+      };
       email_signups: {
         Row: {
           id: number;
@@ -303,6 +361,13 @@ export type RatingUpdate = Database["public"]["Tables"]["ratings"]["Update"];
 export type ShoppingListItem = Database["public"]["Tables"]["shopping_list"]["Row"];
 export type ShoppingListInsert = Database["public"]["Tables"]["shopping_list"]["Insert"];
 export type ShoppingListUpdate = Database["public"]["Tables"]["shopping_list"]["Update"];
+
+export type UserPreferences = Database["public"]["Tables"]["user_preferences"]["Row"];
+export type UserPreferencesInsert = Database["public"]["Tables"]["user_preferences"]["Insert"];
+export type UserPreferencesUpdate = Database["public"]["Tables"]["user_preferences"]["Update"];
+
+export type UserBadge = Database["public"]["Tables"]["user_badges"]["Row"];
+export type UserBadgeInsert = Database["public"]["Tables"]["user_badges"]["Insert"];
 
 export type EmailSignup = Database["public"]["Tables"]["email_signups"]["Row"];
 export type EmailSignupInsert = Database["public"]["Tables"]["email_signups"]["Insert"];
