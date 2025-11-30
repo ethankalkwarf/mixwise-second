@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
@@ -25,16 +25,18 @@ interface UseBarIngredientsResult {
  * 
  * For anonymous users: stores in localStorage
  * For authenticated users: syncs with Supabase
+ * 
+ * IMPORTANT: Uses the shared Supabase client from SessionContext
+ * to ensure session cookies are properly synced after login.
  */
 export function useBarIngredients(): UseBarIngredientsResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
+  const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
   const [ingredientIds, setIngredientIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [serverIngredients, setServerIngredients] = useState<BarIngredient[]>([]);
-  
-  const supabase = createClient();
 
   // Load ingredients from localStorage
   const loadFromLocal = useCallback(() => {

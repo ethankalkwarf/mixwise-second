@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
 import type { ShoppingListItem } from "@/lib/supabase/database.types";
@@ -32,13 +32,21 @@ interface UseShoppingListResult {
   copyAsText: () => string;
 }
 
+/**
+ * Hook to manage shopping list
+ * 
+ * For anonymous users: stores in localStorage
+ * For authenticated users: syncs with Supabase
+ * 
+ * IMPORTANT: Uses the shared Supabase client from SessionContext
+ * to ensure session cookies are properly synced after login.
+ */
 export function useShoppingList(): UseShoppingListResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
+  const { supabaseClient: supabase } = useSessionContext();
   const toast = useToast();
   const [items, setItems] = useState<ShoppingListItem[] | LocalShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  const supabase = createClient();
 
   // Load from localStorage
   const loadFromLocal = useCallback((): LocalShoppingItem[] => {

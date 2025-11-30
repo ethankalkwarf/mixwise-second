@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -68,11 +68,17 @@ interface OnboardingFlowProps {
   onComplete?: () => void;
 }
 
+/**
+ * Onboarding flow component
+ * 
+ * IMPORTANT: Uses the shared Supabase client from SessionContext
+ * to ensure session cookies are properly synced after login.
+ */
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const router = useRouter();
   const { user } = useUser();
+  const { supabaseClient: supabase } = useSessionContext();
   const toast = useToast();
-  const supabase = createClient();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

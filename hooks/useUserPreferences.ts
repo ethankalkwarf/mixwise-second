@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 
 export interface UserPreferences {
@@ -16,12 +16,17 @@ export interface UserPreferences {
   updated_at: string;
 }
 
+/**
+ * Hook to manage user preferences
+ * 
+ * IMPORTANT: Uses the shared Supabase client from SessionContext
+ * to ensure session cookies are properly synced after login.
+ */
 export function useUserPreferences() {
   const { user, isAuthenticated } = useUser();
+  const { supabaseClient: supabase } = useSessionContext();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const supabase = createClient();
 
   const fetchPreferences = useCallback(async () => {
     if (!user) {

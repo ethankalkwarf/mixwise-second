@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { trackCocktailView } from "@/lib/analytics";
 import type { RecentlyViewed } from "@/lib/supabase/database.types";
@@ -24,13 +24,15 @@ interface UseRecentlyViewedResult {
  * Hook to manage recently viewed cocktails
  * 
  * Only tracks for authenticated users.
+ * 
+ * IMPORTANT: Uses the shared Supabase client from SessionContext
+ * to ensure session cookies are properly synced after login.
  */
 export function useRecentlyViewed(): UseRecentlyViewedResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
+  const { supabaseClient: supabase } = useSessionContext();
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewed[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  const supabase = createClient();
 
   // Load recently viewed from server
   const loadRecentlyViewed = useCallback(async () => {

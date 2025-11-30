@@ -2,9 +2,9 @@
 
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/components/auth/UserProvider";
-import { createClient } from "@/lib/supabase/client";
 import { awardSharingBadge } from "@/lib/badgeEngine";
 import {
   ArrowDownTrayIcon,
@@ -26,12 +26,18 @@ interface CocktailShareCardProps {
   };
 }
 
+/**
+ * Component for generating shareable cocktail cards
+ * 
+ * IMPORTANT: Uses the shared Supabase client from SessionContext
+ * to ensure session cookies are properly synced after login.
+ */
 export function CocktailShareCard({ cocktail }: CocktailShareCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const toast = useToast();
   const { user } = useUser();
-  const supabase = createClient();
+  const { supabaseClient: supabase } = useSessionContext();
 
   const handleDownload = async () => {
     if (!cardRef.current) return;

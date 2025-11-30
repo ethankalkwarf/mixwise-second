@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
@@ -27,15 +27,17 @@ interface UseFavoritesResult {
  * 
  * Only works for authenticated users.
  * Anonymous users are prompted to sign in.
+ * 
+ * IMPORTANT: Uses the shared Supabase client from SessionContext
+ * to ensure session cookies are properly synced after login.
  */
 export function useFavorites(): UseFavoritesResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
+  const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  const supabase = createClient();
 
   // Build set of favorite IDs for quick lookup
   const favoriteIds = new Set(favorites.map(f => f.cocktail_id));

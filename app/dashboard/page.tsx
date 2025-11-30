@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
@@ -10,7 +11,6 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
-import { createClient } from "@/lib/supabase/client";
 import { sanityClient } from "@/lib/sanityClient";
 import { BADGES, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
 import {
@@ -41,6 +41,7 @@ interface UserBadge {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
+  const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const { ingredientIds, isLoading: barLoading } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
@@ -50,8 +51,6 @@ export default function DashboardPage() {
   const [recommendations, setRecommendations] = useState<RecommendedCocktail[]>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
-
-  const supabase = createClient();
 
   // Redirect to onboarding if needed
   useEffect(() => {

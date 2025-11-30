@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
@@ -19,8 +19,15 @@ interface UseRatingsResult {
   removeRating: () => Promise<void>;
 }
 
+/**
+ * Hook to manage cocktail ratings
+ * 
+ * IMPORTANT: Uses the shared Supabase client from SessionContext
+ * to ensure session cookies are properly synced after login.
+ */
 export function useRatings(cocktailId: string): UseRatingsResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
+  const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
   const [rating, setRatingState] = useState<RatingData>({
@@ -29,8 +36,6 @@ export function useRatings(cocktailId: string): UseRatingsResult {
     userRating: null,
   });
   const [isLoading, setIsLoading] = useState(true);
-  
-  const supabase = createClient();
 
   // Load ratings
   const loadRatings = useCallback(async () => {
