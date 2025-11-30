@@ -239,11 +239,12 @@ export function MixResultsPanel({
         {/* Cocktail Grid */}
         {displayedDrinks.length > 0 && (
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3" role="list">
-            {displayedDrinks.map(({ cocktail, missingIngredientIds }) => (
+            {displayedDrinks.map(({ cocktail, missingIngredientIds, missingIngredientNames }) => (
               <CocktailCard
                 key={cocktail.id}
                 cocktail={cocktail}
                 missingCount={missingIngredientIds.length}
+                missingNames={missingIngredientNames}
               />
             ))}
           </div>
@@ -311,10 +312,12 @@ export function MixResultsPanel({
 
 function CocktailCard({
   cocktail,
-  missingCount
+  missingCount,
+  missingNames = []
 }: {
   cocktail: MixCocktail;
   missingCount: number;
+  missingNames?: string[];
 }) {
   const isReady = missingCount === 0;
 
@@ -351,9 +354,9 @@ function CocktailCard({
 
         {/* Status Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20 items-start">
-          {!isReady && (
-            <div className="bg-red-500/90 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-lg backdrop-blur-sm">
-              MISSING {missingCount}
+          {isReady && (
+            <div className="bg-lime-500 text-slate-950 text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-lg backdrop-blur-sm">
+              ✓ READY
             </div>
           )}
           {cocktail.isPopular && (
@@ -384,6 +387,25 @@ function CocktailCard({
               {cocktail.name}
             </h3>
           </div>
+          
+          {/* Show missing ingredients if not ready */}
+          {!isReady && missingNames.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1">
+              {missingNames.slice(0, 3).map((name, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded"
+                >
+                  <XMarkIcon className="w-3 h-3" />
+                  {name}
+                </span>
+              ))}
+              {missingNames.length > 3 && (
+                <span className="text-xs text-slate-500">+{missingNames.length - 3} more</span>
+              )}
+            </div>
+          )}
+          
           <p className="text-sm text-slate-400 line-clamp-2 mt-auto leading-relaxed">
             {cocktail.ingredients.map((i) => i.name).join(", ")}
           </p>

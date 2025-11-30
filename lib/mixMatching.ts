@@ -62,10 +62,12 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
 
     all.push(result);
 
-    // Only add to makeNow if user has ALL required ingredients
+    // READY: User has 100% of required ingredients
     if (missingIds.length === 0 && requiredCovered > 0) {
       makeNow.push(result);
-    } else if (missingIds.length === 1) {
+    } 
+    // ALMOST: User has ≥60% of ingredients AND is missing at least 1
+    else if (score >= 0.6 && missingIds.length > 0) {
       almostThere.push(result);
     }
   }

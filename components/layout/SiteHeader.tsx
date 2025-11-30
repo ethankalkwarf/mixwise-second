@@ -9,7 +9,9 @@ import {
   XMarkIcon, 
   UserCircleIcon,
   Cog6ToothIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  Squares2X2Icon,
+  TrophyIcon
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
@@ -118,7 +120,7 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
                   onClick={() => openAuthDialog()}
                   className="px-4 py-2 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold text-sm rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                 >
-                  Sign in
+                  Create Free Account
                 </button>
               )}
             </div>
@@ -182,6 +184,14 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
                     Signed in as <span className="text-slate-200 font-medium">{displayName}</span>
                   </div>
                   <Link
+                    href="/dashboard"
+                    className="flex items-center gap-2 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Squares2X2Icon className="w-5 h-5" />
+                    Dashboard
+                  </Link>
+                  <Link
                     href="/account"
                     className="flex items-center gap-2 px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg"
                     onClick={() => setMobileMenuOpen(false)}
@@ -205,7 +215,7 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
                   }}
                   className="w-full px-4 py-3 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold rounded-lg transition-colors"
                 >
-                  Sign in / Create account
+                  Create Free Account
                 </button>
               )}
             </div>
@@ -264,6 +274,19 @@ function UserMenu({
           </div>
 
           <div className="py-1">
+            <Menu.Item>
+              {({ active }) => (
+                <Link
+                  href="/dashboard"
+                  className={`flex items-center gap-2 px-4 py-2.5 text-sm ${
+                    active ? "bg-white/5 text-white" : "text-slate-300"
+                  }`}
+                >
+                  <Squares2X2Icon className="w-4 h-4" />
+                  Dashboard
+                </Link>
+              )}
+            </Menu.Item>
             <Menu.Item>
               {({ active }) => (
                 <Link

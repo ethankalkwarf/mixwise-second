@@ -53,6 +53,25 @@ export async function GET(request: NextRequest) {
       // Log successful auth for debugging
       console.log("Auth successful for user:", data.user?.email);
       
+      // Check if user needs onboarding (new users)
+      if (data.user) {
+        const { data: preferences, error: prefError } = await supabase
+          .from("user_preferences")
+          .select("onboarding_completed")
+          .eq("user_id", data.user.id)
+          .single();
+        
+        // If no preferences exist or onboarding not completed, redirect to onboarding
+        if (!prefError && (!preferences || !preferences.onboarding_completed)) {
+          return NextResponse.redirect(new URL("/onboarding", requestUrl.origin));
+        }
+        
+        // Handle case where preferences table doesn't exist yet (first-time setup)
+        if (prefError && prefError.code !== "PGRST116") {
+          console.log("Note: user_preferences table may need to be created");
+        }
+      }
+      
     } catch (error) {
       console.error("Auth callback error:", error);
       const redirectUrl = new URL("/", requestUrl.origin);

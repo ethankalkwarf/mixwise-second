@@ -6,7 +6,6 @@ import { Session, createClientComponentClient } from "@supabase/auth-helpers-nex
 import { UserProvider } from "@/components/auth/UserProvider";
 import { AuthDialogProvider } from "@/components/auth/AuthDialogProvider";
 import { ToastProvider } from "@/components/ui/toast";
-import { EmailCaptureModal } from "@/components/email/EmailCaptureModal";
 
 /**
  * SupabaseProvider
@@ -34,7 +33,6 @@ export function SupabaseProvider({
         <AuthDialogProvider>
           <ToastProvider>
             {children}
-            <EmailCaptureModal />
           </ToastProvider>
         </AuthDialogProvider>
       </UserProvider>
