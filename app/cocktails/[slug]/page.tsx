@@ -21,6 +21,9 @@ const COCKTAIL_QUERY = `*[_type == "cocktail" && slug.current == $slug][0] {
   primarySpirit,
   difficulty,
   isPopular,
+  isFavorite,
+  isTrending,
+  drinkCategories,
   garnish,
   tags,
   instructions,
@@ -39,6 +42,28 @@ const COCKTAIL_QUERY = `*[_type == "cocktail" && slug.current == $slug][0] {
     }
   }
 }`;
+
+// Category display configuration
+const CATEGORY_CONFIG: Record<string, { label: string; emoji: string; color: string }> = {
+  tiki: { label: "Tiki", emoji: "🏝️", color: "bg-orange-500/20 text-orange-300 border-orange-500/30" },
+  classic: { label: "Classic", emoji: "🎩", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+  holiday: { label: "Holiday", emoji: "🎄", color: "bg-red-500/20 text-red-300 border-red-500/30" },
+  modern: { label: "Modern", emoji: "✨", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+  dessert: { label: "Dessert", emoji: "🍰", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
+  mocktail: { label: "Mocktail", emoji: "🍹", color: "bg-green-500/20 text-green-300 border-green-500/30" },
+  party: { label: "Party", emoji: "🎉", color: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30" },
+  summer: { label: "Summer", emoji: "☀️", color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
+  winter: { label: "Winter", emoji: "❄️", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
+  fall: { label: "Fall", emoji: "🍂", color: "bg-orange-600/20 text-orange-300 border-orange-600/30" },
+  spring: { label: "Spring", emoji: "🌸", color: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
+  strong: { label: "Strong", emoji: "🔥", color: "bg-red-600/20 text-red-300 border-red-600/30" },
+  refreshing: { label: "Refreshing", emoji: "🌿", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+  sour: { label: "Sour", emoji: "🍋", color: "bg-lime-500/20 text-lime-300 border-lime-500/30" },
+  sweet: { label: "Sweet", emoji: "🍯", color: "bg-amber-400/20 text-amber-200 border-amber-400/30" },
+  boozy: { label: "Boozy", emoji: "🥃", color: "bg-stone-500/20 text-stone-300 border-stone-500/30" },
+  "low-calorie": { label: "Low-Cal", emoji: "🥗", color: "bg-teal-500/20 text-teal-300 border-teal-500/30" },
+  quick: { label: "Quick", emoji: "⚡", color: "bg-sky-500/20 text-sky-300 border-sky-500/30" },
+};
 
 type PageProps = {
   params: { slug: string };
@@ -85,10 +110,20 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             )}
 
             {/* Badges */}
-            <div className="absolute top-4 left-4 flex gap-2">
-              {cocktail.isPopular && (
+            <div className="absolute top-4 left-4 flex flex-wrap gap-2 max-w-[70%]">
+              {cocktail.isTrending && (
+                <span className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                  🔥 Trending
+                </span>
+              )}
+              {cocktail.isPopular && !cocktail.isTrending && (
                 <span className="bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                   ★ Featured
+                </span>
+              )}
+              {cocktail.isFavorite && (
+                <span className="bg-pink-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                  ❤️ Favorite
                 </span>
               )}
               {cocktail.difficulty && (
@@ -118,11 +153,29 @@ export default async function CocktailDetailPage({ params }: PageProps) {
               )}
             </div>
 
+            {/* Category Tags */}
+            {cocktail.drinkCategories && cocktail.drinkCategories.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {cocktail.drinkCategories.map((cat) => {
+                  const config = CATEGORY_CONFIG[cat];
+                  if (!config) return null;
+                  return (
+                    <span
+                      key={cat}
+                      className={`text-xs font-medium px-2.5 py-1 rounded-full border ${config.color}`}
+                    >
+                      {config.emoji} {config.label}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Quick Info */}
             <div className="flex flex-wrap gap-3">
               {cocktail.glass && (
                 <span className="bg-slate-800 text-slate-300 text-sm px-3 py-1.5 rounded-lg capitalize">
-                  🥃 {cocktail.glass.replace("-", " ")}
+                  🥃 {cocktail.glass.replace(/-/g, " ")}
                 </span>
               )}
               {cocktail.method && (

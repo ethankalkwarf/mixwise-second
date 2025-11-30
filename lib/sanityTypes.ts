@@ -62,6 +62,27 @@ export type SanityCocktailIngredient = {
   notes?: string;
 };
 
+// Drink category type
+export type DrinkCategory = 
+  | "tiki" 
+  | "classic" 
+  | "holiday" 
+  | "modern" 
+  | "dessert" 
+  | "mocktail" 
+  | "party" 
+  | "summer" 
+  | "winter" 
+  | "fall" 
+  | "spring" 
+  | "strong" 
+  | "refreshing" 
+  | "sour" 
+  | "sweet" 
+  | "boozy" 
+  | "low-calorie" 
+  | "quick";
+
 // Sanity Cocktail document
 export type SanityCocktail = {
   _id: string;
@@ -77,9 +98,12 @@ export type SanityCocktail = {
   ingredients?: SanityCocktailIngredient[];
   garnish?: string;
   tags?: string[];
+  drinkCategories?: string[];
   primarySpirit?: string;
   difficulty?: "easy" | "moderate" | "advanced";
   isPopular?: boolean;
+  isFavorite?: boolean;
+  isTrending?: boolean;
   history?: SanityBlock[];
   tips?: SanityBlock[];
 };

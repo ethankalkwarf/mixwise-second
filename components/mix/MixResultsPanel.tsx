@@ -49,16 +49,42 @@ export function MixResultsPanel({
   const displayedDrinks = useMemo(() => {
     let results = searchQuery ? [...all] : [...makeNow];
 
-    // Filter by search - searches cocktail name and ingredient names
+    // Filter by search - searches cocktail name, ingredients, categories, and keywords
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
+      
+      // Keyword mappings for special searches
+      const keywordFilters: Record<string, (c: MixCocktail) => boolean> = {
+        popular: (c) => c.isPopular === true,
+        featured: (c) => c.isPopular === true,
+        favorite: (c) => c.isFavorite === true,
+        favourites: (c) => c.isFavorite === true,
+        trending: (c) => c.isTrending === true,
+        hot: (c) => c.isTrending === true,
+        easy: (c) => c.difficulty === "easy",
+        moderate: (c) => c.difficulty === "moderate",
+        advanced: (c) => c.difficulty === "advanced",
+        hard: (c) => c.difficulty === "advanced",
+      };
+      
       results = results.filter((r) => {
+        const c = r.cocktail;
+        
+        // Check for keyword match
+        const keywordFilter = keywordFilters[q];
+        if (keywordFilter && keywordFilter(c)) return true;
+        
         // Match cocktail name
-        if (r.cocktail.name.toLowerCase().includes(q)) return true;
+        if (c.name.toLowerCase().includes(q)) return true;
         // Match ingredient names
-        if (r.cocktail.ingredients.some(ing => ing.name.toLowerCase().includes(q))) return true;
+        if (c.ingredients.some(ing => ing.name.toLowerCase().includes(q))) return true;
         // Match primary spirit
-        if (r.cocktail.primarySpirit?.toLowerCase().includes(q)) return true;
+        if (c.primarySpirit?.toLowerCase().includes(q)) return true;
+        // Match drink categories
+        if (c.drinkCategories?.some(cat => cat.toLowerCase().includes(q))) return true;
+        // Match tags
+        if (c.tags?.some(tag => tag.toLowerCase().includes(q))) return true;
+        
         return false;
       });
     }

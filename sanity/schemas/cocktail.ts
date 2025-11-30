@@ -141,9 +141,54 @@ const cocktail = {
     },
     {
       name: "categories",
-      title: "Categories",
+      title: "Categories (Reference)",
       type: "array",
-      of: [{ type: "reference", to: [{ type: "category" }] }]
+      of: [{ type: "reference", to: [{ type: "category" }] }],
+      hidden: true // Legacy field, use drinkCategories instead
+    },
+    {
+      name: "drinkCategories",
+      title: "Drink Categories",
+      type: "array",
+      of: [{ type: "string" }],
+      options: {
+        list: [
+          { title: "🏝️ Tiki", value: "tiki" },
+          { title: "🎩 Classic", value: "classic" },
+          { title: "🎄 Holiday", value: "holiday" },
+          { title: "✨ Modern", value: "modern" },
+          { title: "🍰 Dessert", value: "dessert" },
+          { title: "🍹 Mocktail", value: "mocktail" },
+          { title: "🎉 Party / Crowd-Friendly", value: "party" },
+          { title: "☀️ Summer", value: "summer" },
+          { title: "❄️ Winter", value: "winter" },
+          { title: "🍂 Fall", value: "fall" },
+          { title: "🌸 Spring", value: "spring" },
+          { title: "🔥 Strong", value: "strong" },
+          { title: "🌿 Refreshing", value: "refreshing" },
+          { title: "🍋 Sour", value: "sour" },
+          { title: "🍯 Sweet", value: "sweet" },
+          { title: "🥃 Boozy", value: "boozy" },
+          { title: "🥗 Low-Calorie", value: "low-calorie" },
+          { title: "⚡ Quick & Easy", value: "quick" }
+        ],
+        layout: "grid"
+      },
+      description: "Select one or more categories that describe this cocktail"
+    },
+    {
+      name: "isFavorite",
+      title: "Favorite",
+      type: "boolean",
+      description: "Mark as a staff favorite or user favorite",
+      initialValue: false
+    },
+    {
+      name: "isTrending",
+      title: "Trending",
+      type: "boolean",
+      description: "Mark as currently trending",
+      initialValue: false
     },
     {
       name: "primarySpirit",

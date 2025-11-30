@@ -29,6 +29,10 @@ const COCKTAILS_QUERY = `*[_type == "cocktail"] | order(name asc) {
   primarySpirit,
   difficulty,
   isPopular,
+  isFavorite,
+  isTrending,
+  drinkCategories,
+  tags,
   garnish,
   "instructions": pt::text(instructions),
   "ingredients": ingredients[] {
@@ -89,6 +93,10 @@ export async function fetchMixCocktails(): Promise<MixCocktail[]> {
     primarySpirit: item.primarySpirit || null,
     difficulty: item.difficulty || null,
     isPopular: item.isPopular || false,
+    isFavorite: item.isFavorite || false,
+    isTrending: item.isTrending || false,
+    drinkCategories: item.drinkCategories || [],
+    tags: item.tags || [],
     garnish: item.garnish || null,
     ingredients: (item.ingredients || [])
       .filter((ing: any) => ing.ingredientId) // Filter out null references

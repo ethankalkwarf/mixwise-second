@@ -35,6 +35,10 @@ export type MixCocktail = {
   primarySpirit?: string | null;
   difficulty?: string | null;
   isPopular?: boolean;
+  isFavorite?: boolean;
+  isTrending?: boolean;
+  drinkCategories?: string[];
+  tags?: string[];
   garnish?: string | null;
   ingredients: MixCocktailIngredient[];
 };

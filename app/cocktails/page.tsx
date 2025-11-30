@@ -19,6 +19,9 @@ const COCKTAILS_QUERY = `*[_type == "cocktail"] | order(name asc) {
   primarySpirit,
   difficulty,
   isPopular,
+  isFavorite,
+  isTrending,
+  drinkCategories,
   garnish,
   tags,
   "ingredients": ingredients[] {
