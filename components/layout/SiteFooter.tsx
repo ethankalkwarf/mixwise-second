@@ -37,18 +37,6 @@ export function SiteFooter() {
               and find drinks you can make with what you have.
             </p>
             
-            {/* Account CTA */}
-            <div className="max-w-sm">
-              <Link
-                href="/account-benefits"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold rounded-lg transition-colors text-sm"
-              >
-                Create Free Account
-              </Link>
-              <p className="text-slate-500 text-xs mt-2">
-                Save your bar, track progress, earn badges
-              </p>
-            </div>
           </div>
 
           {/* Explore Links */}
@@ -96,13 +84,6 @@ export function SiteFooter() {
             © {year} MixWise. All rights reserved.
           </p>
           
-          {/* Social Links Placeholder */}
-          <div className="flex items-center gap-4">
-            <span className="text-slate-600 text-xs">
-              Follow us on social media
-            </span>
-            {/* Add social icons here when available */}
-          </div>
         </div>
       </MainContainer>
     </footer>

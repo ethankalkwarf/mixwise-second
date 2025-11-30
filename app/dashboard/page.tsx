@@ -12,7 +12,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { sanityClient } from "@/lib/sanityClient";
-import { BADGES, BADGE_LIST, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
+import type { MixIngredient } from "@/lib/mixTypes";
 import {
   BeakerIcon,
   HeartIcon,
@@ -22,6 +22,7 @@ import {
   ShareIcon,
   ArrowRightIcon,
   PlusCircleIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 interface RecommendedCocktail {
@@ -43,11 +44,12 @@ export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
   const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
-  const { ingredientIds, isLoading: barLoading } = useBarIngredients();
+  const { ingredientIds, isLoading: barLoading, removeIngredient } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const { preferences, needsOnboarding } = useUserPreferences();
 
+  const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendedCocktail[]>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
@@ -124,6 +126,26 @@ export default function DashboardPage() {
     fetchRecommendations();
   }, [isAuthenticated, ingredientIds, preferences]);
 
+  // Fetch ingredients for display
+  useEffect(() => {
+    async function fetchIngredients() {
+      try {
+        const ingredients = await sanityClient.fetch<MixIngredient[]>(`
+          *[_type == "ingredient"] {
+            _id,
+            name,
+            category
+          }
+        `);
+        setAllIngredients(ingredients);
+      } catch (error) {
+        console.error("Error fetching ingredients:", error);
+      }
+    }
+
+    fetchIngredients();
+  }, []);
+
   // Fetch user badges
   useEffect(() => {
     async function fetchBadges() {
@@ -144,17 +166,44 @@ export default function DashboardPage() {
 
   const isLoading = authLoading || barLoading || favsLoading || recentLoading;
 
-  // Badge display data - show all badges with earned status
-  const allBadgeData = useMemo(() => {
-    const earnedIds = new Set(userBadges.map(ub => ub.badge_id));
-    const earnedTimes = new Map(userBadges.map(ub => [ub.badge_id, ub.earned_at]));
+  // Dynamic greeting based on time of day
+  const getDynamicGreeting = useMemo(() => {
+    const displayName = profile?.display_name || user?.email?.split("@")[0] || "Bartender";
+    const hour = new Date().getHours();
 
-    return BADGE_LIST.map((badge) => ({
-      ...badge,
-      locked: !earnedIds.has(badge.id),
-      earnedAt: earnedTimes.get(badge.id),
-    }));
-  }, [userBadges]);
+    let greeting: string;
+    if (hour < 12) {
+      // Morning
+      const greetings = [
+        `Good morning, ${displayName}. Ready to start shaking things up?`,
+        `Morning, ${displayName}. The bar is open, metaphorically.`,
+        `Rise and shine, ${displayName}. Time to mix something great.`,
+      ];
+      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    } else if (hour < 18) {
+      // Afternoon
+      const greetings = [
+        `Good afternoon, ${displayName}. Feeling inspired?`,
+        `Hey ${displayName}, it's cocktail o'clock somewhere.`,
+        `Afternoon, ${displayName}. Your bar awaits.`,
+      ];
+      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    } else {
+      // Evening
+      const greetings = [
+        `Good evening, ${displayName}. Let's make something smooth.`,
+        `Evening, ${displayName}. Perfect time for a drink.`,
+        `Welcome back, ${displayName}. What's on the menu tonight?`,
+      ];
+      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+    }
+
+    return greeting;
+  }, [user?.email]);
+
+  const handleRemoveFromInventory = useCallback(async (id: string) => {
+    await removeIngredient(id);
+  }, [removeIngredient]);
 
   if (isLoading) {
     return (
@@ -201,11 +250,11 @@ export default function DashboardPage() {
   return (
     <div className="py-8 sm:py-12">
       <MainContainer>
-        {/* Header */}
+        {/* Dynamic Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-serif font-bold text-slate-100">
-              Your Dashboard
+              {getDynamicGreeting}
             </h1>
             <p className="text-slate-400 mt-1">
               Track your bar, favorites, and progress
@@ -220,50 +269,23 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          <StatCard
-            icon={BeakerIcon}
-            label="Ingredients"
-            value={ingredientIds.length}
-            href="/mix"
-            color="lime"
-          />
-          <StatCard
-            icon={HeartIcon}
-            label="Favorites"
-            value={favorites.length}
-            href="/account"
-            color="pink"
-          />
-          <StatCard
-            icon={ClockIcon}
-            label="Recently Viewed"
-            value={recentlyViewed.length}
-            href="/cocktails"
-            color="sky"
-          />
-          <StatCard
-            icon={TrophyIcon}
-            label="Badges"
-            value={userBadges.length}
-            href="#badges"
-            color="amber"
-          />
-        </div>
-
-        {/* Main Content Grid */}
+        {/* Main Content Grid - Two Columns */}
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column */}
+          {/* Left Column - Primary Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Recommendations */}
+            {/* What You Can Make - 100% matches */}
             <section className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
               <div className="flex items-center justify-between p-6 border-b border-slate-800">
                 <div className="flex items-center gap-3">
-                  <SparklesIcon className="w-6 h-6 text-amber-400" />
+                  <SparklesIcon className="w-6 h-6 text-lime-400" />
                   <h2 className="text-xl font-serif font-bold text-slate-100">
-                    Recommended For You
+                    What You Can Make
                   </h2>
+                  {recommendations.length > 0 && (
+                    <span className="text-sm text-slate-500">
+                      {recommendations.length} cocktail{recommendations.length !== 1 ? "s" : ""}
+                    </span>
+                  )}
                 </div>
                 <Link
                   href="/cocktails"
@@ -304,7 +326,7 @@ export default function DashboardPage() {
                             {cocktail.name}
                           </p>
                           <p className="text-sm text-slate-500">
-                            {Math.round((cocktail.matchScore || 0) * 100)}% match
+                            100% match
                           </p>
                         </div>
                       </Link>
@@ -313,7 +335,7 @@ export default function DashboardPage() {
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-slate-400 mb-4">
-                      Add ingredients to your bar to get personalized recommendations.
+                      Add ingredients to your bar to see cocktails you can make.
                     </p>
                     <Link
                       href="/mix"
@@ -327,82 +349,200 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* Recent Activity */}
+            {/* Almost There - Missing 1 ingredient */}
+            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-slate-800">
+                <div className="flex items-center gap-3">
+                  <BeakerIcon className="w-6 h-6 text-amber-400" />
+                  <h2 className="text-xl font-serif font-bold text-slate-100">
+                    Almost There
+                  </h2>
+                  {recommendations.length > 0 && (
+                    <span className="text-sm text-slate-500">
+                      Add one ingredient to unlock
+                    </span>
+                  )}
+                </div>
+                <Link
+                  href="/mix"
+                  className="text-sm text-lime-400 hover:text-lime-300 transition-colors"
+                >
+                  Add ingredients →
+                </Link>
+              </div>
+              <div className="p-6">
+                <div className="text-center py-8">
+                  <p className="text-slate-400 mb-4">
+                    Cocktails that need just one more ingredient will appear here.
+                  </p>
+                  <Link
+                    href="/mix"
+                    className="inline-flex items-center gap-2 text-lime-400 hover:text-lime-300"
+                  >
+                    <PlusCircleIcon className="w-5 h-5" />
+                    Expand Your Bar
+                  </Link>
+                </div>
+              </div>
+            </section>
+
+            {/* Recent Activity - Favorites + Recently Viewed */}
             <section className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
               <div className="flex items-center justify-between p-6 border-b border-slate-800">
                 <div className="flex items-center gap-3">
                   <ClockIcon className="w-6 h-6 text-sky-400" />
                   <h2 className="text-xl font-serif font-bold text-slate-100">
-                    Recently Viewed
+                    Recent Activity
                   </h2>
                 </div>
               </div>
-              <div className="p-6">
-                {recentlyViewed.length > 0 ? (
-                  <div className="flex gap-4 overflow-x-auto pb-2">
-                    {recentlyViewed.slice(0, 8).map((item) => (
-                      <Link
-                        key={item.id}
-                        href={`/cocktails/${item.cocktail_slug}`}
-                        className="flex-shrink-0 w-32 group"
-                      >
-                        {item.cocktail_image_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={item.cocktail_image_url}
-                            alt=""
-                            className="w-32 h-24 rounded-lg object-cover mb-2"
-                          />
-                        ) : (
-                          <div className="w-32 h-24 rounded-lg bg-slate-800 flex items-center justify-center text-3xl mb-2">
-                            🍸
-                          </div>
-                        )}
-                        <p className="text-sm text-slate-300 group-hover:text-lime-400 truncate transition-colors">
-                          {item.cocktail_name}
-                        </p>
-                      </Link>
-                    ))}
+              <div className="p-6 space-y-6">
+                {/* Favorites */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                      <HeartIcon className="w-5 h-5 text-red-400" />
+                      Favorites
+                    </h3>
+                    <Link
+                      href="/cocktails"
+                      className="text-sm text-lime-400 hover:text-lime-300"
+                    >
+                      Browse →
+                    </Link>
                   </div>
-                ) : (
-                  <p className="text-slate-400 text-center py-4">
-                    Start exploring cocktails to build your history.
-                  </p>
-                )}
+                  {favorites.length > 0 ? (
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {favorites.slice(0, 6).map((fav) => (
+                        <Link
+                          key={fav.id}
+                          href={`/cocktails/${fav.cocktail_slug}`}
+                          className="flex-shrink-0 w-32 group"
+                        >
+                          {fav.cocktail_image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={fav.cocktail_image_url}
+                              alt=""
+                              className="w-32 h-24 rounded-lg object-cover mb-2"
+                            />
+                          ) : (
+                            <div className="w-32 h-24 rounded-lg bg-slate-800 flex items-center justify-center text-3xl mb-2">
+                              🍸
+                            </div>
+                          )}
+                          <p className="text-sm text-slate-300 group-hover:text-lime-400 truncate transition-colors">
+                            {fav.cocktail_name}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 text-sm">
+                      Save cocktails to favorites to see them here.
+                    </p>
+                  )}
+                </div>
+
+                {/* Recently Viewed */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                      <ClockIcon className="w-5 h-5 text-sky-400" />
+                      Recently Viewed
+                    </h3>
+                  </div>
+                  {recentlyViewed.length > 0 ? (
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {recentlyViewed.slice(0, 6).map((item) => (
+                        <Link
+                          key={item.id}
+                          href={`/cocktails/${item.cocktail_slug}`}
+                          className="flex-shrink-0 w-32 group"
+                        >
+                          {item.cocktail_image_url ? (
+                            // eslint-disable-next-line @next/next/no/img-element
+                            <img
+                              src={item.cocktail_image_url}
+                              alt=""
+                              className="w-32 h-24 rounded-lg object-cover mb-2"
+                            />
+                          ) : (
+                            <div className="w-32 h-24 rounded-lg bg-slate-800 flex items-center justify-center text-3xl mb-2">
+                              🍸
+                            </div>
+                          )}
+                          <p className="text-sm text-slate-300 group-hover:text-lime-400 truncate transition-colors">
+                            {item.cocktail_name}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 text-sm">
+                      Start exploring cocktails to build your history.
+                    </p>
+                  )}
+                </div>
               </div>
             </section>
           </div>
 
-          {/* Right Column */}
+          {/* Right Column - My Bar Sidebar */}
           <div className="space-y-8">
-            {/* Badges */}
-            <section id="badges" className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-              <div className="p-6 border-b border-slate-800">
+            {/* My Bar */}
+            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-slate-800">
                 <div className="flex items-center gap-3">
-                  <TrophyIcon className="w-6 h-6 text-amber-400" />
+                  <BeakerIcon className="w-6 h-6 text-lime-400" />
                   <h2 className="text-xl font-serif font-bold text-slate-100">
-                    Your Badges
+                    My Bar
                   </h2>
+                  <span className="text-sm text-slate-500">
+                    {ingredientIds.length} ingredient{ingredientIds.length !== 1 ? "s" : ""}
+                  </span>
                 </div>
+                <Link
+                  href="/mix"
+                  className="px-4 py-2 text-sm text-lime-400 hover:text-lime-300 hover:bg-lime-500/10 rounded-lg transition-colors"
+                >
+                  Add Ingredient
+                </Link>
               </div>
               <div className="p-6">
-                {allBadgeData.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-3">
-                    {allBadgeData.map((badge) => (
-                      <BadgeCard key={badge.id} badge={badge} locked={badge.locked} />
-                    ))}
+                {ingredientIds.length === 0 ? (
+                  <div className="text-center py-8">
+                    <BeakerIcon className="w-12 h-12 text-slate-700 mx-auto mb-3" />
+                    <p className="text-slate-400 mb-4">Your bar is empty.</p>
+                    <Link
+                      href="/mix"
+                      className="text-lime-400 hover:text-lime-300 font-medium"
+                    >
+                      Add your first ingredient →
+                    </Link>
                   </div>
                 ) : (
-                  <div className="text-center py-6">
-                    <p className="text-slate-400 text-sm mb-4">
-                      Earn badges by exploring cocktails and building your bar.
-                    </p>
-                    <Link
-                      href="/onboarding"
-                      className="text-lime-400 hover:text-lime-300 text-sm"
-                    >
-                      Complete onboarding for your first badge →
-                    </Link>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {ingredientIds.map((id) => {
+                      // Find the ingredient object for display
+                      const ingredient = allIngredients.find(i => i.id === id);
+                      return (
+                        <div
+                          key={id}
+                          className="flex items-center justify-between px-4 py-3 bg-slate-800/50 rounded-lg text-sm"
+                        >
+                          <span className="text-slate-300">
+                            {ingredient?.name || id}
+                          </span>
+                          <button
+                            onClick={() => handleRemoveFromInventory(id)}
+                            className="text-slate-500 hover:text-red-400"
+                          >
+                            <XMarkIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -5,34 +5,41 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
-import { useBarIngredients } from "@/hooks/useBarIngredients";
-import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { sanityClient } from "@/lib/sanityClient";
+import { BADGES, BADGE_LIST, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
+import { TrophyIcon } from "@heroicons/react/24/outline";
 import {
   UserCircleIcon,
-  BeakerIcon,
-  HeartIcon,
-  ClockIcon,
   ArrowRightOnRectangleIcon,
-  XMarkIcon,
+  ArrowRightIcon,
   TrashIcon,
+  ShareIcon,
 } from "@heroicons/react/24/outline";
 
 // Simple query to get all ingredient names
 const INGREDIENT_NAMES_QUERY = `*[_type == "ingredient"] { _id, name }`;
 
+interface UserBadge {
+  badge_id: string;
+  earned_at: string;
+}
+
+interface BadgeDisplayData extends BadgeDefinition {
+  locked?: boolean;
+  earnedAt?: string;
+}
+
 export default function AccountPage() {
   const router = useRouter();
   const { user, profile, isLoading, isAuthenticated, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
-  const { ingredients, removeIngredient, clearAll: clearBar } = useBarIngredients();
-  const { favorites, removeFavorite } = useFavorites();
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
   
   // Fetch ingredient names from Sanity for fallback lookup
   const [sanityNames, setSanityNames] = useState<Map<string, string>>(new Map());
+  const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   
   useEffect(() => {
     sanityClient.fetch<Array<{ _id: string; name: string }>>(INGREDIENT_NAMES_QUERY)
@@ -43,7 +50,37 @@ export default function AccountPage() {
       })
       .catch((err) => console.error("Failed to fetch ingredient names:", err));
   }, []);
-  
+
+  // Fetch user badges
+  useEffect(() => {
+    async function fetchBadges() {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("user_badges")
+        .select("badge_id, earned_at")
+        .eq("user_id", user.id);
+
+      if (!error && data) {
+        setUserBadges(data);
+      }
+    }
+
+    fetchBadges();
+  }, [user]);
+
+  // Badge display data - show all badges with earned status
+  const allBadgeData = useMemo(() => {
+    const earnedIds = new Set(userBadges.map(ub => ub.badge_id));
+    const earnedTimes = new Map(userBadges.map(ub => [ub.badge_id, ub.earned_at]));
+
+    return BADGE_LIST.map((badge) => ({
+      ...badge,
+      locked: !earnedIds.has(badge.id),
+      earnedAt: earnedTimes.get(badge.id),
+    }));
+  }, [userBadges]);
+
   // Helper to get ingredient display name (from stored name, Sanity, or ID fallback)
   const getIngredientName = (ingredient: { id: string; name: string | null }) => {
     return ingredient.name || sanityNames.get(ingredient.id) || ingredient.id;
@@ -109,7 +146,6 @@ export default function AccountPage() {
   const avatarUrl = profile?.avatar_url;
   const userInitial = displayName.charAt(0).toUpperCase();
   const email = user?.email;
-  const role = profile?.role || "free";
 
   return (
     <div className="py-12">
@@ -120,7 +156,7 @@ export default function AccountPage() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
                 {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                  // eslint-disable-next-line @next/next/no/img-element
                   <img
                     src={avatarUrl}
                     alt=""
@@ -136,244 +172,75 @@ export default function AccountPage() {
                     {displayName}
                   </h1>
                   <p className="text-slate-400">{email}</p>
-                  <div className="mt-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      role === "admin" 
-                        ? "bg-purple-500/20 text-purple-300" 
-                        : role === "paid" 
-                        ? "bg-amber-500/20 text-amber-300"
-                        : "bg-slate-700 text-slate-300"
-                    }`}>
-                      {role === "admin" ? "Admin" : role === "paid" ? "Premium" : "Free Plan"}
-                    </span>
-                  </div>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* Achievements */}
+          <section className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <TrophyIcon className="w-6 h-6 text-amber-400" />
+                <h2 className="text-xl font-serif font-bold text-slate-100">
+                  Achievements
+                </h2>
+                <span className="text-sm text-slate-500">
+                  {userBadges.length} earned
+                </span>
+              </div>
+            </div>
+            <div className="p-6">
+              {allBadgeData.length > 0 ? (
+                <div className="grid grid-cols-3 gap-3">
+                  {allBadgeData.map((badge) => (
+                    <BadgeCard key={badge.id} badge={badge} locked={badge.locked} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-slate-400 text-sm">
+                    Badge system coming soon
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Administrative Actions */}
+          <section className="bg-slate-900/60 border border-slate-800 rounded-xl p-6">
+            <h3 className="text-lg font-bold text-slate-100 mb-4">Account Settings</h3>
+            <div className="space-y-3">
+              <button
+                onClick={clearHistory}
+                className="flex items-center justify-between p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors w-full text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <TrashIcon className="w-5 h-5 text-slate-400" />
+                  <span className="text-slate-300">Clear History</span>
+                </div>
+                <ArrowRightIcon className="w-4 h-4 text-slate-500" />
+              </button>
+              <Link
+                href={`/bar/${user?.id}`}
+                className="flex items-center justify-between p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <ShareIcon className="w-5 h-5 text-slate-400" />
+                  <span className="text-slate-300">Share My Bar</span>
+                </div>
+                <ArrowRightIcon className="w-4 h-4 text-slate-500" />
+              </Link>
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                className="flex items-center justify-between p-3 bg-slate-800/50 hover:bg-red-500/10 rounded-lg transition-colors w-full text-left"
               >
-                <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                Sign out
+                <div className="flex items-center gap-3">
+                  <ArrowRightOnRectangleIcon className="w-5 h-5 text-red-400" />
+                  <span className="text-slate-300">Sign Out</span>
+                </div>
+                <ArrowRightIcon className="w-4 h-4 text-slate-500" />
               </button>
-            </div>
-          </section>
-
-          {/* My Bar */}
-          <section className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <BeakerIcon className="w-6 h-6 text-lime-400" />
-                <h2 className="text-xl font-serif font-bold text-slate-100">
-                  My Bar
-                </h2>
-                <span className="text-sm text-slate-500">
-                  {ingredients.length} ingredient{ingredients.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/mix"
-                  className="px-4 py-2 text-sm text-lime-400 hover:text-lime-300 hover:bg-lime-500/10 rounded-lg transition-colors"
-                >
-                  Edit in Mix Tool
-                </Link>
-                {ingredients.length > 0 && (
-                  <button
-                    onClick={clearBar}
-                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                    title="Clear all"
-                  >
-                    <TrashIcon className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="p-6">
-              {ingredients.length === 0 ? (
-                <div className="text-center py-8">
-                  <BeakerIcon className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-                  <p className="text-slate-400 mb-4">No ingredients in your bar yet.</p>
-                  <Link
-                    href="/mix"
-                    className="text-lime-400 hover:text-lime-300 font-medium"
-                  >
-                    Add ingredients →
-                  </Link>
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {ingredients.slice(0, 30).map((ingredient) => (
-                    <div
-                      key={ingredient.id}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg text-sm"
-                    >
-                      <span className="text-slate-300">
-                        {getIngredientName(ingredient)}
-                      </span>
-                      <button
-                        onClick={() => removeIngredient(ingredient.id)}
-                        className="text-slate-500 hover:text-red-400"
-                      >
-                        <XMarkIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  {ingredients.length > 30 && (
-                    <span className="px-3 py-1.5 text-slate-500 text-sm">
-                      +{ingredients.length - 30} more
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Favorites */}
-          <section className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <HeartIcon className="w-6 h-6 text-red-400" />
-                <h2 className="text-xl font-serif font-bold text-slate-100">
-                  Favorites
-                </h2>
-                <span className="text-sm text-slate-500">
-                  {favorites.length} cocktail{favorites.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-              <Link
-                href="/cocktails"
-                className="px-4 py-2 text-sm text-lime-400 hover:text-lime-300 hover:bg-lime-500/10 rounded-lg transition-colors"
-              >
-                Browse Cocktails
-              </Link>
-            </div>
-            <div className="p-6">
-              {favorites.length === 0 ? (
-                <div className="text-center py-8">
-                  <HeartIcon className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-                  <p className="text-slate-400 mb-4">No favorite cocktails yet.</p>
-                  <Link
-                    href="/cocktails"
-                    className="text-lime-400 hover:text-lime-300 font-medium"
-                  >
-                    Explore cocktails →
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {favorites.slice(0, 9).map((fav) => (
-                    <Link
-                      key={fav.id}
-                      href={`/cocktails/${fav.cocktail_slug}`}
-                      className="group flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors"
-                    >
-                      {fav.cocktail_image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={fav.cocktail_image_url}
-                          alt=""
-                          className="w-12 h-12 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-2xl">
-                          🍸
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-200 group-hover:text-lime-400 truncate transition-colors">
-                          {fav.cocktail_name}
-                        </p>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          removeFavorite(fav.cocktail_id);
-                        }}
-                        className="p-1.5 text-slate-500 hover:text-red-400 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <XMarkIcon className="w-4 h-4" />
-                      </button>
-                    </Link>
-                  ))}
-                </div>
-              )}
-              {favorites.length > 9 && (
-                <div className="mt-4 text-center">
-                  <span className="text-sm text-slate-500">
-                    and {favorites.length - 9} more
-                  </span>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Recently Viewed */}
-          <section className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <ClockIcon className="w-6 h-6 text-sky-400" />
-                <h2 className="text-xl font-serif font-bold text-slate-100">
-                  Recently Viewed
-                </h2>
-                <span className="text-sm text-slate-500">
-                  {recentlyViewed.length} cocktail{recentlyViewed.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-              {recentlyViewed.length > 0 && (
-                <button
-                  onClick={clearHistory}
-                  className="px-4 py-2 text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                >
-                  Clear history
-                </button>
-              )}
-            </div>
-            <div className="p-6">
-              {recentlyViewed.length === 0 ? (
-                <div className="text-center py-8">
-                  <ClockIcon className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-                  <p className="text-slate-400 mb-4">No recently viewed cocktails.</p>
-                  <Link
-                    href="/cocktails"
-                    className="text-lime-400 hover:text-lime-300 font-medium"
-                  >
-                    Start exploring →
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentlyViewed.slice(0, 9).map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/cocktails/${item.cocktail_slug}`}
-                      className="group flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors"
-                    >
-                      {item.cocktail_image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.cocktail_image_url}
-                          alt=""
-                          className="w-12 h-12 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-2xl">
-                          🍸
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-200 group-hover:text-lime-400 truncate transition-colors">
-                          {item.cocktail_name}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {new Date(item.viewed_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
             </div>
           </section>
         </div>
@@ -382,3 +249,37 @@ export default function AccountPage() {
   );
 }
 
+// Badge Card Component
+function BadgeCard({ badge, locked }: { badge: BadgeDisplayData, locked: boolean }) {
+  return (
+    <div className={`relative group flex flex-col items-center p-3 bg-slate-800/50 rounded-xl text-center transition-all ${
+      locked ? "opacity-60" : ""
+    }`}>
+      <div
+        className={`w-12 h-12 rounded-full bg-gradient-to-br ${
+          locked ? "from-slate-500 to-slate-600" : RARITY_COLORS[badge.rarity]
+        } flex items-center justify-center text-2xl mb-2`}
+      >
+        {badge.icon}
+      </div>
+      <p className={`text-xs font-medium line-clamp-2 ${locked ? "text-slate-500" : "text-slate-300"}`}>
+        {badge.name}
+      </p>
+      {locked && (
+        <div className="absolute inset-0 bg-slate-900/5 rounded-xl flex items-center justify-center pointer-events-none">
+          <div className="text-slate-500 text-xs">🔒</div>
+        </div>
+      )}
+
+      {/* Custom Tooltip */}
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+                      opacity-0 group-hover:opacity-100
+                      bg-neutral-900/80 text-neutral-100 text-sm font-medium
+                      px-2 py-1 rounded-md shadow-lg backdrop-blur-sm
+                      whitespace-nowrap pointer-events-none
+                      transition-opacity duration-200 z-50">
+        {badge.criteria}
+      </div>
+    </div>
+  );
+}
