@@ -480,12 +480,9 @@ function StatCard({
 // Badge Card Component
 function BadgeCard({ badge, locked }: { badge: BadgeDefinition & { locked?: boolean; earnedAt?: string }, locked: boolean }) {
   return (
-    <div
-      className={`relative flex flex-col items-center p-3 bg-slate-800/50 rounded-xl text-center transition-all ${
-        locked ? "opacity-60" : ""
-      }`}
-      title={locked ? badge.criteria : badge.description}
-    >
+    <div className={`relative group flex flex-col items-center p-3 bg-slate-800/50 rounded-xl text-center transition-all ${
+      locked ? "opacity-60" : ""
+    }`}>
       <div
         className={`w-12 h-12 rounded-full bg-gradient-to-br ${
           locked ? "from-slate-500 to-slate-600" : RARITY_COLORS[badge.rarity]
@@ -501,6 +498,16 @@ function BadgeCard({ badge, locked }: { badge: BadgeDefinition & { locked?: bool
           <div className="text-slate-500 text-xs">🔒</div>
         </div>
       )}
+
+      {/* Custom Tooltip */}
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+                      opacity-0 group-hover:opacity-100
+                      bg-slate-900/95 text-slate-200 text-xs font-medium
+                      px-2 py-1 rounded-md shadow-lg shadow-black/40
+                      whitespace-nowrap pointer-events-none
+                      transition-opacity duration-200 z-50">
+        {badge.criteria}
+      </div>
     </div>
   );
 }
