@@ -110,3 +110,4 @@ CREATE TRIGGER on_profile_created_preferences
   FOR EACH ROW
   EXECUTE FUNCTION public.create_user_preferences();
 
+
