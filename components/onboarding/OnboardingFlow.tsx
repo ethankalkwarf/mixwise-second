@@ -277,9 +277,18 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       }
       
       toast.error(`Something went wrong: ${errorMessage}`);
+      
+      // Offer to skip onboarding on error
+      console.log("[Onboarding] Offering skip option due to error");
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  // Allow users to skip if they're stuck
+  const handleSkipOnError = () => {
+    toast.info("Skipping setup for now. You can update preferences later.");
+    router.replace("/dashboard");
   };
 
   const canProceed = () => {
@@ -481,7 +490,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       {/* Skip Button */}
       <div className="pb-8 text-center">
         <button
-          onClick={() => router.push("/dashboard")}
+          onClick={handleSkipOnError}
           className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
         >
           Skip for now
