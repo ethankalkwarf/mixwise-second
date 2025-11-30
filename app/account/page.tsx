@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
@@ -9,6 +9,7 @@ import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { sanityClient } from "@/lib/sanityClient";
 import {
   UserCircleIcon,
   BeakerIcon,
@@ -19,6 +20,9 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 
+// Simple query to get all ingredient names
+const INGREDIENT_NAMES_QUERY = `*[_type == "ingredient"] { _id, name }`;
+
 export default function AccountPage() {
   const router = useRouter();
   const { user, profile, isLoading, isAuthenticated, signOut } = useUser();
@@ -26,6 +30,24 @@ export default function AccountPage() {
   const { ingredients, removeIngredient, clearAll: clearBar } = useBarIngredients();
   const { favorites, removeFavorite } = useFavorites();
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
+  
+  // Fetch ingredient names from Sanity for fallback lookup
+  const [sanityNames, setSanityNames] = useState<Map<string, string>>(new Map());
+  
+  useEffect(() => {
+    sanityClient.fetch<Array<{ _id: string; name: string }>>(INGREDIENT_NAMES_QUERY)
+      .then((data) => {
+        const nameMap = new Map<string, string>();
+        data.forEach((ing) => nameMap.set(ing._id, ing.name));
+        setSanityNames(nameMap);
+      })
+      .catch((err) => console.error("Failed to fetch ingredient names:", err));
+  }, []);
+  
+  // Helper to get ingredient display name (from stored name, Sanity, or ID fallback)
+  const getIngredientName = (ingredient: { id: string; name: string | null }) => {
+    return ingredient.name || sanityNames.get(ingredient.id) || ingredient.id;
+  };
 
   // Redirect to home or show auth dialog if not authenticated
   useEffect(() => {
@@ -187,7 +209,7 @@ export default function AccountPage() {
                       className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg text-sm"
                     >
                       <span className="text-slate-300">
-                        {ingredient.name || ingredient.id}
+                        {getIngredientName(ingredient)}
                       </span>
                       <button
                         onClick={() => removeIngredient(ingredient.id)}
