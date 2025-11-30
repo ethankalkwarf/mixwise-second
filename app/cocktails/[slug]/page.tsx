@@ -4,8 +4,8 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { PortableText } from "@/components/PortableText";
 import { RecipeSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { CocktailActions } from "@/components/cocktails/CocktailActions";
+import { BackToCocktails } from "@/components/cocktails/BackToCocktails";
 import { generateCocktailMetadata, SITE_CONFIG } from "@/lib/seo";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
@@ -121,26 +121,10 @@ export default async function CocktailDetailPage({ params }: PageProps) {
 
       <div className="py-10">
         <MainContainer>
-          {/* Breadcrumb Navigation */}
-          <nav aria-label="Breadcrumb" className="mb-6">
-            <ol className="flex items-center gap-2 text-sm text-slate-400">
-              <li>
-                <Link href="/" className="hover:text-lime-400 transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li aria-hidden="true">→</li>
-              <li>
-                <Link href="/cocktails" className="hover:text-lime-400 transition-colors">
-                  Cocktails
-                </Link>
-              </li>
-              <li aria-hidden="true">→</li>
-              <li className="text-slate-200 font-medium" aria-current="page">
-                {cocktail.name}
-              </li>
-            </ol>
-          </nav>
+          {/* Back Link */}
+          <div className="mb-6">
+            <BackToCocktails />
+          </div>
 
           <article>
             <div className="grid lg:grid-cols-2 gap-10 items-start">
