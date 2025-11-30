@@ -34,7 +34,8 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
   const { favorites, isLoading: favsLoading } = useFavorites();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
 
-  const isLoading = authLoading || barLoading || favsLoading || recentLoading;
+  // Only show loading state AFTER auth is confirmed
+  const dataLoading = barLoading || favsLoading || recentLoading;
 
   // Calculate cocktails user can make
   const { readyToMake, oneAway } = useMemo(() => {
@@ -73,12 +74,14 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
     };
   }, [allCocktails, ingredientIds]);
 
-  // If not authenticated or loading, show nothing (parent will show featured)
-  if (!isAuthenticated) {
+  // IMPORTANT: Don't show anything if auth is still loading or user is not authenticated
+  // This prevents skeleton states from showing for anonymous users
+  if (authLoading || !isAuthenticated) {
     return null;
   }
 
-  if (isLoading) {
+  // Only show skeleton if we're DEFINITELY authenticated but data is loading
+  if (dataLoading) {
     return (
       <div className="space-y-12">
         <PersonalizedSectionSkeleton />
