@@ -59,3 +59,4 @@ export function MixSelectedBar({ selectedIngredients, onRemove, onClearAll }: Pr
   );
 }
 
+
