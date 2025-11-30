@@ -200,3 +200,4 @@ export const RARITY_COLORS = {
   legendary: "from-amber-400 to-orange-500",
 };
 
+
