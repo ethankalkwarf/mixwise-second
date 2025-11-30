@@ -1,23 +1,38 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { MixInventoryPanel } from "@/components/mix/MixInventoryPanel";
 import { MixResultsPanel } from "@/components/mix/MixResultsPanel";
 import { MixSelectedBar } from "@/components/mix/MixSelectedBar";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
 import { fetchMixData } from "@/lib/sanityMixData";
 import { getMixMatchGroups } from "@/lib/mixMatching";
+import { useBarIngredients } from "@/hooks/useBarIngredients";
+import { useUser } from "@/components/auth/UserProvider";
 import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, BookmarkIcon } from "@heroicons/react/24/outline";
 
-const STORAGE_KEY = "mixwise-bar-inventory";
+// Show sign-up prompt after adding this many ingredients
+const PROMPT_THRESHOLD = 3;
 
 export default function MixPage() {
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<MixCocktail[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [inventoryIds, setInventoryIds] = useState<string[]>([]);
   const [dataError, setDataError] = useState<string | null>(null);
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const [promptDismissed, setPromptDismissed] = useState(false);
+  
+  const { isAuthenticated } = useUser();
+  const {
+    ingredientIds,
+    isLoading: barLoading,
+    addIngredient,
+    removeIngredient,
+    setIngredients,
+    clearAll,
+    promptToSave,
+  } = useBarIngredients();
 
   // Load data from Sanity
   useEffect(() => {
@@ -36,67 +51,67 @@ export default function MixPage() {
     loadData();
   }, []);
 
-  // Load inventory from localStorage
+  // Show save prompt for anonymous users after threshold
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setInventoryIds(parsed);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load inventory from localStorage:", error);
+    if (
+      !isAuthenticated &&
+      !promptDismissed &&
+      ingredientIds.length >= PROMPT_THRESHOLD
+    ) {
+      setShowSavePrompt(true);
     }
-  }, []);
+  }, [isAuthenticated, promptDismissed, ingredientIds.length]);
 
-  // Save inventory to localStorage
-  const handleInventoryChange = (newIds: string[]) => {
-    setInventoryIds(newIds);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newIds));
-    } catch (error) {
-      console.error("Failed to save inventory to localStorage:", error);
-    }
+  // Handle ingredient toggle
+  const handleInventoryChange = useCallback(async (newIds: string[]) => {
+    await setIngredients(newIds);
+  }, [setIngredients]);
+
+  const handleAddToInventory = useCallback(async (id: string) => {
+    const ingredient = allIngredients.find(i => i.id === id);
+    await addIngredient(id, ingredient?.name);
+  }, [addIngredient, allIngredients]);
+
+  const handleRemoveFromInventory = useCallback(async (id: string) => {
+    await removeIngredient(id);
+  }, [removeIngredient]);
+
+  const handleClearAll = useCallback(async () => {
+    await clearAll();
+  }, [clearAll]);
+
+  const handleDismissPrompt = () => {
+    setShowSavePrompt(false);
+    setPromptDismissed(true);
   };
 
-  const handleAddToInventory = (id: string) => {
-    if (!inventoryIds.includes(id)) {
-      handleInventoryChange([...inventoryIds, id]);
-    }
-  };
-
-  const handleRemoveFromInventory = (id: string) => {
-    handleInventoryChange(inventoryIds.filter((i) => i !== id));
-  };
-
-  const handleClearAll = () => {
-    handleInventoryChange([]);
+  const handleSavePromptClick = () => {
+    setShowSavePrompt(false);
+    promptToSave();
   };
 
   // Get selected ingredient objects
   const selectedIngredients = useMemo(() => {
-    return inventoryIds
+    return ingredientIds
       .map((id) => allIngredients.find((i) => i.id === id))
       .filter((i): i is MixIngredient => i !== undefined);
-  }, [inventoryIds, allIngredients]);
+  }, [ingredientIds, allIngredients]);
 
   // Get match counts for display
   const matchCounts = useMemo(() => {
     const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
     const result = getMixMatchGroups({
       cocktails: allCocktails,
-      ownedIngredientIds: inventoryIds,
+      ownedIngredientIds: ingredientIds,
       stapleIngredientIds: stapleIds,
     });
     return {
       canMake: result.makeNow.length,
       almostThere: result.almostThere.length,
     };
-  }, [allCocktails, allIngredients, inventoryIds]);
+  }, [allCocktails, allIngredients, ingredientIds]);
 
-  if (dataLoading) {
+  if (dataLoading || barLoading) {
     return <MixSkeleton />;
   }
 
@@ -133,7 +148,7 @@ export default function MixPage() {
               Discover cocktails you can make with ingredients you already have.
             </p>
           </div>
-          {inventoryIds.length > 0 && (
+          {ingredientIds.length > 0 && (
             <div className="flex items-center gap-4 text-base">
               <span className="text-slate-400">
                 <span className="font-bold text-lime-400 text-xl">{matchCounts.canMake}</span>{" "}
@@ -161,6 +176,33 @@ export default function MixPage() {
             all the cocktails you can make, plus suggestions for ingredients that unlock the most new recipes.
           </div>
         </div>
+
+        {/* Save Bar Prompt for Anonymous Users */}
+        {showSavePrompt && !isAuthenticated && (
+          <div className="mt-4 flex items-center justify-between p-4 bg-lime-500/10 border border-lime-500/30 rounded-xl">
+            <div className="flex items-center gap-3">
+              <BookmarkIcon className="w-6 h-6 text-lime-400" />
+              <div>
+                <p className="text-slate-200 font-medium">Want to save your bar?</p>
+                <p className="text-sm text-slate-400">Create a free account so you never lose your ingredient list.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDismissPrompt}
+                className="px-3 py-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                Not now
+              </button>
+              <button
+                onClick={handleSavePromptClick}
+                className="px-4 py-2 bg-lime-500 text-slate-900 font-bold text-sm rounded-lg hover:bg-lime-400 transition-colors"
+              >
+                Save my bar
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Selected Ingredients Bar */}
@@ -178,7 +220,7 @@ export default function MixPage() {
         <aside className="lg:sticky lg:top-24" role="complementary" aria-label="Ingredient selection">
           <MixInventoryPanel
             ingredients={allIngredients}
-            selectedIds={inventoryIds}
+            selectedIds={ingredientIds}
             onChange={handleInventoryChange}
           />
         </aside>
@@ -186,7 +228,7 @@ export default function MixPage() {
         {/* Results Panel */}
         <main role="main" aria-label="Cocktail results">
           <MixResultsPanel
-            inventoryIds={inventoryIds}
+            inventoryIds={ingredientIds}
             allCocktails={allCocktails}
             allIngredients={allIngredients}
             onAddToInventory={handleAddToInventory}

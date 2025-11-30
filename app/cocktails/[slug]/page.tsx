@@ -3,6 +3,7 @@ import { getImageUrl } from "@/lib/sanityImage";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { PortableText } from "@/components/PortableText";
 import { RecipeSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
+import { CocktailActions } from "@/components/cocktails/CocktailActions";
 import { generateCocktailMetadata, SITE_CONFIG } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -183,14 +184,27 @@ export default async function CocktailDetailPage({ params }: PageProps) {
               <div className="space-y-6">
                 {/* Title & Meta */}
                 <header>
-                  {cocktail.primarySpirit && (
-                    <p className="text-sm text-lime-400 font-bold tracking-widest uppercase mb-2">
-                      {cocktail.primarySpirit}
-                    </p>
-                  )}
-                  <h1 className="text-3xl sm:text-4xl font-serif font-bold text-slate-50 mb-3">
-                    {cocktail.name}
-                  </h1>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      {cocktail.primarySpirit && (
+                        <p className="text-sm text-lime-400 font-bold tracking-widest uppercase mb-2">
+                          {cocktail.primarySpirit}
+                        </p>
+                      )}
+                      <h1 className="text-3xl sm:text-4xl font-serif font-bold text-slate-50 mb-3">
+                        {cocktail.name}
+                      </h1>
+                    </div>
+                    {/* Favorite Button */}
+                    <CocktailActions
+                      cocktail={{
+                        id: cocktail._id,
+                        name: cocktail.name,
+                        slug: cocktail.slug.current,
+                        imageUrl: imageUrl || undefined,
+                      }}
+                    />
+                  </div>
                   {cocktail.description && (
                     <p className="text-lg text-slate-300 leading-relaxed">
                       {cocktail.description}

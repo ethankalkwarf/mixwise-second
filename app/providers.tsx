@@ -3,6 +3,8 @@
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { Session, createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createClient } from "@supabase/supabase-js";
+import { UserProvider } from "@/components/auth/UserProvider";
+import { AuthDialogProvider } from "@/components/auth/AuthDialogProvider";
 
 // Create Supabase client with fallback for build-time when env vars may not be available
 function createSupabaseClient() {
@@ -33,7 +35,11 @@ export function SupabaseProvider({
 }) {
   return (
     <SessionContextProvider supabaseClient={supabase} initialSession={initialSession}>
-      {children}
+      <UserProvider>
+        <AuthDialogProvider>
+          {children}
+        </AuthDialogProvider>
+      </UserProvider>
     </SessionContextProvider>
   );
 }
