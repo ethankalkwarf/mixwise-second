@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import { getImageUrl } from "@/lib/sanityImage";
@@ -11,6 +11,19 @@ type SortOption = "name-asc" | "name-desc" | "popular";
 type Props = {
   cocktails: SanityCocktail[];
 };
+
+// Key for persisting filter state
+const FILTER_STATE_KEY = "mixwise-cocktails-filters";
+const SCROLL_STATE_KEY = "mixwise-cocktails-scroll";
+
+interface FilterState {
+  searchQuery: string;
+  sortBy: SortOption;
+  filterSpirit: string | null;
+  filterGlass: string | null;
+  filterCategory: string | null;
+  showFilters: boolean;
+}
 
 // Category display configuration
 const CATEGORY_CONFIG: Record<string, { label: string; emoji: string; color: string }> = {
@@ -63,6 +76,9 @@ const KEYWORD_MAPPINGS: Record<string, (c: SanityCocktail) => boolean> = {
 const ITEMS_PER_PAGE = 24;
 
 export function CocktailsDirectory({ cocktails }: Props) {
+  const router = useRouter();
+  
+  // Initialize state from sessionStorage if available
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("name-asc");
   const [filterSpirit, setFilterSpirit] = useState<string | null>(null);
@@ -70,7 +86,76 @@ export function CocktailsDirectory({ cocktails }: Props) {
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [isInitialized, setIsInitialized] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Restore filter state from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(FILTER_STATE_KEY);
+      if (saved) {
+        const state: FilterState = JSON.parse(saved);
+        setSearchQuery(state.searchQuery || "");
+        setSortBy(state.sortBy || "name-asc");
+        setFilterSpirit(state.filterSpirit);
+        setFilterGlass(state.filterGlass);
+        setFilterCategory(state.filterCategory);
+        setShowFilters(state.showFilters || false);
+      }
+    } catch (e) {
+      console.error("Error restoring filter state:", e);
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Restore scroll position after filters are applied
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    try {
+      const savedScroll = sessionStorage.getItem(SCROLL_STATE_KEY);
+      if (savedScroll) {
+        const scrollY = parseInt(savedScroll, 10);
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollY);
+        });
+        // Clear the saved scroll after restoring
+        sessionStorage.removeItem(SCROLL_STATE_KEY);
+      }
+    } catch (e) {
+      console.error("Error restoring scroll position:", e);
+    }
+  }, [isInitialized]);
+
+  // Save filter state to sessionStorage when it changes
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    const state: FilterState = {
+      searchQuery,
+      sortBy,
+      filterSpirit,
+      filterGlass,
+      filterCategory,
+      showFilters,
+    };
+    try {
+      sessionStorage.setItem(FILTER_STATE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.error("Error saving filter state:", e);
+    }
+  }, [isInitialized, searchQuery, sortBy, filterSpirit, filterGlass, filterCategory, showFilters]);
+
+  // Save scroll position before navigating to a cocktail
+  const handleCocktailClick = useCallback((slug: string) => {
+    try {
+      sessionStorage.setItem(SCROLL_STATE_KEY, window.scrollY.toString());
+    } catch (e) {
+      console.error("Error saving scroll position:", e);
+    }
+    router.push(`/cocktails/${slug}`);
+  }, [router]);
 
   // Extract unique filter options from data
   const filterOptions = useMemo(() => {
@@ -440,7 +525,11 @@ export function CocktailsDirectory({ cocktails }: Props) {
         <>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {visibleCocktails.map((cocktail) => (
-              <CocktailCard key={cocktail._id} cocktail={cocktail} />
+              <CocktailCard 
+                key={cocktail._id} 
+                cocktail={cocktail} 
+                onClick={handleCocktailClick}
+              />
             ))}
           </div>
           
@@ -462,14 +551,27 @@ export function CocktailsDirectory({ cocktails }: Props) {
   );
 }
 
-function CocktailCard({ cocktail }: { cocktail: SanityCocktail }) {
+function CocktailCard({ 
+  cocktail, 
+  onClick 
+}: { 
+  cocktail: SanityCocktail;
+  onClick: (slug: string) => void;
+}) {
   const imageUrl = getImageUrl(cocktail.image, { width: 600, height: 400 }) || cocktail.externalImageUrl;
   const ingredientCount = cocktail.ingredients?.length || 0;
+  const slug = cocktail.slug?.current || cocktail._id;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onClick(slug);
+  };
 
   return (
-    <Link
-      href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 transition-all duration-300 hover:border-lime-500/40 hover:shadow-xl hover:shadow-lime-900/10"
+    <a
+      href={`/cocktails/${slug}`}
+      onClick={handleClick}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 transition-all duration-300 hover:border-lime-500/40 hover:shadow-xl hover:shadow-lime-900/10 cursor-pointer"
     >
       {/* Image */}
       <div className="relative h-56 w-full overflow-hidden bg-slate-800">
@@ -556,6 +658,6 @@ function CocktailCard({ cocktail }: { cocktail: SanityCocktail }) {
           </div>
         </div>
       </div>
-    </Link>
+    </a>
   );
 }
