@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import type { Profile } from "@/lib/supabase/database.types";
 import { trackUserSignup } from "@/lib/analytics";
 
@@ -23,12 +23,16 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Provider component
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use session from SessionContextProvider (which has the server-side initial session)
+  const { session: contextSession, supabaseClient, isLoading: sessionLoading } = useSessionContext();
   
-  const supabase = createClient();
+  const [user, setUser] = useState<User | null>(contextSession?.user ?? null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(contextSession);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
+  
+  const supabase = supabaseClient;
 
   // Fetch user profile from database
   const fetchProfile = useCallback(async (userId: string) => {
@@ -53,57 +57,59 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, fetchProfile]);
 
-  // Initialize auth state
+  // Sync with context session changes
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        // Get initial session
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        
-        if (initialSession?.user) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-          const userProfile = await fetchProfile(initialSession.user.id);
+    setSession(contextSession);
+    setUser(contextSession?.user ?? null);
+    
+    // Only set loading false once session context has loaded
+    if (!sessionLoading) {
+      // Fetch profile if user exists
+      if (contextSession?.user && !profile && !profileLoading) {
+        setProfileLoading(true);
+        fetchProfile(contextSession.user.id).then((userProfile) => {
           setProfile(userProfile);
-        }
-      } catch (error) {
-        console.error("Error initializing auth:", error);
-      } finally {
+          setProfileLoading(false);
+          setIsLoading(false);
+        });
+      } else if (!contextSession?.user) {
+        setProfile(null);
+        setIsLoading(false);
+      } else if (profile) {
         setIsLoading(false);
       }
-    };
+    }
+  }, [contextSession, sessionLoading, fetchProfile, profile, profileLoading]);
 
-    initializeAuth();
-
-    // Listen for auth changes
+  // Listen for auth changes (login/logout events)
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        
-        if (newSession?.user) {
+        // Let context update first, but handle immediate profile fetch for new sign-ins
+        if (event === "SIGNED_IN" && newSession?.user) {
+          setSession(newSession);
+          setUser(newSession.user);
+          
           const userProfile = await fetchProfile(newSession.user.id);
           setProfile(userProfile);
           
           // Track new signups
-          if (event === "SIGNED_IN") {
-            // Check if this is a new user (profile just created)
-            // The profile will have a very recent created_at timestamp
-            if (userProfile) {
-              const createdAt = new Date(userProfile.created_at);
-              const now = new Date();
-              const isNewUser = (now.getTime() - createdAt.getTime()) < 60000; // Within 1 minute
-              
-              if (isNewUser) {
-                trackUserSignup(newSession.user.id, newSession.user.email);
-              }
+          if (userProfile) {
+            const createdAt = new Date(userProfile.created_at);
+            const now = new Date();
+            const isNewUser = (now.getTime() - createdAt.getTime()) < 60000; // Within 1 minute
+            
+            if (isNewUser) {
+              trackUserSignup(newSession.user.id, newSession.user.email);
             }
           }
-        } else {
+          setIsLoading(false);
+        } else if (event === "SIGNED_OUT") {
+          setSession(null);
+          setUser(null);
           setProfile(null);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 

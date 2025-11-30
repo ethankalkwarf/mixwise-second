@@ -246,20 +246,114 @@ To implement a paid tier:
 - Server-side operations use the anon key (respects RLS)
 - Service role key (if needed) should never be exposed client-side
 
+## QA Checklist
+
+Use this checklist to verify auth is working correctly after any changes:
+
+### Logged-Out State
+- [ ] Header shows "Sign in" button
+- [ ] Can browse cocktails without signing in
+- [ ] Can use Mix tool without signing in (bar stored in localStorage)
+- [ ] Visiting `/account` redirects to home with `?redirect=/account`
+- [ ] CocktailsReadyBadge does NOT show (requires auth + bar)
+- [ ] ShoppingListBadge shows count from localStorage
+
+### Sign-In Flow (Google)
+1. [ ] Click "Sign in" button - auth dialog opens
+2. [ ] Click "Continue with Google" - redirects to Google
+3. [ ] Complete Google login - redirects back to `/auth/callback`
+4. [ ] Callback exchanges code for session
+5. [ ] Redirects to homepage (or original page if `redirect` param)
+6. [ ] Header updates to show user avatar/name dropdown
+7. [ ] Profile is fetched and accessible via `useUser()`
+
+### Sign-In Flow (Email)
+1. [ ] Click "Sign in" button - auth dialog opens
+2. [ ] Enter email, click "Continue with email"
+3. [ ] Toast shows "Check your email for the magic link"
+4. [ ] Email is received with magic link
+5. [ ] Clicking link opens `/auth/callback`
+6. [ ] Callback exchanges code for session
+7. [ ] Header updates to show logged-in state
+
+### Logged-In State
+- [ ] Header shows user avatar/name dropdown menu
+- [ ] Dropdown has "My Account" and "Sign out" links
+- [ ] Can access `/account` page
+- [ ] Bar ingredients sync to Supabase
+- [ ] Favorites sync to Supabase
+- [ ] Recently viewed syncs to Supabase
+- [ ] CocktailsReadyBadge shows count (if user has bar)
+- [ ] Personalized homepage sections appear (if user has data)
+
+### Sign-Out Flow
+1. [ ] Click user menu, then "Sign out"
+2. [ ] Session is cleared from cookies
+3. [ ] Header updates to show "Sign in" button
+4. [ ] Visiting `/account` redirects to home
+5. [ ] Bar reverts to localStorage-only storage
+
+### Session Persistence
+- [ ] Hard refresh (Cmd+Shift+R) maintains logged-in state
+- [ ] Navigating between pages maintains logged-in state
+- [ ] Opening new tab shows logged-in state
+- [ ] Session auto-refreshes (no expiry during active use)
+
+### Protected Route Behavior
+- [ ] Unauthenticated users are redirected from `/account`
+- [ ] Redirect includes `?redirect=/account` parameter
+- [ ] Auth dialog can open with custom title/subtitle via `openAuthDialog()`
+- [ ] After sign-in, user is redirected to original destination
+
 ## Troubleshooting
 
 ### Auth Callback Not Working
 - Check redirect URLs in Supabase dashboard
 - Ensure `/auth/callback/route.ts` is properly deployed
 - Check browser console for errors
+- Verify the callback is using `exchangeCodeForSession()` correctly
 
 ### Profile Not Loading
 - Verify the `handle_new_user` trigger is created
 - Check RLS policies on the profiles table
 - Look for errors in Supabase logs
+- Ensure `UserProvider` fetches profile after session is set
 
 ### OAuth Errors
 - Verify Google OAuth credentials
 - Check callback URL configuration
 - Ensure HTTPS in production
+
+### Session Not Persisting on Refresh
+- Check that middleware runs on all routes (see `middleware.ts` config)
+- Verify `SessionContextProvider` receives `initialSession` from server
+- Ensure cookies are being set correctly in `/auth/callback`
+- Check that `createMiddlewareClient` is refreshing the session
+
+### UI Not Updating After Login
+- Check that `onAuthStateChange` listener is firing
+- Verify `UserProvider` is updating state after session change
+- Ensure components are using `useUser()` hook, not direct Supabase calls
+- Check for React hydration mismatches between server and client
+
+## Recent Auth Improvements (2024)
+
+### Session Hydration Fix
+- **Issue**: Session was not available on initial page load for server-rendered pages
+- **Solution**: Updated `app/layout.tsx` to fetch session server-side using `createServerComponentClient` and pass it as `initialSession` to `SupabaseProvider`
+
+### UserProvider Refactor
+- **Issue**: UserProvider was fetching its own session, causing potential race conditions
+- **Solution**: UserProvider now uses `useSessionContext()` from `@supabase/auth-helpers-react` to get the session from the parent `SessionContextProvider`, ensuring consistency
+
+### Middleware Session Refresh
+- **Issue**: Sessions could become stale during navigation
+- **Solution**: Middleware now calls `supabase.auth.getSession()` on every request to refresh the session and update cookies
+
+### Auth Callback Improvements
+- **Issue**: Callback wasn't handling all scenarios properly
+- **Solution**: Updated `/auth/callback/route.ts` to:
+  - Use `exchangeCodeForSession()` for the auth code
+  - Support both `next` query param and `returnTo` for redirect destinations
+  - Include proper error logging
 

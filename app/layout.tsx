@@ -1,6 +1,8 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { SupabaseProvider } from "./providers";
 import { SiteHeader, NavItem } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -68,6 +70,16 @@ export default async function RootLayout({
     { label: "Mix", href: "/mix" },
   ];
 
+  // Fetch session server-side for proper hydration
+  let initialSession = null;
+  try {
+    const supabase = createServerComponentClient({ cookies });
+    const { data: { session } } = await supabase.auth.getSession();
+    initialSession = session;
+  } catch (error) {
+    console.error('Error fetching initial session:', error);
+  }
+
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <head>
@@ -81,7 +93,7 @@ export default async function RootLayout({
         
         <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black -z-10" aria-hidden="true" />
         
-        <SupabaseProvider initialSession={null}>
+        <SupabaseProvider initialSession={initialSession}>
           <div className="min-h-screen flex flex-col">
             <SiteHeader navItems={navItems} />
             <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>

@@ -1,33 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { Session, createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { createClient } from "@supabase/supabase-js";
 import { UserProvider } from "@/components/auth/UserProvider";
 import { AuthDialogProvider } from "@/components/auth/AuthDialogProvider";
 import { ToastProvider } from "@/components/ui/toast";
 import { EmailCaptureModal } from "@/components/email/EmailCaptureModal";
 
-// Create Supabase client with fallback for build-time when env vars may not be available
-function createSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // If env vars are available, use the proper auth helpers client
-  if (supabaseUrl && supabaseAnonKey) {
-    return createClientComponentClient();
-  }
-
-  // Fallback: create a minimal client for build time
-  // This allows the build to succeed; actual functionality requires proper env vars
-  return createClient(
-    supabaseUrl || "https://placeholder.supabase.co",
-    supabaseAnonKey || "placeholder-key"
-  );
-}
-
-const supabase = createSupabaseClient();
-
+/**
+ * SupabaseProvider
+ * 
+ * Wraps the application with Supabase session context.
+ * Creates a fresh Supabase client on mount to ensure proper cookie handling.
+ * 
+ * Important: The client is created inside the component (not at module level)
+ * to ensure it has access to the correct browser cookies on each render.
+ */
 export function SupabaseProvider({
   children,
   initialSession
@@ -35,6 +24,10 @@ export function SupabaseProvider({
   children: React.ReactNode;
   initialSession: Session | null;
 }) {
+  // Create client inside component to ensure proper cookie handling
+  // useState ensures the client is only created once per component lifecycle
+  const [supabase] = useState(() => createClientComponentClient());
+  
   return (
     <SessionContextProvider supabaseClient={supabase} initialSession={initialSession}>
       <UserProvider>
