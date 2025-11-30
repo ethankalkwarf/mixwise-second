@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import { getImageUrl } from "@/lib/sanityImage";
 
-type SortOption = "name-asc" | "name-desc" | "popular" | "difficulty";
+type SortOption = "name-asc" | "name-desc" | "popular";
 
 type Props = {
   cocktails: SanityCocktail[];
@@ -34,6 +34,21 @@ const CATEGORY_CONFIG: Record<string, { label: string; emoji: string; color: str
   quick: { label: "Quick", emoji: "⚡", color: "bg-sky-500/20 text-sky-300 border-sky-500/30" },
 };
 
+// Predefined list of base spirits
+const BASE_SPIRITS = [
+  { value: "vodka", label: "Vodka" },
+  { value: "gin", label: "Gin" },
+  { value: "rum", label: "Rum" },
+  { value: "tequila", label: "Tequila" },
+  { value: "mezcal", label: "Mezcal" },
+  { value: "whiskey", label: "Whiskey" },
+  { value: "bourbon", label: "Bourbon" },
+  { value: "scotch", label: "Scotch" },
+  { value: "brandy", label: "Brandy" },
+  { value: "cognac", label: "Cognac" },
+  { value: "none", label: "Non-Alcoholic" },
+];
+
 // Keywords that map to special filters
 const KEYWORD_MAPPINGS: Record<string, (c: SanityCocktail) => boolean> = {
   popular: (c) => c.isPopular === true,
@@ -42,39 +57,33 @@ const KEYWORD_MAPPINGS: Record<string, (c: SanityCocktail) => boolean> = {
   favourites: (c) => c.isFavorite === true,
   trending: (c) => c.isTrending === true,
   hot: (c) => c.isTrending === true,
-  easy: (c) => c.difficulty === "easy",
-  moderate: (c) => c.difficulty === "moderate",
-  advanced: (c) => c.difficulty === "advanced",
-  hard: (c) => c.difficulty === "advanced",
 };
+
+// Number of items to load per batch
+const ITEMS_PER_PAGE = 24;
 
 export function CocktailsDirectory({ cocktails }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("name-asc");
   const [filterSpirit, setFilterSpirit] = useState<string | null>(null);
   const [filterGlass, setFilterGlass] = useState<string | null>(null);
-  const [filterDifficulty, setFilterDifficulty] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Extract unique filter options from data
   const filterOptions = useMemo(() => {
-    const spirits = new Set<string>();
     const glasses = new Set<string>();
-    const difficulties = new Set<string>();
     const categories = new Set<string>();
 
     cocktails.forEach((c) => {
-      if (c.primarySpirit) spirits.add(c.primarySpirit);
       if (c.glass) glasses.add(c.glass);
-      if (c.difficulty) difficulties.add(c.difficulty);
       c.drinkCategories?.forEach((cat) => categories.add(cat));
     });
 
     return {
-      spirits: Array.from(spirits).sort(),
       glasses: Array.from(glasses).sort(),
-      difficulties: Array.from(difficulties).sort(),
       categories: Array.from(categories).sort(),
     };
   }, [cocktails]);
@@ -129,11 +138,6 @@ export function CocktailsDirectory({ cocktails }: Props) {
       results = results.filter((c) => c.glass === filterGlass);
     }
 
-    // Difficulty filter
-    if (filterDifficulty) {
-      results = results.filter((c) => c.difficulty === filterDifficulty);
-    }
-
     // Category filter
     if (filterCategory) {
       results = results.filter((c) => c.drinkCategories?.includes(filterCategory));
@@ -159,26 +163,48 @@ export function CocktailsDirectory({ cocktails }: Props) {
           return a.name.localeCompare(b.name);
         });
         break;
-      case "difficulty":
-        const diffOrder = { easy: 1, moderate: 2, advanced: 3 };
-        results.sort((a, b) => {
-          const aDiff = diffOrder[a.difficulty as keyof typeof diffOrder] || 99;
-          const bDiff = diffOrder[b.difficulty as keyof typeof diffOrder] || 99;
-          if (aDiff !== bDiff) return aDiff - bDiff;
-          return a.name.localeCompare(b.name);
-        });
-        break;
     }
 
     return results;
-  }, [cocktails, searchQuery, sortBy, filterSpirit, filterGlass, filterDifficulty, filterCategory]);
+  }, [cocktails, searchQuery, sortBy, filterSpirit, filterGlass, filterCategory]);
 
-  const activeFilterCount = [filterSpirit, filterGlass, filterDifficulty, filterCategory].filter(Boolean).length;
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [searchQuery, sortBy, filterSpirit, filterGlass, filterCategory]);
+
+  // Lazy loading with Intersection Observer
+  const loadMore = useCallback(() => {
+    if (visibleCount < filteredCocktails.length) {
+      setVisibleCount((prev) => Math.min(prev + ITEMS_PER_PAGE, filteredCocktails.length));
+    }
+  }, [visibleCount, filteredCocktails.length]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [loadMore]);
+
+  const visibleCocktails = filteredCocktails.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredCocktails.length;
+
+  const activeFilterCount = [filterSpirit, filterGlass, filterCategory].filter(Boolean).length;
 
   const clearFilters = () => {
     setFilterSpirit(null);
     setFilterGlass(null);
-    setFilterDifficulty(null);
     setFilterCategory(null);
   };
 
@@ -223,7 +249,6 @@ export function CocktailsDirectory({ cocktails }: Props) {
             <option value="name-asc">A → Z</option>
             <option value="name-desc">Z → A</option>
             <option value="popular">Popular First</option>
-            <option value="difficulty">Easiest First</option>
           </select>
 
           {/* Filter Toggle */}
@@ -310,7 +335,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
               )}
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid sm:grid-cols-3 gap-4">
               {/* Spirit Filter */}
               <div>
                 <label className="block text-xs text-slate-500 mb-2">Base Spirit</label>
@@ -320,9 +345,9 @@ export function CocktailsDirectory({ cocktails }: Props) {
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-lime-500/50"
                 >
                   <option value="">All Spirits</option>
-                  {filterOptions.spirits.map((spirit) => (
-                    <option key={spirit} value={spirit} className="capitalize">
-                      {spirit}
+                  {BASE_SPIRITS.map((spirit) => (
+                    <option key={spirit.value} value={spirit.value}>
+                      {spirit.label}
                     </option>
                   ))}
                 </select>
@@ -340,23 +365,6 @@ export function CocktailsDirectory({ cocktails }: Props) {
                   {filterOptions.glasses.map((glass) => (
                     <option key={glass} value={glass} className="capitalize">
                       {glass.replace(/-/g, " ")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Difficulty Filter */}
-              <div>
-                <label className="block text-xs text-slate-500 mb-2">Difficulty</label>
-                <select
-                  value={filterDifficulty || ""}
-                  onChange={(e) => setFilterDifficulty(e.target.value || null)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-lime-500/50"
-                >
-                  <option value="">All Levels</option>
-                  {filterOptions.difficulties.map((diff) => (
-                    <option key={diff} value={diff} className="capitalize">
-                      {diff.charAt(0).toUpperCase() + diff.slice(1)}
                     </option>
                   ))}
                 </select>
@@ -389,8 +397,8 @@ export function CocktailsDirectory({ cocktails }: Props) {
       {/* Results Count */}
       <div className="mb-6 flex items-center justify-between">
         <p className="text-sm text-slate-500">
-          Showing <span className="text-lime-400 font-medium">{filteredCocktails.length}</span> of{" "}
-          <span className="text-slate-300">{cocktails.length}</span> cocktails
+          Showing <span className="text-lime-400 font-medium">{visibleCocktails.length}</span> of{" "}
+          <span className="text-slate-300">{filteredCocktails.length}</span> cocktails
         </p>
         {(searchQuery || activeFilterCount > 0) && (
           <button
@@ -427,13 +435,28 @@ export function CocktailsDirectory({ cocktails }: Props) {
         </div>
       )}
 
-      {/* Cocktail Grid */}
-      {filteredCocktails.length > 0 && (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCocktails.map((cocktail) => (
-            <CocktailCard key={cocktail._id} cocktail={cocktail} />
-          ))}
-        </div>
+      {/* Cocktail Grid with Lazy Loading */}
+      {visibleCocktails.length > 0 && (
+        <>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {visibleCocktails.map((cocktail) => (
+              <CocktailCard key={cocktail._id} cocktail={cocktail} />
+            ))}
+          </div>
+          
+          {/* Load More Trigger */}
+          {hasMore && (
+            <div 
+              ref={loadMoreRef}
+              className="flex justify-center py-8"
+            >
+              <div className="flex items-center gap-2 text-slate-500">
+                <div className="w-5 h-5 border-2 border-slate-600 border-t-lime-400 rounded-full animate-spin" />
+                <span className="text-sm">Loading more...</span>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -456,6 +479,7 @@ function CocktailCard({ cocktail }: { cocktail: SanityCocktail }) {
             <img
               src={imageUrl}
               alt={cocktail.name}
+              loading="lazy"
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
@@ -481,11 +505,6 @@ function CocktailCard({ cocktail }: { cocktail: SanityCocktail }) {
           {cocktail.isFavorite && (
             <span className="flex items-center gap-1 bg-pink-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg">
               <HeartIcon className="w-3 h-3" /> FAVORITE
-            </span>
-          )}
-          {cocktail.difficulty && (
-            <span className="bg-slate-800/90 text-slate-200 text-[10px] font-medium px-2 py-1 rounded">
-              {cocktail.difficulty.charAt(0).toUpperCase() + cocktail.difficulty.slice(1)}
             </span>
           )}
         </div>
