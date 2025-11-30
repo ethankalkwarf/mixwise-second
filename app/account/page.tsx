@@ -158,19 +158,21 @@ export default function AccountPage() {
           <section className="bg-slate-900/60 border border-slate-800 rounded-xl p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                {avatarUrl ? (
+                <div className="relative w-16 h-16 rounded-full overflow-hidden">
                   <Image
-                    src={avatarUrl}
-                    alt=""
+                    src={avatarUrl || "/placeholder-avatar.jpg"}
+                    alt={displayName}
                     width={64}
                     height={64}
-                    className="w-16 h-16 rounded-full object-cover"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-lime-500/20 flex items-center justify-center text-lime-400 font-bold text-2xl">
+                  <div className="absolute inset-0 bg-lime-500/20 flex items-center justify-center text-lime-400 font-bold text-2xl">
                     {userInitial}
                   </div>
-                )}
+                </div>
                 <div>
                   <h1 className="text-2xl font-serif font-bold text-slate-100">
                     {displayName}

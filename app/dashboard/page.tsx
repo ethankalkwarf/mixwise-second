@@ -135,7 +135,7 @@ export default function DashboardPage() {
       try {
         const ingredients = await sanityClient.fetch<MixIngredient[]>(`
           *[_type == "ingredient"] {
-            _id,
+            _id as id,
             name,
             category
           }
@@ -171,32 +171,33 @@ export default function DashboardPage() {
 
   // Dynamic greeting based on time of day
   const getDynamicGreeting = useMemo(() => {
-    const displayName = profile?.display_name || user?.email?.split("@")[0] || "Bartender";
+    const fullName = profile?.display_name || user?.email?.split("@")[0] || "Bartender";
+    const firstName = fullName.split(" ")[0]; // Only use first name
     const hour = new Date().getHours();
 
     let greeting: string;
     if (hour < 12) {
       // Morning
       const greetings = [
-        `Good morning, ${displayName}. Ready to start shaking things up?`,
-        `Morning, ${displayName}. The bar is open, metaphorically.`,
-        `Rise and shine, ${displayName}. Time to mix something great.`,
+        `Good morning, ${firstName}. Ready to start shaking things up?`,
+        `Morning, ${firstName}. The bar is open, metaphorically.`,
+        `Rise and shine, ${firstName}. Time to mix something great.`,
       ];
       greeting = greetings[Math.floor(Math.random() * greetings.length)];
     } else if (hour < 18) {
       // Afternoon
       const greetings = [
-        `Good afternoon, ${displayName}. Feeling inspired?`,
-        `Hey ${displayName}, it's cocktail o'clock somewhere.`,
-        `Afternoon, ${displayName}. Your bar awaits.`,
+        `Good afternoon, ${firstName}. Feeling inspired?`,
+        `Hey ${firstName}, it's cocktail o'clock somewhere.`,
+        `Afternoon, ${firstName}. Your bar awaits.`,
       ];
       greeting = greetings[Math.floor(Math.random() * greetings.length)];
     } else {
       // Evening
       const greetings = [
-        `Good evening, ${displayName}. Let's make something smooth.`,
-        `Evening, ${displayName}. Perfect time for a drink.`,
-        `Welcome back, ${displayName}. What's on the menu tonight?`,
+        `Good evening, ${firstName}. Let's make something smooth.`,
+        `Evening, ${firstName}. Perfect time for a drink.`,
+        `Welcome back, ${firstName}. What's on the menu tonight?`,
       ];
       greeting = greetings[Math.floor(Math.random() * greetings.length)];
     }
@@ -312,19 +313,16 @@ export default function DashboardPage() {
                         href={`/cocktails/${cocktail.slug?.current}`}
                         className="flex items-center gap-4 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors group"
                       >
-                        {cocktail.externalImageUrl ? (
-                          <Image
-                            src={cocktail.externalImageUrl}
-                            alt=""
-                            width={56}
-                            height={56}
-                            className="w-14 h-14 rounded-lg object-cover"
-                          />
-                        ) : (
-                          <div className="w-14 h-14 rounded-lg bg-slate-700 flex items-center justify-center text-2xl">
-                            🍸
-                          </div>
-                        )}
+                        <Image
+                          src={cocktail.externalImageUrl || "/placeholder-cocktail.jpg"}
+                          alt={cocktail.name}
+                          width={56}
+                          height={56}
+                          className="w-14 h-14 rounded-lg object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "/placeholder-cocktail.jpg";
+                          }}
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-slate-200 group-hover:text-lime-400 truncate transition-colors">
                             {cocktail.name}
@@ -423,19 +421,16 @@ export default function DashboardPage() {
                           href={`/cocktails/${fav.cocktail_slug}`}
                           className="flex-shrink-0 w-32 group"
                         >
-                          {fav.cocktail_image_url ? (
-                            <Image
-                              src={fav.cocktail_image_url}
-                              alt=""
-                              width={128}
-                              height={96}
-                              className="w-32 h-24 rounded-lg object-cover mb-2"
-                            />
-                          ) : (
-                            <div className="w-32 h-24 rounded-lg bg-slate-800 flex items-center justify-center text-3xl mb-2">
-                              🍸
-                            </div>
-                          )}
+                          <Image
+                            src={fav.cocktail_image_url || "/placeholder-cocktail.jpg"}
+                            alt={fav.cocktail_name || "Cocktail"}
+                            width={128}
+                            height={96}
+                            className="w-32 h-24 rounded-lg object-cover mb-2"
+                            onError={(e) => {
+                              e.currentTarget.src = "/placeholder-cocktail.jpg";
+                            }}
+                          />
                           <p className="text-sm text-slate-300 group-hover:text-lime-400 truncate transition-colors">
                             {fav.cocktail_name}
                           </p>
@@ -465,19 +460,16 @@ export default function DashboardPage() {
                           href={`/cocktails/${item.cocktail_slug}`}
                           className="flex-shrink-0 w-32 group"
                         >
-                          {item.cocktail_image_url ? (
-                            <Image
-                              src={item.cocktail_image_url}
-                              alt=""
-                              width={128}
-                              height={96}
-                              className="w-32 h-24 rounded-lg object-cover mb-2"
-                            />
-                          ) : (
-                            <div className="w-32 h-24 rounded-lg bg-slate-800 flex items-center justify-center text-3xl mb-2">
-                              🍸
-                            </div>
-                          )}
+                          <Image
+                            src={item.cocktail_image_url || "/placeholder-cocktail.jpg"}
+                            alt={item.cocktail_name || "Cocktail"}
+                            width={128}
+                            height={96}
+                            className="w-32 h-24 rounded-lg object-cover mb-2"
+                            onError={(e) => {
+                              e.currentTarget.src = "/placeholder-cocktail.jpg";
+                            }}
+                          />
                           <p className="text-sm text-slate-300 group-hover:text-lime-400 truncate transition-colors">
                             {item.cocktail_name}
                           </p>
