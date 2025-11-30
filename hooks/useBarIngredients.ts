@@ -9,8 +9,14 @@ import type { BarIngredient } from "@/lib/supabase/database.types";
 
 const LOCAL_STORAGE_KEY = "mixwise-bar-inventory";
 
+interface IngredientWithName {
+  id: string;
+  name: string | null;
+}
+
 interface UseBarIngredientsResult {
   ingredientIds: string[];
+  ingredients: IngredientWithName[];  // Full data with names
   isLoading: boolean;
   addIngredient: (id: string, name?: string) => Promise<void>;
   removeIngredient: (id: string) => Promise<void>;
@@ -35,8 +41,15 @@ export function useBarIngredients(): UseBarIngredientsResult {
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
   const [ingredientIds, setIngredientIds] = useState<string[]>([]);
+  const [ingredientNameMap, setIngredientNameMap] = useState<Map<string, string | null>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [serverIngredients, setServerIngredients] = useState<BarIngredient[]>([]);
+  
+  // Computed ingredients with names
+  const ingredients: IngredientWithName[] = ingredientIds.map(id => ({
+    id,
+    name: ingredientNameMap.get(id) ?? null,
+  }));
 
   // Load ingredients from localStorage
   const loadFromLocal = useCallback(() => {
@@ -101,6 +114,13 @@ export function useBarIngredients(): UseBarIngredientsResult {
         const serverData = await loadFromServer();
         setServerIngredients(serverData);
         
+        // Build name map from server data
+        const nameMap = new Map<string, string | null>();
+        serverData.forEach(item => {
+          nameMap.set(item.ingredient_id, item.ingredient_name);
+        });
+        setIngredientNameMap(nameMap);
+        
         const serverIds = serverData.map(item => item.ingredient_id);
         const localIds = loadFromLocal();
         
@@ -144,6 +164,11 @@ export function useBarIngredients(): UseBarIngredientsResult {
     const newIds = [...ingredientIds, id];
     setIngredientIds(newIds);
     
+    // Update name map
+    if (name) {
+      setIngredientNameMap(prev => new Map(prev).set(id, name));
+    }
+    
     if (isAuthenticated && user) {
       // Save to server
       const { error } = await supabase.from("bar_ingredients").upsert({
@@ -159,6 +184,11 @@ export function useBarIngredients(): UseBarIngredientsResult {
         toast.error("Failed to add ingredient");
         // Revert on error
         setIngredientIds(ingredientIds);
+        setIngredientNameMap(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(id);
+          return newMap;
+        });
       } else {
         toast.success("Ingredient added to your bar");
       }
@@ -276,6 +306,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
   return {
     ingredientIds,
+    ingredients,
     isLoading,
     addIngredient,
     removeIngredient,

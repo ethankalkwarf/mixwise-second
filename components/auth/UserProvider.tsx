@@ -27,8 +27,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Use session from SessionContextProvider (which has the server-side initial session)
   const { session: contextSession, supabaseClient, isLoading: sessionLoading } = useSessionContext();
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   
   const [user, setUser] = useState<User | null>(contextSession?.user ?? null);
   const [profile, setProfile] = useState<Profile | null>(null);

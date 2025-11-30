@@ -23,7 +23,7 @@ export default function AccountPage() {
   const router = useRouter();
   const { user, profile, isLoading, isAuthenticated, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
-  const { ingredientIds, removeIngredient, clearAll: clearBar } = useBarIngredients();
+  const { ingredients, removeIngredient, clearAll: clearBar } = useBarIngredients();
   const { favorites, removeFavorite } = useFavorites();
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
 
@@ -146,7 +146,7 @@ export default function AccountPage() {
                   My Bar
                 </h2>
                 <span className="text-sm text-slate-500">
-                  {ingredientIds.length} ingredient{ingredientIds.length !== 1 ? "s" : ""}
+                  {ingredients.length} ingredient{ingredients.length !== 1 ? "s" : ""}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ export default function AccountPage() {
                 >
                   Edit in Mix Tool
                 </Link>
-                {ingredientIds.length > 0 && (
+                {ingredients.length > 0 && (
                   <button
                     onClick={clearBar}
                     className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
@@ -168,7 +168,7 @@ export default function AccountPage() {
               </div>
             </div>
             <div className="p-6">
-              {ingredientIds.length === 0 ? (
+              {ingredients.length === 0 ? (
                 <div className="text-center py-8">
                   <BeakerIcon className="w-12 h-12 text-slate-700 mx-auto mb-3" />
                   <p className="text-slate-400 mb-4">No ingredients in your bar yet.</p>
@@ -181,23 +181,25 @@ export default function AccountPage() {
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {ingredientIds.slice(0, 30).map((id) => (
+                  {ingredients.slice(0, 30).map((ingredient) => (
                     <div
-                      key={id}
+                      key={ingredient.id}
                       className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-lg text-sm"
                     >
-                      <span className="text-slate-300">{id}</span>
+                      <span className="text-slate-300">
+                        {ingredient.name || ingredient.id}
+                      </span>
                       <button
-                        onClick={() => removeIngredient(id)}
+                        onClick={() => removeIngredient(ingredient.id)}
                         className="text-slate-500 hover:text-red-400"
                       >
                         <XMarkIcon className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
-                  {ingredientIds.length > 30 && (
+                  {ingredients.length > 30 && (
                     <span className="px-3 py-1.5 text-slate-500 text-sm">
-                      +{ingredientIds.length - 30} more
+                      +{ingredients.length - 30} more
                     </span>
                   )}
                 </div>

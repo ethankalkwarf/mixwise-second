@@ -98,6 +98,10 @@ export async function GET(request: NextRequest) {
             // No row found - new user, needs onboarding
             needsOnboarding = true;
             console.log("[Auth Callback] New user, needs onboarding");
+          } else if (prefError?.code === "42P01") {
+            // Table doesn't exist - skip onboarding entirely
+            console.log("[Auth Callback] user_preferences table not found, skipping onboarding");
+            needsOnboarding = false;
           } else if (!prefError && (!preferences || !preferences.onboarding_completed)) {
             needsOnboarding = true;
             console.log("[Auth Callback] Existing user, onboarding not completed");

@@ -150,11 +150,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       if (upsertError) {
         console.error("[Onboarding] Preferences upsert error:", upsertError);
         
-        // If the table doesn't exist or there's a permission issue, provide clear feedback
+        // If the table doesn't exist, skip onboarding gracefully
         if (upsertError.code === "42P01") {
-          toast.error("Database setup required. Please contact support.");
+          console.warn("[Onboarding] user_preferences table not found - skipping onboarding save");
+          toast.info("Welcome to MixWise!");
+          router.replace("/dashboard");
           return;
         }
+        // Permission error - user should re-login
         if (upsertError.code === "42501") {
           toast.error("Permission denied. Please try logging out and back in.");
           return;
