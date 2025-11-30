@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import type { Profile } from "@/lib/supabase/database.types";
@@ -30,23 +30,34 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(contextSession);
   const [isLoading, setIsLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
+  
+  // Track if we've already processed the initial session to prevent duplicate fetches
+  const initializedRef = useRef(false);
+  const fetchingProfileRef = useRef(false);
   
   const supabase = supabaseClient;
 
   // Fetch user profile from database
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    
-    if (error) {
-      console.error("Error fetching profile:", error);
+  const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+      
+      if (error) {
+        // PGRST116 means no rows found - this is expected for new users
+        if (error.code !== "PGRST116") {
+          console.error("Error fetching profile:", error);
+        }
+        return null;
+      }
+      return data as Profile;
+    } catch (err) {
+      console.error("Profile fetch exception:", err);
       return null;
     }
-    return data as Profile;
   }, [supabase]);
 
   // Refresh profile data
@@ -57,39 +68,58 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, fetchProfile]);
 
-  // Sync with context session changes
+  // Sync with context session changes - this handles the initial load and OAuth redirects
   useEffect(() => {
+    // Don't do anything while session is still loading
+    if (sessionLoading) {
+      return;
+    }
+
+    // Update session and user from context
     setSession(contextSession);
     setUser(contextSession?.user ?? null);
-    
-    // Only set loading false once session context has loaded
-    if (!sessionLoading) {
-      // Fetch profile if user exists
-      if (contextSession?.user && !profile && !profileLoading) {
-        setProfileLoading(true);
-        fetchProfile(contextSession.user.id).then((userProfile) => {
-          setProfile(userProfile);
-          setProfileLoading(false);
-          setIsLoading(false);
-        });
-      } else if (!contextSession?.user) {
-        setProfile(null);
-        setIsLoading(false);
-      } else if (profile) {
-        setIsLoading(false);
-      }
+
+    // If there's no user, we're done loading
+    if (!contextSession?.user) {
+      setProfile(null);
+      setIsLoading(false);
+      initializedRef.current = true;
+      return;
     }
-  }, [contextSession, sessionLoading, fetchProfile, profile, profileLoading]);
+
+    // If we have a user, fetch their profile (if not already fetching)
+    if (!fetchingProfileRef.current) {
+      fetchingProfileRef.current = true;
+      
+      fetchProfile(contextSession.user.id)
+        .then((userProfile) => {
+          setProfile(userProfile);
+        })
+        .catch((err) => {
+          console.error("Profile fetch error:", err);
+        })
+        .finally(() => {
+          fetchingProfileRef.current = false;
+          setIsLoading(false);
+          initializedRef.current = true;
+        });
+    }
+  }, [contextSession, sessionLoading, fetchProfile]);
 
   // Listen for auth changes (login/logout events)
+  // This handles client-side auth events like signInWithOAuth completing
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        // Let context update first, but handle immediate profile fetch for new sign-ins
+        console.log("Auth state change:", event, newSession?.user?.email);
+        
         if (event === "SIGNED_IN" && newSession?.user) {
+          // Update state immediately
           setSession(newSession);
           setUser(newSession.user);
+          setIsLoading(true);
           
+          // Fetch profile
           const userProfile = await fetchProfile(newSession.user.id);
           setProfile(userProfile);
           
@@ -97,7 +127,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           if (userProfile) {
             const createdAt = new Date(userProfile.created_at);
             const now = new Date();
-            const isNewUser = (now.getTime() - createdAt.getTime()) < 60000; // Within 1 minute
+            const isNewUser = (now.getTime() - createdAt.getTime()) < 60000;
             
             if (isNewUser) {
               trackUserSignup(newSession.user.id, newSession.user.email);
@@ -109,6 +139,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setProfile(null);
           setIsLoading(false);
+        } else if (event === "TOKEN_REFRESHED" && newSession?.user) {
+          // Update session on token refresh
+          setSession(newSession);
+          setUser(newSession.user);
+        } else if (event === "INITIAL_SESSION") {
+          // Handle initial session - this fires when onAuthStateChange is first set up
+          if (newSession?.user && !initializedRef.current) {
+            setSession(newSession);
+            setUser(newSession.user);
+            
+            const userProfile = await fetchProfile(newSession.user.id);
+            setProfile(userProfile);
+            setIsLoading(false);
+            initializedRef.current = true;
+          } else if (!newSession && !initializedRef.current) {
+            // No session on initial load
+            setIsLoading(false);
+            initializedRef.current = true;
+          }
         }
       }
     );
@@ -117,6 +166,51 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, [supabase, fetchProfile]);
+
+  // Fallback: Force session check on mount to handle OAuth redirect edge cases
+  // This runs once after mount to catch any missed session updates
+  useEffect(() => {
+    let mounted = true;
+    
+    const checkSession = async () => {
+      // Wait a brief moment for other effects to settle
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (!mounted) return;
+      
+      // If still loading after mount, do an explicit session check
+      if (!initializedRef.current) {
+        try {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          
+          if (!mounted) return;
+          
+          if (currentSession?.user) {
+            setSession(currentSession);
+            setUser(currentSession.user);
+            
+            const userProfile = await fetchProfile(currentSession.user.id);
+            if (mounted) {
+              setProfile(userProfile);
+            }
+          }
+        } catch (err) {
+          console.error("Session check error:", err);
+        } finally {
+          if (mounted) {
+            setIsLoading(false);
+            initializedRef.current = true;
+          }
+        }
+      }
+    };
+    
+    checkSession();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [supabase, fetchProfile]); // Include dependencies for proper cleanup
 
   // Sign in with Google OAuth
   const signInWithGoogle = async () => {
