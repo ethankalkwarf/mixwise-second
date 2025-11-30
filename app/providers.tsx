@@ -1,11 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { Session, createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { UserProvider } from "@/components/auth/UserProvider";
 import { AuthDialogProvider } from "@/components/auth/AuthDialogProvider";
 import { ToastProvider } from "@/components/ui/toast";
+
+/**
+ * UserProviderWrapper
+ * 
+ * Wraps UserProvider in Suspense because it uses useSearchParams()
+ * which requires a Suspense boundary in the App Router.
+ */
+function UserProviderWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <UserProvider>{children}</UserProvider>
+    </Suspense>
+  );
+}
 
 /**
  * SupabaseProvider
@@ -29,13 +43,13 @@ export function SupabaseProvider({
   
   return (
     <SessionContextProvider supabaseClient={supabase} initialSession={initialSession}>
-      <UserProvider>
+      <UserProviderWrapper>
         <AuthDialogProvider>
           <ToastProvider>
             {children}
           </ToastProvider>
         </AuthDialogProvider>
-      </UserProvider>
+      </UserProviderWrapper>
     </SessionContextProvider>
   );
 }

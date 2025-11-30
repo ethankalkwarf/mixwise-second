@@ -125,37 +125,80 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     }
 
     setIsSubmitting(true);
+    console.log("[Onboarding] Starting save for user:", user.id);
 
     try {
       // Save preferences to database
-      const { error } = await supabase.from("user_preferences").upsert({
+      // First, try to insert. If the row exists, update it.
+      const preferencesData = {
         user_id: user.id,
         preferred_spirits: selectedSpirits,
         flavor_profiles: selectedFlavors,
         skill_level: selectedSkill,
         onboarding_completed: true,
         onboarding_completed_at: new Date().toISOString(),
-      });
+      };
+      
+      console.log("[Onboarding] Saving preferences:", preferencesData);
+      
+      const { error: upsertError } = await supabase
+        .from("user_preferences")
+        .upsert(preferencesData, {
+          onConflict: "user_id",
+        });
 
-      if (error) throw error;
+      if (upsertError) {
+        console.error("[Onboarding] Preferences upsert error:", upsertError);
+        
+        // If the table doesn't exist or there's a permission issue, provide clear feedback
+        if (upsertError.code === "42P01") {
+          toast.error("Database setup required. Please contact support.");
+          return;
+        }
+        if (upsertError.code === "42501") {
+          toast.error("Permission denied. Please try logging out and back in.");
+          return;
+        }
+        
+        throw upsertError;
+      }
+
+      console.log("[Onboarding] Preferences saved successfully");
 
       // Award "Home Bartender" badge for completing onboarding
-      await supabase.from("user_badges").upsert({
-        user_id: user.id,
-        badge_id: "home_bartender",
-        metadata: { completed_at: new Date().toISOString() },
-      });
+      // This is optional - don't fail onboarding if badge award fails
+      try {
+        const { error: badgeError } = await supabase
+          .from("user_badges")
+          .upsert({
+            user_id: user.id,
+            badge_id: "home_bartender",
+            metadata: { completed_at: new Date().toISOString() },
+          }, {
+            onConflict: "user_id,badge_id",
+          });
+
+        if (badgeError) {
+          console.warn("[Onboarding] Badge award failed (non-critical):", badgeError);
+        } else {
+          console.log("[Onboarding] Badge awarded successfully");
+        }
+      } catch (badgeErr) {
+        console.warn("[Onboarding] Badge award exception (non-critical):", badgeErr);
+      }
 
       toast.success("Welcome to MixWise! 🍸");
 
       if (onComplete) {
         onComplete();
       } else {
-        router.push("/dashboard");
+        // Use replace to avoid back-button returning to onboarding
+        router.replace("/dashboard");
       }
     } catch (err) {
-      console.error("Error saving preferences:", err);
-      toast.error("Something went wrong. Please try again.");
+      console.error("[Onboarding] Critical error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      toast.error(`Something went wrong: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

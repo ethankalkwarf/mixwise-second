@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { User, Session } from "@supabase/supabase-js";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import type { Profile } from "@/lib/supabase/database.types";
@@ -25,6 +26,9 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: React.ReactNode }) {
   // Use session from SessionContextProvider (which has the server-side initial session)
   const { session: contextSession, supabaseClient, isLoading: sessionLoading } = useSessionContext();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   
   const [user, setUser] = useState<User | null>(contextSession?.user ?? null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -34,6 +38,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Track if we've already processed the initial session to prevent duplicate fetches
   const initializedRef = useRef(false);
   const fetchingProfileRef = useRef(false);
+  const authSuccessHandledRef = useRef(false);
   
   const supabase = supabaseClient;
 
@@ -167,6 +172,50 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, fetchProfile]);
 
+  // Handle auth_success URL parameter - this fires after OAuth callback redirects
+  // This is the KEY fix for the login UI not updating issue
+  useEffect(() => {
+    const authSuccess = searchParams.get("auth_success");
+    
+    if (authSuccess === "true" && !authSuccessHandledRef.current) {
+      authSuccessHandledRef.current = true;
+      console.log("[UserProvider] Detected auth_success, forcing session refresh");
+      
+      // Force a fresh session check from Supabase
+      const refreshSession = async () => {
+        try {
+          const { data: { session: freshSession }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error("[UserProvider] Session refresh error:", error);
+            return;
+          }
+          
+          if (freshSession?.user) {
+            console.log("[UserProvider] Session refreshed for:", freshSession.user.email);
+            setSession(freshSession);
+            setUser(freshSession.user);
+            
+            // Fetch profile
+            const userProfile = await fetchProfile(freshSession.user.id);
+            setProfile(userProfile);
+            setIsLoading(false);
+            initializedRef.current = true;
+            
+            // Clean up URL parameter without triggering navigation
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete("auth_success");
+            window.history.replaceState({}, "", newUrl.toString());
+          }
+        } catch (err) {
+          console.error("[UserProvider] Session refresh exception:", err);
+        }
+      };
+      
+      refreshSession();
+    }
+  }, [searchParams, supabase, fetchProfile]);
+
   // Fallback: Force session check on mount to handle OAuth redirect edge cases
   // This runs once after mount to catch any missed session updates
   useEffect(() => {
@@ -178,6 +227,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       
       if (!mounted) return;
       
+      // Skip if we already handled auth_success
+      if (authSuccessHandledRef.current) {
+        return;
+      }
+      
       // If still loading after mount, do an explicit session check
       if (!initializedRef.current) {
         try {
@@ -186,6 +240,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           if (!mounted) return;
           
           if (currentSession?.user) {
+            console.log("[UserProvider] Mount check found session for:", currentSession.user.email);
             setSession(currentSession);
             setUser(currentSession.user);
             
@@ -195,7 +250,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             }
           }
         } catch (err) {
-          console.error("Session check error:", err);
+          console.error("[UserProvider] Session check error:", err);
         } finally {
           if (mounted) {
             setIsLoading(false);
