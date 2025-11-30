@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { useToast } from "@/components/ui/toast";
 import { trackCocktailFavorited } from "@/lib/analytics";
 import type { Favorite } from "@/lib/supabase/database.types";
 
@@ -30,6 +31,7 @@ interface UseFavoritesResult {
 export function useFavorites(): UseFavoritesResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
   const { openAuthDialog } = useAuthDialog();
+  const toast = useToast();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -110,8 +112,11 @@ export function useFavorites(): UseFavoritesResult {
       
       if (error) {
         console.error("Error removing favorite:", error);
+        toast.error("Failed to remove from favorites");
         // Reload to get accurate state
         await loadFavorites();
+      } else {
+        toast.info("Removed from favorites");
       }
     } else {
       // Add to favorites
@@ -141,15 +146,17 @@ export function useFavorites(): UseFavoritesResult {
       
       if (error) {
         console.error("Error adding favorite:", error);
+        toast.error("Failed to add to favorites");
         // Reload to get accurate state
         await loadFavorites();
       } else if (data) {
         // Update with real data from server
         setFavorites(prev => [data, ...prev.filter(f => f.cocktail_id !== cocktail.id)]);
         trackCocktailFavorited(user.id, cocktail.id, cocktail.name);
+        toast.success("Added to favorites");
       }
     }
-  }, [isAuthenticated, user, favoriteIds, openAuthDialog, supabase, loadFavorites]);
+  }, [isAuthenticated, user, favoriteIds, openAuthDialog, supabase, loadFavorites, toast]);
 
   // Remove favorite
   const removeFavorite = useCallback(async (cocktailId: string) => {
@@ -165,9 +172,12 @@ export function useFavorites(): UseFavoritesResult {
     
     if (error) {
       console.error("Error removing favorite:", error);
+      toast.error("Failed to remove from favorites");
       await loadFavorites();
+    } else {
+      toast.info("Removed from favorites");
     }
-  }, [isAuthenticated, user, supabase, loadFavorites]);
+  }, [isAuthenticated, user, supabase, loadFavorites, toast]);
 
   return {
     favorites,

@@ -5,6 +5,7 @@ import { PortableText } from "@/components/PortableText";
 import { RecipeSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { CocktailActions } from "@/components/cocktails/CocktailActions";
 import { BackToCocktails } from "@/components/cocktails/BackToCocktails";
+import { CocktailPageClient } from "@/components/cocktails/CocktailPageClient";
 import { generateCocktailMetadata, SITE_CONFIG } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import type { SanityCocktail } from "@/lib/sanityTypes";
@@ -291,6 +292,15 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                     ))}
                   </div>
                 )}
+
+                {/* Client-side interactive components */}
+                <CocktailPageClient
+                  cocktailId={cocktail._id}
+                  cocktailName={cocktail.name}
+                  cocktailSlug={cocktail.slug.current}
+                  cocktailDescription={cocktail.description}
+                  ingredients={cocktail.ingredients || []}
+                />
               </div>
             </div>
 

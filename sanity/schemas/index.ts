@@ -6,6 +6,7 @@ import article from "./article";
 import category from "./category";
 import author from "./author";
 import educationModule from "./educationModule";
+import collection from "./collection";
 
 export default [
   // Site configuration
@@ -18,5 +19,6 @@ export default [
   article,
   category,
   author,
-  educationModule
+  educationModule,
+  collection,
 ];

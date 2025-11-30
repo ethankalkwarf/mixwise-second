@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { MainContainer } from "./MainContainer";
+import { NewsletterSignup } from "@/components/email/NewsletterSignup";
 
 const FOOTER_LINKS = {
   explore: [
@@ -20,7 +21,7 @@ export function SiteFooter() {
     <footer className="border-t border-slate-800 bg-slate-950/90 mt-auto">
       <MainContainer className="py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Brand */}
+          {/* Brand & Newsletter */}
           <div className="sm:col-span-2 lg:col-span-2">
             <Link href="/" className="inline-flex items-center gap-3 mb-4 group">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-lime-400 to-emerald-600 flex items-center justify-center text-sm font-serif font-bold text-slate-900">
@@ -30,10 +31,18 @@ export function SiteFooter() {
                 MixWise
               </span>
             </Link>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
+            <p className="text-slate-400 text-sm leading-relaxed max-w-sm mb-6">
               A smarter way to make cocktails at home. Discover recipes, learn techniques, 
               and find drinks you can make with what you have.
             </p>
+            
+            {/* Newsletter Signup */}
+            <div className="max-w-sm">
+              <h4 className="text-sm font-bold text-slate-200 mb-3">
+                Get weekly cocktail inspiration
+              </h4>
+              <NewsletterSignup source="footer" compact />
+            </div>
           </div>
 
           {/* Explore Links */}

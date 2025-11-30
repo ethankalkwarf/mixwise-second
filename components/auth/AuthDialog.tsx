@@ -4,6 +4,7 @@ import React, { useState, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon, EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useUser } from "./UserProvider";
+import { useToast } from "@/components/ui/toast";
 
 // Google icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -33,6 +34,7 @@ export function AuthDialog({
   onSuccess 
 }: AuthDialogProps) {
   const { signInWithGoogle, signInWithEmail, isAuthenticated } = useUser();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -69,10 +71,12 @@ export function AuthDialog({
     
     if (result.error) {
       setError(result.error);
+      toast.error(result.error);
       setIsEmailLoading(false);
     } else {
       setEmailSent(true);
       setIsEmailLoading(false);
+      toast.success("Check your email for the magic link");
     }
   };
 

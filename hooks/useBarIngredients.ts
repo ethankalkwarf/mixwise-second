@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { useToast } from "@/components/ui/toast";
 import type { BarIngredient } from "@/lib/supabase/database.types";
 
 const LOCAL_STORAGE_KEY = "mixwise-bar-inventory";
@@ -28,6 +29,7 @@ interface UseBarIngredientsResult {
 export function useBarIngredients(): UseBarIngredientsResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
   const { openAuthDialog } = useAuthDialog();
+  const toast = useToast();
   const [ingredientIds, setIngredientIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [serverIngredients, setServerIngredients] = useState<BarIngredient[]>([]);
@@ -152,14 +154,18 @@ export function useBarIngredients(): UseBarIngredientsResult {
       
       if (error) {
         console.error("Error adding ingredient:", error);
+        toast.error("Failed to add ingredient");
         // Revert on error
         setIngredientIds(ingredientIds);
+      } else {
+        toast.success("Ingredient added to your bar");
       }
     } else {
       // Save to localStorage
       saveToLocal(newIds);
+      toast.success("Ingredient added to your bar");
     }
-  }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal]);
+  }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
 
   // Remove ingredient
   const removeIngredient = useCallback(async (id: string) => {
@@ -176,14 +182,18 @@ export function useBarIngredients(): UseBarIngredientsResult {
       
       if (error) {
         console.error("Error removing ingredient:", error);
+        toast.error("Failed to remove ingredient");
         // Revert on error
         setIngredientIds(ingredientIds);
+      } else {
+        toast.info("Ingredient removed");
       }
     } else {
       // Save to localStorage
       saveToLocal(newIds);
+      toast.info("Ingredient removed");
     }
-  }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal]);
+  }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
 
   // Set all ingredients at once
   const setIngredientsHandler = useCallback(async (ids: string[]) => {
@@ -214,14 +224,21 @@ export function useBarIngredients(): UseBarIngredientsResult {
     setIngredientIds([]);
     
     if (isAuthenticated && user) {
-      await supabase
+      const { error } = await supabase
         .from("bar_ingredients")
         .delete()
         .eq("user_id", user.id);
+      
+      if (error) {
+        toast.error("Failed to clear bar");
+      } else {
+        toast.info("Bar cleared");
+      }
     } else {
       clearLocal();
+      toast.info("Bar cleared");
     }
-  }, [isAuthenticated, user, supabase, clearLocal]);
+  }, [isAuthenticated, user, supabase, clearLocal, toast]);
 
   // Sync local to server (for after sign-in)
   const syncToServer = useCallback(async () => {
@@ -235,12 +252,16 @@ export function useBarIngredients(): UseBarIngredientsResult {
       ingredient_id: id,
     }));
     
-    await supabase.from("bar_ingredients").upsert(items, {
+    const { error } = await supabase.from("bar_ingredients").upsert(items, {
       onConflict: "user_id,ingredient_id",
     });
     
     clearLocal();
-  }, [isAuthenticated, user, loadFromLocal, clearLocal, supabase]);
+    
+    if (!error) {
+      toast.success("Bar saved!");
+    }
+  }, [isAuthenticated, user, loadFromLocal, clearLocal, supabase, toast]);
 
   // Prompt user to sign in to save
   const promptToSave = useCallback(() => {

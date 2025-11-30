@@ -158,6 +158,81 @@ export interface Database {
           updated_at?: string;
         };
       };
+      ratings: {
+        Row: {
+          id: number;
+          user_id: string;
+          cocktail_id: string;
+          rating: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          cocktail_id: string;
+          rating: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          cocktail_id?: string;
+          rating?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      shopping_list: {
+        Row: {
+          id: number;
+          user_id: string;
+          ingredient_id: string;
+          ingredient_name: string;
+          ingredient_category: string | null;
+          is_checked: boolean;
+          added_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          ingredient_id: string;
+          ingredient_name: string;
+          ingredient_category?: string | null;
+          is_checked?: boolean;
+          added_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          ingredient_id?: string;
+          ingredient_name?: string;
+          ingredient_category?: string | null;
+          is_checked?: boolean;
+          added_at?: string;
+        };
+      };
+      email_signups: {
+        Row: {
+          id: number;
+          email: string;
+          source: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          email: string;
+          source?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          email?: string;
+          source?: string;
+          created_at?: string;
+        };
+      };
     };
     Functions: {
       upsert_recently_viewed: {
@@ -176,6 +251,30 @@ export interface Database {
           p_feature: string;
         };
         Returns: undefined;
+      };
+      upsert_rating: {
+        Args: {
+          p_user_id: string;
+          p_cocktail_id: string;
+          p_rating: number;
+        };
+        Returns: undefined;
+      };
+      get_cocktail_rating: {
+        Args: {
+          p_cocktail_id: string;
+        };
+        Returns: {
+          average_rating: number;
+          total_ratings: number;
+        }[];
+      };
+      toggle_shopping_item: {
+        Args: {
+          p_user_id: string;
+          p_ingredient_id: string;
+        };
+        Returns: boolean;
       };
     };
   };
@@ -196,6 +295,17 @@ export type RecentlyViewed = Database["public"]["Tables"]["recently_viewed_cockt
 export type RecentlyViewedInsert = Database["public"]["Tables"]["recently_viewed_cocktails"]["Insert"];
 
 export type FeatureUsage = Database["public"]["Tables"]["feature_usage"]["Row"];
+
+export type Rating = Database["public"]["Tables"]["ratings"]["Row"];
+export type RatingInsert = Database["public"]["Tables"]["ratings"]["Insert"];
+export type RatingUpdate = Database["public"]["Tables"]["ratings"]["Update"];
+
+export type ShoppingListItem = Database["public"]["Tables"]["shopping_list"]["Row"];
+export type ShoppingListInsert = Database["public"]["Tables"]["shopping_list"]["Insert"];
+export type ShoppingListUpdate = Database["public"]["Tables"]["shopping_list"]["Update"];
+
+export type EmailSignup = Database["public"]["Tables"]["email_signups"]["Row"];
+export type EmailSignupInsert = Database["public"]["Tables"]["email_signups"]["Insert"];
 
 // User role type
 export type UserRole = "free" | "paid" | "admin";

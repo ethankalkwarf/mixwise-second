@@ -110,3 +110,33 @@ export async function trackMixToolUsed(
   console.log("[Analytics] Mix tool used:", { userId, ingredientCount, matchCount });
 }
 
+/**
+ * Track when a user signs up for the email newsletter/lead magnet.
+ * 
+ * @param email - The email address
+ * @param source - Where the signup came from ('footer', 'cocktail_guide', etc.)
+ */
+export async function trackEmailSignup(
+  email: string,
+  source: string
+): Promise<void> {
+  // TODO: Send to email platform
+  // Example with ConvertKit:
+  // await fetch('https://api.convertkit.com/v3/forms/{form_id}/subscribe', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({
+  //     api_key: process.env.CONVERTKIT_API_KEY,
+  //     email: email,
+  //     tags: [source],
+  //   }),
+  // });
+
+  console.log("[Analytics] Email signup:", { email, source });
+}
+
+// Make trackEmailSignup available globally for the modal
+if (typeof window !== "undefined") {
+  (window as unknown as Record<string, unknown>).trackEmailSignup = trackEmailSignup;
+}
+

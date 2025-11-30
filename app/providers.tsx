@@ -5,6 +5,8 @@ import { Session, createClientComponentClient } from "@supabase/auth-helpers-nex
 import { createClient } from "@supabase/supabase-js";
 import { UserProvider } from "@/components/auth/UserProvider";
 import { AuthDialogProvider } from "@/components/auth/AuthDialogProvider";
+import { ToastProvider } from "@/components/ui/toast";
+import { EmailCaptureModal } from "@/components/email/EmailCaptureModal";
 
 // Create Supabase client with fallback for build-time when env vars may not be available
 function createSupabaseClient() {
@@ -37,7 +39,10 @@ export function SupabaseProvider({
     <SessionContextProvider supabaseClient={supabase} initialSession={initialSession}>
       <UserProvider>
         <AuthDialogProvider>
-          {children}
+          <ToastProvider>
+            {children}
+            <EmailCaptureModal />
+          </ToastProvider>
         </AuthDialogProvider>
       </UserProvider>
     </SessionContextProvider>

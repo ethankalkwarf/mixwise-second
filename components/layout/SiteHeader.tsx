@@ -13,6 +13,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { CocktailsReadyBadge, CocktailsReadyBadgeCompact } from "./CocktailsReadyBadge";
+import { ShoppingListBadge } from "./ShoppingListBadge";
 
 export interface NavItem {
   label: string;
@@ -87,8 +89,19 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
             })}
           </ul>
 
-          {/* Right side: Auth */}
+          {/* Right side: Auth & Stats */}
           <div className="flex items-center gap-3">
+            {/* Shopping List Badge */}
+            <ShoppingListBadge />
+
+            {/* Cocktails Ready Badge (Desktop) */}
+            <CocktailsReadyBadge />
+
+            {/* Cocktails Ready Badge (Mobile) */}
+            <div className="md:hidden">
+              <CocktailsReadyBadgeCompact />
+            </div>
+
             {/* Desktop Auth */}
             <div className="hidden md:flex items-center">
               {isLoading ? (

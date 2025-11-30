@@ -68,6 +68,27 @@ Tracks recently viewed cocktails.
 For future usage tracking and quotas.
 - `user_id`, `feature`, `period_start`, `count`
 
+### ratings (Migration 002)
+Stores user cocktail ratings.
+- `user_id` - References auth user
+- `cocktail_id` - Sanity cocktail ID
+- `rating` - 1-5 star rating
+- Unique constraint on (user_id, cocktail_id)
+
+### shopping_list (Migration 002)
+Stores user's shopping list for missing ingredients.
+- `user_id` - References auth user
+- `ingredient_id` - Sanity ingredient ID
+- `ingredient_name` - Denormalized name
+- `ingredient_category` - Category for grouping
+- `is_checked` - Whether item is checked off
+
+### email_signups (Migration 002)
+Stores email signups for newsletters and lead magnets.
+- `email` - Email address
+- `source` - Where signup came from ('newsletter', 'cocktail_guide', 'footer')
+- Public insert allowed (no auth required)
+
 ## Setup Instructions
 
 ### 1. Run the Database Migration
