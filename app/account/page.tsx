@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
+import Image from "next/image";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { sanityClient } from "@/lib/sanityClient";
 import { BADGES, BADGE_LIST, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
@@ -34,6 +36,7 @@ interface BadgeDisplayData extends BadgeDefinition {
 export default function AccountPage() {
   const router = useRouter();
   const { user, profile, isLoading, isAuthenticated, signOut } = useUser();
+  const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
   
@@ -156,10 +159,11 @@ export default function AccountPage() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
                 {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no/img-element
-                  <img
+                  <Image
                     src={avatarUrl}
                     alt=""
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 ) : (

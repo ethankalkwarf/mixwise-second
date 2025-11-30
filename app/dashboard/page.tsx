@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSessionContext } from "@supabase/auth-helpers-react";
@@ -12,7 +12,10 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { sanityClient } from "@/lib/sanityClient";
+import Image from "next/image";
 import type { MixIngredient } from "@/lib/mixTypes";
+import type { BadgeDefinition } from "@/lib/badges";
+import { RARITY_COLORS } from "@/lib/badges";
 import {
   BeakerIcon,
   HeartIcon,
@@ -41,7 +44,7 @@ interface UserBadge {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading } = useUser();
+  const { user, profile, isAuthenticated, isLoading: authLoading } = useUser();
   const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const { ingredientIds, isLoading: barLoading, removeIngredient } = useBarIngredients();
@@ -310,10 +313,11 @@ export default function DashboardPage() {
                         className="flex items-center gap-4 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors group"
                       >
                         {cocktail.externalImageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={cocktail.externalImageUrl}
                             alt=""
+                            width={56}
+                            height={56}
                             className="w-14 h-14 rounded-lg object-cover"
                           />
                         ) : (
@@ -420,10 +424,11 @@ export default function DashboardPage() {
                           className="flex-shrink-0 w-32 group"
                         >
                           {fav.cocktail_image_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            <Image
                               src={fav.cocktail_image_url}
                               alt=""
+                              width={128}
+                              height={96}
                               className="w-32 h-24 rounded-lg object-cover mb-2"
                             />
                           ) : (
@@ -461,10 +466,11 @@ export default function DashboardPage() {
                           className="flex-shrink-0 w-32 group"
                         >
                           {item.cocktail_image_url ? (
-                            // eslint-disable-next-line @next/next/no/img-element
-                            <img
+                            <Image
                               src={item.cocktail_image_url}
                               alt=""
+                              width={128}
+                              height={96}
                               className="w-32 h-24 rounded-lg object-cover mb-2"
                             />
                           ) : (
