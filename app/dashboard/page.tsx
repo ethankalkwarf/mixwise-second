@@ -12,7 +12,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { sanityClient } from "@/lib/sanityClient";
-import { BADGES, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
+import { BADGES, BADGE_LIST, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
 import {
   BeakerIcon,
   HeartIcon,
@@ -144,11 +144,15 @@ export default function DashboardPage() {
 
   const isLoading = authLoading || barLoading || favsLoading || recentLoading;
 
-  // Badge display data
-  const badgeData = useMemo(() => {
-    return userBadges.map((ub) => ({
-      ...BADGES[ub.badge_id],
-      earnedAt: ub.earned_at,
+  // Badge display data - show all badges with earned status
+  const allBadgeData = useMemo(() => {
+    const earnedIds = new Set(userBadges.map(ub => ub.badge_id));
+    const earnedTimes = new Map(userBadges.map(ub => [ub.badge_id, ub.earned_at]));
+
+    return BADGE_LIST.map((badge) => ({
+      ...badge,
+      locked: !earnedIds.has(badge.id),
+      earnedAt: earnedTimes.get(badge.id),
     }));
   }, [userBadges]);
 
@@ -382,10 +386,10 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="p-6">
-                {badgeData.length > 0 ? (
+                {allBadgeData.length > 0 ? (
                   <div className="grid grid-cols-3 gap-3">
-                    {badgeData.map((badge) => (
-                      <BadgeCard key={badge.id} badge={badge as BadgeDefinition} />
+                    {allBadgeData.map((badge) => (
+                      <BadgeCard key={badge.id} badge={badge} locked={badge.locked} />
                     ))}
                   </div>
                 ) : (
@@ -474,18 +478,29 @@ function StatCard({
 }
 
 // Badge Card Component
-function BadgeCard({ badge }: { badge: BadgeDefinition }) {
+function BadgeCard({ badge, locked }: { badge: BadgeDefinition & { locked?: boolean; earnedAt?: string }, locked: boolean }) {
   return (
     <div
-      className="flex flex-col items-center p-3 bg-slate-800/50 rounded-xl text-center"
-      title={badge.description}
+      className={`relative flex flex-col items-center p-3 bg-slate-800/50 rounded-xl text-center transition-all ${
+        locked ? "opacity-60" : ""
+      }`}
+      title={locked ? badge.criteria : badge.description}
     >
       <div
-        className={`w-12 h-12 rounded-full bg-gradient-to-br ${RARITY_COLORS[badge.rarity]} flex items-center justify-center text-2xl mb-2`}
+        className={`w-12 h-12 rounded-full bg-gradient-to-br ${
+          locked ? "from-slate-500 to-slate-600" : RARITY_COLORS[badge.rarity]
+        } flex items-center justify-center text-2xl mb-2`}
       >
         {badge.icon}
       </div>
-      <p className="text-xs text-slate-300 font-medium line-clamp-2">{badge.name}</p>
+      <p className={`text-xs font-medium line-clamp-2 ${locked ? "text-slate-500" : "text-slate-300"}`}>
+        {badge.name}
+      </p>
+      {locked && (
+        <div className="absolute inset-0 bg-slate-900/5 rounded-xl flex items-center justify-center pointer-events-none">
+          <div className="text-slate-500 text-xs">🔒</div>
+        </div>
+      )}
     </div>
   );
 }
