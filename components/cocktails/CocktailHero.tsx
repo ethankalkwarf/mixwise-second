@@ -1,7 +1,6 @@
 import Image from "next/image";
-import { CocktailActions } from "./CocktailActions";
-import { RatingStars } from "./RatingStars";
 import type { SanityCocktail } from "@/lib/sanityTypes";
+import { BeakerIcon, Square3Stack3DIcon } from "@heroicons/react/24/outline";
 
 interface CocktailHeroProps {
   cocktail: SanityCocktail;
@@ -10,48 +9,17 @@ interface CocktailHeroProps {
 
 export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-start">
-      {/* Left Column: Text Content */}
-      <div className="space-y-6">
-        {/* Cocktail Name */}
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-forest leading-tight">
-          {cocktail.name}
-        </h1>
-
-        {/* Short Description */}
-        {cocktail.description && (
-          <p className="text-lg text-sage leading-relaxed">
-            {cocktail.description}
-          </p>
-        )}
-
-        {/* Rating Stars */}
-        <div className="flex items-center gap-4">
-          <RatingStars cocktailId={cocktail._id} size="md" showCount={false} />
-          <span className="text-sm text-sage">Rate this cocktail</span>
-        </div>
-
-        {/* Save/Favorite Button */}
-        <CocktailActions
-          cocktail={{
-            id: cocktail._id,
-            name: cocktail.name,
-            slug: cocktail.slug.current,
-            imageUrl: imageUrl || undefined,
-          }}
-        />
-      </div>
-
-      {/* Right Column: Image */}
-      <div className="relative order-first md:order-last">
-        <div className="aspect-square md:aspect-[4/5] w-full overflow-hidden rounded-3xl shadow-card bg-mist">
+    <>
+      {/* IMAGE SIDE */}
+      <div className="relative group">
+        <div className="aspect-[4/5] md:aspect-square w-full overflow-hidden rounded-2xl shadow-soft bg-gray-200 relative">
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={cocktail.imageAltOverride || cocktail.image?.alt || `${cocktail.name} cocktail`}
               fill
               priority
-              className="object-cover"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           ) : (
@@ -61,21 +29,76 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
           )}
 
           {/* Badges Overlay */}
-          <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-            {cocktail.isTrending && (
-              <span className="bg-terracotta text-cream text-xs font-bold px-3 py-1.5 rounded-full shadow-md">
-                🔥 Trending
-              </span>
-            )}
-            {cocktail.isPopular && !cocktail.isTrending && (
-              <span className="bg-forest text-cream text-xs font-bold px-3 py-1.5 rounded-full shadow-md">
-                ★ Featured
-              </span>
-            )}
-          </div>
+          {(cocktail.isTrending || cocktail.isPopular) && (
+            <div className="absolute bottom-2 right-2 text-[10px] text-white/60 bg-black/20 px-2 py-1 rounded backdrop-blur-sm">
+              Photo credit
+            </div>
+          )}
         </div>
       </div>
-    </div>
+
+      {/* HERO CONTENT */}
+      <div className="flex flex-col justify-center h-full space-y-6">
+        {/* CATEGORY ROW */}
+        <div className="flex items-center space-x-2 text-sm text-gray-500 font-medium">
+          {cocktail.primarySpirit && (
+            <>
+              <span className="uppercase tracking-wider text-xs">{cocktail.primarySpirit}</span>
+              <span>&bull;</span>
+            </>
+          )}
+          {cocktail.drinkCategories && cocktail.drinkCategories.length > 0 && (
+            <span className="uppercase tracking-wider text-xs text-terracotta">{cocktail.drinkCategories[0]}</span>
+          )}
+        </div>
+
+        {/* TITLE + TAGS */}
+        <div>
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-forest mb-4 leading-tight">
+            {cocktail.name}
+          </h1>
+
+          <div className="flex flex-wrap gap-2 mb-4">
+            {cocktail.tags && cocktail.tags.slice(0, 3).map((tag) => (
+              <span key={tag} className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full uppercase tracking-wide">
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          {cocktail.description && (
+            <p className="text-lg text-sage leading-relaxed">{cocktail.description}</p>
+          )}
+        </div>
+
+        {/* META GRID */}
+        <div className="grid grid-cols-2 gap-4 py-6 border-t border-b border-gray-100">
+          {cocktail.glass && (
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
+                <Square3Stack3DIcon className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Glassware</p>
+                <p className="font-medium text-forest capitalize">{cocktail.glass.replace(/-/g, " ")}</p>
+              </div>
+            </div>
+          )}
+
+          {cocktail.method && (
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                <BeakerIcon className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Method</p>
+                <p className="font-medium text-forest capitalize">{cocktail.method}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 

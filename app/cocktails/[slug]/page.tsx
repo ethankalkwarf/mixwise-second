@@ -1,6 +1,5 @@
 import { sanityClient } from "@/lib/sanityClient";
 import { getImageUrl } from "@/lib/sanityImage";
-import { MainContainer } from "@/components/layout/MainContainer";
 import { RecipeSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { BackToCocktails } from "@/components/cocktails/BackToCocktails";
 import { generateCocktailMetadata, SITE_CONFIG } from "@/lib/seo";
@@ -8,9 +7,12 @@ import { notFound } from "next/navigation";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
 import { CocktailHero } from "@/components/cocktails/CocktailHero";
-import { IngredientCard } from "@/components/cocktails/IngredientCard";
-import { InstructionList } from "@/components/cocktails/InstructionList";
-import { InfoCard } from "@/components/cocktails/InfoCard";
+import { CocktailIngredientsCard } from "@/components/cocktails/CocktailIngredientsCard";
+import { CocktailTools } from "@/components/cocktails/CocktailTools";
+import { CocktailFlavorProfileCard } from "@/components/cocktails/CocktailFlavorProfileCard";
+import { CocktailBestForCard } from "@/components/cocktails/CocktailBestForCard";
+import { CocktailFunFactCard } from "@/components/cocktails/CocktailFunFactCard";
+import { CocktailInstructions } from "@/components/cocktails/CocktailInstructions";
 
 export const revalidate = 60;
 export const dynamic = 'force-dynamic';
@@ -64,11 +66,11 @@ type PageProps = {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const cocktail: SanityCocktail | null = await sanityClient.fetch(COCKTAIL_QUERY, { slug });
-  
+
   if (!cocktail) {
     return { title: "Cocktail Not Found" };
   }
-  
+
   return generateCocktailMetadata(cocktail);
 }
 
@@ -84,8 +86,8 @@ export default async function CocktailDetailPage({ params }: PageProps) {
   const imageUrl = getImageUrl(cocktail.image, { width: 1200, height: 1200 }) || cocktail.externalImageUrl || null;
 
   // Build ingredients list for schema
-  const ingredientsList = cocktail.ingredients?.map((item) => 
-    `${item.amount ? item.amount + " " : ""}${item.ingredient?.name || "Unknown"}`
+  const ingredientsList = cocktail.ingredients?.map((item) =>
+    `${item.amount ? item.amount + " " : ""}${item.ingredient?.name || "Ingredient"}`
   ) || [];
 
   return (
@@ -107,60 +109,62 @@ export default async function CocktailDetailPage({ params }: PageProps) {
         ]}
       />
 
-      <div className="py-8 lg:py-12 bg-cream min-h-screen">
-        <MainContainer>
-          {/* Back Link */}
-          <div className="mb-8">
-            <BackToCocktails />
+      {/* MAIN PAGE WRAPPER */}
+      <main className="max-w-6xl mx-auto px-4 py-8 md:py-12">
+        {/* Back Link */}
+        <div className="mb-8">
+          <BackToCocktails />
+        </div>
+
+        {/* HERO SECTION */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 mb-16 items-start">
+          <CocktailHero cocktail={cocktail} imageUrl={imageUrl} />
+        </section>
+
+        {/* CONTENT GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* INGREDIENTS COLUMN */}
+          <div className="lg:col-span-5 space-y-8">
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 sticky top-24">
+              <CocktailIngredientsCard ingredients={cocktail.ingredients || []} />
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <CocktailTools />
+              </div>
+            </div>
           </div>
 
-          <article className="space-y-8">
-            {/* Hero Section */}
-            <CocktailHero cocktail={cocktail} imageUrl={imageUrl} />
-
-            {/* Two-Column Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Ingredients Card */}
-              <IngredientCard ingredients={cocktail.ingredients || []} />
-
-              {/* Instructions Card */}
-              {cocktail.instructions && (
-                <InstructionList
-                  instructions={cocktail.instructions}
-                  tips={cocktail.tips}
-                />
-              )}
-            </div>
-
-            {/* Optional Info Cards */}
-            {(cocktail.garnish || cocktail.glass || cocktail.method) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {cocktail.garnish && (
-                  <InfoCard
-                    title="Garnish"
-                    content={cocktail.garnish}
-                    type="garnish"
-                  />
+          {/* RIGHT COLUMN */}
+          <div className="lg:col-span-7 space-y-10">
+            {/* FLAVOR + BEST FOR GRID */}
+            {(cocktail.flavorProfile || cocktail.bestFor) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {cocktail.flavorProfile && (
+                  <CocktailFlavorProfileCard profile={cocktail.flavorProfile} />
                 )}
-                {cocktail.glass && (
-                  <InfoCard
-                    title="Glassware"
-                    content={cocktail.glass.replace(/-/g, " ")}
-                    type="glassware"
-                  />
-                )}
-                {cocktail.method && (
-                  <InfoCard
-                    title="Method"
-                    content={cocktail.method}
-                    type="notes"
-                  />
+                {cocktail.bestFor && cocktail.bestFor.length > 0 && (
+                  <CocktailBestForCard bestFor={cocktail.bestFor} />
                 )}
               </div>
             )}
-          </article>
-        </MainContainer>
-      </div>
+
+            {/* FUN FACT */}
+            {cocktail.funFact && (
+              <CocktailFunFactCard
+                fact={cocktail.funFact}
+                sources={cocktail.funFactSources}
+              />
+            )}
+
+            {/* INSTRUCTIONS */}
+            {cocktail.instructions && (
+              <CocktailInstructions
+                instructions={cocktail.instructions}
+                tips={cocktail.tips}
+              />
+            )}
+          </div>
+        </div>
+      </main>
     </>
   );
 }
