@@ -112,7 +112,7 @@ export function AuthDialog({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-forest/30 backdrop-blur-sm" />
         </Transition.Child>
 
         {/* Dialog content */}
@@ -127,11 +127,11 @@ export function AuthDialog({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-slate-900 border border-slate-700 p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-white border border-mist p-6 sm:p-8 text-left align-middle shadow-card-hover transition-all">
                 {/* Close button */}
                 <button
                   onClick={handleClose}
-                  className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  className="absolute top-4 right-4 p-2 rounded-xl text-sage hover:text-forest hover:bg-mist transition-colors"
                   aria-label="Close dialog"
                 >
                   <XMarkIcon className="w-5 h-5" />
@@ -140,19 +140,19 @@ export function AuthDialog({
                 {emailSent ? (
                   // Email sent confirmation
                   <div className="text-center py-6">
-                    <div className="mx-auto w-16 h-16 bg-lime-500/20 rounded-full flex items-center justify-center mb-4">
-                      <CheckCircleIcon className="w-8 h-8 text-lime-400" />
+                    <div className="mx-auto w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center mb-4">
+                      <CheckCircleIcon className="w-8 h-8 text-olive" />
                     </div>
-                    <Dialog.Title className="text-xl font-serif font-bold text-slate-100 mb-2">
+                    <Dialog.Title className="text-xl font-display font-bold text-forest mb-2">
                       Check your email
                     </Dialog.Title>
-                    <p className="text-slate-400 mb-6">
-                      We sent a magic link to <span className="text-slate-200 font-medium">{email}</span>.
+                    <p className="text-sage mb-6">
+                      We sent a magic link to <span className="text-forest font-medium">{email}</span>.
                       Click the link to sign in.
                     </p>
                     <button
                       onClick={() => setEmailSent(false)}
-                      className="text-sm text-lime-400 hover:text-lime-300"
+                      className="text-sm text-terracotta hover:text-terracotta-dark font-medium"
                     >
                       Use a different email
                     </button>
@@ -162,13 +162,13 @@ export function AuthDialog({
                   <>
                     {/* Header */}
                     <div className="text-center mb-6">
-                      <div className="mx-auto w-14 h-14 bg-gradient-to-br from-lime-400 to-emerald-600 rounded-full flex items-center justify-center mb-4">
-                        <span className="text-slate-900 font-serif font-bold text-xl">MW</span>
+                      <div className="mb-4">
+                        <span className="text-3xl font-display font-bold text-forest">mixwise.</span>
                       </div>
-                      <Dialog.Title className="text-xl font-serif font-bold text-slate-100 mb-2">
+                      <Dialog.Title className="text-xl font-display font-bold text-forest mb-2">
                         {displayTitle}
                       </Dialog.Title>
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-sage text-sm">
                         {subtitle || (mode === "login" 
                           ? "Sign in to access your saved cocktails, bar inventory, and more."
                           : "Save your bar, favorite cocktails, and get personalized recommendations.")}
@@ -177,7 +177,7 @@ export function AuthDialog({
 
                     {/* Error message */}
                     {error && (
-                      <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-terracotta text-sm">
                         {error}
                       </div>
                     )}
@@ -186,10 +186,10 @@ export function AuthDialog({
                     <button
                       onClick={handleGoogleSignIn}
                       disabled={isGoogleLoading}
-                      className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-gray-100 text-slate-900 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+                      className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-mist/50 text-forest font-medium rounded-2xl border border-mist transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
                     >
                       {isGoogleLoading ? (
-                        <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
+                        <div className="spinner" />
                       ) : (
                         <GoogleIcon className="w-5 h-5" />
                       )}
@@ -199,33 +199,34 @@ export function AuthDialog({
                     {/* Divider */}
                     <div className="relative my-6">
                       <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-700" />
+                        <div className="w-full border-t border-mist" />
                       </div>
                       <div className="relative flex justify-center text-xs">
-                        <span className="bg-slate-900 px-3 text-slate-500">or</span>
+                        <span className="bg-white px-3 text-sage">or</span>
                       </div>
                     </div>
 
                     {/* Email sign in */}
                     <form onSubmit={handleEmailSignIn}>
+                      <label className="label-botanical">Email Address</label>
                       <div className="relative mb-4">
-                        <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                        <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
                         <input
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="Enter your email"
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500/50 transition-all"
+                          className="input-botanical pl-11"
                           required
                         />
                       </div>
                       <button
                         type="submit"
                         disabled={isEmailLoading || !email.trim()}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isEmailLoading ? (
-                          <div className="w-5 h-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />
+                          <div className="spinner border-cream/30 border-t-cream" />
                         ) : (
                           "Continue with email"
                         )}
@@ -234,19 +235,19 @@ export function AuthDialog({
 
                     {/* Benefits list (only for signup mode) */}
                     {mode === "signup" && (
-                      <div className="mt-6 pt-6 border-t border-slate-800">
-                        <p className="text-xs text-slate-500 text-center mb-3">Free accounts include:</p>
-                        <ul className="space-y-2 text-sm text-slate-400">
+                      <div className="mt-6 pt-6 border-t border-mist">
+                        <p className="font-mono text-xs text-sage text-center mb-3 uppercase tracking-widest">Free accounts include:</p>
+                        <ul className="space-y-2 text-sm text-charcoal">
                           <li className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full" />
+                            <span className="w-1.5 h-1.5 bg-olive rounded-full" />
                             Save your home bar ingredients
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full" />
+                            <span className="w-1.5 h-1.5 bg-olive rounded-full" />
                             Favorite cocktails to find later
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full" />
+                            <span className="w-1.5 h-1.5 bg-olive rounded-full" />
                             Track your cocktail history
                           </li>
                         </ul>
@@ -254,23 +255,23 @@ export function AuthDialog({
                     )}
 
                     {/* Mode switcher */}
-                    <div className="mt-6 pt-6 border-t border-slate-800 text-center">
+                    <div className="mt-6 pt-6 border-t border-mist text-center">
                       {mode === "signup" ? (
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-sage">
                           Already have an account?{" "}
                           <button
                             onClick={() => onModeChange?.("login")}
-                            className="text-lime-400 hover:text-lime-300 font-medium transition-colors"
+                            className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
                           >
                             Log in
                           </button>
                         </p>
                       ) : (
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-sage">
                           Don&apos;t have an account?{" "}
                           <button
                             onClick={() => onModeChange?.("signup")}
-                            className="text-lime-400 hover:text-lime-300 font-medium transition-colors"
+                            className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
                           >
                             Create one for free
                           </button>
@@ -279,7 +280,7 @@ export function AuthDialog({
                     </div>
 
                     {/* Terms */}
-                    <p className="mt-4 text-xs text-slate-500 text-center">
+                    <p className="mt-4 text-xs text-sage text-center">
                       By continuing, you agree to our Terms of Service and Privacy Policy.
                     </p>
                   </>
@@ -292,4 +293,3 @@ export function AuthDialog({
     </Transition>
   );
 }
-

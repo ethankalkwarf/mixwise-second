@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { DM_Serif_Display, Jost, Space_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { SupabaseProvider } from "./providers";
@@ -9,8 +9,25 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { OrganizationSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+const dmSerif = DM_Serif_Display({ 
+  subsets: ["latin"], 
+  weight: "400",
+  variable: "--font-dm-serif",
+  display: "swap",
+});
+
+const jost = Jost({ 
+  subsets: ["latin"], 
+  variable: "--font-jost",
+  display: "swap",
+});
+
+const spaceMono = Space_Mono({ 
+  subsets: ["latin"], 
+  weight: ["400", "700"],
+  variable: "--font-space-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -53,7 +70,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#F9F7F2",
   width: "device-width",
   initialScale: 1,
 };
@@ -75,17 +92,15 @@ export default async function RootLayout({
   const initialSession = null;
 
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${dmSerif.variable} ${jost.variable} ${spaceMono.variable}`}>
       <head>
         <OrganizationSchema />
       </head>
-      <body className="bg-slate-950 text-slate-50 font-sans selection:bg-lime-500/30 antialiased">
+      <body className="bg-cream text-charcoal font-sans antialiased">
         {/* Skip to main content link for accessibility */}
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        
-        <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black -z-10" aria-hidden="true" />
         
         <SupabaseProvider initialSession={initialSession}>
           <div className="min-h-screen flex flex-col">

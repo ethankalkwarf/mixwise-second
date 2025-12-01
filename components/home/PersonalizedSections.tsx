@@ -107,14 +107,14 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
             <SectionHeader title="Cocktails You Can Make" id="canmake-title" />
             <Link
               href="/mix"
-              className="text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors flex items-center gap-1"
+              className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1"
             >
               View all in Mix <ArrowRightIcon className="w-4 h-4" />
             </Link>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
             {readyToMake.map((cocktail) => (
-              <SmallCocktailCard key={cocktail._id} cocktail={cocktail} badge="Ready!" badgeColor="bg-lime-500" />
+              <SmallCocktailCard key={cocktail._id} cocktail={cocktail} badge="Ready!" badgeColor="bg-olive" />
             ))}
           </div>
         </section>
@@ -124,7 +124,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       {oneAway.length > 0 && (
         <section aria-labelledby="oneaway-title">
           <SectionHeader title="Just One Ingredient Away" id="oneaway-title" />
-          <p className="text-slate-400 text-sm mb-6">Add one ingredient to unlock these recipes!</p>
+          <p className="text-sage text-sm mb-6">Add one ingredient to unlock these recipes!</p>
           <div className="grid gap-5 sm:grid-cols-2" role="list">
             {oneAway.map(({ cocktail, missingIngredient }) => (
               <OneAwayCard
@@ -145,7 +145,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
             <SectionHeader title="Your Favorites" id="favorites-title" />
             <Link
               href="/account"
-              className="text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors flex items-center gap-1"
+              className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1"
             >
               View all <ArrowRightIcon className="w-4 h-4" />
             </Link>
@@ -161,7 +161,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
                   externalImageUrl: fav.cocktail_image_url || undefined,
                 }}
                 badge="❤️"
-                badgeColor="bg-pink-500"
+                badgeColor="bg-terracotta"
               />
             ))}
           </div>
@@ -172,7 +172,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       {hasRecent && recentlyViewed.length > 0 && (
         <section aria-labelledby="recent-title">
           <SectionHeader title="Continue Exploring" id="recent-title" />
-          <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-track-slate-800 scrollbar-thumb-slate-600" role="list">
+          <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin" role="list">
             {recentlyViewed.slice(0, 8).map((item) => (
               <SmallCocktailCard
                 key={item.cocktail_id}
@@ -206,40 +206,40 @@ interface SmallCocktailCardProps {
   compact?: boolean;
 }
 
-function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-lime-500", compact }: SmallCocktailCardProps) {
+function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }: SmallCocktailCardProps) {
   const imageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 }) || cocktail.externalImageUrl;
 
   return (
     <Link
       href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-      className={`group relative flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all duration-300 hover:border-lime-500/40 hover:shadow-lg hover:shadow-lime-900/10 ${compact ? "flex-shrink-0 w-48" : ""}`}
+      className={`group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover ${compact ? "flex-shrink-0 w-48" : ""}`}
       role="listitem"
     >
-      <div className={`relative ${compact ? "h-28" : "h-36"} w-full overflow-hidden bg-slate-800`}>
+      <div className={`relative ${compact ? "h-28" : "h-36"} w-full overflow-hidden bg-mist`}>
         {imageUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
               alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
           </>
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-700 text-4xl" aria-hidden="true">
+          <div className="h-full w-full flex items-center justify-center text-sage text-4xl" aria-hidden="true">
             🍸
           </div>
         )}
         {badge && (
-          <span className={`absolute top-2 left-2 ${badgeColor} text-white text-xs font-bold px-2 py-1 rounded shadow-lg`}>
+          <span className={`absolute top-2 left-2 ${badgeColor} text-cream text-xs font-bold px-2 py-1 rounded-full shadow-lg`}>
             {badge}
           </span>
         )}
       </div>
       <div className={`${compact ? "p-3" : "p-4"} flex-1`}>
-        <h3 className={`font-serif font-bold ${compact ? "text-sm" : "text-base"} text-slate-100 group-hover:text-lime-400 transition-colors line-clamp-2`}>
+        <h3 className={`font-display font-bold ${compact ? "text-sm" : "text-base"} text-forest group-hover:text-terracotta transition-colors line-clamp-2`}>
           {cocktail.name}
         </h3>
       </div>
@@ -257,40 +257,40 @@ function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCa
   const imageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 }) || cocktail.externalImageUrl;
 
   return (
-    <div className="flex gap-4 p-4 rounded-xl border border-slate-800 bg-slate-900/50 hover:border-slate-700 transition-colors">
+    <div className="flex gap-4 p-4 rounded-2xl border border-mist bg-white hover:shadow-soft transition-all">
       <Link
         href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-        className="flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden bg-slate-800"
+        className="flex-shrink-0 w-24 h-20 rounded-xl overflow-hidden bg-mist"
       >
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
             alt=""
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover mix-blend-multiply"
             loading="lazy"
           />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-700 text-2xl" aria-hidden="true">
+          <div className="h-full w-full flex items-center justify-center text-sage text-2xl" aria-hidden="true">
             🍸
           </div>
         )}
       </Link>
       <div className="flex-1 min-w-0">
         <Link href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}>
-          <h4 className="font-serif font-bold text-base text-slate-100 hover:text-lime-400 transition-colors truncate">
+          <h4 className="font-display font-bold text-base text-forest hover:text-terracotta transition-colors truncate">
             {cocktail.name}
           </h4>
         </Link>
-        <p className="text-sm text-slate-400 mt-1">
-          Missing: <span className="text-slate-300">{missingIngredient.name}</span>
+        <p className="text-sm text-sage mt-1">
+          Missing: <span className="text-forest">{missingIngredient.name}</span>
         </p>
         <button
           onClick={(e) => {
             e.preventDefault();
             onAddIngredient();
           }}
-          className="mt-2 flex items-center gap-1.5 text-xs font-medium text-lime-400 hover:text-lime-300 transition-colors"
+          className="mt-2 flex items-center gap-1.5 text-xs font-medium text-terracotta hover:text-terracotta-dark transition-colors"
         >
           <PlusCircleIcon className="w-4 h-4" />
           Add to bar
@@ -303,14 +303,14 @@ function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCa
 function PersonalizedSectionSkeleton() {
   return (
     <div className="animate-pulse">
-      <div className="h-7 bg-slate-800 rounded w-48 mb-6" />
+      <div className="h-7 bg-mist rounded-2xl w-48 mb-6" />
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-            <div className="h-36 bg-slate-800" />
+          <div key={i} className="rounded-3xl border border-mist bg-white overflow-hidden">
+            <div className="h-36 bg-mist" />
             <div className="p-4 space-y-2">
-              <div className="h-4 bg-slate-800 rounded w-3/4" />
-              <div className="h-3 bg-slate-800 rounded w-1/2" />
+              <div className="h-4 bg-mist rounded w-3/4" />
+              <div className="h-3 bg-mist rounded w-1/2" />
             </div>
           </div>
         ))}
@@ -318,4 +318,3 @@ function PersonalizedSectionSkeleton() {
     </div>
   );
 }
-

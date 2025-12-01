@@ -51,7 +51,7 @@ export function BackToCocktails() {
   return (
     <button
       onClick={handleClick}
-      className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-lime-400 transition-colors group"
+      className="inline-flex items-center gap-2 text-sm text-sage hover:text-terracotta transition-colors group"
     >
       <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
       Back to cocktails

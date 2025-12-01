@@ -48,26 +48,26 @@ const COCKTAIL_QUERY = `*[_type == "cocktail" && slug.current == $slug][0] {
   }
 }`;
 
-// Category display configuration
+// Category display configuration - Botanical theme
 const CATEGORY_CONFIG: Record<string, { label: string; emoji: string; color: string }> = {
-  tiki: { label: "Tiki", emoji: "🏝️", color: "bg-orange-500/20 text-orange-300 border-orange-500/30" },
-  classic: { label: "Classic", emoji: "🎩", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
-  holiday: { label: "Holiday", emoji: "🎄", color: "bg-red-500/20 text-red-300 border-red-500/30" },
-  modern: { label: "Modern", emoji: "✨", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
-  dessert: { label: "Dessert", emoji: "🍰", color: "bg-pink-500/20 text-pink-300 border-pink-500/30" },
-  mocktail: { label: "Mocktail", emoji: "🍹", color: "bg-green-500/20 text-green-300 border-green-500/30" },
-  party: { label: "Party", emoji: "🎉", color: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30" },
-  summer: { label: "Summer", emoji: "☀️", color: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
-  winter: { label: "Winter", emoji: "❄️", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
-  fall: { label: "Fall", emoji: "🍂", color: "bg-orange-600/20 text-orange-300 border-orange-600/30" },
-  spring: { label: "Spring", emoji: "🌸", color: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
-  strong: { label: "Strong", emoji: "🔥", color: "bg-red-600/20 text-red-300 border-red-600/30" },
-  refreshing: { label: "Refreshing", emoji: "🌿", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-  sour: { label: "Sour", emoji: "🍋", color: "bg-lime-500/20 text-lime-300 border-lime-500/30" },
-  sweet: { label: "Sweet", emoji: "🍯", color: "bg-amber-400/20 text-amber-200 border-amber-400/30" },
-  boozy: { label: "Boozy", emoji: "🥃", color: "bg-stone-500/20 text-stone-300 border-stone-500/30" },
-  "low-calorie": { label: "Low-Cal", emoji: "🥗", color: "bg-teal-500/20 text-teal-300 border-teal-500/30" },
-  quick: { label: "Quick", emoji: "⚡", color: "bg-sky-500/20 text-sky-300 border-sky-500/30" },
+  tiki: { label: "Tiki", emoji: "🏝️", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
+  classic: { label: "Classic", emoji: "🎩", color: "bg-forest/20 text-forest border-forest/30" },
+  holiday: { label: "Holiday", emoji: "🎄", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
+  modern: { label: "Modern", emoji: "✨", color: "bg-olive/20 text-olive border-olive/30" },
+  dessert: { label: "Dessert", emoji: "🍰", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
+  mocktail: { label: "Mocktail", emoji: "🍹", color: "bg-olive/20 text-olive border-olive/30" },
+  party: { label: "Party", emoji: "🎉", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
+  summer: { label: "Summer", emoji: "☀️", color: "bg-olive/20 text-olive border-olive/30" },
+  winter: { label: "Winter", emoji: "❄️", color: "bg-forest/20 text-forest border-forest/30" },
+  fall: { label: "Fall", emoji: "🍂", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
+  spring: { label: "Spring", emoji: "🌸", color: "bg-olive/20 text-olive border-olive/30" },
+  strong: { label: "Strong", emoji: "🔥", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
+  refreshing: { label: "Refreshing", emoji: "🌿", color: "bg-olive/20 text-olive border-olive/30" },
+  sour: { label: "Sour", emoji: "🍋", color: "bg-olive/20 text-olive border-olive/30" },
+  sweet: { label: "Sweet", emoji: "🍯", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
+  boozy: { label: "Boozy", emoji: "🥃", color: "bg-forest/20 text-forest border-forest/30" },
+  "low-calorie": { label: "Low-Cal", emoji: "🥗", color: "bg-olive/20 text-olive border-olive/30" },
+  quick: { label: "Quick", emoji: "⚡", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
 };
 
 type PageProps = {
@@ -121,7 +121,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
         ]}
       />
 
-      <div className="py-10">
+      <div className="py-10 bg-cream min-h-screen">
         <MainContainer>
           {/* Back Link */}
           <div className="mb-6">
@@ -131,17 +131,17 @@ export default async function CocktailDetailPage({ params }: PageProps) {
           <article>
             <div className="grid lg:grid-cols-2 gap-10 items-start">
               {/* Image */}
-              <figure className="relative rounded-2xl overflow-hidden bg-slate-800 aspect-[4/3]">
+              <figure className="relative rounded-3xl overflow-hidden bg-mist aspect-[4/3] shadow-card">
                 {imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={imageUrl}
                     alt={`${cocktail.name} cocktail`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover mix-blend-multiply"
                     loading="eager"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-700 text-8xl" aria-hidden="true">
+                  <div className="w-full h-full flex items-center justify-center text-sage text-8xl" aria-hidden="true">
                     🍸
                   </div>
                 )}
@@ -149,17 +149,17 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                 {/* Badges */}
                 <div className="absolute top-4 left-4 flex flex-wrap gap-2 max-w-[70%]">
                   {cocktail.isTrending && (
-                    <span className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                    <span className="bg-terracotta text-cream text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                       🔥 Trending
                     </span>
                   )}
                   {cocktail.isPopular && !cocktail.isTrending && (
-                    <span className="bg-amber-500 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                    <span className="bg-terracotta text-cream text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                       ★ Featured
                     </span>
                   )}
                   {cocktail.isFavorite && (
-                    <span className="bg-pink-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                    <span className="bg-terracotta text-cream text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                       ❤️ Favorite
                     </span>
                   )}
@@ -173,11 +173,11 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       {cocktail.primarySpirit && (
-                        <p className="text-sm text-lime-400 font-bold tracking-widest uppercase mb-2">
+                        <p className="font-mono text-sm text-terracotta font-bold tracking-widest uppercase mb-2">
                           {cocktail.primarySpirit}
                         </p>
                       )}
-                      <h1 className="text-3xl sm:text-4xl font-serif font-bold text-slate-50 mb-3">
+                      <h1 className="text-3xl sm:text-4xl font-display font-bold text-forest mb-3">
                         {cocktail.name}
                       </h1>
                     </div>
@@ -192,7 +192,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                     />
                   </div>
                   {cocktail.description && (
-                    <p className="text-lg text-slate-300 leading-relaxed">
+                    <p className="text-lg text-sage leading-relaxed">
                       {cocktail.description}
                     </p>
                   )}
@@ -220,55 +220,55 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                 {/* Quick Info */}
                 <div className="flex flex-wrap gap-3">
                   {cocktail.glass && (
-                    <span className="bg-slate-800 text-slate-300 text-sm px-4 py-2 rounded-lg capitalize">
+                    <span className="bg-white border border-mist text-forest text-sm px-4 py-2 rounded-xl capitalize shadow-soft">
                       🥃 {cocktail.glass.replace(/-/g, " ")}
                     </span>
                   )}
                   {cocktail.method && (
-                    <span className="bg-slate-800 text-slate-300 text-sm px-4 py-2 rounded-lg capitalize">
+                    <span className="bg-white border border-mist text-forest text-sm px-4 py-2 rounded-xl capitalize shadow-soft">
                       {cocktail.method}
                     </span>
                   )}
                   {cocktail.garnish && (
-                    <span className="bg-slate-800 text-slate-300 text-sm px-4 py-2 rounded-lg">
+                    <span className="bg-white border border-mist text-forest text-sm px-4 py-2 rounded-xl shadow-soft">
                       🍒 {cocktail.garnish}
                     </span>
                   )}
                 </div>
 
-                {/* Ingredients */}
+                {/* Ingredients - Paper-like recipe card */}
                 {cocktail.ingredients && cocktail.ingredients.length > 0 && (
-                  <section className="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
-                    <h2 className="text-lg font-bold text-slate-100 mb-4 flex items-center gap-2">
+                  <section className="bg-white border border-mist rounded-3xl p-6 shadow-card">
+                    <h2 className="text-lg font-display font-bold text-forest mb-4 flex items-center gap-2">
                       <span aria-hidden="true">📝</span> Ingredients
                     </h2>
                     <ul className="space-y-3">
                       {cocktail.ingredients.map((item) => (
                         <li key={item._key} className="flex items-start gap-3">
                           <span 
-                            className="flex-shrink-0 w-5 h-5 rounded-full bg-lime-500/20 text-lime-400 flex items-center justify-center text-xs mt-0.5"
+                            className="flex-shrink-0 w-5 h-5 rounded-full bg-olive/20 text-olive flex items-center justify-center text-xs mt-0.5"
                             aria-hidden="true"
                           >
                             ✓
                           </span>
                           <div className="flex-1">
                             <div className="flex items-baseline gap-2 flex-wrap">
-                              <span className="font-medium text-slate-200 text-base">
+                              <span className="font-medium text-forest text-base">
                                 {item.ingredient?.name || "Unknown ingredient"}
                               </span>
                               {item.amount && (
-                                <span className="text-sm text-slate-400">
+                                <span className="text-sm text-sage">
                                   {item.amount}
                                 </span>
                               )}
                               {item.isOptional && (
-                                <span className="text-xs text-slate-500 italic">
+                                <span className="text-xs text-sage italic">
                                   (optional)
                                 </span>
                               )}
                             </div>
                             {item.notes && (
-                              <p className="text-sm text-slate-500 mt-1">
+                              <p className="text-sm text-sage mt-1">
                                 {item.notes}
                               </p>
                             )}
@@ -285,7 +285,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                     {cocktail.tags.map((tag, i) => (
                       <span
                         key={i}
-                        className="bg-slate-800 text-slate-400 text-sm px-3 py-1.5 rounded-full"
+                        className="bg-mist text-sage text-sm px-3 py-1.5 rounded-full"
                         role="listitem"
                       >
                         #{tag}
@@ -308,10 +308,10 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             {/* Instructions */}
             {cocktail.instructions && cocktail.instructions.length > 0 && (
               <section className="mt-12 max-w-3xl">
-                <h2 className="text-2xl font-serif font-bold text-slate-100 mb-6">
+                <h2 className="text-2xl font-display font-bold text-forest mb-6">
                   Instructions
                 </h2>
-                <div className="prose prose-lg prose-invert prose-slate max-w-none">
+                <div className="prose prose-lg prose-botanical max-w-none text-charcoal">
                   <PortableText value={cocktail.instructions} />
                 </div>
               </section>
@@ -320,10 +320,10 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             {/* History */}
             {cocktail.history && cocktail.history.length > 0 && (
               <section className="mt-12 max-w-3xl">
-                <h2 className="text-2xl font-serif font-bold text-slate-100 mb-6">
+                <h2 className="text-2xl font-display font-bold text-forest mb-6">
                   History
                 </h2>
-                <div className="prose prose-lg prose-invert prose-slate max-w-none">
+                <div className="prose prose-lg prose-botanical max-w-none text-charcoal">
                   <PortableText value={cocktail.history} />
                 </div>
               </section>
@@ -332,11 +332,11 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             {/* Pro Tips */}
             {cocktail.tips && cocktail.tips.length > 0 && (
               <section className="mt-12 max-w-3xl">
-                <h2 className="text-2xl font-serif font-bold text-slate-100 mb-6">
+                <h2 className="text-2xl font-display font-bold text-forest mb-6">
                   Pro Tips
                 </h2>
-                <div className="bg-lime-500/5 border border-lime-500/20 rounded-xl p-6">
-                  <div className="prose prose-lg prose-invert prose-slate max-w-none">
+                <div className="bg-olive/10 border border-olive/20 rounded-3xl p-6">
+                  <div className="prose prose-lg prose-botanical max-w-none text-charcoal">
                     <PortableText value={cocktail.tips} />
                   </div>
                 </div>

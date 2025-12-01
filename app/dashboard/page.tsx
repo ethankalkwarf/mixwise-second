@@ -218,16 +218,16 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="py-12">
+      <div className="py-12 bg-cream min-h-screen">
         <MainContainer>
           <div className="animate-pulse space-y-8">
-            <div className="h-12 bg-slate-800 rounded-lg w-64" />
+            <div className="h-12 bg-mist rounded-2xl w-64" />
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 bg-slate-800 rounded-xl" />
+                <div key={i} className="h-32 bg-mist rounded-3xl" />
               ))}
             </div>
-            <div className="h-64 bg-slate-800 rounded-xl" />
+            <div className="h-64 bg-mist rounded-3xl" />
           </div>
         </MainContainer>
       </div>
@@ -236,19 +236,21 @@ export default function DashboardPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="py-12">
+      <div className="py-12 bg-cream min-h-screen">
         <MainContainer>
           <div className="text-center py-20">
-            <TrophyIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <h1 className="text-2xl font-serif font-bold text-slate-200 mb-2">
+            <div className="w-20 h-20 bg-mist rounded-full flex items-center justify-center mx-auto mb-6">
+              <TrophyIcon className="w-10 h-10 text-sage" />
+            </div>
+            <h1 className="text-3xl font-display font-bold text-forest mb-3">
               Your Personal Dashboard
             </h1>
-            <p className="text-slate-400 mb-6 max-w-md mx-auto">
+            <p className="text-sage mb-8 max-w-md mx-auto">
               Sign in to track your bar inventory, favorites, recommendations, and badges.
             </p>
             <button
               onClick={() => openAuthDialog()}
-              className="px-6 py-3 bg-lime-500 text-slate-900 font-bold rounded-lg hover:bg-lime-400 transition-colors"
+              className="px-8 py-4 bg-terracotta text-cream font-bold rounded-2xl hover:bg-terracotta-dark transition-all shadow-lg shadow-terracotta/20"
             >
               Create Free Account
             </button>
@@ -259,48 +261,52 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="py-8 sm:py-12">
+    <div className="py-8 sm:py-12 bg-cream min-h-screen">
       <MainContainer>
         {/* Dynamic Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-slate-100">
+            <h1 className="text-3xl font-display font-bold text-forest">
               {getDynamicGreeting}
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-sage mt-1">
               Track your bar, favorites, and progress
             </p>
           </div>
           <Link
             href={`/bar/${user?.id}`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors text-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
           >
             <ShareIcon className="w-4 h-4" />
             Share My Bar
           </Link>
         </div>
 
-        {/* Main Content Grid - Two Columns */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        {/* Bento Grid Layout */}
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Primary Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6">
             {/* What You Can Make - 100% matches */}
-            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-slate-800">
+            <section className="card overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-mist">
                 <div className="flex items-center gap-3">
-                  <SparklesIcon className="w-6 h-6 text-lime-400" />
-                  <h2 className="text-xl font-serif font-bold text-slate-100">
-                    What You Can Make
-                  </h2>
-                  {recommendations.length > 0 && (
-                    <span className="text-sm text-slate-500">
-                      {recommendations.length} cocktail{recommendations.length !== 1 ? "s" : ""}
-                    </span>
-                  )}
+                  <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center">
+                    <SparklesIcon className="w-5 h-5 text-olive" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-display font-bold text-forest">
+                      What You Can Make
+                    </h2>
+                    {recommendations.length > 0 && (
+                      <span className="text-sm text-sage">
+                        {recommendations.length} cocktail{recommendations.length !== 1 ? "s" : ""} ready
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <Link
                   href="/cocktails"
-                  className="text-sm text-lime-400 hover:text-lime-300 transition-colors"
+                  className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium"
                 >
                   View all →
                 </Link>
@@ -309,7 +315,7 @@ export default function DashboardPage() {
                 {loadingRecs ? (
                   <div className="grid sm:grid-cols-2 gap-4">
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-24 bg-slate-800 rounded-lg animate-pulse" />
+                      <div key={i} className="h-24 bg-mist rounded-2xl animate-pulse" />
                     ))}
                   </div>
                 ) : recommendations.length > 0 ? (
@@ -318,23 +324,23 @@ export default function DashboardPage() {
                       <Link
                         key={cocktail._id}
                         href={`/cocktails/${cocktail.slug?.current}`}
-                        className="flex items-center gap-4 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors group"
+                        className="flex items-center gap-4 p-3 bg-cream hover:bg-mist rounded-2xl transition-all group"
                       >
                         <Image
-                          src={cocktail.externalImageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg=="}
+                          src={cocktail.externalImageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
                           alt={cocktail.name}
                           width={56}
                           height={56}
-                          className="w-14 h-14 rounded-lg object-cover"
+                          className="w-14 h-14 rounded-xl object-cover"
                           onError={(e) => {
-                            e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg==";
+                            e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
                           }}
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-200 group-hover:text-lime-400 truncate transition-colors">
+                          <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
                             {cocktail.name}
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-sage">
                             100% match
                           </p>
                         </div>
@@ -343,12 +349,12 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-slate-400 mb-4">
+                    <p className="text-sage mb-4">
                       Add ingredients to your bar to see cocktails you can make.
                     </p>
                     <Link
                       href="/mix"
-                      className="inline-flex items-center gap-2 text-lime-400 hover:text-lime-300"
+                      className="inline-flex items-center gap-2 text-terracotta hover:text-terracotta-dark font-medium"
                     >
                       <PlusCircleIcon className="w-5 h-5" />
                       Build Your Bar
@@ -359,34 +365,36 @@ export default function DashboardPage() {
             </section>
 
             {/* Almost There - Missing 1 ingredient */}
-            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-slate-800">
+            <section className="card overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-mist">
                 <div className="flex items-center gap-3">
-                  <BeakerIcon className="w-6 h-6 text-amber-400" />
-                  <h2 className="text-xl font-serif font-bold text-slate-100">
-                    Almost There
-                  </h2>
-                  {recommendations.length > 0 && (
-                    <span className="text-sm text-slate-500">
+                  <div className="w-10 h-10 bg-terracotta/20 rounded-xl flex items-center justify-center">
+                    <BeakerIcon className="w-5 h-5 text-terracotta" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-display font-bold text-forest">
+                      Almost There
+                    </h2>
+                    <span className="text-sm text-sage">
                       Add one ingredient to unlock
                     </span>
-                  )}
+                  </div>
                 </div>
                 <Link
                   href="/mix"
-                  className="text-sm text-lime-400 hover:text-lime-300 transition-colors"
+                  className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium"
                 >
                   Add ingredients →
                 </Link>
               </div>
               <div className="p-6">
                 <div className="text-center py-8">
-                  <p className="text-slate-400 mb-4">
+                  <p className="text-sage mb-4">
                     Cocktails that need just one more ingredient will appear here.
                   </p>
                   <Link
                     href="/mix"
-                    className="inline-flex items-center gap-2 text-lime-400 hover:text-lime-300"
+                    className="inline-flex items-center gap-2 text-terracotta hover:text-terracotta-dark font-medium"
                   >
                     <PlusCircleIcon className="w-5 h-5" />
                     Expand Your Bar
@@ -396,11 +404,13 @@ export default function DashboardPage() {
             </section>
 
             {/* Recent Activity - Favorites + Recently Viewed */}
-            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-slate-800">
+            <section className="card overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-mist">
                 <div className="flex items-center gap-3">
-                  <ClockIcon className="w-6 h-6 text-sky-400" />
-                  <h2 className="text-xl font-serif font-bold text-slate-100">
+                  <div className="w-10 h-10 bg-forest/10 rounded-xl flex items-center justify-center">
+                    <ClockIcon className="w-5 h-5 text-forest" />
+                  </div>
+                  <h2 className="text-xl font-display font-bold text-forest">
                     Recent Activity
                   </h2>
                 </div>
@@ -409,19 +419,19 @@ export default function DashboardPage() {
                 {/* Favorites */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                      <HeartIcon className="w-5 h-5 text-red-400" />
+                    <h3 className="text-lg font-semibold text-forest flex items-center gap-2">
+                      <HeartIcon className="w-5 h-5 text-terracotta" />
                       Favorites
                     </h3>
                     <Link
                       href="/cocktails"
-                      className="text-sm text-lime-400 hover:text-lime-300"
+                      className="text-sm text-terracotta hover:text-terracotta-dark font-medium"
                     >
                       Browse →
                     </Link>
                   </div>
                   {favorites.length > 0 ? (
-                    <div className="flex gap-4 overflow-x-auto pb-2">
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
                       {favorites.slice(0, 6).map((fav) => (
                         <Link
                           key={fav.id}
@@ -429,23 +439,23 @@ export default function DashboardPage() {
                           className="flex-shrink-0 w-32 group"
                         >
                           <Image
-                            src={fav.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg=="}
+                            src={fav.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
                             alt={fav.cocktail_name || "Cocktail"}
                             width={128}
                             height={96}
-                            className="w-32 h-24 rounded-lg object-cover mb-2"
+                            className="w-32 h-24 rounded-2xl object-cover mb-2"
                             onError={(e) => {
-                              e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg==";
+                              e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
                             }}
                           />
-                          <p className="text-sm text-slate-300 group-hover:text-lime-400 truncate transition-colors">
+                          <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
                             {fav.cocktail_name}
                           </p>
                         </Link>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-sage text-sm">
                       Save cocktails to favorites to see them here.
                     </p>
                   )}
@@ -454,13 +464,13 @@ export default function DashboardPage() {
                 {/* Recently Viewed */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                      <ClockIcon className="w-5 h-5 text-sky-400" />
+                    <h3 className="text-lg font-semibold text-forest flex items-center gap-2">
+                      <ClockIcon className="w-5 h-5 text-sage" />
                       Recently Viewed
                     </h3>
                   </div>
                   {recentlyViewed.length > 0 ? (
-                    <div className="flex gap-4 overflow-x-auto pb-2">
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
                       {recentlyViewed.slice(0, 6).map((item) => (
                         <Link
                           key={item.id}
@@ -468,23 +478,23 @@ export default function DashboardPage() {
                           className="flex-shrink-0 w-32 group"
                         >
                           <Image
-                            src={item.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg=="}
+                            src={item.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
                             alt={item.cocktail_name || "Cocktail"}
                             width={128}
                             height={96}
-                            className="w-32 h-24 rounded-lg object-cover mb-2"
+                            className="w-32 h-24 rounded-2xl object-cover mb-2"
                             onError={(e) => {
-                              e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMGEwZjFhIi8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOWNhM2FmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ilrDilrDilrA8L3RleHQ+Cjwvc3ZnPg==";
+                              e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
                             }}
                           />
-                          <p className="text-sm text-slate-300 group-hover:text-lime-400 truncate transition-colors">
+                          <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
                             {item.cocktail_name}
                           </p>
                         </Link>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-sage text-sm">
                       Start exploring cocktails to build your history.
                     </p>
                   )}
@@ -494,54 +504,60 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column - My Bar Sidebar */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* My Bar */}
-            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-slate-800">
+            <section className="card overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-mist">
                 <div className="flex items-center gap-3">
-                  <BeakerIcon className="w-6 h-6 text-lime-400" />
-                  <h2 className="text-xl font-serif font-bold text-slate-100">
-                    My Bar
-                  </h2>
-                  <span className="text-sm text-slate-500">
-                    {ingredientIds.length} ingredient{ingredientIds.length !== 1 ? "s" : ""}
-                  </span>
+                  <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center">
+                    <BeakerIcon className="w-5 h-5 text-olive" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-display font-bold text-forest">
+                      My Bar
+                    </h2>
+                    <span className="text-sm text-sage">
+                      {ingredientIds.length} ingredient{ingredientIds.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
                 </div>
                 <Link
                   href="/mix"
-                  className="px-4 py-2 text-sm text-lime-400 hover:text-lime-300 hover:bg-lime-500/10 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm text-terracotta hover:text-terracotta-dark hover:bg-terracotta/10 rounded-xl transition-colors font-medium"
                 >
-                  Add Ingredient
+                  Add
                 </Link>
               </div>
               <div className="p-6">
                 {ingredientIds.length === 0 ? (
                   <div className="text-center py-8">
-                    <BeakerIcon className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-                    <p className="text-slate-400 mb-4">Your bar is empty.</p>
+                    <div className="w-16 h-16 bg-mist rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BeakerIcon className="w-8 h-8 text-sage" />
+                    </div>
+                    <p className="text-sage mb-4">Your bar is empty.</p>
                     <Link
                       href="/mix"
-                      className="text-lime-400 hover:text-lime-300 font-medium"
+                      className="text-terracotta hover:text-terracotta-dark font-medium"
                     >
                       Add your first ingredient →
                     </Link>
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-thin">
                     {ingredientIds.map((id) => {
                       // Find the ingredient object for display
                       const ingredient = allIngredients.find(i => i.id === id);
                       return (
                         <div
                           key={id}
-                          className="flex items-center justify-between px-4 py-3 bg-slate-800/50 rounded-lg text-sm"
+                          className="flex items-center justify-between px-4 py-3 bg-cream rounded-xl text-sm group"
                         >
-                          <span className="text-slate-300">
+                          <span className="text-forest">
                             {ingredient?.name || id}
                           </span>
                           <button
                             onClick={() => handleRemoveFromInventory(id)}
-                            className="text-slate-500 hover:text-red-400"
+                            className="text-sage hover:text-terracotta opacity-0 group-hover:opacity-100 transition-all"
                           >
                             <XMarkIcon className="w-4 h-4" />
                           </button>
@@ -554,29 +570,29 @@ export default function DashboardPage() {
             </section>
 
             {/* Quick Actions */}
-            <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-slate-100 mb-4">Quick Actions</h3>
+            <section className="card p-6">
+              <h3 className="text-lg font-display font-bold text-forest mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Link
                   href="/mix"
-                  className="flex items-center justify-between p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors"
+                  className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
                 >
-                  <span className="text-slate-300">Edit My Bar</span>
-                  <ArrowRightIcon className="w-4 h-4 text-slate-500" />
+                  <span className="text-forest group-hover:text-terracotta transition-colors">Edit My Bar</span>
+                  <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
                 </Link>
                 <Link
                   href="/cocktails"
-                  className="flex items-center justify-between p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors"
+                  className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
                 >
-                  <span className="text-slate-300">Browse Cocktails</span>
-                  <ArrowRightIcon className="w-4 h-4 text-slate-500" />
+                  <span className="text-forest group-hover:text-terracotta transition-colors">Browse Cocktails</span>
+                  <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
                 </Link>
                 <Link
                   href={`/bar/${user?.id}`}
-                  className="flex items-center justify-between p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors"
+                  className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
                 >
-                  <span className="text-slate-300">Share My Bar</span>
-                  <ArrowRightIcon className="w-4 h-4 text-slate-500" />
+                  <span className="text-forest group-hover:text-terracotta transition-colors">Share My Bar</span>
+                  <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
                 </Link>
               </div>
             </section>
@@ -599,25 +615,25 @@ function StatCard({
   label: string;
   value: number;
   href: string;
-  color: "lime" | "pink" | "sky" | "amber";
+  color: "olive" | "terracotta" | "forest" | "sage";
 }) {
   const colorClasses = {
-    lime: "text-lime-400 bg-lime-500/10",
-    pink: "text-pink-400 bg-pink-500/10",
-    sky: "text-sky-400 bg-sky-500/10",
-    amber: "text-amber-400 bg-amber-500/10",
+    olive: "text-olive bg-olive/10",
+    terracotta: "text-terracotta bg-terracotta/10",
+    forest: "text-forest bg-forest/10",
+    sage: "text-sage bg-sage/10",
   };
 
   return (
     <Link
       href={href}
-      className="p-6 bg-slate-900/50 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors"
+      className="card card-hover p-6"
     >
-      <div className={`inline-flex p-2 rounded-lg ${colorClasses[color]} mb-3`}>
+      <div className={`inline-flex p-2 rounded-xl ${colorClasses[color]} mb-3`}>
         <Icon className="w-5 h-5" />
       </div>
-      <p className="text-3xl font-bold text-slate-100">{value}</p>
-      <p className="text-sm text-slate-400">{label}</p>
+      <p className="text-3xl font-bold text-forest">{value}</p>
+      <p className="text-sm text-sage">{label}</p>
     </Link>
   );
 }
@@ -625,30 +641,30 @@ function StatCard({
 // Badge Card Component
 function BadgeCard({ badge, locked }: { badge: BadgeDefinition & { locked?: boolean; earnedAt?: string }, locked: boolean }) {
   return (
-    <div className={`relative group flex flex-col items-center p-3 bg-slate-800/50 rounded-xl text-center transition-all ${
+    <div className={`relative group flex flex-col items-center p-3 bg-cream rounded-xl text-center transition-all ${
       locked ? "opacity-60" : ""
     }`}>
       <div
         className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-          locked ? "from-slate-500 to-slate-600" : RARITY_COLORS[badge.rarity]
+          locked ? "from-sage to-stone" : RARITY_COLORS[badge.rarity]
         } flex items-center justify-center text-2xl mb-2`}
       >
         {badge.icon}
       </div>
-      <p className={`text-xs font-medium line-clamp-2 ${locked ? "text-slate-500" : "text-slate-300"}`}>
+      <p className={`text-xs font-medium line-clamp-2 ${locked ? "text-sage" : "text-forest"}`}>
         {badge.name}
       </p>
       {locked && (
-        <div className="absolute inset-0 bg-slate-900/5 rounded-xl flex items-center justify-center pointer-events-none">
-          <div className="text-slate-500 text-xs">🔒</div>
+        <div className="absolute inset-0 bg-white/5 rounded-xl flex items-center justify-center pointer-events-none">
+          <div className="text-sage text-xs">🔒</div>
         </div>
       )}
 
       {/* Custom Tooltip */}
       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2
                       opacity-0 group-hover:opacity-100
-                      bg-slate-900/95 text-slate-200 text-xs font-medium
-                      px-2 py-1 rounded-md shadow-lg shadow-black/40
+                      bg-forest text-cream text-xs font-medium
+                      px-2 py-1 rounded-lg shadow-lg
                       whitespace-nowrap pointer-events-none
                       transition-opacity duration-200 z-50">
         {badge.criteria}
@@ -656,4 +672,3 @@ function BadgeCard({ badge, locked }: { badge: BadgeDefinition & { locked?: bool
     </div>
   );
 }
-

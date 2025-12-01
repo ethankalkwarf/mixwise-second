@@ -13,28 +13,131 @@ body {
     font-size: 16px;
   }
   
-  /* Improved base typography for better readability */
+  /* Botanical Garden Base Typography */
   body {
-    @apply text-[16px] leading-relaxed antialiased;
+    @apply text-charcoal bg-cream antialiased;
+    font-family: var(--font-jost), system-ui, sans-serif;
+    line-height: 1.65;
   }
   
-  /* Focus states for accessibility */
+  /* Heading styles with DM Serif Display */
+  h1, h2, h3 {
+    font-family: var(--font-dm-serif), Georgia, serif;
+    @apply text-forest leading-tight;
+  }
+  
+  h1 {
+    @apply text-4xl sm:text-5xl md:text-6xl font-bold;
+  }
+  
+  h2 {
+    @apply text-2xl sm:text-3xl font-bold;
+  }
+  
+  h3 {
+    @apply text-xl sm:text-2xl font-bold;
+  }
+  
+  /* Focus states for accessibility - terracotta accent */
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-lime-500;
+    @apply outline-2 outline-offset-2 outline-terracotta;
   }
   
   /* Skip link for accessibility */
   .skip-link {
-    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-lime-500 focus:text-slate-900 focus:rounded-lg focus:font-bold;
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-terracotta focus:text-cream focus:rounded-lg focus:font-bold;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-olive/30 text-forest;
+  }
+}
+
+@layer components {
+  /* Botanical Button Styles */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold 
+           bg-terracotta text-cream shadow-terracotta
+           hover:bg-terracotta-dark
+           transition-all duration-300
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-cream;
+  }
+  
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold 
+           bg-forest text-cream
+           hover:bg-charcoal
+           transition-all duration-300
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 focus-visible:ring-offset-cream;
+  }
+  
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold 
+           bg-white text-forest border border-mist
+           hover:bg-mist/50 hover:border-stone
+           transition-all duration-300
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2;
+  }
+
+  /* Botanical Card Styles */
+  .card {
+    @apply bg-white rounded-3xl border border-mist shadow-soft;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover;
+  }
+
+  /* Botanical Input Styles */
+  .input-botanical {
+    @apply w-full bg-cream border border-mist rounded-xl px-4 py-3 
+           text-forest placeholder:text-sage
+           focus:outline-none focus:ring-2 focus:ring-terracotta/50 focus:border-terracotta
+           transition-all duration-200;
+  }
+  
+  /* Label Styles */
+  .label-botanical {
+    @apply text-xs font-bold uppercase tracking-widest text-sage mb-2 block;
+  }
+
+  /* Tag/Pill Styles */
+  .tag {
+    @apply inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium
+           bg-mist text-forest border border-stone;
+  }
+  
+  .tag-selected {
+    @apply bg-terracotta text-cream border-terracotta;
+  }
+
+  /* Section Container */
+  .section-botanical {
+    @apply bg-white rounded-3xl border border-mist p-6 sm:p-8;
   }
 }
 
 @layer utilities {
-  .font-sans {
-    font-family: var(--font-inter), system-ui, sans-serif;
+  .font-display {
+    font-family: var(--font-dm-serif), Georgia, serif;
   }
-  .font-serif {
-    font-family: var(--font-playfair), serif;
+  .font-sans {
+    font-family: var(--font-jost), system-ui, sans-serif;
+  }
+  .font-mono {
+    font-family: var(--font-space-mono), monospace;
+  }
+  
+  /* Text colors */
+  .text-body {
+    @apply text-charcoal;
+  }
+  .text-muted {
+    @apply text-sage;
+  }
+  .text-heading {
+    @apply text-forest;
   }
 }
 
@@ -48,20 +151,20 @@ body {
   line-height: 1.3;
 }
 
-/* Improved scrollbar styling */
+/* Improved scrollbar styling - Botanical theme */
 .scrollbar-thin::-webkit-scrollbar {
   width: 8px;
 }
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(230, 235, 228, 0.5);
   border-radius: 4px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(95, 111, 94, 0.3);
   border-radius: 4px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(95, 111, 94, 0.5);
 }
 
 .scrollbar-none::-webkit-scrollbar {
@@ -72,7 +175,7 @@ body {
   scrollbar-width: none;
 }
 
-/* Skeleton loading animation */
+/* Skeleton loading animation - Botanical theme */
 @keyframes skeleton-pulse {
   0%, 100% {
     opacity: 0.4;
@@ -85,11 +188,27 @@ body {
 .skeleton {
   animation: skeleton-pulse 1.5s ease-in-out infinite;
   background: linear-gradient(90deg, 
-    rgba(51, 65, 85, 0.4) 0%, 
-    rgba(71, 85, 105, 0.6) 50%, 
-    rgba(51, 65, 85, 0.4) 100%
+    rgba(230, 235, 228, 0.6) 0%, 
+    rgba(209, 218, 208, 0.8) 50%, 
+    rgba(230, 235, 228, 0.6) 100%
   );
   background-size: 200% 100%;
+  @apply rounded-lg;
+}
+
+/* Spinner - Terracotta colored */
+.spinner {
+  @apply w-6 h-6 border-2 border-mist border-t-terracotta rounded-full;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error state styling */
+.error-box {
+  @apply bg-red-50 border border-red-200 rounded-2xl p-4 text-terracotta;
 }
 
 /* Improved tap target size for mobile */
@@ -98,4 +217,22 @@ body {
     min-height: 44px;
     min-width: 44px;
   }
+}
+
+/* Image blend for cocktail images on light backgrounds */
+.img-blend {
+  mix-blend-mode: multiply;
+}
+
+/* Hero background pattern */
+.hero-bg {
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(188, 90, 69, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(138, 154, 91, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(230, 235, 228, 0.5) 0%, transparent 70%);
+}
+
+/* Mist background for sections */
+.bg-mist-gradient {
+  background: linear-gradient(180deg, #E6EBE4 0%, #F9F7F2 100%);
 }

@@ -19,20 +19,17 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-slate-800 bg-slate-950/90 mt-auto">
-      <MainContainer className="py-12">
+    <footer className="bg-forest mt-auto">
+      <MainContainer className="py-12 sm:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand & CTA */}
           <div className="sm:col-span-2 lg:col-span-2">
             <Link href="/" className="inline-flex items-center gap-3 mb-4 group">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-lime-400 to-emerald-600 flex items-center justify-center text-sm font-serif font-bold text-slate-900">
-                MW
-              </div>
-              <span className="font-serif font-bold text-xl text-slate-100">
-                MixWise
+              <span className="text-3xl font-display font-bold text-cream">
+                mixwise.
               </span>
             </Link>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm mb-6">
+            <p className="text-stone text-sm leading-relaxed max-w-sm mb-6">
               A smarter way to make cocktails at home. Discover recipes, learn techniques, 
               and find drinks you can make with what you have.
             </p>
@@ -41,7 +38,7 @@ export function SiteFooter() {
 
           {/* Explore Links */}
           <nav aria-label="Explore">
-            <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4">
+            <h3 className="font-mono text-xs font-bold text-cream/80 uppercase tracking-widest mb-4">
               Explore
             </h3>
             <ul className="space-y-3">
@@ -49,7 +46,7 @@ export function SiteFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-slate-400 hover:text-lime-400 transition-colors text-sm"
+                    className="text-stone hover:text-cream transition-colors text-sm"
                   >
                     {link.label}
                   </Link>
@@ -60,7 +57,7 @@ export function SiteFooter() {
 
           {/* Learn Links */}
           <nav aria-label="Learn more">
-            <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4">
+            <h3 className="font-mono text-xs font-bold text-cream/80 uppercase tracking-widest mb-4">
               Learn
             </h3>
             <ul className="space-y-3">
@@ -68,7 +65,7 @@ export function SiteFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-slate-400 hover:text-lime-400 transition-colors text-sm"
+                    className="text-stone hover:text-cream transition-colors text-sm"
                   >
                     {link.label}
                   </Link>
@@ -79,8 +76,8 @@ export function SiteFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-slate-500 text-sm">
+        <div className="mt-12 pt-8 border-t border-cream/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-stone/70 text-sm">
             © {year} MixWise. All rights reserved.
           </p>
           

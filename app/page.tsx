@@ -61,17 +61,17 @@ export default async function HomePage() {
         url={SITE_CONFIG.url}
       />
 
-      <div className="py-12 sm:py-16">
+      {/* Hero Section with Mist Background */}
+      <section className="bg-mist hero-bg py-16 sm:py-24">
         <MainContainer>
-          {/* Hero Section */}
-          <section className="mb-20 text-center max-w-4xl mx-auto" aria-labelledby="hero-title">
+          <div className="text-center max-w-4xl mx-auto" aria-labelledby="hero-title">
             <h1 
               id="hero-title"
-              className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold text-slate-50 mb-6 leading-tight"
+              className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-forest mb-6 leading-tight"
             >
               {heroTitle}
             </h1>
-            <p className="text-lg sm:text-xl text-slate-300 mb-10 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-sage mb-10 leading-relaxed max-w-2xl mx-auto">
               {heroSubtitle}
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
@@ -79,11 +79,15 @@ export default async function HomePage() {
                 <Button>Browse Cocktails</Button>
               </Link>
               <Link href="/mix">
-                <Button variant="secondary">Mix with What You Have</Button>
+                <Button variant="ghost">Mix with What You Have</Button>
               </Link>
             </div>
-          </section>
+          </div>
+        </MainContainer>
+      </section>
 
+      <div className="py-12 sm:py-16">
+        <MainContainer>
           {/* Personalized Sections (for authenticated users) */}
           <div className="mb-20">
             <PersonalizedSections allCocktails={allCocktails} featuredCocktails={cocktails} />
@@ -96,7 +100,7 @@ export default async function HomePage() {
                 <SectionHeader title="Featured Cocktails" id="featured-title" />
                 <Link
                   href="/cocktails"
-                  className="text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors"
+                  className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors"
                 >
                   View all →
                 </Link>
@@ -115,12 +119,12 @@ export default async function HomePage() {
           {/* Empty State */}
           {cocktails.length === 0 && (
             <section className="mb-20">
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-10 text-center">
+              <div className="card p-10 text-center">
                 <div className="text-6xl mb-5" aria-hidden="true">🍸</div>
-                <h2 className="text-2xl font-serif font-bold text-slate-200 mb-3">
+                <h2 className="text-2xl font-display font-bold text-forest mb-3">
                   No cocktails yet
                 </h2>
-                <p className="text-slate-400 mb-8 text-lg">
+                <p className="text-sage mb-8 text-lg">
                   Create your first cocktail in Sanity Studio to see it here.
                 </p>
                 <Link href="/studio">
@@ -166,43 +170,43 @@ function FeaturedCocktailCard({ cocktail }: { cocktail: SanityCocktail & { ingre
   return (
     <Link
       href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all duration-300 hover:border-lime-500/40 hover:shadow-lg hover:shadow-lime-900/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500"
+      className="group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
       role="listitem"
     >
-      <div className="relative h-44 w-full overflow-hidden bg-slate-800">
+      <div className="relative h-48 w-full overflow-hidden bg-mist">
         {imageUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
               alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
           </>
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-700 text-5xl" aria-hidden="true">
+          <div className="h-full w-full flex items-center justify-center text-sage text-5xl" aria-hidden="true">
             🍸
           </div>
         )}
         {cocktail.isPopular && (
-          <span className="absolute top-3 left-3 bg-amber-500 text-slate-950 text-xs font-bold px-2.5 py-1 rounded shadow-lg">
+          <span className="absolute top-3 left-3 bg-terracotta text-cream text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
             ★ FEATURED
           </span>
         )}
       </div>
       <div className="p-5 flex-1 flex flex-col">
         {cocktail.primarySpirit && (
-          <p className="text-xs text-lime-400 font-bold tracking-widest uppercase mb-1">
+          <p className="font-mono text-xs text-terracotta font-bold tracking-widest uppercase mb-1">
             {cocktail.primarySpirit}
           </p>
         )}
-        <h3 className="font-serif font-bold text-xl text-slate-100 group-hover:text-lime-400 transition-colors">
+        <h3 className="font-display font-bold text-xl text-forest group-hover:text-terracotta transition-colors">
           {cocktail.name}
         </h3>
         {cocktail.ingredientCount !== undefined && (
-          <p className="text-sm text-slate-500 mt-auto pt-3">
+          <p className="text-sm text-sage mt-auto pt-3">
             {cocktail.ingredientCount} ingredient{cocktail.ingredientCount !== 1 ? "s" : ""}
           </p>
         )}
@@ -225,13 +229,15 @@ function QuickLinkCard({
   return (
     <Link
       href={href}
-      className="group rounded-xl border border-slate-800 bg-slate-900/50 p-6 transition-all duration-300 hover:border-lime-500/30 hover:bg-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500"
+      className="group card card-hover p-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
     >
-      <div className="text-4xl mb-4" aria-hidden="true">{icon}</div>
-      <h3 className="font-bold text-lg text-slate-100 mb-2 group-hover:text-lime-400 transition-colors">
+      <div className="w-14 h-14 rounded-2xl bg-mist flex items-center justify-center text-3xl mb-4 group-hover:bg-terracotta/10 transition-colors" aria-hidden="true">
+        {icon}
+      </div>
+      <h3 className="font-display font-bold text-lg text-forest mb-2 group-hover:text-terracotta transition-colors">
         {title}
       </h3>
-      <p className="text-sm text-slate-400 leading-relaxed">{description}</p>
+      <p className="text-sm text-sage leading-relaxed">{description}</p>
     </Link>
   );
 }

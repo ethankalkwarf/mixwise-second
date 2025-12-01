@@ -11,12 +11,12 @@ export function SectionHeader({ title, subtitle, id }: SectionHeaderProps) {
     <div className="mb-6">
       <h2 
         id={id}
-        className="text-2xl sm:text-3xl font-serif font-bold text-slate-50"
+        className="text-2xl sm:text-3xl font-display font-bold text-forest"
       >
         {title}
       </h2>
       {subtitle && (
-        <p className="text-slate-400 mt-2 max-w-xl leading-relaxed">
+        <p className="text-sage mt-2 max-w-xl leading-relaxed">
           {subtitle}
         </p>
       )}

@@ -41,14 +41,14 @@ export default async function CocktailsPage() {
   const cocktails: SanityCocktail[] = await sanityClient.fetch(COCKTAILS_QUERY);
 
   return (
-    <div className="py-10">
+    <div className="py-10 bg-cream min-h-screen">
       <MainContainer>
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-slate-50 mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-forest mb-4">
             Cocktail Recipes
           </h1>
-          <p className="text-slate-400 max-w-2xl">
+          <p className="text-sage max-w-2xl">
             Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each recipe includes detailed ingredients and instructions.
           </p>
         </div>
@@ -57,12 +57,12 @@ export default async function CocktailsPage() {
         {cocktails.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-6xl mb-6">🍸</div>
-            <h2 className="text-2xl font-serif font-bold text-slate-200 mb-3">
+            <h2 className="text-2xl font-display font-bold text-forest mb-3">
               No cocktails yet
             </h2>
-            <p className="text-slate-400 max-w-md">
+            <p className="text-sage max-w-md">
               Head over to Sanity Studio at{" "}
-              <Link href="/studio" className="text-lime-400 hover:underline">
+              <Link href="/studio" className="text-terracotta hover:underline">
                 /studio
               </Link>{" "}
               to create your first cocktail recipe.
@@ -76,4 +76,3 @@ export default async function CocktailsPage() {
     </div>
   );
 }
-

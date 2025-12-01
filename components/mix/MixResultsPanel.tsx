@@ -129,15 +129,15 @@ export function MixResultsPanel({
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
-            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white">
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest">
               {searchQuery ? "Search Results" : "Ready to Mix"}
             </h2>
             {displayedDrinks.length > 0 && (
               <span
                 className={`px-3 py-1 rounded-full text-base font-bold font-mono border ${
                   searchQuery
-                    ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
-                    : "bg-lime-500/10 border-lime-500/20 text-lime-400"
+                    ? "bg-forest/10 border-forest/20 text-forest"
+                    : "bg-olive/10 border-olive/20 text-olive"
                 }`}
                 aria-label={`${displayedDrinks.length} cocktails`}
               >
@@ -148,19 +148,19 @@ export function MixResultsPanel({
 
           {/* Search Input */}
           <div className="relative w-full sm:w-72">
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage pointer-events-none" />
             <input
               type="text"
               placeholder="Search all recipes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-11 pr-10 py-3 text-base text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500/50 transition-all"
+              className="input-botanical pl-11 pr-10"
               aria-label="Search cocktail recipes"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-sage hover:text-forest transition-colors"
                 aria-label="Clear search"
               >
                 <XMarkIcon className="w-5 h-5" />
@@ -182,8 +182,8 @@ export function MixResultsPanel({
               aria-selected={activeCategory === null}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold border transition-all ${
                 activeCategory === null
-                  ? "bg-lime-500 text-slate-900 border-lime-500"
-                  : "bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800"
+                  ? "bg-terracotta text-cream border-terracotta"
+                  : "bg-white border-mist text-sage hover:bg-mist"
               }`}
             >
               All
@@ -196,8 +196,8 @@ export function MixResultsPanel({
                 aria-selected={activeCategory === cat}
                 className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold border transition-all capitalize ${
                   activeCategory === cat
-                    ? "bg-lime-500 text-slate-900 border-lime-500"
-                    : "bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800"
+                    ? "bg-terracotta text-cream border-terracotta"
+                    : "bg-white border-mist text-sage hover:bg-mist"
                 }`}
               >
                 {cat}
@@ -209,18 +209,18 @@ export function MixResultsPanel({
         {/* Empty State */}
         {displayedDrinks.length === 0 && (
           <div 
-            className="flex flex-col items-center justify-center p-12 sm:p-16 border border-dashed border-slate-700/50 rounded-2xl bg-gradient-to-b from-slate-900/50 to-slate-950/50 text-center min-h-[350px]"
+            className="flex flex-col items-center justify-center p-12 sm:p-16 border border-dashed border-mist rounded-3xl bg-white text-center min-h-[350px]"
             role="status"
           >
             <div className="text-7xl mb-6 opacity-70" aria-hidden="true">🍹</div>
-            <h3 className="text-slate-100 font-serif font-bold mb-4 text-2xl sm:text-3xl">
+            <h3 className="text-forest font-display font-bold mb-4 text-2xl sm:text-3xl">
               {searchQuery 
                 ? "No matches found" 
                 : inventoryIds.length === 0 
                 ? "What's in your bar?" 
                 : "Almost there!"}
             </h3>
-            <p className="text-slate-400 text-base sm:text-lg max-w-md leading-relaxed mx-auto">
+            <p className="text-sage text-base sm:text-lg max-w-md leading-relaxed mx-auto">
               {searchQuery
                 ? "Try adjusting your search terms or clear the search to see available drinks."
                 : inventoryIds.length === 0
@@ -228,8 +228,8 @@ export function MixResultsPanel({
                 : "Add a few more ingredients to unlock your first cocktails. Check the suggestions below!"}
             </p>
             {!searchQuery && inventoryIds.length > 0 && (
-              <div className="mt-6 text-base text-slate-500">
-                <span className="text-lime-400 font-bold">{inventoryIds.length}</span>{" "}
+              <div className="mt-6 text-base text-sage">
+                <span className="text-olive font-bold">{inventoryIds.length}</span>{" "}
                 ingredient{inventoryIds.length !== 1 ? "s" : ""} selected
               </div>
             )}
@@ -253,40 +253,40 @@ export function MixResultsPanel({
 
       {/* Smart Additions */}
       {!searchQuery && unlockPotential.length > 0 && (
-        <div className="border-t border-slate-800/50 pt-10" aria-labelledby="smart-additions-title">
+        <div className="border-t border-mist pt-10" aria-labelledby="smart-additions-title">
           <div className="flex items-center gap-4 mb-6">
-            <h2 id="smart-additions-title" className="text-2xl sm:text-3xl font-serif font-bold text-white">
+            <h2 id="smart-additions-title" className="text-2xl sm:text-3xl font-display font-bold text-forest">
               Smart Additions
             </h2>
-            <span className="text-base text-slate-500">Unlocks new recipes</span>
+            <span className="text-base text-sage">Unlocks new recipes</span>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2" role="list">
             {unlockPotential.map((item) => (
               <div
                 key={item.id}
-                className="group flex flex-col p-5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-lime-500/30 transition-all h-full"
+                className="group flex flex-col p-5 rounded-3xl bg-white border border-mist hover:border-olive/30 transition-all h-full shadow-soft"
                 role="listitem"
               >
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="flex-shrink-0 w-16 h-16 bg-slate-800 rounded-xl flex flex-col items-center justify-center border border-white/5">
-                    <span className="text-2xl font-bold text-lime-400 leading-none">
+                  <div className="flex-shrink-0 w-16 h-16 bg-olive/10 rounded-2xl flex flex-col items-center justify-center border border-olive/20">
+                    <span className="text-2xl font-bold text-olive leading-none">
                       +{item.count}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500 uppercase mt-1">
+                    <span className="font-mono text-[10px] font-bold text-sage uppercase mt-1">
                       Drinks
                     </span>
                   </div>
 
                   <div className="flex flex-col min-w-0 pt-1">
-                    <h4 className="font-bold text-slate-100 text-lg leading-tight break-words">
+                    <h4 className="font-bold text-forest text-lg leading-tight break-words">
                       {item.name}
                     </h4>
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">
+                    <span className="font-mono text-xs font-bold text-sage uppercase tracking-wider mt-1">
                       {item.category}
                     </span>
                     {item.drinks.length > 0 && (
-                      <p className="text-sm text-slate-400 mt-2 line-clamp-2">
+                      <p className="text-sm text-sage mt-2 line-clamp-2">
                         Unlocks: {item.drinks.join(", ")}
                       </p>
                     )}
@@ -295,7 +295,7 @@ export function MixResultsPanel({
 
                 <button
                   onClick={() => onAddToInventory(item.id)}
-                  className="mt-auto w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-lime-500/10 text-lime-400 border border-lime-500/20 hover:bg-lime-500 hover:text-slate-900 hover:border-lime-500 transition-all font-bold text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-lime-500/50"
+                  className="mt-auto w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-olive/10 text-olive border border-olive/20 hover:bg-olive hover:text-cream hover:border-olive transition-all font-bold text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-olive/50"
                   aria-label={`Add ${item.name} to your bar`}
                 >
                   <PlusIcon className="w-5 h-5" aria-hidden="true" />
@@ -324,30 +324,30 @@ function CocktailCard({
   return (
     <Link
       href={`/cocktails/${cocktail.slug}`}
-      className={`group relative flex flex-col overflow-hidden rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-lime-500/50 ${
+      className={`group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-terracotta/50 ${
         isReady
-          ? "bg-slate-900 border-slate-800 hover:border-lime-500/40 hover:shadow-xl hover:shadow-lime-900/10"
-          : "bg-slate-900/40 border-slate-800/60 opacity-80 hover:opacity-100 hover:border-slate-700"
+          ? "bg-white border-mist hover:border-olive/40 hover:shadow-card-hover hover:-translate-y-2"
+          : "bg-cream/50 border-mist/60 opacity-80 hover:opacity-100 hover:border-mist"
       }`}
       role="listitem"
       aria-label={`${cocktail.name}${isReady ? ", ready to make" : `, missing ${missingCount} ingredient${missingCount > 1 ? "s" : ""}`}`}
     >
-      <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-slate-800">
+      <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-mist">
         {cocktail.imageUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={cocktail.imageUrl}
               alt=""
-              className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${
+              className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply ${
                 isReady ? "opacity-90 group-hover:opacity-100" : "opacity-60 grayscale-[0.5]"
               }`}
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
           </>
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-700 text-5xl" aria-hidden="true">
+          <div className="h-full w-full flex items-center justify-center text-sage text-5xl" aria-hidden="true">
             🥃
           </div>
         )}
@@ -355,12 +355,12 @@ function CocktailCard({
         {/* Status Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20 items-start">
           {isReady && (
-            <div className="bg-lime-500 text-slate-950 text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-lg backdrop-blur-sm">
+            <div className="bg-olive text-cream text-xs font-bold px-2.5 py-1.5 rounded-full shadow-lg backdrop-blur-sm">
               ✓ READY
             </div>
           )}
           {cocktail.isPopular && (
-            <div className="bg-amber-500 text-slate-950 text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-lg backdrop-blur-sm tracking-wider">
+            <div className="bg-terracotta text-cream text-xs font-bold px-2.5 py-1.5 rounded-full shadow-lg backdrop-blur-sm tracking-wider">
               ★ FEATURED
             </div>
           )}
@@ -369,19 +369,19 @@ function CocktailCard({
 
       <div className="p-5 flex-1 flex flex-col relative z-10 -mt-14">
         <div
-          className={`backdrop-blur-md rounded-xl p-4 border border-white/10 shadow-lg flex-1 flex flex-col ${
-            isReady ? "bg-slate-950/80" : "bg-slate-950/60"
+          className={`backdrop-blur-md rounded-2xl p-4 border border-mist/50 shadow-soft flex-1 flex flex-col ${
+            isReady ? "bg-white/90" : "bg-cream/80"
           }`}
         >
           <div className="mb-3">
             {cocktail.primarySpirit && (
-              <p className="text-xs text-lime-400 font-bold tracking-widest uppercase mb-1.5">
+              <p className="font-mono text-xs text-terracotta font-bold tracking-widest uppercase mb-1.5">
                 {cocktail.primarySpirit}
               </p>
             )}
             <h3
-              className={`font-serif font-bold text-xl leading-tight ${
-                isReady ? "text-slate-100" : "text-slate-300"
+              className={`font-display font-bold text-xl leading-tight ${
+                isReady ? "text-forest" : "text-sage"
               }`}
             >
               {cocktail.name}
@@ -394,19 +394,19 @@ function CocktailCard({
               {missingNames.slice(0, 3).map((name, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-medium rounded"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-terracotta/10 text-terracotta text-xs font-medium rounded-full"
                 >
                   <XMarkIcon className="w-3 h-3" />
                   {name}
                 </span>
               ))}
               {missingNames.length > 3 && (
-                <span className="text-xs text-slate-500">+{missingNames.length - 3} more</span>
+                <span className="text-xs text-sage">+{missingNames.length - 3} more</span>
               )}
             </div>
           )}
           
-          <p className="text-sm text-slate-400 line-clamp-2 mt-auto leading-relaxed">
+          <p className="text-sm text-sage line-clamp-2 mt-auto leading-relaxed">
             {cocktail.ingredients.map((i) => i.name).join(", ")}
           </p>
         </div>

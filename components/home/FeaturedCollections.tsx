@@ -35,14 +35,14 @@ export async function FeaturedCollections() {
         <SectionHeader title="Curated Collections" id="collections-title" />
         <Link
           href="/collections"
-          className="text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors"
+          className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors"
         >
           View all →
         </Link>
       </div>
 
       {/* Horizontal scroll container */}
-      <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-track-slate-800 scrollbar-thumb-slate-600">
+      <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin">
         {collections.map((collection) => (
           <CollectionCard key={collection._id} collection={collection} />
         ))}
@@ -57,37 +57,37 @@ function CollectionCard({ collection }: { collection: Collection }) {
   return (
     <Link
       href={`/collections/${collection.slug.current}`}
-      className="group flex-shrink-0 w-72 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all duration-300 hover:border-lime-500/40 hover:shadow-lg hover:shadow-lime-900/10"
+      className="group flex-shrink-0 w-72 overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover"
     >
-      <div className="relative h-36 w-full overflow-hidden bg-slate-800">
+      <div className="relative h-36 w-full overflow-hidden bg-mist">
         {imageUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
               alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent" />
           </>
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-700 text-4xl" aria-hidden="true">
+          <div className="h-full w-full flex items-center justify-center text-sage text-4xl" aria-hidden="true">
             📚
           </div>
         )}
-        <div className="absolute bottom-2 right-2 bg-slate-900/80 backdrop-blur-sm px-2 py-1 rounded-full">
-          <span className="text-xs font-medium text-slate-300">
+        <div className="absolute bottom-2 right-2 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full">
+          <span className="text-xs font-medium text-forest">
             {collection.cocktailCount} cocktail{collection.cocktailCount !== 1 ? "s" : ""}
           </span>
         </div>
       </div>
       <div className="p-4">
-        <h3 className="font-serif font-bold text-base text-slate-100 group-hover:text-lime-400 transition-colors line-clamp-1">
+        <h3 className="font-display font-bold text-base text-forest group-hover:text-terracotta transition-colors line-clamp-1">
           {collection.name}
         </h3>
         {collection.description && (
-          <p className="text-sm text-slate-500 line-clamp-1 mt-1">
+          <p className="text-sm text-sage line-clamp-1 mt-1">
             {collection.description}
           </p>
         )}
@@ -95,4 +95,3 @@ function CollectionCard({ collection }: { collection: Collection }) {
     </Link>
   );
 }
-

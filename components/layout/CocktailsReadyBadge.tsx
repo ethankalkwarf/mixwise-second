@@ -83,11 +83,11 @@ export function CocktailsReadyBadge() {
   return (
     <Link
       href="/mix"
-      className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-lime-500/10 hover:bg-lime-500/20 border border-lime-500/20 rounded-full transition-colors group"
+      className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-olive/10 hover:bg-olive/20 border border-olive/20 rounded-full transition-colors group"
       title="View cocktails you can make"
     >
       <span className="text-lg" aria-hidden="true">🍸</span>
-      <span className="text-sm font-medium text-lime-400 group-hover:text-lime-300">
+      <span className="text-sm font-medium text-olive group-hover:text-forest">
         {readyCount} cocktail{readyCount !== 1 ? "s" : ""} ready
       </span>
     </Link>
@@ -154,12 +154,10 @@ export function CocktailsReadyBadgeCompact() {
   return (
     <Link
       href="/mix"
-      className="flex items-center justify-center w-8 h-8 bg-lime-500/20 text-lime-400 font-bold text-xs rounded-full"
+      className="flex items-center justify-center w-8 h-8 bg-olive/20 text-olive font-bold text-xs rounded-full"
       title={`${readyCount} cocktails ready`}
     >
       {readyCount}
     </Link>
   );
 }
-
-

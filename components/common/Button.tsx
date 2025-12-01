@@ -1,7 +1,7 @@
 import React from "react";
 import clsx from "clsx";
 
-type ButtonVariant = "primary" | "secondary";
+type ButtonVariant = "primary" | "secondary" | "ghost";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -14,12 +14,15 @@ export function Button({
   ...props
 }: ButtonProps) {
   const base =
-    "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-lime-400 focus-visible:ring-offset-slate-950";
+    "inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
 
   const variants: Record<ButtonVariant, string> = {
-    primary: "bg-lime-400 text-slate-950 hover:bg-lime-300",
+    primary: 
+      "bg-terracotta text-cream shadow-lg shadow-terracotta/20 hover:bg-terracotta-dark focus-visible:ring-terracotta focus-visible:ring-offset-cream",
     secondary:
-      "bg-slate-800 text-slate-100 hover:bg-slate-700 border border-slate-600"
+      "bg-forest text-cream hover:bg-charcoal focus-visible:ring-forest focus-visible:ring-offset-cream",
+    ghost:
+      "bg-white text-forest border border-mist hover:bg-mist/50 hover:border-stone focus-visible:ring-forest"
   };
 
   return (
@@ -31,5 +34,3 @@ export function Button({
     </button>
   );
 }
-
-
