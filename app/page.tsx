@@ -1,19 +1,15 @@
 import { sanityClient } from "@/lib/sanityClient";
-import { getImageUrl } from "@/lib/sanityImage";
-import { MainContainer } from "@/components/layout/MainContainer";
-import { SectionHeader } from "@/components/common/SectionHeader";
-import { Button } from "@/components/common/Button";
 import { WebPageSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
-import { PersonalizedSections } from "@/components/home/PersonalizedSections";
-import { FeaturedCollections } from "@/components/home/FeaturedCollections";
-import Link from "next/link";
+import { Hero } from "@/components/home/Hero";
+import { FeaturedCocktails } from "@/components/home/FeaturedCocktails";
+import { PlatformSection } from "@/components/home/PlatformSection";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
 export const revalidate = 60;
 
 // Fetch featured cocktails from Sanity
-const FEATURED_COCKTAILS_QUERY = `*[_type == "cocktail"] | order(isPopular desc, name asc) [0...6] {
+const FEATURED_COCKTAILS_QUERY = `*[_type == "cocktail"] | order(isPopular desc, name asc) [0...8] {
   _id,
   name,
   slug,
@@ -25,27 +21,10 @@ const FEATURED_COCKTAILS_QUERY = `*[_type == "cocktail"] | order(isPopular desc,
   "ingredientCount": count(ingredients)
 }`;
 
-// Fetch all cocktails with ingredients for personalized matching
-const ALL_COCKTAILS_QUERY = `*[_type == "cocktail"] {
-  _id,
-  name,
-  slug,
-  image,
-  externalImageUrl,
-  primarySpirit,
-  "ingredients": ingredients[] {
-    "ingredient": ingredient-> {
-      _id,
-      name
-    }
-  }
-}`;
-
 export default async function HomePage() {
-  const [settings, cocktails, allCocktails] = await Promise.all([
+  const [settings, cocktails] = await Promise.all([
     sanityClient.fetch(`*[_type == "siteSettings"][0]{heroTitle, heroSubtitle}`),
-    sanityClient.fetch<SanityCocktail[]>(FEATURED_COCKTAILS_QUERY),
-    sanityClient.fetch(ALL_COCKTAILS_QUERY)
+    sanityClient.fetch<SanityCocktail[]>(FEATURED_COCKTAILS_QUERY)
   ]);
 
   const heroTitle = settings?.heroTitle || "Discover Your Next Favorite Cocktail";
@@ -61,183 +40,17 @@ export default async function HomePage() {
         url={SITE_CONFIG.url}
       />
 
-      {/* Hero Section with Mist Background */}
-      <section className="bg-mist hero-bg py-16 sm:py-24">
-        <MainContainer>
-          <div className="text-center max-w-4xl mx-auto" aria-labelledby="hero-title">
-            <h1 
-              id="hero-title"
-              className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-forest mb-6 leading-tight"
-            >
-              {heroTitle}
-            </h1>
-            <p className="text-lg sm:text-xl text-sage mb-10 leading-relaxed max-w-2xl mx-auto">
-              {heroSubtitle}
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/cocktails">
-                <Button>Browse Cocktails</Button>
-              </Link>
-              <Link href="/mix">
-                <Button variant="ghost">Mix with What You Have</Button>
-              </Link>
-            </div>
-          </div>
-        </MainContainer>
-      </section>
+      {/* Hero Section */}
+      <Hero title={heroTitle} subtitle={heroSubtitle} />
 
-      <div className="py-12 sm:py-16">
-        <MainContainer>
-          {/* Personalized Sections (for authenticated users) */}
-          <div className="mb-20">
-            <PersonalizedSections allCocktails={allCocktails} featuredCocktails={cocktails} />
-          </div>
+      {/* Featured Cocktails */}
+      {cocktails.length > 0 && (
+        <FeaturedCocktails cocktails={cocktails} />
+      )}
 
-          {/* Featured Cocktails (fallback for anonymous users) */}
-          {cocktails.length > 0 && (
-            <section className="mb-20" aria-labelledby="featured-title">
-              <div className="flex items-center justify-between mb-8">
-                <SectionHeader title="Featured Cocktails" id="featured-title" />
-                <Link
-                  href="/cocktails"
-                  className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors"
-                >
-                  View all →
-                </Link>
-              </div>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" role="list">
-                {cocktails.map((cocktail) => (
-                  <FeaturedCocktailCard key={cocktail._id} cocktail={cocktail} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Featured Collections */}
-          <FeaturedCollections />
-
-          {/* Empty State */}
-          {cocktails.length === 0 && (
-            <section className="mb-20">
-              <div className="card p-10 text-center">
-                <div className="text-6xl mb-5" aria-hidden="true">🍸</div>
-                <h2 className="text-2xl font-display font-bold text-forest mb-3">
-                  No cocktails yet
-                </h2>
-                <p className="text-sage mb-8 text-lg">
-                  Create your first cocktail in Sanity Studio to see it here.
-                </p>
-                <Link href="/studio">
-                  <Button variant="secondary">Open Studio</Button>
-                </Link>
-              </div>
-            </section>
-          )}
-
-          {/* Quick Links */}
-          <section aria-labelledby="explore-title">
-            <h2 id="explore-title" className="sr-only">Explore MixWise</h2>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <QuickLinkCard
-                title="Browse Recipes"
-                description="Explore our collection of cocktail recipes with detailed ingredients and instructions."
-                href="/cocktails"
-                icon="📚"
-              />
-              <QuickLinkCard
-                title="Mix Tool"
-                description="Find cocktails you can make with the ingredients you already have at home."
-                href="/mix"
-                icon="🧪"
-              />
-              <QuickLinkCard
-                title="About MixWise"
-                description="Learn about our mission to make cocktail learning simple and accessible."
-                href="/about"
-                icon="💡"
-              />
-            </div>
-          </section>
-        </MainContainer>
-      </div>
+      {/* Platform Section */}
+      <PlatformSection />
     </>
   );
 }
 
-function FeaturedCocktailCard({ cocktail }: { cocktail: SanityCocktail & { ingredientCount?: number } }) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 400, height: 300 }) || cocktail.externalImageUrl;
-
-  return (
-    <Link
-      href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
-      role="listitem"
-    >
-      <div className="relative h-48 w-full overflow-hidden bg-mist">
-        {imageUrl ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageUrl}
-              alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
-          </>
-        ) : (
-          <div className="h-full w-full flex items-center justify-center text-sage text-5xl" aria-hidden="true">
-            🍸
-          </div>
-        )}
-        {cocktail.isPopular && (
-          <span className="absolute top-3 left-3 bg-terracotta text-cream text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
-            ★ FEATURED
-          </span>
-        )}
-      </div>
-      <div className="p-5 flex-1 flex flex-col">
-        {cocktail.primarySpirit && (
-          <p className="font-mono text-xs text-terracotta font-bold tracking-widest uppercase mb-1">
-            {cocktail.primarySpirit}
-          </p>
-        )}
-        <h3 className="font-display font-bold text-xl text-forest group-hover:text-terracotta transition-colors">
-          {cocktail.name}
-        </h3>
-        {cocktail.ingredientCount !== undefined && (
-          <p className="text-sm text-sage mt-auto pt-3">
-            {cocktail.ingredientCount} ingredient{cocktail.ingredientCount !== 1 ? "s" : ""}
-          </p>
-        )}
-      </div>
-    </Link>
-  );
-}
-
-function QuickLinkCard({
-  title,
-  description,
-  href,
-  icon
-}: {
-  title: string;
-  description: string;
-  href: string;
-  icon: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group card card-hover p-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
-    >
-      <div className="w-14 h-14 rounded-2xl bg-mist flex items-center justify-center text-3xl mb-4 group-hover:bg-terracotta/10 transition-colors" aria-hidden="true">
-        {icon}
-      </div>
-      <h3 className="font-display font-bold text-lg text-forest mb-2 group-hover:text-terracotta transition-colors">
-        {title}
-      </h3>
-      <p className="text-sm text-sage leading-relaxed">{description}</p>
-    </Link>
-  );
-}

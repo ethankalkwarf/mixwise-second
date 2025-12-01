@@ -3,14 +3,27 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { SupabaseProvider } from "./providers";
-import { SiteHeader, NavItem } from "@/components/layout/SiteHeader";
+import { Navbar } from "@/components/layout/Navbar";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { OrganizationSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 
-// Use system fonts to avoid Google Fonts network issues during build
-// In production, these will be replaced with web fonts via CSS
-const fontClasses = "";
+import { DM_Serif_Display, Jost } from "next/font/google";
+
+// Load fonts using next/font
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-dm-serif",
+  display: "swap",
+});
+
+const jost = Jost({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  variable: "--font-jost",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -63,19 +76,13 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Simplified navigation - only essential items
-  const navItems: NavItem[] = [
-    { label: "Home", href: "/" },
-    { label: "Cocktails", href: "/cocktails" },
-    { label: "Mix", href: "/mix" },
-  ];
 
   // Don't fetch session server-side to avoid static generation issues
   // Let client-side providers handle session fetching
   const initialSession = null;
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${dmSerifDisplay.variable} ${jost.variable}`}>
       <head>
         <OrganizationSchema />
       </head>
@@ -87,7 +94,7 @@ export default async function RootLayout({
         
         <SupabaseProvider initialSession={initialSession}>
           <div className="min-h-screen flex flex-col">
-            <SiteHeader navItems={navItems} />
+            <Navbar />
             <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
               {children}
             </main>
