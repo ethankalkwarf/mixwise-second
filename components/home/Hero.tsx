@@ -10,12 +10,10 @@ interface HeroProps {
 
 export function Hero({ title, subtitle }: HeroProps) {
   return (
-    <section className="bg-cream py-12 sm:py-16 lg:py-20">
+    <section className="bg-cream py-16 sm:py-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        {/* Glassmorphism container */}
-        <div className="relative bg-white/60 backdrop-blur-lg border border-white/20 rounded-3xl p-6 sm:p-10 lg:p-14 shadow-soft overflow-hidden">
-          {/* Subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-olive/5 via-transparent to-terracotta/5 pointer-events-none" />
+        {/* Green hero container */}
+        <div className="relative bg-mist border border-mist rounded-3xl p-6 sm:p-10 lg:p-14 shadow-soft overflow-hidden">
           
           <div className="relative flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
             {/* Content */}
@@ -23,7 +21,7 @@ export function Hero({ title, subtitle }: HeroProps) {
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-forest leading-tight mb-4">
                 Find your next favorite cocktail
               </h1>
-              <p className="text-base sm:text-lg text-charcoal/80 leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
+              <p className="text-base sm:text-lg text-sage leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
                 {subtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
@@ -32,12 +30,6 @@ export function Hero({ title, subtitle }: HeroProps) {
                   className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark transition-all duration-300 shadow-terracotta"
                 >
                   Discover Your Perfect Drink
-                </Link>
-                <Link
-                  href="/cocktails"
-                  className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium bg-white text-forest border border-mist hover:bg-mist/50 transition-all duration-300"
-                >
-                  Browse Cocktail Recipes
                 </Link>
               </div>
             </div>

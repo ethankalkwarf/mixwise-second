@@ -110,7 +110,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
       />
 
       {/* MAIN PAGE WRAPPER */}
-      <main className="max-w-6xl mx-auto px-4 py-8 md:py-12">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12">
         {/* Back Link */}
         <div className="mb-8">
           <BackToCocktails />

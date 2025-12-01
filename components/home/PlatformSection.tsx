@@ -14,7 +14,7 @@ export function PlatformSection() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="mb-24 text-center md:text-left">
-          <h2 className="text-4xl md:text-6xl font-display max-w-2xl leading-[1.1] mb-6">
+          <h2 className="text-4xl md:text-6xl font-display max-w-2xl leading-[1.1] mb-6 text-[#E6EBE4]">
             Everything you need to master home mixology.
           </h2>
           <div className="h-1 w-24 bg-[#BC5A45] rounded-full"></div>

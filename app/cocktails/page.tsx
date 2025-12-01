@@ -7,7 +7,8 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 export const revalidate = 60; // Revalidate every 60 seconds
 
 // GROQ query to fetch all cocktails with their ingredients
-const COCKTAILS_QUERY = `*[_type == "cocktail"] | order(name asc) {
+// Temporary random ordering until search/filters are implemented
+const COCKTAILS_QUERY = `*[_type == "cocktail"] {
   _id,
   name,
   slug,
@@ -40,6 +41,9 @@ const COCKTAILS_QUERY = `*[_type == "cocktail"] | order(name asc) {
 export default async function CocktailsPage() {
   const cocktails: SanityCocktail[] = await sanityClient.fetch(COCKTAILS_QUERY);
 
+  // Temporary random ordering until search/filters are implemented
+  const shuffledCocktails = [...cocktails].sort(() => Math.random() - 0.5);
+
   return (
     <div className="py-10 bg-cream min-h-screen">
       <MainContainer>
@@ -49,12 +53,12 @@ export default async function CocktailsPage() {
             Cocktail Recipes
           </h1>
           <p className="text-sage max-w-2xl">
-            Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each recipe includes detailed ingredients and instructions.
+            Browse our collection of {shuffledCocktails.length} handcrafted cocktail recipes. Each recipe includes detailed ingredients and instructions.
           </p>
         </div>
 
         {/* Empty State */}
-        {cocktails.length === 0 && (
+        {shuffledCocktails.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-6xl mb-6">🍸</div>
             <h2 className="text-2xl font-display font-bold text-forest mb-3">
@@ -71,7 +75,7 @@ export default async function CocktailsPage() {
         )}
 
         {/* Cocktail Directory with Search, Filters, and Grid */}
-        {cocktails.length > 0 && <CocktailsDirectory cocktails={cocktails} />}
+        {shuffledCocktails.length > 0 && <CocktailsDirectory cocktails={shuffledCocktails} />}
       </MainContainer>
     </div>
   );

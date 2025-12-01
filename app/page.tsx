@@ -5,6 +5,7 @@ import { Hero } from "@/components/home/Hero";
 import { FeaturedCocktails } from "@/components/home/FeaturedCocktails";
 import { PlatformSection } from "@/components/home/PlatformSection";
 import { PersonalizedSections } from "@/components/home/PersonalizedSections";
+import { FeaturedCocktailsWrapper } from "@/components/home/FeaturedCocktailsWrapper";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
 export const revalidate = 60;
@@ -73,7 +74,7 @@ export default async function HomePage() {
 
       {/* Featured Cocktails */}
       {cocktails.length > 0 && (
-        <FeaturedCocktails cocktails={cocktails} />
+        <FeaturedCocktailsWrapper cocktails={cocktails} />
       )}
 
       {/* Platform Section */}
