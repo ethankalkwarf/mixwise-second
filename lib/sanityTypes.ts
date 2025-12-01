@@ -14,6 +14,7 @@ export type SanityImage = {
     height: number;
     width: number;
   };
+  alt?: string;
 };
 
 export type SanitySlug = {
@@ -106,6 +107,13 @@ export type SanityCocktail = {
   isTrending?: boolean;
   history?: SanityBlock[];
   tips?: SanityBlock[];
+  funFact?: string;
+  funFactSources?: Array<{label: string; url: string;}>;
+  flavorProfile?: any; // Complex object with strength, sweetness, etc.
+  bestFor?: string[];
+  seoTitle?: string;
+  metaDescription?: string;
+  imageAltOverride?: string;
 };
 
 // Category document

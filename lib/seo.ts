@@ -106,6 +106,8 @@ export function generateCocktailMetadata(cocktail: {
   slug?: { current: string };
   description?: string;
   externalImageUrl?: string;
+  seoTitle?: string;
+  metaDescription?: string;
   // eslint-disable-next-line
   ingredients?: Array<any>;
   primarySpirit?: string;
@@ -116,14 +118,17 @@ export function generateCocktailMetadata(cocktail: {
     .slice(0, 5)
     .join(", ");
 
-  const description = cocktail.description 
+  const title = cocktail.seoTitle || `${cocktail.name} Recipe`;
+
+  const description = cocktail.metaDescription
+    || cocktail.description
     || `Learn how to make a ${cocktail.name}${cocktail.primarySpirit ? ` with ${cocktail.primarySpirit}` : ""}${ingredientNames ? `. Made with ${ingredientNames}.` : "."}`;
 
   // Handle image from Sanity or external URL
   const imageUrl = cocktail.externalImageUrl;
 
   return generatePageMetadata({
-    title: `${cocktail.name} Recipe`,
+    title,
     description,
     path: `/cocktails/${cocktail.slug?.current}`,
     ogImage: imageUrl,

@@ -19,33 +19,21 @@ const COCKTAIL_QUERY = `*[_type == "cocktail" && slug.current == $slug][0] {
   _id,
   name,
   slug,
-  description,
   image,
-  externalImageUrl,
+  description,
+  ingredients[],
+  instructions[],
   glass,
   method,
-  primarySpirit,
-  isPopular,
-  isFavorite,
-  isTrending,
-  drinkCategories,
-  garnish,
   tags,
-  instructions,
-  history,
-  tips,
-  "ingredients": ingredients[] {
-    _key,
-    amount,
-    isOptional,
-    notes,
-    "ingredient": ingredient-> {
-      _id,
-      name,
-      type,
-      description
-    }
-  }
+  hidden,
+  funFact,
+  funFactSources[]{label, url},
+  flavorProfile,
+  bestFor,
+  seoTitle,
+  metaDescription,
+  imageAltOverride
 }`;
 
 // Category display configuration - Botanical theme
@@ -136,7 +124,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={imageUrl}
-                    alt={`${cocktail.name} cocktail`}
+                    alt={cocktail.imageAltOverride || cocktail.image?.alt || `${cocktail.name} cocktail`}
                     className="w-full h-full object-cover mix-blend-multiply"
                     loading="eager"
                   />
@@ -197,6 +185,87 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                     </p>
                   )}
                 </header>
+
+                {/* Fun Fact Section */}
+                {cocktail.funFact && (
+                  <section className="bg-white border border-mist rounded-3xl p-6 shadow-card">
+                    <h2 className="text-lg font-display font-bold text-forest mb-3 flex items-center gap-2">
+                      <span aria-hidden="true">💡</span> Fun Fact
+                    </h2>
+                    <p className="text-base text-sage leading-relaxed mb-3">
+                      {cocktail.funFact}
+                    </p>
+                    {cocktail.funFactSources && cocktail.funFactSources.length > 0 && (
+                      <div className="text-sm text-sage">
+                        <span className="font-medium">Sources: </span>
+                        {cocktail.funFactSources.map((source, index) => (
+                          <span key={index}>
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-terracotta hover:text-terracotta/80 underline"
+                            >
+                              {source.label}
+                            </a>
+                            {index < cocktail.funFactSources!.length - 1 && ", "}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                )}
+
+                {/* Flavor Profile */}
+                {cocktail.flavorProfile && (
+                  <div className="flex flex-wrap gap-2" role="list" aria-label="Flavor profile">
+                    {cocktail.flavorProfile.strength && (
+                      <span className="bg-mist text-sage text-sm px-3 py-1.5 rounded-full">
+                        Strength: {cocktail.flavorProfile.strength}
+                      </span>
+                    )}
+                    {cocktail.flavorProfile.sweetness && (
+                      <span className="bg-mist text-sage text-sm px-3 py-1.5 rounded-full">
+                        Sweetness: {cocktail.flavorProfile.sweetness}
+                      </span>
+                    )}
+                    {cocktail.flavorProfile.tartness && (
+                      <span className="bg-mist text-sage text-sm px-3 py-1.5 rounded-full">
+                        Tartness: {cocktail.flavorProfile.tartness}
+                      </span>
+                    )}
+                    {cocktail.flavorProfile.bitterness && (
+                      <span className="bg-mist text-sage text-sm px-3 py-1.5 rounded-full">
+                        Bitterness: {cocktail.flavorProfile.bitterness}
+                      </span>
+                    )}
+                    {cocktail.flavorProfile.aroma && (
+                      <span className="bg-mist text-sage text-sm px-3 py-1.5 rounded-full">
+                        Aroma: {cocktail.flavorProfile.aroma}
+                      </span>
+                    )}
+                    {cocktail.flavorProfile.texture && (
+                      <span className="bg-mist text-sage text-sm px-3 py-1.5 rounded-full">
+                        Texture: {cocktail.flavorProfile.texture}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Best For Tags */}
+                {cocktail.bestFor && cocktail.bestFor.length > 0 && (
+                  <div className="flex flex-wrap gap-2" role="list" aria-label="Best for occasions">
+                    {cocktail.bestFor.map((occasion, index) => (
+                      <span
+                        key={index}
+                        className="bg-mist text-sage text-sm px-3 py-1.5 rounded-full"
+                        role="listitem"
+                      >
+                        {occasion}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Category Tags */}
                 {cocktail.drinkCategories && cocktail.drinkCategories.length > 0 && (
