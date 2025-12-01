@@ -43,7 +43,7 @@ export function Navbar() {
               href="/mix"
               className="text-charcoal hover:text-terracotta transition-colors font-medium"
             >
-              Mix With What You Have
+              My Cabinet
             </Link>
           </div>
 
@@ -159,7 +159,7 @@ export function Navbar() {
                 className="block px-3 py-2 text-base font-medium text-charcoal hover:text-terracotta transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Mix With What You Have
+                My Cabinet
               </Link>
 
               <div className="border-t border-mist mt-4 pt-4">

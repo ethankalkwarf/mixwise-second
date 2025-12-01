@@ -1,83 +1,77 @@
 "use client";
 
-import Link from "next/link";
-
 export function PlatformSection() {
   return (
-    <section className="bg-charcoal text-cream py-16 sm:py-20 lg:py-24 px-6 md:px-10 lg:px-20 relative overflow-hidden">
-      {/* Watermark Numbers */}
-      <div className="absolute inset-0 pointer-events-none select-none">
-        <div className="absolute -top-12 -left-4 text-[140px] leading-none font-display italic text-white opacity-[0.05]">
-          1
-        </div>
-        <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 text-[140px] leading-none font-display italic text-white opacity-[0.05]">
-          2
-        </div>
-        <div className="absolute -top-12 -right-4 text-[140px] leading-none font-display italic text-white opacity-[0.05]">
-          3
-        </div>
-      </div>
+    <section className="bg-[#2C3628] text-[#F9F7F2] py-32 px-6 rounded-t-[3rem] relative overflow-hidden mt-24">
+      {/* Background Pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+          backgroundSize: '40px 40px'
+        }}
+      ></div>
 
-      <div className="relative max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="mb-24 text-center md:text-left">
+          <h2 className="text-4xl md:text-6xl font-display max-w-2xl leading-[1.1] mb-6">
+            Everything you need to master home mixology.
+          </h2>
+          <div className="h-1 w-24 bg-[#BC5A45] rounded-full"></div>
+        </div>
+
+        {/* Grid Container */}
+        <div className="grid md:grid-cols-3 gap-12 md:gap-8">
+
           {/* Column 1 */}
-          <div className="text-center md:text-left">
-            <div className="text-sm font-bold uppercase tracking-widest text-white/70 mb-4">
-              Curated Recipes
+          <div className="relative group pt-8 border-t border-white/10 md:border-t-0 hover:-translate-y-2 transition-transform duration-500">
+            <div className="absolute -top-12 -left-4 text-[140px] leading-none font-display italic text-white opacity-[0.05] select-none pointer-events-none z-0">1</div>
+            <div className="relative z-10 pt-4">
+              <h3 className="text-3xl font-display mb-4 text-white">Curated Recipes</h3>
+              <p className="text-[#D1DAD0] leading-relaxed mb-8 pr-8">
+                Explore an extensive collection of handcrafted cocktails, complete with historical context and precise measurements.
+              </p>
+              <a
+                href="/cocktails"
+                className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-[#8A9A5B] hover:text-white transition-colors gap-3"
+              >
+                Start Browsing <span className="bg-[#8A9A5B]/20 w-6 h-6 rounded-full flex items-center justify-center text-[10px]">→</span>
+              </a>
             </div>
-            <h3 className="text-2xl sm:text-3xl font-display font-bold text-white mb-4">
-              Expert-Crafted Cocktails
-            </h3>
-            <p className="text-white/80 leading-relaxed mb-6">
-              Discover professionally crafted cocktail recipes from mixologists around the world.
-              Each recipe includes detailed instructions, ingredient lists, and serving suggestions.
-            </p>
-            <Link
-              href="/cocktails"
-              className="inline-block text-white/90 hover:text-white transition-colors underline underline-offset-4"
-            >
-              Start Browsing →
-            </Link>
           </div>
 
           {/* Column 2 */}
-          <div className="text-center md:text-left">
-            <div className="text-sm font-bold uppercase tracking-widest text-white/70 mb-4">
-              My Cabinet
+          <div className="relative group pt-8 border-t border-white/10 md:border-t-0 hover:-translate-y-2 transition-transform duration-500 delay-100">
+            <div className="absolute -top-12 -left-4 text-[140px] leading-none font-display italic text-white opacity-[0.05] select-none pointer-events-none z-0">2</div>
+            <div className="relative z-10 pt-4">
+              <h3 className="text-3xl font-display mb-4 text-white">My Cabinet</h3>
+              <p className="text-[#D1DAD0] leading-relaxed mb-8 pr-8">
+                Input your available spirits and mixers to instantly generate a personalized menu of cocktails you can craft right now.
+              </p>
+              <a
+                href="/mix"
+                className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-[#BC5A45] hover:text-white transition-colors gap-3"
+              >
+                Launch My Cabinet <span className="bg-[#BC5A45]/20 w-6 h-6 rounded-full flex items-center justify-center text-[10px]">→</span>
+              </a>
             </div>
-            <h3 className="text-2xl sm:text-3xl font-display font-bold text-white mb-4">
-              Smart Ingredient Matching
-            </h3>
-            <p className="text-white/80 leading-relaxed mb-6">
-              Tell us what you have at home and we&apos;ll show you exactly which cocktails you can make.
-              No more guessing or disappointing trips to the liquor store.
-            </p>
-            <Link
-              href="/mix"
-              className="inline-block text-white/90 hover:text-white transition-colors underline underline-offset-4"
-            >
-              Launch My Cabinet →
-            </Link>
           </div>
 
           {/* Column 3 */}
-          <div className="text-center md:text-left">
-            <div className="text-sm font-bold uppercase tracking-widest text-white/70 mb-4">
-              Master Class
+          <div className="relative group pt-8 border-t border-white/10 md:border-t-0 hover:-translate-y-2 transition-transform duration-500 delay-200">
+            <div className="absolute -top-12 -left-4 text-[140px] leading-none font-display italic text-white opacity-[0.05] select-none pointer-events-none z-0">3</div>
+            <div className="relative z-10 pt-4">
+              <h3 className="text-3xl font-display mb-4 text-white">Master Class</h3>
+              <p className="text-[#D1DAD0] leading-relaxed mb-8 pr-8">
+                Elevate your home bartending with expert guides on essential techniques, glassware selection, and preparation.
+              </p>
+              <a
+                href="/about"
+                className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-[#8A9A5B] hover:text-white transition-colors gap-3"
+              >
+                Read Guides <span className="bg-[#8A9A5B]/20 w-6 h-6 rounded-full flex items-center justify-center text-[10px]">→</span>
+              </a>
             </div>
-            <h3 className="text-2xl sm:text-3xl font-display font-bold text-white mb-4">
-              Learn the Craft
-            </h3>
-            <p className="text-white/80 leading-relaxed mb-6">
-              Master the fundamentals of mixology with our comprehensive guides, technique tutorials,
-              and expert tips for creating exceptional cocktails at home.
-            </p>
-            <Link
-              href="/about"
-              className="inline-block text-white/90 hover:text-white transition-colors underline underline-offset-4"
-            >
-              Read Guides →
-            </Link>
           </div>
         </div>
       </div>
