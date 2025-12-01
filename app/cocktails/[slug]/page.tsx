@@ -128,7 +128,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 sticky top-24">
               <CocktailIngredientsCard ingredients={cocktail.ingredients || []} />
               <div className="mt-8 pt-6 border-t border-gray-100">
-                <CocktailTools />
+                <CocktailTools method={cocktail.method} />
               </div>
             </div>
           </div>

@@ -9,7 +9,7 @@ interface CocktailInstructionsProps {
 export function CocktailInstructions({ instructions, tips }: CocktailInstructionsProps) {
   return (
     <div>
-      <h2 className="font-display text-3xl font-bold text-forest mb-8 border-b border-gray-200 pb-4">
+      <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
         Instructions
       </h2>
 
@@ -20,8 +20,8 @@ export function CocktailInstructions({ instructions, tips }: CocktailInstruction
 
         {tips && tips.length > 0 && (
           <div className="mt-8 pt-6 border-t border-gray-100">
-            <h4 className="font-bold text-forest mb-3">Pro Tips</h4>
-            <div className="prose prose-botanical text-sage">
+            <h4 className="font-bold text-gray-900 mb-3">Pro Tips</h4>
+            <div className="prose prose-botanical text-gray-600">
               <PortableText value={tips} />
             </div>
           </div>
@@ -30,3 +30,4 @@ export function CocktailInstructions({ instructions, tips }: CocktailInstruction
     </div>
   );
 }
+

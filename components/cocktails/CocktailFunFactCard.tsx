@@ -17,7 +17,7 @@ export function CocktailFunFactCard({ fact, sources }: CocktailFunFactCardProps)
           <h3 className="text-xs font-bold uppercase tracking-widest text-amber-800">Did you know?</h3>
         </div>
 
-        <p className="font-display italic text-lg md:text-xl text-amber-900 leading-relaxed mb-4">
+        <p className="font-serif italic text-lg md:text-xl text-amber-900 leading-relaxed mb-4">
           &ldquo;{fact}&rdquo;
         </p>
 
@@ -43,3 +43,4 @@ export function CocktailFunFactCard({ fact, sources }: CocktailFunFactCardProps)
     </div>
   );
 }
+

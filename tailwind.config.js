@@ -18,6 +18,7 @@ module.exports = {
         "terracotta-dark": "#A04532",
         olive: "#8A9A5B",
         stone: "#D1DAD0",
+        "mixwise-accent": "#BC5A45", // Same as terracotta
         // Keep some utility colors
         brand: {
           DEFAULT: "#BC5A45",

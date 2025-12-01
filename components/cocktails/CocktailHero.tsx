@@ -28,12 +28,7 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
             </div>
           )}
 
-          {/* Badges Overlay */}
-          {(cocktail.isTrending || cocktail.isPopular) && (
-            <div className="absolute bottom-2 right-2 text-[10px] text-white/60 bg-black/20 px-2 py-1 rounded backdrop-blur-sm">
-              Photo credit
-            </div>
-          )}
+          <div className="absolute bottom-2 right-2 text-[10px] text-white/60 bg-black/20 px-2 py-1 rounded backdrop-blur-sm">Photo credit</div>
         </div>
       </div>
 
@@ -48,13 +43,13 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
             </>
           )}
           {cocktail.drinkCategories && cocktail.drinkCategories.length > 0 && (
-            <span className="uppercase tracking-wider text-xs text-terracotta">{cocktail.drinkCategories[0]}</span>
+            <span className="uppercase tracking-wider text-xs text-mixwise-accent">{cocktail.drinkCategories[0]}</span>
           )}
         </div>
 
         {/* TITLE + TAGS */}
         <div>
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-forest mb-4 leading-tight">
+          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
             {cocktail.name}
           </h1>
 
@@ -67,7 +62,7 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
           </div>
 
           {cocktail.description && (
-            <p className="text-lg text-sage leading-relaxed">{cocktail.description}</p>
+            <p className="text-lg text-gray-600 leading-relaxed">{cocktail.description}</p>
           )}
         </div>
 
@@ -80,7 +75,7 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Glassware</p>
-                <p className="font-medium text-forest capitalize">{cocktail.glass.replace(/-/g, " ")}</p>
+                <p className="font-medium text-gray-900 capitalize">{cocktail.glass.replace(/-/g, " ")}</p>
               </div>
             </div>
           )}
@@ -92,7 +87,7 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Method</p>
-                <p className="font-medium text-forest capitalize">{cocktail.method}</p>
+                <p className="font-medium text-gray-900 capitalize">{cocktail.method}</p>
               </div>
             </div>
           )}

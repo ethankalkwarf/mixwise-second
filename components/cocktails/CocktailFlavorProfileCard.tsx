@@ -40,7 +40,7 @@ export function CocktailFlavorProfileCard({ profile }: CocktailFlavorProfileCard
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-soft border border-gray-100">
-      <h3 className="font-display font-bold text-lg text-forest mb-4">Flavor Profile</h3>
+      <h3 className="font-serif font-bold text-lg text-gray-900 mb-4">Flavor Profile</h3>
       <div className="space-y-4">
         {activeAttributes.map((attr) => {
           // Try both key formats (e.g. "sweetness" or "Sweet")
@@ -49,7 +49,7 @@ export function CocktailFlavorProfileCard({ profile }: CocktailFlavorProfileCard
 
           return (
             <div key={attr.key}>
-              <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-sage mb-1.5">
+              <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5">
                 <span>{attr.label}</span>
                 <span>{value}/5</span>
               </div>
@@ -66,3 +66,4 @@ export function CocktailFlavorProfileCard({ profile }: CocktailFlavorProfileCard
     </div>
   );
 }
+

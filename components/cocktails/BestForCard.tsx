@@ -20,3 +20,4 @@ export function BestForCard({ bestFor }: BestForCardProps) {
   );
 }
 
+
