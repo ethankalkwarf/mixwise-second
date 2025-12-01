@@ -9,10 +9,8 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
 import { CocktailHero } from "@/components/cocktails/CocktailHero";
 import { IngredientCard } from "@/components/cocktails/IngredientCard";
-import { FlavorProfile } from "@/components/cocktails/FlavorProfile";
-import { FunFactCard } from "@/components/cocktails/FunFactCard";
 import { InstructionList } from "@/components/cocktails/InstructionList";
-import { BestForCard } from "@/components/cocktails/BestForCard";
+import { InfoCard } from "@/components/cocktails/InfoCard";
 
 export const revalidate = 60;
 export const dynamic = 'force-dynamic';
@@ -116,48 +114,50 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             <BackToCocktails />
           </div>
 
-          <article className="space-y-12">
+          <article className="space-y-8">
             {/* Hero Section */}
             <CocktailHero cocktail={cocktail} imageUrl={imageUrl} />
 
-            {/* Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-              {/* Left Column - Tools & Ingredients (Sticky) */}
-              <div className="lg:col-span-5">
-                <div className="lg:sticky lg:top-24 space-y-8">
-                  <IngredientCard ingredients={cocktail.ingredients || []} garnish={cocktail.garnish} />
-                </div>
-              </div>
+            {/* Two-Column Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Ingredients Card */}
+              <IngredientCard ingredients={cocktail.ingredients || []} />
 
-              {/* Right Column - Experience & Instructions */}
-              <div className="lg:col-span-7 space-y-10">
-                {/* Enriched Data Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {cocktail.flavorProfile && (
-                    <FlavorProfile profile={cocktail.flavorProfile} />
-                  )}
-                  {cocktail.bestFor && cocktail.bestFor.length > 0 && (
-                    <BestForCard bestFor={cocktail.bestFor} />
-                  )}
-                </div>
-
-                {/* Fun Fact Card */}
-                {cocktail.funFact && (
-                  <FunFactCard 
-                    fact={cocktail.funFact} 
-                    sources={cocktail.funFactSources} 
-                  />
-                )}
-
-                {/* Instructions */}
-                {cocktail.instructions && (
-                  <InstructionList 
-                    instructions={cocktail.instructions} 
-                    tips={cocktail.tips} 
-                  />
-                )}
-              </div>
+              {/* Instructions Card */}
+              {cocktail.instructions && (
+                <InstructionList
+                  instructions={cocktail.instructions}
+                  tips={cocktail.tips}
+                />
+              )}
             </div>
+
+            {/* Optional Info Cards */}
+            {(cocktail.garnish || cocktail.glass || cocktail.method) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {cocktail.garnish && (
+                  <InfoCard
+                    title="Garnish"
+                    content={cocktail.garnish}
+                    type="garnish"
+                  />
+                )}
+                {cocktail.glass && (
+                  <InfoCard
+                    title="Glassware"
+                    content={cocktail.glass.replace(/-/g, " ")}
+                    type="glassware"
+                  />
+                )}
+                {cocktail.method && (
+                  <InfoCard
+                    title="Method"
+                    content={cocktail.method}
+                    type="notes"
+                  />
+                )}
+              </div>
+            )}
           </article>
         </MainContainer>
       </div>
