@@ -122,3 +122,5 @@ curl -sI http://localhost:3000/about | head -1
 - Ensure cookies are being set (check Application → Cookies in DevTools)
 
 
+
+

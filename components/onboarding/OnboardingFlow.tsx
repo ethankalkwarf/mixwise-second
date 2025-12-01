@@ -6,6 +6,7 @@ import { useSessionContext } from "@supabase/auth-helpers-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
+import { BrandLogo } from "@/components/common/BrandLogo";
 import {
   CheckIcon,
   ArrowRightIcon,
@@ -31,16 +32,16 @@ const SPIRITS = [
 
 // Flavor profiles for step 2
 const FLAVOR_PROFILES = [
-  { id: "citrus", name: "Citrus", color: "from-yellow-400 to-orange-500" },
-  { id: "sweet", name: "Sweet", color: "from-pink-400 to-rose-500" },
-  { id: "smoky", name: "Smoky", color: "from-gray-400 to-slate-600" },
-  { id: "herbal", name: "Herbal", color: "from-green-400 to-emerald-600" },
-  { id: "bitter", name: "Bitter", color: "from-amber-400 to-orange-600" },
-  { id: "tropical", name: "Tropical", color: "from-cyan-400 to-teal-500" },
-  { id: "spicy", name: "Spicy", color: "from-red-400 to-red-600" },
-  { id: "creamy", name: "Creamy", color: "from-amber-100 to-amber-300" },
-  { id: "refreshing", name: "Refreshing", color: "from-sky-400 to-blue-500" },
-  { id: "boozy", name: "Spirit-forward", color: "from-amber-500 to-amber-700" },
+  { id: "citrus", name: "Citrus", color: "bg-olive/20 text-olive" },
+  { id: "sweet", name: "Sweet", color: "bg-terracotta/20 text-terracotta" },
+  { id: "smoky", name: "Smoky", color: "bg-forest/20 text-forest" },
+  { id: "herbal", name: "Herbal", color: "bg-olive/20 text-olive" },
+  { id: "bitter", name: "Bitter", color: "bg-terracotta/20 text-terracotta" },
+  { id: "tropical", name: "Tropical", color: "bg-olive/20 text-olive" },
+  { id: "spicy", name: "Spicy", color: "bg-terracotta/20 text-terracotta" },
+  { id: "creamy", name: "Creamy", color: "bg-stone text-forest" },
+  { id: "refreshing", name: "Refreshing", color: "bg-olive/20 text-olive" },
+  { id: "boozy", name: "Spirit-forward", color: "bg-forest/20 text-forest" },
 ];
 
 // Skill levels for step 3
@@ -69,25 +70,16 @@ interface OnboardingFlowProps {
   onComplete?: () => void;
 }
 
-/**
- * Onboarding flow component
- * 
- * IMPORTANT: Uses the shared Supabase client from SessionContext
- * to ensure session cookies are properly synced after login.
- */
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const router = useRouter();
   const { user, session } = useUser();
   const { supabaseClient: contextSupabase } = useSessionContext();
   const toast = useToast();
   
-  // Use context client if available, otherwise create a new one
-  // This ensures we have a working client even if session context isn't ready
   const getSupabaseClient = () => {
     if (contextSupabase) {
       return contextSupabase;
     }
-    console.log("[Onboarding] Creating fallback Supabase client");
     return createClientComponentClient();
   };
 
@@ -136,33 +128,18 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     }
 
     setIsSubmitting(true);
-    console.log("[Onboarding] Starting save for user:", user.id);
-    console.log("[Onboarding] Session available:", !!session);
-    console.log("[Onboarding] Context supabase available:", !!contextSupabase);
 
     try {
       const supabase = getSupabaseClient();
       
-      // Verify we have an authenticated session
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionError) {
-        console.error("[Onboarding] Session check error:", sessionError);
+      if (sessionError || !sessionData.session) {
         toast.error("Session expired. Please log in again.");
         router.push("/");
         return;
       }
-      
-      if (!sessionData.session) {
-        console.error("[Onboarding] No active session found");
-        toast.error("You need to be logged in. Please sign in again.");
-        router.push("/");
-        return;
-      }
-      
-      console.log("[Onboarding] Verified session for:", sessionData.session.user.email);
 
-      // Save preferences to database
       const preferencesData = {
         user_id: user.id,
         preferred_spirits: selectedSpirits,
@@ -172,58 +149,27 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         onboarding_completed_at: new Date().toISOString(),
       };
       
-      console.log("[Onboarding] Saving preferences:", preferencesData);
-      
-      const { data, error: upsertError } = await supabase
+      const { error: upsertError } = await supabase
         .from("user_preferences")
         .upsert(preferencesData, {
           onConflict: "user_id",
         })
         .select();
 
-      console.log("[Onboarding] Upsert response - data:", data, "error:", upsertError);
-
       if (upsertError) {
-        console.error("[Onboarding] Preferences upsert error:", {
-          message: upsertError.message,
-          code: upsertError.code,
-          details: upsertError.details,
-          hint: upsertError.hint,
-        });
-        
-        // If the table doesn't exist, skip onboarding gracefully
         if (upsertError.code === "42P01") {
-          console.warn("[Onboarding] user_preferences table not found - skipping onboarding save");
           toast.info("Welcome to MixWise!");
           router.replace("/dashboard");
           return;
         }
         
-        // Permission error - user should re-login
-        if (upsertError.code === "42501") {
-          toast.error("Permission denied. Please try logging out and back in.");
-          return;
-        }
-        
-        // RLS policy violation - common error code
-        if (upsertError.code === "42501" || upsertError.code === "PGRST301" || 
-            upsertError.message?.toLowerCase().includes("policy") ||
-            upsertError.message?.toLowerCase().includes("permission")) {
-          toast.error("Access denied. Please try logging out and back in.");
-          return;
-        }
-        
-        // Show the actual error message from Supabase
         toast.error(`Failed to save preferences: ${upsertError.message || "Database error"}`);
         return;
       }
 
-      console.log("[Onboarding] Preferences saved successfully");
-
-      // Award "Home Bartender" badge for completing onboarding
-      // This is optional - don't fail onboarding if badge award fails
+      // Award badge
       try {
-        const { error: badgeError } = await supabase
+        await supabase
           .from("user_badges")
           .upsert({
             user_id: user.id,
@@ -232,14 +178,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           }, {
             onConflict: "user_id,badge_id",
           });
-
-        if (badgeError) {
-          console.warn("[Onboarding] Badge award failed (non-critical):", badgeError.message);
-        } else {
-          console.log("[Onboarding] Badge awarded successfully");
-        }
       } catch (badgeErr) {
-        console.warn("[Onboarding] Badge award exception (non-critical):", badgeErr);
+        console.warn("Badge award failed:", badgeErr);
       }
 
       toast.success("Welcome to MixWise! 🍸");
@@ -247,46 +187,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       if (onComplete) {
         onComplete();
       } else {
-        // Use replace to avoid back-button returning to onboarding
         router.replace("/dashboard");
       }
     } catch (err: unknown) {
-      console.error("[Onboarding] Critical error:", err);
-      console.error("[Onboarding] Error type:", typeof err);
-      console.error("[Onboarding] Error constructor:", err?.constructor?.name);
-      
-      // Better error message extraction
-      let errorMessage = "An unexpected error occurred";
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === "object" && err !== null) {
-        const errObj = err as Record<string, unknown>;
-        if (errObj.message) {
-          errorMessage = String(errObj.message);
-        } else if (errObj.error) {
-          errorMessage = String(errObj.error);
-        } else {
-          try {
-            errorMessage = JSON.stringify(err);
-          } catch {
-            errorMessage = "Failed to serialize error";
-          }
-        }
-      } else if (typeof err === "string") {
-        errorMessage = err;
-      }
-      
-      toast.error(`Something went wrong: ${errorMessage}`);
-      
-      // Offer to skip onboarding on error
-      console.log("[Onboarding] Offering skip option due to error");
+      console.error("Onboarding error:", err);
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  // Allow users to skip if they're stuck
-  const handleSkipOnError = () => {
+  const handleSkip = () => {
     toast.info("Skipping setup for now. You can update preferences later.");
     router.replace("/dashboard");
   };
@@ -305,17 +216,22 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col">
+    <div className="min-h-screen bg-cream flex flex-col">
       {/* Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-slate-800 z-50">
+      <div className="fixed top-0 left-0 right-0 h-1 bg-mist z-50">
         <div
-          className="h-full bg-gradient-to-r from-lime-400 to-emerald-500 transition-all duration-500"
+          className="h-full bg-terracotta transition-all duration-500"
           style={{ width: `${(currentStep / totalSteps) * 100}%` }}
         />
       </div>
 
+      {/* Header */}
+      <div className="pt-8 pb-4 text-center">
+        <BrandLogo size="lg" variant="dark" />
+      </div>
+
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12">
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-2xl">
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-2 mb-8">
@@ -324,10 +240,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 key={step}
                 className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all ${
                   step < currentStep
-                    ? "bg-lime-500 text-slate-900"
+                    ? "bg-olive text-cream"
                     : step === currentStep
-                    ? "bg-lime-500/20 text-lime-400 ring-2 ring-lime-500"
-                    : "bg-slate-800 text-slate-500"
+                    ? "bg-terracotta/20 text-terracotta ring-2 ring-terracotta"
+                    : "bg-mist text-sage"
                 }`}
               >
                 {step < currentStep ? (
@@ -343,10 +259,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           {currentStep === 1 && (
             <div className="animate-in fade-in duration-300">
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-serif font-bold text-slate-100 mb-3">
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-3">
                   What spirits do you enjoy?
                 </h1>
-                <p className="text-slate-400">
+                <p className="text-sage">
                   Select all that apply. We&apos;ll use this to personalize your recommendations.
                 </p>
               </div>
@@ -356,14 +272,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <button
                     key={spirit.id}
                     onClick={() => toggleSpirit(spirit.id)}
-                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                    className={`p-4 rounded-2xl border-2 transition-all text-left ${
                       selectedSpirits.includes(spirit.id)
-                        ? "border-lime-500 bg-lime-500/10"
-                        : "border-slate-700 bg-slate-900/50 hover:border-slate-600"
+                        ? "border-terracotta bg-terracotta/10"
+                        : "border-mist bg-white hover:border-stone"
                     }`}
                   >
                     <span className="text-2xl mb-2 block">{spirit.emoji}</span>
-                    <span className="font-medium text-slate-200">{spirit.name}</span>
+                    <span className="font-medium text-forest">{spirit.name}</span>
                   </button>
                 ))}
               </div>
@@ -374,10 +290,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           {currentStep === 2 && (
             <div className="animate-in fade-in duration-300">
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-serif font-bold text-slate-100 mb-3">
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-3">
                   What flavors appeal to you?
                 </h1>
-                <p className="text-slate-400">
+                <p className="text-sage">
                   Pick your favorite flavor profiles. You can select multiple.
                 </p>
               </div>
@@ -387,16 +303,16 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <button
                     key={flavor.id}
                     onClick={() => toggleFlavor(flavor.id)}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`p-4 rounded-2xl border-2 transition-all ${
                       selectedFlavors.includes(flavor.id)
-                        ? "border-lime-500 bg-lime-500/10"
-                        : "border-slate-700 bg-slate-900/50 hover:border-slate-600"
+                        ? "border-terracotta bg-terracotta/10"
+                        : "border-mist bg-white hover:border-stone"
                     }`}
                   >
-                    <div
-                      className={`w-8 h-8 rounded-lg bg-gradient-to-br ${flavor.color} mb-2`}
-                    />
-                    <span className="font-medium text-slate-200">{flavor.name}</span>
+                    <div className={`w-8 h-8 rounded-lg ${flavor.color} mb-2 flex items-center justify-center text-sm font-bold`}>
+                      {flavor.name.charAt(0)}
+                    </div>
+                    <span className="font-medium text-forest">{flavor.name}</span>
                   </button>
                 ))}
               </div>
@@ -407,10 +323,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           {currentStep === 3 && (
             <div className="animate-in fade-in duration-300">
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-serif font-bold text-slate-100 mb-3">
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-3">
                   What&apos;s your skill level?
                 </h1>
-                <p className="text-slate-400">
+                <p className="text-sage">
                   We&apos;ll adjust recipe complexity based on your experience.
                 </p>
               </div>
@@ -420,19 +336,19 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <button
                     key={level.id}
                     onClick={() => setSelectedSkill(level.id)}
-                    className={`w-full p-6 rounded-xl border-2 transition-all text-left ${
+                    className={`w-full p-6 rounded-2xl border-2 transition-all text-left ${
                       selectedSkill === level.id
-                        ? "border-lime-500 bg-lime-500/10"
-                        : "border-slate-700 bg-slate-900/50 hover:border-slate-600"
+                        ? "border-terracotta bg-terracotta/10"
+                        : "border-mist bg-white hover:border-stone"
                     }`}
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-3xl">{level.icon}</span>
                       <div>
-                        <h3 className="text-lg font-bold text-slate-100">
+                        <h3 className="text-lg font-display font-bold text-forest">
                           {level.name}
                         </h3>
-                        <p className="text-sm text-slate-400">{level.description}</p>
+                        <p className="text-sm text-sage">{level.description}</p>
                       </div>
                     </div>
                   </button>
@@ -446,7 +362,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             {currentStep > 1 ? (
               <button
                 onClick={handleBack}
-                className="flex items-center gap-2 px-6 py-3 text-slate-300 hover:text-white transition-colors"
+                className="flex items-center gap-2 px-6 py-3 text-sage hover:text-forest transition-colors"
               >
                 <ArrowLeftIcon className="w-4 h-4" />
                 Back
@@ -459,7 +375,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="flex items-center gap-2 px-8 py-3 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-8 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-terracotta"
               >
                 Continue
                 <ArrowRightIcon className="w-4 h-4" />
@@ -468,11 +384,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <button
                 onClick={handleComplete}
                 disabled={!canProceed() || isSubmitting}
-                className="flex items-center gap-2 px-8 py-3 bg-lime-500 hover:bg-lime-400 text-slate-900 font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-8 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-terracotta"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-cream/30 border-t-cream rounded-full animate-spin" />
                     Saving...
                   </>
                 ) : (
@@ -490,8 +406,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       {/* Skip Button */}
       <div className="pb-8 text-center">
         <button
-          onClick={handleSkipOnError}
-          className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+          onClick={handleSkip}
+          className="text-sm text-sage hover:text-forest transition-colors"
         >
           Skip for now
         </button>
@@ -499,4 +415,3 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     </div>
   );
 }
-

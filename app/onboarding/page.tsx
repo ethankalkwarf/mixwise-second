@@ -19,8 +19,8 @@ export default function OnboardingPage() {
   // Show loading while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-lime-500/30 border-t-lime-500 rounded-full animate-spin" />
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-terracotta/30 border-t-terracotta rounded-full animate-spin" />
       </div>
     );
   }
@@ -32,5 +32,7 @@ export default function OnboardingPage() {
 
   return <OnboardingFlow />;
 }
+
+
 
 

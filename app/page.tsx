@@ -4,6 +4,7 @@ import { SITE_CONFIG } from "@/lib/seo";
 import { Hero } from "@/components/home/Hero";
 import { FeaturedCocktails } from "@/components/home/FeaturedCocktails";
 import { PlatformSection } from "@/components/home/PlatformSection";
+import { PersonalizedSections } from "@/components/home/PersonalizedSections";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
 export const revalidate = 60;
@@ -21,10 +22,27 @@ const FEATURED_COCKTAILS_QUERY = `*[_type == "cocktail"] | order(isPopular desc,
   "ingredientCount": count(ingredients)
 }`;
 
+// Fetch all cocktails for personalized sections (with ingredient refs)
+const ALL_COCKTAILS_QUERY = `*[_type == "cocktail"] {
+  _id,
+  name,
+  slug,
+  image,
+  externalImageUrl,
+  primarySpirit,
+  "ingredients": ingredients[] {
+    "ingredient": ingredient-> {
+      _id,
+      name
+    }
+  }
+}`;
+
 export default async function HomePage() {
-  const [settings, cocktails] = await Promise.all([
+  const [settings, cocktails, allCocktails] = await Promise.all([
     sanityClient.fetch(`*[_type == "siteSettings"][0]{heroTitle, heroSubtitle}`),
-    sanityClient.fetch<SanityCocktail[]>(FEATURED_COCKTAILS_QUERY)
+    sanityClient.fetch<SanityCocktail[]>(FEATURED_COCKTAILS_QUERY),
+    sanityClient.fetch(ALL_COCKTAILS_QUERY),
   ]);
 
   const heroTitle = settings?.heroTitle || "Discover Your Next Favorite Cocktail";
@@ -43,6 +61,16 @@ export default async function HomePage() {
       {/* Hero Section */}
       <Hero title={heroTitle} subtitle={heroSubtitle} />
 
+      {/* Personalized Sections for Logged-in Users */}
+      <section className="bg-cream py-12 sm:py-16">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <PersonalizedSections 
+            allCocktails={allCocktails} 
+            featuredCocktails={cocktails} 
+          />
+        </div>
+      </section>
+
       {/* Featured Cocktails */}
       {cocktails.length > 0 && (
         <FeaturedCocktails cocktails={cocktails} />
@@ -53,4 +81,3 @@ export default async function HomePage() {
     </>
   );
 }
-

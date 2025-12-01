@@ -10,50 +10,54 @@ interface HeroProps {
 
 export function Hero({ title, subtitle }: HeroProps) {
   return (
-    <section className="bg-cream py-16 sm:py-24 lg:py-32">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-mist rounded-[3rem] p-8 md:p-12 lg:p-20">
-          <div className="flex flex-col lg:flex-row gap-10 items-center">
+    <section className="bg-cream py-12 sm:py-16 lg:py-20">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        {/* Glassmorphism container */}
+        <div className="relative bg-white/60 backdrop-blur-lg border border-white/20 rounded-3xl p-6 sm:p-10 lg:p-14 shadow-soft overflow-hidden">
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-olive/5 via-transparent to-terracotta/5 pointer-events-none" />
+          
+          <div className="relative flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
             {/* Content */}
             <div className="flex-1 text-center lg:text-left">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-forest leading-tight mb-6">
-                Discover Your{" "}
-                <span className="text-[#6B8E63] italic">Next Favorite</span>{" "}
-                Cocktail
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-forest leading-tight mb-4">
+                Everything you need to{" "}
+                <span className="text-terracotta italic">master</span>{" "}
+                home mixology.
               </h1>
-              <p className="text-lg sm:text-xl text-charcoal leading-relaxed mb-8 max-w-2xl">
+              <p className="text-base sm:text-lg text-charcoal/80 leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
                 {subtitle}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <Link
                   href="/mix"
-                  className="inline-flex items-center justify-center rounded-full px-8 py-4 text-base font-medium bg-terracotta text-cream hover:bg-terracotta-dark transition-all duration-300 shadow-terracotta"
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark transition-all duration-300 shadow-terracotta"
                 >
-                  Open My Cabinet
+                  Open Mixology Wizard
                 </Link>
                 <Link
                   href="/cocktails"
-                  className="inline-flex items-center justify-center rounded-full px-8 py-4 text-base font-medium bg-white text-forest border border-mist hover:bg-mist/50 transition-all duration-300"
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium bg-white text-forest border border-mist hover:bg-mist/50 transition-all duration-300"
                 >
-                  Browse Cocktails
+                  Browse Cocktail Recipes
                 </Link>
               </div>
             </div>
 
             {/* Image */}
-            <div className="flex-1 relative">
+            <div className="flex-shrink-0 w-full max-w-sm lg:max-w-md">
               <div className="relative">
                 <Image
                   src="https://usgsomofsav4obpi.public.blob.vercel-storage.com/Gemini_Generated_Image_mqk0vymqk0vymqk0.png"
                   alt="Cocktail preparation with fresh ingredients"
-                  width={600}
-                  height={500}
-                  className="rounded-[2.5rem] shadow-2xl w-full h-auto object-cover"
+                  width={500}
+                  height={400}
+                  className="rounded-2xl shadow-card w-full h-auto object-cover"
                   priority
                 />
-                {/* Cocktail of the Day Badge */}
-                <div className="absolute bottom-4 left-4 bg-cream text-charcoal rounded-full px-4 py-2 text-sm font-medium shadow-lg">
-                  Cocktail of the Day
+                {/* Floating badge */}
+                <div className="absolute -bottom-3 -right-3 bg-white text-charcoal rounded-full px-4 py-2 text-xs font-medium shadow-card border border-mist">
+                  ✨ 400+ Recipes
                 </div>
               </div>
             </div>
