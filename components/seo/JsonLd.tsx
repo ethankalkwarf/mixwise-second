@@ -31,13 +31,13 @@ export function WebPageSchema({ title, description, url }: WebPageSchemaProps) {
 type RecipeSchemaProps = {
   name: string;
   description?: string;
-  image?: string;
+  image?: string | null;
   ingredients: string[];
   instructions?: string;
   prepTime?: string; // ISO 8601 duration (e.g., "PT5M" for 5 minutes)
   totalTime?: string;
   servings?: number;
-  category?: string;
+  category?: string | null;
   url: string;
 };
 
@@ -68,7 +68,7 @@ export function RecipeSchema({
     prepTime,
     totalTime,
     recipeYield: `${servings} serving${servings > 1 ? "s" : ""}`,
-    recipeCategory: category,
+    recipeCategory: category || "Cocktail",
     recipeCuisine: "International",
     recipeIngredient: ingredients,
     recipeInstructions: instructions

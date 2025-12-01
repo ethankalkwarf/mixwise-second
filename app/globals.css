@@ -236,3 +236,35 @@ body {
 .bg-mist-gradient {
   background: linear-gradient(180deg, #E6EBE4 0%, #F9F7F2 100%);
 }
+
+/* Custom Instruction List Styling */
+.instruction-list-container ol {
+  counter-reset: instruction-counter;
+  list-style: none;
+  padding: 0;
+}
+
+.instruction-list-container ol li {
+  position: relative;
+  padding-left: 4rem;
+  margin-bottom: 2rem;
+  counter-increment: instruction-counter;
+}
+
+.instruction-list-container ol li::before {
+  content: counter(instruction-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: #E6EBE4; /* mist */
+  color: #3A4D39; /* forest */
+  font-family: var(--font-dm-serif), serif;
+  font-weight: bold;
+  font-size: 1.25rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
