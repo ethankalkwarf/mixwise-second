@@ -111,3 +111,5 @@ CREATE TRIGGER on_profile_created_preferences
   EXECUTE FUNCTION public.create_user_preferences();
 
 
+
+

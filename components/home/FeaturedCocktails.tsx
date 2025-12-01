@@ -105,3 +105,5 @@ function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps)
     </Link>
   );
 }
+
+

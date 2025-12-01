@@ -112,3 +112,5 @@ export function RatingStarsCompact({ cocktailId }: { cocktailId: string }) {
 }
 
 
+
+
