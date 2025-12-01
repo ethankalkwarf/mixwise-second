@@ -1,6 +1,5 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import { DM_Serif_Display, Jost, Space_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { SupabaseProvider } from "./providers";
@@ -9,25 +8,9 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { OrganizationSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 
-const dmSerif = DM_Serif_Display({ 
-  subsets: ["latin"], 
-  weight: "400",
-  variable: "--font-dm-serif",
-  display: "swap",
-});
-
-const jost = Jost({ 
-  subsets: ["latin"], 
-  variable: "--font-jost",
-  display: "swap",
-});
-
-const spaceMono = Space_Mono({ 
-  subsets: ["latin"], 
-  weight: ["400", "700"],
-  variable: "--font-space-mono",
-  display: "swap",
-});
+// Use system fonts to avoid Google Fonts network issues during build
+// In production, these will be replaced with web fonts via CSS
+const fontClasses = "";
 
 export const metadata: Metadata = {
   title: {
@@ -92,7 +75,7 @@ export default async function RootLayout({
   const initialSession = null;
 
   return (
-    <html lang="en" className={`${dmSerif.variable} ${jost.variable} ${spaceMono.variable}`}>
+    <html lang="en">
       <head>
         <OrganizationSchema />
       </head>

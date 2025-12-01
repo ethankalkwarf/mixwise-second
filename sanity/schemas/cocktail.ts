@@ -524,129 +524,18 @@ const cocktail = {
     // Legacy content fields - map to new structure where possible
      {
       name: 'history',
-      title: 'History/Background (Legacy)',
+      title: 'History/Background',
       type: 'array',
       of: [{ type: 'block' }],
-      hidden: true,
-      description: 'Legacy field - use funFact field instead'
+      description: 'Historical background and context for this cocktail'
     },
 
      {
       name: 'tips',
-      title: 'Pro Tips (Legacy)',
+      title: 'Pro Tips',
       type: 'array',
       of: [{ type: 'block' }],
-      hidden: true,
-      description: 'Legacy field - consider adding to instructions'
-    },
-    {
-      name: "categories",
-      title: "Categories (Reference)",
-      type: "array",
-      of: [{ type: "reference", to: [{ type: "category" }] }],
-      hidden: true // Legacy field, use drinkCategories instead
-    },
-    {
-      name: "drinkCategories",
-      title: "Drink Categories",
-      type: "array",
-      of: [{ type: "string" }],
-      options: {
-        list: [
-          { title: "🏝️ Tiki", value: "tiki" },
-          { title: "🎩 Classic", value: "classic" },
-          { title: "🎄 Holiday", value: "holiday" },
-          { title: "✨ Modern", value: "modern" },
-          { title: "🍰 Dessert", value: "dessert" },
-          { title: "🍹 Mocktail", value: "mocktail" },
-          { title: "🎉 Party / Crowd-Friendly", value: "party" },
-          { title: "☀️ Summer", value: "summer" },
-          { title: "❄️ Winter", value: "winter" },
-          { title: "🍂 Fall", value: "fall" },
-          { title: "🌸 Spring", value: "spring" },
-          { title: "🔥 Strong", value: "strong" },
-          { title: "🌿 Refreshing", value: "refreshing" },
-          { title: "🍋 Sour", value: "sour" },
-          { title: "🍯 Sweet", value: "sweet" },
-          { title: "🥃 Boozy", value: "boozy" },
-          { title: "🥗 Low-Calorie", value: "low-calorie" },
-          { title: "⚡ Quick & Easy", value: "quick" }
-        ],
-        layout: "grid"
-      },
-      description: "Select one or more categories that describe this cocktail"
-    },
-    {
-      name: "isFavorite",
-      title: "Favorite",
-      type: "boolean",
-      description: "Mark as a staff favorite or user favorite",
-      initialValue: false
-    },
-    {
-      name: "isTrending",
-      title: "Trending",
-      type: "boolean",
-      description: "Mark as currently trending",
-      initialValue: false
-    },
-    {
-      name: "primarySpirit",
-      title: "Primary Spirit",
-      type: "string",
-      options: {
-        list: [
-          { title: "Vodka", value: "vodka" },
-          { title: "Gin", value: "gin" },
-          { title: "Rum", value: "rum" },
-          { title: "Tequila", value: "tequila" },
-          { title: "Mezcal", value: "mezcal" },
-          { title: "Whiskey", value: "whiskey" },
-          { title: "Bourbon", value: "bourbon" },
-          { title: "Scotch", value: "scotch" },
-          { title: "Brandy", value: "brandy" },
-          { title: "Cognac", value: "cognac" },
-          { title: "None (Non-alcoholic)", value: "none" }
-        ]
-      }
-    },
-    {
-      name: "difficulty",
-      title: "Difficulty",
-      type: "string",
-      options: {
-        list: [
-          { title: "Easy", value: "easy" },
-          { title: "Moderate", value: "moderate" },
-          { title: "Advanced", value: "advanced" }
-        ]
-      },
-      initialValue: "easy"
-    },
-    {
-      name: "isPopular",
-      title: "Featured/Popular",
-      type: "boolean",
-      description: "Mark as a featured or popular cocktail",
-      initialValue: false
-    },
-    {
-      name: "relatedArticles",
-      title: "Related Articles",
-      type: "array",
-      of: [{ type: "reference", to: [{ type: "article" }] }]
-    },
-    {
-      name: "history",
-      title: "History/Background",
-      type: "array",
-      of: [{ type: "block" }]
-    },
-    {
-      name: "tips",
-      title: "Pro Tips",
-      type: "array",
-      of: [{ type: "block" }]
+      description: 'Professional tips and techniques for making this cocktail'
     }
   ],
   preview: {
