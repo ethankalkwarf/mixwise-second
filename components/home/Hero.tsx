@@ -21,9 +21,7 @@ export function Hero({ title, subtitle }: HeroProps) {
             {/* Content */}
             <div className="flex-1 text-center lg:text-left">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-forest leading-tight mb-4">
-                Everything you need to{" "}
-                <span className="text-terracotta italic">master</span>{" "}
-                home mixology.
+                Find your next favorite cocktail
               </h1>
               <p className="text-base sm:text-lg text-charcoal/80 leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
                 {subtitle}
@@ -33,7 +31,7 @@ export function Hero({ title, subtitle }: HeroProps) {
                   href="/mix"
                   className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark transition-all duration-300 shadow-terracotta"
                 >
-                  Open Mixology Wizard
+                  Discover Your Perfect Drink
                 </Link>
                 <Link
                   href="/cocktails"

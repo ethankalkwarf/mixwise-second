@@ -69,18 +69,13 @@ export default function AccountBenefitsPage() {
       <MainContainer>
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-olive/10 border border-olive/20 rounded-full text-olive text-sm font-medium mb-6">
-            <SparklesIcon className="w-4 h-4" />
-            100% Free Forever
-          </div>
-          
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-forest mb-6">
-            Your Personal
-            <span className="text-terracotta italic"> Cocktail Hub</span>
+            Powerful cocktail tools for
+            <span className="text-terracotta italic"> home bartenders</span>
           </h1>
-          
+
           <p className="text-base sm:text-lg text-sage max-w-2xl mx-auto mb-8">
-            Create a free MixWise account to save your bar, get personalized recommendations, 
+            Start using MixWise with our current free features today. Save your bar, get personalized recommendations,
             track your progress, and unlock achievements.
           </p>
 
@@ -97,7 +92,7 @@ export default function AccountBenefitsPage() {
               onClick={() => openAuthDialog({ mode: "signup" })}
               className="inline-flex items-center gap-2 px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-full transition-colors shadow-terracotta"
             >
-              Create My Free Account
+              Get Started Free
               <ArrowRightIcon className="w-5 h-5" />
             </button>
           )}
@@ -179,7 +174,7 @@ export default function AccountBenefitsPage() {
                 onClick={() => openAuthDialog({ mode: "signup" })}
                 className="px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-full transition-colors shadow-terracotta"
               >
-                Create My Free Account
+                Get Started Free
               </button>
               <Link
                 href="/mix"
