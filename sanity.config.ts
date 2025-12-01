@@ -3,8 +3,15 @@ import { deskTool } from "sanity/desk";
 import { visionTool } from "@sanity/vision";
 import schemaTypes from "./sanity/schemas";
 
-// Note: This file must remain a pure Sanity config with no JSX.
-// Debug UI components should be moved to separate React components in the app directory.
+/**
+ * Sanity Configuration for MixWise Studio
+ *
+ * IMPORTANT: This file must remain a pure Sanity config with NO JSX.
+ * Any React components or JSX should be moved to separate files in the app directory.
+ *
+ * Schemas are aggregated in ./sanity/schemas/index.ts
+ * Add new document types there and they will automatically appear in Studio.
+ */
 
 // Read Sanity configuration from environment variables with fallbacks
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "hqga2p7i";

@@ -7,7 +7,7 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
 import Image from "next/image";
 
-export const revalidate = 60;
+export const revalidate = 300; // Revalidate every 5 minutes for better performance
 export const dynamic = 'force-dynamic';
 
 // GROQ query to fetch a single cocktail by slug

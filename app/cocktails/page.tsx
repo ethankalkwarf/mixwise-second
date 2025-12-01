@@ -4,7 +4,7 @@ import { CocktailsDirectory } from "@/components/cocktails/CocktailsDirectory";
 import Link from "next/link";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 300; // Revalidate every 5 minutes for better performance
 
 // GROQ query to fetch all cocktails with their ingredients
 // Temporary random ordering until search/filters are implemented

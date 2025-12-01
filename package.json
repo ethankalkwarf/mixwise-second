@@ -7,7 +7,9 @@
     "build": "next build --no-lint",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "npx tsx scripts/migrate-to-sanity.ts"
+    "migrate": "npx tsx scripts/migrate-to-sanity.ts",
+    "export:cocktails": "npx tsx scripts/exportSanityCocktails.ts",
+    "import:cocktails": "npx tsx scripts/importEnrichedCocktails.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
