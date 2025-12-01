@@ -10,8 +10,8 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 
 export const revalidate = 60;
 
-// Fetch featured cocktails from Sanity
-const FEATURED_COCKTAILS_QUERY = `*[_type == "cocktail"] | order(isPopular desc, name asc) [0...8] {
+// Fetch popular cocktails from Sanity (will be randomized client-side)
+const FEATURED_COCKTAILS_QUERY = `*[_type == "cocktail" && isPopular == true] [0...50] {
   _id,
   name,
   slug,
@@ -46,6 +46,9 @@ export default async function HomePage() {
     sanityClient.fetch(ALL_COCKTAILS_QUERY),
   ]);
 
+  // Randomize featured cocktails on each page load
+  const featuredCocktails = [...cocktails].sort(() => Math.random() - 0.5).slice(0, 8);
+
   const heroTitle = settings?.heroTitle || "Discover Your Next Favorite Cocktail";
   const heroSubtitle =
     settings?.heroSubtitle ||
@@ -65,16 +68,16 @@ export default async function HomePage() {
       {/* Personalized Sections for Logged-in Users */}
       <section className="bg-cream py-12 sm:py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <PersonalizedSections 
-            allCocktails={allCocktails} 
-            featuredCocktails={cocktails} 
+          <PersonalizedSections
+            allCocktails={allCocktails}
+            featuredCocktails={featuredCocktails}
           />
         </div>
       </section>
 
       {/* Featured Cocktails */}
-      {cocktails.length > 0 && (
-        <FeaturedCocktailsWrapper cocktails={cocktails} />
+      {featuredCocktails.length > 0 && (
+        <FeaturedCocktailsWrapper cocktails={featuredCocktails} />
       )}
 
       {/* Platform Section */}

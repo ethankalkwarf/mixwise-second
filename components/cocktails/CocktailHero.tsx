@@ -28,7 +28,6 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
             </div>
           )}
 
-          <div className="absolute bottom-2 right-2 text-[10px] text-white/60 bg-black/20 px-2 py-1 rounded backdrop-blur-sm">Photo credit</div>
         </div>
       </div>
 

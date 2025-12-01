@@ -2,7 +2,8 @@
 
 export function PlatformSection() {
   return (
-    <section className="bg-[#2C3628] text-[#F9F7F2] py-32 px-6 rounded-t-[3rem] relative overflow-hidden mt-24">
+    <section className="bg-[#2C3628] text-[#F9F7F2] py-32 rounded-t-[3rem] relative overflow-hidden mt-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
       {/* Background Pattern */}
       <div
         className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -74,6 +75,7 @@ export function PlatformSection() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

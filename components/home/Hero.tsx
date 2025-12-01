@@ -10,7 +10,7 @@ interface HeroProps {
 
 export function Hero({ title, subtitle }: HeroProps) {
   return (
-    <section className="bg-cream py-16 sm:py-20">
+    <section className="bg-cream pt-16 pb-16 sm:pt-20 sm:pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         {/* Green hero container */}
         <div className="relative bg-mist border border-mist rounded-3xl p-6 sm:p-10 lg:p-14 shadow-soft overflow-hidden">
@@ -19,7 +19,7 @@ export function Hero({ title, subtitle }: HeroProps) {
             {/* Content */}
             <div className="flex-1 text-center lg:text-left">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-forest leading-tight mb-4">
-                Find your next favorite cocktail
+                Find Your <span className="italic text-olive">Next Favorite</span> Cocktail
               </h1>
               <p className="text-base sm:text-lg text-sage leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
                 {subtitle}
