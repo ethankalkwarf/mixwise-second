@@ -3,28 +3,8 @@ import { deskTool } from "sanity/desk";
 import { visionTool } from "@sanity/vision";
 import schemaTypes from "./sanity/schemas";
 
-// Debug tool to show current Sanity configuration
-const projectInfoTool = () => ({
-  name: 'project-info',
-  title: 'Project Info',
-  component: () => {
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "hqga2p7i";
-    const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
-    const hasAuthToken = !!process.env.SANITY_AUTH_TOKEN;
-
-    return (
-      <div style={{ padding: '20px', fontFamily: 'monospace' }}>
-        <h2>Sanity Project Configuration</h2>
-        <p><strong>Project ID:</strong> {projectId}</p>
-        <p><strong>Dataset:</strong> {dataset}</p>
-        <p><strong>Auth Token:</strong> {hasAuthToken ? '✅ Configured' : '❌ Missing (read-only mode)'}</p>
-        {process.env.NODE_ENV === 'development' && (
-          <p><em>This tool only appears in development mode</em></p>
-        )}
-      </div>
-    );
-  }
-});
+// Note: This file must remain a pure Sanity config with no JSX.
+// Debug UI components should be moved to separate React components in the app directory.
 
 // Read Sanity configuration from environment variables with fallbacks
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "hqga2p7i";
@@ -42,8 +22,7 @@ export default defineConfig({
   auth: authToken ? { token: authToken } : undefined,
   plugins: [
     deskTool(),
-    visionTool(),
-    ...(process.env.NODE_ENV === 'development' ? [projectInfoTool()] : [])
+    visionTool()
   ],
   schema: {
     types: schemaTypes
