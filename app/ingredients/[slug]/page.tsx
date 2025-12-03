@@ -8,17 +8,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { SanityImage } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
+import { getAllCocktails } from "@/lib/cocktails";
 
 export const revalidate = 60;
-
-interface Cocktail {
-  _id: string;
-  name: string;
-  slug: { current: string };
-  image?: SanityImage;
-  externalImageUrl?: string;
-  primarySpirit?: string;
-}
 
 interface Substitute {
   _id: string;
@@ -40,7 +32,6 @@ interface Ingredient {
   isStaple?: boolean;
   storageNotes?: string;
   substitutes?: Substitute[];
-  cocktails: Cocktail[];
 }
 
 const INGREDIENT_QUERY = `*[_type == "ingredient" && slug.current == $slug][0] {
@@ -60,14 +51,6 @@ const INGREDIENT_QUERY = `*[_type == "ingredient" && slug.current == $slug][0] {
     _id,
     name,
     slug
-  },
-  "cocktails": *[_type == "cocktail" && references(^._id)] | order(name asc) [0...12] {
-    _id,
-    name,
-    slug,
-    image,
-    externalImageUrl,
-    primarySpirit
   }
 }`;
 
@@ -106,6 +89,19 @@ export default async function IngredientDetailPage({ params }: PageProps) {
   }
 
   const imageUrl = getImageUrl(ingredient.image, { width: 600, height: 600 }) || ingredient.externalImageUrl;
+  const cocktails = await getAllCocktails();
+  const cocktailsUsingIngredient = cocktails
+    .filter((cocktail) =>
+      cocktail.ingredients.some((ing) => getIngredientKey(ing) === ingredient._id)
+    )
+    .slice(0, 12)
+    .map((cocktail) => ({
+      id: cocktail.id,
+      name: cocktail.name,
+      slug: cocktail.slug,
+      imageUrl: cocktail.imageUrl,
+      baseSpirit: cocktail.baseSpirit,
+    }));
 
   return (
     <>
@@ -253,17 +249,17 @@ export default async function IngredientDetailPage({ params }: PageProps) {
               )}
 
               {/* Cocktails */}
-              {ingredient.cocktails && ingredient.cocktails.length > 0 && (
+              {cocktailsUsingIngredient.length > 0 && (
                 <div>
                   <h2 className="text-xl font-serif font-bold text-slate-100 mb-4">
                     Cocktails with {ingredient.name}
                   </h2>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    {ingredient.cocktails.map((cocktail) => (
-                      <CocktailCard key={cocktail._id} cocktail={cocktail} />
+                    {cocktailsUsingIngredient.map((cocktail) => (
+                      <CocktailCard key={cocktail.id} cocktail={cocktail} />
                     ))}
                   </div>
-                  {ingredient.cocktails.length === 12 && (
+                  {cocktailsUsingIngredient.length === 12 && (
                     <div className="mt-6 text-center">
                       <Link
                         href={`/cocktails?ingredient=${ingredient.name}`}
@@ -283,12 +279,20 @@ export default async function IngredientDetailPage({ params }: PageProps) {
   );
 }
 
-function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 }) || cocktail.externalImageUrl;
+type IngredientCocktailCard = {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl?: string | null;
+  baseSpirit?: string | null;
+};
+
+function CocktailCard({ cocktail }: { cocktail: IngredientCocktailCard }) {
+  const imageUrl = cocktail.imageUrl;
 
   return (
     <Link
-      href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
+      href={`/cocktails/${cocktail.slug}`}
       className="group flex gap-4 p-3 rounded-xl border border-slate-800 bg-slate-900/50 hover:border-slate-700 transition-colors"
     >
       <div className="flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden bg-slate-800">
@@ -307,9 +311,9 @@ function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        {cocktail.primarySpirit && (
+        {cocktail.baseSpirit && (
           <p className="text-xs text-lime-400 font-bold tracking-wider uppercase">
-            {cocktail.primarySpirit}
+            {cocktail.baseSpirit}
           </p>
         )}
         <h3 className="font-medium text-slate-100 group-hover:text-lime-400 transition-colors truncate">
@@ -318,6 +322,15 @@ function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
       </div>
     </Link>
   );
+}
+
+function getIngredientKey(ingredient: { id?: string | null; name?: string | null }): string | null {
+  if (ingredient.id) return ingredient.id;
+  if (!ingredient.name) return null;
+  return ingredient.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 // Generate static paths

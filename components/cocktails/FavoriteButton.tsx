@@ -23,7 +23,7 @@ export function FavoriteButton({
   className = "",
 }: FavoriteButtonProps) {
   const { isFavorite, toggleFavorite, isLoading } = useFavorites();
-  const favorited = isFavorite(cocktail.id);
+  const favorited = isFavorite(cocktail.id, cocktail.slug);
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();

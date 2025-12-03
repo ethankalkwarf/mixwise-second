@@ -16,6 +16,119 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      cocktails: {
+        Row: {
+          id: string;
+          legacy_id: string | null;
+          slug: string;
+          name: string;
+          short_description: string | null;
+          long_description: string | null;
+          seo_description: string | null;
+          base_spirit: string | null;
+          category_primary: string | null;
+          categories_all: string[] | null;
+          tags: string[] | null;
+          image_url: string | null;
+          image_alt: string | null;
+          glassware: string | null;
+          garnish: string | null;
+          technique: string | null;
+          difficulty: string | null;
+          flavor_strength: number | null;
+          flavor_sweetness: number | null;
+          flavor_tartness: number | null;
+          flavor_bitterness: number | null;
+          flavor_aroma: string | null;
+          flavor_texture: string | null;
+          notes: string | null;
+          fun_fact: string | null;
+          fun_fact_source: string | null;
+          metadata_json: Json | null;
+          ingredients: Json | null;
+          instructions: string | null;
+          is_popular: boolean | null;
+          is_favorite: boolean | null;
+          is_trending: boolean | null;
+          is_hidden: boolean | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          legacy_id?: string | null;
+          slug: string;
+          name: string;
+          short_description?: string | null;
+          long_description?: string | null;
+          seo_description?: string | null;
+          base_spirit?: string | null;
+          category_primary?: string | null;
+          categories_all?: string[] | null;
+          tags?: string[] | null;
+          image_url?: string | null;
+          image_alt?: string | null;
+          glassware?: string | null;
+          garnish?: string | null;
+          technique?: string | null;
+          difficulty?: string | null;
+          flavor_strength?: number | null;
+          flavor_sweetness?: number | null;
+          flavor_tartness?: number | null;
+          flavor_bitterness?: number | null;
+          flavor_aroma?: string | null;
+          flavor_texture?: string | null;
+          notes?: string | null;
+          fun_fact?: string | null;
+          fun_fact_source?: string | null;
+          metadata_json?: Json | null;
+          ingredients?: Json | null;
+          instructions?: string | null;
+          is_popular?: boolean | null;
+          is_favorite?: boolean | null;
+          is_trending?: boolean | null;
+          is_hidden?: boolean | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          legacy_id?: string | null;
+          slug?: string;
+          name?: string;
+          short_description?: string | null;
+          long_description?: string | null;
+          seo_description?: string | null;
+          base_spirit?: string | null;
+          category_primary?: string | null;
+          categories_all?: string[] | null;
+          tags?: string[] | null;
+          image_url?: string | null;
+          image_alt?: string | null;
+          glassware?: string | null;
+          garnish?: string | null;
+          technique?: string | null;
+          difficulty?: string | null;
+          flavor_strength?: number | null;
+          flavor_sweetness?: number | null;
+          flavor_tartness?: number | null;
+          flavor_bitterness?: number | null;
+          flavor_aroma?: string | null;
+          flavor_texture?: string | null;
+          notes?: string | null;
+          fun_fact?: string | null;
+          fun_fact_source?: string | null;
+          metadata_json?: Json | null;
+          ingredients?: Json | null;
+          instructions?: string | null;
+          is_popular?: boolean | null;
+          is_favorite?: boolean | null;
+          is_trending?: boolean | null;
+          is_hidden?: boolean | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       profiles: {
         Row: {
           id: string;
@@ -339,6 +452,10 @@ export interface Database {
 }
 
 // Convenience types for common operations
+export type CocktailRow = Database["public"]["Tables"]["cocktails"]["Row"];
+export type CocktailInsert = Database["public"]["Tables"]["cocktails"]["Insert"];
+export type CocktailUpdate = Database["public"]["Tables"]["cocktails"]["Update"];
+
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];

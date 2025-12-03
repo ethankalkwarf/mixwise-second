@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { MainContainer } from "@/components/layout/MainContainer";
-import { sanityClient } from "@/lib/sanityClient";
+import { getAllCocktails } from "@/lib/cocktails";
 import {
   BeakerIcon,
   HeartIcon,
@@ -37,11 +37,12 @@ interface Favorite {
 }
 
 interface CocktailMatch {
-  _id: string;
+  id: string;
   name: string;
-  slug: { current: string };
-  externalImageUrl?: string;
-  primarySpirit?: string;
+  slug: string;
+  imageUrl?: string | null;
+  baseSpirit?: string | null;
+  ingredients: Array<{ id?: string | null; name?: string | null }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -97,25 +98,26 @@ export default async function PublicBarPage({ params }: PageProps) {
   let cocktailMatches: CocktailMatch[] = [];
 
   if (ingredientIds.length > 0) {
-    const cocktails = await sanityClient.fetch<(CocktailMatch & { ingredientIds: string[] })[]>(`
-      *[_type == "cocktail"][0...100] {
-        _id,
-        name,
-        slug,
-        externalImageUrl,
-        primarySpirit,
-        "ingredientIds": ingredients[].ingredient->._id
-      }
-    `);
-
+    const cocktails = await getAllCocktails();
     const ingredientSet = new Set(ingredientIds);
+
     cocktailMatches = cocktails
       .filter((cocktail) => {
-        const required = cocktail.ingredientIds || [];
+        const required = cocktail.ingredients
+          .map((ingredient) => getIngredientKey(ingredient))
+          .filter(Boolean) as string[];
         if (required.length === 0) return false;
         return required.every((id) => ingredientSet.has(id));
       })
-      .slice(0, 12);
+      .slice(0, 12)
+      .map((cocktail) => ({
+        id: cocktail.id,
+        name: cocktail.name,
+        slug: cocktail.slug,
+        imageUrl: cocktail.imageUrl,
+        baseSpirit: cocktail.baseSpirit,
+        ingredients: cocktail.ingredients,
+      }));
   }
 
   const displayName = (profile as UserProfile).display_name || "User";
@@ -204,14 +206,14 @@ export default async function PublicBarPage({ params }: PageProps) {
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {cocktailMatches.map((cocktail) => (
                   <Link
-                    key={cocktail._id}
-                    href={`/cocktails/${cocktail.slug?.current}`}
+                    key={cocktail.id}
+                    href={`/cocktails/${cocktail.slug}`}
                     className="flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors group"
                   >
-                    {cocktail.externalImageUrl ? (
+                    {cocktail.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={cocktail.externalImageUrl}
+                        src={cocktail.imageUrl}
                         alt=""
                         className="w-12 h-12 rounded-lg object-cover"
                       />
@@ -224,8 +226,8 @@ export default async function PublicBarPage({ params }: PageProps) {
                       <p className="font-medium text-slate-200 group-hover:text-lime-400 truncate transition-colors">
                         {cocktail.name}
                       </p>
-                      {cocktail.primarySpirit && (
-                        <p className="text-xs text-slate-500">{cocktail.primarySpirit}</p>
+                      {cocktail.baseSpirit && (
+                        <p className="text-xs text-slate-500">{cocktail.baseSpirit}</p>
                       )}
                     </div>
                   </Link>
@@ -296,5 +298,14 @@ export default async function PublicBarPage({ params }: PageProps) {
       </MainContainer>
     </div>
   );
+}
+
+function getIngredientKey(ingredient: { id?: string | null; name?: string | null }): string | null {
+  if (ingredient.id) return ingredient.id;
+  if (!ingredient.name) return null;
+  return ingredient.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 

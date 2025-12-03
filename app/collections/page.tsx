@@ -6,6 +6,7 @@ import { SITE_CONFIG } from "@/lib/seo";
 import Link from "next/link";
 import type { SanityImage } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
+import { getAllCocktails } from "@/lib/cocktails";
 
 export const revalidate = 60;
 
@@ -25,8 +26,9 @@ interface Collection {
   slug: { current: string };
   description?: string;
   image?: SanityImage;
-  cocktailCount: number;
+  cocktails: Array<{ _ref: string }>;
   featured: boolean;
+  cocktailCount?: number;
 }
 
 const COLLECTIONS_QUERY = `*[_type == "collection"] | order(order asc, name asc) {
@@ -36,11 +38,33 @@ const COLLECTIONS_QUERY = `*[_type == "collection"] | order(order asc, name asc)
   description,
   image,
   featured,
-  "cocktailCount": count(cocktails)
+  "cocktails": cocktails[]{
+    _ref
+  }
 }`;
 
 export default async function CollectionsPage() {
-  const collections = await sanityClient.fetch<Collection[]>(COLLECTIONS_QUERY);
+  const [collections, cocktails] = await Promise.all([
+    sanityClient.fetch<Collection[]>(COLLECTIONS_QUERY),
+    getAllCocktails(),
+  ]);
+
+  const cocktailByLegacyId = new Map(
+    cocktails.filter((cocktail) => cocktail.legacyId).map((cocktail) => [cocktail.legacyId as string, cocktail])
+  );
+
+  const enrichedCollections = collections.map((collection) => {
+    const count = (collection.cocktails || []).reduce((total, ref) => {
+      if (ref._ref && cocktailByLegacyId.has(ref._ref)) {
+        return total + 1;
+      }
+      return total;
+    }, 0);
+    return {
+      ...collection,
+      cocktailCount: count,
+    };
+  });
 
   return (
     <>
@@ -63,9 +87,9 @@ export default async function CollectionsPage() {
           </div>
 
           {/* Collections Grid */}
-          {collections.length > 0 ? (
+          {enrichedCollections.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {collections.map((collection) => (
+              {enrichedCollections.map((collection) => (
                 <CollectionCard key={collection._id} collection={collection} />
               ))}
             </div>

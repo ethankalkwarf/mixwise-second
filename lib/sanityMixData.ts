@@ -1,9 +1,12 @@
 /**
- * Fetch cocktails and ingredients from Sanity for the Mix tool
+ * Fetch cocktails from Supabase and ingredients from Sanity for the Mix tool
  */
 
 import { sanityClient } from "./sanityClient";
 import { getImageUrl } from "./sanityImage";
+import { createClient } from "@/lib/supabase/client";
+import type { CocktailRow } from "@/lib/supabase/database.types";
+import { normalizeCocktail } from "@/lib/cocktailTypes";
 import type { MixIngredient, MixCocktail } from "./mixTypes";
 
 // GROQ query to fetch all ingredients
@@ -14,35 +17,6 @@ const INGREDIENTS_QUERY = `*[_type == "ingredient"] | order(name asc) {
   image,
   externalImageUrl,
   isStaple
-}`;
-
-// GROQ query to fetch all cocktails with their ingredients
-const COCKTAILS_QUERY = `*[_type == "cocktail"] | order(name asc) {
-  _id,
-  name,
-  "slug": slug.current,
-  description,
-  image,
-  externalImageUrl,
-  glass,
-  method,
-  primarySpirit,
-  difficulty,
-  isPopular,
-  isFavorite,
-  isTrending,
-  drinkCategories,
-  tags,
-  garnish,
-  "instructions": pt::text(instructions),
-  "ingredients": ingredients[] {
-    _key,
-    amount,
-    isOptional,
-    notes,
-    "ingredientId": ingredient->_id,
-    "ingredientName": ingredient->name
-  }
 }`;
 
 // Map Sanity ingredient type to display category
@@ -75,39 +49,21 @@ export async function fetchMixIngredients(): Promise<MixIngredient[]> {
 }
 
 /**
- * Fetch all cocktails from Sanity
+ * Fetch all cocktails from Supabase
  */
 export async function fetchMixCocktails(): Promise<MixCocktail[]> {
-  const data = await sanityClient.fetch(COCKTAILS_QUERY);
-  
-  return data.map((item: any) => ({
-    id: item._id,
-    name: item.name,
-    slug: item.slug || item._id,
-    description: item.description || null,
-    instructions: item.instructions || null,
-    category: item.primarySpirit || null,
-    imageUrl: getImageUrl(item.image, { width: 600, height: 400 }) || item.externalImageUrl || null,
-    glass: item.glass || null,
-    method: item.method || null,
-    primarySpirit: item.primarySpirit || null,
-    difficulty: item.difficulty || null,
-    isPopular: item.isPopular || false,
-    isFavorite: item.isFavorite || false,
-    isTrending: item.isTrending || false,
-    drinkCategories: item.drinkCategories || [],
-    tags: item.tags || [],
-    garnish: item.garnish || null,
-    ingredients: (item.ingredients || [])
-      .filter((ing: any) => ing.ingredientId) // Filter out null references
-      .map((ing: any) => ({
-        id: ing.ingredientId,
-        name: ing.ingredientName || "Unknown",
-        amount: ing.amount || null,
-        isOptional: ing.isOptional || false,
-        notes: ing.notes || null
-      }))
-  }));
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("cocktails")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("Failed to load cocktails for Mix tool", error);
+    return [];
+  }
+
+  return (data || []).map((row) => mapCocktailToMix(normalizeCocktail(row as CocktailRow)));
 }
 
 /**
@@ -123,5 +79,41 @@ export async function fetchMixData(): Promise<{
   ]);
   
   return { ingredients, cocktails };
+}
+
+function mapCocktailToMix(cocktail: ReturnType<typeof normalizeCocktail>): MixCocktail {
+  return {
+    id: cocktail.id,
+    name: cocktail.name,
+    slug: cocktail.slug,
+    description: cocktail.description,
+    instructions: cocktail.instructions?.join("\n") || null,
+    category: cocktail.baseSpirit,
+    imageUrl: cocktail.imageUrl,
+    glass: cocktail.glass,
+    method: cocktail.method,
+    primarySpirit: cocktail.baseSpirit,
+    difficulty: cocktail.difficulty,
+    isPopular: cocktail.isPopular,
+    isFavorite: cocktail.isFavorite,
+    isTrending: cocktail.isTrending,
+    drinkCategories: cocktail.categories,
+    tags: cocktail.tags,
+    garnish: cocktail.garnish,
+    ingredients: cocktail.ingredients.map((ingredient) => ({
+      id: ingredient.id || slugify(ingredient.name || ""),
+      name: ingredient.name || "Ingredient",
+      amount: ingredient.amount || null,
+      isOptional: ingredient.isOptional || false,
+      notes: ingredient.notes || null,
+    })),
+  };
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 

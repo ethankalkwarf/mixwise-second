@@ -7,18 +7,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { SanityImage } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
+import { getAllCocktails } from "@/lib/cocktails";
 
 export const revalidate = 60;
-
-interface Cocktail {
-  _id: string;
-  name: string;
-  slug: { current: string };
-  image?: SanityImage;
-  externalImageUrl?: string;
-  primarySpirit?: string;
-  isPopular?: boolean;
-}
 
 interface Collection {
   _id: string;
@@ -26,7 +17,7 @@ interface Collection {
   slug: { current: string };
   description?: string;
   image?: SanityImage;
-  cocktails: Cocktail[];
+  cocktails: Array<{ _ref: string }>;
 }
 
 const COLLECTION_QUERY = `*[_type == "collection" && slug.current == $slug][0] {
@@ -35,14 +26,8 @@ const COLLECTION_QUERY = `*[_type == "collection" && slug.current == $slug][0] {
   slug,
   description,
   image,
-  "cocktails": cocktails[]-> {
-    _id,
-    name,
-    slug,
-    image,
-    externalImageUrl,
-    primarySpirit,
-    isPopular
+  "cocktails": cocktails[]{
+    _ref
   }
 }`;
 
@@ -81,6 +66,20 @@ export default async function CollectionDetailPage({ params }: PageProps) {
   }
 
   const imageUrl = getImageUrl(collection.image, { width: 1200, height: 600 });
+  const cocktails = await getAllCocktails();
+  const collectionCocktails = (collection.cocktails || [])
+    .map((ref) => ref._ref)
+    .filter(Boolean);
+  const cocktailsInCollection = cocktails
+    .filter((cocktail) => cocktail.legacyId && collectionCocktails.includes(cocktail.legacyId))
+    .map((cocktail) => ({
+      id: cocktail.id,
+      name: cocktail.name,
+      slug: cocktail.slug,
+      imageUrl: cocktail.imageUrl,
+      baseSpirit: cocktail.baseSpirit,
+      isPopular: cocktail.isPopular,
+    }));
 
   return (
     <>
@@ -123,7 +122,7 @@ export default async function CollectionDetailPage({ params }: PageProps) {
                     {collection.name}
                   </h1>
                   <p className="text-slate-300">
-                    {collection.cocktails?.length || 0} cocktails
+                    {cocktailsInCollection.length} cocktail{cocktailsInCollection.length !== 1 ? "s" : ""}
                   </p>
                 </div>
               </div>
@@ -134,7 +133,7 @@ export default async function CollectionDetailPage({ params }: PageProps) {
                   {collection.name}
                 </h1>
                 <p className="text-slate-400">
-                  {collection.cocktails?.length || 0} cocktails
+                  {cocktailsInCollection.length} cocktail{cocktailsInCollection.length !== 1 ? "s" : ""}
                 </p>
               </div>
             )}
@@ -146,10 +145,10 @@ export default async function CollectionDetailPage({ params }: PageProps) {
           </div>
 
           {/* Cocktails Grid */}
-          {collection.cocktails && collection.cocktails.length > 0 ? (
+          {cocktailsInCollection.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {collection.cocktails.map((cocktail) => (
-                <CocktailCard key={cocktail._id} cocktail={cocktail} />
+              {cocktailsInCollection.map((cocktail) => (
+                <CocktailCard key={cocktail.id} cocktail={cocktail} />
               ))}
             </div>
           ) : (
@@ -163,12 +162,21 @@ export default async function CollectionDetailPage({ params }: PageProps) {
   );
 }
 
-function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 400, height: 300 }) || cocktail.externalImageUrl;
+type CollectionCocktail = {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl?: string | null;
+  baseSpirit?: string | null;
+  isPopular?: boolean;
+};
+
+function CocktailCard({ cocktail }: { cocktail: CollectionCocktail }) {
+  const imageUrl = cocktail.imageUrl;
 
   return (
     <Link
-      href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
+      href={`/cocktails/${cocktail.slug}`}
       className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all duration-300 hover:border-lime-500/40 hover:shadow-lg hover:shadow-lime-900/10"
     >
       <div className="relative h-44 w-full overflow-hidden bg-slate-800">
@@ -195,9 +203,9 @@ function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
         )}
       </div>
       <div className="p-5 flex-1">
-        {cocktail.primarySpirit && (
+        {cocktail.baseSpirit && (
           <p className="text-xs text-lime-400 font-bold tracking-widest uppercase mb-1">
-            {cocktail.primarySpirit}
+            {cocktail.baseSpirit}
           </p>
         )}
         <h3 className="font-serif font-bold text-xl text-slate-100 group-hover:text-lime-400 transition-colors">

@@ -70,7 +70,7 @@ export default function AccountPage() {
     }
 
     fetchBadges();
-  }, [user]);
+  }, [user, supabase]);
 
   // Badge display data - show all badges with earned status
   const allBadgeData = useMemo(() => {

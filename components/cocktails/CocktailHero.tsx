@@ -1,9 +1,9 @@
 import Image from "next/image";
-import type { SanityCocktail } from "@/lib/sanityTypes";
+import type { Cocktail } from "@/lib/cocktailTypes";
 import { BeakerIcon, Square3Stack3DIcon } from "@heroicons/react/24/outline";
 
 interface CocktailHeroProps {
-  cocktail: SanityCocktail;
+  cocktail: Cocktail;
   imageUrl: string | null;
 }
 
@@ -16,7 +16,7 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={cocktail.imageAltOverride || cocktail.image?.alt || `${cocktail.name} cocktail`}
+              alt={cocktail.imageAlt || `${cocktail.name} cocktail`}
               fill
               priority
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -35,14 +35,14 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
       <div className="flex flex-col justify-center h-full space-y-6">
         {/* CATEGORY ROW */}
         <div className="flex items-center space-x-2 text-sm text-gray-500 font-medium">
-          {cocktail.primarySpirit && (
+          {cocktail.baseSpirit && (
             <>
-              <span className="uppercase tracking-wider text-xs">{cocktail.primarySpirit}</span>
+              <span className="uppercase tracking-wider text-xs">{cocktail.baseSpirit}</span>
               <span>&bull;</span>
             </>
           )}
-          {cocktail.drinkCategories && cocktail.drinkCategories.length > 0 && (
-            <span className="uppercase tracking-wider text-xs text-mixwise-accent">{cocktail.drinkCategories[0]}</span>
+          {cocktail.categories && cocktail.categories.length > 0 && (
+            <span className="uppercase tracking-wider text-xs text-mixwise-accent">{cocktail.categories[0]}</span>
           )}
         </div>
 

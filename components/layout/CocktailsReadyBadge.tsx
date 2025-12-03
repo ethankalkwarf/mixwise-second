@@ -4,12 +4,13 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
-import { sanityClient } from "@/lib/sanityClient";
+import { createClient } from "@/lib/supabase/client";
 
 interface CocktailWithIngredients {
-  _id: string;
+  id: string;
   ingredients?: Array<{
-    ingredient?: { _id: string } | null;
+    id?: string | null;
+    name?: string | null;
   }>;
 }
 
@@ -21,25 +22,10 @@ export function CocktailsReadyBadge() {
 
   // Fetch all cocktails with their ingredients
   useEffect(() => {
-    const fetchCocktails = async () => {
-      try {
-        const data = await sanityClient.fetch<CocktailWithIngredients[]>(`
-          *[_type == "cocktail"] {
-            _id,
-            "ingredients": ingredients[] {
-              "ingredient": ingredient-> { _id }
-            }
-          }
-        `);
-        setCocktails(data);
-      } catch (error) {
-        console.error("Error fetching cocktails for badge:", error);
-      } finally {
-        setCocktailsLoading(false);
-      }
-    };
-
-    fetchCocktails();
+    fetchCocktailsWithIngredients()
+      .then(setCocktails)
+      .catch((error) => console.error("Error fetching cocktails for badge:", error))
+      .finally(() => setCocktailsLoading(false));
   }, []);
 
   // Calculate how many cocktails user can make
@@ -52,12 +38,10 @@ export function CocktailsReadyBadge() {
     let count = 0;
 
     cocktails.forEach((cocktail) => {
-      const requiredIngredients = cocktail.ingredients?.filter(i => i.ingredient) || [];
+      const requiredIngredients = (cocktail.ingredients || []).map(getIngredientKey).filter(Boolean) as string[];
       if (requiredIngredients.length === 0) return;
 
-      const hasAll = requiredIngredients.every(i => 
-        i.ingredient && ingredientSet.has(i.ingredient._id)
-      );
+      const hasAll = requiredIngredients.every((key) => ingredientSet.has(key));
 
       if (hasAll) {
         count++;
@@ -102,25 +86,10 @@ export function CocktailsReadyBadgeCompact() {
   const [cocktailsLoading, setCocktailsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCocktails = async () => {
-      try {
-        const data = await sanityClient.fetch<CocktailWithIngredients[]>(`
-          *[_type == "cocktail"] {
-            _id,
-            "ingredients": ingredients[] {
-              "ingredient": ingredient-> { _id }
-            }
-          }
-        `);
-        setCocktails(data);
-      } catch (error) {
-        console.error("Error fetching cocktails for badge:", error);
-      } finally {
-        setCocktailsLoading(false);
-      }
-    };
-
-    fetchCocktails();
+    fetchCocktailsWithIngredients()
+      .then(setCocktails)
+      .catch((error) => console.error("Error fetching cocktails for badge:", error))
+      .finally(() => setCocktailsLoading(false));
   }, []);
 
   const readyCount = useMemo(() => {
@@ -132,12 +101,10 @@ export function CocktailsReadyBadgeCompact() {
     let count = 0;
 
     cocktails.forEach((cocktail) => {
-      const requiredIngredients = cocktail.ingredients?.filter(i => i.ingredient) || [];
+      const requiredIngredients = (cocktail.ingredients || []).map(getIngredientKey).filter(Boolean) as string[];
       if (requiredIngredients.length === 0) return;
 
-      const hasAll = requiredIngredients.every(i => 
-        i.ingredient && ingredientSet.has(i.ingredient._id)
-      );
+      const hasAll = requiredIngredients.every((key) => ingredientSet.has(key));
 
       if (hasAll) {
         count++;
@@ -160,4 +127,31 @@ export function CocktailsReadyBadgeCompact() {
       {readyCount}
     </Link>
   );
+}
+
+async function fetchCocktailsWithIngredients(): Promise<CocktailWithIngredients[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("cocktails")
+    .select("id, ingredients");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data || []).map((row) => ({
+    id: row.id,
+    ingredients: Array.isArray(row.ingredients)
+      ? (row.ingredients as Array<{ id?: string; name?: string }>)
+      : [],
+  }));
+}
+
+function getIngredientKey(ingredient: { id?: string | null; name?: string | null }): string | null {
+  if (ingredient.id) return ingredient.id;
+  if (!ingredient.name) return null;
+  return ingredient.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }

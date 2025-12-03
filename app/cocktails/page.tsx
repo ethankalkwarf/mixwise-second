@@ -1,45 +1,12 @@
-import { sanityClient } from "@/lib/sanityClient";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { CocktailsDirectory } from "@/components/cocktails/CocktailsDirectory";
 import Link from "next/link";
-import type { SanityCocktail } from "@/lib/sanityTypes";
+import { getAllCocktails } from "@/lib/cocktails";
 
 export const revalidate = 300; // Revalidate every 5 minutes for better performance
 
-// GROQ query to fetch all cocktails with their ingredients
-// Temporary random ordering until search/filters are implemented
-const COCKTAILS_QUERY = `*[_type == "cocktail"] {
-  _id,
-  name,
-  slug,
-  description,
-  image,
-  externalImageUrl,
-  glass,
-  method,
-  primarySpirit,
-  difficulty,
-  isPopular,
-  isFavorite,
-  isTrending,
-  drinkCategories,
-  garnish,
-  tags,
-  "ingredients": ingredients[] {
-    _key,
-    amount,
-    isOptional,
-    notes,
-    "ingredient": ingredient-> {
-      _id,
-      name,
-      type
-    }
-  }
-}`;
-
 export default async function CocktailsPage() {
-  const cocktails: SanityCocktail[] = await sanityClient.fetch(COCKTAILS_QUERY);
+  const cocktails = await getAllCocktails();
 
   // Temporary random ordering until search/filters are implemented
   const shuffledCocktails = [...cocktails].sort(() => Math.random() - 0.5);
@@ -65,11 +32,7 @@ export default async function CocktailsPage() {
               No cocktails yet
             </h2>
             <p className="text-sage max-w-md">
-              Head over to Sanity Studio at{" "}
-              <Link href="/studio" className="text-terracotta hover:underline">
-                /studio
-              </Link>{" "}
-              to create your first cocktail recipe.
+              We&rsquo;re still importing recipes. Check back soon or upload new cocktails through the Supabase seed workflow.
             </p>
           </div>
         )}

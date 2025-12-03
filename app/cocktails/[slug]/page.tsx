@@ -1,43 +1,13 @@
-import { sanityClient } from "@/lib/sanityClient";
-import { getImageUrl } from "@/lib/sanityImage";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 import { notFound } from "next/navigation";
-import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
 import Image from "next/image";
+import { getCocktailBySlug } from "@/lib/cocktails";
+import type { Cocktail } from "@/lib/cocktailTypes";
 
 export const revalidate = 300; // Revalidate every 5 minutes for better performance
 export const dynamic = 'force-dynamic';
-
-// GROQ query to fetch a single cocktail by slug
-const COCKTAIL_QUERY = `*[_type == "cocktail" && slug.current == $slug][0]{
-  _id,
-  name,
-  slug,
-  image,
-  description,
-  ingredients[],
-  instructions[],
-  glass,
-  method,
-  tags,
-  hidden,
-  funFact,
-  funFactSources[]{label, url},
-  flavorProfile{
-    strength,
-    sweetness,
-    tartness,
-    bitterness,
-    aroma,
-    texture
-  },
-  bestFor,
-  seoTitle,
-  metaDescription,
-  imageAltOverride
-}`;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -46,14 +16,18 @@ type PageProps = {
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const cocktail: SanityCocktail | null = await sanityClient.fetch(COCKTAIL_QUERY, { slug });
+  const cocktail = await getCocktailBySlug(slug);
 
   if (!cocktail) {
     return { title: "Cocktail Not Found" };
   }
 
   const title = cocktail.seoTitle || cocktail.name;
-  const description = cocktail.metaDescription || cocktail.description || `${cocktail.name} cocktail recipe with ingredients and instructions.`;
+  const description =
+    cocktail.seoDescription ||
+    cocktail.description ||
+    `${cocktail.name} cocktail recipe with ingredients and instructions.`;
+  const images = cocktail.imageUrl ? [{ url: cocktail.imageUrl }] : [];
 
   return {
     title,
@@ -61,33 +35,32 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title,
       description,
-      images: cocktail.image ? [{ url: getImageUrl(cocktail.image, { width: 1200, height: 630 }) || cocktail.externalImageUrl || '' }] : [],
+      images,
     },
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title,
       description,
-      images: cocktail.image ? [{ url: getImageUrl(cocktail.image, { width: 1200, height: 630 }) || cocktail.externalImageUrl || '' }] : [],
+      images,
     },
   };
 }
 
 // Generate JSON-LD Recipe Schema
-function generateRecipeSchema(cocktail: SanityCocktail, imageUrl: string | null) {
-  const ingredients = cocktail.ingredients?.map((item) =>
-    `${item.amount ? item.amount + " " : ""}${item.ingredient?.name || "Ingredient"}`
-  ) || [];
+function generateRecipeSchema(cocktail: Cocktail, imageUrl: string | null) {
+  const ingredients =
+    cocktail.ingredients?.map((item) => `${item.amount ? `${item.amount} ` : ""}${item.name || "Ingredient"}`) || [];
 
-  const instructions = cocktail.instructions?.map((instruction, index) => ({
-    "@type": "HowToStep",
-    "text": instruction.children?.map(child => child.text).join("") || "",
-    "position": index + 1
-  })) || [];
+  const instructions =
+    cocktail.instructions?.map((step, index) => ({
+      "@type": "HowToStep",
+      "text": step,
+      "position": index + 1,
+    })) || [];
 
-  const keywords = [
-    ...(cocktail.tags || []),
-    ...(cocktail.bestFor || [])
-  ].join(", ");
+  const extraKeywords = Array.isArray(cocktail.metadata.bestFor) ? cocktail.metadata.bestFor : [];
+
+  const keywords = [...(cocktail.tags || []), ...extraKeywords].join(", ");
 
   return {
     "@context": "https://schema.org/",
@@ -102,27 +75,26 @@ function generateRecipeSchema(cocktail: SanityCocktail, imageUrl: string | null)
     "recipeCuisine": "Cocktail",
     "author": {
       "@type": "Organization",
-      "name": "MixWise"
+      "name": "MixWise",
     },
     "publisher": {
       "@type": "Organization",
-      "name": "MixWise"
-    }
+      "name": "MixWise",
+    },
   };
 }
 
 export default async function CocktailDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const cocktail: SanityCocktail | null = await sanityClient.fetch(COCKTAIL_QUERY, { slug });
+  const cocktail = await getCocktailBySlug(slug);
 
   if (!cocktail) {
     notFound();
   }
 
-  // Use uploaded Sanity image, or fall back to external URL
-  const imageUrl = getImageUrl(cocktail.image, { width: 1200, height: 1200 }) || cocktail.externalImageUrl || null;
-
+  const imageUrl = cocktail.imageUrl;
   const recipeSchema = generateRecipeSchema(cocktail, imageUrl);
+  const funFactSources = Array.isArray(cocktail.metadata.funFactSources) ? cocktail.metadata.funFactSources : [];
 
   return (
     <>
@@ -137,7 +109,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
         items={[
           { name: "Home", url: SITE_CONFIG.url },
           { name: "Cocktails", url: `${SITE_CONFIG.url}/cocktails` },
-          { name: cocktail.name, url: `${SITE_CONFIG.url}/cocktails/${cocktail.slug.current}` },
+          { name: cocktail.name, url: `${SITE_CONFIG.url}/cocktails/${cocktail.slug}` },
         ]}
       />
 
@@ -161,7 +133,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
               {imageUrl ? (
                 <Image
                   src={imageUrl}
-                  alt={cocktail.imageAltOverride || cocktail.image?.alt || `${cocktail.name} cocktail`}
+                  alt={cocktail.imageAlt || `${cocktail.name} cocktail`}
                   fill
                   priority
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -256,13 +228,13 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 sticky top-24">
               <h2 className="font-serif text-2xl font-bold text-gray-900 mb-6">Ingredients</h2>
               <ul className="space-y-4">
-                {cocktail.ingredients?.map((item) => (
-                  <li key={item._key} className="flex items-start space-x-3">
+                {cocktail.ingredients?.map((item, index) => (
+                  <li key={item.id || `${item.name}-${index}`} className="flex items-start space-x-3">
                     <div className="flex-shrink-0 w-2 h-2 rounded-full bg-gray-300 mt-2"></div>
                     <div className="flex-1">
                       <div className="flex items-baseline justify-between">
                         <span className="font-medium text-gray-900">
-                          {item.ingredient?.name || "Ingredient"}
+                          {item.name || "Ingredient"}
                         </span>
                         <span className="text-gray-600 font-mono text-sm whitespace-nowrap ml-2">
                           {item.amount || "To taste"}
@@ -328,11 +300,11 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             )}
 
             {/* Best For */}
-            {cocktail.bestFor && cocktail.bestFor.length > 0 && (
+            {Array.isArray(cocktail.metadata.bestFor) && cocktail.metadata.bestFor.length > 0 && (
               <div className="bg-white p-6 rounded-2xl shadow-soft border border-gray-100">
                 <h3 className="font-serif font-bold text-lg text-gray-900 mb-4">Best For</h3>
                 <div className="flex flex-wrap gap-2">
-                  {cocktail.bestFor.map((tag, i) => (
+                  {cocktail.metadata.bestFor.map((tag: string, i: number) => (
                     <span
                       key={i}
                       className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full"
@@ -353,22 +325,22 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                     <h3 className="text-xs font-bold uppercase tracking-widest text-amber-800">Did you know?</h3>
                   </div>
                   <p className="font-serif italic text-lg md:text-xl text-amber-900 leading-relaxed mb-4">
-                    "{cocktail.funFact}"
+                    &ldquo;{cocktail.funFact}&rdquo;
                   </p>
-                  {cocktail.funFactSources && cocktail.funFactSources.length > 0 && (
+                  {funFactSources.length > 0 && (
                     <div className="flex flex-wrap gap-x-2 text-xs text-amber-700/70">
                       <span className="font-bold">Sources:</span>
-                      {cocktail.funFactSources.map((source, i) => (
-                        <span key={i}>
+                      {funFactSources.map((source: { label?: string; url?: string }, i: number) => (
+                        <span key={`${source.url || source.label || i}`}>
                           <a
-                            href={source.url}
+                            href={source.url || "#"}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="underline hover:text-amber-900 transition-colors"
                           >
-                            {source.label}
+                            {source.label || source.url}
                           </a>
-                          {i < cocktail.funFactSources!.length - 1 && ", "}
+                          {i < funFactSources.length - 1 && ", "}
                         </span>
                       ))}
                     </div>
@@ -387,12 +359,12 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             </h2>
             <ol className="space-y-4">
               {cocktail.instructions.map((instruction, index) => (
-                <li key={instruction._key || index} className="flex gap-4">
+                <li key={`${index}-${instruction.slice(0, 12)}`} className="flex gap-4">
                   <span className="flex-shrink-0 w-8 h-8 rounded-full bg-terracotta text-cream flex items-center justify-center text-sm font-bold">
                     {index + 1}
                   </span>
                   <p className="text-lg text-gray-700 leading-relaxed pt-1">
-                    {instruction.children?.map(child => child.text).join("") || ""}
+                    {instruction}
                   </p>
                 </li>
               ))}
@@ -405,12 +377,3 @@ export default async function CocktailDetailPage({ params }: PageProps) {
 }
 
 // Generate static paths for known cocktails
-export async function generateStaticParams() {
-  const cocktails = await sanityClient.fetch<Array<{ slug: { current: string } }>>(
-    `*[_type == "cocktail" && defined(slug.current)]{slug}`
-  );
-
-  return cocktails.map((cocktail) => ({
-    slug: cocktail.slug.current,
-  }));
-}

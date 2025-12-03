@@ -5,6 +5,7 @@ import { SITE_CONFIG } from "@/lib/seo";
 import { IngredientsDirectory } from "@/components/ingredients/IngredientsDirectory";
 import type { SanityImage } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
+import { getAllCocktails } from "@/lib/cocktails";
 
 export const revalidate = 60;
 
@@ -26,7 +27,7 @@ interface Ingredient {
   image?: SanityImage;
   externalImageUrl?: string;
   description?: string;
-  cocktailCount: number;
+  cocktailCount?: number;
 }
 
 const INGREDIENTS_QUERY = `*[_type == "ingredient"] | order(name asc) {
@@ -36,12 +37,28 @@ const INGREDIENTS_QUERY = `*[_type == "ingredient"] | order(name asc) {
   type,
   image,
   externalImageUrl,
-  description,
-  "cocktailCount": count(*[_type == "cocktail" && references(^._id)])
+  description
 }`;
 
 export default async function IngredientsPage() {
-  const ingredients = await sanityClient.fetch<Ingredient[]>(INGREDIENTS_QUERY);
+  const [ingredients, cocktails] = await Promise.all([
+    sanityClient.fetch<Ingredient[]>(INGREDIENTS_QUERY),
+    getAllCocktails(),
+  ]);
+
+  const ingredientCounts = new Map<string, number>();
+  cocktails.forEach((cocktail) => {
+    cocktail.ingredients.forEach((ingredient) => {
+      const key = getIngredientKey(ingredient);
+      if (!key) return;
+      ingredientCounts.set(key, (ingredientCounts.get(key) || 0) + 1);
+    });
+  });
+
+  const enrichedIngredients = ingredients.map((ingredient) => ({
+    ...ingredient,
+    cocktailCount: ingredientCounts.get(ingredient._id) || 0,
+  }));
 
   return (
     <>
@@ -63,10 +80,19 @@ export default async function IngredientsPage() {
             </p>
           </div>
 
-          <IngredientsDirectory ingredients={ingredients} />
+          <IngredientsDirectory ingredients={enrichedIngredients} />
         </MainContainer>
       </div>
     </>
   );
+}
+
+function getIngredientKey(ingredient: { id?: string | null; name?: string | null }): string | null {
+  if (ingredient.id) return ingredient.id;
+  if (!ingredient.name) return null;
+  return ingredient.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
