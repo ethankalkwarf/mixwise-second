@@ -3,13 +3,12 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
-import type { SanityCocktail } from "@/lib/sanityTypes";
-import { getImageUrl } from "@/lib/sanityImage";
+import type { Cocktail } from "@/lib/cocktailTypes";
 
 type SortOption = "name-asc" | "name-desc" | "popular";
 
 type Props = {
-  cocktails: SanityCocktail[];
+  cocktails: Cocktail[];
 };
 
 // Key for persisting filter state
@@ -63,7 +62,7 @@ const BASE_SPIRITS = [
 ];
 
 // Keywords that map to special filters
-const KEYWORD_MAPPINGS: Record<string, (c: SanityCocktail) => boolean> = {
+const KEYWORD_MAPPINGS: Record<string, (c: Cocktail) => boolean> = {
   popular: (c) => c.isPopular === true,
   featured: (c) => c.isPopular === true,
   favorite: (c) => c.isFavorite === true,
@@ -164,7 +163,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
     cocktails.forEach((c) => {
       if (c.glass) glasses.add(c.glass);
-      c.drinkCategories?.forEach((cat) => categories.add(cat));
+      c.categories?.forEach((cat) => categories.add(cat));
     });
 
     return {
@@ -196,15 +195,15 @@ export function CocktailsDirectory({ cocktails }: Props) {
         // Match description
         if (c.description?.toLowerCase().includes(q)) return true;
         // Match ingredient names
-        if (c.ingredients?.some((ing) => ing.ingredient?.name?.toLowerCase().includes(q))) return true;
+        if (c.ingredients?.some((ing) => ing.name?.toLowerCase().includes(q))) return true;
         // Match primary spirit
-        if (c.primarySpirit?.toLowerCase().includes(q)) return true;
+        if (c.baseSpirit?.toLowerCase().includes(q)) return true;
         // Match tags
         if (c.tags?.some((tag) => tag.toLowerCase().includes(q))) return true;
         // Match drink categories
-        if (c.drinkCategories?.some((cat) => cat.toLowerCase().includes(q))) return true;
+        if (c.categories?.some((cat) => cat.toLowerCase().includes(q))) return true;
         // Match category labels
-        if (c.drinkCategories?.some((cat) => {
+        if (c.categories?.some((cat) => {
           const config = CATEGORY_CONFIG[cat];
           return config?.label.toLowerCase().includes(q);
         })) return true;
@@ -215,7 +214,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
     // Spirit filter
     if (filterSpirit) {
-      results = results.filter((c) => c.primarySpirit === filterSpirit);
+      results = results.filter((c) => c.baseSpirit === filterSpirit);
     }
 
     // Glass filter
@@ -225,7 +224,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
     // Category filter
     if (filterCategory) {
-      results = results.filter((c) => c.drinkCategories?.includes(filterCategory));
+      results = results.filter((c) => c.categories?.includes(filterCategory));
     }
 
     // Sort
@@ -551,16 +550,16 @@ export function CocktailsDirectory({ cocktails }: Props) {
   );
 }
 
-function CocktailCard({ 
-  cocktail, 
-  onClick 
-}: { 
-  cocktail: SanityCocktail;
+function CocktailCard({
+  cocktail,
+  onClick
+}: {
+  cocktail: Cocktail;
   onClick: (slug: string) => void;
 }) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 600, height: 400 }) || cocktail.externalImageUrl;
-  const ingredientCount = cocktail.ingredients?.length || 0;
-  const slug = cocktail.slug?.current || cocktail._id;
+const imageUrl = cocktail.imageUrl;
+const ingredientCount = cocktail.ingredients?.length || 0;
+const slug = cocktail.slug;
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -616,9 +615,9 @@ function CocktailCard({
       <div className="p-5 flex-1 flex flex-col relative z-10 -mt-12">
         <div className="backdrop-blur-md rounded-2xl p-4 border border-mist/50 shadow-soft flex-1 flex flex-col bg-white/90">
           <div className="mb-2">
-            {cocktail.primarySpirit && (
+            {cocktail.baseSpirit && (
               <p className="font-mono text-[10px] text-terracotta font-bold tracking-widest uppercase mb-1">
-                {cocktail.primarySpirit}
+                {cocktail.baseSpirit}
               </p>
             )}
             <h3 className="font-display font-bold text-xl leading-tight text-forest">
@@ -627,9 +626,9 @@ function CocktailCard({
           </div>
 
           {/* Category Tags */}
-          {cocktail.drinkCategories && cocktail.drinkCategories.length > 0 && (
+          {cocktail.categories && cocktail.categories.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
-              {cocktail.drinkCategories.slice(0, 3).map((cat) => {
+              {cocktail.categories.slice(0, 3).map((cat) => {
                 const config = CATEGORY_CONFIG[cat];
                 if (!config) return null;
                 return (

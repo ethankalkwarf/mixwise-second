@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { getImageUrl } from "@/lib/sanityImage";
-import type { SanityCocktail } from "@/lib/sanityTypes";
+import type { Cocktail } from "@/lib/cocktailTypes";
 
 interface FeaturedCocktailsProps {
-  cocktails: SanityCocktail[];
+  cocktails: Cocktail[];
 }
 
 export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
@@ -25,7 +24,7 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {cocktails.map((cocktail, index) => (
             <FeaturedCocktailCard
-              key={cocktail._id}
+              key={cocktail.id}
               cocktail={cocktail}
               isOffset={index % 2 === 1}
             />
@@ -46,16 +45,16 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
 }
 
 interface FeaturedCocktailCardProps {
-  cocktail: SanityCocktail & { ingredientCount?: number };
+  cocktail: Cocktail;
   isOffset: boolean;
 }
 
 function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 400, height: 300 }) || cocktail.externalImageUrl;
+  const imageUrl = cocktail.imageUrl;
 
   return (
     <Link
-      href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
+      href={`/cocktails/${cocktail.slug}`}
       className={`group relative flex flex-col bg-white rounded-2xl border border-mist overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta ${
         isOffset ? 'lg:mt-8' : ''
       }`}
@@ -83,9 +82,9 @@ function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps)
           {cocktail.name}
         </h3>
 
-        {cocktail.primarySpirit && (
+        {cocktail.baseSpirit && (
           <p className="text-xs font-medium uppercase tracking-wide text-sage mt-1">
-            {cocktail.primarySpirit}
+            {cocktail.baseSpirit}
           </p>
         )}
       </div>

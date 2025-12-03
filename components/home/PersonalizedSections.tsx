@@ -7,25 +7,12 @@ import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { SectionHeader } from "@/components/common/SectionHeader";
-import { getImageUrl } from "@/lib/sanityImage";
 import { PlusCircleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
-import type { SanityCocktail, SanityImage } from "@/lib/sanityTypes";
-
-interface MixCocktail {
-  _id: string;
-  name: string;
-  slug: { current: string };
-  image?: SanityImage;
-  externalImageUrl?: string;
-  primarySpirit?: string;
-  ingredients?: Array<{
-    ingredient?: { _id: string; name: string } | null;
-  }>;
-}
+import type { Cocktail } from "@/lib/cocktailTypes";
 
 interface PersonalizedSectionsProps {
-  allCocktails: MixCocktail[];
-  featuredCocktails: SanityCocktail[];
+  allCocktails: Cocktail[];
+  featuredCocktails: Cocktail[];
 }
 
 export function PersonalizedSections({ allCocktails, featuredCocktails }: PersonalizedSectionsProps) {
@@ -48,21 +35,24 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
     const oneAway: Array<{ cocktail: MixCocktail; missingIngredient: { id: string; name: string } }> = [];
 
     allCocktails.forEach((cocktail) => {
-      const requiredIngredients = cocktail.ingredients?.filter(i => i.ingredient) || [];
+      const requiredIngredients = (cocktail.ingredients || []).filter((ingredient) => Boolean(getIngredientKey(ingredient)));
       if (requiredIngredients.length === 0) return;
 
-      const missing = requiredIngredients.filter(i => 
-        i.ingredient && !ingredientSet.has(i.ingredient._id)
-      );
+      const missing = requiredIngredients.filter((ingredient) => {
+        const key = getIngredientKey(ingredient);
+        return key ? !ingredientSet.has(key) : false;
+      });
 
       if (missing.length === 0) {
         readyToMake.push(cocktail);
-      } else if (missing.length === 1 && missing[0].ingredient) {
+      } else if (missing.length === 1) {
+        const key = getIngredientKey(missing[0]);
+        if (!key) return;
         oneAway.push({
           cocktail,
           missingIngredient: {
-            id: missing[0].ingredient._id,
-            name: missing[0].ingredient.name,
+            id: key,
+            name: missing[0].name || "Ingredient",
           },
         });
       }
@@ -114,7 +104,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
             {readyToMake.map((cocktail) => (
-              <SmallCocktailCard key={cocktail._id} cocktail={cocktail} badge="Ready!" badgeColor="bg-olive" />
+              <SmallCocktailCard key={cocktail.id} cocktail={cocktail} badge="Ready!" badgeColor="bg-olive" />
             ))}
           </div>
         </section>
@@ -128,7 +118,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
           <div className="grid gap-5 sm:grid-cols-2" role="list">
             {oneAway.map(({ cocktail, missingIngredient }) => (
               <OneAwayCard
-                key={cocktail._id}
+                key={cocktail.id}
                 cocktail={cocktail}
                 missingIngredient={missingIngredient}
                 onAddIngredient={() => addIngredient(missingIngredient.id, missingIngredient.name)}
@@ -155,10 +145,11 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
               <SmallCocktailCard
                 key={fav.cocktail_id}
                 cocktail={{
-                  _id: fav.cocktail_id,
+                  id: fav.cocktail_id,
                   name: fav.cocktail_name || "Cocktail",
-                  slug: { current: fav.cocktail_slug || "" },
-                  externalImageUrl: fav.cocktail_image_url || undefined,
+                  slug: fav.cocktail_slug || fav.cocktail_id,
+                  imageUrl: fav.cocktail_image_url || null,
+                  baseSpirit: null,
                 }}
                 badge="❤️"
                 badgeColor="bg-terracotta"
@@ -177,10 +168,11 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
               <SmallCocktailCard
                 key={item.cocktail_id}
                 cocktail={{
-                  _id: item.cocktail_id,
+                  id: item.cocktail_id,
                   name: item.cocktail_name || "Cocktail",
-                  slug: { current: item.cocktail_slug || "" },
-                  externalImageUrl: item.cocktail_image_url || undefined,
+                  slug: item.cocktail_slug || item.cocktail_id,
+                  imageUrl: item.cocktail_image_url || null,
+                  baseSpirit: null,
                 }}
                 compact
               />
@@ -192,26 +184,21 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
   );
 }
 
+type CardCocktail = Pick<Cocktail, "id" | "name" | "slug" | "imageUrl" | "baseSpirit">;
+
 interface SmallCocktailCardProps {
-  cocktail: {
-    _id: string;
-    name: string;
-    slug: { current: string };
-    image?: SanityImage;
-    externalImageUrl?: string;
-    primarySpirit?: string;
-  };
+  cocktail: CardCocktail;
   badge?: string;
   badgeColor?: string;
   compact?: boolean;
 }
 
 function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }: SmallCocktailCardProps) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 }) || cocktail.externalImageUrl;
+  const imageUrl = cocktail.imageUrl;
 
   return (
     <Link
-      href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
+      href={`/cocktails/${cocktail.slug}`}
       className={`group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover ${compact ? "flex-shrink-0 w-48" : ""}`}
       role="listitem"
     >
@@ -248,18 +235,18 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }
 }
 
 interface OneAwayCardProps {
-  cocktail: MixCocktail;
+  cocktail: Cocktail;
   missingIngredient: { id: string; name: string };
   onAddIngredient: () => void;
 }
 
 function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCardProps) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 }) || cocktail.externalImageUrl;
+  const imageUrl = cocktail.imageUrl;
 
   return (
     <div className="flex gap-4 p-4 rounded-2xl border border-mist bg-white hover:shadow-soft transition-all">
       <Link
-        href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
+        href={`/cocktails/${cocktail.slug}`}
         className="flex-shrink-0 w-24 h-20 rounded-xl overflow-hidden bg-mist"
       >
         {imageUrl ? (
@@ -277,7 +264,7 @@ function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCa
         )}
       </Link>
       <div className="flex-1 min-w-0">
-        <Link href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}>
+        <Link href={`/cocktails/${cocktail.slug}`}>
           <h4 className="font-display font-bold text-base text-forest hover:text-terracotta transition-colors truncate">
             {cocktail.name}
           </h4>
@@ -298,6 +285,15 @@ function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCa
       </div>
     </div>
   );
+}
+
+function getIngredientKey(ingredient: { id?: string | null; name?: string | null }): string | null {
+  if (ingredient.id) return ingredient.id;
+  if (!ingredient.name) return null;
+  return ingredient.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 function PersonalizedSectionSkeleton() {

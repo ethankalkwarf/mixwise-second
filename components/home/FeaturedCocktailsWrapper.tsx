@@ -2,10 +2,10 @@
 
 import { useUser } from "@/components/auth/UserProvider";
 import { FeaturedCocktails } from "./FeaturedCocktails";
-import type { SanityCocktail } from "@/lib/sanityTypes";
+import type { Cocktail } from "@/lib/cocktailTypes";
 
 interface FeaturedCocktailsWrapperProps {
-  cocktails: SanityCocktail[];
+  cocktails: Cocktail[];
 }
 
 export function FeaturedCocktailsWrapper({ cocktails }: FeaturedCocktailsWrapperProps) {

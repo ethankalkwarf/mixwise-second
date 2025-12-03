@@ -2,48 +2,18 @@ import { sanityClient } from "@/lib/sanityClient";
 import { WebPageSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 import { Hero } from "@/components/home/Hero";
-import { FeaturedCocktails } from "@/components/home/FeaturedCocktails";
 import { PlatformSection } from "@/components/home/PlatformSection";
 import { PersonalizedSections } from "@/components/home/PersonalizedSections";
 import { FeaturedCocktailsWrapper } from "@/components/home/FeaturedCocktailsWrapper";
-import type { SanityCocktail } from "@/lib/sanityTypes";
+import { getAllCocktails, getFeaturedCocktails } from "@/lib/cocktails";
 
 export const revalidate = 60;
-
-// Fetch popular cocktails from Sanity (will be randomized client-side)
-const FEATURED_COCKTAILS_QUERY = `*[_type == "cocktail" && isPopular == true] [0...50] {
-  _id,
-  name,
-  slug,
-  description,
-  image,
-  externalImageUrl,
-  primarySpirit,
-  isPopular,
-  "ingredientCount": count(ingredients)
-}`;
-
-// Fetch all cocktails for personalized sections (with ingredient refs)
-const ALL_COCKTAILS_QUERY = `*[_type == "cocktail"] {
-  _id,
-  name,
-  slug,
-  image,
-  externalImageUrl,
-  primarySpirit,
-  "ingredients": ingredients[] {
-    "ingredient": ingredient-> {
-      _id,
-      name
-    }
-  }
-}`;
 
 export default async function HomePage() {
   const [settings, cocktails, allCocktails] = await Promise.all([
     sanityClient.fetch(`*[_type == "siteSettings"][0]{heroTitle, heroSubtitle}`),
-    sanityClient.fetch<SanityCocktail[]>(FEATURED_COCKTAILS_QUERY),
-    sanityClient.fetch(ALL_COCKTAILS_QUERY),
+    getFeaturedCocktails(50),
+    getAllCocktails(),
   ]);
 
   // Randomize featured cocktails on each page load

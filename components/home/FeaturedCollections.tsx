@@ -3,6 +3,7 @@ import { getImageUrl } from "@/lib/sanityImage";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import Link from "next/link";
 import type { SanityImage } from "@/lib/sanityTypes";
+import { getAllCocktails } from "@/lib/cocktails";
 
 interface Collection {
   _id: string;
@@ -10,7 +11,8 @@ interface Collection {
   slug: { current: string };
   description?: string;
   image?: SanityImage;
-  cocktailCount: number;
+  cocktails: Array<{ _ref: string }>;
+  cocktailCount?: number;
 }
 
 const FEATURED_COLLECTIONS_QUERY = `*[_type == "collection" && featured == true] | order(order asc) [0...5] {
@@ -19,13 +21,36 @@ const FEATURED_COLLECTIONS_QUERY = `*[_type == "collection" && featured == true]
   slug,
   description,
   image,
-  "cocktailCount": count(cocktails)
+  "cocktails": cocktails[]{
+    _ref
+  }
 }`;
 
 export async function FeaturedCollections() {
-  const collections = await sanityClient.fetch<Collection[]>(FEATURED_COLLECTIONS_QUERY);
+  const [collections, cocktails] = await Promise.all([
+    sanityClient.fetch<Collection[]>(FEATURED_COLLECTIONS_QUERY),
+    getAllCocktails(),
+  ]);
 
-  if (collections.length === 0) {
+  const cocktailByLegacyId = new Map(
+    cocktails.filter((cocktail) => cocktail.legacyId).map((cocktail) => [cocktail.legacyId as string, cocktail])
+  );
+
+  const enrichedCollections = collections.map((collection) => {
+    const count = (collection.cocktails || []).reduce((total, ref) => {
+      if (ref._ref && cocktailByLegacyId.has(ref._ref)) {
+        return total + 1;
+      }
+      return total;
+    }, 0);
+
+    return {
+      ...collection,
+      cocktailCount: count,
+    };
+  });
+
+  if (enrichedCollections.length === 0) {
     return null;
   }
 
@@ -43,7 +68,7 @@ export async function FeaturedCollections() {
 
       {/* Horizontal scroll container */}
       <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin">
-        {collections.map((collection) => (
+        {enrichedCollections.map((collection) => (
           <CollectionCard key={collection._id} collection={collection} />
         ))}
       </div>
@@ -78,7 +103,7 @@ function CollectionCard({ collection }: { collection: Collection }) {
         )}
         <div className="absolute bottom-2 right-2 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-full">
           <span className="text-xs font-medium text-forest">
-            {collection.cocktailCount} cocktail{collection.cocktailCount !== 1 ? "s" : ""}
+            {collection.cocktailCount ?? 0} cocktail{(collection.cocktailCount ?? 0) !== 1 ? "s" : ""}
           </span>
         </div>
       </div>

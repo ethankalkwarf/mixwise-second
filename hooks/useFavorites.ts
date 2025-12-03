@@ -10,16 +10,16 @@ import type { Favorite } from "@/lib/supabase/database.types";
 
 interface UseFavoritesResult {
   favorites: Favorite[];
-  favoriteIds: Set<string>;
+  favoriteKeys: Set<string>;
   isLoading: boolean;
-  isFavorite: (cocktailId: string) => boolean;
+  isFavorite: (cocktailId: string, slug?: string) => boolean;
   toggleFavorite: (cocktail: {
     id: string;
     name: string;
     slug?: string;
     imageUrl?: string;
   }) => Promise<void>;
-  removeFavorite: (cocktailId: string) => Promise<void>;
+  removeFavorite: (cocktailId: string, slug?: string) => Promise<void>;
 }
 
 /**
@@ -39,8 +39,11 @@ export function useFavorites(): UseFavoritesResult {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Build set of favorite IDs for quick lookup
-  const favoriteIds = new Set(favorites.map(f => f.cocktail_id));
+  const favoriteKeys = new Set<string>();
+  favorites.forEach((favorite) => {
+    if (favorite.cocktail_id) favoriteKeys.add(favorite.cocktail_id);
+    if (favorite.cocktail_slug) favoriteKeys.add(`slug:${favorite.cocktail_slug}`);
+  });
 
   // Load favorites from server
   const loadFavorites = useCallback(async () => {
@@ -80,9 +83,15 @@ export function useFavorites(): UseFavoritesResult {
   }, [authLoading, isAuthenticated, user, loadFavorites]);
 
   // Check if a cocktail is favorited
-  const isFavorite = useCallback((cocktailId: string) => {
-    return favoriteIds.has(cocktailId);
-  }, [favoriteIds]);
+  const isFavorite = useCallback((cocktailId: string, slug?: string) => {
+    if (cocktailId && favoriteKeys.has(cocktailId)) {
+      return true;
+    }
+    if (slug && favoriteKeys.has(`slug:${slug}`)) {
+      return true;
+    }
+    return false;
+  }, [favoriteKeys]);
 
   // Toggle favorite status
   const toggleFavorite = useCallback(async (cocktail: {
@@ -101,17 +110,17 @@ export function useFavorites(): UseFavoritesResult {
       return;
     }
 
-    const isCurrentlyFavorite = favoriteIds.has(cocktail.id);
+    const isCurrentlyFavorite = isFavorite(cocktail.id, cocktail.slug);
 
     if (isCurrentlyFavorite) {
       // Remove from favorites
-      setFavorites(prev => prev.filter(f => f.cocktail_id !== cocktail.id));
+      setFavorites(prev => prev.filter(f => !doesFavoriteMatchCocktail(f, cocktail)));
       
       const { error } = await supabase
         .from("favorites")
         .delete()
         .eq("user_id", user.id)
-        .eq("cocktail_id", cocktail.id);
+        .or(buildCocktailMatchFilter(cocktail));
       
       if (error) {
         console.error("Error removing favorite:", error);
@@ -154,24 +163,24 @@ export function useFavorites(): UseFavoritesResult {
         await loadFavorites();
       } else if (data) {
         // Update with real data from server
-        setFavorites(prev => [data, ...prev.filter(f => f.cocktail_id !== cocktail.id)]);
+        setFavorites(prev => [data, ...prev.filter(f => !doesFavoriteMatchCocktail(f, cocktail))]);
         trackCocktailFavorited(user.id, cocktail.id, cocktail.name);
         toast.success("Added to favorites");
       }
     }
-  }, [isAuthenticated, user, favoriteIds, openAuthDialog, supabase, loadFavorites, toast]);
+  }, [isAuthenticated, user, isFavorite, openAuthDialog, supabase, loadFavorites, toast]);
 
   // Remove favorite
-  const removeFavorite = useCallback(async (cocktailId: string) => {
+  const removeFavorite = useCallback(async (cocktailId: string, slug?: string) => {
     if (!isAuthenticated || !user) return;
     
-    setFavorites(prev => prev.filter(f => f.cocktail_id !== cocktailId));
+    setFavorites(prev => prev.filter(f => f.cocktail_id !== cocktailId && f.cocktail_slug !== slug));
     
     const { error } = await supabase
       .from("favorites")
       .delete()
       .eq("user_id", user.id)
-      .eq("cocktail_id", cocktailId);
+      .or(buildCocktailMatchFilter({ id: cocktailId, slug }));
     
     if (error) {
       console.error("Error removing favorite:", error);
@@ -184,11 +193,25 @@ export function useFavorites(): UseFavoritesResult {
 
   return {
     favorites,
-    favoriteIds,
+    favoriteKeys,
     isLoading,
     isFavorite,
     toggleFavorite,
     removeFavorite,
   };
+}
+
+function doesFavoriteMatchCocktail(favorite: Favorite, cocktail: { id: string; slug?: string }) {
+  if (favorite.cocktail_id === cocktail.id) return true;
+  if (cocktail.slug && favorite.cocktail_slug === cocktail.slug) return true;
+  return false;
+}
+
+function buildCocktailMatchFilter(cocktail: { id: string; slug?: string }) {
+  const filters = [`cocktail_id.eq.${cocktail.id}`];
+  if (cocktail.slug) {
+    filters.push(`cocktail_slug.eq.${cocktail.slug}`);
+  }
+  return filters.join(",");
 }
 

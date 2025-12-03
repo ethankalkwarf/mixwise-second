@@ -123,11 +123,11 @@ export default function AboutPage() {
           {/* What's Ahead */}
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-4">
-              What's ahead
+              What&apos;s ahead
             </h2>
             <p className="text-sage mb-8 max-w-2xl mx-auto">
               We are always refining MixWise with new recipes, smarter recommendations, and features to support
-              serious home bartenders. You can start with today's features and grow with us as we evolve.
+              serious home bartenders. You can start with today&rsquo;s features and grow with us as we evolve.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

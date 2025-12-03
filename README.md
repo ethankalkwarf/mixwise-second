@@ -10,8 +10,8 @@ MixWise is a cocktail platform designed to help people make better drinks at hom
 
 - **Framework**: Next.js 14 (App Router)
 - **Styling**: Tailwind CSS
-- **CMS**: Sanity
-- **Auth & Database**: Supabase
+- **CMS**: Sanity (site/ingredient content only)
+- **Cocktail Data + Auth & Database**: Supabase
 - **Deployment**: Vercel
 
 ## Features
@@ -73,9 +73,20 @@ npm start
    - **Email**: Enable magic link authentication
 3. Set Site URL to `https://getmixwise.com`
 
-### Sanity Studio
+### Cocktail Data Workflow
 
-Access the CMS at `/studio` to manage cocktails, ingredients, and content.
+1. Place the Excel source file at `data/Cocktail DB_Full.xlsx`.
+2. Seed Supabase with fresh cocktail data:
+   ```bash
+   npm run seed:cocktails
+   ```
+3. (Optional) Verify a specific slug:
+   ```bash
+   npm run verify:cocktails old-fashioned
+   ```
+4. Use `npm run clear:sanity-cocktails` if you need to remove legacy cocktail docs from Sanity.
+
+> Sanity Studio (`/studio`) now manages **ingredients, articles, pages, and collections only**. The cocktail library itself lives entirely in Supabase.
 
 ## Project Structure
 

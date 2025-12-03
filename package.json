@@ -9,7 +9,10 @@
     "lint": "next lint",
     "migrate": "npx tsx scripts/migrate-to-sanity.ts",
     "export:cocktails": "npx tsx scripts/exportSanityCocktails.ts",
-    "import:cocktails": "npx tsx scripts/importEnrichedCocktails.ts"
+    "import:cocktails": "npx tsx scripts/importEnrichedCocktails.ts",
+    "clear:sanity-cocktails": "tsx scripts/clearSanityCocktails.ts",
+    "seed:cocktails": "tsx scripts/seedCocktailsFromExcel.ts",
+    "verify:cocktails": "tsx scripts/verifyCocktails.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
@@ -27,7 +30,8 @@
     "next": "14.2.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "sanity": "^4.19.0"
+    "sanity": "^4.19.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20.12.0",

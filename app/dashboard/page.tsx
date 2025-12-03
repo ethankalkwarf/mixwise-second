@@ -29,11 +29,12 @@ import {
 } from "@heroicons/react/24/outline";
 
 interface RecommendedCocktail {
-  _id: string;
+  id: string;
   name: string;
-  slug: { current: string };
-  externalImageUrl?: string;
-  primarySpirit?: string;
+  slug: string;
+  imageUrl?: string | null;
+  baseSpirit?: string | null;
+  ingredients: Array<{ id?: string | null; name?: string | null }>;
   matchScore?: number;
 }
 
@@ -85,34 +86,46 @@ export default function DashboardPage() {
       }
 
       try {
-        // Fetch cocktails from Sanity
-        const cocktails = await sanityClient.fetch<RecommendedCocktail[]>(`
-          *[_type == "cocktail"][0...50] {
-            _id,
-            name,
-            slug,
-            externalImageUrl,
-            primarySpirit,
-            "ingredientIds": ingredients[].ingredient->._id
-          }
-        `);
+        const { data, error } = await supabase
+          .from("cocktails")
+          .select("id, name, slug, image_url, base_spirit, ingredients")
+          .limit(100);
+
+        if (error) {
+          console.error("Error fetching cocktails for recommendations:", error);
+          setRecommendations([]);
+          setLoadingRecs(false);
+          return;
+        }
 
         // Score cocktails by how many ingredients user has
         const ingredientSet = new Set(ingredientIds);
-        const scoredCocktails = cocktails
+        const scoredCocktails = (data || [])
           .map((cocktail) => {
-            const cocktailIngredients = (cocktail as unknown as { ingredientIds: string[] }).ingredientIds || [];
+            const cocktailIngredients = Array.isArray(cocktail.ingredients)
+              ? (cocktail.ingredients as Array<{ id?: string; name?: string }>)
+                  .map(getIngredientKey)
+                  .filter(Boolean) as string[]
+              : [];
             const matchCount = cocktailIngredients.filter((id) => ingredientSet.has(id)).length;
             const totalIngredients = cocktailIngredients.length || 1;
             const matchScore = totalIngredients > 0 ? matchCount / totalIngredients : 0;
 
             // Boost score if matches user preferences
             let finalScore = matchScore;
-            if (preferences?.preferred_spirits?.includes(cocktail.primarySpirit?.toLowerCase() || "")) {
+            if (preferences?.preferred_spirits?.includes((cocktail.base_spirit || "").toLowerCase())) {
               finalScore += 0.2;
             }
 
-            return { ...cocktail, matchScore: finalScore };
+            return {
+              id: cocktail.id,
+              name: cocktail.name,
+              slug: cocktail.slug,
+              imageUrl: cocktail.image_url,
+              baseSpirit: cocktail.base_spirit,
+              ingredients: Array.isArray(cocktail.ingredients) ? (cocktail.ingredients as any[]) : [],
+              matchScore: finalScore,
+            };
           })
           .filter((c) => c.matchScore && c.matchScore > 0.3)
           .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
@@ -127,13 +140,12 @@ export default function DashboardPage() {
     }
 
     fetchRecommendations();
-  }, [isAuthenticated, ingredientIds, preferences]);
+  }, [isAuthenticated, ingredientIds, preferences, supabase]);
 
   // Fetch ingredients for display
   useEffect(() => {
     async function fetchIngredients() {
       try {
-        console.log("Fetching ingredients from Sanity...");
         const ingredients = await sanityClient.fetch<any[]>(`
           *[_type == "ingredient"] {
             _id,
@@ -210,7 +222,7 @@ export default function DashboardPage() {
     }
 
     return greeting;
-  }, [user?.email]);
+  }, [profile?.display_name, user?.email]);
 
   const handleRemoveFromInventory = useCallback(async (id: string) => {
     await removeIngredient(id);
@@ -322,12 +334,12 @@ export default function DashboardPage() {
                   <div className="grid sm:grid-cols-2 gap-4">
                     {recommendations.slice(0, 6).map((cocktail) => (
                       <Link
-                        key={cocktail._id}
-                        href={`/cocktails/${cocktail.slug?.current}`}
+                        key={cocktail.id}
+                        href={`/cocktails/${cocktail.slug}`}
                         className="flex items-center gap-4 p-3 bg-cream hover:bg-mist rounded-2xl transition-all group"
                       >
                         <Image
-                          src={cocktail.externalImageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
+                          src={cocktail.imageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
                           alt={cocktail.name}
                           width={56}
                           height={56}
@@ -341,7 +353,7 @@ export default function DashboardPage() {
                             {cocktail.name}
                           </p>
                           <p className="text-sm text-sage">
-                            100% match
+                            {Math.round((cocktail.matchScore || 0) * 100)}% match
                           </p>
                         </div>
                       </Link>
@@ -601,6 +613,15 @@ export default function DashboardPage() {
       </MainContainer>
     </div>
   );
+}
+
+function getIngredientKey(ingredient: { id?: string | null; name?: string | null }): string | null {
+  if (ingredient.id) return ingredient.id;
+  if (!ingredient.name) return null;
+  return ingredient.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 // Stat Card Component

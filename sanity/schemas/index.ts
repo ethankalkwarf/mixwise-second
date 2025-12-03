@@ -1,6 +1,5 @@
 import siteSettings from "./siteSettings";
 import page from "./page";
-import cocktail from "./cocktail";
 import ingredient from "./ingredient";
 import article from "./article";
 import category from "./category";
@@ -14,7 +13,7 @@ export default [
   page,
   
   // Core content types
-  cocktail,
+  // Cocktail schema removed – cocktails now live in Supabase
   ingredient,
   article,
   category,

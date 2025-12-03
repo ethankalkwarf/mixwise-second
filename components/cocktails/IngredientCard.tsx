@@ -1,7 +1,7 @@
-import type { SanityCocktailIngredient } from "@/lib/sanityTypes";
+import type { CocktailIngredient } from "@/lib/cocktailTypes";
 
 interface IngredientCardProps {
-  ingredients: SanityCocktailIngredient[];
+  ingredients: CocktailIngredient[];
 }
 
 export function IngredientCard({ ingredients }: IngredientCardProps) {
@@ -12,10 +12,10 @@ export function IngredientCard({ ingredients }: IngredientCardProps) {
       </h3>
 
       <ul className="space-y-4">
-        {ingredients.map((item) => (
-          <li key={item._key} className="flex items-center justify-between">
+        {ingredients.map((item, index) => (
+          <li key={item.id || index} className="flex items-center justify-between">
             <span className="font-medium text-forest">
-              {item.ingredient?.name || (item.notes ? `Ingredient (${item.notes})` : "Ingredient")}
+              {item.name || (item.notes ? `Ingredient (${item.notes})` : "Ingredient")}
             </span>
             <span className="text-sage font-mono text-sm whitespace-nowrap">
               {item.amount || "To taste"}

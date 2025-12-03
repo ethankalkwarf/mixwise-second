@@ -1,6 +1,8 @@
 import { MetadataRoute } from "next";
-import { sanityClient } from "@/lib/sanityClient";
 import { SITE_CONFIG } from "@/lib/seo";
+import { sanityClient } from "@/lib/sanityClient";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_CONFIG.url;
@@ -39,19 +41,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Fetch cocktail slugs from Sanity
+  // Fetch cocktail slugs from Supabase
   let cocktailPages: MetadataRoute.Sitemap = [];
   try {
-    const cocktails = await sanityClient.fetch<Array<{ slug: { current: string }; _updatedAt: string }>>(
-      `*[_type == "cocktail" && defined(slug.current)]{ slug, _updatedAt }`
-    );
-    
-    cocktailPages = cocktails.map((cocktail) => ({
-      url: `${baseUrl}/cocktails/${cocktail.slug.current}`,
-      lastModified: new Date(cocktail._updatedAt),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    }));
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseAnonKey) {
+      const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+      const { data, error } = await supabase
+        .from("cocktails")
+        .select("slug, updated_at, is_hidden")
+        .eq("is_hidden", false);
+
+      if (error) {
+        throw error;
+      }
+
+      cocktailPages = (data || []).map((row) => ({
+        url: `${baseUrl}/cocktails/${row.slug}`,
+        lastModified: new Date(row.updated_at),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }));
+    }
   } catch (error) {
     console.error("Failed to fetch cocktails for sitemap:", error);
   }
