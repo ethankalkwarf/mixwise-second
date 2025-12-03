@@ -11,7 +11,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
-import { sanityClient } from "@/lib/sanityClient";
+import { getCocktailsListClient } from "@/lib/cocktails";
 import Image from "next/image";
 import type { MixIngredient } from "@/lib/mixTypes";
 import type { BadgeDefinition } from "@/lib/badges";
@@ -85,23 +85,24 @@ export default function DashboardPage() {
       }
 
       try {
-        // Fetch cocktails from Sanity
-        const cocktails = await sanityClient.fetch<RecommendedCocktail[]>(`
-          *[_type == "cocktail"][0...50] {
-            _id,
-            name,
-            slug,
-            externalImageUrl,
-            primarySpirit,
-            "ingredientIds": ingredients[].ingredient->._id
-          }
-        `);
+        // Fetch cocktails from Supabase
+        const cocktails = await getCocktailsListClient({ limit: 50 });
+
+        // Convert to expected format
+        const formattedCocktails: RecommendedCocktail[] = cocktails.map(cocktail => ({
+          _id: cocktail.id,
+          name: cocktail.name,
+          slug: { current: cocktail.slug },
+          externalImageUrl: cocktail.image_url || undefined,
+          primarySpirit: cocktail.base_spirit || undefined,
+          ingredientIds: (cocktail.ingredients as any[] || []).map(ing => ing.ingredient?.id).filter(Boolean)
+        }));
 
         // Score cocktails by how many ingredients user has
         const ingredientSet = new Set(ingredientIds);
-        const scoredCocktails = cocktails
+        const scoredCocktails = formattedCocktails
           .map((cocktail) => {
-            const cocktailIngredients = (cocktail as unknown as { ingredientIds: string[] }).ingredientIds || [];
+            const cocktailIngredients = cocktail.ingredientIds || [];
             const matchCount = cocktailIngredients.filter((id) => ingredientSet.has(id)).length;
             const totalIngredients = cocktailIngredients.length || 1;
             const matchScore = totalIngredients > 0 ? matchCount / totalIngredients : 0;

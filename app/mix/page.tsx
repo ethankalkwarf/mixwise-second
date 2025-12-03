@@ -5,7 +5,7 @@ import { MixInventoryPanel } from "@/components/mix/MixInventoryPanel";
 import { MixResultsPanel } from "@/components/mix/MixResultsPanel";
 import { MixSelectedBar } from "@/components/mix/MixSelectedBar";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
-import { fetchMixData } from "@/lib/sanityMixData";
+import { getMixDataClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
@@ -34,15 +34,15 @@ export default function MixPage() {
     promptToSave,
   } = useBarIngredients();
 
-  // Load data from Sanity
+  // Load data from Supabase
   useEffect(() => {
     async function loadData() {
       try {
-        const { ingredients, cocktails } = await fetchMixData();
+        const { ingredients, cocktails } = await getMixDataClient();
         setAllIngredients(ingredients);
         setAllCocktails(cocktails);
       } catch (error) {
-        console.error("Failed to load data from Sanity:", error);
+        console.error("Failed to load data from Supabase:", error);
         setDataError(error instanceof Error ? error.message : "Unknown error");
       } finally {
         setDataLoading(false);

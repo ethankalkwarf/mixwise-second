@@ -1,4 +1,5 @@
 import { sanityClient } from "@/lib/sanityClient";
+import { getCocktailsList } from "@/lib/cocktails.server";
 import { WebPageSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 import { Hero } from "@/components/home/Hero";
@@ -10,44 +11,43 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 
 export const revalidate = 60;
 
-// Fetch popular cocktails from Sanity (will be randomized client-side)
-const FEATURED_COCKTAILS_QUERY = `*[_type == "cocktail" && isPopular == true] [0...50] {
-  _id,
-  name,
-  slug,
-  description,
-  image,
-  externalImageUrl,
-  primarySpirit,
-  isPopular,
-  "ingredientCount": count(ingredients)
-}`;
-
-// Fetch all cocktails for personalized sections (with ingredient refs)
-const ALL_COCKTAILS_QUERY = `*[_type == "cocktail"] {
-  _id,
-  name,
-  slug,
-  image,
-  externalImageUrl,
-  primarySpirit,
-  "ingredients": ingredients[] {
-    "ingredient": ingredient-> {
-      _id,
-      name
-    }
-  }
-}`;
+// Helper function to map Supabase cocktails to Sanity format for compatibility
+function mapSupabaseToSanityForHome(cocktails: any[]): SanityCocktail[] {
+  return cocktails.map(cocktail => ({
+    _id: cocktail.id,
+    _type: "cocktail" as const,
+    name: cocktail.name,
+    slug: { _type: "slug" as const, current: cocktail.slug },
+    description: cocktail.short_description,
+    externalImageUrl: cocktail.image_url,
+    primarySpirit: cocktail.base_spirit,
+    isPopular: cocktail.metadata_json?.isPopular || false,
+    ingredients: (cocktail.ingredients || []).map((ing: any, index: number) => ({
+      _key: `ing${index}`,
+      ingredient: ing.ingredient ? {
+        _id: ing.ingredient.id,
+        name: ing.ingredient.name,
+        type: ing.ingredient.type || 'other'
+      } : null,
+      amount: ing.amount,
+      isOptional: ing.isOptional,
+      notes: ing.notes,
+    })),
+  }));
+}
 
 export default async function HomePage() {
-  const [settings, cocktails, allCocktails] = await Promise.all([
+  const [settings, allCocktailsList] = await Promise.all([
     sanityClient.fetch(`*[_type == "siteSettings"][0]{heroTitle, heroSubtitle}`),
-    sanityClient.fetch<SanityCocktail[]>(FEATURED_COCKTAILS_QUERY),
-    sanityClient.fetch(ALL_COCKTAILS_QUERY),
+    getCocktailsList({ limit: 50 }), // Get cocktails from Supabase
   ]);
 
-  // Randomize featured cocktails on each page load
-  const featuredCocktails = [...cocktails].sort(() => Math.random() - 0.5).slice(0, 8);
+  // Convert to Sanity format for compatibility
+  const allCocktails = mapSupabaseToSanityForHome(allCocktailsList);
+
+  // Filter for popular cocktails and randomize
+  const popularCocktails = allCocktails.filter(c => c.isPopular);
+  const featuredCocktails = [...popularCocktails].sort(() => Math.random() - 0.5).slice(0, 8);
 
   const heroTitle = settings?.heroTitle || "Discover Your Next Favorite Cocktail";
   const heroSubtitle =

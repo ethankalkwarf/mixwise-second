@@ -291,6 +291,107 @@ export interface Database {
           created_at?: string;
         };
       };
+      cocktails: {
+        Row: {
+          id: string;
+          legacy_id: string | null;
+          slug: string;
+          name: string;
+          short_description: string | null;
+          long_description: string | null;
+          seo_description: string | null;
+          base_spirit: string | null;
+          category_primary: string | null;
+          glassware: string | null;
+          garnish: string | null;
+          technique: string | null;
+          difficulty: string | null;
+          categories_all: string[] | null;
+          tags: string[] | null;
+          flavor_strength: number | null;
+          flavor_sweetness: number | null;
+          flavor_tartness: number | null;
+          flavor_bitterness: number | null;
+          flavor_aroma: number | null;
+          flavor_texture: number | null;
+          notes: string | null;
+          fun_fact: string | null;
+          fun_fact_source: string | null;
+          metadata_json: Json;
+          ingredients: Json;
+          instructions: string | null;
+          image_url: string | null;
+          image_alt: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          legacy_id?: string | null;
+          slug: string;
+          name: string;
+          short_description?: string | null;
+          long_description?: string | null;
+          seo_description?: string | null;
+          base_spirit?: string | null;
+          category_primary?: string | null;
+          glassware?: string | null;
+          garnish?: string | null;
+          technique?: string | null;
+          difficulty?: string | null;
+          categories_all?: string[] | null;
+          tags?: string[] | null;
+          flavor_strength?: number | null;
+          flavor_sweetness?: number | null;
+          flavor_tartness?: number | null;
+          flavor_bitterness?: number | null;
+          flavor_aroma?: number | null;
+          flavor_texture?: number | null;
+          notes?: string | null;
+          fun_fact?: string | null;
+          fun_fact_source?: string | null;
+          metadata_json?: Json;
+          ingredients?: Json;
+          instructions?: string | null;
+          image_url?: string | null;
+          image_alt?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          legacy_id?: string | null;
+          slug?: string;
+          name?: string;
+          short_description?: string | null;
+          long_description?: string | null;
+          seo_description?: string | null;
+          base_spirit?: string | null;
+          category_primary?: string | null;
+          glassware?: string | null;
+          garnish?: string | null;
+          technique?: string | null;
+          difficulty?: string | null;
+          categories_all?: string[] | null;
+          tags?: string[] | null;
+          flavor_strength?: number | null;
+          flavor_sweetness?: number | null;
+          flavor_tartness?: number | null;
+          flavor_bitterness?: number | null;
+          flavor_aroma?: number | null;
+          flavor_texture?: number | null;
+          notes?: string | null;
+          fun_fact?: string | null;
+          fun_fact_source?: string | null;
+          metadata_json?: Json;
+          ingredients?: Json;
+          instructions?: string | null;
+          image_url?: string | null;
+          image_alt?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Functions: {
       upsert_recently_viewed: {
@@ -371,6 +472,10 @@ export type UserBadgeInsert = Database["public"]["Tables"]["user_badges"]["Inser
 
 export type EmailSignup = Database["public"]["Tables"]["email_signups"]["Row"];
 export type EmailSignupInsert = Database["public"]["Tables"]["email_signups"]["Insert"];
+
+export type CocktailRow = Database["public"]["Tables"]["cocktails"]["Row"];
+export type CocktailInsert = Database["public"]["Tables"]["cocktails"]["Insert"];
+export type CocktailUpdate = Database["public"]["Tables"]["cocktails"]["Update"];
 
 // User role type
 export type UserRole = "free" | "paid" | "admin";

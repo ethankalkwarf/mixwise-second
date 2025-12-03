@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { MainContainer } from "@/components/layout/MainContainer";
-import { sanityClient } from "@/lib/sanityClient";
+import { getCocktailsList } from "@/lib/cocktails";
 import {
   BeakerIcon,
   HeartIcon,
@@ -97,24 +97,22 @@ export default async function PublicBarPage({ params }: PageProps) {
   let cocktailMatches: CocktailMatch[] = [];
 
   if (ingredientIds.length > 0) {
-    const cocktails = await sanityClient.fetch<(CocktailMatch & { ingredientIds: string[] })[]>(`
-      *[_type == "cocktail"][0...100] {
-        _id,
-        name,
-        slug,
-        externalImageUrl,
-        primarySpirit,
-        "ingredientIds": ingredients[].ingredient->._id
-      }
-    `);
+    const cocktails = await getCocktailsList({ limit: 100 });
 
     const ingredientSet = new Set(ingredientIds);
     cocktailMatches = cocktails
       .filter((cocktail) => {
-        const required = cocktail.ingredientIds || [];
+        const required = (cocktail.ingredients as any[] || []).map(ing => ing.ingredient?.id).filter(Boolean);
         if (required.length === 0) return false;
         return required.every((id) => ingredientSet.has(id));
       })
+      .map(cocktail => ({
+        _id: cocktail.id,
+        name: cocktail.name,
+        slug: { current: cocktail.slug },
+        externalImageUrl: cocktail.image_url || undefined,
+        primarySpirit: cocktail.base_spirit || undefined,
+      }))
       .slice(0, 12);
   }
 
