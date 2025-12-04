@@ -298,43 +298,77 @@ export default async function CocktailDetailPage({ params }: PageProps) {
             )}
 
             {/* Meta chips row */}
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-              {[
-                cocktail.base_spirit && titleCase(cocktail.base_spirit),
-                cocktail.category_primary && titleCase(cocktail.category_primary),
-                cocktail.glassware && `Glass: ${titleCase(cocktail.glassware)}`,
-                cocktail.difficulty && `Difficulty: ${titleCase(cocktail.difficulty)}`,
-                ...normalizeTags(cocktail.tags)
-              ].filter(Boolean).map((chip, i) => (
-                <span key={i} className="rounded-full border px-2 py-0.5 bg-white/60">
-                  {chip}
-                </span>
-              ))}
-            </div>
+            {(() => {
+              const baseSpiritChip = cocktail.base_spirit
+                ? titleCase(cocktail.base_spirit)
+                : null;
+
+              const categoryChip = cocktail.category_primary
+                ? titleCase(cocktail.category_primary)
+                : null;
+
+              const glassChip = cocktail.glassware
+                ? `Glass: ${titleCase(cocktail.glassware)}`
+                : null;
+
+              const difficultyChip = cocktail.difficulty
+                ? `Difficulty: ${titleCase(cocktail.difficulty)}`
+                : null;
+
+              // style_tags might be missing on some cocktails; guard it
+              const styleTagsRaw = (cocktail as any).style_tags ?? null;
+              const styleTags = normalizeTags(styleTagsRaw);
+
+              const metaChips = [
+                baseSpiritChip,
+                categoryChip,
+                glassChip,
+                difficultyChip,
+                ...styleTags,
+              ].filter(Boolean) as string[];
+
+              return (
+                <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                  {metaChips.map((chip, i) => (
+                    <span
+                      key={i}
+                      className="rounded-full border px-2 py-0.5 bg-white/60"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Image */}
           <div className="w-full max-w-xl lg:max-w-md">
             <div className="relative overflow-hidden rounded-xl border bg-black/5">
               <div className="aspect-video relative">
-                <Image
-                  src={imageUrl}
-                  alt={cocktail.imageAltOverride || cocktail.image?.alt || `${cocktail.name} cocktail`}
-                  fill
-                  priority
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
+                {cocktail.image_url ? (
+                  <Image
+                    src={cocktail.image_url}
+                    alt={cocktail.image_alt ?? cocktail.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                    No image available
+                  </div>
+                )}
               </div>
 
-              {/* One ribbon only */}
+              {/* Ribbon badge */}
               {cocktail.metadata_json?.is_community_favorite && (
-                <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200 shadow">
+                <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200">
                   ★ Community Favorite
                 </div>
               )}
+
               {!cocktail.metadata_json?.is_community_favorite && cocktail.metadata_json?.is_mixwise_original && (
-                <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200 shadow">
+                <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200">
                   MixWise Original
                 </div>
               )}
