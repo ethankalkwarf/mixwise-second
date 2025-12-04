@@ -5,6 +5,91 @@ import { notFound } from "next/navigation";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
 import Image from "next/image";
+import { FlavorProfileCard } from "@/components/cocktails/FlavorProfileCard";
+
+// --- helpers for data normalization ---
+
+type IngredientLike =
+  | null
+  | undefined
+  | string
+  | { text?: string }
+  | Array<string | { text?: string }>;
+
+function normalizeIngredients(raw: IngredientLike): { text: string }[] {
+  if (!raw) return [];
+
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) =>
+        typeof item === "string"
+          ? { text: item }
+          : { text: String(item.text ?? "").trim() }
+      )
+      .filter((i) => i.text.length > 0);
+  }
+
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return normalizeIngredients(parsed);
+    } catch {
+      const parts = raw
+        .split("|")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      return parts.map((text) => ({ text }));
+    }
+  }
+
+  const text = String(raw.text ?? "").trim();
+  return text ? [{ text }] : [];
+}
+
+function normalizeInstructions(
+  raw: string | string[] | null | undefined
+): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.filter((s) => s.trim().length > 0);
+
+  const value = raw.trim();
+
+  const numbered = value
+    .split(/\s*\d+\)\s*/g)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (numbered.length > 1) return numbered;
+
+  return value
+    .split(/\.\s+/g)
+    .map((s) => s.trim().replace(/\.$/, ""))
+    .filter(Boolean);
+}
+
+function normalizeTags(
+  raw: string | string[] | null | undefined
+): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.filter((t) => t.trim().length > 0);
+
+  return raw
+    .split("|")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function titleCase(s: string): string {
+  return s
+    .split(/[\s-]+/)
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
+function buildTagLine(tags: string[]): string {
+  if (!tags.length) return "";
+  return tags.map(titleCase).join(" · ");
+}
 
 export const revalidate = 300; // Revalidate every 5 minutes for better performance
 export const dynamic = 'force-dynamic';
@@ -146,6 +231,12 @@ export default async function CocktailDetailPage({ params }: PageProps) {
 
   const sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
 
+  // Normalize data from Supabase
+  const ingredients = normalizeIngredients(cocktail.ingredients as any);
+  const instructionSteps = normalizeInstructions(cocktail.instructions as any);
+  const tags = normalizeTags(cocktail.tags as any);
+  const tagLine = buildTagLine(tags);
+
   // Use external image URL from Supabase
   const imageUrl = sanityCocktail.externalImageUrl || null;
 
@@ -210,18 +301,11 @@ export default async function CocktailDetailPage({ params }: PageProps) {
                 {sanityCocktail.name}
               </h1>
 
-              {/* Tags */}
-              {sanityCocktail.tags && sanityCocktail.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {sanityCocktail.tags.slice(0, 4).map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-mist text-sage text-xs font-semibold rounded-full uppercase tracking-wide"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+              {/* Tag Line */}
+              {tagLine && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {tagLine}
+                </p>
               )}
 
               {/* Description */}
@@ -282,77 +366,34 @@ export default async function CocktailDetailPage({ params }: PageProps) {
           <div className="lg:col-span-5 space-y-8">
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 sticky top-24">
               <h2 className="font-serif text-2xl font-bold text-gray-900 mb-6">Ingredients</h2>
-              <ul className="space-y-4">
-                {sanityCocktail.ingredients?.map((item) => (
-                  <li key={item._key} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-2 h-2 rounded-full bg-gray-300 mt-2"></div>
-                    <div className="flex-1">
-                      <div className="flex items-baseline justify-between">
-                        <span className="font-medium text-gray-900">
-                          {item.ingredient?.name || "Ingredient"}
-                        </span>
-                        <span className="text-gray-600 font-mono text-sm whitespace-nowrap ml-2">
-                          {item.amount || "To taste"}
-                        </span>
-                      </div>
-                      {item.notes && (
-                        <p className="text-sm text-gray-500 mt-1">{item.notes}</p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+
+              {ingredients.length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Ingredients coming soon.
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-1 text-sm">
+                  {ingredients.map((ing, idx) => (
+                    <li key={idx}>• {ing.text}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 
           {/* RIGHT COLUMN */}
           <div className="lg:col-span-7 space-y-10">
             {/* Flavor Profile */}
-            {sanityCocktail.flavorProfile && (
-              <div className="bg-white p-6 rounded-2xl shadow-soft border border-gray-100">
-                <h3 className="font-serif font-bold text-lg text-gray-900 mb-4">Flavor Profile</h3>
-                <div className="space-y-4">
-                  {[
-                    { key: 'strength', label: 'Strength', color: 'bg-red-500' },
-                    { key: 'sweetness', label: 'Sweetness', color: 'bg-yellow-500' },
-                    { key: 'tartness', label: 'Tartness', color: 'bg-orange-500' },
-                    { key: 'bitterness', label: 'Bitterness', color: 'bg-amber-600' },
-                  ].map((attr) => {
-                    const value = sanityCocktail.flavorProfile?.[attr.key];
-                    if (!value) return null;
-
-                    return (
-                      <div key={attr.key}>
-                        <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5">
-                          <span>{attr.label}</span>
-                          <span>{value}/5</span>
-                        </div>
-                        <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${attr.color} rounded-full`}
-                            style={{ width: `${(value / 5) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {sanityCocktail.flavorProfile.aroma && (
-                    <div className="pt-2 border-t border-gray-100">
-                      <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Aroma</span>
-                      <p className="text-sm text-gray-700 mt-1">{sanityCocktail.flavorProfile.aroma}</p>
-                    </div>
-                  )}
-
-                  {sanityCocktail.flavorProfile.texture && (
-                    <div className="pt-2 border-t border-gray-100">
-                      <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Texture</span>
-                      <p className="text-sm text-gray-700 mt-1">{sanityCocktail.flavorProfile.texture}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            <FlavorProfileCard
+              flavor={{
+                strength: cocktail.flavor_strength,
+                sweetness: cocktail.flavor_sweetness,
+                tartness: cocktail.flavor_tartness,
+                bitterness: cocktail.flavor_bitterness,
+                aroma: cocktail.flavor_aroma,
+                texture: cocktail.flavor_texture,
+              }}
+            />
 
             {/* Best For */}
             {sanityCocktail.bestFor && sanityCocktail.bestFor.length > 0 && (
@@ -407,25 +448,28 @@ export default async function CocktailDetailPage({ params }: PageProps) {
         </div>
 
         {/* Instructions Section */}
-        {sanityCocktail.instructions && sanityCocktail.instructions.length > 0 && (
-          <section className="mt-16">
-            <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
-              Instructions
-            </h2>
-            <ol className="space-y-4">
-              {sanityCocktail.instructions.map((instruction, index) => (
-                <li key={instruction._key || index} className="flex gap-4">
-                  <span className="flex-shrink-0 w-8 h-8 rounded-full bg-terracotta text-cream flex items-center justify-center text-sm font-bold">
-                    {index + 1}
+        <section className="mt-16">
+          <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
+            Instructions
+          </h2>
+
+          {instructionSteps.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Instructions coming soon.
+            </p>
+          ) : (
+            <ol className="mt-4 space-y-3">
+              {instructionSteps.map((step, idx) => (
+                <li key={idx} className="flex gap-3 items-start">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold">
+                    {idx + 1}
                   </span>
-                  <p className="text-lg text-gray-700 leading-relaxed pt-1">
-                    {instruction.children?.map(child => child.text).join("") || ""}
-                  </p>
+                  <span className="text-sm">{step}</span>
                 </li>
               ))}
             </ol>
-          </section>
-        )}
+          )}
+        </section>
       </main>
     </>
   );
