@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 import { getCocktailBySlug, getCocktailsList } from "@/lib/cocktails.server";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
