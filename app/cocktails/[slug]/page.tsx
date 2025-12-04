@@ -272,88 +272,70 @@ export default async function CocktailDetailPage({ params }: PageProps) {
         </div>
 
         {/* HERO SECTION */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 mb-16 items-start">
-          {/* Image Side */}
-          <div className="relative group">
-            <div className="aspect-[4/5] md:aspect-square w-full overflow-hidden rounded-2xl shadow-soft bg-gray-200 relative">
-              {imageUrl ? (
+        <section className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start mb-16">
+          {/* Text */}
+          <div className="flex-1">
+            {/* Status badges above title */}
+            {cocktail.metadata_json?.is_community_favorite && (
+              <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+                ★ Community Favorite
+              </div>
+            )}
+            {!cocktail.metadata_json?.is_community_favorite && cocktail.metadata_json?.is_mixwise_original && (
+              <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+                MixWise Original
+              </div>
+            )}
+
+            <h1 className="text-3xl font-semibold tracking-tight">
+              {sanityCocktail.name}
+            </h1>
+
+            {tagLine && (
+              <p className="mt-1 text-xs text-muted-foreground tracking-wide">
+                {tagLine}
+              </p>
+            )}
+
+            {/* Meta chips row */}
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+              {[
+                cocktail.base_spirit && titleCase(cocktail.base_spirit),
+                cocktail.category_primary && titleCase(cocktail.category_primary),
+                cocktail.glassware && `Glass: ${titleCase(cocktail.glassware)}`,
+                cocktail.difficulty && `Difficulty: ${titleCase(cocktail.difficulty)}`,
+                ...normalizeTags(cocktail.tags)
+              ].filter(Boolean).map((chip, i) => (
+                <span key={i} className="rounded-full border px-2 py-0.5 bg-white/60">
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Image */}
+          <div className="w-full max-w-xl lg:max-w-md">
+            <div className="relative overflow-hidden rounded-xl border bg-black/5">
+              <div className="aspect-video relative">
                 <Image
                   src={imageUrl}
                   alt={cocktail.imageAltOverride || cocktail.image?.alt || `${cocktail.name} cocktail`}
                   fill
                   priority
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-sage text-6xl">
-                  🍸
+              </div>
+
+              {/* One ribbon only */}
+              {cocktail.metadata_json?.is_community_favorite && (
+                <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200 shadow">
+                  ★ Community Favorite
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Content Side */}
-          <div className="flex flex-col justify-center h-full space-y-6">
-            {/* Title */}
-            <div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-forest leading-tight mb-4">
-                {sanityCocktail.name}
-              </h1>
-
-              {/* Tag Line */}
-              {tagLine && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {tagLine}
-                </p>
-              )}
-
-              {/* Description */}
-              {sanityCocktail.description && (
-                <p className="text-lg text-sage leading-relaxed mb-6">
-                  {sanityCocktail.description}
-                </p>
-              )}
-            </div>
-
-            {/* Meta Row */}
-            <div className="grid grid-cols-2 gap-4 py-6 border-t border-b border-gray-100">
-              {/* Method */}
-              {sanityCocktail.method && (
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                    <div className="w-5 h-5 rounded-full bg-blue-600"></div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">Method</p>
-                    <p className="font-medium text-gray-900 capitalize">{sanityCocktail.method}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Glassware */}
-              {sanityCocktail.glass && (
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
-                    <div className="w-5 h-5 rounded-full bg-orange-600"></div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">Glassware</p>
-                    <p className="font-medium text-gray-900 capitalize">{sanityCocktail.glass.replace(/-/g, " ")}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Strength Rating */}
-              {sanityCocktail.flavorProfile?.strength && (
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
-                    <div className="w-5 h-5 rounded-full bg-green-600"></div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">Strength</p>
-                    <p className="font-medium text-gray-900">{sanityCocktail.flavorProfile.strength}/5</p>
-                  </div>
+              {!cocktail.metadata_json?.is_community_favorite && cocktail.metadata_json?.is_mixwise_original && (
+                <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200 shadow">
+                  MixWise Original
                 </div>
               )}
             </div>
