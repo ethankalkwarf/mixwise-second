@@ -4,7 +4,6 @@ import { useState } from "react";
 import { QuantitySelector } from "@/components/cocktails/QuantitySelector";
 import { ShoppingListButton } from "@/components/cocktails/ShoppingListButton";
 import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
-import { FlavorRadarChart } from "@/components/cocktails/FlavorRadarChart";
 import Image from "next/image";
 import { RecipeActions } from "@/components/cocktails/RecipeActions";
 import { Button } from "@/components/common/Button";
@@ -98,9 +97,11 @@ export function RecipeContent({
           )}
 
           {/* Drink title */}
-          <h1 className="text-4xl font-semibold tracking-tight mb-4">
+          <h1 className="text-4xl font-semibold tracking-tight mb-6">
             {sanityCocktail.name}
           </h1>
+
+          <hr className="border-mist mb-6" />
 
           {/* Short description */}
           {cocktail.short_description && (
@@ -109,8 +110,10 @@ export function RecipeContent({
             </p>
           )}
 
+          <hr className="border-mist mb-6" />
+
           {/* Drink properties (difficulty, glassware, etc.) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {/* Base Spirit */}
             {cocktail.base_spirit && (
               <div>
@@ -180,28 +183,32 @@ export function RecipeContent({
             )}
           </div>
 
+          <hr className="border-mist mb-6" />
+
           {/* Long description */}
           {cocktail.long_description && (
-            <div className="prose prose-gray max-w-none mb-8">
+            <div className="prose prose-gray max-w-none mb-6">
               <p className="text-base leading-relaxed">{cocktail.long_description}</p>
             </div>
           )}
 
-          {/* Share icons */}
-          <div className="mb-6">
-            <RecipeActions cocktail={cocktail} />
-          </div>
+          <hr className="border-mist mb-6" />
 
           {/* Jump to recipe button */}
           <Button
             variant="secondary"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto mb-6"
             onClick={() => {
               document.getElementById('recipe')?.scrollIntoView({ behavior: 'smooth' });
             }}
           >
             Jump to recipe
           </Button>
+
+          {/* Share icons */}
+          <div>
+            <RecipeActions cocktail={cocktail} />
+          </div>
         </div>
 
         {/* Image */}
@@ -275,19 +282,6 @@ export function RecipeContent({
           </div>
         </div>
 
-        {/* Flavor Profile - moved below ingredients */}
-        <div className="lg:col-span-12">
-          <FlavorRadarChart
-            flavor={{
-              strength: cocktail.flavor_strength,
-              sweetness: cocktail.flavor_sweetness,
-              tartness: cocktail.flavor_tartness,
-              bitterness: cocktail.flavor_bitterness,
-              aroma: cocktail.flavor_aroma,
-              texture: cocktail.flavor_texture,
-            }}
-          />
-        </div>
 
         {/* RIGHT COLUMN */}
         <div className="lg:col-span-7 space-y-10">
@@ -351,14 +345,14 @@ export function RecipeContent({
         )}
       </section>
 
-      {/* You Might Also Like */}
+      {/* Drinks similar to [Drink Name] */}
       {similarRecipes.length > 0 && (
         <section className="mt-16">
           <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
-            You Might Also Like
+            Drinks similar to {sanityCocktail.name}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {similarRecipes.slice(0, 6).map((recipe) => (
+            {similarRecipes.slice(0, 3).map((recipe) => (
               <a
                 key={recipe.id}
                 href={`/cocktails/${recipe.slug}`}
