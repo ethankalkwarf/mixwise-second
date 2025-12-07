@@ -252,12 +252,61 @@ export async function getCocktailsListClient(filters: CocktailFilters = {}): Pro
 // =========================
 
 /**
- * Fetch ingredients for mix logic (placeholder - will be implemented when ingredients migrate)
+ * Fetch ingredients for mix logic (client-side)
  */
 export async function getMixIngredients(): Promise<MixIngredient[]> {
-  // For now, return empty array - ingredients will be migrated separately
-  // TODO: Implement when ingredients are migrated to Supabase
-  return [];
+  const supabase = getSupabaseClient();
+
+  try {
+    const { data, error } = await supabase
+      .from('ingredients')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching mix ingredients from Supabase:', error);
+      // Fallback: return some basic ingredients for the wizard to work
+      return getFallbackIngredients();
+    }
+
+    if (!data || data.length === 0) {
+      console.warn('No ingredients found in Supabase, using fallback');
+      return getFallbackIngredients();
+    }
+
+    return (data || []).map(ingredient => ({
+      id: ingredient.id || ingredient.legacy_id || `ing-${Math.random()}`,
+      name: ingredient.name,
+      category: ingredient.type || ingredient.category || 'other',
+      imageUrl: ingredient.image_url || null,
+      isStaple: ingredient.is_staple || false,
+    }));
+  } catch (error) {
+    console.error('Error in getMixIngredients:', error);
+    return getFallbackIngredients();
+  }
+}
+
+/**
+ * Fallback ingredients for when the database is not available
+ */
+function getFallbackIngredients(): MixIngredient[] {
+  return [
+    { id: 'whiskey', name: 'Whiskey', category: 'spirit' },
+    { id: 'vodka', name: 'Vodka', category: 'spirit' },
+    { id: 'gin', name: 'Gin', category: 'spirit' },
+    { id: 'rum', name: 'Rum', category: 'spirit' },
+    { id: 'tequila', name: 'Tequila', category: 'spirit' },
+    { id: 'vermouth', name: 'Vermouth', category: 'liqueur' },
+    { id: 'triple-sec', name: 'Triple Sec', category: 'liqueur' },
+    { id: 'lime-juice', name: 'Lime Juice', category: 'citrus' },
+    { id: 'lemon-juice', name: 'Lemon Juice', category: 'citrus' },
+    { id: 'simple-syrup', name: 'Simple Syrup', category: 'syrup' },
+    { id: 'bitters', name: 'Bitters', category: 'bitters' },
+    { id: 'club-soda', name: 'Club Soda', category: 'mixer' },
+    { id: 'tonic', name: 'Tonic Water', category: 'mixer' },
+    { id: 'ice', name: 'Ice', category: 'other', isStaple: true },
+  ];
 }
 
 /**

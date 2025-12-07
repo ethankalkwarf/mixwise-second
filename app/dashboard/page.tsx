@@ -134,28 +134,57 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchIngredients() {
       try {
-        console.log("Fetching ingredients from Sanity...");
-        const ingredients = await sanityClient.fetch<any[]>(`
-          *[_type == "ingredient"] {
-            _id,
-            name,
-            "category": type
-          }
-        `);
+        console.log("Fetching ingredients from Supabase...");
+        const { data, error } = await supabase
+          .from('ingredients')
+          .select('id, name, type, image_url, is_staple')
+          .order('name');
+
+        if (error) {
+          console.error("Error fetching ingredients from Supabase:", error);
+          // Fallback to some basic ingredients
+          setAllIngredients(getFallbackIngredients());
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          console.warn("No ingredients found, using fallback");
+          setAllIngredients(getFallbackIngredients());
+          return;
+        }
+
         // Map to expected format
-        const mappedIngredients = ingredients.map(ing => ({
-          id: ing._id,
+        const mappedIngredients = (data || []).map(ing => ({
+          id: ing.id,
           name: ing.name,
-          category: ing.category
+          category: ing.type,
+          imageUrl: ing.image_url,
+          isStaple: ing.is_staple
         }));
         setAllIngredients(mappedIngredients);
       } catch (error) {
         console.error("Error fetching ingredients:", error);
+        setAllIngredients(getFallbackIngredients());
       }
     }
 
     fetchIngredients();
-  }, []);
+  }, [supabase]);
+
+  // Fallback ingredients
+  function getFallbackIngredients() {
+    return [
+      { id: 'whiskey', name: 'Whiskey', category: 'spirit' },
+      { id: 'vodka', name: 'Vodka', category: 'spirit' },
+      { id: 'gin', name: 'Gin', category: 'spirit' },
+      { id: 'rum', name: 'Rum', category: 'spirit' },
+      { id: 'tequila', name: 'Tequila', category: 'spirit' },
+      { id: 'lime-juice', name: 'Lime Juice', category: 'citrus' },
+      { id: 'lemon-juice', name: 'Lemon Juice', category: 'citrus' },
+      { id: 'simple-syrup', name: 'Simple Syrup', category: 'syrup' },
+      { id: 'bitters', name: 'Bitters', category: 'bitters' },
+    ];
+  }
 
   // Fetch user badges
   useEffect(() => {

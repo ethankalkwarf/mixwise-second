@@ -10,6 +10,7 @@
     "migrate": "npx tsx scripts/migrate-to-sanity.ts",
     "export:cocktails": "npx tsx scripts/exportSanityCocktails.ts",
     "import:cocktails": "npx tsx scripts/importEnrichedCocktails.ts",
+    "import:ingredients": "npx tsx scripts/importIngredients.ts",
     "seed:cocktails": "npx tsx scripts/seedCocktailsFromExcel.ts",
     "verify:cocktails": "npx tsx scripts/verifyCocktails.ts",
     "clear:sanity-cocktails": "npx tsx scripts/clearSanityCocktails.ts"
