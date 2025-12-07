@@ -7,6 +7,7 @@ import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
+import { useBarIngredients } from "@/hooks/useBarIngredients";
 import Image from "next/image";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { sanityClient } from "@/lib/sanityClient";
@@ -39,6 +40,7 @@ export default function AccountPage() {
   const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
+  const { ingredientIds } = useBarIngredients();
   
   // Fetch ingredient names from Sanity for fallback lookup
   const [sanityNames, setSanityNames] = useState<Map<string, string>>(new Map());
@@ -254,16 +256,18 @@ export default function AccountPage() {
                 </div>
                 <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-forest" />
               </button>
-              <Link
-                href={`/bar/${user?.id}`}
-                className="flex items-center justify-between p-4 bg-mist/50 hover:bg-mist rounded-xl transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <ShareIcon className="w-5 h-5 text-sage group-hover:text-forest" />
-                  <span className="text-forest">Share My Bar</span>
-                </div>
-                <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-forest" />
-              </Link>
+              {ingredientIds.length > 0 && (
+                <Link
+                  href={`/bar/${user?.id}`}
+                  className="flex items-center justify-between p-4 bg-mist/50 hover:bg-mist rounded-xl transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <ShareIcon className="w-5 h-5 text-sage group-hover:text-forest" />
+                    <span className="text-forest">Share My Bar</span>
+                  </div>
+                  <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-forest" />
+                </Link>
+              )}
               <button
                 onClick={handleSignOut}
                 className="flex items-center justify-between p-4 bg-mist/50 hover:bg-mist rounded-xl transition-colors w-full text-left group"

@@ -274,13 +274,15 @@ export default function DashboardPage() {
               Track your bar, favorites, and progress
             </p>
           </div>
-          <Link
-            href={`/bar/${user?.id}`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
-          >
-            <ShareIcon className="w-4 h-4" />
-            Share My Bar
-          </Link>
+          {ingredientIds.length > 0 && (
+            <Link
+              href={`/bar/${user?.id}`}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
+            >
+              <ShareIcon className="w-4 h-4" />
+              Share My Bar
+            </Link>
+          )}
         </div>
 
         {/* Bento Grid Layout */}
