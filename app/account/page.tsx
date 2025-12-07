@@ -168,20 +168,24 @@ export default function AccountPage() {
             <h2 className="text-xl font-serif font-bold text-forest mb-6">Profile</h2>
             <div className="flex items-start gap-6">
               <div className="flex-shrink-0">
-                <div className="relative w-20 h-20 rounded-full overflow-hidden">
-                  <Image
-                    src={avatarUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiMwYTBmMWEiLz4KPHN2ZyB4PSIxNiIgeT0iMTYiIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2EzYWYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgo8cGF0aCBkPSJNMTIgMTJDMxMy44IDEyIDE1IDEzLjggMTUgMTVDMTUgMTYuMiAxMy44IDE4IDEyIDE4QzEwLjIgMTggOSAxNi4yIDkgMTVDOSAxMy44IDEwLjIgMTIgMTIgMTJaIi8+CjxwYXRoIGQ9Ik0yMSAyMWgzVjIwQzIxIDE4LjkgMjAgMTcuOSAyMCAxN0gxOFYyMEgzVjIxWk0xNiAyMEgzVjE5QzE2IDE4LjkgMTYuOSAxOCA4IDE4VjIwSDR2MWMwIDEuMS0uOSAyLTIgMkgxNXYtMWMwLTEuMS45LTItMi0ySDE2VjIwWk0xNiAyMEgzVjE5QzE2IDE4LjkgMTYuOSAxOCA4IDE4VjIwSDR2MWMwIDEuMS0uOSAyLTIgMkgxNXYtMWMwLTEuMS45LTItMi0ySDE2VjIwWiIvPgo8L3N2Zz4KPHN2ZyB4PSIyMCIgeT0iMjAiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5Y2EzYWYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgo8Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIyIi8+Cjwvc3ZnPgo8L3N2Zz4K"}
-                    alt={displayName}
-                    width={80}
-                    height={80}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-olive/20 flex items-center justify-center text-olive font-bold text-2xl">
-                    {userInitial}
-                  </div>
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-olive/20 flex items-center justify-center">
+                  {avatarUrl ? (
+                    <Image
+                      src={avatarUrl}
+                      alt={displayName}
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // If image fails to load, hide it (fallback will show)
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <span className="text-olive font-bold text-2xl">
+                      {userInitial}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex-grow">
