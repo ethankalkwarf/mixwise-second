@@ -7,6 +7,7 @@ import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
 import { FlavorRadarChart } from "@/components/cocktails/FlavorRadarChart";
 import Image from "next/image";
 import { RecipeActions } from "@/components/cocktails/RecipeActions";
+import { Button } from "@/components/common/Button";
 import {
   BeakerIcon,
   SparklesIcon,
@@ -96,34 +97,19 @@ export function RecipeContent({
             </div>
           )}
 
-          {/* Recipe Actions (Heart + Share) */}
-          <div className="mb-4">
-            <RecipeActions cocktail={cocktail} />
-          </div>
-
+          {/* Drink title */}
           <h1 className="text-4xl font-semibold tracking-tight mb-4">
             {sanityCocktail.name}
           </h1>
 
-          {/* Short Description */}
+          {/* Short description */}
           {cocktail.short_description && (
-            <p className="text-lg font-medium text-foreground mb-4 leading-tight">
+            <p className="text-lg font-medium text-foreground mb-6 leading-tight">
               {cocktail.short_description}
             </p>
           )}
 
-          {/* Long Description with Divider */}
-          {cocktail.long_description && cocktail.short_description && (
-            <hr className="border-mist mb-6" />
-          )}
-
-          {cocktail.long_description && (
-            <div className="prose prose-gray max-w-none mb-8">
-              <p className="text-base leading-relaxed">{cocktail.long_description}</p>
-            </div>
-          )}
-
-          {/* Grouped Metadata */}
+          {/* Drink properties (difficulty, glassware, etc.) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             {/* Base Spirit */}
             {cocktail.base_spirit && (
@@ -193,6 +179,29 @@ export function RecipeContent({
               </div>
             )}
           </div>
+
+          {/* Long description */}
+          {cocktail.long_description && (
+            <div className="prose prose-gray max-w-none mb-8">
+              <p className="text-base leading-relaxed">{cocktail.long_description}</p>
+            </div>
+          )}
+
+          {/* Share icons */}
+          <div className="mb-6">
+            <RecipeActions cocktail={cocktail} />
+          </div>
+
+          {/* Jump to recipe button */}
+          <Button
+            variant="secondary"
+            className="w-full sm:w-auto"
+            onClick={() => {
+              document.getElementById('recipe')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            Jump to recipe
+          </Button>
         </div>
 
         {/* Image */}
@@ -319,7 +328,7 @@ export function RecipeContent({
       </div>
 
       {/* Instructions Section */}
-      <section className="mt-16">
+      <section id="recipe" className="mt-16">
         <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
           How to Make It {sanityCocktail.name}
         </h2>
