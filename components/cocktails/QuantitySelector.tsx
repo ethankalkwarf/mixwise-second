@@ -37,18 +37,18 @@ export function QuantitySelector({
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-2">
       <span className="text-sm font-medium text-muted-foreground">
-        {label}:
+        Servings
       </span>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3 px-2 py-2">
         <button
           onClick={decrease}
           disabled={quantity <= min}
-          className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Decrease quantity"
         >
-          <MinusIcon className="w-4 h-4" />
+          <MinusIcon className="w-5 h-5" />
         </button>
 
         <input
@@ -57,17 +57,17 @@ export function QuantitySelector({
           onChange={handleInputChange}
           min={min}
           max={max}
-          className="w-16 text-center px-2 py-1 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta/50 focus:border-terracotta"
-          aria-label={`Number of ${label}`}
+          className="w-16 text-center px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta/50 focus:border-terracotta font-medium"
+          aria-label={`Number of servings`}
         />
 
         <button
           onClick={increase}
           disabled={quantity >= max}
-          className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Increase quantity"
         >
-          <PlusIcon className="w-4 h-4" />
+          <PlusIcon className="w-5 h-5" />
         </button>
       </div>
     </div>

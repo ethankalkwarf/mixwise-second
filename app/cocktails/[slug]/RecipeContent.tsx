@@ -4,9 +4,15 @@ import { useState } from "react";
 import { QuantitySelector } from "@/components/cocktails/QuantitySelector";
 import { ShoppingListButton } from "@/components/cocktails/ShoppingListButton";
 import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
-import { FlavorProfileCard } from "@/components/cocktails/FlavorProfileCard";
+import { FlavorRadarChart } from "@/components/cocktails/FlavorRadarChart";
 import Image from "next/image";
 import { RecipeActions } from "@/components/cocktails/RecipeActions";
+import {
+  BeakerIcon,
+  SparklesIcon,
+  CpuChipIcon,
+  ChartBarIcon
+} from "@heroicons/react/24/outline";
 
 interface RecipeContentProps {
   cocktail: any;
@@ -95,73 +101,98 @@ export function RecipeContent({
             <RecipeActions cocktail={cocktail} />
           </div>
 
-          <h1 className="text-4xl font-semibold tracking-tight mb-2">
+          <h1 className="text-4xl font-semibold tracking-tight mb-4">
             {sanityCocktail.name}
           </h1>
 
           {/* Short Description */}
           {cocktail.short_description && (
-            <p className="text-lg text-muted-foreground mb-4 leading-relaxed">
+            <p className="text-lg font-medium text-foreground mb-4 leading-tight">
               {cocktail.short_description}
             </p>
           )}
 
-          {/* Long Description */}
+          {/* Long Description with Divider */}
+          {cocktail.long_description && cocktail.short_description && (
+            <hr className="border-mist mb-6" />
+          )}
+
           {cocktail.long_description && (
-            <div className="prose prose-gray max-w-none mb-6">
+            <div className="prose prose-gray max-w-none mb-8">
               <p className="text-base leading-relaxed">{cocktail.long_description}</p>
             </div>
           )}
 
-          {tagLine && (
-            <p className="mt-1 text-xs text-muted-foreground tracking-wide mb-4">
-              {tagLine}
-            </p>
-          )}
-
-          {/* Meta chips row */}
-          {(() => {
-            const baseSpiritChip = cocktail.base_spirit
-              ? cocktail.base_spirit
-              : null;
-
-            const categoryChip = cocktail.category_primary
-              ? cocktail.category_primary
-              : null;
-
-            const glassChip = cocktail.glassware
-              ? `Glass: ${cocktail.glassware}`
-              : null;
-
-            const difficultyChip = cocktail.difficulty
-              ? `Difficulty: ${cocktail.difficulty}`
-              : null;
-
-            // style_tags might be missing on some cocktails; guard it
-            const styleTagsRaw = cocktail.style_tags ?? null;
-            const styleTags = styleTagsRaw ? [styleTagsRaw] : [];
-
-            const metaChips = [
-              baseSpiritChip,
-              categoryChip,
-              glassChip,
-              difficultyChip,
-              ...styleTags,
-            ].filter(Boolean) as string[];
-
-            return (
-              <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                {metaChips.map((chip, i) => (
-                  <span
-                    key={i}
-                    className="rounded-full border px-2 py-0.5 bg-white/60"
-                  >
-                    {chip}
+          {/* Grouped Metadata */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            {/* Base Spirit */}
+            {cocktail.base_spirit && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <BeakerIcon className="w-4 h-4 text-sage" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Base Spirit
                   </span>
-                ))}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full">
+                    {cocktail.base_spirit}
+                  </span>
+                </div>
               </div>
-            );
-          })()}
+            )}
+
+            {/* Style */}
+            {cocktail.category_primary && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <SparklesIcon className="w-4 h-4 text-sage" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Style
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full">
+                    {cocktail.category_primary}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Glassware */}
+            {cocktail.glassware && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <CpuChipIcon className="w-4 h-4 text-sage" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Glassware
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full">
+                    {cocktail.glassware}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Difficulty */}
+            {cocktail.difficulty && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <ChartBarIcon className="w-4 h-4 text-sage" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Difficulty
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full">
+                    {cocktail.difficulty}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Image */}
@@ -204,12 +235,11 @@ export function RecipeContent({
         {/* INGREDIENTS COLUMN */}
         <div className="lg:col-span-5 space-y-8">
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 sticky top-24">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-serif text-2xl font-bold text-gray-900">Ingredients</h2>
+            <div className="flex items-start justify-between mb-6">
+              <h2 className="font-serif text-2xl font-bold text-gray-900 mt-2">Ingredients</h2>
               <QuantitySelector
                 quantity={quantity}
                 onQuantityChange={setQuantity}
-                label="servings"
               />
             </div>
 
@@ -236,10 +266,9 @@ export function RecipeContent({
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
-        <div className="lg:col-span-7 space-y-10">
-          {/* Flavor Profile - moved lower */}
-          <FlavorProfileCard
+        {/* Flavor Profile - moved below ingredients */}
+        <div className="lg:col-span-12">
+          <FlavorRadarChart
             flavor={{
               strength: cocktail.flavor_strength,
               sweetness: cocktail.flavor_sweetness,
@@ -249,6 +278,10 @@ export function RecipeContent({
               texture: cocktail.flavor_texture,
             }}
           />
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="lg:col-span-7 space-y-10">
 
           {/* Best For */}
           {sanityCocktail.bestFor && sanityCocktail.bestFor.length > 0 && (
