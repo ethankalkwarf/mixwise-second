@@ -107,3 +107,4 @@ export interface CocktailListItem {
   flavor_aroma?: number;
   flavor_texture?: number;
 }
+

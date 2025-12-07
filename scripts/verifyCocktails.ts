@@ -106,3 +106,4 @@ if (!slug) {
 }
 
 verifyCocktail(slug);
+

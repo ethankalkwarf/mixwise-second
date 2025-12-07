@@ -6,6 +6,12 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { FlavorProfileCard } from "@/components/cocktails/FlavorProfileCard";
+import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
+import { QuantitySelector } from "@/components/cocktails/QuantitySelector";
+import { RecipeActions } from "@/components/cocktails/RecipeActions";
+import { getSimilarRecipes } from "@/lib/similarRecipes";
+import { ShoppingListButton } from "@/components/cocktails/ShoppingListButton";
+import { RecipeContent } from "./RecipeContent";
 
 // --- helpers for data normalization ---
 
@@ -242,6 +248,14 @@ export default async function CocktailDetailPage({ params }: PageProps) {
 
   const recipeSchema = generateRecipeSchema(sanityCocktail, imageUrl);
 
+  // Get similar recipes for recommendations
+  const similarRecipes = await getSimilarRecipes(
+    cocktail.id,
+    cocktail.base_spirit,
+    cocktail.tags,
+    cocktail.categories_all
+  );
+
   return (
     <>
       {/* JSON-LD Structured Data */}
@@ -271,221 +285,15 @@ export default async function CocktailDetailPage({ params }: PageProps) {
           </a>
         </div>
 
-        {/* HERO SECTION */}
-        <section className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start mb-16">
-          {/* Text */}
-          <div className="flex-1">
-            {/* Status badges above title */}
-            {cocktail.metadata_json?.is_community_favorite && (
-              <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
-                ★ Community Favorite
-              </div>
-            )}
-            {!cocktail.metadata_json?.is_community_favorite && cocktail.metadata_json?.is_mixwise_original && (
-              <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
-                MixWise Original
-              </div>
-            )}
-
-            <h1 className="text-3xl font-semibold tracking-tight">
-              {sanityCocktail.name}
-            </h1>
-
-            {tagLine && (
-              <p className="mt-1 text-xs text-muted-foreground tracking-wide">
-                {tagLine}
-              </p>
-            )}
-
-            {/* Meta chips row */}
-            {(() => {
-              const baseSpiritChip = cocktail.base_spirit
-                ? titleCase(cocktail.base_spirit)
-                : null;
-
-              const categoryChip = cocktail.category_primary
-                ? titleCase(cocktail.category_primary)
-                : null;
-
-              const glassChip = cocktail.glassware
-                ? `Glass: ${titleCase(cocktail.glassware)}`
-                : null;
-
-              const difficultyChip = cocktail.difficulty
-                ? `Difficulty: ${titleCase(cocktail.difficulty)}`
-                : null;
-
-              // style_tags might be missing on some cocktails; guard it
-              const styleTagsRaw = (cocktail as any).style_tags ?? null;
-              const styleTags = normalizeTags(styleTagsRaw);
-
-              const metaChips = [
-                baseSpiritChip,
-                categoryChip,
-                glassChip,
-                difficultyChip,
-                ...styleTags,
-              ].filter(Boolean) as string[];
-
-              return (
-                <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                  {metaChips.map((chip, i) => (
-                    <span
-                      key={i}
-                      className="rounded-full border px-2 py-0.5 bg-white/60"
-                    >
-                      {chip}
-                    </span>
-                  ))}
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Image */}
-          <div className="w-full max-w-xl lg:max-w-md">
-            <div className="relative overflow-hidden rounded-xl border bg-black/5">
-              <div className="aspect-video relative">
-                {cocktail.image_url ? (
-                  <Image
-                    src={cocktail.image_url}
-                    alt={cocktail.image_alt ?? cocktail.name}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                    No image available
-                  </div>
-                )}
-              </div>
-
-              {/* Ribbon badge */}
-              {cocktail.metadata_json?.is_community_favorite && (
-                <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200">
-                  ★ Community Favorite
-                </div>
-              )}
-
-              {!cocktail.metadata_json?.is_community_favorite && cocktail.metadata_json?.is_mixwise_original && (
-                <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200">
-                  MixWise Original
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* CONTENT GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* INGREDIENTS COLUMN */}
-          <div className="lg:col-span-5 space-y-8">
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 sticky top-24">
-              <h2 className="font-serif text-2xl font-bold text-gray-900 mb-6">Ingredients</h2>
-
-              {ingredients.length === 0 ? (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Ingredients coming soon.
-                </p>
-              ) : (
-                <ul className="mt-3 space-y-1 text-sm">
-                  {ingredients.map((ing, idx) => (
-                    <li key={idx}>• {ing.text}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN */}
-          <div className="lg:col-span-7 space-y-10">
-            {/* Flavor Profile */}
-            <FlavorProfileCard
-              flavor={{
-                strength: cocktail.flavor_strength,
-                sweetness: cocktail.flavor_sweetness,
-                tartness: cocktail.flavor_tartness,
-                bitterness: cocktail.flavor_bitterness,
-                aroma: cocktail.flavor_aroma,
-                texture: cocktail.flavor_texture,
-              }}
-            />
-
-            {/* Best For */}
-            {sanityCocktail.bestFor && sanityCocktail.bestFor.length > 0 && (
-              <div className="bg-white p-6 rounded-2xl shadow-soft border border-gray-100">
-                <h3 className="font-serif font-bold text-lg text-gray-900 mb-4">Best For</h3>
-                <div className="flex flex-wrap gap-2">
-                  {sanityCocktail.bestFor.map((tag, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Fun Fact */}
-            {sanityCocktail.funFact && (
-              <div className="bg-amber-50 rounded-2xl p-6 md:p-8 border border-amber-100 relative overflow-hidden">
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="text-amber-600">💡</div>
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-amber-800">Did you know?</h3>
-                  </div>
-                  <p className="font-serif italic text-lg md:text-xl text-amber-900 leading-relaxed mb-4">
-                    "{sanityCocktail.funFact}"
-                  </p>
-                  {sanityCocktail.funFactSources && sanityCocktail.funFactSources.length > 0 && (
-                    <div className="flex flex-wrap gap-x-2 text-xs text-amber-700/70">
-                      <span className="font-bold">Sources:</span>
-                      {sanityCocktail.funFactSources.map((source, i) => (
-                        <span key={i}>
-                          <a
-                            href={source.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline hover:text-amber-900 transition-colors"
-                          >
-                            {source.label}
-                          </a>
-                          {i < sanityCocktail.funFactSources!.length - 1 && ", "}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Instructions Section */}
-        <section className="mt-16">
-          <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
-            Instructions
-          </h2>
-
-          {instructionSteps.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Instructions coming soon.
-            </p>
-          ) : (
-            <ol className="mt-4 space-y-3">
-              {instructionSteps.map((step, idx) => (
-                <li key={idx} className="flex gap-3 items-start">
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold">
-                    {idx + 1}
-                  </span>
-                  <span className="text-sm">{step}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
+        <RecipeContent
+          cocktail={cocktail}
+          sanityCocktail={sanityCocktail}
+          ingredients={ingredients}
+          instructionSteps={instructionSteps}
+          tagLine={tagLine}
+          imageUrl={imageUrl}
+          similarRecipes={similarRecipes}
+        />
       </main>
     </>
   );
