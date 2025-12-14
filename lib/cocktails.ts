@@ -2,7 +2,8 @@
  * Cocktail helper functions for Supabase
  */
 
-import { getSupabaseClient } from './supabase/client';
+import { getSupabaseClient, createClient } from './supabase/client';
+import { createServerClient } from './supabase/server';
 import type {
   Cocktail,
   CocktailListItem,
