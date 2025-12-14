@@ -11,6 +11,7 @@ import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
 import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
 import { InformationCircleIcon, BookmarkIcon } from "@heroicons/react/24/outline";
+import { createClient } from "@/lib/supabase/client";
 
 // Show sign-up prompt after adding this many ingredients
 const PROMPT_THRESHOLD = 3;
@@ -52,23 +53,115 @@ export default function MixPage() {
     loadData();
   }, []);
 
-  // Fetch numeric ingredient IDs for cocktail matching
-  useEffect(() => {
-    async function fetchNumericIds() {
-      if (user && ingredientIds.length > 0) {
-        try {
-          const numericIds = await getUserBarIngredientIdsClient(user.id);
-          setNumericIngredientIds(numericIds);
-        } catch (error) {
-          console.error('Error fetching numeric ingredient IDs:', error);
-          setNumericIngredientIds([]);
-        }
-      } else {
-        setNumericIngredientIds([]);
+  // Convert all selected ingredient IDs to numeric IDs for cocktail matching
+  const convertSelectedIngredientsToNumeric = useCallback(async (selectedIds: string[]): Promise<number[]> => {
+    if (selectedIds.length === 0) return [];
+
+    try {
+      // Fetch ingredients list for mapping
+      const supabase = createClient();
+      const { data: allIngredients, error } = await supabase
+        .from('ingredients')
+        .select('id, name');
+
+      if (error || !allIngredients) {
+        console.error('Error fetching ingredients for mapping:', error);
+        return [];
       }
+
+      // Create mapping from lowercased name to ID
+      const nameToIdMap = new Map<string, number>();
+      allIngredients.forEach(ing => {
+        if (ing.name) {
+          nameToIdMap.set(ing.name.toLowerCase(), ing.id);
+        }
+      });
+
+      // Convert function (same logic as in the helpers)
+      const convertToNumericId = (stringId: string): number | null => {
+        // First try to parse as integer
+        let parsed = parseInt(stringId, 10);
+        if (!isNaN(parsed) && parsed > 0) {
+          return parsed;
+        }
+
+        // Handle ingredient- prefixed IDs
+        if (stringId.startsWith('ingredient-')) {
+          const idPart = stringId.substring('ingredient-'.length);
+          parsed = parseInt(idPart, 10);
+          if (!isNaN(parsed) && parsed > 0) {
+            return parsed;
+          }
+        }
+
+        // Create synonym mapping for brand-specific names
+        const createSynonyms = (input: string): string[] => {
+          const synonyms = [input.toLowerCase()];
+
+          // Remove common brand prefixes/suffixes
+          const brandPatterns = [
+            /\b(absolut|grey goose|smirnoff|ketel one|tito's)\s+/gi, // Vodka brands
+            /\b(bombay|beefeater|tanqueray|hendrick's|plymouth)\s+/gi, // Gin brands
+            /\b(jameson|jack daniel's|jim beam|crown royal)\s+/gi, // Whiskey brands
+            /\b(jose cuervo|patron|clase azul)\s+/gi, // Tequila brands
+            /\b(baileys|kahlua|tia maria)\s+/gi, // Liqueur brands
+            /\b(cointreau|grand marnier|triple sec)\s+/gi, // Triple sec brands
+            /\b(campbell|fee brothers|angostura)\s+/gi, // Bitters brands
+            /\s+(vodka|gin|rum|whiskey|bourbon|scotch|tequila|brandy|cognac|liqueur|wine|beer|juice|soda|syrup|bitters|vermouth|amaro)\b/gi, // Generic terms
+          ];
+
+          brandPatterns.forEach(pattern => {
+            const cleaned = input.replace(pattern, '').trim();
+            if (cleaned && cleaned !== input.toLowerCase()) {
+              synonyms.push(cleaned.toLowerCase());
+            }
+          });
+
+          // Split on common separators and try base terms
+          const parts = input.toLowerCase().split(/\s+|\-|_/);
+          if (parts.length > 1) {
+            // Try the last part (often the generic term)
+            synonyms.push(parts[parts.length - 1]);
+            // Try the first part
+            synonyms.push(parts[0]);
+          }
+
+          return [...new Set(synonyms)]; // Remove duplicates
+        };
+
+        // Try to find by name variations
+        const lookupNames = createSynonyms(stringId);
+
+        for (const lookupName of lookupNames) {
+          const found = nameToIdMap.get(lookupName);
+          if (found) {
+            return found;
+          }
+        }
+
+        return null;
+      };
+
+      // Convert all selected IDs
+      const numericIds: number[] = [];
+      for (const stringId of selectedIds) {
+        const numericId = convertToNumericId(stringId);
+        if (numericId) {
+          numericIds.push(numericId);
+        }
+      }
+
+      return numericIds;
+    } catch (error) {
+      console.error('Error converting ingredient IDs:', error);
+      return [];
     }
-    fetchNumericIds();
-  }, [user, ingredientIds]);
+  }, []);
+
+  // Update numeric IDs whenever selected ingredients change
+  useEffect(() => {
+    convertSelectedIngredientsToNumeric(ingredientIds).then(setNumericIngredientIds);
+  }, [ingredientIds, convertSelectedIngredientsToNumeric]);
 
   // Show save prompt for anonymous users after threshold
   useEffect(() => {

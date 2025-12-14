@@ -274,13 +274,30 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
       return getFallbackIngredients();
     }
 
-    return (data || []).map(ingredient => ({
-      id: ingredient.id || ingredient.legacy_id || `ing-${Math.random()}`,
-      name: ingredient.name,
-      category: ingredient.type || ingredient.category || 'other',
-      imageUrl: ingredient.image_url || null,
-      isStaple: ingredient.is_staple || false,
-    }));
+    return (data || []).map(ingredient => {
+      // Prefer numeric ID, then legacy_id, then create stable string ID from name
+      let id: string | number = ingredient.id;
+      if (!id) {
+        id = ingredient.legacy_id;
+      }
+      if (!id && ingredient.name) {
+        // Create stable ID from name for fallback cases
+        id = ingredient.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      }
+      if (!id) {
+        // Only use random ID as absolute last resort
+        console.warn('Could not generate stable ID for ingredient:', ingredient);
+        id = `fallback-${Math.random()}`;
+      }
+
+      return {
+        id,
+        name: ingredient.name,
+        category: ingredient.type || ingredient.category || 'other',
+        imageUrl: ingredient.image_url || null,
+        isStaple: ingredient.is_staple || false,
+      };
+    });
   } catch (error) {
     console.error('Error in getMixIngredients:', error);
     return getFallbackIngredients();
@@ -423,13 +440,66 @@ export async function getUserBarIngredientIdsClient(userId: string): Promise<num
   // Helper function to convert string ID to numeric ID
   const convertToNumericId = (stringId: string): number | null => {
     // First try to parse as integer
-    const parsed = parseInt(stringId, 10);
+    let parsed = parseInt(stringId, 10);
     if (!isNaN(parsed) && parsed > 0) {
       return parsed;
     }
 
-    // Try to find by name (the string ID itself)
-    return nameToIdMap.get(stringId.toLowerCase()) || null;
+    // Handle ingredient- prefixed IDs
+    if (stringId.startsWith('ingredient-')) {
+      const idPart = stringId.substring('ingredient-'.length);
+      parsed = parseInt(idPart, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+
+    // Create synonym mapping for brand-specific names
+    const createSynonyms = (input: string): string[] => {
+      const synonyms = [input.toLowerCase()];
+
+      // Remove common brand prefixes/suffixes
+      const brandPatterns = [
+        /\b(absolut|grey goose|smirnoff|ketel one|tito's)\s+/gi, // Vodka brands
+        /\b(bombay|beefeater|tanqueray|hendrick's|plymouth)\s+/gi, // Gin brands
+        /\b(jameson|jack daniel's|jim beam|crown royal)\s+/gi, // Whiskey brands
+        /\b(jose cuervo|patron|clase azul)\s+/gi, // Tequila brands
+        /\b(baileys|kahlua|tia maria)\s+/gi, // Liqueur brands
+        /\b(cointreau|grand marnier|triple sec)\s+/gi, // Triple sec brands
+        /\b(campbell|fee brothers|angostura)\s+/gi, // Bitters brands
+        /\s+(vodka|gin|rum|whiskey|bourbon|scotch|tequila|brandy|cognac|liqueur|wine|beer|juice|soda|syrup|bitters|vermouth|amaro)\b/gi, // Generic terms
+      ];
+
+      brandPatterns.forEach(pattern => {
+        const cleaned = input.replace(pattern, '').trim();
+        if (cleaned && cleaned !== input.toLowerCase()) {
+          synonyms.push(cleaned.toLowerCase());
+        }
+      });
+
+      // Split on common separators and try base terms
+      const parts = input.toLowerCase().split(/\s+|\-|_/);
+      if (parts.length > 1) {
+        // Try the last part (often the generic term)
+        synonyms.push(parts[parts.length - 1]);
+        // Try the first part
+        synonyms.push(parts[0]);
+      }
+
+      return [...new Set(synonyms)]; // Remove duplicates
+    };
+
+    // Try to find by name variations
+    const lookupNames = createSynonyms(stringId);
+
+    for (const lookupName of lookupNames) {
+      const found = nameToIdMap.get(lookupName);
+      if (found) {
+        return found;
+      }
+    }
+
+    return null;
   };
 
   // First try old inventories table structure

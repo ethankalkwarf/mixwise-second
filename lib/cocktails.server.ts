@@ -241,14 +241,66 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
   // Helper function to convert string ID to numeric ID
   const convertToNumericId = (stringId: string, name?: string | null): number | null => {
     // First try to parse as integer
-    const parsed = parseInt(stringId, 10);
+    let parsed = parseInt(stringId, 10);
     if (!isNaN(parsed) && parsed > 0) {
       return parsed;
     }
 
+    // Handle ingredient- prefixed IDs
+    if (stringId.startsWith('ingredient-')) {
+      const idPart = stringId.substring('ingredient-'.length);
+      parsed = parseInt(idPart, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+
+    // Create synonym mapping for brand-specific names
+    const createSynonyms = (input: string): string[] => {
+      const synonyms = [input.toLowerCase()];
+
+      // Remove common brand prefixes/suffixes
+      const brandPatterns = [
+        /\b(absolut|grey goose|smirnoff|ketel one|tito's)\s+/gi, // Vodka brands
+        /\b(bombay|beefeater|tanqueray|hendrick's|plymouth)\s+/gi, // Gin brands
+        /\b(jameson|jack daniel's|jim beam|crown royal)\s+/gi, // Whiskey brands
+        /\b(jose cuervo|patron|clase azul)\s+/gi, // Tequila brands
+        /\b(baileys|kahlua|tia maria)\s+/gi, // Liqueur brands
+        /\b(cointreau|grand marnier|triple sec)\s+/gi, // Triple sec brands
+        /\b(campbell|fee brothers|angostura)\s+/gi, // Bitters brands
+        /\s+(vodka|gin|rum|whiskey|bourbon|scotch|tequila|brandy|cognac|liqueur|wine|beer|juice|soda|syrup|bitters|vermouth|amaro)\b/gi, // Generic terms
+      ];
+
+      brandPatterns.forEach(pattern => {
+        const cleaned = input.replace(pattern, '').trim();
+        if (cleaned && cleaned !== input.toLowerCase()) {
+          synonyms.push(cleaned.toLowerCase());
+        }
+      });
+
+      // Split on common separators and try base terms
+      const parts = input.toLowerCase().split(/\s+|\-|_/);
+      if (parts.length > 1) {
+        // Try the last part (often the generic term)
+        synonyms.push(parts[parts.length - 1]);
+        // Try the first part
+        synonyms.push(parts[0]);
+      }
+
+      return [...new Set(synonyms)]; // Remove duplicates
+    };
+
     // Try to find by name (either provided name or the string ID itself)
-    const lookupName = (name || stringId).toLowerCase();
-    return nameToIdMap.get(lookupName) || null;
+    const lookupNames = name ? createSynonyms(name) : createSynonyms(stringId);
+
+    for (const lookupName of lookupNames) {
+      const found = nameToIdMap.get(lookupName);
+      if (found) {
+        return found;
+      }
+    }
+
+    return null;
   };
 
   // First try the old inventories table structure (if it exists)
