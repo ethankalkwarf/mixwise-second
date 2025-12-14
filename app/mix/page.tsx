@@ -103,6 +103,15 @@ export default function MixPage() {
   // Get match counts for display
   const matchCounts = useMemo(() => {
     const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[mix-page] Calling getMixMatchGroups with:', {
+        ownedIngredientIds: ingredientIds,
+        stapleIds: stapleIds.slice(0, 3),
+        cocktailCount: allCocktails.length
+      });
+    }
+
     const result = getMixMatchGroups({
       cocktails: allCocktails,
       ownedIngredientIds: ingredientIds,

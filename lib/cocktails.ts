@@ -222,6 +222,17 @@ export async function getMixDataClient(): Promise<{
     getMixCocktailsClient()
   ]);
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[mix-data] Loaded data:', {
+      ingredientCount: ingredients.length,
+      cocktailCount: cocktails.length,
+      sampleCocktails: cocktails.slice(0, 2).map(c => ({
+        name: c.name,
+        ingredientIds: c.ingredients.map(ing => ({id: ing.id, name: ing.name}))
+      }))
+    });
+  }
+
   return { ingredients, cocktails };
 }
 
@@ -292,12 +303,26 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     ingredientNameById.set(String(ing.id), ing.name);
   });
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[cocktail-ing] Ingredient name map (first 5):', Array.from(ingredientNameById.entries()).slice(0, 5));
+  }
+
   // Group ingredients by cocktail_id
   const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
   (cocktailIngredients || []).forEach((ci: any) => {
     const cocktailId = ci.cocktail_id;
     const ingredientId = String(ci.ingredient_id);
     const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
+
+    if (process.env.NODE_ENV === 'development' && ingredientsByCocktail.size < 3) {
+      console.log('[cocktail-ing] Processing:', {
+        cocktailId,
+        rawIngredientId: ci.ingredient_id,
+        stringIngredientId: ingredientId,
+        name,
+        foundInMap: ingredientNameById.has(ingredientId)
+      });
+    }
 
     const ingredient = {
       id: ingredientId,
