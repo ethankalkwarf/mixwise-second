@@ -71,12 +71,26 @@ export function RecipeContent({
     text: quantity === 1 ? ing.text : scaleIngredient(ing.text, quantity),
   }));
 
-  // Extract ingredients for shopping list (simplified - would need better parsing in real app)
-  const shoppingListIngredients = ingredients.map((ing, index) => ({
-    id: `ing-${index}`,
-    name: ing.text.split(' ').slice(1).join(' ') || ing.text, // Rough extraction
-    category: 'cocktail',
-  }));
+  // Extract ingredients for shopping list with better parsing
+  const shoppingListIngredients = ingredients.map((ing, index) => {
+    // Better ingredient name extraction
+    const text = ing.text.trim();
+
+    // Remove common quantity patterns at the start
+    const cleanedName = text
+      .replace(/^\d+(\/\d+|\.\d+)?\s*(oz|cup|cups|tbsp|tsp|ml|cl|dash|dashes|drop|drops|slice|slices|piece|pieces|sprig|sprigs|leaf|leaves|wheel|wheels|twist|twists|rim|rims|part|parts)\s+/i, '')
+      .replace(/^\d+(\/\d+|\.\d+)?\s+/, '') // Remove remaining numbers at start
+      .trim();
+
+    // Use cleaned name as ID (lowercased and sanitized)
+    const ingredientId = cleanedName.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+
+    return {
+      id: ingredientId || `ingredient-${index}`, // Fallback if cleaning results in empty string
+      name: cleanedName || text, // Fallback to original if cleaning fails
+      category: 'cocktail',
+    };
+  });
 
   return (
     <>

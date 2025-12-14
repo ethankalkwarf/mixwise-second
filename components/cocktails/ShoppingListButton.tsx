@@ -20,7 +20,7 @@ export function ShoppingListButton({ ingredients, quantity }: ShoppingListButton
   const handleAddToShoppingList = async () => {
     setIsAdding(true);
     try {
-      // Scale ingredients by quantity
+      // Scale ingredients by quantity (quantity scaling not implemented yet)
       const scaledIngredients = ingredients.map(ing => ({
         id: ing.id,
         name: ing.name,
@@ -30,6 +30,11 @@ export function ShoppingListButton({ ingredients, quantity }: ShoppingListButton
       await addItems(scaledIngredients);
     } catch (error) {
       console.error("Error adding to shopping list:", error);
+      // Show error toast if not already handled by the hook
+      if (!error.message?.includes("already in")) {
+        // The hook should handle toasts, but add fallback
+        console.error("Failed to add items to shopping list");
+      }
     } finally {
       setIsAdding(false);
     }
