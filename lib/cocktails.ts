@@ -256,39 +256,65 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
 }>> {
   const supabase = createClient();
 
-  // Get all cocktails with ingredients from the JSON field
-  const { data: cocktails, error: cocktailsError } = await supabase
+  // Get all cocktails with their ingredients via JOIN
+  const { data: cocktailData, error: cocktailError } = await supabase
     .from('cocktails')
-    .select('id, name, slug, short_description, instructions, category_primary, image_url, glassware, technique, base_spirit, difficulty, categories_all, tags, garnish, metadata_json, ingredients')
+    .select(`
+      id,
+      name,
+      slug,
+      short_description,
+      instructions,
+      category_primary,
+      image_url,
+      glassware,
+      technique,
+      base_spirit,
+      difficulty,
+      categories_all,
+      tags,
+      garnish,
+      metadata_json,
+      cocktail_ingredients (
+        ingredient_id,
+        amount,
+        is_optional,
+        notes,
+        ingredients (
+          id,
+          name
+        )
+      )
+    `)
     .order('name');
 
-  if (cocktailsError) {
-    console.error('Error fetching cocktails:', cocktailsError);
+  if (cocktailError) {
+    console.error('Error fetching cocktails with ingredients:', cocktailError);
     return [];
   }
 
-  if (!cocktails) return [];
+  if (!cocktailData) return [];
 
-  // Process each cocktail's ingredients from the JSON field
-  return cocktails.map(cocktail => {
+  // Process and group ingredients by cocktail
+  return cocktailData.map(cocktail => {
     const ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }> = [];
 
-    if (cocktail.ingredients && Array.isArray(cocktail.ingredients)) {
-      cocktail.ingredients.forEach((ing: any) => {
-        if (ing.ingredient && ing.ingredient.id) {
+    if (cocktail.cocktail_ingredients && Array.isArray(cocktail.cocktail_ingredients)) {
+      cocktail.cocktail_ingredients.forEach((ci: any) => {
+        if (ci.ingredients && ci.ingredient_id) {
           ingredientsWithIds.push({
-            id: String(ing.ingredient.id),
-            name: ing.ingredient.name || 'Unknown',
-            amount: ing.amount,
-            isOptional: ing.isOptional || false,
-            notes: ing.notes
+            id: String(ci.ingredient_id),
+            name: ci.ingredients.name || 'Unknown',
+            amount: ci.amount,
+            isOptional: ci.is_optional || false,
+            notes: ci.notes
           });
         }
       });
     }
 
     // Log first few cocktails for debugging
-    if (cocktails.indexOf(cocktail) < 3) {
+    if (cocktailData.indexOf(cocktail) < 3) {
       console.log(`[PROD-DEBUG] Cocktail "${cocktail.name}" has ${ingredientsWithIds.length} ingredients:`, ingredientsWithIds.map(i => ({id: i.id, name: i.name})));
     }
 

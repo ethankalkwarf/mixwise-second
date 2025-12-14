@@ -13,7 +13,8 @@
     "import:ingredients": "npx tsx scripts/importIngredients.ts",
     "seed:cocktails": "npx tsx scripts/seedCocktailsFromExcel.ts",
     "verify:cocktails": "npx tsx scripts/verifyCocktails.ts",
-    "clear:sanity-cocktails": "npx tsx scripts/clearSanityCocktails.ts"
+    "clear:sanity-cocktails": "npx tsx scripts/clearSanityCocktails.ts",
+    "migrate:cocktail-uuids": "npx tsx scripts/migrate-cocktail-ingredients-uuids.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
