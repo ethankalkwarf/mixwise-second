@@ -120,7 +120,7 @@ export function RecipeContent({
                 <div className="flex items-center gap-2 mb-2">
                   <BeakerIcon className="w-4 h-4 text-sage" />
                   <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Base Spirit
+                    Base spirit
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -324,7 +324,7 @@ export function RecipeContent({
       {/* Instructions Section */}
       <section id="recipe" className="mt-16">
         <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
-          How to Make It {sanityCocktail.name}
+          How to make the {sanityCocktail.name}
         </h2>
 
         {instructionSteps.length === 0 ? (

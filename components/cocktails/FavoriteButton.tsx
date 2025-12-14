@@ -46,7 +46,7 @@ export function FavoriteButton({
   if (isLoading) {
     return (
       <div className={`${sizeClasses[size]} ${className}`}>
-        <div className={`${iconSizes[size]} bg-slate-700 rounded animate-pulse`} />
+        <div className={`${iconSizes[size]} bg-red-200 rounded animate-pulse`} />
       </div>
     );
   }

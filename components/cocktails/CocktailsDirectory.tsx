@@ -423,7 +423,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
             <div className="grid sm:grid-cols-3 gap-4">
               {/* Spirit Filter */}
               <div>
-                <label className="label-botanical">Base Spirit</label>
+                <label className="label-botanical">Base spirit</label>
                 <select
                   value={filterSpirit || ""}
                   onChange={(e) => setFilterSpirit(e.target.value || null)}
