@@ -193,7 +193,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   drinkCategories: string[];
   tags: string[];
   garnish: string | null;
-  ingredientsWithIds: Array<{ id: number; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+  ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
   const supabase = createServerSupabaseClient();
 
@@ -228,20 +228,21 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     return [];
   }
 
-  // Build Map<number, string> of ingredientId → ingredientName
-  const ingredientNameById = new Map<number, string>();
+  // Build Map<string, string> of ingredientId → ingredientName
+  const ingredientNameById = new Map<string, string>();
   (ingredients || []).forEach(ing => {
-    ingredientNameById.set(ing.id, ing.name);
+    ingredientNameById.set(String(ing.id), ing.name);
   });
 
   // Group ingredients by cocktail_id
-  const ingredientsByCocktail = new Map<string, Array<{ id: number; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
+  const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
   (cocktailIngredients || []).forEach((ci: any) => {
     const cocktailId = ci.cocktail_id;
-    const name = ingredientNameById.get(ci.ingredient_id) ?? 'Unknown';
+    const ingredientId = String(ci.ingredient_id);
+    const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
 
     const ingredient = {
-      id: ci.ingredient_id,
+      id: ingredientId,
       name,
       amount: ci.amount,
       isOptional: ci.is_optional,

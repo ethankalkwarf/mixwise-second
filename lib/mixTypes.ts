@@ -14,7 +14,7 @@ export type MixIngredient = {
 
 // Ingredient within a cocktail recipe
 export type MixCocktailIngredient = {
-  id: number;       // Numeric ingredient ID from ingredients table
+  id: string;       // String ingredient ID from ingredients table
   name: string;
   amount?: string | null;
   isOptional?: boolean;

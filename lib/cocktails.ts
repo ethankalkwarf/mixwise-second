@@ -137,15 +137,9 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
     }
 
     return (data || []).map(ingredient => {
-      // Prefer numeric ID, then legacy_id, then create stable string ID from name
-      let id: string | number = ingredient.id;
-      if (!id) {
-        id = ingredient.legacy_id;
-      }
-      if (!id && ingredient.name) {
-        // Create stable ID from name for fallback cases
-        id = ingredient.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      }
+      // Force id to be a string - normalize all IDs to string type
+      let id = String(ingredient.id ?? ingredient.legacy_id ?? ingredient.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''));
+
       if (!id) {
         // Only use random ID as absolute last resort
         console.warn('Could not generate stable ID for ingredient:', ingredient);
@@ -257,7 +251,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   drinkCategories: string[];
   tags: string[];
   garnish: string | null;
-  ingredientsWithIds: Array<{ id: number; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+  ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
   const supabase = createClient();
 
@@ -292,20 +286,21 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     return [];
   }
 
-  // Build Map<number, string> of ingredientId → ingredientName
-  const ingredientNameById = new Map<number, string>();
+  // Build Map<string, string> of ingredientId → ingredientName
+  const ingredientNameById = new Map<string, string>();
   (ingredients || []).forEach(ing => {
-    ingredientNameById.set(ing.id, ing.name);
+    ingredientNameById.set(String(ing.id), ing.name);
   });
 
   // Group ingredients by cocktail_id
-  const ingredientsByCocktail = new Map<string, Array<{ id: number; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
+  const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
   (cocktailIngredients || []).forEach((ci: any) => {
     const cocktailId = ci.cocktail_id;
-    const name = ingredientNameById.get(ci.ingredient_id) ?? 'Unknown';
+    const ingredientId = String(ci.ingredient_id);
+    const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
 
     const ingredient = {
-      id: ci.ingredient_id,
+      id: ingredientId,
       name,
       amount: ci.amount,
       isOptional: ci.is_optional,
