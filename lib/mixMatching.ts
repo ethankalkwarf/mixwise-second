@@ -14,11 +14,6 @@ export type MixMatchParams = {
 export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   const { cocktails, ownedIngredientIds, stapleIngredientIds = [] } = params;
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[mix] Matching with owned IDs:', ownedIngredientIds.slice(0, 5));
-    console.log('[mix] Total cocktails to check:', cocktails.length);
-  }
-
   const owned = new Set<string>(ownedIngredientIds);
   const staples = new Set<string>(stapleIngredientIds);
 
@@ -30,11 +25,6 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     // Skip cocktails with no ingredients (bad data)
     if (!cocktail.ingredientsWithIds || cocktail.ingredientsWithIds.length === 0) {
       continue;
-    }
-
-    // Debug: Check first few cocktails
-    if (process.env.NODE_ENV === 'development' && all.length < 3) {
-      console.log(`[mix] Cocktail "${cocktail.name}" has ingredients:`, cocktail.ingredientsWithIds.map(ing => ({id: ing.id, name: ing.name, optional: ing.isOptional})));
     }
 
     // Filter to required ingredients (not optional, not staples)
@@ -91,10 +81,6 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   makeNow.sort(sortFn);
   almostThere.sort(sortFn);
   all.sort(sortFn);
-
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[mix] Results: ${makeNow.length} ready, ${almostThere.length} almost there, ${all.length} total`);
-  }
 
   return { makeNow, almostThere, all };
 }

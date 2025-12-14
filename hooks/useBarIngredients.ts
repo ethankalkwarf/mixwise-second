@@ -196,14 +196,9 @@ export function useBarIngredients(): UseBarIngredientsResult {
         // Merge local with server (server takes precedence, but add any new local items)
         const mergedIds = [...new Set([...serverIds, ...localIds])];
 
-        // Normalize merged IDs to canonical format
+              // Normalize merged IDs to canonical format
         const normalizedMergedIds = normalizeIngredientIds(mergedIds, nameToCanonicalId, nameMap);
 
-        // Debug logs
-        if (process.env.NODE_ENV === 'development') {
-          console.log("[bar] before normalization", mergedIds.slice(0, 10));
-          console.log("[bar] after normalization", normalizedMergedIds.slice(0, 10));
-        }
 
         // If normalization changed anything, migrate the data
         if (normalizedMergedIds.length !== mergedIds.length || !normalizedMergedIds.every(id => mergedIds.includes(id))) {
@@ -251,12 +246,6 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
         // Normalize local IDs to canonical format
         const normalizedLocalIds = normalizeIngredientIds(localIds, nameToCanonicalId);
-
-        // Debug logs
-        if (process.env.NODE_ENV === 'development') {
-          console.log("[bar] local before normalization", localIds.slice(0, 10));
-          console.log("[bar] local after normalization", normalizedLocalIds.slice(0, 10));
-        }
 
         // If normalization changed anything, update localStorage
         if (normalizedLocalIds.length !== localIds.length || !normalizedLocalIds.every(id => localIds.includes(id))) {
