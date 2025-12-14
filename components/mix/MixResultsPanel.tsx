@@ -8,7 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 type Props = {
-  inventoryIds: string[];
+  inventoryIds: number[];
   allCocktails: MixCocktail[];
   allIngredients: MixIngredient[];
   onAddToInventory: (id: string) => void;

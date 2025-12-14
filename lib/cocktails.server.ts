@@ -210,14 +210,46 @@ export async function getCocktailCount(): Promise<number> {
 /**
  * Get user's bar ingredients with fallback logic
  * First tries inventories/inventory_items tables, then falls back to bar_ingredients
+ * Returns numeric ingredient IDs that match the ingredients table
  */
 export async function getUserBarIngredients(userId: string): Promise<Array<{
   id: string;
-  ingredient_id: string;
+  ingredient_id: number;
   ingredient_name: string | null;
   inventory_id?: string;
 }>> {
   const supabase = createServerSupabaseClient();
+
+  // First, fetch all ingredients to create name-to-ID mapping
+  const { data: allIngredients, error: ingredientsError } = await supabase
+    .from('ingredients')
+    .select('id, name');
+
+  if (ingredientsError) {
+    console.error('Error fetching ingredients list:', ingredientsError);
+    return [];
+  }
+
+  // Create mapping from lowercased name to ID
+  const nameToIdMap = new Map<string, number>();
+  (allIngredients || []).forEach(ing => {
+    if (ing.name) {
+      nameToIdMap.set(ing.name.toLowerCase(), ing.id);
+    }
+  });
+
+  // Helper function to convert string ID to numeric ID
+  const convertToNumericId = (stringId: string, name?: string | null): number | null => {
+    // First try to parse as integer
+    const parsed = parseInt(stringId, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      return parsed;
+    }
+
+    // Try to find by name (either provided name or the string ID itself)
+    const lookupName = (name || stringId).toLowerCase();
+    return nameToIdMap.get(lookupName) || null;
+  };
 
   // First try the old inventories table structure (if it exists)
   try {
@@ -237,12 +269,21 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
         .eq('inventory_id', inventoryId);
 
       if (!itemsError && inventoryItems) {
-        return inventoryItems.map(item => ({
-          id: item.id.toString(),
-          ingredient_id: item.ingredient_id,
-          ingredient_name: item.ingredient_name,
-          inventory_id: inventoryId,
-        }));
+        return inventoryItems
+          .map(item => {
+            const numericId = convertToNumericId(item.ingredient_id, item.ingredient_name);
+            if (!numericId) {
+              console.warn(`Could not convert ingredient ID "${item.ingredient_id}" to numeric ID`);
+              return null;
+            }
+            return {
+              id: item.id.toString(),
+              ingredient_id: numericId,
+              ingredient_name: item.ingredient_name,
+              inventory_id: inventoryId,
+            };
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null);
       }
     }
   } catch (error) {
@@ -260,19 +301,29 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
     return [];
   }
 
-  return (barIngredients || []).map(item => ({
-    id: item.id.toString(),
-    ingredient_id: item.ingredient_id,
-    ingredient_name: item.ingredient_name,
-    // No inventory_id for bar_ingredients
-  }));
+  return (barIngredients || [])
+    .map(item => {
+      const numericId = convertToNumericId(item.ingredient_id, item.ingredient_name);
+      if (!numericId) {
+        console.warn(`Could not convert ingredient ID "${item.ingredient_id}" to numeric ID, skipping`);
+        return null;
+      }
+      return {
+        id: item.id.toString(),
+        ingredient_id: numericId,
+        ingredient_name: item.ingredient_name,
+        // No inventory_id for bar_ingredients
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 }
 
 /**
  * Get user's bar ingredient IDs only (for quick checks)
  * First tries inventories/inventory_items tables, then falls back to bar_ingredients
+ * Returns numeric IDs that match ingredients.id
  */
-export async function getUserBarIngredientIds(userId: string): Promise<string[]> {
+export async function getUserBarIngredientIds(userId: string): Promise<number[]> {
   const ingredients = await getUserBarIngredients(userId);
   return ingredients.map(item => item.ingredient_id);
 }

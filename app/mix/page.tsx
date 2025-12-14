@@ -5,7 +5,7 @@ import { MixInventoryPanel } from "@/components/mix/MixInventoryPanel";
 import { MixResultsPanel } from "@/components/mix/MixResultsPanel";
 import { MixSelectedBar } from "@/components/mix/MixSelectedBar";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
-import { getMixDataClient } from "@/lib/cocktails";
+import { getMixDataClient, getUserBarIngredientIdsClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
@@ -22,8 +22,9 @@ export default function MixPage() {
   const [dataError, setDataError] = useState<string | null>(null);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [promptDismissed, setPromptDismissed] = useState(false);
-  
-  const { isAuthenticated } = useUser();
+  const [numericIngredientIds, setNumericIngredientIds] = useState<number[]>([]);
+
+  const { isAuthenticated, user } = useUser();
   const {
     ingredientIds,
     isLoading: barLoading,
@@ -50,6 +51,24 @@ export default function MixPage() {
     }
     loadData();
   }, []);
+
+  // Fetch numeric ingredient IDs for cocktail matching
+  useEffect(() => {
+    async function fetchNumericIds() {
+      if (user && ingredientIds.length > 0) {
+        try {
+          const numericIds = await getUserBarIngredientIdsClient(user.id);
+          setNumericIngredientIds(numericIds);
+        } catch (error) {
+          console.error('Error fetching numeric ingredient IDs:', error);
+          setNumericIngredientIds([]);
+        }
+      } else {
+        setNumericIngredientIds([]);
+      }
+    }
+    fetchNumericIds();
+  }, [user, ingredientIds]);
 
   // Show save prompt for anonymous users after threshold
   useEffect(() => {
@@ -102,14 +121,14 @@ export default function MixPage() {
     const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
     const result = getMixMatchGroups({
       cocktails: allCocktails,
-      ownedIngredientIds: ingredientIds,
+      ownedIngredientIds: numericIngredientIds,
       stapleIngredientIds: stapleIds,
     });
     return {
       canMake: result.makeNow.length,
       almostThere: result.almostThere.length,
     };
-  }, [allCocktails, allIngredients, ingredientIds]);
+  }, [allCocktails, allIngredients, numericIngredientIds]);
 
   if (dataLoading || barLoading) {
     return <MixSkeleton />;
@@ -233,7 +252,7 @@ export default function MixPage() {
           {/* Results Panel */}
           <main role="main" aria-label="Cocktail results">
             <MixResultsPanel
-              inventoryIds={ingredientIds}
+              inventoryIds={numericIngredientIds}
               allCocktails={allCocktails}
               allIngredients={allIngredients}
               onAddToInventory={handleAddToInventory}

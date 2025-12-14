@@ -397,9 +397,40 @@ export async function getUniqueValues(field: 'base_spirit' | 'category_primary' 
 /**
  * Get user's bar ingredient IDs (client-side)
  * Uses server action for consistency with fallback logic
+ * Returns numeric IDs that match ingredients.id
  */
-export async function getUserBarIngredientIdsClient(userId: string): Promise<string[]> {
+export async function getUserBarIngredientIdsClient(userId: string): Promise<number[]> {
   const supabase = createClient();
+
+  // First, fetch all ingredients to create name-to-ID mapping
+  const { data: allIngredients, error: ingredientsError } = await supabase
+    .from('ingredients')
+    .select('id, name');
+
+  if (ingredientsError) {
+    console.error('Error fetching ingredients list:', ingredientsError);
+    return [];
+  }
+
+  // Create mapping from lowercased name to ID
+  const nameToIdMap = new Map<string, number>();
+  (allIngredients || []).forEach(ing => {
+    if (ing.name) {
+      nameToIdMap.set(ing.name.toLowerCase(), ing.id);
+    }
+  });
+
+  // Helper function to convert string ID to numeric ID
+  const convertToNumericId = (stringId: string): number | null => {
+    // First try to parse as integer
+    const parsed = parseInt(stringId, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      return parsed;
+    }
+
+    // Try to find by name (the string ID itself)
+    return nameToIdMap.get(stringId.toLowerCase()) || null;
+  };
 
   // First try old inventories table structure
   try {
@@ -413,11 +444,13 @@ export async function getUserBarIngredientIdsClient(userId: string): Promise<str
       const inventoryId = inventories[0].id;
       const { data: inventoryItems, error: itemsError } = await supabase
         .from('inventory_items')
-        .select('ingredient_id')
+        .select('ingredient_id, ingredient_name')
         .eq('inventory_id', inventoryId);
 
       if (!itemsError && inventoryItems) {
-        return inventoryItems.map(item => item.ingredient_id);
+        return inventoryItems
+          .map(item => convertToNumericId(item.ingredient_id))
+          .filter((id): id is number => id !== null);
       }
     }
   } catch (error) {
@@ -427,7 +460,7 @@ export async function getUserBarIngredientIdsClient(userId: string): Promise<str
   // Fallback to bar_ingredients
   const { data: barIngredients, error } = await supabase
     .from('bar_ingredients')
-    .select('ingredient_id')
+    .select('ingredient_id, ingredient_name')
     .eq('user_id', userId);
 
   if (error) {
@@ -435,7 +468,9 @@ export async function getUserBarIngredientIdsClient(userId: string): Promise<str
     return [];
   }
 
-  return (barIngredients || []).map(item => item.ingredient_id);
+  return (barIngredients || [])
+    .map(item => convertToNumericId(item.ingredient_id))
+    .filter((id): id is number => id !== null);
 }
 
 /**
