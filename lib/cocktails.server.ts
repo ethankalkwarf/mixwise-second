@@ -208,35 +208,41 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     return [];
   }
 
-  // Then get all cocktail ingredients joined with ingredients table
-  const { data: cocktailIngredients, error: ingredientsError } = await supabase
+  // Query A: Get cocktail ingredients
+  const { data: cocktailIngredients, error: ciError } = await supabase
     .from('cocktail_ingredients')
-    .select(`
-      cocktail_id,
-      ingredient_id,
-      amount,
-      is_optional,
-      notes,
-      ingredients (
-        id,
-        name
-      )
-    `);
+    .select('cocktail_id, ingredient_id, amount, is_optional, notes');
 
-  if (ingredientsError) {
-    console.error('Error fetching cocktail ingredients:', ingredientsError);
+  if (ciError) {
+    console.error('Error fetching cocktail ingredients:', ciError);
     return [];
   }
+
+  // Query B: Get ingredients mapping
+  const { data: ingredients, error: ingError } = await supabase
+    .from('ingredients')
+    .select('id, name');
+
+  if (ingError) {
+    console.error('Error fetching ingredients:', ingError);
+    return [];
+  }
+
+  // Build Map<number, string> of ingredientId → ingredientName
+  const ingredientNameById = new Map<number, string>();
+  (ingredients || []).forEach(ing => {
+    ingredientNameById.set(ing.id, ing.name);
+  });
 
   // Group ingredients by cocktail_id
   const ingredientsByCocktail = new Map<string, Array<{ id: number; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
   (cocktailIngredients || []).forEach((ci: any) => {
-    if (!ci.ingredients) return; // Skip if ingredient not found
-
     const cocktailId = ci.cocktail_id;
+    const name = ingredientNameById.get(ci.ingredient_id) ?? 'Unknown';
+
     const ingredient = {
-      id: ci.ingredients.id,
-      name: ci.ingredients.name,
+      id: ci.ingredient_id,
+      name,
       amount: ci.amount,
       isOptional: ci.is_optional,
       notes: ci.notes
@@ -247,6 +253,11 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     }
     ingredientsByCocktail.get(cocktailId)!.push(ingredient);
   });
+
+  // Dev-only warning for debugging
+  if (process.env.NODE_ENV === 'development' && ingredientsByCocktail.size === 0) {
+    console.warn('[mix] ingredientsByCocktail empty — check cocktail_ingredients data');
+  }
 
   // Build the result with ingredientsWithIds
   return (cocktails || []).map(cocktail => ({
