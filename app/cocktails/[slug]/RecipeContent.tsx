@@ -251,8 +251,8 @@ export function RecipeContent({
         {/* INGREDIENTS COLUMN */}
         <div className="lg:col-span-5 space-y-8">
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 sticky top-24">
-            <div className="flex items-start justify-between mb-6">
-              <h2 className="font-serif text-2xl font-bold text-gray-900 mt-2">Ingredients</h2>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-0 mb-6">
+              <h2 className="font-serif text-2xl font-bold text-gray-900">Ingredients</h2>
               <QuantitySelector
                 quantity={quantity}
                 onQuantityChange={setQuantity}
