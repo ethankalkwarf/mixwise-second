@@ -43,30 +43,41 @@ export async function getCocktailBySlug(slug: string): Promise<Cocktail | null> 
 
 /**
  * Get cocktails list with optional filters (server-side)
+ * Use includeIngredients: true for bar matching logic
  */
-export async function getCocktailsList(filters: CocktailFilters = {}): Promise<CocktailListItem[]> {
+export async function getCocktailsList(filters: CocktailFilters & { includeIngredients?: boolean } = {}): Promise<CocktailListItem[]> {
   const supabase = createServerSupabaseClient();
+
+  // Build select fields
+  let selectFields = `
+    id,
+    slug,
+    name,
+    short_description,
+    base_spirit,
+    category_primary,
+    difficulty,
+    tags,
+    categories_all,
+    image_url,
+    image_alt,
+    flavor_strength,
+    flavor_sweetness,
+    flavor_tartness,
+    flavor_bitterness,
+    flavor_aroma,
+    flavor_texture
+  `;
+
+  if (filters.includeIngredients) {
+    selectFields += `,
+    ingredients
+    `;
+  }
+
   let query = supabase
     .from('cocktails')
-    .select(`
-      id,
-      slug,
-      name,
-      short_description,
-      base_spirit,
-      category_primary,
-      difficulty,
-      tags,
-      categories_all,
-      image_url,
-      image_alt,
-      flavor_strength,
-      flavor_sweetness,
-      flavor_tartness,
-      flavor_bitterness,
-      flavor_aroma,
-      flavor_texture
-    `)
+    .select(selectFields)
     .order('name');
 
   // Apply filters

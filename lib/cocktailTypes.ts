@@ -86,6 +86,7 @@ export interface CocktailFilters {
   search?: string;
   limit?: number;
   offset?: number;
+  includeIngredients?: boolean;
 }
 
 // Result type for cocktail listings

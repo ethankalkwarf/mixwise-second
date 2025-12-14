@@ -103,7 +103,7 @@ export default async function PublicBarPage({ params }: PageProps) {
   let cocktailMatches: CocktailMatch[] = [];
 
   if (ingredientIds.length > 0) {
-    const cocktails = await getCocktailsList({ limit: 100 });
+    const cocktails = await getCocktailsList({ limit: 100, includeIngredients: true });
 
     const ingredientSet = new Set(ingredientIds);
     cocktailMatches = cocktails
