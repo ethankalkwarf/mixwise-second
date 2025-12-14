@@ -23,12 +23,12 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
 
   for (const cocktail of cocktails) {
     // Skip cocktails with no ingredients (bad data)
-    if (!cocktail.ingredients || cocktail.ingredients.length === 0) {
+    if (!cocktail.ingredientsWithIds || cocktail.ingredientsWithIds.length === 0) {
       continue;
     }
 
     // Filter to required ingredients (not optional, not staples)
-    const requiredIngredients = cocktail.ingredients.filter(
+    const requiredIngredients = cocktail.ingredientsWithIds.filter(
       (ing) => ing.id && !ing.isOptional && !staples.has(ing.id)
     );
 

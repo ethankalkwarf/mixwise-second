@@ -330,45 +330,27 @@ function getFallbackIngredients(): MixIngredient[] {
  * Fetch cocktails for mix logic (client-side)
  */
 export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
-  const supabase = getSupabaseClient();
+  const cocktailsWithIngredients = await getCocktailsWithIngredientsClient();
 
-  const { data, error } = await supabase
-    .from('cocktails')
-    .select('*')
-    .order('name');
-
-  if (error) {
-    console.error('Error fetching mix cocktails:', error);
-    return [];
-  }
-
-  return (data || []).map(cocktail => ({
+  return cocktailsWithIngredients.map(cocktail => ({
     id: cocktail.id,
     name: cocktail.name,
     slug: cocktail.slug,
-    description: cocktail.short_description || null,
-    instructions: cocktail.instructions || null,
-    category: cocktail.category_primary || null,
-    imageUrl: cocktail.image_url || null,
-    glass: cocktail.glassware || null,
-    method: cocktail.technique || null,
-    primarySpirit: cocktail.base_spirit || null,
-    difficulty: cocktail.difficulty || null,
-    isPopular: cocktail.metadata_json?.isPopular || false,
-    isFavorite: cocktail.metadata_json?.isFavorite || false,
-    isTrending: cocktail.metadata_json?.isTrending || false,
-    drinkCategories: cocktail.categories_all || [],
-    tags: cocktail.tags || [],
-    garnish: cocktail.garnish || null,
-    ingredients: (cocktail.ingredients as CocktailIngredient[] || [])
-      .filter(ing => ing.ingredient?.id) // Filter out null references
-      .map(ing => ({
-        id: ing.ingredient!.id,
-        name: ing.ingredient!.name || "Unknown",
-        amount: ing.amount || null,
-        isOptional: ing.isOptional || false,
-        notes: ing.notes || null
-      }))
+    description: cocktail.description,
+    instructions: cocktail.instructions,
+    category: cocktail.category,
+    imageUrl: cocktail.imageUrl,
+    glass: cocktail.glass,
+    method: cocktail.method,
+    primarySpirit: cocktail.primarySpirit,
+    difficulty: cocktail.difficulty,
+    isPopular: cocktail.isPopular,
+    isFavorite: cocktail.isFavorite,
+    isTrending: cocktail.isTrending,
+    drinkCategories: cocktail.drinkCategories,
+    tags: cocktail.tags,
+    garnish: cocktail.garnish,
+    ingredients: cocktail.ingredientsWithIds
   }));
 }
 
@@ -390,6 +372,106 @@ export async function getMixDataClient(): Promise<{
 // =========================
 // UTILITY FUNCTIONS
 // =========================
+
+/**
+ * Get cocktails with ingredients from cocktail_ingredients table (client-side)
+ * Returns cocktails with ingredientsWithIds array containing numeric ingredient IDs and names
+ */
+export async function getCocktailsWithIngredientsClient(): Promise<Array<{
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  instructions: string | null;
+  category: string | null;
+  imageUrl: string | null;
+  glass: string | null;
+  method: string | null;
+  primarySpirit: string | null;
+  difficulty: string | null;
+  isPopular: boolean;
+  isFavorite: boolean;
+  isTrending: boolean;
+  drinkCategories: string[];
+  tags: string[];
+  garnish: string | null;
+  ingredientsWithIds: Array<{ id: number; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+}>> {
+  const supabase = createClient();
+
+  // First get all cocktails
+  const { data: cocktails, error: cocktailsError } = await supabase
+    .from('cocktails')
+    .select('id, name, slug, short_description, instructions, category_primary, image_url, glassware, technique, base_spirit, difficulty, categories_all, tags, garnish, metadata_json')
+    .order('name');
+
+  if (cocktailsError) {
+    console.error('Error fetching cocktails:', cocktailsError);
+    return [];
+  }
+
+  // Then get all cocktail ingredients joined with ingredients table
+  const { data: cocktailIngredients, error: ingredientsError } = await supabase
+    .from('cocktail_ingredients')
+    .select(`
+      cocktail_id,
+      ingredient_id,
+      amount,
+      is_optional,
+      notes,
+      ingredients (
+        id,
+        name
+      )
+    `);
+
+  if (ingredientsError) {
+    console.error('Error fetching cocktail ingredients:', ingredientsError);
+    return [];
+  }
+
+  // Group ingredients by cocktail_id
+  const ingredientsByCocktail = new Map<string, Array<{ id: number; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
+  (cocktailIngredients || []).forEach((ci: any) => {
+    if (!ci.ingredients) return; // Skip if ingredient not found
+
+    const cocktailId = ci.cocktail_id;
+    const ingredient = {
+      id: ci.ingredients.id,
+      name: ci.ingredients.name,
+      amount: ci.amount,
+      isOptional: ci.is_optional,
+      notes: ci.notes
+    };
+
+    if (!ingredientsByCocktail.has(cocktailId)) {
+      ingredientsByCocktail.set(cocktailId, []);
+    }
+    ingredientsByCocktail.get(cocktailId)!.push(ingredient);
+  });
+
+  // Build the result with ingredientsWithIds
+  return (cocktails || []).map(cocktail => ({
+    id: cocktail.id,
+    name: cocktail.name,
+    slug: cocktail.slug,
+    description: cocktail.short_description || null,
+    instructions: cocktail.instructions || null,
+    category: cocktail.category_primary || null,
+    imageUrl: cocktail.image_url || null,
+    glass: cocktail.glassware || null,
+    method: cocktail.technique || null,
+    primarySpirit: cocktail.base_spirit || null,
+    difficulty: cocktail.difficulty || null,
+    isPopular: cocktail.metadata_json?.isPopular || false,
+    isFavorite: cocktail.metadata_json?.isFavorite || false,
+    isTrending: cocktail.metadata_json?.isTrending || false,
+    drinkCategories: cocktail.categories_all || [],
+    tags: cocktail.tags || [],
+    garnish: cocktail.garnish || null,
+    ingredientsWithIds: ingredientsByCocktail.get(cocktail.id) || []
+  }));
+}
 
 /**
  * Get unique values for a field (e.g., base_spirits, categories)

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { MainContainer } from "@/components/layout/MainContainer";
-import { getCocktailsList } from "@/lib/cocktails";
+import { getCocktailsWithIngredients } from "@/lib/cocktails.server";
 import { getUserBarIngredients } from "@/lib/cocktails.server";
 import {
   BeakerIcon,
@@ -101,16 +101,16 @@ export default async function PublicBarPage({ params }: PageProps) {
   let cocktailMatches: CocktailMatch[] = [];
 
   if (ingredientIds.length > 0) {
-    const cocktails = await getCocktailsList({ limit: 100, includeIngredients: true });
+    const cocktails = await getCocktailsWithIngredients();
 
     const ingredientSet = new Set(ingredientIds);
     cocktailMatches = cocktails
       .filter((cocktail) => {
         try {
-          const ingredients = cocktail.ingredients as any[] || [];
+          const ingredients = cocktail.ingredientsWithIds || [];
           const required = ingredients
-            .map(ing => ing?.ingredient?.id)
-            .filter(Boolean);
+            .filter(ing => !ing.isOptional)
+            .map(ing => ing.id);
           if (required.length === 0) return false;
           return required.every((id) => ingredientSet.has(id));
         } catch (error) {
@@ -122,8 +122,8 @@ export default async function PublicBarPage({ params }: PageProps) {
         _id: cocktail.id,
         name: cocktail.name,
         slug: { current: cocktail.slug },
-        externalImageUrl: cocktail.image_url || undefined,
-        primarySpirit: cocktail.base_spirit || undefined,
+        externalImageUrl: cocktail.imageUrl || undefined,
+        primarySpirit: cocktail.primarySpirit || undefined,
       }))
       .slice(0, 12);
   }
