@@ -14,6 +14,60 @@ interface IngredientWithName {
   name: string | null;
 }
 
+/**
+ * Normalize legacy ingredient IDs to canonical ingredients.id values
+ */
+function normalizeIngredientIds(
+  ids: string[],
+  nameToCanonicalId: Map<string, string>,
+  ingredientNameMap?: Map<string, string | null>
+): string[] {
+  const normalized: string[] = [];
+
+  for (const id of ids) {
+    // If it's already numeric, keep as-is
+    if (/^\d+$/.test(id)) {
+      normalized.push(id);
+      continue;
+    }
+
+    // If it starts with ingredient-, strip prefix
+    if (id.startsWith('ingredient-')) {
+      const remainder = id.substring('ingredient-'.length);
+      if (/^\d+$/.test(remainder)) {
+        normalized.push(remainder);
+        continue;
+      }
+    }
+
+    // Try lookup by exact name
+    const canonicalId = nameToCanonicalId.get(id.toLowerCase());
+    if (canonicalId) {
+      normalized.push(canonicalId);
+      continue;
+    }
+
+    // If we have a name map and this ID has a name, try looking up by name
+    if (ingredientNameMap) {
+      const name = ingredientNameMap.get(id);
+      if (name) {
+        const canonicalIdFromName = nameToCanonicalId.get(name.toLowerCase());
+        if (canonicalIdFromName) {
+          normalized.push(canonicalIdFromName);
+          continue;
+        }
+      }
+    }
+
+    // If still not found, drop it but log in dev mode
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[bar] Dropping unmigratable ingredient ID: "${id}"`);
+    }
+  }
+
+  return [...new Set(normalized)]; // Remove duplicates
+}
+
 interface UseBarIngredientsResult {
   ingredientIds: string[];
   ingredients: IngredientWithName[];  // Full data with names
@@ -106,56 +160,117 @@ export function useBarIngredients(): UseBarIngredientsResult {
   useEffect(() => {
     const initialize = async () => {
       if (authLoading) return;
-      
+
       setIsLoading(true);
-      
+
+      // Fetch ingredients for ID normalization
+      const { data: ingredientsData, error: ingredientsError } = await supabase
+        .from("ingredients")
+        .select("id, name");
+
+      if (ingredientsError) {
+        console.error("Error fetching ingredients for normalization:", ingredientsError);
+        return;
+      }
+
+      const nameToCanonicalId = new Map<string, string>();
+      (ingredientsData || []).forEach(ingredient => {
+        nameToCanonicalId.set(ingredient.name.toLowerCase(), String(ingredient.id));
+      });
+
       if (isAuthenticated && user) {
         // Load from server for authenticated users
         const serverData = await loadFromServer();
         setServerIngredients(serverData);
-        
+
         // Build name map from server data
         const nameMap = new Map<string, string | null>();
         serverData.forEach(item => {
           nameMap.set(item.ingredient_id, item.ingredient_name);
         });
         setIngredientNameMap(nameMap);
-        
+
         const serverIds = serverData.map(item => item.ingredient_id);
         const localIds = loadFromLocal();
-        
+
         // Merge local with server (server takes precedence, but add any new local items)
         const mergedIds = [...new Set([...serverIds, ...localIds])];
-        
-        // If there are local items not on server, sync them
-        const newLocalIds = localIds.filter(id => !serverIds.includes(id));
-        if (newLocalIds.length > 0) {
-          // Add new local items to server
-          const newItems = newLocalIds.map(id => ({
+
+        // Normalize merged IDs to canonical format
+        const normalizedMergedIds = normalizeIngredientIds(mergedIds, nameToCanonicalId, nameMap);
+
+        // Debug logs
+        if (process.env.NODE_ENV === 'development') {
+          console.log("[bar] before normalization", mergedIds.slice(0, 10));
+          console.log("[bar] after normalization", normalizedMergedIds.slice(0, 10));
+        }
+
+        // If normalization changed anything, migrate the data
+        if (normalizedMergedIds.length !== mergedIds.length || !normalizedMergedIds.every(id => mergedIds.includes(id))) {
+          // Replace all server data with normalized IDs
+          await supabase.from("bar_ingredients").delete().eq("user_id", user.id);
+
+          const normalizedItems = normalizedMergedIds.map(id => ({
             user_id: user.id,
             ingredient_id: id,
+            ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
           }));
-          
-          await supabase.from("bar_ingredients").upsert(newItems, {
-            onConflict: "user_id,ingredient_id",
-          });
-          
-          // Clear local storage after syncing
-          clearLocal();
+
+          await supabase.from("bar_ingredients").insert(normalizedItems);
+
+          // Update local storage with normalized IDs
+          saveToLocal(normalizedMergedIds);
+
+          setServerIngredients(normalizedItems);
+        } else {
+          // If there are local items not on server, sync them (normalized)
+          const newLocalIds = localIds.filter(id => !serverIds.includes(id));
+          if (newLocalIds.length > 0) {
+            const normalizedNewIds = normalizeIngredientIds(newLocalIds, nameToCanonicalId);
+
+            // Add new local items to server (normalized)
+            const newItems = normalizedNewIds.map(id => ({
+              user_id: user.id,
+              ingredient_id: id,
+              ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
+            }));
+
+            await supabase.from("bar_ingredients").upsert(newItems, {
+              onConflict: "user_id,ingredient_id",
+            });
+
+            // Clear local storage after syncing
+            clearLocal();
+          }
         }
-        
-        setIngredientIds(mergedIds);
+
+        setIngredientIds(normalizedMergedIds);
       } else {
         // Load from localStorage for anonymous users
         const localIds = loadFromLocal();
-        setIngredientIds(localIds);
+
+        // Normalize local IDs to canonical format
+        const normalizedLocalIds = normalizeIngredientIds(localIds, nameToCanonicalId);
+
+        // Debug logs
+        if (process.env.NODE_ENV === 'development') {
+          console.log("[bar] local before normalization", localIds.slice(0, 10));
+          console.log("[bar] local after normalization", normalizedLocalIds.slice(0, 10));
+        }
+
+        // If normalization changed anything, update localStorage
+        if (normalizedLocalIds.length !== localIds.length || !normalizedLocalIds.every(id => localIds.includes(id))) {
+          saveToLocal(normalizedLocalIds);
+        }
+
+        setIngredientIds(normalizedLocalIds);
       }
-      
+
       setIsLoading(false);
     };
-    
+
     initialize();
-  }, [authLoading, isAuthenticated, user, loadFromServer, loadFromLocal, clearLocal, supabase]);
+  }, [authLoading, isAuthenticated, user, loadFromServer, loadFromLocal, clearLocal, saveToLocal, supabase]);
 
   // Add ingredient
   const addIngredient = useCallback(async (id: string, name?: string) => {
