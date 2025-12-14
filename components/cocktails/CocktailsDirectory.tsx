@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import { getImageUrl } from "@/lib/sanityImage";
+import { formatCocktailName } from "@/lib/formatters";
 
 type SortOption = "name-asc" | "name-desc" | "popular";
 
@@ -622,7 +623,7 @@ function CocktailCard({
               </p>
             )}
             <h3 className="font-display font-bold text-xl leading-tight text-forest">
-              {cocktail.name}
+              {formatCocktailName(cocktail.name)}
             </h3>
           </div>
 

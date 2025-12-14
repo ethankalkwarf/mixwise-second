@@ -60,17 +60,24 @@ function normalizeInstructions(
 
   const value = raw.trim();
 
+  // First try to split on numbered patterns like "1) ", "2) ", etc.
   const numbered = value
     .split(/\s*\d+\)\s*/g)
     .map((s) => s.trim())
-    .filter(Boolean);
+    .filter((s) => s.length > 0 && !/^\d+$/.test(s)); // Remove standalone numbers
 
   if (numbered.length > 1) return numbered;
 
-  return value
+  // Fallback: split on sentence endings (periods followed by space)
+  const sentences = value
     .split(/\.\s+/g)
     .map((s) => s.trim().replace(/\.$/, ""))
-    .filter(Boolean);
+    .filter((s) => s.length > 0 && !/^\d+$/.test(s)); // Remove standalone numbers
+
+  if (sentences.length > 1) return sentences;
+
+  // Final fallback: if it's a single instruction, return it as one step
+  return [value];
 }
 
 function normalizeTags(

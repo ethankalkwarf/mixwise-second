@@ -7,6 +7,7 @@ import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
 import Image from "next/image";
 import { RecipeActions } from "@/components/cocktails/RecipeActions";
 import { Button } from "@/components/common/Button";
+import { formatCocktailName } from "@/lib/formatters";
 import {
   BeakerIcon,
   SparklesIcon,
@@ -112,7 +113,7 @@ export function RecipeContent({
 
           {/* Drink title */}
           <h1 className="text-4xl font-semibold tracking-tight mb-6">
-            {sanityCocktail.name}
+            {formatCocktailName(sanityCocktail.name)}
           </h1>
 
           <hr className="border-mist mb-6" />
@@ -265,8 +266,8 @@ export function RecipeContent({
         {/* INGREDIENTS COLUMN */}
         <div className="lg:col-span-5 space-y-8">
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 sticky top-24">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-0 mb-6">
-              <h2 className="font-serif text-2xl font-bold text-gray-900">Ingredients</h2>
+            <h2 className="font-serif text-2xl font-bold text-gray-900 mb-4">Ingredients</h2>
+            <div className="mb-6">
               <QuantitySelector
                 quantity={quantity}
                 onQuantityChange={setQuantity}
@@ -338,7 +339,7 @@ export function RecipeContent({
       {/* Instructions Section */}
       <section id="recipe" className="mt-16">
         <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
-          How to make the {sanityCocktail.name}
+          How to make the {formatCocktailName(sanityCocktail.name)}
         </h2>
 
         {instructionSteps.length === 0 ? (
@@ -363,7 +364,7 @@ export function RecipeContent({
       {similarRecipes.length > 0 && (
         <section className="mt-16">
           <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
-            Drinks similar to {sanityCocktail.name}
+            Drinks similar to {formatCocktailName(sanityCocktail.name)}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {similarRecipes.slice(0, 3).map((recipe) => (
@@ -388,7 +389,7 @@ export function RecipeContent({
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900 group-hover:text-terracotta transition-colors">
-                    {recipe.name}
+                    {formatCocktailName(recipe.name)}
                   </h3>
                   {recipe.short_description && (
                     <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
