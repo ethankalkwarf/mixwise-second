@@ -206,3 +206,73 @@ export async function getCocktailCount(): Promise<number> {
 
   return count || 0;
 }
+
+/**
+ * Get user's bar ingredients with fallback logic
+ * First tries inventories/inventory_items tables, then falls back to bar_ingredients
+ */
+export async function getUserBarIngredients(userId: string): Promise<Array<{
+  id: string;
+  ingredient_id: string;
+  ingredient_name: string | null;
+  inventory_id?: string;
+}>> {
+  const supabase = createServerSupabaseClient();
+
+  // First try the old inventories table structure (if it exists)
+  try {
+    // Check if inventories table exists and has data for this user
+    const { data: inventories, error: inventoriesError } = await supabase
+      .from('inventories')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1);
+
+    if (!inventoriesError && inventories && inventories.length > 0) {
+      // Use old table structure
+      const inventoryId = inventories[0].id;
+      const { data: inventoryItems, error: itemsError } = await supabase
+        .from('inventory_items')
+        .select('id, ingredient_id, ingredient_name')
+        .eq('inventory_id', inventoryId);
+
+      if (!itemsError && inventoryItems) {
+        return inventoryItems.map(item => ({
+          id: item.id.toString(),
+          ingredient_id: item.ingredient_id,
+          ingredient_name: item.ingredient_name,
+          inventory_id: inventoryId,
+        }));
+      }
+    }
+  } catch (error) {
+    // inventories/inventory_items tables don't exist or are empty, continue to fallback
+  }
+
+  // Fallback to bar_ingredients table
+  const { data: barIngredients, error } = await supabase
+    .from('bar_ingredients')
+    .select('id, ingredient_id, ingredient_name')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching bar ingredients:', error);
+    return [];
+  }
+
+  return (barIngredients || []).map(item => ({
+    id: item.id.toString(),
+    ingredient_id: item.ingredient_id,
+    ingredient_name: item.ingredient_name,
+    // No inventory_id for bar_ingredients
+  }));
+}
+
+/**
+ * Get user's bar ingredient IDs only (for quick checks)
+ * First tries inventories/inventory_items tables, then falls back to bar_ingredients
+ */
+export async function getUserBarIngredientIds(userId: string): Promise<string[]> {
+  const ingredients = await getUserBarIngredients(userId);
+  return ingredients.map(item => item.ingredient_id);
+}

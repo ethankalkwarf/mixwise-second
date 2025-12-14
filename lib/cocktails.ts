@@ -395,6 +395,50 @@ export async function getUniqueValues(field: 'base_spirit' | 'category_primary' 
 }
 
 /**
+ * Get user's bar ingredient IDs (client-side)
+ * Uses server action for consistency with fallback logic
+ */
+export async function getUserBarIngredientIdsClient(userId: string): Promise<string[]> {
+  const supabase = createClient();
+
+  // First try old inventories table structure
+  try {
+    const { data: inventories, error: inventoriesError } = await supabase
+      .from('inventories')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1);
+
+    if (!inventoriesError && inventories && inventories.length > 0) {
+      const inventoryId = inventories[0].id;
+      const { data: inventoryItems, error: itemsError } = await supabase
+        .from('inventory_items')
+        .select('ingredient_id')
+        .eq('inventory_id', inventoryId);
+
+      if (!itemsError && inventoryItems) {
+        return inventoryItems.map(item => item.ingredient_id);
+      }
+    }
+  } catch (error) {
+    // Continue to fallback
+  }
+
+  // Fallback to bar_ingredients
+  const { data: barIngredients, error } = await supabase
+    .from('bar_ingredients')
+    .select('ingredient_id')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching bar ingredient IDs:', error);
+    return [];
+  }
+
+  return (barIngredients || []).map(item => item.ingredient_id);
+}
+
+/**
  * Get cocktail count
  */
 export async function getCocktailCount(): Promise<number> {

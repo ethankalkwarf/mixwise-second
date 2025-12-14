@@ -7,6 +7,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { getCocktailsList } from "@/lib/cocktails";
+import { getUserBarIngredients } from "@/lib/cocktails.server";
 import {
   BeakerIcon,
   HeartIcon,
@@ -85,11 +86,8 @@ export default async function PublicBarPage({ params }: PageProps) {
     notFound();
   }
 
-  // Fetch bar ingredients
-  const { data: barIngredients } = await supabase
-    .from("bar_ingredients")
-    .select("ingredient_id, ingredient_name")
-    .eq("user_id", params.userId);
+  // Fetch bar ingredients with fallback logic
+  const barIngredients = await getUserBarIngredients(params.userId);
 
   // Fetch favorites (public)
   const { data: favorites } = await supabase
@@ -99,7 +97,7 @@ export default async function PublicBarPage({ params }: PageProps) {
     .limit(6);
 
   // Calculate cocktails they can make
-  const ingredientIds = (barIngredients || []).map((i) => i.ingredient_id);
+  const ingredientIds = barIngredients.map((i) => i.ingredient_id);
   let cocktailMatches: CocktailMatch[] = [];
 
   if (ingredientIds.length > 0) {
@@ -155,7 +153,7 @@ export default async function PublicBarPage({ params }: PageProps) {
               {displayName}&apos;s Bar
             </h1>
             <p className="text-slate-400 mt-1">
-              {ingredientIds.length} ingredients • {cocktailMatches.length} cocktails possible
+              {barIngredients.length} ingredients • {cocktailMatches.length} cocktails possible
             </p>
           </div>
         </div>
@@ -164,7 +162,7 @@ export default async function PublicBarPage({ params }: PageProps) {
         <div className="grid sm:grid-cols-3 gap-4 mb-8">
           <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-xl">
             <BeakerIcon className="w-6 h-6 text-lime-400 mb-2" />
-            <p className="text-2xl font-bold text-slate-100">{ingredientIds.length}</p>
+            <p className="text-2xl font-bold text-slate-100">{barIngredients.length}</p>
             <p className="text-sm text-slate-400">Ingredients</p>
           </div>
           <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-xl">
@@ -187,9 +185,9 @@ export default async function PublicBarPage({ params }: PageProps) {
             </h2>
           </div>
           <div className="p-6">
-            {barIngredients && barIngredients.length > 0 ? (
+            {barIngredients.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {(barIngredients as BarIngredient[]).map((item) => (
+                {barIngredients.map((item) => (
                   <span
                     key={item.ingredient_id}
                     className="px-3 py-1.5 bg-slate-800 text-slate-300 text-sm rounded-lg"
