@@ -66,13 +66,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function PublicBarPage({ params }: PageProps) {
+  const { userId } = params;
+
+  if (!userId) {
+    notFound();
+  }
+
   const supabase = createServerComponentClient({ cookies });
 
   // Fetch user profile
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id, display_name, avatar_url")
-    .eq("id", params.userId)
+    .eq("id", userId)
     .single();
 
   if (profileError || !profile) {
@@ -102,9 +108,17 @@ export default async function PublicBarPage({ params }: PageProps) {
     const ingredientSet = new Set(ingredientIds);
     cocktailMatches = cocktails
       .filter((cocktail) => {
-        const required = (cocktail.ingredients as any[] || []).map(ing => ing.ingredient?.id).filter(Boolean);
-        if (required.length === 0) return false;
-        return required.every((id) => ingredientSet.has(id));
+        try {
+          const ingredients = cocktail.ingredients as any[] || [];
+          const required = ingredients
+            .map(ing => ing?.ingredient?.id)
+            .filter(Boolean);
+          if (required.length === 0) return false;
+          return required.every((id) => ingredientSet.has(id));
+        } catch (error) {
+          // Skip cocktails with malformed ingredient data
+          return false;
+        }
       })
       .map(cocktail => ({
         _id: cocktail.id,
@@ -247,7 +261,7 @@ export default async function PublicBarPage({ params }: PageProps) {
             </div>
             <div className="p-6">
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {(favorites as Favorite[]).map((fav) => (
+                {(favorites as Favorite[]).filter(fav => fav.cocktail_slug).map((fav) => (
                   <Link
                     key={fav.cocktail_id}
                     href={`/cocktails/${fav.cocktail_slug}`}
