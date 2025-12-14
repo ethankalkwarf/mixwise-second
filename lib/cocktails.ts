@@ -287,6 +287,11 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
       });
     }
 
+    // Log first few cocktails for debugging
+    if (cocktails.indexOf(cocktail) < 3) {
+      console.log(`[PROD-DEBUG] Cocktail "${cocktail.name}" has ${ingredientsWithIds.length} ingredients:`, ingredientsWithIds.map(i => ({id: i.id, name: i.name})));
+    }
+
     return {
       id: cocktail.id,
       name: cocktail.name,
