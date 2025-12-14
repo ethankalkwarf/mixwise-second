@@ -24,19 +24,28 @@ export function BartendersNoteCard({ note, sources }: BartendersNoteCardProps) {
         {sources && sources.length > 0 && (
           <div className="flex flex-wrap gap-x-2 text-xs text-amber-700/70">
             <span className="font-bold">Source:</span>
-            {sources.map((source, i) => (
-              <span key={i}>
-                <a
-                  href={source.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-amber-900 transition-colors"
-                >
-                  {source.label}
-                </a>
-                {i < sources.length - 1 && ", "}
-              </span>
-            ))}
+            {sources.map((source, i) => {
+              // Check if URL is valid (not "#" or empty)
+              const isValidUrl = source.url && source.url !== "#" && source.url.startsWith("http");
+
+              return (
+                <span key={i}>
+                  {isValidUrl ? (
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-amber-900 transition-colors"
+                    >
+                      {source.label}
+                    </a>
+                  ) : (
+                    <span className="italic">{source.label}</span>
+                  )}
+                  {i < sources.length - 1 && ", "}
+                </span>
+              );
+            })}
           </div>
         )}
       </div>

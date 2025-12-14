@@ -113,7 +113,10 @@ function mapSupabaseToSanityCocktail(cocktail: any) {
     method: cocktail.technique,
     tags: cocktail.tags || [],
     funFact: cocktail.fun_fact,
-    funFactSources: cocktail.fun_fact_source ? [{ label: cocktail.fun_fact_source, url: "#" }] : [],
+    funFactSources: cocktail.fun_fact_source ? [{
+      label: cocktail.fun_fact_source,
+      url: cocktail.fun_fact_source.startsWith('http') ? cocktail.fun_fact_source : ""
+    }] : [],
     flavorProfile: cocktail.flavor_strength || cocktail.flavor_sweetness || cocktail.flavor_tartness || cocktail.flavor_bitterness ? {
       strength: cocktail.flavor_strength,
       sweetness: cocktail.flavor_sweetness,
