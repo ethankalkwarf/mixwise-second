@@ -182,7 +182,7 @@ async function migrateCocktailUUIDs() {
 
     const { data: verificationRows, error: verifyError } = await supabase
       .from('cocktail_ingredients')
-      .select('id, cocktail_id')
+      .select('cocktail_id, ingredient_id')
       .limit(5);
 
     if (verifyError) {

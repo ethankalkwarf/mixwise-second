@@ -14,7 +14,8 @@
     "seed:cocktails": "npx tsx scripts/seedCocktailsFromExcel.ts",
     "verify:cocktails": "npx tsx scripts/verifyCocktails.ts",
     "clear:sanity-cocktails": "npx tsx scripts/clearSanityCocktails.ts",
-    "migrate:cocktail-uuids": "node scripts/migrate-cocktail-uuids.js"
+    "migrate:cocktail-uuids": "node scripts/migrate-cocktail-uuids.js",
+    "verify:cocktail-uuids": "node scripts/verify-cocktail-uuids.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
