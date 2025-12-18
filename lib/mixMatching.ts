@@ -14,9 +14,6 @@ export type MixMatchParams = {
 export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   const { cocktails, ownedIngredientIds, stapleIngredientIds = [] } = params;
 
-  console.log(`[PROD-DEBUG] Matching ${ownedIngredientIds.length} owned ingredients against ${cocktails.length} cocktails`);
-  console.log(`[PROD-DEBUG] Owned IDs sample:`, ownedIngredientIds.slice(0, 5));
-
   const owned = new Set<string>(ownedIngredientIds);
   const staples = new Set<string>(stapleIngredientIds);
 
@@ -84,8 +81,6 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   makeNow.sort(sortFn);
   almostThere.sort(sortFn);
   all.sort(sortFn);
-
-  console.log(`[PROD-DEBUG] Match results: ${makeNow.length} ready, ${almostThere.length} almost there`);
 
   return { makeNow, almostThere, all };
 }

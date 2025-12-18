@@ -256,7 +256,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
 }>> {
   const supabase = createClient();
 
-  // Get all cocktails with their ingredients via JOIN
+  // Get all cocktails
   const { data: cocktailData, error: cocktailError } = await supabase
     .from('cocktails')
     .select(`
@@ -274,49 +274,68 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
       categories_all,
       tags,
       garnish,
-      metadata_json,
-      cocktail_ingredients (
-        ingredient_id,
-        amount,
-        is_optional,
-        notes,
-        ingredients (
-          id,
-          name
-        )
-      )
+      metadata_json
     `)
     .order('name');
 
   if (cocktailError) {
-    console.error('Error fetching cocktails with ingredients:', cocktailError);
+    console.error('Error fetching cocktails:', cocktailError);
     return [];
   }
 
   if (!cocktailData) return [];
 
-  // Process and group ingredients by cocktail
+  // Get cocktail ingredients from cocktail_ingredients_uuid table
+  const { data: cocktailIngredients, error: ingredientsError } = await supabase
+    .from('cocktail_ingredients_uuid')
+    .select('cocktail_id, ingredient_id, raw_text, amount, is_optional, notes');
+
+  if (ingredientsError) {
+    console.error('Error fetching cocktail ingredients:', ingredientsError);
+    return [];
+  }
+
+  // Get ingredient name mapping
+  const { data: ingredients, error: ingError } = await supabase
+    .from('ingredients')
+    .select('id, name');
+
+  if (ingError) {
+    console.error('Error fetching ingredients:', ingError);
+    return [];
+  }
+
+  // Build ingredient name mapping
+  const ingredientNameById = new Map<number, string>();
+  (ingredients || []).forEach(ing => {
+    ingredientNameById.set(ing.id, ing.name);
+  });
+
+  // Group ingredients by cocktail_id (UUID)
+  const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
+  (cocktailIngredients || []).forEach((ci: any) => {
+    const cocktailId = ci.cocktail_id;
+    const ingredientId = String(ci.ingredient_id);
+    const name = ingredientNameById.get(ci.ingredient_id) ?? 'Unknown';
+
+    const ingredient = {
+      id: ingredientId,
+      name,
+      amount: ci.amount ?? ci.raw_text ?? null,
+      isOptional: ci.is_optional ?? false,
+      notes: ci.notes ?? null
+    };
+
+    if (!ingredientsByCocktail.has(cocktailId)) {
+      ingredientsByCocktail.set(cocktailId, []);
+    }
+    ingredientsByCocktail.get(cocktailId)!.push(ingredient);
+  });
+
+  // Process cocktails and attach their ingredients
   return cocktailData.map(cocktail => {
-    const ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }> = [];
+    const ingredientsWithIds = ingredientsByCocktail.get(cocktail.id) || [];
 
-    if (cocktail.cocktail_ingredients && Array.isArray(cocktail.cocktail_ingredients)) {
-      cocktail.cocktail_ingredients.forEach((ci: any) => {
-        if (ci.ingredients && ci.ingredient_id) {
-          ingredientsWithIds.push({
-            id: String(ci.ingredient_id),
-            name: ci.ingredients.name || 'Unknown',
-            amount: ci.amount,
-            isOptional: ci.is_optional || false,
-            notes: ci.notes
-          });
-        }
-      });
-    }
-
-    // Log first few cocktails for debugging
-    if (cocktailData.indexOf(cocktail) < 3) {
-      console.log(`[PROD-DEBUG] Cocktail "${cocktail.name}" has ${ingredientsWithIds.length} ingredients:`, ingredientsWithIds.map(i => ({id: i.id, name: i.name})));
-    }
 
     return {
       id: cocktail.id,

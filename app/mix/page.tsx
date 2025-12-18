@@ -103,8 +103,6 @@ export default function MixPage() {
   // Get match counts for display
   const matchCounts = useMemo(() => {
     const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
-    console.log(`[PROD-DEBUG] Mix page - ingredientIds:`, ingredientIds);
-    console.log(`[PROD-DEBUG] Mix page - stapleIds:`, stapleIds);
     const result = getMixMatchGroups({
       cocktails: allCocktails,
       ownedIngredientIds: ingredientIds,
