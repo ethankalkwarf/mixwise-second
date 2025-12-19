@@ -115,17 +115,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     // Only proceed with initialization if session context is ready
     if (!sessionContextLoading) {
-
       // Function to update auth state
       const updateAuthState = async (newSession: Session | null) => {
-      if (!mounted) return;
+        if (!mounted) return;
 
-      console.log("[UserProvider] Updating auth state:", {
-        hasSession: !!newSession,
-        hasUser: !!newSession?.user,
-        userId: newSession?.user?.id,
-        userEmail: newSession?.user?.email
-      });
+        console.log("[UserProvider] Updating auth state:", {
+          hasSession: !!newSession,
+          hasUser: !!newSession?.user,
+          userId: newSession?.user?.id,
+          userEmail: newSession?.user?.email
+        });
 
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -162,95 +161,88 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
       };
 
-        // Initial session check
-        const initializeAuth = async () => {
-          try {
-            console.log("[UserProvider] Initializing auth - getting session...");
-            const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      // Initial session check
+      const initializeAuth = async () => {
+        try {
+          console.log("[UserProvider] Initializing auth - getting session...");
+          const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
 
-            if (sessionError) {
-              console.error("[UserProvider] Initial session error:", sessionError);
-              setError(sessionError);
-              setIsLoading(false);
-              return;
-            }
-
-            console.log("[UserProvider] Initial session result:", {
-              hasSession: !!currentSession,
-              hasUser: !!currentSession?.user,
-              sessionExpiry: currentSession?.expires_at
-            });
-
-            await updateAuthState(currentSession);
-          } catch (err) {
-            console.error("[UserProvider] Initialize auth error:", err);
-            if (mounted) {
-              setError(err instanceof Error ? err : new Error("Auth initialization failed"));
-              setIsLoading(false);
-            }
+          if (sessionError) {
+            console.error("[UserProvider] Initial session error:", sessionError);
+            setError(sessionError);
+            setIsLoading(false);
+            return;
           }
-        };
 
-        // Subscribe to auth state changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, newSession) => {
-            console.log("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
+          console.log("[UserProvider] Initial session result:", {
+            hasSession: !!currentSession,
+            hasUser: !!currentSession?.user,
+            sessionExpiry: currentSession?.expires_at
+          });
 
-            // Handle different auth events
-            switch (event) {
-              case "SIGNED_IN":
-              case "TOKEN_REFRESHED":
+          await updateAuthState(currentSession);
+        } catch (err) {
+          console.error("[UserProvider] Initialize auth error:", err);
+          if (mounted) {
+            setError(err instanceof Error ? err : new Error("Auth initialization failed"));
+            setIsLoading(false);
+          }
+        }
+      };
+
+      // Subscribe to auth state changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, newSession) => {
+          console.log("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
+
+          // Handle different auth events
+          switch (event) {
+            case "SIGNED_IN":
+            case "TOKEN_REFRESHED":
+              await updateAuthState(newSession);
+              break;
+
+            case "SIGNED_OUT":
+              if (mounted) {
+                setSession(null);
+                setUser(null);
+                setProfile(null);
+                setIsLoading(false);
+              }
+              break;
+
+            case "INITIAL_SESSION":
+              // Only process if we haven't done the initial check yet
+              if (!initialCheckDone.current) {
                 await updateAuthState(newSession);
-                break;
+              }
+              break;
 
-              case "SIGNED_OUT":
+            case "USER_UPDATED":
+              // User data was updated, refresh profile
+              if (newSession?.user && mounted) {
+                setUser(newSession.user);
+                const userProfile = await fetchProfile(newSession.user.id);
                 if (mounted) {
-                  setSession(null);
-                  setUser(null);
-                  setProfile(null);
-                  setIsLoading(false);
+                  setProfile(userProfile);
                 }
-                break;
+              }
+              break;
 
-              case "INITIAL_SESSION":
-                // Only process if we haven't done the initial check yet
-                if (!initialCheckDone.current) {
-                  await updateAuthState(newSession);
-                }
-                break;
-
-              case "USER_UPDATED":
-                // User data was updated, refresh profile
-                if (newSession?.user && mounted) {
-                  setUser(newSession.user);
-                  const userProfile = await fetchProfile(newSession.user.id);
-                  if (mounted) {
-                    setProfile(userProfile);
-                  }
-                }
-                break;
-
-              case "PASSWORD_RECOVERY":
-                // Handle password recovery if needed
-                break;
-            }
+            case "PASSWORD_RECOVERY":
+              // Handle password recovery if needed
+              break;
           }
-        );
+        }
+      );
 
-        // Run initial auth check
-        initializeAuth();
+      // Run initial auth check
+      initializeAuth();
 
-        // Cleanup
-        return () => {
-          mounted = false;
-          if (timeoutId) clearTimeout(timeoutId);
-          subscription.unsubscribe();
-        };
-      }
-
-      // Cleanup for the timeout case
+      // Cleanup
       return () => {
-        if (timeoutId) clearTimeout(timeoutId);
+        mounted = false;
+        subscription.unsubscribe();
       };
     }
   }, [supabase, sessionContextLoading, fetchProfile]);
