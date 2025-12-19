@@ -140,6 +140,6 @@ export function getNextIngredientSuggestionsWithNames(
 
   return suggestions.map(suggestion => ({
     ...suggestion,
-    ingredientName: idToName.get(suggestion.ingredientId) || 'Unknown Ingredient'
+    ingredientName: idToName.get(suggestion.ingredientId) || 'Ingredient'
   }));
 }

@@ -35,6 +35,18 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
       ownedSample: ownedIngredientIds.slice(0, 5),
       firstCocktailIngredients: cocktails.length > 0 ? cocktails[0].ingredients.slice(0, 3).map(i => ({ id: i.id, name: i.name, optional: i.isOptional })) : []
     });
+
+    // Debug Margarita specifically
+    const margarita = cocktails.find(c => c.name.toLowerCase().includes('margarita'));
+    if (margarita) {
+      console.log('[MIX-MATCH-DEBUG] Margarita found:', {
+        id: margarita.id,
+        name: margarita.name,
+        ingredients: margarita.ingredients.map(i => ({ id: i.id, name: i.name, optional: i.isOptional }))
+      });
+    } else {
+      console.log('[MIX-MATCH-DEBUG] Margarita not found in cocktails');
+    }
   }
 
   for (const cocktail of cocktails) {
@@ -80,6 +92,22 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
       missingCount,
       matchPercent,
     };
+
+    // Debug Margarita specifically
+    if (process.env.NODE_ENV === 'development' && cocktail.name.toLowerCase().includes('margarita')) {
+      console.log('[MIX-MATCH-DEBUG] Margarita matching:', {
+        name: cocktail.name,
+        requiredTotal,
+        requiredCovered,
+        missingCount,
+        matchPercent,
+        requiredIngredients: requiredIngredients.map(i => ({ id: i.id, name: i.name })),
+        missingRequiredIds,
+        ownedIngredientIds: ownedIngredientIds.slice(0, 10),
+        staples: stapleIngredientIds,
+        category: missingCount === 0 ? 'READY' : missingCount <= maxMissing ? 'ALMOST' : 'FAR'
+      });
+    }
 
     // Categorize cocktails based on missing required ingredients
     if (missingCount === 0) {

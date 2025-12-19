@@ -179,7 +179,10 @@ export default function MixPage() {
       return { canMake: 0, almostThere: 0 };
     }
 
-    const stapleIds = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
+    // Get staples from database + manually add common basics
+    const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
+    const manualStaples = ['ice', 'sugar', 'salt', 'water', 'simple-syrup', 'lime-juice', 'lemon-juice'];
+    const stapleIds = [...new Set([...dbStaples, ...manualStaples])];
 
     // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
     console.log('[MIX-DEBUG] 🟢 RUNNING MATCHING LOGIC');
