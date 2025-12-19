@@ -2,6 +2,15 @@
 -- Run this in Supabase SQL Editor
 
 -- FIRST: Inspect what the ingredients data actually looks like
+-- Check ALL cocktails, not just ones with ingredients
+SELECT
+    COUNT(*) as total_cocktails,
+    COUNT(CASE WHEN ingredients IS NULL THEN 1 END) as null_ingredients,
+    COUNT(CASE WHEN ingredients::text = '' THEN 1 END) as empty_string_ingredients,
+    COUNT(CASE WHEN ingredients IS NOT NULL AND ingredients::text != '' THEN 1 END) as has_some_ingredients_data
+FROM cocktails;
+
+-- Now show sample of cocktails with ingredients data
 SELECT
     id,
     name,
@@ -17,7 +26,8 @@ SELECT
 FROM cocktails
 WHERE ingredients IS NOT NULL
     AND ingredients::text != ''
-LIMIT 5;
+    AND jsonb_typeof(ingredients) IS NOT NULL
+LIMIT 3;
 
 -- Clear existing data (optional, for re-running)
 TRUNCATE TABLE cocktail_ingredients_uuid;
