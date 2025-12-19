@@ -38,12 +38,12 @@ async function createTestData() {
       console.log('✅ Existing data cleared with truncate');
     }
 
-    // Get cocktails and assign sequential numeric IDs
+    // Get cocktails and assign sequential numeric IDs - include at least the first 25 to get Margarita
     const { data: cocktails, error: cocktailError } = await supabase
       .from('cocktails')
       .select('id, name')
       .order('name')
-      .limit(20); // Just create data for first 20 cocktails for testing
+      .limit(25); // Include Margarita (position 22)
 
     if (cocktailError) {
       throw new Error(`Failed to fetch cocktails: ${cocktailError.message}`);
@@ -70,53 +70,54 @@ async function createTestData() {
     // Create test relationships using numeric cocktail_ids
     const testData = [];
 
-    // Margarita (tequila, lime, triple sec)
-    const margarita = cocktails.find(c => c.name.toLowerCase().includes('margarita'));
-    if (margarita) {
-      const tequila = ingredients.find(i => i.name.toLowerCase().includes('tequila'));
-      const lime = ingredients.find(i => i.name.toLowerCase().includes('lime'));
-      const tripleSec = ingredients.find(i => i.name.toLowerCase().includes('triple sec'));
+    // Margarita (tequila, lime, triple sec) - classic Margarita is at position 94
+    console.log('Adding Margarita manually (position 94)...');
+    testData.push(
+      { cocktail_id: 94, ingredient_id: 135, measure: '2 oz' },  // Tequila
+      { cocktail_id: 94, ingredient_id: 2102, measure: '1 oz' }, // Lime
+      { cocktail_id: 94, ingredient_id: 121, measure: '1 oz' }   // Triple Sec
+    );
 
-      if (tequila && lime && tripleSec) {
-        const numericId = uuidToNumericId.get(margarita.id);
-        testData.push(
-          { cocktail_id: numericId, ingredient_id: tequila.id, measure: '2 oz' },
-          { cocktail_id: numericId, ingredient_id: lime.id, measure: '1 oz' },
-          { cocktail_id: numericId, ingredient_id: tripleSec.id, measure: '1 oz' }
-        );
-      }
-    }
+    // Add Espresso Martini (position 54) as a Martini example
+    console.log('Adding Espresso Martini (position 54) as Martini example...');
+    testData.push(
+      { cocktail_id: 54, ingredient_id: 2, measure: '2 oz' },     // Gin (closest to vodka in Espresso Martini)
+      { cocktail_id: 54, ingredient_id: 2039, measure: '1 oz' }   // Kahlua (coffee liqueur)
+    );
 
-    // Martini (gin, vermouth)
-    const martini = cocktails.find(c => c.name.toLowerCase().includes('martini'));
+    // Add Chocolate Negroni (position 46) as a Negroni example
+    console.log('Adding Chocolate Negroni (position 46) as Negroni example...');
+    testData.push(
+      { cocktail_id: 46, ingredient_id: 2, measure: '1 oz' },     // Gin
+      { cocktail_id: 46, ingredient_id: 2062, measure: '1 oz' },  // Campari
+      { cocktail_id: 46, ingredient_id: 37, measure: '1 oz' }     // Sweet Vermouth
+    );
+
+    // Martini (gin, vermouth) - use correct ingredient IDs
+    const martini = cocktails.find(c => c.name.toLowerCase() === 'martini');
     if (martini) {
-      const gin = ingredients.find(i => i.name.toLowerCase().includes('gin'));
-      const vermouth = ingredients.find(i => i.name.toLowerCase().includes('vermouth'));
+      const numericId = uuidToNumericId.get(martini.id);
+      console.log(`Found Martini: ${martini.name} at position ${cocktails.findIndex(c => c.id === martini.id) + 1}, numeric ID: ${numericId}`);
 
-      if (gin && vermouth) {
-        const numericId = uuidToNumericId.get(martini.id);
-        testData.push(
-          { cocktail_id: numericId, ingredient_id: gin.id, measure: '2.5 oz' },
-          { cocktail_id: numericId, ingredient_id: vermouth.id, measure: '0.5 oz' }
-        );
-      }
+      // Use correct ingredient IDs: Gin (2), Dry Vermouth (38)
+      testData.push(
+        { cocktail_id: numericId, ingredient_id: 2, measure: '2.5 oz' },   // Gin
+        { cocktail_id: numericId, ingredient_id: 38, measure: '0.5 oz' }  // Dry Vermouth
+      );
     }
 
-    // Negroni (gin, campari, sweet vermouth)
-    const negroni = cocktails.find(c => c.name.toLowerCase().includes('negroni'));
+    // Negroni (gin, campari, sweet vermouth) - use correct ingredient IDs
+    const negroni = cocktails.find(c => c.name.toLowerCase() === 'negroni');
     if (negroni) {
-      const gin = ingredients.find(i => i.name.toLowerCase().includes('gin'));
-      const campari = ingredients.find(i => i.name.toLowerCase().includes('campari'));
-      const sweetVermouth = ingredients.find(i => i.name.toLowerCase().includes('vermouth'));
+      const numericId = uuidToNumericId.get(negroni.id);
+      console.log(`Found Negroni: ${negroni.name} at position ${cocktails.findIndex(c => c.id === negroni.id) + 1}, numeric ID: ${numericId}`);
 
-      if (gin && campari && sweetVermouth) {
-        const numericId = uuidToNumericId.get(negroni.id);
-        testData.push(
-          { cocktail_id: numericId, ingredient_id: gin.id, measure: '1 oz' },
-          { cocktail_id: numericId, ingredient_id: campari.id, measure: '1 oz' },
-          { cocktail_id: numericId, ingredient_id: sweetVermouth.id, measure: '1 oz' }
-        );
-      }
+      // Use correct ingredient IDs: Gin (2), Campari (2062), Sweet Vermouth (37)
+      testData.push(
+        { cocktail_id: numericId, ingredient_id: 2, measure: '1 oz' },     // Gin
+        { cocktail_id: numericId, ingredient_id: 2062, measure: '1 oz' },  // Campari
+        { cocktail_id: numericId, ingredient_id: 37, measure: '1 oz' }     // Sweet Vermouth
+      );
     }
 
     // Add some basic relationships for other cocktails
