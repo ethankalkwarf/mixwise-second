@@ -117,7 +117,7 @@ export async function getCocktailsListClient(filters: CocktailFilters = {}): Pro
  * Fetch ingredients for mix logic (client-side)
  */
 export async function getMixIngredients(): Promise<MixIngredient[]> {
-  console.log('[MIX-DEBUG] getMixIngredients called');
+  console.log('[MIX-DEBUG] getMixIngredients called - VERSION 2.0');
   const supabase = getSupabaseClient();
   console.log('[MIX-DEBUG] getSupabaseClient returned:', !!supabase);
 
@@ -130,7 +130,7 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
       .order('name');
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Ingredients query timed out after 15 seconds')), 15000);
+      setTimeout(() => reject(new Error('Ingredients query timed out after 20 seconds - DEPLOYMENT TEST')), 20000);
     });
 
     const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
