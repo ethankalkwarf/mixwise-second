@@ -226,10 +226,10 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
 
   if (!cocktailData) return [];
 
-  // Get cocktail ingredients from cocktail_ingredients table
+  // Get cocktail ingredients from cocktail_ingredients_uuid table
   // Start with columns that are known to exist on the live database
   const queryResult = await supabase
-    .from('cocktail_ingredients')
+    .from('cocktail_ingredients_uuid')
     .select('cocktail_id, ingredient_id, measure');
 
   const cocktailIngredients = queryResult.data;
