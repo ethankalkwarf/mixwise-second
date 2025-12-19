@@ -260,7 +260,7 @@ export async function getMixDataClient(): Promise<{
 
 /**
  * Get cocktails with ingredients from cocktail_ingredients table (client-side)
- * Returns cocktails with ingredientsWithIds array containing numeric ingredient IDs and names
+ * Returns cocktails with ingredients array containing numeric ingredient IDs and names
  */
 export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   id: string;
@@ -280,7 +280,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   drinkCategories: string[];
   tags: string[];
   garnish: string | null;
-  ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+  ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
   try {
     // Try client-side approach first with timeout
@@ -362,7 +362,7 @@ async function getCocktailsWithIngredientsClientSide() {
 
     // Process each cocktail and extract ingredients from JSON field
     const processedCocktails = cocktailData.map((cocktail, index) => {
-      let ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }> = [];
+      let ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }> = [];
 
       try {
         // Parse ingredients from JSON field
@@ -383,7 +383,7 @@ async function getCocktailsWithIngredientsClientSide() {
 
 
           // Convert to the expected format
-          ingredientsWithIds = parsedIngredients.map((ing: any) => {
+          ingredients = parsedIngredients.map((ing: any) => {
             // Handle different ingredient formats
             const ingredientId = String(ing.ingredient?.id || ing.id || 'unknown');
             const ingredientName = ing.ingredient?.name || ingredientNameById.get(ingredientId) || 'Unknown';
@@ -422,13 +422,13 @@ async function getCocktailsWithIngredientsClientSide() {
         drinkCategories: Array.isArray(cocktail.categories_all) ? cocktail.categories_all : [],
         tags: Array.isArray(cocktail.tags) ? cocktail.tags : [],
         garnish: cocktail.garnish,
-        ingredientsWithIds
+        ingredients
       };
     });
 
     // Filter out cocktails with no valid ingredients
     const validCocktails = processedCocktails.filter(cocktail => {
-      const hasIngredients = cocktail.ingredientsWithIds && cocktail.ingredientsWithIds.length > 0;
+      const hasIngredients = cocktail.ingredients && cocktail.ingredients.length > 0;
       return hasIngredients;
     });
 
@@ -454,7 +454,7 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
   drinkCategories: string[];
   tags: string[];
   garnish: string | null;
-  ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+  ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
   console.log('[MIX-DEBUG] Using server-side API fallback');
 

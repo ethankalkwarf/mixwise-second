@@ -193,7 +193,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   drinkCategories: string[];
   tags: string[];
   garnish: string | null;
-  ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+  ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
   const supabase = createServerSupabaseClient();
 
@@ -298,7 +298,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     drinkCategories: cocktail.categories_all || [],
     tags: cocktail.tags || [],
     garnish: cocktail.garnish || null,
-    ingredientsWithIds: ingredientsByCocktail.get(cocktail.id) || []
+    ingredients: ingredientsByCocktail.get(cocktail.id) || []
   }));
 }
 
