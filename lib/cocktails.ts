@@ -284,244 +284,139 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
 }>> {
   try {
     console.log('[MIX-DEBUG] getCocktailsWithIngredientsClient: starting...');
+
     const supabase = createClient();
 
-  // Get all cocktails
-  const { data: cocktailData, error: cocktailError } = await supabase
-    .from('cocktails')
-    .select(`
-      id,
-      name,
-      slug,
-      short_description,
-      instructions,
-      category_primary,
-      image_url,
-      glassware,
-      technique,
-      base_spirit,
-      difficulty,
-      categories_all,
-      tags,
-      garnish,
-      metadata_json,
-      legacy_id
-    `)
-    .order('name');
+    // Get all cocktails with ingredients from the ingredients JSON field
+    const { data: cocktailData, error: cocktailError } = await supabase
+      .from('cocktails')
+      .select(`
+        id,
+        name,
+        slug,
+        short_description,
+        instructions,
+        category_primary,
+        image_url,
+        glassware,
+        technique,
+        base_spirit,
+        difficulty,
+        categories_all,
+        tags,
+        garnish,
+        metadata_json,
+        ingredients
+      `)
+      .order('name');
 
-  if (cocktailError) {
-    console.error('Error fetching cocktails:', cocktailError);
-    return [];
-  }
-
-  if (!cocktailData) return [];
-
-  // Get cocktail ingredients from cocktail_ingredients table
-  // Start with columns that are known to exist on the live database
-  const queryResult = await supabase
-    .from('cocktail_ingredients')
-    .select('cocktail_id, ingredient_id, measure');
-
-  const cocktailIngredients = queryResult.data;
-  const ingredientsError = queryResult.error;
-
-  if (ingredientsError) {
-    console.error('Error fetching cocktail ingredients:', ingredientsError);
-    return [];
-  }
-
-  // Get ingredient name mapping
-  const { data: ingredients, error: ingError } = await supabase
-    .from('ingredients')
-    .select('id, name');
-
-  if (ingError) {
-    console.error('Error fetching ingredients:', ingError);
-    return [];
-  }
-
-  // Build ingredient name mapping with string keys
-  const ingredientNameById = new Map<string, string>();
-  (ingredients || []).forEach(ing => {
-    ingredientNameById.set(String(ing.id), ing.name);
-  });
-
-  // Debug: Analyze cocktail_id patterns
-  if (process.env.NODE_ENV === 'development') {
-    const cocktailIds = [...new Set(cocktailIngredients.map(ci => ci.cocktail_id))];
-    console.log(`[MIX-DEBUG] Found ${cocktailIngredients.length} ingredient relationships for ${cocktailIds.length} unique cocktail_ids`);
-    console.log(`[MIX-DEBUG] Sample cocktail_ids from cocktail_ingredients:`, cocktailIds.slice(0, 10));
-
-    // Check what types of IDs we have
-    const uuidIds = cocktailIds.filter(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id));
-    const numericIds = cocktailIds.filter(id => /^\d+$/.test(id));
-    console.log(`[MIX-DEBUG] UUID cocktail_ids: ${uuidIds.length}, Numeric cocktail_ids: ${numericIds.length}`);
-    if (numericIds.length > 0) {
-      console.log(`[MIX-DEBUG] Numeric ID range: ${Math.min(...numericIds.map(id => parseInt(id)))} - ${Math.max(...numericIds.map(id => parseInt(id)))}`);
+    if (cocktailError) {
+      console.error('Error fetching cocktails:', cocktailError);
+      throw cocktailError;
     }
-  }
 
-  // Debug: Check cocktail structure
-  if (process.env.NODE_ENV === 'development' && cocktailData.length > 0) {
-    console.log('[MIX-DEBUG] Cocktail structure sample:', {
-      id: cocktailData[0].id,
-      name: cocktailData[0].name,
-      hasLegacyId: 'legacy_id' in cocktailData[0],
-      legacyId: cocktailData[0].legacy_id,
-      allKeys: Object.keys(cocktailData[0])
-    });
-  }
-
-  // Create mapping from numeric legacy_id to UUID for cocktails that have it
-  const numericToUUID = new Map<number, string>();
-  cocktailData.forEach(cocktail => {
-    if (cocktail.legacy_id) {
-      numericToUUID.set(cocktail.legacy_id, cocktail.id);
+    if (!cocktailData || cocktailData.length === 0) {
+      console.log('[MIX-DEBUG] No cocktails found');
+      return [];
     }
-  });
 
-  // Create a map of all cocktail IDs for direct matching
-  const cocktailIdMap = new Map<string, string>();
-  cocktailData.forEach(cocktail => {
-    cocktailIdMap.set(cocktail.id, cocktail.id);
-    // Also try to map by legacy_id if it exists
-    if (cocktail.legacy_id) {
-      cocktailIdMap.set(String(cocktail.legacy_id), cocktail.id);
+    console.log(`[MIX-DEBUG] Fetched ${cocktailData.length} cocktails from database`);
+
+    // Get ingredient name mapping for converting IDs to names
+    const { data: ingredients, error: ingError } = await supabase
+      .from('ingredients')
+      .select('id, name');
+
+    if (ingError) {
+      console.error('Error fetching ingredients:', ingError);
+      throw ingError;
     }
-  });
 
-  // Create sequential mapping as fallback (cocktail_ingredients might use 1-based sequential IDs)
-  // Sort by name for consistent ordering
-  const sortedCocktails = [...cocktailData].sort((a, b) => a.name.localeCompare(b.name));
-  sortedCocktails.forEach((cocktail, index) => {
-    const sequentialId = String(index + 1); // 1-based
-    cocktailIdMap.set(sequentialId, cocktail.id);
-  });
-
-  // Additional fallback: try mapping by insertion order (id field comparison)
-  // This might work if cocktail_ingredients uses auto-incrementing IDs
-  const sortedById = [...cocktailData].sort((a, b) => {
-    // Try to extract numeric part from UUID or use string comparison
-    const aNum = parseInt(a.id.split('-')[0], 16) || 0;
-    const bNum = parseInt(b.id.split('-')[0], 16) || 0;
-    return aNum - bNum;
-  });
-  sortedById.forEach((cocktail, index) => {
-    const insertionId = String(index + 1); // 1-based
-    cocktailIdMap.set(insertionId, cocktail.id);
-  });
-
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[MIX-DEBUG] First few cocktail mappings:');
-    Array.from(cocktailIdMap.entries()).slice(0, 10).forEach(([key, value]) => {
-      console.log(`  ${key} -> ${value}`);
+    // Build ingredient name mapping
+    const ingredientNameById = new Map<string, string>();
+    (ingredients || []).forEach(ing => {
+      ingredientNameById.set(String(ing.id), ing.name);
     });
-    console.log('[MIX-DEBUG] Sequential mapping sample:');
-    sortedCocktails.slice(0, 5).forEach((cocktail, index) => {
-      console.log(`  ${index + 1} -> ${cocktail.name} (${cocktail.id})`);
-    });
-  }
 
-  // Group ingredients by cocktail UUID
-  const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
-  let mappedCount = 0;
-  let failedCount = 0;
+    console.log(`[MIX-DEBUG] Built ingredient name mapping for ${ingredientNameById.size} ingredients`);
 
-  (cocktailIngredients || []).forEach((ci: any) => {
-    let cocktailUUID: string | null = null;
+    // Process each cocktail and extract ingredients from JSON field
+    const processedCocktails = cocktailData.map(cocktail => {
+      let ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }> = [];
 
-    // Try direct mapping first (handles UUIDs and any existing mappings)
-    const cocktailIdStr = String(ci.cocktail_id);
-    cocktailUUID = cocktailIdMap.get(cocktailIdStr) || null;
+      try {
+        // Parse ingredients from JSON field
+        if (cocktail.ingredients) {
+          let parsedIngredients: any[] = [];
 
-    // If not found and it's numeric, try legacy_id mapping
-    if (!cocktailUUID && /^\d+$/.test(cocktailIdStr)) {
-      const numericId = parseInt(cocktailIdStr, 10);
-      cocktailUUID = numericToUUID.get(numericId) || null;
+          if (typeof cocktail.ingredients === 'string') {
+            // Try to parse JSON string
+            try {
+              parsedIngredients = JSON.parse(cocktail.ingredients);
+            } catch (parseError) {
+              console.warn(`Failed to parse ingredients JSON for cocktail ${cocktail.id}:`, parseError);
+              parsedIngredients = [];
+            }
+          } else if (Array.isArray(cocktail.ingredients)) {
+            parsedIngredients = cocktail.ingredients;
+          }
 
-      if (process.env.NODE_ENV === 'development' && !cocktailUUID) {
-        console.log(`[MIX-DEBUG] Numeric cocktail_id ${numericId} not found in legacy_id mapping`);
+          // Convert to the expected format
+          ingredientsWithIds = parsedIngredients.map((ing: any) => {
+            // Handle different ingredient formats
+            const ingredientId = String(ing.ingredient?.id || ing.id || 'unknown');
+            const ingredientName = ing.ingredient?.name || ingredientNameById.get(ingredientId) || 'Unknown';
+
+            return {
+              id: ingredientId,
+              name: ingredientName,
+              amount: ing.amount || ing.measure || null,
+              isOptional: ing.isOptional || false,
+              notes: ing.notes || null
+            };
+          }).filter(ing => ing.id !== 'unknown'); // Filter out unknown ingredients
+        }
+      } catch (error) {
+        console.warn(`Error processing ingredients for cocktail ${cocktail.id}:`, error);
       }
-    }
 
-    if (!cocktailUUID) {
-      failedCount++;
-      if (process.env.NODE_ENV === 'development' && failedCount <= 5) { // Only log first 5 failures
-        console.log(`[MIX-DEBUG] Could not map cocktail_id ${ci.cocktail_id} (type: ${typeof ci.cocktail_id}) to any cocktail UUID`);
-        console.log(`[MIX-DEBUG] Available cocktailIdMap keys sample:`, Array.from(cocktailIdMap.keys()).slice(0, 10));
+      // Extract metadata
+      const metadata = cocktail.metadata_json || {};
+
+      return {
+        id: cocktail.id,
+        name: cocktail.name,
+        slug: cocktail.slug,
+        description: cocktail.short_description,
+        instructions: cocktail.instructions,
+        category: cocktail.category_primary,
+        imageUrl: cocktail.image_url,
+        glass: cocktail.glassware,
+        method: cocktail.technique,
+        primarySpirit: cocktail.base_spirit,
+        difficulty: cocktail.difficulty,
+        isPopular: metadata.isPopular || false,
+        isFavorite: metadata.isFavorite || false,
+        isTrending: metadata.isTrending || false,
+        drinkCategories: Array.isArray(cocktail.categories_all) ? cocktail.categories_all : [],
+        tags: Array.isArray(cocktail.tags) ? cocktail.tags : [],
+        garnish: cocktail.garnish,
+        ingredientsWithIds
+      };
+    });
+
+    // Filter out cocktails with no valid ingredients
+    const validCocktails = processedCocktails.filter(cocktail => {
+      const hasIngredients = cocktail.ingredientsWithIds && cocktail.ingredientsWithIds.length > 0;
+      if (!hasIngredients && process.env.NODE_ENV === 'development') {
+        console.log(`[MIX-DEBUG] Cocktail "${cocktail.name}" has no ingredients, filtering out`);
       }
-      return; // Skip this ingredient instead of failing the whole function
-    }
+      return hasIngredients;
+    });
 
-    mappedCount++;
+    console.log(`[MIX-DEBUG] getCocktailsWithIngredientsClient: returning ${validCocktails.length} valid cocktails (${processedCocktails.length - validCocktails.length} filtered out)`);
+    return validCocktails;
 
-    const ingredientId = String(ci.ingredient_id);
-    const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
-
-    const ingredient = {
-      id: ingredientId,
-      name,
-      amount: ci.measure ?? ci.amount ?? null, // Handle both column names
-      isOptional: ci.is_optional ?? false,
-      notes: ci.notes ?? null
-    };
-
-    if (!ingredientsByCocktail.has(cocktailUUID)) {
-      ingredientsByCocktail.set(cocktailUUID, []);
-    }
-    ingredientsByCocktail.get(cocktailUUID)!.push(ingredient);
-  });
-
-  // Debug: Check cocktail_ingredients data
-  if (process.env.NODE_ENV === 'development' && cocktailIngredients.length > 0) {
-    console.log('[MIX-DEBUG] cocktail_ingredients sample:', cocktailIngredients.slice(0, 3));
-  }
-
-  console.log(`[MIX-DEBUG] cocktailIdMap size: ${cocktailIdMap.size}`);
-  console.log(`[MIX-DEBUG] ingredientsByCocktail: ${ingredientsByCocktail.size} cocktails with ingredients`);
-  console.log(`[MIX-DEBUG] Sample cocktail IDs with ingredients:`, Array.from(ingredientsByCocktail.keys()).slice(0, 3));
-  console.log(`[MIX-DEBUG] cocktailData length: ${cocktailData.length}`);
-  console.log(`[MIX-DEBUG] Sample cocktail IDs from cocktails table:`, cocktailData.slice(0, 3).map(c => c.id));
-  console.log(`[MIX-DEBUG] numericToUUID mapping size: ${numericToUUID.size}`);
-  console.log(`[MIX-DEBUG] Mapping results: ${mappedCount} ingredients mapped, ${failedCount} failed`);
-
-  // Process cocktails and attach their ingredients
-  const processedCocktails = cocktailData.map(cocktail => {
-    const ingredientsWithIds = ingredientsByCocktail.get(cocktail.id) || [];
-
-    if (process.env.NODE_ENV === 'development' && ingredientsWithIds.length === 0) {
-      console.log(`[MIX-DEBUG] Cocktail ${cocktail.name} (${cocktail.id}) has no ingredients in cocktail_ingredients table`);
-    }
-
-    return {
-      id: cocktail.id,
-      name: cocktail.name,
-      slug: cocktail.slug,
-      description: cocktail.short_description || null,
-      instructions: cocktail.instructions || null,
-      category: cocktail.category_primary || null,
-      imageUrl: cocktail.image_url || null,
-      glass: cocktail.glassware || null,
-      method: cocktail.technique || null,
-      primarySpirit: cocktail.base_spirit || null,
-      difficulty: cocktail.difficulty || null,
-      isPopular: cocktail.metadata_json?.isPopular || false,
-      isFavorite: cocktail.metadata_json?.isFavorite || false,
-      isTrending: cocktail.metadata_json?.isTrending || false,
-      drinkCategories: cocktail.categories_all || [],
-      tags: cocktail.tags || [],
-      garnish: cocktail.garnish || null,
-      ingredientsWithIds
-    };
-  });
-
-  const cocktailsWithIngredients = processedCocktails.filter(c => c.ingredientsWithIds.length > 0);
-  const cocktailsWithoutIngredients = processedCocktails.filter(c => c.ingredientsWithIds.length === 0);
-
-  console.log(`[MIX-DEBUG] getCocktailsWithIngredientsClient: returning ${processedCocktails.length} processed cocktails`);
-  console.log(`[MIX-DEBUG] ${cocktailsWithIngredients.length} cocktails have ingredients, ${cocktailsWithoutIngredients.length} have no ingredients`);
-
-  return processedCocktails;
   } catch (error) {
     console.error('[MIX-DEBUG] getCocktailsWithIngredientsClient failed:', error);
     throw error;
