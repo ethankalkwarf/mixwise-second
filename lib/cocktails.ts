@@ -185,28 +185,38 @@ function getFallbackIngredients(): MixIngredient[] {
  * Fetch cocktails for mix logic (client-side)
  */
 export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
-  const cocktailsWithIngredients = await getCocktailsWithIngredientsClient();
+  try {
+    console.log('[MIX-DEBUG] getMixCocktailsClient: calling getCocktailsWithIngredientsClient...');
+    const cocktailsWithIngredients = await getCocktailsWithIngredientsClient();
+    console.log(`[MIX-DEBUG] getMixCocktailsClient: got ${cocktailsWithIngredients.length} cocktails with ingredients`);
 
-  return cocktailsWithIngredients.map(cocktail => ({
-    id: cocktail.id,
-    name: cocktail.name,
-    slug: cocktail.slug,
-    description: cocktail.description,
-    instructions: cocktail.instructions,
-    category: cocktail.category,
-    imageUrl: cocktail.imageUrl,
-    glass: cocktail.glass,
-    method: cocktail.method,
-    primarySpirit: cocktail.primarySpirit,
-    difficulty: cocktail.difficulty,
-    isPopular: cocktail.isPopular,
-    isFavorite: cocktail.isFavorite,
-    isTrending: cocktail.isTrending,
-    drinkCategories: cocktail.drinkCategories,
-    tags: cocktail.tags,
-    garnish: cocktail.garnish,
-    ingredients: cocktail.ingredientsWithIds
-  }));
+    const result = cocktailsWithIngredients.map(cocktail => ({
+      id: cocktail.id,
+      name: cocktail.name,
+      slug: cocktail.slug,
+      description: cocktail.description,
+      instructions: cocktail.instructions,
+      category: cocktail.category,
+      imageUrl: cocktail.imageUrl,
+      glass: cocktail.glass,
+      method: cocktail.method,
+      primarySpirit: cocktail.primarySpirit,
+      difficulty: cocktail.difficulty,
+      isPopular: cocktail.isPopular,
+      isFavorite: cocktail.isFavorite,
+      isTrending: cocktail.isTrending,
+      drinkCategories: cocktail.drinkCategories,
+      tags: cocktail.tags,
+      garnish: cocktail.garnish,
+      ingredients: cocktail.ingredientsWithIds
+    }));
+
+    console.log(`[MIX-DEBUG] getMixCocktailsClient: returning ${result.length} cocktails`);
+    return result;
+  } catch (error) {
+    console.error('[MIX-DEBUG] getMixCocktailsClient failed:', error);
+    throw error;
+  }
 }
 
 /**
@@ -218,12 +228,25 @@ export async function getMixDataClient(): Promise<{
 }> {
   try {
     console.log('[MIX-DEBUG] Starting getMixDataClient...');
+
+    const ingredientsPromise = getMixIngredients();
+    const cocktailsPromise = getMixCocktailsClient();
+
     const [ingredients, cocktails] = await Promise.all([
-      getMixIngredients(),
-      getMixCocktailsClient()
+      ingredientsPromise,
+      cocktailsPromise
     ]);
 
     console.log(`[MIX-DEBUG] getMixDataClient loaded ${ingredients.length} ingredients, ${cocktails.length} cocktails`);
+
+    // Check for data loading failures
+    if (!ingredients || ingredients.length === 0) {
+      throw new Error(`Failed to load ingredients (got ${ingredients?.length || 0})`);
+    }
+    if (!cocktails || cocktails.length === 0) {
+      throw new Error(`Failed to load cocktails (got ${cocktails?.length || 0})`);
+    }
+
     return { ingredients, cocktails };
   } catch (error) {
     console.error('[MIX-DEBUG] getMixDataClient failed:', error);
@@ -259,7 +282,9 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   garnish: string | null;
   ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
-  const supabase = createClient();
+  try {
+    console.log('[MIX-DEBUG] getCocktailsWithIngredientsClient: starting...');
+    const supabase = createClient();
 
   // Get all cocktails
   const { data: cocktailData, error: cocktailError } = await supabase
@@ -369,8 +394,12 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     };
   });
 
-
+  console.log(`[MIX-DEBUG] getCocktailsWithIngredientsClient: returning ${processedCocktails.length} processed cocktails`);
   return processedCocktails;
+  } catch (error) {
+    console.error('[MIX-DEBUG] getCocktailsWithIngredientsClient failed:', error);
+    throw error;
+  }
 }
 
 
