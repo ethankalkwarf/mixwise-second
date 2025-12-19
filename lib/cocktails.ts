@@ -137,13 +137,12 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
     }
 
     return (data || []).map(ingredient => {
-      // Force id to be a string - normalize all IDs to string type
-      let id = String(ingredient.id ?? ingredient.legacy_id ?? ingredient.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''));
+      // Use ONLY ingredients.id as canonical ID, converted to string
+      const id = String(ingredient.id);
 
-      if (!id) {
-        // Only use random ID as absolute last resort
-        console.warn('Could not generate stable ID for ingredient:', ingredient);
-        id = `fallback-${Math.random()}`;
+      if (!id || id === 'undefined' || id === 'null') {
+        console.warn('Invalid ingredient ID:', ingredient);
+        return null;
       }
 
       return {
@@ -153,7 +152,7 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
         imageUrl: ingredient.image_url || null,
         isStaple: ingredient.is_staple || false,
       };
-    });
+    }).filter(Boolean) as MixIngredient[];
   } catch (error) {
     console.error('Error in getMixIngredients:', error);
     return getFallbackIngredients();
@@ -305,10 +304,10 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     return [];
   }
 
-  // Build ingredient name mapping
-  const ingredientNameById = new Map<number, string>();
+  // Build ingredient name mapping with string keys
+  const ingredientNameById = new Map<string, string>();
   (ingredients || []).forEach(ing => {
-    ingredientNameById.set(ing.id, ing.name);
+    ingredientNameById.set(String(ing.id), ing.name);
   });
 
   // Group ingredients by cocktail_id (UUID)
@@ -316,7 +315,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   (cocktailIngredients || []).forEach((ci: any) => {
     const cocktailId = ci.cocktail_id;
     const ingredientId = String(ci.ingredient_id);
-    const name = ingredientNameById.get(ci.ingredient_id) ?? 'Unknown';
+    const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
 
     const ingredient = {
       id: ingredientId,

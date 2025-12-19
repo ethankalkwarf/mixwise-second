@@ -17,6 +17,17 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   const owned = new Set<string>(ownedIngredientIds);
   const staples = new Set<string>(stapleIngredientIds);
 
+  // TEMPORARY DEBUG LOGGING (remove once confirmed)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[MIX-MATCH-DEBUG] Input:', {
+      ownedCount: ownedIngredientIds.length,
+      stapleCount: stapleIngredientIds.length,
+      cocktailCount: cocktails.length,
+      ownedSample: ownedIngredientIds.slice(0, 5),
+      stapleSample: stapleIngredientIds.slice(0, 5)
+    });
+  }
+
   const makeNow: MixMatchResult[] = [];
   const almostThere: MixMatchResult[] = [];
   const all: MixMatchResult[] = [];

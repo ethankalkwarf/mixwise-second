@@ -103,11 +103,31 @@ export default function MixPage() {
   // Get match counts for display
   const matchCounts = useMemo(() => {
     const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
+
+    // TEMPORARY DEBUG LOGGING (remove once confirmed)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[MIX-DEBUG] ownedIngredientIds (first 10):', ingredientIds.slice(0, 10));
+      console.log('[MIX-DEBUG] stapleIds (first 10):', stapleIds.slice(0, 10));
+      console.log('[MIX-DEBUG] cocktailsLoaded:', allCocktails.length);
+      if (allCocktails.length > 0) {
+        console.log('[MIX-DEBUG] first cocktail ingredients (first 10):', allCocktails[0].ingredientsWithIds.slice(0, 10));
+      }
+    }
+
     const result = getMixMatchGroups({
       cocktails: allCocktails,
       ownedIngredientIds: ingredientIds,
       stapleIngredientIds: stapleIds,
     });
+
+    // TEMPORARY DEBUG LOGGING (remove once confirmed)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[MIX-DEBUG] match result:', {
+        canMake: result.makeNow.length,
+        almostThere: result.almostThere.length
+      });
+    }
+
     return {
       canMake: result.makeNow.length,
       almostThere: result.almostThere.length,

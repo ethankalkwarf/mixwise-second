@@ -246,10 +246,10 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     return [];
   }
 
-  // Build ingredient name mapping
-  const ingredientNameById = new Map<number, string>();
+  // Build ingredient name mapping with string keys
+  const ingredientNameById = new Map<string, string>();
   (ingredients || []).forEach(ing => {
-    ingredientNameById.set(ing.id, ing.name);
+    ingredientNameById.set(String(ing.id), ing.name);
   });
 
   // Group ingredients by cocktail_id (UUID)
@@ -257,7 +257,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   (cocktailIngredients || []).forEach((ci: any) => {
     const cocktailId = ci.cocktail_id;
     const ingredientId = String(ci.ingredient_id);
-    const name = ingredientNameById.get(ci.ingredient_id) ?? 'Unknown';
+    const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
 
     const ingredient = {
       id: ingredientId,
