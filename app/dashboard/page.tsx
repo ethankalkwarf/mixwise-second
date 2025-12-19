@@ -252,7 +252,7 @@ export default function DashboardPage() {
         console.log("Fetching ingredients from Supabase...");
         const { data, error } = await supabase
           .from('ingredients')
-          .select('id, name, type, image_url, is_staple')
+          .select('id, name, category, image_url, is_staple')
           .order('name');
 
         if (error) {
@@ -280,7 +280,7 @@ export default function DashboardPage() {
           return {
             id,
             name: ingredient.name,
-            category: ingredient.type || ingredient.category || 'other',
+            category: ingredient.category || 'other',
             imageUrl: ingredient.image_url || null,
             isStaple: ingredient.is_staple || false,
           };
