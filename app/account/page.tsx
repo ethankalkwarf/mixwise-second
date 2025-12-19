@@ -19,6 +19,8 @@ import {
   ArrowRightIcon,
   TrashIcon,
   ShareIcon,
+  GlobeAltIcon,
+  LockClosedIcon,
 } from "@heroicons/react/24/outline";
 
 // Simple query to get all ingredient names
@@ -41,6 +43,7 @@ export default function AccountPage() {
   const { openAuthDialog } = useAuthDialog();
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
   const { ingredientIds } = useBarIngredients();
+  const { preferences, updatePreferences } = useUserPreferences();
   
   // Fetch ingredient names from Sanity for fallback lookup
   const [sanityNames, setSanityNames] = useState<Map<string, string>>(new Map());
@@ -213,6 +216,74 @@ export default function AccountPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* Privacy & Sharing */}
+          <section className="section-botanical">
+            <h2 className="text-xl font-serif font-bold text-forest mb-6">Privacy & Sharing</h2>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
+                <div className="flex items-center gap-3">
+                  {preferences?.public_bar_enabled ? (
+                    <GlobeAltIcon className="w-6 h-6 text-olive" />
+                  ) : (
+                    <LockClosedIcon className="w-6 h-6 text-sage" />
+                  )}
+                  <div>
+                    <h3 className="font-semibold text-forest">Public Bar Profile</h3>
+                    <p className="text-sm text-sage">
+                      {preferences?.public_bar_enabled
+                        ? "Your bar is visible to anyone with the link"
+                        : "Your bar is private and only visible to you"
+                      }
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={preferences?.public_bar_enabled || false}
+                    onChange={async (e) => {
+                      const result = await updatePreferences({
+                        public_bar_enabled: e.target.checked,
+                      });
+                      if (result.error) {
+                        console.error("Failed to update privacy setting:", result.error);
+                      }
+                    }}
+                  />
+                  <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta"></div>
+                </label>
+              </div>
+              {preferences?.public_bar_enabled && (
+                <div className="p-4 bg-olive/10 border border-olive/20 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <GlobeAltIcon className="w-5 h-5 text-olive mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-forest mb-1">Your bar is now public!</h4>
+                      <p className="text-sm text-sage mb-3">
+                        Share your bar profile with friends using this link:
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 px-3 py-2 bg-cream text-forest text-sm rounded-lg border border-mist font-mono">
+                          {typeof window !== 'undefined' ? `${window.location.origin}/bar/${user?.id}` : ''}
+                        </code>
+                        <button
+                          onClick={() => {
+                            const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/bar/${user?.id}`;
+                            navigator.clipboard.writeText(url);
+                          }}
+                          className="px-3 py-2 bg-terracotta hover:bg-terracotta-dark text-cream text-sm rounded-lg transition-colors font-medium"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
