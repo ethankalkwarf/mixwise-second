@@ -304,7 +304,8 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
       categories_all,
       tags,
       garnish,
-      metadata_json
+      metadata_json,
+      legacy_id
     `)
     .order('name');
 
