@@ -284,27 +284,13 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   if (!cocktailData) return [];
 
   // Get cocktail ingredients from cocktail_ingredients table
-  // Try with all columns first, fallback to available columns
-  let queryResult = await supabase
+  // Start with columns that are known to exist on the live database
+  const queryResult = await supabase
     .from('cocktail_ingredients')
-    .select('cocktail_id, ingredient_id, measure, is_optional, notes');
+    .select('cocktail_id, ingredient_id, measure');
 
-  let cocktailIngredients = queryResult.data;
-  let ingredientsError = queryResult.error;
-
-  // If the query fails due to missing columns, try with only available columns
-  if (ingredientsError && (
-    ingredientsError.message?.includes('column') ||
-    ingredientsError.message?.includes('does not exist') ||
-    ingredientsError.code === 'PGRST116' // Column does not exist
-  )) {
-    console.warn('Falling back to available columns for cocktail_ingredients');
-    queryResult = await supabase
-      .from('cocktail_ingredients')
-      .select('cocktail_id, ingredient_id, measure');
-    cocktailIngredients = queryResult.data;
-    ingredientsError = queryResult.error;
-  }
+  const cocktailIngredients = queryResult.data;
+  const ingredientsError = queryResult.error;
 
   if (ingredientsError) {
     console.error('Error fetching cocktail ingredients:', ingredientsError);
