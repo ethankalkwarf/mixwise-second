@@ -57,10 +57,9 @@ export function OptimizedCocktailImage({
         width={!fill ? width : undefined}
         height={!fill ? height : undefined}
         priority={priority}
-        quality={quality}
+        // quality={quality} // Temporarily disabled for debugging
         sizes={sizes || "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"}
-        placeholder="blur"
-        blurDataURL={blurDataURL}
+        placeholder="empty"
         className={`object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'} ${className}`}
         onLoad={() => {
           console.log('Image loaded successfully:', src);
