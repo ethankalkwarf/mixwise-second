@@ -195,8 +195,9 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   garnish: string | null;
   ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
-  console.log('[SERVER] getCocktailsWithIngredients starting...');
-  const supabase = createServerSupabaseClient();
+  try {
+    console.log('[SERVER] getCocktailsWithIngredients starting...');
+    const supabase = createServerSupabaseClient();
 
   // Get all cocktails
   console.log('[SERVER] Querying cocktails table...');
@@ -326,8 +327,12 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     };
   });
 
-  console.log('[SERVER] Final result: first cocktail has ingredients:', result[0]?.ingredients?.length || 0);
-  return result;
+    console.log('[SERVER] Final result: first cocktail has ingredients:', result[0]?.ingredients?.length || 0);
+    return result;
+  } catch (error) {
+    console.error('[SERVER] Error in getCocktailsWithIngredients:', error);
+    return [];
+  }
 }
 
 /**
