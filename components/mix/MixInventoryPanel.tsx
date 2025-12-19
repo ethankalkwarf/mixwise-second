@@ -8,6 +8,7 @@ type Props = {
   ingredients: MixIngredient[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
+  stapleIds?: string[];
 };
 
 // Category icons and colors - Botanical theme
@@ -44,7 +45,7 @@ function getFirstLetter(name: string): string {
   return "#";
 }
 
-export function MixInventoryPanel({ ingredients, selectedIds, onChange }: Props) {
+export function MixInventoryPanel({ ingredients, selectedIds, onChange, stapleIds = [] }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
@@ -90,6 +91,10 @@ export function MixInventoryPanel({ ingredients, selectedIds, onChange }: Props)
   // Filter and group ingredients
   const { groupedIngredients, availableLetters, filteredCount } = useMemo(() => {
     let filtered = ingredients;
+
+    // Filter out staples (like ice, water)
+    const stapleSet = new Set(stapleIds);
+    filtered = filtered.filter((i) => !stapleSet.has(i.id));
 
     // Apply search filter
     if (searchQuery.trim()) {

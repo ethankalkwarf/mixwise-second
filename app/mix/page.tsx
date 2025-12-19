@@ -366,6 +366,7 @@ export default function MixPage() {
               ingredients={allIngredients}
               selectedIds={ingredientIds}
               onChange={handleInventoryChange}
+              stapleIds={stapleIds}
             />
           </aside>
 
