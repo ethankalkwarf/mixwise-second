@@ -252,7 +252,7 @@ export default function DashboardPage() {
         console.log("Fetching ingredients from Supabase...");
         const { data, error } = await supabase
           .from('ingredients')
-          .select('id, name, type, image_url, is_staple')
+          .select('*')
           .order('name');
 
         if (error) {
@@ -268,14 +268,24 @@ export default function DashboardPage() {
           return;
         }
 
-        // Map to expected format
-        const mappedIngredients = (data || []).map(ing => ({
-          id: ing.id,
-          name: ing.name,
-          category: ing.type,
-          imageUrl: ing.image_url,
-          isStaple: ing.is_staple
-        }));
+        // Map to expected format (same as getMixIngredients)
+        const mappedIngredients = (data || []).map(ingredient => {
+          const id = String(ingredient.id);
+
+          if (!id || id === 'undefined' || id === 'null') {
+            console.warn('Invalid ingredient ID:', ingredient);
+            return null;
+          }
+
+          return {
+            id,
+            name: ingredient.name,
+            category: ingredient.type || ingredient.category || 'other',
+            imageUrl: ingredient.image_url || null,
+            isStaple: ingredient.is_staple || false,
+          };
+        }).filter(Boolean) as MixIngredient[];
+
         setAllIngredients(mappedIngredients);
       } catch (error) {
         console.error("Error fetching ingredients:", error);
