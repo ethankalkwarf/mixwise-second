@@ -345,9 +345,12 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
 
   // Create mapping from lowercased name to ID
   const nameToIdMap = new Map<string, number>();
+  // Create mapping from numeric ID to ingredient name for lookup
+  const idToNameMap = new Map<number, string>();
   (allIngredients || []).forEach(ing => {
     if (ing.name) {
       nameToIdMap.set(ing.name.toLowerCase(), ing.id);
+      idToNameMap.set(ing.id, ing.name);
     }
   });
 
@@ -441,10 +444,14 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
               console.warn(`Could not convert ingredient ID "${item.ingredient_id}" to numeric ID`);
               return null;
             }
+
+            // Get the proper ingredient name from the ingredients table
+            const properName = idToNameMap.get(numericId) || item.ingredient_name || item.ingredient_id;
+
             return {
               id: item.id.toString(),
               ingredient_id: numericId,
-              ingredient_name: item.ingredient_name,
+              ingredient_name: properName,
               inventory_id: inventoryId,
             };
           })
@@ -473,10 +480,14 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
         console.warn(`Could not convert ingredient ID "${item.ingredient_id}" to numeric ID, skipping`);
         return null;
       }
+
+      // Get the proper ingredient name from the ingredients table
+      const properName = idToNameMap.get(numericId) || item.ingredient_name || item.ingredient_id;
+
       return {
         id: item.id.toString(),
         ingredient_id: numericId,
-        ingredient_name: item.ingredient_name,
+        ingredient_name: properName,
         // No inventory_id for bar_ingredients
       };
     })
