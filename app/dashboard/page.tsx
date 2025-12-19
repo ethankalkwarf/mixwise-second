@@ -210,11 +210,11 @@ export default function DashboardPage() {
           slug: { current: cocktail.slug },
           externalImageUrl: cocktail.imageUrl || undefined,
           primarySpirit: cocktail.primarySpirit || undefined,
-          ingredientIds: cocktail.ingredientsWithIds.map(ing => ing.id)
+          ingredientIds: cocktail.ingredients.map(ing => ing.id)
         }));
 
         // Score cocktails by how many ingredients user has
-        const ingredientSet = new Set(numericIngredientIds); // Use numeric IDs
+        const ingredientSet = new Set(ingredientIds); // Use string IDs directly like mix tool
         const scoredCocktails = formattedCocktails
           .map((cocktail) => {
             const cocktailIngredients = cocktail.ingredientIds || [];
