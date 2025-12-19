@@ -695,6 +695,14 @@ export default function DashboardPage() {
                       // Find the ingredient object for display
                       // Convert both IDs to strings for comparison
                       const ingredient = allIngredients.find(i => String(i.id) === String(id));
+
+                      // Debug logging
+                      if (process.env.NODE_ENV === 'development') {
+                        console.log(`[DASHBOARD] Looking for ingredient ID ${id} (type: ${typeof id})`);
+                        console.log(`[DASHBOARD] Found ingredient:`, ingredient ? `${ingredient.name} (${ingredient.id})` : 'NOT FOUND');
+                        console.log(`[DASHBOARD] allIngredients sample:`, allIngredients.slice(0, 3).map(i => `${i.name} (${i.id})`));
+                      }
+
                       return (
                         <div
                           key={id}
