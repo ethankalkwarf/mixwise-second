@@ -283,51 +283,27 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
   try {
-    console.log('[MIX-DEBUG] getCocktailsWithIngredientsClient: starting...');
-
     // Try client-side approach first
     try {
       return await getCocktailsWithIngredientsClientSide();
     } catch (clientError) {
-      console.warn('[MIX-DEBUG] Client-side query failed, trying server-side fallback:', clientError.message);
+      console.warn('Client-side query failed, trying server-side fallback:', clientError.message);
 
       // Fallback to server-side API call
       return await getCocktailsWithIngredientsServerSide();
     }
   } catch (error) {
-    console.error('[MIX-DEBUG] getCocktailsWithIngredientsClient failed:', error);
+    console.error('getCocktailsWithIngredientsClient failed:', error);
     throw error;
   }
 }
 
 // Client-side implementation
 async function getCocktailsWithIngredientsClientSide() {
-  let supabase;
-  try {
-    supabase = createClient();
-    console.log('[MIX-DEBUG] Supabase client created successfully');
-  } catch (clientError) {
-    console.error('[MIX-DEBUG] Failed to create Supabase client:', clientError);
-    throw clientError;
-  }
+  const supabase = createClient();
 
-  console.log('[MIX-DEBUG] Testing simple query first...');
-  const simpleQuery = await supabase
-    .from('cocktails')
-    .select('id, name, slug')
-    .limit(1);
-
-  console.log('[MIX-DEBUG] Simple query result:', simpleQuery);
-
-  if (simpleQuery.error) {
-    console.error('[MIX-DEBUG] Simple query failed:', simpleQuery.error);
-    throw simpleQuery.error;
-  }
-
-  console.log('[MIX-DEBUG] Simple query successful, proceeding with full query...');
-
-  // Add timeout to catch hanging queries
-  const queryPromise = supabase
+  // Query cocktails with ingredients
+  const { data: cocktailData, error: cocktailError } = await supabase
     .from('cocktails')
     .select(`
       id,
@@ -349,19 +325,8 @@ async function getCocktailsWithIngredientsClientSide() {
     `)
     .order('name');
 
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000);
-  });
-
-  let cocktailData, cocktailError;
-  try {
-    const result = await Promise.race([queryPromise, timeoutPromise]);
-    cocktailData = result.data;
-    cocktailError = result.error;
-    console.log('[MIX-DEBUG] Query completed successfully, error:', cocktailError, 'data length:', cocktailData?.length);
-  } catch (timeoutError) {
-    console.error('[MIX-DEBUG] Query failed or timed out:', timeoutError);
-    throw timeoutError;
+  if (cocktailError) {
+    throw cocktailError;
   }
 
     if (cocktailError) {
@@ -374,16 +339,10 @@ async function getCocktailsWithIngredientsClientSide() {
       return [];
     }
 
-    console.log(`[MIX-DEBUG] Fetched ${cocktailData.length} cocktails from database`);
-    console.log(`[MIX-DEBUG] First cocktail sample:`, cocktailData[0]);
-
-    console.log('[MIX-DEBUG] Fetching ingredients...');
     // Get ingredient name mapping for converting IDs to names
     const { data: ingredients, error: ingError } = await supabase
       .from('ingredients')
       .select('id, name');
-
-    console.log('[MIX-DEBUG] Ingredients query completed, error:', ingError, 'data length:', ingredients?.length);
 
     if (ingError) {
       console.error('Error fetching ingredients:', ingError);
@@ -396,10 +355,7 @@ async function getCocktailsWithIngredientsClientSide() {
       ingredientNameById.set(String(ing.id), ing.name);
     });
 
-    console.log(`[MIX-DEBUG] Built ingredient name mapping for ${ingredientNameById.size} ingredients`);
-
     // Process each cocktail and extract ingredients from JSON field
-    console.log(`[MIX-DEBUG] Starting to process ${cocktailData.length} cocktails`);
     const processedCocktails = cocktailData.map((cocktail, index) => {
       let ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }> = [];
 
@@ -420,9 +376,6 @@ async function getCocktailsWithIngredientsClientSide() {
             parsedIngredients = cocktail.ingredients;
           }
 
-          if (index < 3) { // Only log first few cocktails
-            console.log(`[MIX-DEBUG] Cocktail ${cocktail.name}: ingredients field type=${typeof cocktail.ingredients}, parsed=${parsedIngredients.length} items`);
-          }
 
           // Convert to the expected format
           ingredientsWithIds = parsedIngredients.map((ing: any) => {
@@ -438,10 +391,6 @@ async function getCocktailsWithIngredientsClientSide() {
               notes: ing.notes || null
             };
           }).filter(ing => ing.id !== 'unknown'); // Filter out unknown ingredients
-        } else {
-          if (index < 3) { // Only log first few cocktails
-            console.log(`[MIX-DEBUG] Cocktail ${cocktail.name}: no ingredients field`);
-          }
         }
       } catch (error) {
         console.warn(`Error processing ingredients for cocktail ${cocktail.id}:`, error);
@@ -475,13 +424,9 @@ async function getCocktailsWithIngredientsClientSide() {
     // Filter out cocktails with no valid ingredients
     const validCocktails = processedCocktails.filter(cocktail => {
       const hasIngredients = cocktail.ingredientsWithIds && cocktail.ingredientsWithIds.length > 0;
-      if (!hasIngredients && process.env.NODE_ENV === 'development') {
-        console.log(`[MIX-DEBUG] Cocktail "${cocktail.name}" has no ingredients, filtering out`);
-      }
       return hasIngredients;
     });
 
-    console.log(`[MIX-DEBUG] getCocktailsWithIngredientsClient: returning ${validCocktails.length} valid cocktails (${processedCocktails.length - validCocktails.length} filtered out)`);
     return validCocktails;
 }
 
