@@ -16,7 +16,7 @@ SELECT
     CAST(ing->>'id' AS INTEGER) as ingredient_id
 FROM
     cocktails c,
-    json_array_elements(
+    jsonb_array_elements(
         CASE
             WHEN c.ingredients IS NULL OR c.ingredients::text = '' THEN '[]'::jsonb
             WHEN jsonb_typeof(c.ingredients) = 'array' THEN c.ingredients
