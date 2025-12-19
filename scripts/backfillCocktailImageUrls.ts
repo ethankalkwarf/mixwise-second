@@ -46,7 +46,15 @@ const EXTENSION_PREFERENCE = ['webp', 'jpg', 'jpeg', 'png'];
 
 function getSlugFromPath(path: string): string {
   // Remove extension and any leading/trailing slashes
-  return path.replace(/\.[^.]+$/, '').replace(/^\/+|\/+$/g, '');
+  let slug = path.replace(/\.[^.]+$/, '').replace(/^\/+|\/+$/g, '');
+
+  // Remove " cocktail" suffix (case insensitive)
+  slug = slug.replace(/\s+cocktail\s*\(\d+\)?$/i, '').replace(/\s+cocktail$/i, '');
+
+  // Convert spaces to hyphens and make lowercase
+  slug = slug.toLowerCase().replace(/\s+/g, '-');
+
+  return slug;
 }
 
 function getExtension(path: string): string {
