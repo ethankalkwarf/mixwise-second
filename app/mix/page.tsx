@@ -132,6 +132,9 @@ export default function MixPage() {
     console.log('[MIX-DEBUG] 🟢 RUNNING MATCHING LOGIC');
     console.log('[MIX-DEBUG] ownedIngredientIds (first 10):', ingredientIds.slice(0, 10));
     console.log('[MIX-DEBUG] stapleIds (first 10):', stapleIds.slice(0, 10));
+    // Only match against cocktails that have ingredient data
+    const cocktailsWithIngredients = allCocktails.filter(c => c.ingredients && c.ingredients.length > 0);
+
     console.log('[MIX-DEBUG] cocktailsLoaded:', allCocktails.length);
     console.log('[MIX-DEBUG] cocktailsWithIngredients:', cocktailsWithIngredients.length);
 
@@ -146,9 +149,6 @@ export default function MixPage() {
         console.log('[MIX-DEBUG] Margarita not found in cocktails');
       }
     }
-
-    // Only match against cocktails that have ingredient data
-    const cocktailsWithIngredients = allCocktails.filter(c => c.ingredients && c.ingredients.length > 0);
 
     const result = getMixMatchGroups({
       cocktails: cocktailsWithIngredients,
