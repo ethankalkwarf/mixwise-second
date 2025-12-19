@@ -157,16 +157,6 @@ export default async function PublicBarPage({ params }: PageProps) {
   );
 }
 
-interface BarContentWrapperProps {
-  userId: string;
-  profile: UserProfile;
-  isPublicBar: boolean;
-  displayName: string;
-  userInitial: string;
-  barIngredients: BarIngredient[];
-  cocktailMatches: CocktailMatch[];
-  favorites: Favorite[];
-}
 
 function BarContentWrapper({
   userId,
@@ -262,15 +252,6 @@ function BarContent({
         </MainContainer>
       </div>
     );
-
-  return (
-    <div className="min-h-screen bg-botanical-gradient py-8 sm:py-16">
-      <MainContainer>
-        {/* Header */}
-        <div className="relative mb-16">
-          <div className="absolute inset-0 bg-hero-pattern rounded-3xl blur-3xl"></div>
-          <div className="relative card card-hover p-8 sm:p-12">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-8">
               <div className="flex-shrink-0">
                 {(profile as UserProfile).avatar_url ? (
                   <div className="relative">
@@ -633,16 +614,6 @@ function BarContent({
   );
 }
 
-interface BarContentWrapperProps {
-  userId: string;
-  profile: UserProfile;
-  isPublicBar: boolean;
-  displayName: string;
-  userInitial: string;
-  barIngredients: BarIngredient[];
-  cocktailMatches: CocktailMatch[];
-  favorites: Favorite[];
-}
 
 function BarContentWrapper({
   userId,
