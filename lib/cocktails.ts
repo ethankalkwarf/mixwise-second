@@ -364,23 +364,37 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     }
   });
 
+  // Create a map of all cocktail IDs for direct matching
+  const cocktailIdMap = new Map<string, string>();
+  cocktailData.forEach(cocktail => {
+    cocktailIdMap.set(cocktail.id, cocktail.id);
+    // Also try to map by legacy_id if it exists
+    if (cocktail.legacy_id) {
+      cocktailIdMap.set(String(cocktail.legacy_id), cocktail.id);
+    }
+  });
+
   // Group ingredients by cocktail UUID
   const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
   (cocktailIngredients || []).forEach((ci: any) => {
     let cocktailUUID: string | null = null;
 
-    // Handle both UUID and numeric cocktail_id formats
-    const cocktailIdValue = ci.cocktail_id;
-    if (typeof cocktailIdValue === 'string' && cocktailIdValue.includes('-')) {
-      // Already a UUID
-      cocktailUUID = cocktailIdValue;
-    } else {
-      // Numeric ID - convert using legacy_id mapping
-      const numericId = typeof cocktailIdValue === 'string' ? parseInt(cocktailIdValue, 10) : cocktailIdValue;
+    // Try direct mapping first (handles UUIDs and any existing mappings)
+    const cocktailIdStr = String(ci.cocktail_id);
+    cocktailUUID = cocktailIdMap.get(cocktailIdStr) || null;
+
+    // If not found and it's numeric, try legacy_id mapping
+    if (!cocktailUUID && /^\d+$/.test(cocktailIdStr)) {
+      const numericId = parseInt(cocktailIdStr, 10);
       cocktailUUID = numericToUUID.get(numericId) || null;
     }
 
-    if (!cocktailUUID) return;
+    if (!cocktailUUID) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[MIX-DEBUG] Could not map cocktail_id ${ci.cocktail_id} to any cocktail UUID`);
+      }
+      return;
+    }
 
     const ingredientId = String(ci.ingredient_id);
     const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
@@ -404,6 +418,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     console.log('[MIX-DEBUG] cocktail_ingredients sample:', cocktailIngredients.slice(0, 3));
   }
 
+  console.log(`[MIX-DEBUG] cocktailIdMap size: ${cocktailIdMap.size}`);
   console.log(`[MIX-DEBUG] ingredientsByCocktail: ${ingredientsByCocktail.size} cocktails with ingredients`);
   console.log(`[MIX-DEBUG] Sample cocktail IDs with ingredients:`, Array.from(ingredientsByCocktail.keys()).slice(0, 3));
   console.log(`[MIX-DEBUG] cocktailData length: ${cocktailData.length}`);
