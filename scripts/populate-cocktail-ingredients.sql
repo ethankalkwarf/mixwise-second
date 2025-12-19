@@ -30,6 +30,27 @@ WHERE
     AND ing->>'id' IS NOT NULL
     AND CAST(ing->>'id' AS INTEGER) > 0;
 
+-- First, let's inspect what the ingredients data looks like
+SELECT
+    id,
+    name,
+    ingredients,
+    jsonb_typeof(ingredients) as data_type,
+    CASE
+        WHEN ingredients IS NULL THEN 'NULL'
+        WHEN ingredients::text = '' THEN 'EMPTY_STRING'
+        WHEN jsonb_typeof(ingredients) = 'array' THEN 'ARRAY'
+        WHEN jsonb_typeof(ingredients) = 'string' THEN 'STRING'
+        ELSE 'OTHER'
+    END as ingredients_type
+FROM cocktails
+WHERE ingredients IS NOT NULL
+    AND ingredients::text != ''
+LIMIT 10;
+
+-- Clear existing data (optional, for re-running)
+TRUNCATE TABLE cocktail_ingredients_uuid;
+
 -- Verify the data was inserted
 SELECT
     COUNT(*) as total_relationships,
