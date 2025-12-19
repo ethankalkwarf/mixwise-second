@@ -124,23 +124,35 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
   try {
     // Add timeout to prevent hanging queries
     console.log('[MIX-DEBUG] Making ingredients query...');
+    console.log('[MIX-DEBUG] Creating ingredients query...');
     const queryPromise = supabase
       .from('ingredients')
-      .select('id, name, type, category, image_url, is_staple')
-      .order('name');
+      .select('id, name')
+      .order('name')
+      .then(result => {
+        console.log('[MIX-DEBUG] Ingredients query promise resolved:', { dataLength: result.data?.length, error: result.error });
+        return result;
+      });
 
     // Temporarily remove timeout to allow full ingredients load
     // const timeoutPromise = new Promise<never>((_, reject) => {
     //   setTimeout(() => reject(new Error('Ingredients query timed out')), 30000);
     // });
 
-    // Temporarily run without timeout to allow full ingredients load
-    const { data, error } = await queryPromise;
+    // Add back a longer timeout for ingredients query
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Ingredients query timed out after 45 seconds')), 45000);
+    });
+
+    console.log('[MIX-DEBUG] Starting Promise.race for ingredients query...');
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+    console.log('[MIX-DEBUG] Promise.race completed for ingredients');
     console.log('[MIX-DEBUG] Ingredients query completed, error:', error, 'data length:', data?.length);
 
     if (error) {
       console.error('Error fetching mix ingredients from Supabase:', error);
       // Fallback: return some basic ingredients for the wizard to work
+      console.log('[MIX-DEBUG] Using fallback ingredients due to error');
       return getFallbackIngredients();
     }
 
