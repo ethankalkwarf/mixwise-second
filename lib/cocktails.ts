@@ -368,9 +368,18 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     ingredientsByCocktail.get(cocktailUUID)!.push(ingredient);
   });
 
+  console.log(`[MIX-DEBUG] ingredientsByCocktail: ${ingredientsByCocktail.size} cocktails with ingredients`);
+  console.log(`[MIX-DEBUG] Sample cocktail IDs with ingredients:`, Array.from(ingredientsByCocktail.keys()).slice(0, 3));
+  console.log(`[MIX-DEBUG] cocktailData length: ${cocktailData.length}`);
+  console.log(`[MIX-DEBUG] Sample cocktail IDs from cocktails table:`, cocktailData.slice(0, 3).map(c => c.id));
+
   // Process cocktails and attach their ingredients
   const processedCocktails = cocktailData.map(cocktail => {
     const ingredientsWithIds = ingredientsByCocktail.get(cocktail.id) || [];
+
+    if (process.env.NODE_ENV === 'development' && ingredientsWithIds.length === 0) {
+      console.log(`[MIX-DEBUG] Cocktail ${cocktail.name} (${cocktail.id}) has no ingredients in cocktail_ingredients table`);
+    }
 
     return {
       id: cocktail.id,
@@ -394,7 +403,12 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     };
   });
 
+  const cocktailsWithIngredients = processedCocktails.filter(c => c.ingredientsWithIds.length > 0);
+  const cocktailsWithoutIngredients = processedCocktails.filter(c => c.ingredientsWithIds.length === 0);
+
   console.log(`[MIX-DEBUG] getCocktailsWithIngredientsClient: returning ${processedCocktails.length} processed cocktails`);
+  console.log(`[MIX-DEBUG] ${cocktailsWithIngredients.length} cocktails have ingredients, ${cocktailsWithoutIngredients.length} have no ingredients`);
+
   return processedCocktails;
   } catch (error) {
     console.error('[MIX-DEBUG] getCocktailsWithIngredientsClient failed:', error);
