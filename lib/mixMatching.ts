@@ -26,6 +26,15 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
       ownedSample: ownedIngredientIds.slice(0, 5),
       stapleSample: stapleIngredientIds.slice(0, 5)
     });
+
+    // Check for Margarita specifically
+    const margarita = cocktails.find(c => c.name === 'Margarita');
+    if (margarita) {
+      console.log('[MIX-MATCH-DEBUG] Margarita found with ingredients:', margarita.ingredientsWithIds);
+      console.log('[MIX-MATCH-DEBUG] Margarita ingredient IDs:', margarita.ingredientsWithIds.map(i => i.id));
+    } else {
+      console.log('[MIX-MATCH-DEBUG] Margarita not found in cocktails');
+    }
   }
 
   const makeNow: MixMatchResult[] = [];

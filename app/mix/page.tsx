@@ -111,6 +111,14 @@ export default function MixPage() {
       console.log('[MIX-DEBUG] cocktailsLoaded:', allCocktails.length);
       if (allCocktails.length > 0) {
         console.log('[MIX-DEBUG] first cocktail ingredients (first 10):', allCocktails[0].ingredientsWithIds.slice(0, 10));
+        // Find Margarita specifically
+        const margarita = allCocktails.find(c => c.name === 'Margarita');
+        if (margarita) {
+          console.log('[MIX-DEBUG] Margarita found with ingredients:', margarita.ingredientsWithIds);
+          console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredientsWithIds.map(i => i.id));
+        } else {
+          console.log('[MIX-DEBUG] Margarita not found in cocktails');
+        }
       }
     }
 
