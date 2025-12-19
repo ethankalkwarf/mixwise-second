@@ -74,7 +74,7 @@ async function createTestData() {
     console.log('Adding Margarita manually (position 94)...');
     testData.push(
       { cocktail_id: 94, ingredient_id: 135, measure: '2 oz' },  // Tequila
-      { cocktail_id: 94, ingredient_id: 2102, measure: '1 oz' }, // Lime
+      { cocktail_id: 94, ingredient_id: 2296, measure: '1 oz' }, // Fresh Lime Juice (what frontend finds)
       { cocktail_id: 94, ingredient_id: 121, measure: '1 oz' }   // Triple Sec
     );
 

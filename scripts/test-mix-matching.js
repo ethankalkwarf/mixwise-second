@@ -97,8 +97,8 @@ async function testMixMatching() {
       const margaritaIngredientIds = margarita.ingredientsWithIds.map(i => i.id);
       console.log(`\nRequired ingredient IDs: ${margaritaIngredientIds.join(', ')}`);
 
-      // Test with user selecting Tequila + Lime + Triple Sec
-      const userSelectedIds = ['135', '2102', '121']; // Tequila, Lime, Triple Sec
+    // Test with user selecting Tequila + Fresh Lime Juice + Triple Sec
+    const userSelectedIds = ['135', '2296', '121']; // Tequila, Fresh Lime Juice, Triple Sec
       console.log(`User selected IDs: ${userSelectedIds.join(', ')}`);
 
       const hasAllIngredients = margaritaIngredientIds.every(id => userSelectedIds.includes(id));
