@@ -195,6 +195,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   garnish: string | null;
   ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
+  try {
     console.log('[SERVER] getCocktailsWithIngredients starting...');
     const supabase = createServerSupabaseClient();
 
