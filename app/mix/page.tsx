@@ -40,8 +40,25 @@ export default function MixPage() {
     async function loadData() {
         try {
         const { ingredients, cocktails } = await getMixDataClient();
-        setAllIngredients(ingredients);
-        setAllCocktails(cocktails);
+
+        // Guard: Filter out cocktails with missing or empty ingredients arrays
+        const validCocktails = cocktails.filter(cocktail => {
+          return cocktail &&
+                 cocktail.ingredients &&
+                 Array.isArray(cocktail.ingredients) &&
+                 cocktail.ingredients.length > 0;
+        });
+
+        // Development-only warning for excluded cocktails
+        if (process.env.NODE_ENV === 'development') {
+          const excludedCount = cocktails.length - validCocktails.length;
+          if (excludedCount > 0) {
+            console.warn(`[MIX-DEBUG] Excluded ${excludedCount} cocktails with missing/empty ingredients (total: ${cocktails.length}, valid: ${validCocktails.length})`);
+          }
+        }
+
+        setAllIngredients(ingredients || []);
+        setAllCocktails(validCocktails || []);
       } catch (error) {
         console.error('Failed to load data from Supabase:', error);
         setDataError(error instanceof Error ? error.message : "Unknown error");
