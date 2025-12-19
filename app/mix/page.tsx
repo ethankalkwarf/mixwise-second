@@ -35,6 +35,13 @@ export default function MixPage() {
     promptToSave,
   } = useBarIngredients();
 
+  // Calculate staple IDs for filtering out basic ingredients
+  const stapleIds = useMemo(() => {
+    const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
+    const manualStaples = ['ice', 'water']; // Only truly universal basics
+    return [...new Set([...dbStaples, ...manualStaples])];
+  }, [allIngredients]);
+
   // Load data from Supabase
   useEffect(() => {
     async function loadData() {
@@ -179,10 +186,7 @@ export default function MixPage() {
       return { canMake: 0, almostThere: 0 };
     }
 
-    // Get staples from database + manually add true basics only
-    const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
-    const manualStaples = ['ice', 'water']; // Only truly universal basics
-    const stapleIds = [...new Set([...dbStaples, ...manualStaples])];
+    // stapleIds is now calculated at component level
 
     // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
     console.log('[MIX-DEBUG] 🟢 RUNNING MATCHING LOGIC');

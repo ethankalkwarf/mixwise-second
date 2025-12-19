@@ -45,7 +45,9 @@ function getFirstLetter(name: string): string {
   return "#";
 }
 
-export function MixInventoryPanel({ ingredients, selectedIds, onChange, stapleIds = [] }: Props) {
+export function MixInventoryPanel({ ingredients, selectedIds, onChange, stapleIds }: Props) {
+  // Ensure stapleIds is always an array
+  const safeStapleIds = stapleIds || [];
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
@@ -93,7 +95,7 @@ export function MixInventoryPanel({ ingredients, selectedIds, onChange, stapleId
     let filtered = ingredients;
 
     // Filter out staples (like ice, water)
-    const stapleSet = new Set(stapleIds);
+    const stapleSet = new Set(safeStapleIds);
     filtered = filtered.filter((i) => !stapleSet.has(i.id));
 
     // Apply search filter
@@ -139,7 +141,7 @@ export function MixInventoryPanel({ ingredients, selectedIds, onChange, stapleId
       availableLetters: letters,
       filteredCount: filtered.length,
     };
-  }, [ingredients, searchQuery, activeFilter, showSelectedOnly, selectedSet, stapleIds]);
+  }, [ingredients, searchQuery, activeFilter, showSelectedOnly, selectedSet, safeStapleIds]);
 
   // Generate A-Z for scrubber
   const alphabet = useMemo(() => {
