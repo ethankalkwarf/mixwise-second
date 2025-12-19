@@ -199,12 +199,14 @@ export default function MixPage() {
       if (allCocktails && allCocktails.length > 0) {
         console.log('[MIX-DEBUG] first cocktail ingredients (first 3):', allCocktails[0]?.ingredients?.slice(0, 3) || []);
         // Find Margarita specifically
-        const margarita = allCocktails.find(c => c.name === 'Margarita');
+        const margarita = allCocktails.find(c => c.name.toLowerCase().includes('margarita'));
         if (margarita) {
-          console.log('[MIX-DEBUG] Margarita found with ingredients:', margarita.ingredients);
-          console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredients?.map(i => i.id) || []);
+          console.log('[MIX-DEBUG] Margarita found:', margarita.name, 'ID:', margarita.id);
+          console.log('[MIX-DEBUG] Margarita ingredients:', margarita.ingredients);
+          console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredients?.map(i => ({id: i.id, name: i.name, optional: i.isOptional})) || []);
         } else {
           console.log('[MIX-DEBUG] Margarita not found in cocktails');
+          console.log('[MIX-DEBUG] Available cocktail names (sample):', allCocktails.slice(0, 10).map(c => c.name));
         }
 
         // Check if Margarita's ingredients are in owned list
@@ -214,13 +216,25 @@ export default function MixPage() {
           const ownedSet = new Set(ingredientIds);
           const missingFromMargarita = margaritaRequiredIds.filter(id => !ownedSet.has(id));
           console.log('[MIX-DEBUG] Margarita required IDs:', margaritaRequiredIds);
+          console.log('[MIX-DEBUG] Currently owned IDs:', ingredientIds);
           console.log('[MIX-DEBUG] Missing from Margarita:', missingFromMargarita);
+          console.log('[MIX-DEBUG] Margarita match status:', missingFromMargarita.length === 0 ? 'READY' : `MISSING ${missingFromMargarita.length}`);
         }
 
         // Debug ingredient ID mismatches
         console.log('[MIX-DEBUG] Cocktail ingredient IDs sample (first cocktail):', allCocktails[0]?.ingredients?.slice(0, 3).map(i => ({id: i.id, name: i.name})) || []);
         console.log('[MIX-DEBUG] All ingredients IDs sample:', allIngredients.slice(0, 10).map(i => ({id: i.id, name: i.name})) || []);
         console.log('[MIX-DEBUG] ID type check - cocktail ID:', typeof allCocktails[0]?.ingredients?.[0]?.id, 'ingredients ID:', typeof allIngredients[0]?.id);
+
+        // Debug selected ingredients
+        if (ingredientIds.length > 0) {
+          console.log('[MIX-DEBUG] Selected ingredient IDs:', ingredientIds);
+          const selectedIngredientDetails = ingredientIds.map(id => {
+            const ing = allIngredients.find(i => i.id === id);
+            return {id, name: ing?.name || 'NOT FOUND', found: !!ing};
+          });
+          console.log('[MIX-DEBUG] Selected ingredient details:', selectedIngredientDetails);
+        }
       }
     }
 

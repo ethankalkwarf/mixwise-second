@@ -120,10 +120,13 @@ export function MixResultsPanel({
         const ing = allIngredients.find((i) => i.id === id);
         // Debug ingredient lookup issues
         if (process.env.NODE_ENV === 'development') {
+          console.log('[MIX-DEBUG] Looking up ingredient ID:', id, 'Type:', typeof id);
+          console.log('[MIX-DEBUG] allIngredients sample (first 3):', allIngredients.slice(0, 3).map(i => ({id: i.id, name: i.name, type: typeof i.id})));
           if (!ing) {
-            console.log('[MIX-DEBUG] Ingredient lookup failed for ID:', id, 'Available IDs (first 10):', allIngredients.slice(0, 10).map(i => ({id: i.id, name: i.name})));
-          } else if (!ing.name) {
-            console.log('[MIX-DEBUG] Ingredient found but no name for ID:', id, 'Ingredient data:', ing);
+            console.log('[MIX-DEBUG] ❌ Ingredient lookup FAILED for ID:', id);
+            console.log('[MIX-DEBUG] Available IDs (all):', allIngredients.map(i => i.id));
+          } else {
+            console.log('[MIX-DEBUG] ✅ Ingredient found:', {id: ing.id, name: ing.name, category: ing.category});
           }
         }
         return {
