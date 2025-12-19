@@ -100,8 +100,13 @@ export function MixResultsPanel({
   // Smart additions
   const unlockPotential = useMemo(() => {
     const immediateUnlockCounts = new Map<string, { count: number; drinks: string[] }>();
-    
+
     almostThere.forEach((match) => {
+      // Safety check: ensure missingIngredientIds exists and has elements
+      if (!match.missingIngredientIds || match.missingIngredientIds.length === 0) {
+        return; // Skip cocktails that don't have missing required ingredients
+      }
+
       const missingId = match.missingIngredientIds[0];
       if (!missingId) return;
       const current = immediateUnlockCounts.get(missingId) || { count: 0, drinks: [] };
