@@ -267,17 +267,11 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
         console.log(`[SERVER] Processing ${cocktail.name}, ingredients type:`, typeof cocktail.ingredients, 'isArray:', Array.isArray(cocktail.ingredients));
 
         if (cocktail.ingredients && Array.isArray(cocktail.ingredients)) {
-          console.log(`[SERVER] First ingredient structure:`, JSON.stringify(cocktail.ingredients[0], null, 2));
-          ingredients = cocktail.ingredients.map((ing: any, index: number) => {
-            console.log(`[SERVER] Processing ingredient ${index}:`, JSON.stringify(ing, null, 2));
-            console.log(`[SERVER] Keys in ingredient:`, Object.keys(ing || {}));
-
+          ingredients = cocktail.ingredients.map((ing: any) => {
             // The ingredients JSON has a 'text' field with the ingredient name
             const ingredientText = ing.text || ing.name;
-            console.log(`[SERVER] Ingredient ${index}: text=${ingredientText}, amount=${ing.amount}`);
 
             if (!ingredientText) {
-              console.log(`[SERVER] No text/name found for ingredient ${index}, skipping`);
               return null;
             }
 
@@ -290,7 +284,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
               }
             }
 
-            // If exact match not found, try partial match (like the SQL does)
+            // If exact match not found, try partial match
             if (!matchedIngredient) {
               for (const [id, name] of ingredientNameById.entries()) {
                 if (name && name.toLowerCase().includes(ingredientText.toLowerCase()) ||
@@ -304,8 +298,6 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
             const ingredientId = matchedIngredient ? String(matchedIngredient.id) : 'unknown';
             const ingredientName = matchedIngredient ? matchedIngredient.name : 'Unknown';
 
-            console.log(`[SERVER] Ingredient ${index}: matched id=${ingredientId}, name=${ingredientName} for text="${ingredientText}"`);
-
             return {
               id: ingredientId,
               name: ingredientName,
@@ -314,6 +306,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
               notes: ing.notes || null
             };
           }).filter(ing => ing !== null); // Remove null entries
+
           console.log(`[SERVER] Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
         } else if (cocktail.ingredients) {
           // Try to handle as string or other format
