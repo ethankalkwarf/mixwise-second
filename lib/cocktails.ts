@@ -283,11 +283,16 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
   try {
-    // Try client-side approach first
+    // Try client-side approach first with timeout
     try {
-      return await getCocktailsWithIngredientsClientSide();
+      const clientSidePromise = getCocktailsWithIngredientsClientSide();
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Client-side query timed out after 5 seconds')), 5000);
+      });
+
+      return await Promise.race([clientSidePromise, timeoutPromise]);
     } catch (clientError) {
-      console.warn('Client-side query failed, trying server-side fallback:', clientError.message);
+      console.warn('Client-side query failed/timed out, trying server-side fallback:', clientError.message);
 
       // Fallback to server-side API call
       return await getCocktailsWithIngredientsServerSide();
