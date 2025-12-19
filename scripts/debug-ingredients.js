@@ -60,6 +60,21 @@ async function debugIngredients() {
     ingredients.forEach(ing => {
       console.log(`  ${ing.id}: ${ing.name}`);
     });
+
+  // Look for specific ingredients that should be in Margarita
+  console.log('\n=== LOOKING FOR MARGARITA INGREDIENTS ===');
+  const margaritaIngredients = ['tequila', 'triple sec', 'lime juice', 'cointreau'];
+  margaritaIngredients.forEach(searchName => {
+    const matches = ingredients.filter(ing =>
+      ing.name.toLowerCase().includes(searchName.toLowerCase())
+    );
+    if (matches.length > 0) {
+      console.log(`Found ${searchName}:`);
+      matches.forEach(match => console.log(`  ${match.id}: ${match.name}`));
+    } else {
+      console.log(`No matches found for ${searchName}`);
+    }
+  });
   }
 }
 

@@ -272,10 +272,39 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
             console.log(`[SERVER] Processing ingredient ${index}:`, JSON.stringify(ing, null, 2));
             console.log(`[SERVER] Keys in ingredient:`, Object.keys(ing || {}));
 
-            const ingredientId = String(ing.ingredient?.id || ing.id || 'unknown');
-            const ingredientName = ing.ingredient?.name || ingredientNameById.get(ingredientId) || ing.text || ing.name || 'Unknown';
+            // The ingredients JSON has a 'text' field with the ingredient name
+            const ingredientText = ing.text || ing.name;
+            console.log(`[SERVER] Ingredient ${index}: text=${ingredientText}, amount=${ing.amount}`);
 
-            console.log(`[SERVER] Ingredient ${index}: id=${ingredientId}, name=${ingredientName}, text=${ing.text}, amount=${ing.amount}`);
+            if (!ingredientText) {
+              console.log(`[SERVER] No text/name found for ingredient ${index}, skipping`);
+              return null;
+            }
+
+            // Find matching ingredient in the ingredients table by name
+            let matchedIngredient = null;
+            for (const [id, name] of ingredientNameById.entries()) {
+              if (name && name.toLowerCase().trim() === ingredientText.toLowerCase().trim()) {
+                matchedIngredient = { id, name };
+                break;
+              }
+            }
+
+            // If exact match not found, try partial match (like the SQL does)
+            if (!matchedIngredient) {
+              for (const [id, name] of ingredientNameById.entries()) {
+                if (name && name.toLowerCase().includes(ingredientText.toLowerCase()) ||
+                    ingredientText.toLowerCase().includes(name.toLowerCase())) {
+                  matchedIngredient = { id, name };
+                  break;
+                }
+              }
+            }
+
+            const ingredientId = matchedIngredient ? String(matchedIngredient.id) : 'unknown';
+            const ingredientName = matchedIngredient ? matchedIngredient.name : 'Unknown';
+
+            console.log(`[SERVER] Ingredient ${index}: matched id=${ingredientId}, name=${ingredientName} for text="${ingredientText}"`);
 
             return {
               id: ingredientId,
@@ -284,7 +313,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
               isOptional: ing.isOptional || false,
               notes: ing.notes || null
             };
-          });
+          }).filter(ing => ing !== null); // Remove null entries
           console.log(`[SERVER] Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
         } else if (cocktail.ingredients) {
           // Try to handle as string or other format
