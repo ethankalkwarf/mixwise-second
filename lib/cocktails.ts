@@ -130,7 +130,7 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
       .order('name');
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Ingredients query timed out after 10 seconds')), 10000);
+      setTimeout(() => reject(new Error('Ingredients query timed out after 12 seconds')), 12000);
     });
 
     const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
