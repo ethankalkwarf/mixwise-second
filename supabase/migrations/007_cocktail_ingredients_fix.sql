@@ -16,6 +16,24 @@ ADD COLUMN IF NOT EXISTS notes TEXT,
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
+-- Rename amount column to measure if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'cocktail_ingredients'
+    AND column_name = 'amount'
+    AND table_schema = 'public'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'cocktail_ingredients'
+    AND column_name = 'measure'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.cocktail_ingredients RENAME COLUMN amount TO measure;
+  END IF;
+END $$;
+
 -- Add primary key constraint if id column was added
 DO $$
 BEGIN

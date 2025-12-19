@@ -284,9 +284,24 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   if (!cocktailData) return [];
 
   // Get cocktail ingredients from cocktail_ingredients table
-  const { data: cocktailIngredients, error: ingredientsError } = await supabase
-    .from('cocktail_ingredients')
-    .select('cocktail_id, ingredient_id, measure, is_optional, notes');
+  // Try with new column names first, fallback to old names if needed
+  let cocktailIngredients, ingredientsError;
+
+  try {
+    const result = await supabase
+      .from('cocktail_ingredients')
+      .select('cocktail_id, ingredient_id, measure, is_optional, notes');
+    cocktailIngredients = result.data;
+    ingredientsError = result.error;
+  } catch (e) {
+    // Fallback to old column names if migration hasn't run
+    console.warn('Falling back to old column names for cocktail_ingredients');
+    const result = await supabase
+      .from('cocktail_ingredients')
+      .select('cocktail_id, ingredient_id, amount, is_optional, notes');
+    cocktailIngredients = result.data;
+    ingredientsError = result.error;
+  }
 
   if (ingredientsError) {
     console.error('Error fetching cocktail ingredients:', ingredientsError);
@@ -321,7 +336,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     const ingredient = {
       id: ingredientId,
       name,
-      amount: ci.measure ?? null,
+      amount: ci.measure ?? ci.amount ?? null, // Handle both column names
       isOptional: ci.is_optional ?? false,
       notes: ci.notes ?? null
     };
