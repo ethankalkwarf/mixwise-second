@@ -226,16 +226,10 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
 
   if (!cocktailData) return [];
 
-  // Create mapping from sequential numeric ID to UUID (since cocktail_ingredients uses numeric IDs)
-  const numericIdToUUID = new Map<number, string>();
-  cocktailData.forEach((cocktail, index) => {
-    numericIdToUUID.set(index + 1, cocktail.id); // 1-based sequential IDs
-  });
-
   // Get cocktail ingredients from cocktail_ingredients table
   const { data: cocktailIngredients, error: ingredientsError } = await supabase
     .from('cocktail_ingredients')
-    .select('cocktail_id, ingredient_id, measure'); // Note: table uses 'measure', not 'amount'
+    .select('cocktail_id, ingredient_id, measure, is_optional, notes');
 
   if (ingredientsError) {
     console.error('Error fetching cocktail ingredients:', ingredientsError);
@@ -258,11 +252,11 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     ingredientNameById.set(String(ing.id), ing.name);
   });
 
-  // Group ingredients by cocktail UUID (convert numeric cocktail_id to UUID)
+  // Group ingredients by cocktail UUID
   const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
   (cocktailIngredients || []).forEach((ci: any) => {
-    const cocktailUUID = numericIdToUUID.get(ci.cocktail_id);
-    if (!cocktailUUID) return; // Skip if no mapping found
+    const cocktailUUID = String(ci.cocktail_id);
+    if (!cocktailUUID) return;
 
     const ingredientId = String(ci.ingredient_id);
     const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
@@ -270,9 +264,9 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     const ingredient = {
       id: ingredientId,
       name,
-      amount: ci.measure ?? null, // Use 'measure' column from table
-      isOptional: false, // Table doesn't have is_optional column
-      notes: null
+      amount: ci.measure ?? null,
+      isOptional: ci.is_optional ?? false,
+      notes: ci.notes ?? null
     };
 
     if (!ingredientsByCocktail.has(cocktailUUID)) {

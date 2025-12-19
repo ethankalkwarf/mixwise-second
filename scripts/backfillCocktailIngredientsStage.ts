@@ -155,24 +155,6 @@ class CocktailIngredientBackfiller {
   async processCocktails(limit?: number) {
     console.log(`🍸 Processing cocktails${limit ? ` (limited to ${limit})` : ''}...`);
 
-    // Get ALL cocktails to build the position mapping
-    const { data: allCocktails, error: allError } = await supabase
-      .from('cocktails')
-      .select('id, name')
-      .order('name');
-
-    if (allError) {
-      throw new Error(`Failed to load all cocktails: ${allError.message}`);
-    }
-
-    // Create UUID to position mapping
-    const uuidToPosition = new Map<string, number>();
-    allCocktails.forEach((cocktail, index) => {
-      uuidToPosition.set(cocktail.id, index + 1); // 1-based positions
-    });
-
-    console.log(`🗺️  Created position mapping for ${allCocktails.length} cocktails`);
-
     // Get cocktails with ingredients JSON data
     let query = supabase
       .from('cocktails')
@@ -197,15 +179,9 @@ class CocktailIngredientBackfiller {
     let errorCount = 0;
 
     for (const cocktail of cocktails) {
-      const position = uuidToPosition.get(cocktail.id);
-      if (!position) {
-        console.log(`  ⚠️  Could not find position for cocktail ${cocktail.name} (${cocktail.id})`);
-        errorCount++;
-        continue;
-      }
       try {
         console.log(`\n🔄 Processing: ${cocktail.name}`);
-        const result = await this.processSingleCocktail(cocktail, uuidToPosition);
+        const result = await this.processSingleCocktail(cocktail);
 
         if (result.success) {
           successCount++;
@@ -234,19 +210,14 @@ class CocktailIngredientBackfiller {
     console.log(`   📊 Total processed: ${processedCount}`);
   }
 
-  private async processSingleCocktail(cocktail: CocktailWithIngredients, uuidToPosition: Map<string, number>) {
-    const position = uuidToPosition.get(cocktail.id);
-    if (!position) {
-      return { success: false, error: `Could not find position for cocktail ${cocktail.name}`, ingredientCount: 0 };
-    }
-
+  private async processSingleCocktail(cocktail: CocktailWithIngredients) {
     const ingredients = Array.isArray(cocktail.ingredients) ? cocktail.ingredients : [];
 
     if (ingredients.length === 0) {
       return { success: false, error: 'No ingredients array', ingredientCount: 0 };
     }
 
-    console.log(`  📝 Raw ingredients: ${ingredients.length} items (position: ${position})`);
+    console.log(`  📝 Raw ingredients: ${ingredients.length} items (UUID: ${cocktail.id})`);
 
     // Parse and map ingredients
     const ingredientRelationships: any[] = [];
@@ -270,11 +241,12 @@ class CocktailIngredientBackfiller {
       const ingredientId = this.findIngredientId(parsed.name);
 
       if (ingredientId) {
-        console.log(`    ✅ "${parsed.name}" → ID ${ingredientId}${parsed.amount ? ` (${parsed.amount})` : ''}`);
+        console.log(`    ✅ "${parsed.name}" → ID ${ingredientId}${parsed.amount ? ` (${parsed.amount})` : ''}${parsed.isOptional ? ' (optional)' : ''}`);
         ingredientRelationships.push({
-          cocktail_id: position,
+          cocktail_id: cocktail.id, // Use UUID directly
           ingredient_id: ingredientId,
-          measure: parsed.amount || null
+          measure: parsed.amount || null,
+          is_optional: parsed.isOptional || false
         });
         parsedCount++;
       } else {
@@ -286,19 +258,35 @@ class CocktailIngredientBackfiller {
       return { success: false, error: 'No ingredients could be mapped', ingredientCount: 0 };
     }
 
-    // Skip duplicate check for now - we want to populate all cocktails
-    // In the future, we could check by finding the cocktail's position in the sorted list
+    // Check for existing relationships to avoid duplicates
+    const existingCheck = await supabase
+      .from('cocktail_ingredients')
+      .select('cocktail_id, ingredient_id')
+      .eq('cocktail_id', cocktail.id);
+
+    const existingPairs = new Set(
+      (existingCheck.data || []).map(row => `${row.cocktail_id}-${row.ingredient_id}`)
+    );
+
+    // Filter out duplicates
+    const newRelationships = ingredientRelationships.filter(rel =>
+      !existingPairs.has(`${rel.cocktail_id}-${rel.ingredient_id}`)
+    );
+
+    if (newRelationships.length === 0) {
+      return { success: true, ingredientCount: 0 }; // Already exists, not an error
+    }
 
     // Insert ingredient relationships
     const { error: insertError } = await supabase
       .from('cocktail_ingredients')
-      .insert(ingredientRelationships);
+      .insert(newRelationships);
 
     if (insertError) {
       return { success: false, error: `Insert error: ${insertError.message}`, ingredientCount: 0 };
     }
 
-    return { success: true, ingredientCount: ingredientRelationships.length };
+    return { success: true, ingredientCount: newRelationships.length };
   }
 }
 
