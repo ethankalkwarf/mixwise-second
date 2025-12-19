@@ -17,23 +17,6 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   const owned = new Set<string>(ownedIngredientIds);
   const staples = new Set<string>(stapleIngredientIds);
 
-  // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
-  console.log('[MIX-MATCH-DEBUG] Input:', {
-    ownedCount: ownedIngredientIds.length,
-    stapleCount: stapleIngredientIds.length,
-    cocktailCount: cocktails.length,
-    ownedSample: ownedIngredientIds.slice(0, 5),
-    stapleSample: stapleIngredientIds.slice(0, 5)
-  });
-
-    // Check for Margarita specifically
-    const margarita = cocktails.find(c => c.name === 'Margarita');
-    if (margarita) {
-      console.log('[MIX-MATCH-DEBUG] Margarita found with ingredients:', margarita.ingredients);
-      console.log('[MIX-MATCH-DEBUG] Margarita ingredient IDs:', margarita.ingredients?.map(i => i.id) || []);
-    } else {
-      console.log('[MIX-MATCH-DEBUG] Margarita not found in cocktails');
-    }
 
   const makeNow: MixMatchResult[] = [];
   const almostThere: MixMatchResult[] = [];

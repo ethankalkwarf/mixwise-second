@@ -216,16 +216,10 @@ export async function getMixDataClient(): Promise<{
   ingredients: MixIngredient[];
   cocktails: MixCocktail[];
 }> {
-  console.log('[MIX-DEBUG] getMixDataClient: Starting Promise.all...');
-
   const [ingredients, cocktails] = await Promise.all([
     getMixIngredients(),
     getMixCocktailsClient()
   ]);
-
-  console.log('[MIX-DEBUG] getMixDataClient: Promise.all complete');
-  console.log('[MIX-DEBUG] getMixDataClient: ingredients loaded:', ingredients.length);
-  console.log('[MIX-DEBUG] getMixDataClient: cocktails loaded:', cocktails.length);
 
   return { ingredients, cocktails };
 }
@@ -258,7 +252,6 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   garnish: string | null;
   ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
-  console.log('[MIX-DEBUG] getCocktailsWithIngredientsClient: Starting...');
   const supabase = createClient();
 
   // Get all cocktails
@@ -371,17 +364,6 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     };
   });
 
-  console.log('[MIX-DEBUG] getCocktailsWithIngredientsClient: Returning', result.length, 'cocktails');
-
-  // Check Margarita specifically
-  const margarita = result.find(c => c.name === 'Margarita');
-  if (margarita) {
-    console.log('[MIX-DEBUG] Margarita in result:', {
-      name: margarita.name,
-      ingredientsCount: margarita.ingredientsWithIds.length,
-      ingredientIds: margarita.ingredientsWithIds.map(i => i.id)
-    });
-  }
 
   return result;
 }
