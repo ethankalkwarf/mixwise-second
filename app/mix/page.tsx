@@ -152,15 +152,31 @@ export default function MixPage() {
     console.log('[MIX-DEBUG] cocktailsLoaded:', allCocktails.length);
     console.log('[MIX-DEBUG] cocktailsWithIngredients:', cocktailsWithIngredients.length);
 
-    if (allCocktails && allCocktails.length > 0) {
-      console.log('[MIX-DEBUG] first cocktail ingredients (first 3):', allCocktails[0]?.ingredients?.slice(0, 3) || []);
-      // Find Margarita specifically
-      const margarita = allCocktails.find(c => c.name === 'Margarita');
-      if (margarita) {
-        console.log('[MIX-DEBUG] Margarita found with ingredients:', margarita.ingredients);
-        console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredients?.map(i => i.id) || []);
-      } else {
-        console.log('[MIX-DEBUG] Margarita not found in cocktails');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[MIX-DEBUG] ownedIngredientIds:', ingredientIds);
+      console.log('[MIX-DEBUG] stapleIds:', stapleIds);
+      console.log('[MIX-DEBUG] cocktailsWithIngredients count:', cocktailsWithIngredients.length);
+
+      if (allCocktails && allCocktails.length > 0) {
+        console.log('[MIX-DEBUG] first cocktail ingredients (first 3):', allCocktails[0]?.ingredients?.slice(0, 3) || []);
+        // Find Margarita specifically
+        const margarita = allCocktails.find(c => c.name === 'Margarita');
+        if (margarita) {
+          console.log('[MIX-DEBUG] Margarita found with ingredients:', margarita.ingredients);
+          console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredients?.map(i => i.id) || []);
+        } else {
+          console.log('[MIX-DEBUG] Margarita not found in cocktails');
+        }
+
+        // Check if Margarita's ingredients are in owned list
+        if (margarita) {
+          const margaritaRequired = margarita.ingredients.filter(i => !i.isOptional);
+          const margaritaRequiredIds = margaritaRequired.map(i => i.id);
+          const ownedSet = new Set(ingredientIds);
+          const missingFromMargarita = margaritaRequiredIds.filter(id => !ownedSet.has(id));
+          console.log('[MIX-DEBUG] Margarita required IDs:', margaritaRequiredIds);
+          console.log('[MIX-DEBUG] Missing from Margarita:', missingFromMargarita);
+        }
       }
     }
 

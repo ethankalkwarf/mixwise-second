@@ -27,6 +27,16 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   const almostThere: MixMatchResult[] = [];
   const far: MixMatchResult[] = [];
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[MIX-MATCH-DEBUG] Input:', {
+      ownedCount: ownedIngredientIds.length,
+      cocktailCount: cocktails.length,
+      stapleCount: stapleIngredientIds.length,
+      ownedSample: ownedIngredientIds.slice(0, 5),
+      firstCocktailIngredients: cocktails.length > 0 ? cocktails[0].ingredients.slice(0, 3).map(i => ({ id: i.id, name: i.name, optional: i.isOptional })) : []
+    });
+  }
+
   for (const cocktail of cocktails) {
     // Skip cocktails with no ingredients (bad data)
     if (!cocktail.ingredients || cocktail.ingredients.length === 0) {
@@ -104,6 +114,16 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     if (b.matchPercent !== a.matchPercent) return b.matchPercent - a.matchPercent;
     return a.cocktail.name.localeCompare(b.cocktail.name);
   });
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[MIX-MATCH-DEBUG] Results:', {
+      ready: ready.length,
+      almostThere: almostThere.length,
+      far: far.length,
+      readySample: ready.slice(0, 3).map(r => ({ name: r.cocktail.name, matchPercent: r.matchPercent })),
+      almostThereSample: almostThere.slice(0, 3).map(r => ({ name: r.cocktail.name, missingCount: r.missingCount, matchPercent: r.matchPercent }))
+    });
+  }
 
   return {
     ready,
