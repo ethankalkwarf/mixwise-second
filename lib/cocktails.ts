@@ -318,6 +318,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
 
 // Client-side implementation
 async function getCocktailsWithIngredientsClientSide() {
+  console.log('[MIX-DEBUG] Client-side cocktails query starting...');
   const supabase = createClient();
 
   // Query cocktails with ingredients
@@ -342,6 +343,8 @@ async function getCocktailsWithIngredientsClientSide() {
       ingredients
     `)
     .order('name');
+
+  console.log('[MIX-DEBUG] Client-side cocktails query completed, error:', cocktailError, 'data length:', cocktailData?.length);
 
   if (cocktailError) {
     throw cocktailError;
@@ -440,10 +443,15 @@ async function getCocktailsWithIngredientsClientSide() {
     });
 
     // Filter out cocktails with no valid ingredients
+    console.log('[MIX-DEBUG] Client-side: processed cocktails:', processedCocktails.length);
     const validCocktails = processedCocktails.filter(cocktail => {
       const hasIngredients = cocktail.ingredients && cocktail.ingredients.length > 0;
+      if (!hasIngredients) {
+        console.log('[MIX-DEBUG] Client-side: filtering out cocktail:', cocktail.name, 'ingredients:', cocktail.ingredients);
+      }
       return hasIngredients;
     });
+    console.log('[MIX-DEBUG] Client-side: valid cocktails after filtering:', validCocktails.length);
 
     return validCocktails;
 }
