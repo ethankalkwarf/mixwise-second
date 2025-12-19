@@ -1,8 +1,3 @@
--- ============================================================================
--- INSPECTION ONLY: Run this first to understand the ingredients data
--- ============================================================================
-
--- Check ALL cocktails and their ingredients status
 SELECT
     COUNT(*) as total_cocktails,
     COUNT(CASE WHEN ingredients IS NULL THEN 1 END) as null_ingredients,
@@ -10,7 +5,6 @@ SELECT
     COUNT(CASE WHEN ingredients IS NOT NULL AND ingredients::text != '' THEN 1 END) as has_some_ingredients_data
 FROM cocktails;
 
--- Show detailed breakdown of ingredient data types
 SELECT
     jsonb_typeof(ingredients) as data_type,
     COUNT(*) as count
@@ -18,33 +12,20 @@ FROM cocktails
 WHERE ingredients IS NOT NULL AND ingredients::text != ''
 GROUP BY jsonb_typeof(ingredients);
 
--- Show actual sample data from cocktails with ingredients
 SELECT
     id,
     name,
     LEFT(ingredients::text, 300) as ingredients_preview,
-    jsonb_typeof(ingredients) as data_type,
-    CASE
-        WHEN ingredients IS NULL THEN 'NULL'
-        WHEN ingredients::text = '' THEN 'EMPTY_STRING'
-        WHEN jsonb_typeof(ingredients) = 'array' THEN 'ARRAY - length: ' || jsonb_array_length(ingredients)::text
-        WHEN jsonb_typeof(ingredients) = 'string' THEN 'STRING'
-        ELSE 'OTHER'
-    END as ingredients_type
+    jsonb_typeof(ingredients) as data_type
 FROM cocktails
 WHERE ingredients IS NOT NULL
     AND ingredients::text != ''
 LIMIT 5;
 
--- ============================================================================
--- DATA POPULATION: Run this second to populate the table
--- ============================================================================
-
 -- Clear existing data (optional, for re-running)
 TRUNCATE TABLE cocktail_ingredients_uuid;
 
 -- Insert ingredient relationships by matching text to ingredient names
--- The ingredients data has "text" fields, not "id" fields, so we need to match by name
 INSERT INTO cocktail_ingredients_uuid (cocktail_id, ingredient_id)
 SELECT DISTINCT
     c.id as cocktail_id,
