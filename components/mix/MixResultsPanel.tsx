@@ -118,9 +118,13 @@ export function MixResultsPanel({
     return Array.from(immediateUnlockCounts.entries())
       .map(([id, data]) => {
         const ing = allIngredients.find((i) => i.id === id);
+        // Debug ingredient lookup issues
+        if (!ing && process.env.NODE_ENV === 'development') {
+          console.log('[MIX-DEBUG] Ingredient lookup failed for ID:', id, 'Available IDs (first 10):', allIngredients.slice(0, 10).map(i => i.id));
+        }
         return {
           id,
-          name: ing?.name || "Unknown",
+          name: ing?.name || "Ingredient",
           category: ing?.category || "Other",
           count: data.count,
           drinks: data.drinks

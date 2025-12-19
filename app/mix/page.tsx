@@ -216,6 +216,11 @@ export default function MixPage() {
           console.log('[MIX-DEBUG] Margarita required IDs:', margaritaRequiredIds);
           console.log('[MIX-DEBUG] Missing from Margarita:', missingFromMargarita);
         }
+
+        // Debug ingredient ID mismatches
+        console.log('[MIX-DEBUG] Cocktail ingredient IDs sample (first cocktail):', allCocktails[0]?.ingredients?.slice(0, 3).map(i => ({id: i.id, name: i.name})) || []);
+        console.log('[MIX-DEBUG] All ingredients IDs sample:', allIngredients.slice(0, 10).map(i => ({id: i.id, name: i.name})) || []);
+        console.log('[MIX-DEBUG] ID type check - cocktail ID:', typeof allCocktails[0]?.ingredients?.[0]?.id, 'ingredients ID:', typeof allIngredients[0]?.id);
       }
     }
 
