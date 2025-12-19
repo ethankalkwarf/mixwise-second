@@ -321,6 +321,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     }
 
     console.log(`[MIX-DEBUG] Fetched ${cocktailData.length} cocktails from database`);
+    console.log(`[MIX-DEBUG] First cocktail sample:`, cocktailData[0]);
 
     // Get ingredient name mapping for converting IDs to names
     const { data: ingredients, error: ingError } = await supabase
@@ -341,7 +342,8 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     console.log(`[MIX-DEBUG] Built ingredient name mapping for ${ingredientNameById.size} ingredients`);
 
     // Process each cocktail and extract ingredients from JSON field
-    const processedCocktails = cocktailData.map(cocktail => {
+    console.log(`[MIX-DEBUG] Starting to process ${cocktailData.length} cocktails`);
+    const processedCocktails = cocktailData.map((cocktail, index) => {
       let ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }> = [];
 
       try {
@@ -361,6 +363,10 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
             parsedIngredients = cocktail.ingredients;
           }
 
+          if (index < 3) { // Only log first few cocktails
+            console.log(`[MIX-DEBUG] Cocktail ${cocktail.name}: ingredients field type=${typeof cocktail.ingredients}, parsed=${parsedIngredients.length} items`);
+          }
+
           // Convert to the expected format
           ingredientsWithIds = parsedIngredients.map((ing: any) => {
             // Handle different ingredient formats
@@ -375,6 +381,10 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
               notes: ing.notes || null
             };
           }).filter(ing => ing.id !== 'unknown'); // Filter out unknown ingredients
+        } else {
+          if (index < 3) { // Only log first few cocktails
+            console.log(`[MIX-DEBUG] Cocktail ${cocktail.name}: no ingredients field`);
+          }
         }
       } catch (error) {
         console.warn(`Error processing ingredients for cocktail ${cocktail.id}:`, error);
