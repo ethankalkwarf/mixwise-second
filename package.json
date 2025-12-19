@@ -19,7 +19,9 @@
     "create:test-data": "node scripts/create-test-data.js",
     "migrate:cocktail-uuids": "node scripts/migrate-cocktail-uuids.js",
     "verify:cocktail-uuids": "node scripts/verify-cocktail-uuids.js",
-    "debug:cocktail-mapping": "npx tsx scripts/debug-cocktail-mapping.ts"
+    "debug:cocktail-mapping": "npx tsx scripts/debug-cocktail-mapping.ts",
+    "backfill:images:dry": "npx tsx scripts/backfillCocktailImageUrls.ts --dry-run",
+    "backfill:images:apply": "npx tsx scripts/backfillCocktailImageUrls.ts --apply"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",

@@ -98,6 +98,39 @@ Access the CMS at `/studio` to manage cocktails, ingredients, and content.
 └── supabase/migrations/  # Database migrations
 ```
 
+## Scripts
+
+### Backfill Scripts
+
+#### Cocktail Image URLs
+
+Updates `cocktails.image_url` with public URLs from Supabase Storage bucket `cocktail-images-fullsize`.
+
+**Required Environment Variables:**
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY` (⚠️ Never commit this key!)
+
+**Usage:**
+```bash
+# Dry run (recommended first)
+npm run backfill:images:dry
+
+# Apply updates
+npm run backfill:images:apply
+
+# Apply with overwrite (updates existing URLs too)
+npm run backfill:images:apply -- --overwrite
+
+# Test with limited rows
+npm run backfill:images:dry -- --limit 10
+```
+
+**Behavior:**
+- Matches cocktails by `slug` to storage files
+- Prefers WebP > JPG/JPEG > PNG extensions
+- Only updates rows where `image_url` is null/empty (unless `--overwrite` is used)
+- Prints detailed summary of planned changes
+
 ## Documentation
 
 - [Authentication & Profiles](./docs/auth-and-profiles.md) - Auth setup and user management
