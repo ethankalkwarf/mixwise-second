@@ -117,7 +117,9 @@ export async function getCocktailsListClient(filters: CocktailFilters = {}): Pro
  * Fetch ingredients for mix logic (client-side)
  */
 export async function getMixIngredients(): Promise<MixIngredient[]> {
+  console.log('[MIX-DEBUG] getMixIngredients called');
   const supabase = getSupabaseClient();
+  console.log('[MIX-DEBUG] getSupabaseClient returned:', !!supabase);
 
   try {
     const { data, error } = await supabase
@@ -231,6 +233,8 @@ export async function getMixDataClient(): Promise<{
 
     const ingredientsPromise = getMixIngredients();
     const cocktailsPromise = getMixCocktailsClient();
+
+    console.log('[MIX-DEBUG] Created promises, waiting for Promise.all...');
 
     const [ingredients, cocktails] = await Promise.all([
       ingredientsPromise,
