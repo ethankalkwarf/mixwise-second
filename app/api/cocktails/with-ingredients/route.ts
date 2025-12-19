@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
     const cocktails = await getCocktailsWithIngredients();
 
     console.log(`[API] API returning ${cocktails.length} cocktails with ingredients`);
+    console.log(`[API] First cocktail has ingredients: ${cocktails[0]?.ingredients?.length || 0}`);
+    console.log(`[API] First cocktail sample:`, JSON.stringify(cocktails[0], null, 2));
 
     return NextResponse.json(cocktails);
   } catch (error) {
