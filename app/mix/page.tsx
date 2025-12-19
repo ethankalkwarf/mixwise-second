@@ -55,25 +55,31 @@ export default function MixPage() {
         }
 
         // Guard: Filter out cocktails with missing or empty ingredients arrays
+        console.log('[MIX-DEBUG] Filtering cocktails, total:', cocktails.length);
+        console.log('[MIX-DEBUG] First cocktail sample:', cocktails[0]);
+
         const validCocktails = cocktails.filter(cocktail => {
           const isValid = cocktail &&
-                 cocktail.ingredients &&
-                 Array.isArray(cocktail.ingredients) &&
-                 cocktail.ingredients.length > 0;
+                         cocktail.ingredients &&
+                         Array.isArray(cocktail.ingredients) &&
+                         cocktail.ingredients.length > 0;
 
-          if (process.env.NODE_ENV === 'development' && !isValid) {
+          if (!isValid) {
             console.log('[MIX-DEBUG] Invalid cocktail:', {
               id: cocktail.id,
               name: cocktail.name,
               hasIngredients: !!cocktail.ingredients,
               ingredientsType: typeof cocktail.ingredients,
               ingredientsIsArray: Array.isArray(cocktail.ingredients),
-              ingredientsLength: cocktail.ingredients?.length || 0
+              ingredientsLength: cocktail.ingredients?.length || 0,
+              cocktailKeys: Object.keys(cocktail)
             });
           }
 
           return isValid;
         });
+
+        console.log('[MIX-DEBUG] After filtering: valid cocktails:', validCocktails.length);
 
         // Development-only warning for excluded cocktails
         if (process.env.NODE_ENV === 'development') {
