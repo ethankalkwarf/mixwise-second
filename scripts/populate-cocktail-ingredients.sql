@@ -1,9 +1,23 @@
 -- Populate cocktail_ingredients_uuid table from cocktails.ingredients JSON
 -- Run this in Supabase SQL Editor
 
--- First, ensure the table exists (if not already created)
--- Note: This table already exists, we're just populating it
--- Check the existing schema first
+-- FIRST: Inspect what the ingredients data actually looks like
+SELECT
+    id,
+    name,
+    ingredients,
+    jsonb_typeof(ingredients) as data_type,
+    CASE
+        WHEN ingredients IS NULL THEN 'NULL'
+        WHEN ingredients::text = '' THEN 'EMPTY_STRING'
+        WHEN jsonb_typeof(ingredients) = 'array' THEN 'ARRAY'
+        WHEN jsonb_typeof(ingredients) = 'string' THEN 'STRING'
+        ELSE 'OTHER'
+    END as ingredients_type
+FROM cocktails
+WHERE ingredients IS NOT NULL
+    AND ingredients::text != ''
+LIMIT 5;
 
 -- Clear existing data (optional, for re-running)
 TRUNCATE TABLE cocktail_ingredients_uuid;
