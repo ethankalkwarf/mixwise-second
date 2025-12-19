@@ -158,40 +158,7 @@ export default async function PublicBarPage({ params }: PageProps) {
 }
 
 
-function BarContentWrapper({
-  userId,
-  profile,
-  isPublicBar,
-  displayName,
-  userInitial,
-  barIngredients,
-  cocktailMatches,
-  favorites,
-}: BarContentWrapperProps) {
-  return (
-    <BarContent
-      userId={userId}
-      profile={profile}
-      isPublicBar={isPublicBar}
-      displayName={displayName}
-      userInitial={userInitial}
-      barIngredients={barIngredients}
-      cocktailMatches={cocktailMatches}
-      favorites={favorites}
-    />
-  );
-}
 
-function BarContent({
-  userId,
-  profile,
-  isPublicBar,
-  displayName,
-  userInitial,
-  barIngredients,
-  cocktailMatches,
-  favorites,
-}: BarContentWrapperProps) {
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -252,93 +219,6 @@ function BarContent({
         </MainContainer>
       </div>
     );
-              <div className="flex-shrink-0">
-                {(profile as UserProfile).avatar_url ? (
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-terracotta/30 to-olive/30 rounded-full blur-lg"></div>
-                    <img
-                      src={(profile as UserProfile).avatar_url!}
-                      alt=""
-                      className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-mist"
-                    />
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-terracotta/10 to-olive/10 border-2 border-mist flex items-center justify-center">
-                      <span className="text-4xl sm:text-5xl font-display font-bold text-terracotta">
-                        {userInitial}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 text-center sm:text-left">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-forest">
-                    {displayName}&apos;s Bar
-                  </h1>
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-                    isPublicBar
-                      ? 'bg-olive/10 text-olive border border-olive/20'
-                      : 'bg-stone/30 text-sage border border-stone/40'
-                  }`}>
-                    {isPublicBar ? (
-                      <>
-                        <GlobeAltIcon className="w-4 h-4" />
-                        <span>Public</span>
-                      </>
-                    ) : (
-                      <>
-                        <LockClosedIcon className="w-4 h-4" />
-                        <span>Private</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <p className="text-lg text-sage mb-6">
-                  {barIngredients.length} ingredients • {cocktailMatches.length} cocktails possible
-                </p>
-                <div className="flex items-center justify-center sm:justify-start gap-4 text-sm">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-mist/50 rounded-xl border border-mist">
-                    <BeakerIcon className="w-4 h-4 text-olive" />
-                    <span className="text-forest font-medium">{barIngredients.length} ingredients</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-mist/50 rounded-xl border border-mist">
-                    <span className="text-xl">🍸</span>
-                    <span className="text-forest font-medium">{cocktailMatches.length} cocktails</span>
-                  </div>
-                  {favorites && favorites.length > 0 && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-mist/50 rounded-xl border border-mist">
-                      <HeartIcon className="w-4 h-4 text-terracotta" />
-                      <span className="text-forest font-medium">{favorites.length} favorites</span>
-                    </div>
-                  )}
-                </div>
-                {isOwner && (
-                  <div className="mt-6 text-center sm:text-left">
-                    <Link
-                      href="/settings"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-mist/50 hover:bg-mist/70 text-forest rounded-xl transition-colors text-sm font-medium border border-mist"
-                    >
-                      {isPublicBar ? (
-                        <>
-                          <GlobeAltIcon className="w-4 h-4" />
-                          Manage Public Settings
-                        </>
-                      ) : (
-                        <>
-                          <LockClosedIcon className="w-4 h-4" />
-                          Make Bar Public
-                        </>
-                      )}
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Stats */}
         <div className="grid sm:grid-cols-3 gap-6 mb-16">
           <div className="card card-hover">
@@ -615,40 +495,7 @@ function BarContent({
 }
 
 
-function BarContentWrapper({
-  userId,
-  profile,
-  isPublicBar,
-  displayName,
-  userInitial,
-  barIngredients,
-  cocktailMatches,
-  favorites,
-}: BarContentWrapperProps) {
-  return (
-    <BarContent
-      userId={userId}
-      profile={profile}
-      isPublicBar={isPublicBar}
-      displayName={displayName}
-      userInitial={userInitial}
-      barIngredients={barIngredients}
-      cocktailMatches={cocktailMatches}
-      favorites={favorites}
-    />
-  );
-}
 
-function BarContent({
-  userId,
-  profile,
-  isPublicBar,
-  displayName,
-  userInitial,
-  barIngredients,
-  cocktailMatches,
-  favorites,
-}: BarContentWrapperProps) {
   const [currentUser, setCurrentUser] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
