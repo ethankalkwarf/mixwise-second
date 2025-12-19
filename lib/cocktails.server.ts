@@ -247,7 +247,9 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   console.log('[SERVER] Cocktail ingredients query result:', {
     error: ingredientsError,
     dataLength: cocktailIngredients?.length,
-    firstFew: cocktailIngredients?.slice(0, 3)
+    firstFew: cocktailIngredients?.slice(0, 3),
+    sampleCocktailIds: cocktailIngredients?.slice(0, 5)?.map(ci => ci.cocktail_id),
+    sampleIngredientIds: cocktailIngredients?.slice(0, 5)?.map(ci => ci.ingredient_id)
   });
 
   if (ingredientsError) {
@@ -295,26 +297,37 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   });
 
   // Process cocktails and attach their ingredients
-  return cocktailData.map(cocktail => ({
-    id: cocktail.id,
-    name: cocktail.name,
-    slug: cocktail.slug,
-    description: cocktail.short_description || null,
-    instructions: cocktail.instructions || null,
-    category: cocktail.category_primary || null,
-    imageUrl: cocktail.image_url || null,
-    glass: cocktail.glassware || null,
-    method: cocktail.technique || null,
-    primarySpirit: cocktail.base_spirit || null,
-    difficulty: cocktail.difficulty || null,
-    isPopular: cocktail.metadata_json?.isPopular || false,
-    isFavorite: cocktail.metadata_json?.isFavorite || false,
-    isTrending: cocktail.metadata_json?.isTrending || false,
-    drinkCategories: cocktail.categories_all || [],
-    tags: cocktail.tags || [],
-    garnish: cocktail.garnish || null,
-    ingredients: ingredientsByCocktail.get(cocktail.id) || []
-  }));
+  console.log('[SERVER] Processing cocktails, ingredientsByCocktail size:', ingredientsByCocktail.size);
+  console.log('[SERVER] Sample cocktail IDs from cocktails table:', cocktailData.slice(0, 3).map(c => c.id));
+  console.log('[SERVER] Sample cocktail IDs with ingredients:', Array.from(ingredientsByCocktail.keys()).slice(0, 3));
+
+  const result = cocktailData.map(cocktail => {
+    const ingredients = ingredientsByCocktail.get(cocktail.id) || [];
+    console.log(`[SERVER] Cocktail ${cocktail.name}: found ${ingredients.length} ingredients`);
+    return {
+      id: cocktail.id,
+      name: cocktail.name,
+      slug: cocktail.slug,
+      description: cocktail.short_description || null,
+      instructions: cocktail.instructions || null,
+      category: cocktail.category_primary || null,
+      imageUrl: cocktail.image_url || null,
+      glass: cocktail.glassware || null,
+      method: cocktail.technique || null,
+      primarySpirit: cocktail.base_spirit || null,
+      difficulty: cocktail.difficulty || null,
+      isPopular: cocktail.metadata_json?.isPopular || false,
+      isFavorite: cocktail.metadata_json?.isFavorite || false,
+      isTrending: cocktail.metadata_json?.isTrending || false,
+      drinkCategories: cocktail.categories_all || [],
+      tags: cocktail.tags || [],
+      garnish: cocktail.garnish || null,
+      ingredients: ingredients
+    };
+  });
+
+  console.log('[SERVER] Final result: first cocktail has ingredients:', result[0]?.ingredients?.length || 0);
+  return result;
 }
 
 /**
