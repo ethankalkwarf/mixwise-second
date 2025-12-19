@@ -262,7 +262,6 @@ function BarContent({
         </MainContainer>
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen bg-botanical-gradient py-8 sm:py-16">
@@ -739,7 +738,6 @@ function BarContent({
         </MainContainer>
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen bg-botanical-gradient py-8 sm:py-16">
