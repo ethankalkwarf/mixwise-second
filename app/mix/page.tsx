@@ -179,9 +179,9 @@ export default function MixPage() {
       return { canMake: 0, almostThere: 0 };
     }
 
-    // Get staples from database + manually add common basics
+    // Get staples from database + manually add true basics only
     const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
-    const manualStaples = ['ice', 'sugar', 'salt', 'water', 'simple-syrup', 'lime-juice', 'lemon-juice'];
+    const manualStaples = ['ice', 'water']; // Only truly universal basics
     const stapleIds = [...new Set([...dbStaples, ...manualStaples])];
 
     // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
