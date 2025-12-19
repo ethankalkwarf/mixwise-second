@@ -231,9 +231,9 @@ export function RecipeContent({
         <div className="w-full max-w-2xl lg:max-w-lg">
           <div className="relative overflow-hidden rounded-xl border bg-black/5">
             <div className="aspect-[4/5] relative">
-              {cocktail.image_url ? (
+              {imageUrl ? (
                 <OptimizedCocktailImage
-                  src={cocktail.image_url}
+                  src={imageUrl}
                   alt={cocktail.image_alt ?? cocktail.name}
                   priority
                   className="object-cover"
