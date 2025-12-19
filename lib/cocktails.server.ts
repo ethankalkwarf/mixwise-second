@@ -253,6 +253,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     });
 
     console.log('[SERVER] Processing cocktails with JSON ingredients...');
+    console.log('[SERVER] Available fields in cocktailData[0]:', Object.keys(cocktailData[0] || {}));
 
     console.log('[SERVER] First 3 cocktails ingredients data:');
     cocktailData.slice(0, 3).forEach((cocktail, i) => {
