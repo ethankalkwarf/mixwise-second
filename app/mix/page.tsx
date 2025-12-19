@@ -41,12 +41,38 @@ export default function MixPage() {
         try {
         const { ingredients, cocktails } = await getMixDataClient();
 
+        // Debug: Check cocktail structure
+        if (process.env.NODE_ENV === 'development' && cocktails.length > 0) {
+          console.log('[MIX-DEBUG] First cocktail structure:', {
+            id: cocktails[0].id,
+            name: cocktails[0].name,
+            hasIngredients: !!cocktails[0].ingredients,
+            ingredientsType: typeof cocktails[0].ingredients,
+            ingredientsIsArray: Array.isArray(cocktails[0].ingredients),
+            ingredientsLength: cocktails[0].ingredients?.length || 0,
+            sampleIngredient: cocktails[0].ingredients?.[0]
+          });
+        }
+
         // Guard: Filter out cocktails with missing or empty ingredients arrays
         const validCocktails = cocktails.filter(cocktail => {
-          return cocktail &&
+          const isValid = cocktail &&
                  cocktail.ingredients &&
                  Array.isArray(cocktail.ingredients) &&
                  cocktail.ingredients.length > 0;
+
+          if (process.env.NODE_ENV === 'development' && !isValid) {
+            console.log('[MIX-DEBUG] Invalid cocktail:', {
+              id: cocktail.id,
+              name: cocktail.name,
+              hasIngredients: !!cocktail.ingredients,
+              ingredientsType: typeof cocktail.ingredients,
+              ingredientsIsArray: Array.isArray(cocktail.ingredients),
+              ingredientsLength: cocktail.ingredients?.length || 0
+            });
+          }
+
+          return isValid;
         });
 
         // Development-only warning for excluded cocktails
@@ -57,6 +83,7 @@ export default function MixPage() {
           }
         }
 
+        console.log(`[MIX-DEBUG] Setting state: ${ingredients.length} ingredients, ${validCocktails.length} valid cocktails`);
         setAllIngredients(ingredients || []);
         setAllCocktails(validCocktails || []);
       } catch (error) {
