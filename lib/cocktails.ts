@@ -285,70 +285,84 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   try {
     console.log('[MIX-DEBUG] getCocktailsWithIngredientsClient: starting...');
 
-    let supabase;
+    // Try client-side approach first
     try {
-      supabase = createClient();
-      console.log('[MIX-DEBUG] Supabase client created successfully');
+      return await getCocktailsWithIngredientsClientSide();
     } catch (clientError) {
-      console.error('[MIX-DEBUG] Failed to create Supabase client:', clientError);
-      throw clientError;
+      console.warn('[MIX-DEBUG] Client-side query failed, trying server-side fallback:', clientError.message);
+
+      // Fallback to server-side API call
+      return await getCocktailsWithIngredientsServerSide();
     }
+  } catch (error) {
+    console.error('[MIX-DEBUG] getCocktailsWithIngredientsClient failed:', error);
+    throw error;
+  }
+}
 
-    console.log('[MIX-DEBUG] Making Supabase query...');
+// Client-side implementation
+async function getCocktailsWithIngredientsClientSide() {
+  let supabase;
+  try {
+    supabase = createClient();
+    console.log('[MIX-DEBUG] Supabase client created successfully');
+  } catch (clientError) {
+    console.error('[MIX-DEBUG] Failed to create Supabase client:', clientError);
+    throw clientError;
+  }
 
-    // Start with a very simple query to test connectivity
-    console.log('[MIX-DEBUG] Testing simple query first...');
-    const simpleQuery = await supabase
-      .from('cocktails')
-      .select('id, name, slug')
-      .limit(1);
+  console.log('[MIX-DEBUG] Testing simple query first...');
+  const simpleQuery = await supabase
+    .from('cocktails')
+    .select('id, name, slug')
+    .limit(1);
 
-    console.log('[MIX-DEBUG] Simple query result:', simpleQuery);
+  console.log('[MIX-DEBUG] Simple query result:', simpleQuery);
 
-    if (simpleQuery.error) {
-      console.error('[MIX-DEBUG] Simple query failed:', simpleQuery.error);
-      throw simpleQuery.error;
-    }
+  if (simpleQuery.error) {
+    console.error('[MIX-DEBUG] Simple query failed:', simpleQuery.error);
+    throw simpleQuery.error;
+  }
 
-    console.log('[MIX-DEBUG] Simple query successful, proceeding with full query...');
+  console.log('[MIX-DEBUG] Simple query successful, proceeding with full query...');
 
-    // Add timeout to catch hanging queries
-    const queryPromise = supabase
-      .from('cocktails')
-      .select(`
-        id,
-        name,
-        slug,
-        short_description,
-        instructions,
-        category_primary,
-        image_url,
-        glassware,
-        technique,
-        base_spirit,
-        difficulty,
-        categories_all,
-        tags,
-        garnish,
-        metadata_json,
-        ingredients
-      `)
-      .order('name');
+  // Add timeout to catch hanging queries
+  const queryPromise = supabase
+    .from('cocktails')
+    .select(`
+      id,
+      name,
+      slug,
+      short_description,
+      instructions,
+      category_primary,
+      image_url,
+      glassware,
+      technique,
+      base_spirit,
+      difficulty,
+      categories_all,
+      tags,
+      garnish,
+      metadata_json,
+      ingredients
+    `)
+    .order('name');
 
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000);
-    });
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000);
+  });
 
-    let cocktailData, cocktailError;
-    try {
-      const result = await Promise.race([queryPromise, timeoutPromise]);
-      cocktailData = result.data;
-      cocktailError = result.error;
-      console.log('[MIX-DEBUG] Query completed successfully, error:', cocktailError, 'data length:', cocktailData?.length);
-    } catch (timeoutError) {
-      console.error('[MIX-DEBUG] Query failed or timed out:', timeoutError);
-      throw timeoutError;
-    }
+  let cocktailData, cocktailError;
+  try {
+    const result = await Promise.race([queryPromise, timeoutPromise]);
+    cocktailData = result.data;
+    cocktailError = result.error;
+    console.log('[MIX-DEBUG] Query completed successfully, error:', cocktailError, 'data length:', cocktailData?.length);
+  } catch (timeoutError) {
+    console.error('[MIX-DEBUG] Query failed or timed out:', timeoutError);
+    throw timeoutError;
+  }
 
     if (cocktailError) {
       console.error('Error fetching cocktails:', cocktailError);
@@ -469,6 +483,53 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
 
     console.log(`[MIX-DEBUG] getCocktailsWithIngredientsClient: returning ${validCocktails.length} valid cocktails (${processedCocktails.length - validCocktails.length} filtered out)`);
     return validCocktails;
+}
+
+// Server-side fallback implementation
+async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  instructions: string | null;
+  category: string | null;
+  imageUrl: string | null;
+  glass: string | null;
+  method: string | null;
+  primarySpirit: string | null;
+  difficulty: string | null;
+  isPopular: boolean;
+  isFavorite: boolean;
+  isTrending: boolean;
+  drinkCategories: string[];
+  tags: string[];
+  garnish: string | null;
+  ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+}>> {
+  console.log('[MIX-DEBUG] Using server-side API fallback');
+
+  // Make a request to our own API route
+  try {
+    const response = await fetch('/api/cocktails/with-ingredients', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[MIX-DEBUG] Server-side API returned:', data.length, 'cocktails');
+
+    return data;
+  } catch (error) {
+    console.error('[MIX-DEBUG] Server-side API fallback failed:', error);
+    throw error;
+  }
+}
 
   } catch (error) {
     console.error('[MIX-DEBUG] getCocktailsWithIngredientsClient failed:', error);
