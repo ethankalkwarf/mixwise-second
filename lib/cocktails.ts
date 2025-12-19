@@ -345,6 +345,17 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     ingredientNameById.set(String(ing.id), ing.name);
   });
 
+  // Debug: Check cocktail structure
+  if (process.env.NODE_ENV === 'development' && cocktailData.length > 0) {
+    console.log('[MIX-DEBUG] Cocktail structure sample:', {
+      id: cocktailData[0].id,
+      name: cocktailData[0].name,
+      hasLegacyId: 'legacy_id' in cocktailData[0],
+      legacyId: cocktailData[0].legacy_id,
+      allKeys: Object.keys(cocktailData[0])
+    });
+  }
+
   // Create mapping from numeric legacy_id to UUID for cocktails that have it
   const numericToUUID = new Map<number, string>();
   cocktailData.forEach(cocktail => {
@@ -387,6 +398,11 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     }
     ingredientsByCocktail.get(cocktailUUID)!.push(ingredient);
   });
+
+  // Debug: Check cocktail_ingredients data
+  if (process.env.NODE_ENV === 'development' && cocktailIngredients.length > 0) {
+    console.log('[MIX-DEBUG] cocktail_ingredients sample:', cocktailIngredients.slice(0, 3));
+  }
 
   console.log(`[MIX-DEBUG] ingredientsByCocktail: ${ingredientsByCocktail.size} cocktails with ingredients`);
   console.log(`[MIX-DEBUG] Sample cocktail IDs with ingredients:`, Array.from(ingredientsByCocktail.keys()).slice(0, 3));
