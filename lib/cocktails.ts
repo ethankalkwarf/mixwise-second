@@ -216,12 +216,19 @@ export async function getMixDataClient(): Promise<{
   ingredients: MixIngredient[];
   cocktails: MixCocktail[];
 }> {
-  const [ingredients, cocktails] = await Promise.all([
-    getMixIngredients(),
-    getMixCocktailsClient()
-  ]);
+  try {
+    console.log('[MIX-DEBUG] Starting getMixDataClient...');
+    const [ingredients, cocktails] = await Promise.all([
+      getMixIngredients(),
+      getMixCocktailsClient()
+    ]);
 
-  return { ingredients, cocktails };
+    console.log(`[MIX-DEBUG] getMixDataClient loaded ${ingredients.length} ingredients, ${cocktails.length} cocktails`);
+    return { ingredients, cocktails };
+  } catch (error) {
+    console.error('[MIX-DEBUG] getMixDataClient failed:', error);
+    throw error;
+  }
 }
 
 // =========================
