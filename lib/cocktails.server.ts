@@ -253,10 +253,17 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
 
     console.log('[SERVER] Processing cocktails with JSON ingredients...');
 
+    console.log('[SERVER] First 3 cocktails ingredients data:');
+    cocktailData.slice(0, 3).forEach((cocktail, i) => {
+      console.log(`[SERVER] Cocktail ${i+1} (${cocktail.name}): ingredients =`, cocktail.ingredients);
+    });
+
     const result = cocktailData.map(cocktail => {
       // Process ingredients from JSON field
       let ingredients = [];
       try {
+        console.log(`[SERVER] Processing ${cocktail.name}, ingredients type:`, typeof cocktail.ingredients, 'isArray:', Array.isArray(cocktail.ingredients));
+
         if (cocktail.ingredients && Array.isArray(cocktail.ingredients)) {
           ingredients = cocktail.ingredients.map((ing: any) => ({
             id: String(ing.ingredient?.id || ing.id || 'unknown'),
@@ -265,12 +272,15 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
             isOptional: ing.isOptional || false,
             notes: ing.notes || null
           }));
+          console.log(`[SERVER] Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
+        } else {
+          console.log(`[SERVER] No ingredients array for ${cocktail.name}`);
         }
       } catch (error) {
         console.error(`Error processing ingredients for cocktail ${cocktail.name}:`, error);
       }
 
-      console.log(`[SERVER] Cocktail ${cocktail.name}: found ${ingredients.length} ingredients`);
+      console.log(`[SERVER] Final: Cocktail ${cocktail.name}: found ${ingredients.length} ingredients`);
 
       return {
         id: cocktail.id,
