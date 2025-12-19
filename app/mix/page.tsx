@@ -135,6 +135,7 @@ export default function MixPage() {
 
   // Get selected ingredient objects
   const selectedIngredients = useMemo(() => {
+    if (!ingredientIds || !allIngredients) return [];
     return ingredientIds
       .map((id) => allIngredients.find((i) => i.id === id))
       .filter((i): i is MixIngredient => i !== undefined);
@@ -143,11 +144,11 @@ export default function MixPage() {
   // Get match counts for display - only run when all data is loaded and stable
   const matchCounts = useMemo(() => {
     // CRITICAL: Only run matching when ALL data is loaded and we have cocktails with ingredients
-    if (dataLoading || allCocktails.length === 0 || allIngredients.length === 0 || !ingredientIds) {
+    if (dataLoading || !allCocktails || allCocktails.length === 0 || !allIngredients || allIngredients.length === 0 || !ingredientIds) {
       console.log('[MIX-DEBUG] Skipping matching - data not ready:', {
         dataLoading,
-        cocktailsLoaded: allCocktails.length,
-        ingredientsLoaded: allIngredients.length,
+        cocktailsLoaded: allCocktails?.length || 0,
+        ingredientsLoaded: allIngredients?.length || 0,
         hasIngredientIds: !!ingredientIds
       });
       return { canMake: 0, almostThere: 0 };
@@ -160,7 +161,7 @@ export default function MixPage() {
       return { canMake: 0, almostThere: 0 };
     }
 
-    const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
+    const stapleIds = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
 
     // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
     console.log('[MIX-DEBUG] 🟢 RUNNING MATCHING LOGIC');
@@ -169,7 +170,7 @@ export default function MixPage() {
     console.log('[MIX-DEBUG] cocktailsLoaded:', allCocktails.length);
     console.log('[MIX-DEBUG] cocktailsWithIngredients:', cocktailsWithIngredients.length);
 
-    if (allCocktails.length > 0) {
+    if (allCocktails && allCocktails.length > 0) {
       console.log('[MIX-DEBUG] first cocktail ingredients (first 3):', allCocktails[0]?.ingredients?.slice(0, 3) || []);
       // Find Margarita specifically
       const margarita = allCocktails.find(c => c.name === 'Margarita');
