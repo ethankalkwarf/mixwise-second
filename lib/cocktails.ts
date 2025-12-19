@@ -476,12 +476,6 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
   }
 }
 
-  } catch (error) {
-    console.error('[MIX-DEBUG] getCocktailsWithIngredientsClient failed:', error);
-    throw error;
-  }
-}
-
 
 /**
  * Get user's bar ingredient IDs (client-side)
