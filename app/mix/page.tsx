@@ -182,14 +182,18 @@ export default function MixPage() {
       }
     }
 
+    // Only match against cocktails that have ingredient data
+    const cocktailsWithIngredients = allCocktails.filter(c => c.ingredients && c.ingredients.length > 0);
+
     const result = getMixMatchGroups({
-      cocktails: allCocktails,
+      cocktails: cocktailsWithIngredients,
       ownedIngredientIds: ingredientIds,
       stapleIngredientIds: stapleIds,
     });
 
     // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
     console.log('[MIX-DEBUG] match result:', {
+      cocktailsWithIngredients: cocktailsWithIngredients.length,
       canMake: result.makeNow.length,
       almostThere: result.almostThere.length,
       canMakeCocktails: result.makeNow.slice(0, 3).map(c => c.cocktail.name)
