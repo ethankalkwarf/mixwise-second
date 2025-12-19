@@ -346,6 +346,21 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     ingredientNameById.set(String(ing.id), ing.name);
   });
 
+  // Debug: Analyze cocktail_id patterns
+  if (process.env.NODE_ENV === 'development') {
+    const cocktailIds = [...new Set(cocktailIngredients.map(ci => ci.cocktail_id))];
+    console.log(`[MIX-DEBUG] Found ${cocktailIngredients.length} ingredient relationships for ${cocktailIds.length} unique cocktail_ids`);
+    console.log(`[MIX-DEBUG] Sample cocktail_ids from cocktail_ingredients:`, cocktailIds.slice(0, 10));
+
+    // Check what types of IDs we have
+    const uuidIds = cocktailIds.filter(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id));
+    const numericIds = cocktailIds.filter(id => /^\d+$/.test(id));
+    console.log(`[MIX-DEBUG] UUID cocktail_ids: ${uuidIds.length}, Numeric cocktail_ids: ${numericIds.length}`);
+    if (numericIds.length > 0) {
+      console.log(`[MIX-DEBUG] Numeric ID range: ${Math.min(...numericIds.map(id => parseInt(id)))} - ${Math.max(...numericIds.map(id => parseInt(id)))}`);
+    }
+  }
+
   // Debug: Check cocktail structure
   if (process.env.NODE_ENV === 'development' && cocktailData.length > 0) {
     console.log('[MIX-DEBUG] Cocktail structure sample:', {
@@ -376,10 +391,24 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   });
 
   // Create sequential mapping as fallback (cocktail_ingredients might use 1-based sequential IDs)
+  // Sort by name for consistent ordering
   const sortedCocktails = [...cocktailData].sort((a, b) => a.name.localeCompare(b.name));
   sortedCocktails.forEach((cocktail, index) => {
     const sequentialId = String(index + 1); // 1-based
     cocktailIdMap.set(sequentialId, cocktail.id);
+  });
+
+  // Additional fallback: try mapping by insertion order (id field comparison)
+  // This might work if cocktail_ingredients uses auto-incrementing IDs
+  const sortedById = [...cocktailData].sort((a, b) => {
+    // Try to extract numeric part from UUID or use string comparison
+    const aNum = parseInt(a.id.split('-')[0], 16) || 0;
+    const bNum = parseInt(b.id.split('-')[0], 16) || 0;
+    return aNum - bNum;
+  });
+  sortedById.forEach((cocktail, index) => {
+    const insertionId = String(index + 1); // 1-based
+    cocktailIdMap.set(insertionId, cocktail.id);
   });
 
   if (process.env.NODE_ENV === 'development') {
@@ -409,14 +438,19 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     if (!cocktailUUID && /^\d+$/.test(cocktailIdStr)) {
       const numericId = parseInt(cocktailIdStr, 10);
       cocktailUUID = numericToUUID.get(numericId) || null;
+
+      if (process.env.NODE_ENV === 'development' && !cocktailUUID) {
+        console.log(`[MIX-DEBUG] Numeric cocktail_id ${numericId} not found in legacy_id mapping`);
+      }
     }
 
     if (!cocktailUUID) {
       failedCount++;
       if (process.env.NODE_ENV === 'development' && failedCount <= 5) { // Only log first 5 failures
         console.log(`[MIX-DEBUG] Could not map cocktail_id ${ci.cocktail_id} (type: ${typeof ci.cocktail_id}) to any cocktail UUID`);
+        console.log(`[MIX-DEBUG] Available cocktailIdMap keys sample:`, Array.from(cocktailIdMap.keys()).slice(0, 10));
       }
-      return;
+      continue; // Skip this ingredient instead of failing the whole function
     }
 
     mappedCount++;
