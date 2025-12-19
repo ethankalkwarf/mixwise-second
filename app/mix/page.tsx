@@ -17,6 +17,8 @@ import { createClient } from "@/lib/supabase/client";
 const PROMPT_THRESHOLD = 3;
 
 export default function MixPage() {
+  console.log('[MIX-DEBUG] MixPage component mounted');
+
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<MixCocktail[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -104,21 +106,19 @@ export default function MixPage() {
   const matchCounts = useMemo(() => {
     const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
 
-    // TEMPORARY DEBUG LOGGING (remove once confirmed)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[MIX-DEBUG] ownedIngredientIds (first 10):', ingredientIds.slice(0, 10));
-      console.log('[MIX-DEBUG] stapleIds (first 10):', stapleIds.slice(0, 10));
-      console.log('[MIX-DEBUG] cocktailsLoaded:', allCocktails.length);
-      if (allCocktails.length > 0) {
-        console.log('[MIX-DEBUG] first cocktail ingredients (first 10):', allCocktails[0].ingredientsWithIds.slice(0, 10));
-        // Find Margarita specifically
-        const margarita = allCocktails.find(c => c.name === 'Margarita');
-        if (margarita) {
-          console.log('[MIX-DEBUG] Margarita found with ingredients:', margarita.ingredientsWithIds);
-          console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredientsWithIds.map(i => i.id));
-        } else {
-          console.log('[MIX-DEBUG] Margarita not found in cocktails');
-        }
+    // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
+    console.log('[MIX-DEBUG] ownedIngredientIds (first 10):', ingredientIds.slice(0, 10));
+    console.log('[MIX-DEBUG] stapleIds (first 10):', stapleIds.slice(0, 10));
+    console.log('[MIX-DEBUG] cocktailsLoaded:', allCocktails.length);
+    if (allCocktails.length > 0) {
+      console.log('[MIX-DEBUG] first cocktail ingredients (first 10):', allCocktails[0].ingredientsWithIds.slice(0, 10));
+      // Find Margarita specifically
+      const margarita = allCocktails.find(c => c.name === 'Margarita');
+      if (margarita) {
+        console.log('[MIX-DEBUG] Margarita found with ingredients:', margarita.ingredientsWithIds);
+        console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredientsWithIds.map(i => i.id));
+      } else {
+        console.log('[MIX-DEBUG] Margarita not found in cocktails');
       }
     }
 
@@ -128,13 +128,11 @@ export default function MixPage() {
       stapleIngredientIds: stapleIds,
     });
 
-    // TEMPORARY DEBUG LOGGING (remove once confirmed)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[MIX-DEBUG] match result:', {
-        canMake: result.makeNow.length,
-        almostThere: result.almostThere.length
-      });
-    }
+    // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
+    console.log('[MIX-DEBUG] match result:', {
+      canMake: result.makeNow.length,
+      almostThere: result.almostThere.length
+    });
 
     return {
       canMake: result.makeNow.length,
