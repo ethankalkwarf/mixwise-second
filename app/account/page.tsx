@@ -8,6 +8,9 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
+
+export const dynamic = 'force-dynamic';
 import Image from "next/image";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { sanityClient } from "@/lib/sanityClient";
