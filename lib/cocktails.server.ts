@@ -228,12 +228,19 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
 
   // Get cocktail ingredients from cocktail_ingredients_uuid table
   // Start with columns that are known to exist on the live database
+  console.log('[SERVER] Querying cocktail_ingredients_uuid table...');
   const queryResult = await supabase
     .from('cocktail_ingredients_uuid')
     .select('cocktail_id, ingredient_id, measure');
 
   const cocktailIngredients = queryResult.data;
   const ingredientsError = queryResult.error;
+
+  console.log('[SERVER] Cocktail ingredients query result:', {
+    error: ingredientsError,
+    dataLength: cocktailIngredients?.length,
+    firstFew: cocktailIngredients?.slice(0, 3)
+  });
 
   if (ingredientsError) {
     console.error('Error fetching cocktail ingredients:', ingredientsError);
