@@ -1,0 +1,49 @@
+-- Populate cocktail_ingredients_uuid table from cocktails.ingredients JSON
+-- Run this in Supabase SQL Editor
+
+-- First, ensure the table exists (if not already created)
+-- Note: This table already exists, we're just populating it
+-- Check the existing schema first
+
+-- Clear existing data (optional, for re-running)
+TRUNCATE TABLE cocktail_ingredients_uuid;
+
+-- Insert ingredient relationships from cocktails.ingredients JSON
+-- Note: Only insert cocktail_id and ingredient_id since those are the only columns that exist
+INSERT INTO cocktail_ingredients_uuid (cocktail_id, ingredient_id)
+SELECT
+    c.id as cocktail_id,
+    CAST(ing->>'id' AS INTEGER) as ingredient_id
+FROM
+    cocktails c,
+    json_array_elements(
+        CASE
+            WHEN c.ingredients IS NULL OR c.ingredients = 'null' OR c.ingredients::text = '' THEN '[]'::json
+            WHEN json_typeof(c.ingredients) = 'array' THEN c.ingredients
+            WHEN json_typeof(c.ingredients) = 'string' THEN c.ingredients::json
+            ELSE '[]'::json
+        END
+    ) as ing
+WHERE
+    c.ingredients IS NOT NULL
+    AND c.ingredients::text != ''
+    AND c.ingredients::text != 'null'
+    AND ing->>'id' IS NOT NULL
+    AND CAST(ing->>'id' AS INTEGER) > 0;
+
+-- Verify the data was inserted
+SELECT
+    COUNT(*) as total_relationships,
+    COUNT(DISTINCT cocktail_id) as cocktails_with_ingredients,
+    COUNT(DISTINCT ingredient_id) as unique_ingredients
+FROM cocktail_ingredients_uuid;
+
+-- Show a sample of the data
+SELECT
+    c.name as cocktail_name,
+    i.name as ingredient_name
+FROM cocktail_ingredients_uuid ci
+JOIN cocktails c ON c.id = ci.cocktail_id
+JOIN ingredients i ON i.id = ci.ingredient_id
+ORDER BY c.name, i.name
+LIMIT 20;

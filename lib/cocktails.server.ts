@@ -239,7 +239,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   console.log('[SERVER] Querying cocktail_ingredients_uuid table...');
   const queryResult = await supabase
     .from('cocktail_ingredients_uuid')
-    .select('cocktail_id, ingredient_id, measure');
+    .select('cocktail_id, ingredient_id');
 
   const cocktailIngredients = queryResult.data;
   const ingredientsError = queryResult.error;
@@ -283,9 +283,9 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
     const ingredient = {
       id: ingredientId,
       name,
-      amount: ci.measure ?? ci.amount ?? null, // Handle both column names
-      isOptional: ci.is_optional ?? false, // Default to false if column doesn't exist
-      notes: ci.notes ?? null // Default to null if column doesn't exist
+      amount: null, // No measure column in the table
+      isOptional: false, // Default to false
+      notes: null // Default to null
     };
 
     if (!ingredientsByCocktail.has(cocktailUUID)) {
