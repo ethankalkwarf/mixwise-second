@@ -46,8 +46,6 @@ export function OptimizedCocktailImage({
     );
   }
 
-  console.log('Rendering OptimizedCocktailImage:', { src, hasError, fill });
-
   return (
     <div className={`relative ${fill ? '' : 'inline-block'}`}>
       <Image
@@ -57,18 +55,13 @@ export function OptimizedCocktailImage({
         width={!fill ? width : undefined}
         height={!fill ? height : undefined}
         priority={priority}
-        // quality={quality} // Temporarily disabled for debugging
+        quality={quality}
         sizes={sizes || "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"}
-        placeholder="empty"
+        placeholder="blur"
+        blurDataURL={blurDataURL}
         className={`object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'} ${className}`}
-        onLoad={() => {
-          console.log('Image loaded successfully:', src);
-          setIsLoading(false);
-        }}
-        onError={(e) => {
-          console.error('Image failed to load:', src, e);
-          setHasError(true);
-        }}
+        onLoad={() => setIsLoading(false)}
+        onError={() => setHasError(true)}
         onClick={onClick}
       />
       {isLoading && (

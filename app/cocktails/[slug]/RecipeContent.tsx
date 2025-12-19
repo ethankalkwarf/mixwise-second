@@ -66,7 +66,6 @@ export function RecipeContent({
   imageUrl,
   similarRecipes,
 }: RecipeContentProps) {
-  console.log('RecipeContent rendering with imageUrl:', imageUrl, 'cocktail:', cocktail.name);
   const [quantity, setQuantity] = useState(1);
 
   const scaledIngredients = ingredients.map(ing => ({
