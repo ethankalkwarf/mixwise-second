@@ -285,8 +285,16 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   try {
     console.log('[MIX-DEBUG] getCocktailsWithIngredientsClient: starting...');
 
-    const supabase = createClient();
+    let supabase;
+    try {
+      supabase = createClient();
+      console.log('[MIX-DEBUG] Supabase client created successfully');
+    } catch (clientError) {
+      console.error('[MIX-DEBUG] Failed to create Supabase client:', clientError);
+      throw clientError;
+    }
 
+    console.log('[MIX-DEBUG] Making Supabase query...');
     // Get all cocktails with ingredients from the ingredients JSON field
     const { data: cocktailData, error: cocktailError } = await supabase
       .from('cocktails')
@@ -310,6 +318,8 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
       `)
       .order('name');
 
+    console.log('[MIX-DEBUG] Query completed, error:', cocktailError, 'data length:', cocktailData?.length);
+
     if (cocktailError) {
       console.error('Error fetching cocktails:', cocktailError);
       throw cocktailError;
@@ -323,10 +333,13 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     console.log(`[MIX-DEBUG] Fetched ${cocktailData.length} cocktails from database`);
     console.log(`[MIX-DEBUG] First cocktail sample:`, cocktailData[0]);
 
+    console.log('[MIX-DEBUG] Fetching ingredients...');
     // Get ingredient name mapping for converting IDs to names
     const { data: ingredients, error: ingError } = await supabase
       .from('ingredients')
       .select('id, name');
+
+    console.log('[MIX-DEBUG] Ingredients query completed, error:', ingError, 'data length:', ingredients?.length);
 
     if (ingError) {
       console.error('Error fetching ingredients:', ingError);
