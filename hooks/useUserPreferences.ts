@@ -16,10 +16,12 @@ export function useUserPreferences() {
   const { supabaseClient: supabase } = useSessionContext();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchPreferences = useCallback(async () => {
     if (!user) {
       setPreferences(null);
+      setError(null);
       setIsLoading(false);
       return;
     }
@@ -33,11 +35,16 @@ export function useUserPreferences() {
 
       if (error && error.code !== "PGRST116") {
         console.error("Error fetching preferences:", error);
+        setError(error.message);
+        setPreferences(null);
+      } else {
+        setError(null);
+        setPreferences(data || null);
       }
-
-      setPreferences(data || null);
     } catch (err) {
       console.error("Error fetching preferences:", err);
+      setError("Network error");
+      setPreferences(null);
     } finally {
       setIsLoading(false);
     }
@@ -71,13 +78,18 @@ export function useUserPreferences() {
     [user, supabase, fetchPreferences]
   );
 
-  // Only redirect to onboarding if we explicitly know the user hasn't completed it
-  // This prevents redirecting users who have completed onboarding but whose preferences fail to load
-  const needsOnboarding = isAuthenticated && !isLoading && preferences && !preferences.onboarding_completed;
+  // Redirect to onboarding if:
+  // 1. No preferences record exists (new user), OR
+  // 2. Preferences exist but onboarding_completed is false/null
+  // Don't redirect if preferences failed to load (assume user has completed onboarding)
+  // Only redirect to onboarding if we successfully determined the user hasn't completed it
+  // Don't redirect if preferences failed to load (assume user has completed onboarding)
+  const needsOnboarding = isAuthenticated && !isLoading && !error && (preferences === null || !preferences.onboarding_completed);
 
   return {
     preferences,
     isLoading,
+    error,
     needsOnboarding,
     updatePreferences,
     refreshPreferences: fetchPreferences,
