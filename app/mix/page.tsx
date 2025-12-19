@@ -238,6 +238,26 @@ export default function MixPage() {
             return {id, name: ing?.name || 'NOT FOUND', found: !!ing};
           });
           console.log('[MIX-DEBUG] Selected ingredient details:', selectedIngredientDetails);
+
+          // Check for Margarita ingredients specifically
+          const tequila = allIngredients.find(i => i.name?.toLowerCase().includes('tequila'));
+          const tripleSec = allIngredients.find(i => i.name?.toLowerCase().includes('triple sec') || i.name?.toLowerCase().includes('triple-sec'));
+          const limeJuice = allIngredients.find(i => i.name?.toLowerCase().includes('lime juice'));
+
+          console.log('[MIX-DEBUG] Margarita ingredient lookup:');
+          console.log('[MIX-DEBUG] - Tequila found:', tequila ? {id: tequila.id, name: tequila.name} : 'NOT FOUND');
+          console.log('[MIX-DEBUG] - Triple Sec found:', tripleSec ? {id: tripleSec.id, name: tripleSec.name} : 'NOT FOUND');
+          console.log('[MIX-DEBUG] - Lime Juice found:', limeJuice ? {id: limeJuice.id, name: limeJuice.name} : 'NOT FOUND');
+
+          const hasTequila = tequila && ingredientIds.includes(tequila.id);
+          const hasTripleSec = tripleSec && ingredientIds.includes(tripleSec.id);
+          const hasLimeJuice = limeJuice && ingredientIds.includes(limeJuice.id);
+
+          console.log('[MIX-DEBUG] Margarita ingredients owned:');
+          console.log('[MIX-DEBUG] - Has Tequila:', hasTequila);
+          console.log('[MIX-DEBUG] - Has Triple Sec:', hasTripleSec);
+          console.log('[MIX-DEBUG] - Has Lime Juice:', hasLimeJuice);
+          console.log('[MIX-DEBUG] - Margarita should be READY:', hasTequila && hasTripleSec && hasLimeJuice);
         }
       }
     }

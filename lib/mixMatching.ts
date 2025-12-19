@@ -27,32 +27,31 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   const almostThere: MixMatchResult[] = [];
   const far: MixMatchResult[] = [];
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[MIX-MATCH-DEBUG] Input:', {
-      ownedCount: ownedIngredientIds.length,
-      cocktailCount: cocktails.length,
-      stapleCount: stapleIngredientIds.length,
-      ownedSample: ownedIngredientIds.slice(0, 5),
-      firstCocktailIngredients: cocktails.length > 0 ? cocktails[0].ingredients.slice(0, 3).map(i => ({ id: i.id, name: i.name, optional: i.isOptional })) : []
+  // Always debug Margarita (not just in development)
+  console.log('[MIX-MATCH-DEBUG] Input:', {
+    ownedCount: ownedIngredientIds.length,
+    cocktailCount: cocktails.length,
+    stapleCount: stapleIngredientIds.length,
+    ownedSample: ownedIngredientIds.slice(0, 5),
+    firstCocktailIngredients: cocktails.length > 0 ? cocktails[0].ingredients.slice(0, 3).map(i => ({ id: i.id, name: i.name, optional: i.isOptional })) : []
+  });
+
+  // Debug Margarita specifically - try multiple name variations
+  const margaritaVariations = ['margarita', 'classic margarita', 'tequila margarita'];
+  let margarita = null;
+  for (const variation of margaritaVariations) {
+    margarita = cocktails.find(c => c.name.toLowerCase().includes(variation));
+    if (margarita) break;
+  }
+
+  if (margarita) {
+    console.log('[MIX-MATCH-DEBUG] Margarita found:', {
+      id: margarita.id,
+      name: margarita.name,
+      ingredients: margarita.ingredients.map(i => ({ id: i.id, name: i.name, optional: i.isOptional }))
     });
-
-    // Debug Margarita specifically - try multiple name variations
-    const margaritaVariations = ['margarita', 'classic margarita', 'tequila margarita'];
-    let margarita = null;
-    for (const variation of margaritaVariations) {
-      margarita = cocktails.find(c => c.name.toLowerCase().includes(variation));
-      if (margarita) break;
-    }
-
-    if (margarita) {
-      console.log('[MIX-MATCH-DEBUG] Margarita found:', {
-        id: margarita.id,
-        name: margarita.name,
-        ingredients: margarita.ingredients.map(i => ({ id: i.id, name: i.name, optional: i.isOptional }))
-      });
-    } else {
-      console.log('[MIX-MATCH-DEBUG] Margarita not found in cocktails. Available names:', cocktails.slice(0, 10).map(c => c.name));
-    }
+  } else {
+    console.log('[MIX-MATCH-DEBUG] Margarita not found in cocktails. Available names:', cocktails.slice(0, 10).map(c => c.name));
   }
 
   for (const cocktail of cocktails) {
@@ -100,7 +99,7 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     };
 
     // Debug Margarita specifically
-    if (process.env.NODE_ENV === 'development' && cocktail.name.toLowerCase().includes('margarita')) {
+    if (cocktail.name.toLowerCase().includes('margarita')) {
       console.log('[MIX-MATCH-DEBUG] Margarita matching:', {
         name: cocktail.name,
         requiredTotal,
