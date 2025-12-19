@@ -54,6 +54,17 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     console.log('[MIX-MATCH-DEBUG] Margarita not found in cocktails. Available names:', cocktails.slice(0, 10).map(c => c.name));
   }
 
+  // Specifically debug the basic "Margarita" cocktail
+  const basicMargarita = cocktails.find(c => c.name.toLowerCase() === 'margarita');
+  if (basicMargarita) {
+    console.log('[MIX-MATCH-DEBUG] BASIC Margarita ingredients:', basicMargarita.ingredients.map(i => ({
+      id: i.id,
+      name: i.name,
+      optional: i.isOptional,
+      isStaple: stapleIngredientIds.includes(i.id)
+    })));
+  }
+
   for (const cocktail of cocktails) {
     // Skip cocktails with no ingredients (bad data)
     if (!cocktail.ingredients || cocktail.ingredients.length === 0) {
@@ -99,8 +110,8 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     };
 
     // Debug Margarita specifically
-    if (cocktail.name.toLowerCase().includes('margarita')) {
-      console.log('[MIX-MATCH-DEBUG] Margarita matching:', {
+    if (cocktail.name.toLowerCase() === 'margarita') {
+      console.log('[MIX-MATCH-DEBUG] BASIC Margarita matching:', {
         name: cocktail.name,
         requiredTotal,
         requiredCovered,

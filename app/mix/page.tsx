@@ -258,6 +258,13 @@ export default function MixPage() {
           console.log('[MIX-DEBUG] - Has Triple Sec:', hasTripleSec);
           console.log('[MIX-DEBUG] - Has Lime Juice:', hasLimeJuice);
           console.log('[MIX-DEBUG] - Margarita should be READY:', hasTequila && hasTripleSec && hasLimeJuice);
+
+          // Show what ingredients user actually has selected
+          console.log('[MIX-DEBUG] User selected ingredients:');
+          ingredientIds.forEach(id => {
+            const ing = allIngredients.find(i => i.id === id);
+            console.log(`[MIX-DEBUG] - ${id}: ${ing ? ing.name : 'NOT FOUND'}`);
+          });
         }
       }
     }
