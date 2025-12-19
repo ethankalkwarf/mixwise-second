@@ -26,14 +26,14 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     stapleSample: stapleIngredientIds.slice(0, 5)
   });
 
-  // Check for Margarita specifically
-  const margarita = cocktails.find(c => c.name === 'Margarita');
-  if (margarita) {
-    console.log('[MIX-MATCH-DEBUG] Margarita found with ingredients:', margarita.ingredientsWithIds);
-    console.log('[MIX-MATCH-DEBUG] Margarita ingredient IDs:', margarita.ingredientsWithIds.map(i => i.id));
-  } else {
-    console.log('[MIX-MATCH-DEBUG] Margarita not found in cocktails');
-  }
+    // Check for Margarita specifically
+    const margarita = cocktails.find(c => c.name === 'Margarita');
+    if (margarita) {
+      console.log('[MIX-MATCH-DEBUG] Margarita found with ingredients:', margarita.ingredients);
+      console.log('[MIX-MATCH-DEBUG] Margarita ingredient IDs:', margarita.ingredients?.map(i => i.id) || []);
+    } else {
+      console.log('[MIX-MATCH-DEBUG] Margarita not found in cocktails');
+    }
 
   const makeNow: MixMatchResult[] = [];
   const almostThere: MixMatchResult[] = [];
@@ -41,12 +41,12 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
 
   for (const cocktail of cocktails) {
     // Skip cocktails with no ingredients (bad data)
-    if (!cocktail.ingredientsWithIds || cocktail.ingredientsWithIds.length === 0) {
+    if (!cocktail.ingredients || cocktail.ingredients.length === 0) {
       continue;
     }
 
     // Filter to required ingredients (not optional, not staples)
-    const requiredIngredients = cocktail.ingredientsWithIds.filter(
+    const requiredIngredients = cocktail.ingredients.filter(
       (ing) => ing.id && !ing.isOptional && !staples.has(ing.id)
     );
 
