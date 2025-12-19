@@ -262,7 +262,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
       // Process ingredients from JSON field
       let ingredients = [];
       try {
-        console.log(`[SERVER] Processing ${cocktail.name}, ingredients type:`, typeof cocktail.ingredients, 'isArray:', Array.isArray(cocktail.ingredients));
+        console.log(`[SERVER] Processing ${cocktail.name}, ingredients type:`, typeof cocktail.ingredients, 'isArray:', Array.isArray(cocktail.ingredients), 'raw value:', JSON.stringify(cocktail.ingredients));
 
         if (cocktail.ingredients && Array.isArray(cocktail.ingredients)) {
           ingredients = cocktail.ingredients.map((ing: any) => ({
@@ -273,8 +273,26 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
             notes: ing.notes || null
           }));
           console.log(`[SERVER] Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
+        } else if (cocktail.ingredients) {
+          // Try to handle as string or other format
+          console.log(`[SERVER] Ingredients is not an array for ${cocktail.name}, trying fallback...`);
+          try {
+            const parsed = typeof cocktail.ingredients === 'string' ? JSON.parse(cocktail.ingredients) : cocktail.ingredients;
+            if (Array.isArray(parsed)) {
+              ingredients = parsed.map((ing: any) => ({
+                id: String(ing.ingredient?.id || ing.id || 'unknown'),
+                name: ing.ingredient?.name || 'Unknown',
+                amount: ing.amount || ing.measure || null,
+                isOptional: ing.isOptional || false,
+                notes: ing.notes || null
+              }));
+              console.log(`[SERVER] Fallback worked: Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
+            }
+          } catch (fallbackError) {
+            console.error(`[SERVER] Fallback failed for ${cocktail.name}:`, fallbackError);
+          }
         } else {
-          console.log(`[SERVER] No ingredients array for ${cocktail.name}`);
+          console.log(`[SERVER] No ingredients field for ${cocktail.name}`);
         }
       } catch (error) {
         console.error(`Error processing ingredients for cocktail ${cocktail.name}:`, error);
