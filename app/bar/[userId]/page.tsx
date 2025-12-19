@@ -144,7 +144,6 @@ export default async function PublicBarPage({ params }: PageProps) {
                   {(profile as UserProfile).avatar_url ? (
                     <div className="relative">
                       <div className="absolute inset-0 bg-gradient-to-r from-lime-400 to-terracotta rounded-full blur-md opacity-50"></div>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={(profile as UserProfile).avatar_url!}
                         alt=""
@@ -323,7 +322,6 @@ export default async function PublicBarPage({ params }: PageProps) {
                               {cocktail.externalImageUrl ? (
                                   <div className="relative">
                                   <div className="absolute inset-0 bg-gradient-to-r from-terracotta/30 to-orange-400/30 rounded-xl blur-sm"></div>
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
                                     src={cocktail.externalImageUrl}
                                     alt=""
@@ -410,7 +408,6 @@ export default async function PublicBarPage({ params }: PageProps) {
                               {fav.cocktail_image_url ? (
                                 <div className="relative">
                                   <div className="absolute inset-0 bg-gradient-to-r from-pink-500/30 to-rose-400/30 rounded-xl blur-sm"></div>
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
                                     src={fav.cocktail_image_url}
                                     alt=""
