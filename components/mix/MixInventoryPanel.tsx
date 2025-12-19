@@ -139,7 +139,7 @@ export function MixInventoryPanel({ ingredients, selectedIds, onChange, stapleId
       availableLetters: letters,
       filteredCount: filtered.length,
     };
-  }, [ingredients, searchQuery, activeFilter, showSelectedOnly, selectedSet]);
+  }, [ingredients, searchQuery, activeFilter, showSelectedOnly, selectedSet, stapleIds]);
 
   // Generate A-Z for scrubber
   const alphabet = useMemo(() => {

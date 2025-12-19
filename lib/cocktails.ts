@@ -127,7 +127,7 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
     console.log('[MIX-DEBUG] Creating ingredients query...');
     const queryPromise = supabase
       .from('ingredients')
-      .select('id, name, type, category, image_url, is_staple')
+      .select('id, name, category, image_url, is_staple')
       .order('name')
       .then(result => {
         console.log('[MIX-DEBUG] Ingredients query promise resolved:', { dataLength: result.data?.length, error: result.error });
