@@ -122,10 +122,19 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
   console.log('[MIX-DEBUG] getSupabaseClient returned:', !!supabase);
 
   try {
-    const { data, error } = await supabase
+    // Add timeout to prevent hanging queries
+    console.log('[MIX-DEBUG] Making ingredients query...');
+    const queryPromise = supabase
       .from('ingredients')
       .select('*')
       .order('name');
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Ingredients query timed out after 5 seconds')), 5000);
+    });
+
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+    console.log('[MIX-DEBUG] Ingredients query completed, error:', error, 'data length:', data?.length);
 
     if (error) {
       console.error('Error fetching mix ingredients from Supabase:', error);
