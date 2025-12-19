@@ -195,137 +195,104 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   garnish: string | null;
   ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
-  try {
     console.log('[SERVER] getCocktailsWithIngredients starting...');
     const supabase = createServerSupabaseClient();
 
-  // Get all cocktails
-  console.log('[SERVER] Querying cocktails table...');
-  const { data: cocktailData, error: cocktailError } = await supabase
-    .from('cocktails')
-    .select(`
-      id,
-      name,
-      slug,
-      short_description,
-      instructions,
-      category_primary,
-      image_url,
-      glassware,
-      technique,
-      base_spirit,
-      difficulty,
-      categories_all,
-      tags,
-      garnish,
-      metadata_json
-    `)
-    .order('name');
+    // Get all cocktails WITH ingredients JSON field
+    console.log('[SERVER] Querying cocktails table with ingredients...');
+    const { data: cocktailData, error: cocktailError } = await supabase
+      .from('cocktails')
+      .select(`
+        id,
+        name,
+        slug,
+        short_description,
+        instructions,
+        category_primary,
+        image_url,
+        glassware,
+        technique,
+        base_spirit,
+        difficulty,
+        categories_all,
+        tags,
+        garnish,
+        metadata_json,
+        ingredients
+      `)
+      .order('name');
 
-  console.log('[SERVER] Cocktails query result:', {
-    error: cocktailError,
-    dataLength: cocktailData?.length,
-    firstFew: cocktailData?.slice(0, 3)?.map(c => ({ id: c.id, name: c.name }))
-  });
+    console.log('[SERVER] Cocktails query result:', {
+      error: cocktailError,
+      dataLength: cocktailData?.length,
+      firstFew: cocktailData?.slice(0, 3)?.map(c => ({ id: c.id, name: c.name }))
+    });
 
-  if (cocktailError) {
-    console.error('Error fetching cocktails:', cocktailError);
-    return [];
-  }
-
-  if (!cocktailData) return [];
-
-  // Get cocktail ingredients from cocktail_ingredients_uuid table
-  // Start with columns that are known to exist on the live database
-  console.log('[SERVER] Querying cocktail_ingredients_uuid table...');
-  const queryResult = await supabase
-    .from('cocktail_ingredients_uuid')
-    .select('cocktail_id, ingredient_id');
-
-  const cocktailIngredients = queryResult.data;
-  const ingredientsError = queryResult.error;
-
-  console.log('[SERVER] Cocktail ingredients query result:', {
-    error: ingredientsError,
-    dataLength: cocktailIngredients?.length,
-    firstFew: cocktailIngredients?.slice(0, 3),
-    sampleCocktailIds: cocktailIngredients?.slice(0, 5)?.map(ci => ci.cocktail_id),
-    sampleIngredientIds: cocktailIngredients?.slice(0, 5)?.map(ci => ci.ingredient_id)
-  });
-
-  if (ingredientsError) {
-    console.error('Error fetching cocktail ingredients:', ingredientsError);
-    return [];
-  }
-
-  // Get ingredient name mapping
-  const { data: ingredients, error: ingError } = await supabase
-    .from('ingredients')
-    .select('id, name');
-
-  if (ingError) {
-    console.error('Error fetching ingredients:', ingError);
-    return [];
-  }
-
-  // Build ingredient name mapping with string keys
-  const ingredientNameById = new Map<string, string>();
-  (ingredients || []).forEach(ing => {
-    ingredientNameById.set(String(ing.id), ing.name);
-  });
-
-  // Group ingredients by cocktail UUID
-  const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
-  (cocktailIngredients || []).forEach((ci: any) => {
-    const cocktailUUID = String(ci.cocktail_id);
-    if (!cocktailUUID) return;
-
-    const ingredientId = String(ci.ingredient_id);
-    const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
-
-    const ingredient = {
-      id: ingredientId,
-      name,
-      amount: null, // No measure column in the table
-      isOptional: false, // Default to false
-      notes: null // Default to null
-    };
-
-    if (!ingredientsByCocktail.has(cocktailUUID)) {
-      ingredientsByCocktail.set(cocktailUUID, []);
+    if (cocktailError) {
+      console.error('Error fetching cocktails:', cocktailError);
+      return [];
     }
-    ingredientsByCocktail.get(cocktailUUID)!.push(ingredient);
-  });
 
-  // Process cocktails and attach their ingredients
-  console.log('[SERVER] Processing cocktails, ingredientsByCocktail size:', ingredientsByCocktail.size);
-  console.log('[SERVER] Sample cocktail IDs from cocktails table:', cocktailData.slice(0, 3).map(c => c.id));
-  console.log('[SERVER] Sample cocktail IDs with ingredients:', Array.from(ingredientsByCocktail.keys()).slice(0, 3));
+    if (!cocktailData) return [];
 
-  const result = cocktailData.map(cocktail => {
-    const ingredients = ingredientsByCocktail.get(cocktail.id) || [];
-    console.log(`[SERVER] Cocktail ${cocktail.name}: found ${ingredients.length} ingredients`);
-    return {
-      id: cocktail.id,
-      name: cocktail.name,
-      slug: cocktail.slug,
-      description: cocktail.short_description || null,
-      instructions: cocktail.instructions || null,
-      category: cocktail.category_primary || null,
-      imageUrl: cocktail.image_url || null,
-      glass: cocktail.glassware || null,
-      method: cocktail.technique || null,
-      primarySpirit: cocktail.base_spirit || null,
-      difficulty: cocktail.difficulty || null,
-      isPopular: cocktail.metadata_json?.isPopular || false,
-      isFavorite: cocktail.metadata_json?.isFavorite || false,
-      isTrending: cocktail.metadata_json?.isTrending || false,
-      drinkCategories: cocktail.categories_all || [],
-      tags: cocktail.tags || [],
-      garnish: cocktail.garnish || null,
-      ingredients: ingredients
-    };
-  });
+    // Get ingredient name mapping
+    const { data: ingredients, error: ingError } = await supabase
+      .from('ingredients')
+      .select('id, name');
+
+    if (ingError) {
+      console.error('Error fetching ingredients:', ingError);
+      return [];
+    }
+
+    // Build ingredient name mapping with string keys
+    const ingredientNameById = new Map<string, string>();
+    (ingredients || []).forEach(ing => {
+      ingredientNameById.set(String(ing.id), ing.name);
+    });
+
+    console.log('[SERVER] Processing cocktails with JSON ingredients...');
+
+    const result = cocktailData.map(cocktail => {
+      // Process ingredients from JSON field
+      let ingredients = [];
+      try {
+        if (cocktail.ingredients && Array.isArray(cocktail.ingredients)) {
+          ingredients = cocktail.ingredients.map((ing: any) => ({
+            id: String(ing.ingredient?.id || ing.id || 'unknown'),
+            name: ing.ingredient?.name || 'Unknown',
+            amount: ing.amount || ing.measure || null,
+            isOptional: ing.isOptional || false,
+            notes: ing.notes || null
+          }));
+        }
+      } catch (error) {
+        console.error(`Error processing ingredients for cocktail ${cocktail.name}:`, error);
+      }
+
+      console.log(`[SERVER] Cocktail ${cocktail.name}: found ${ingredients.length} ingredients`);
+
+      return {
+        id: cocktail.id,
+        name: cocktail.name,
+        slug: cocktail.slug,
+        description: cocktail.short_description || null,
+        instructions: cocktail.instructions || null,
+        category: cocktail.category_primary || null,
+        imageUrl: cocktail.image_url || null,
+        glass: cocktail.glassware || null,
+        method: cocktail.technique || null,
+        primarySpirit: cocktail.base_spirit || null,
+        difficulty: cocktail.difficulty || null,
+        isPopular: cocktail.metadata_json?.isPopular || false,
+        isFavorite: cocktail.metadata_json?.isFavorite || false,
+        isTrending: cocktail.metadata_json?.isTrending || false,
+        drinkCategories: cocktail.categories_all || [],
+        tags: cocktail.tags || [],
+        garnish: cocktail.garnish || null,
+        ingredients: ingredients
+      };
+    });
 
     console.log('[SERVER] Final result: first cocktail has ingredients:', result[0]?.ingredients?.length || 0);
     return result;
