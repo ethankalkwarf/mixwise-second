@@ -264,16 +264,27 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
       // Process ingredients from JSON field
       let ingredients = [];
       try {
-        console.log(`[SERVER] Processing ${cocktail.name}, ingredients type:`, typeof cocktail.ingredients, 'isArray:', Array.isArray(cocktail.ingredients), 'raw value:', JSON.stringify(cocktail.ingredients));
+        console.log(`[SERVER] Processing ${cocktail.name}, ingredients type:`, typeof cocktail.ingredients, 'isArray:', Array.isArray(cocktail.ingredients));
 
         if (cocktail.ingredients && Array.isArray(cocktail.ingredients)) {
-          ingredients = cocktail.ingredients.map((ing: any) => ({
-            id: String(ing.ingredient?.id || ing.id || 'unknown'),
-            name: ing.ingredient?.name || 'Unknown',
-            amount: ing.amount || ing.measure || null,
-            isOptional: ing.isOptional || false,
-            notes: ing.notes || null
-          }));
+          console.log(`[SERVER] First ingredient structure:`, JSON.stringify(cocktail.ingredients[0], null, 2));
+          ingredients = cocktail.ingredients.map((ing: any, index: number) => {
+            console.log(`[SERVER] Processing ingredient ${index}:`, JSON.stringify(ing, null, 2));
+            console.log(`[SERVER] Keys in ingredient:`, Object.keys(ing || {}));
+
+            const ingredientId = String(ing.ingredient?.id || ing.id || 'unknown');
+            const ingredientName = ing.ingredient?.name || ingredientNameById.get(ingredientId) || ing.text || ing.name || 'Unknown';
+
+            console.log(`[SERVER] Ingredient ${index}: id=${ingredientId}, name=${ingredientName}, text=${ing.text}, amount=${ing.amount}`);
+
+            return {
+              id: ingredientId,
+              name: ingredientName,
+              amount: ing.amount || ing.measure || null,
+              isOptional: ing.isOptional || false,
+              notes: ing.notes || null
+            };
+          });
           console.log(`[SERVER] Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
         } else if (cocktail.ingredients) {
           // Try to handle as string or other format
