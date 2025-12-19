@@ -195,9 +195,11 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   garnish: string | null;
   ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
+  console.log('[SERVER] getCocktailsWithIngredients starting...');
   const supabase = createServerSupabaseClient();
 
   // Get all cocktails
+  console.log('[SERVER] Querying cocktails table...');
   const { data: cocktailData, error: cocktailError } = await supabase
     .from('cocktails')
     .select(`
@@ -218,6 +220,12 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
       metadata_json
     `)
     .order('name');
+
+  console.log('[SERVER] Cocktails query result:', {
+    error: cocktailError,
+    dataLength: cocktailData?.length,
+    firstFew: cocktailData?.slice(0, 3)?.map(c => ({ id: c.id, name: c.name }))
+  });
 
   if (cocktailError) {
     console.error('Error fetching cocktails:', cocktailError);
