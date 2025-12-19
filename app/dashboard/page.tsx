@@ -693,7 +693,8 @@ export default function DashboardPage() {
                   <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-thin">
                     {ingredientIds.map((id) => {
                       // Find the ingredient object for display
-                      const ingredient = allIngredients.find(i => i.id === id);
+                      // Convert both IDs to strings for comparison
+                      const ingredient = allIngredients.find(i => String(i.id) === String(id));
                       return (
                         <div
                           key={id}
