@@ -9,6 +9,10 @@
  * Usage: npm run populate:cocktail-ingredients
  */
 
+// Load environment variables
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
+
 const { createClient } = require('@supabase/supabase-js');
 
 // Read environment variables
@@ -37,16 +41,49 @@ async function populateCocktailIngredients() {
 
     const { data: existingData, error: checkError } = await supabase
       .from('cocktail_ingredients')
-      .select('id')
+      .select('cocktail_id')
       .limit(1);
 
     if (checkError && checkError.message.includes('does not exist')) {
-      console.log('❌ cocktail_ingredients table does not exist. Run database migrations first.');
-      console.log('Run: supabase db push');
-      return;
-    }
+      console.log('❌ cocktail_ingredients table does not exist. Creating it...');
 
-    if (existingData && existingData.length > 0) {
+      // Try to create the table using SQL
+      const { error: createError } = await supabase.rpc('exec_sql', {
+        sql: `
+          CREATE TABLE IF NOT EXISTS public.cocktail_ingredients (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            cocktail_id UUID NOT NULL,
+            ingredient_id INTEGER NOT NULL,
+            amount TEXT,
+            is_optional BOOLEAN DEFAULT FALSE,
+            notes TEXT,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          );
+
+          CREATE INDEX IF NOT EXISTS cocktail_ingredients_cocktail_id_idx ON public.cocktail_ingredients(cocktail_id);
+          CREATE INDEX IF NOT EXISTS cocktail_ingredients_ingredient_id_idx ON public.cocktail_ingredients(ingredient_id);
+
+          ALTER TABLE public.cocktail_ingredients ENABLE ROW LEVEL SECURITY;
+
+          CREATE POLICY "Anyone can view cocktail ingredients"
+            ON public.cocktail_ingredients FOR SELECT
+            USING (TRUE);
+
+          CREATE POLICY "Authenticated users can manage cocktail ingredients"
+            ON public.cocktail_ingredients FOR ALL
+            USING (auth.role() = 'authenticated');
+        `
+      });
+
+      if (createError) {
+        console.error('❌ Failed to create cocktail_ingredients table:', createError.message);
+        console.log('Please run the database migration manually: supabase db push');
+        return;
+      }
+
+      console.log('✅ Created cocktail_ingredients table');
+    } else if (existingData && existingData.length > 0) {
       console.log('ℹ️  cocktail_ingredients table already has data. Skipping population.');
       return;
     }

@@ -13,6 +13,10 @@
  * - SUPABASE_SERVICE_ROLE_KEY environment variable (or SUPABASE_ANON_KEY as fallback)
  */
 
+// Load environment variables
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
+
 const { createClient } = require('@supabase/supabase-js');
 
 // Read environment variables
@@ -79,7 +83,7 @@ async function migrateCocktailUUIDs() {
 
     const { data: ingredients, error: ingredientError } = await supabase
       .from('cocktail_ingredients')
-      .select('id, cocktail_id');
+      .select('cocktail_id, ingredient_id');
 
     if (ingredientError) {
       throw new Error(`Failed to fetch cocktail ingredients: ${ingredientError.message}`);
@@ -106,7 +110,7 @@ async function migrateCocktailUUIDs() {
       const cocktailId = row.cocktail_id?.toString();
 
       if (!cocktailId) {
-        console.warn(`⚠️  Row ${row.id} has null/undefined cocktail_id, skipping`);
+        console.warn(`⚠️  Row with ingredient_id ${row.ingredient_id} has null/undefined cocktail_id, skipping`);
         stats.unmappable++;
         continue;
       }
@@ -120,17 +124,17 @@ async function migrateCocktailUUIDs() {
         const targetUUID = legacyToUUID.get(cocktailId);
         if (targetUUID) {
           rowsToUpdate.push({
-            id: row.id,
             oldCocktailId: cocktailId,
-            newCocktailId: targetUUID
+            newCocktailId: targetUUID,
+            ingredientId: row.ingredient_id
           });
           stats.needsMigration++;
         } else {
-          console.warn(`⚠️  Row ${row.id} has numeric cocktail_id "${cocktailId}" with no matching cocktail.legacy_id`);
+          console.warn(`⚠️  Row with ingredient_id ${row.ingredient_id} has numeric cocktail_id "${cocktailId}" with no matching cocktail.legacy_id`);
           stats.unmappable++;
         }
       } else {
-        console.warn(`⚠️  Row ${row.id} has unrecognized cocktail_id format: "${cocktailId}"`);
+        console.warn(`⚠️  Row with ingredient_id ${row.ingredient_id} has unrecognized cocktail_id format: "${cocktailId}"`);
         stats.unmappable++;
       }
     }
@@ -162,10 +166,11 @@ async function migrateCocktailUUIDs() {
         const { error: updateError } = await supabase
           .from('cocktail_ingredients')
           .update({ cocktail_id: row.newCocktailId })
-          .eq('id', row.id);
+          .eq('cocktail_id', row.oldCocktailId)
+          .eq('ingredient_id', row.ingredientId);
 
         if (updateError) {
-          throw new Error(`Failed to update row ${row.id}: ${updateError.message}`);
+          throw new Error(`Failed to update row (cocktail_id: ${row.oldCocktailId}, ingredient_id: ${row.ingredientId}): ${updateError.message}`);
         }
       }
 
@@ -182,7 +187,7 @@ async function migrateCocktailUUIDs() {
 
     const { data: verificationRows, error: verifyError } = await supabase
       .from('cocktail_ingredients')
-      .select('cocktail_id, ingredient_id')
+      .select('cocktail_id')
       .limit(5);
 
     if (verifyError) {
