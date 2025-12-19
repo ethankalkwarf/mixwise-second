@@ -66,7 +66,6 @@ export function RecipeContent({
   imageUrl,
   similarRecipes,
 }: RecipeContentProps) {
-  console.log('RecipeContent props:', { cocktailName: cocktail.name, imageUrl, cocktailImageUrl: cocktail.image_url });
   const [quantity, setQuantity] = useState(1);
 
   const scaledIngredients = ingredients.map(ing => ({
@@ -237,7 +236,6 @@ export function RecipeContent({
                   src={imageUrl}
                   alt={cocktail.image_alt ?? cocktail.name}
                   priority
-                  className="object-cover"
                   quality={80}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
