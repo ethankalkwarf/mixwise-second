@@ -1,8 +1,8 @@
--- Populate cocktail_ingredients_uuid table from cocktails.ingredients JSON
--- Run this in Supabase SQL Editor
+-- ============================================================================
+-- INSPECTION ONLY: Run this first to understand the ingredients data
+-- ============================================================================
 
--- FIRST: Inspect what the ingredients data actually looks like
--- Check ALL cocktails, not just ones with ingredients
+-- Check ALL cocktails and their ingredients status
 SELECT
     COUNT(*) as total_cocktails,
     COUNT(CASE WHEN ingredients IS NULL THEN 1 END) as null_ingredients,
@@ -10,24 +10,35 @@ SELECT
     COUNT(CASE WHEN ingredients IS NOT NULL AND ingredients::text != '' THEN 1 END) as has_some_ingredients_data
 FROM cocktails;
 
--- Now show sample of cocktails with ingredients data
+-- Show detailed breakdown of ingredient data types
+SELECT
+    jsonb_typeof(ingredients) as data_type,
+    COUNT(*) as count
+FROM cocktails
+WHERE ingredients IS NOT NULL AND ingredients::text != ''
+GROUP BY jsonb_typeof(ingredients);
+
+-- Show actual sample data from cocktails with ingredients
 SELECT
     id,
     name,
-    ingredients,
+    LEFT(ingredients::text, 300) as ingredients_preview,
     jsonb_typeof(ingredients) as data_type,
     CASE
         WHEN ingredients IS NULL THEN 'NULL'
         WHEN ingredients::text = '' THEN 'EMPTY_STRING'
-        WHEN jsonb_typeof(ingredients) = 'array' THEN 'ARRAY'
+        WHEN jsonb_typeof(ingredients) = 'array' THEN 'ARRAY - length: ' || jsonb_array_length(ingredients)::text
         WHEN jsonb_typeof(ingredients) = 'string' THEN 'STRING'
         ELSE 'OTHER'
     END as ingredients_type
 FROM cocktails
 WHERE ingredients IS NOT NULL
     AND ingredients::text != ''
-    AND jsonb_typeof(ingredients) IS NOT NULL
-LIMIT 3;
+LIMIT 5;
+
+-- ============================================================================
+-- DATA POPULATION: Run this second to populate the table
+-- ============================================================================
 
 -- Clear existing data (optional, for re-running)
 TRUNCATE TABLE cocktail_ingredients_uuid;
@@ -54,27 +65,6 @@ WHERE
     AND ing->>'id' IS NOT NULL
     AND CAST(ing->>'id' AS INTEGER) > 0;
 
--- First, let's inspect what the ingredients data looks like
-SELECT
-    id,
-    name,
-    ingredients,
-    jsonb_typeof(ingredients) as data_type,
-    CASE
-        WHEN ingredients IS NULL THEN 'NULL'
-        WHEN ingredients::text = '' THEN 'EMPTY_STRING'
-        WHEN jsonb_typeof(ingredients) = 'array' THEN 'ARRAY'
-        WHEN jsonb_typeof(ingredients) = 'string' THEN 'STRING'
-        ELSE 'OTHER'
-    END as ingredients_type
-FROM cocktails
-WHERE ingredients IS NOT NULL
-    AND ingredients::text != ''
-LIMIT 10;
-
--- Clear existing data (optional, for re-running)
-TRUNCATE TABLE cocktail_ingredients_uuid;
-
 -- Verify the data was inserted
 SELECT
     COUNT(*) as total_relationships,
@@ -85,9 +75,11 @@ FROM cocktail_ingredients_uuid;
 -- Show a sample of the data
 SELECT
     c.name as cocktail_name,
-    i.name as ingredient_name
+    i.name as ingredient_name,
+    COUNT(*) as occurrences
 FROM cocktail_ingredients_uuid ci
 JOIN cocktails c ON c.id = ci.cocktail_id
 JOIN ingredients i ON i.id = ci.ingredient_id
+GROUP BY c.name, i.name
 ORDER BY c.name, i.name
 LIMIT 20;
