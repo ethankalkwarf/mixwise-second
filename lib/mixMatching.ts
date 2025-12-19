@@ -9,18 +9,23 @@ export type MixMatchParams = {
   cocktails: MixCocktail[];
   ownedIngredientIds: string[];
   stapleIngredientIds?: string[];
+  maxMissing?: number; // Maximum missing required ingredients for "almost there"
 };
 
 export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
-  const { cocktails, ownedIngredientIds, stapleIngredientIds = [] } = params;
+  const {
+    cocktails,
+    ownedIngredientIds,
+    stapleIngredientIds = [],
+    maxMissing = 2
+  } = params;
 
   const owned = new Set<string>(ownedIngredientIds);
   const staples = new Set<string>(stapleIngredientIds);
 
-
-  const makeNow: MixMatchResult[] = [];
+  const ready: MixMatchResult[] = [];
   const almostThere: MixMatchResult[] = [];
-  const all: MixMatchResult[] = [];
+  const far: MixMatchResult[] = [];
 
   for (const cocktail of cocktails) {
     // Skip cocktails with no ingredients (bad data)
@@ -28,7 +33,7 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
       continue;
     }
 
-    // Filter to required ingredients (not optional, not staples)
+    // Classify ingredients
     const requiredIngredients = cocktail.ingredients.filter(
       (ing) => ing.id && !ing.isOptional && !staples.has(ing.id)
     );
@@ -40,49 +45,70 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
 
     const requiredTotal = requiredIngredients.length;
     let requiredCovered = 0;
-    const missingIds: string[] = [];
+    const missingRequiredIds: string[] = [];
     const missingNames: string[] = [];
 
+    // Check required ingredients
     for (const ing of requiredIngredients) {
-      if (owned.has(ing.id) || staples.has(ing.id)) {
+      if (owned.has(ing.id)) {
         requiredCovered += 1;
       } else {
-        missingIds.push(ing.id);
+        missingRequiredIds.push(ing.id);
         missingNames.push(ing.name);
       }
     }
 
-    const score = requiredCovered / requiredTotal;
+    const missingCount = missingRequiredIds.length;
+    const matchPercent = requiredTotal > 0 ? requiredCovered / requiredTotal : 0;
 
     const result: MixMatchResult = {
       cocktail,
-      score,
-      missingIngredientIds: missingIds,
-      missingIngredientNames: missingNames,
+      score: matchPercent, // Legacy compatibility
+      missingRequiredIngredientIds: missingRequiredIds,
+      missingIngredientNames: missingNames, // Legacy compatibility
+      missingCount,
+      matchPercent,
     };
 
-    all.push(result);
-
-    // READY: User has 100% of required ingredients
-    if (missingIds.length === 0 && requiredCovered > 0) {
-      makeNow.push(result);
-    } 
-    // ALMOST: User has ≥60% of ingredients AND is missing at least 1
-    else if (score >= 0.6 && missingIds.length > 0) {
+    // Categorize cocktails based on missing required ingredients
+    if (missingCount === 0) {
+      // READY: All required ingredients owned
+      ready.push(result);
+    } else if (missingCount <= maxMissing) {
+      // ALMOST THERE: Missing 1-maxMissing required ingredients
       almostThere.push(result);
+    } else {
+      // FAR: Missing more than maxMissing required ingredients
+      far.push(result);
     }
   }
 
-  // Sort by score descending, then by name
-  const sortFn = (a: MixMatchResult, b: MixMatchResult) => {
-    if (b.score !== a.score) return b.score - a.score;
+  // Sort READY: highest matchPercent, then fewest total required ingredients
+  ready.sort((a, b) => {
+    if (b.matchPercent !== a.matchPercent) return b.matchPercent - a.matchPercent;
+    const aRequiredCount = a.cocktail.ingredients.filter(ing => !ing.isOptional).length;
+    const bRequiredCount = b.cocktail.ingredients.filter(ing => !ing.isOptional).length;
+    return aRequiredCount - bRequiredCount;
+  });
+
+  // Sort ALMOST THERE: missingCount ascending, then matchPercent descending
+  almostThere.sort((a, b) => {
+    if (a.missingCount !== b.missingCount) return a.missingCount - b.missingCount;
+    if (b.matchPercent !== a.matchPercent) return b.matchPercent - a.matchPercent;
     return a.cocktail.name.localeCompare(b.cocktail.name);
+  });
+
+  // Sort FAR: by matchPercent descending (can be ignored by UI)
+  far.sort((a, b) => {
+    if (b.matchPercent !== a.matchPercent) return b.matchPercent - a.matchPercent;
+    return a.cocktail.name.localeCompare(b.cocktail.name);
+  });
+
+  return {
+    ready,
+    almostThere,
+    far,
+    makeNow: ready // Legacy compatibility
   };
-
-  makeNow.sort(sortFn);
-  almostThere.sort(sortFn);
-  all.sort(sortFn);
-
-  return { makeNow, almostThere, all };
 }
 

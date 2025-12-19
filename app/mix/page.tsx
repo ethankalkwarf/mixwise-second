@@ -171,7 +171,7 @@ export default function MixPage() {
     });
 
     return {
-      canMake: result.makeNow.length,
+      canMake: result.ready.length,
       almostThere: result.almostThere.length,
     };
   }, [allCocktails, allIngredients, ingredientIds, dataLoading]);

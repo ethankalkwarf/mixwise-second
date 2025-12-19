@@ -46,15 +46,18 @@ export type MixCocktail = {
 // Matching result
 export type MixMatchResult = {
   cocktail: MixCocktail;
-  score: number;
-  missingIngredientIds: string[];
-  missingIngredientNames: string[];
+  score: number; // Legacy field, kept for compatibility
+  missingRequiredIngredientIds: string[];
+  missingIngredientNames: string[]; // Legacy field, kept for compatibility
+  missingCount: number; // Number of missing required ingredients
+  matchPercent: number; // Percentage of required ingredients owned (0-1)
 };
 
 // Match groups
 export type MixMatchGroups = {
-  makeNow: MixMatchResult[];
+  ready: MixMatchResult[]; // Previously makeNow
   almostThere: MixMatchResult[];
-  all: MixMatchResult[];
+  far: MixMatchResult[]; // Previously unused "all" group
+  makeNow?: MixMatchResult[]; // Legacy alias for backward compatibility
 };
 

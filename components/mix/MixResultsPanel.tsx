@@ -29,26 +29,27 @@ export function MixResultsPanel({
   }, [allIngredients]);
 
   // Run matching engine
-  const { makeNow, almostThere, all } = useMemo(
+  const { ready, almostThere, far } = useMemo(
     () =>
       getMixMatchGroups({
         cocktails: allCocktails,
         ownedIngredientIds: inventoryIds,
-        stapleIngredientIds: stapleIds
+        stapleIngredientIds: stapleIds,
+        maxMissing: 2 // Default max missing ingredients for "almost there"
       }),
     [allCocktails, inventoryIds, stapleIds]
   );
 
   // Get available categories
   const availableCategories = useMemo(() => {
-    const source = searchQuery ? all : makeNow;
+    const source = searchQuery ? far : ready;
     const cats = new Set(source.map((m) => m.cocktail.primarySpirit).filter(Boolean));
     return Array.from(cats).sort() as string[];
-  }, [makeNow, all, searchQuery]);
+  }, [ready, far, searchQuery]);
 
   // Filter and sort displayed drinks
   const displayedDrinks = useMemo(() => {
-    let results = searchQuery ? [...all] : [...makeNow];
+    let results = searchQuery ? [...far] : [...ready];
 
     // Filter by search
     if (searchQuery.trim()) {
@@ -93,7 +94,7 @@ export function MixResultsPanel({
       if (!a.cocktail.isPopular && b.cocktail.isPopular) return 1;
       return a.cocktail.name.localeCompare(b.cocktail.name);
     });
-  }, [makeNow, all, searchQuery, activeCategory]);
+  }, [ready, far, searchQuery, activeCategory]);
 
   // Smart additions
   const unlockPotential = useMemo(() => {
