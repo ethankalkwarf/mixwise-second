@@ -18,7 +18,8 @@
     "fix:cocktail-relationships": "node scripts/fix-cocktail-relationships.js",
     "create:test-data": "node scripts/create-test-data.js",
     "migrate:cocktail-uuids": "node scripts/migrate-cocktail-uuids.js",
-    "verify:cocktail-uuids": "node scripts/verify-cocktail-uuids.js"
+    "verify:cocktail-uuids": "node scripts/verify-cocktail-uuids.js",
+    "debug:cocktail-mapping": "npx tsx scripts/debug-cocktail-mapping.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
