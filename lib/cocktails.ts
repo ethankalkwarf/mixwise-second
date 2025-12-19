@@ -126,11 +126,11 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
     console.log('[MIX-DEBUG] Making ingredients query...');
     const queryPromise = supabase
       .from('ingredients')
-      .select('*')
+      .select('id, name, type, category, image_url, is_staple')
       .order('name');
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Ingredients query timed out after 5 seconds')), 5000);
+      setTimeout(() => reject(new Error('Ingredients query timed out after 10 seconds')), 10000);
     });
 
     const { data, error } = await Promise.race([queryPromise, timeoutPromise]);

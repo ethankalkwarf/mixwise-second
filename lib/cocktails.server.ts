@@ -268,8 +268,29 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
 
         if (cocktail.ingredients && Array.isArray(cocktail.ingredients)) {
           ingredients = cocktail.ingredients.map((ing: any) => {
-            // The ingredients JSON has a 'text' field with the ingredient name
-            const ingredientText = ing.text || ing.name;
+            // The ingredients JSON has a 'text' field with measurement + ingredient name
+            const fullText = ing.text || ing.name;
+
+            if (!fullText) {
+              return null;
+            }
+
+            // Parse the ingredient name from the full text by removing measurement prefixes
+            // Examples: "1.5 oz amontillado sherry" → "amontillado sherry"
+            //           "2 dashes orange bitters" → "orange bitters"
+            //           "Orange twist" → "orange twist"
+            let ingredientText = fullText.trim();
+
+            // Remove common measurement prefixes
+            ingredientText = ingredientText
+              // Remove amounts with units: "1.5 oz", "2 dashes", "1/2 cup", etc.
+              .replace(/^\d+(\/\d+)?\s*(oz|cup|tbsp|tsp|dash|dashes|drop|drops|ml|cl|shot|jigger|part|parts|slice|slices|wheel|wheels|twist|twists|peel|peels|wedge|wedges|sprig|sprigs|leaf|leaves|piece|pieces)\s+/i, '')
+              // Remove just numbers at the start: "2 orange twists" → "orange twists"
+              .replace(/^\d+\s+/, '')
+              // Clean up extra whitespace
+              .trim();
+
+            console.log(`[SERVER] Parsed "${fullText}" → "${ingredientText}"`);
 
             if (!ingredientText) {
               return null;
@@ -277,6 +298,8 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
 
             // Find matching ingredient in the ingredients table by name
             let matchedIngredient = null;
+
+            // First try exact match
             for (const [id, name] of ingredientNameById.entries()) {
               if (name && name.toLowerCase().trim() === ingredientText.toLowerCase().trim()) {
                 matchedIngredient = { id, name };
@@ -284,19 +307,35 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
               }
             }
 
-            // If exact match not found, try partial match
+            // If exact match not found, try partial match with common ingredient name variations
             if (!matchedIngredient) {
-              for (const [id, name] of ingredientNameById.entries()) {
-                if (name && name.toLowerCase().includes(ingredientText.toLowerCase()) ||
-                    ingredientText.toLowerCase().includes(name.toLowerCase())) {
-                  matchedIngredient = { id, name };
-                  break;
+              const searchVariations = [
+                ingredientText,
+                // Try removing common prefixes/suffixes
+                ingredientText.replace(/^(sweet|dry|white|dark|aged|extra|fresh)\s+/i, ''),
+                ingredientText.replace(/\s+(juice|syrup|bitters|liqueur|vodka|gin|rum|whiskey|bourbon|scotch|tequila|brandy|cognac|wine|beer)$/i, ''),
+                // Try splitting and taking the last meaningful part
+                ingredientText.split(/\s+/).slice(-2).join(' '),
+                ingredientText.split(/\s+/).slice(-1)[0]
+              ].filter(v => v && v.length > 2); // Filter out very short fragments
+
+              for (const variation of searchVariations) {
+                for (const [id, name] of ingredientNameById.entries()) {
+                  if (name && (
+                    name.toLowerCase().includes(variation.toLowerCase()) ||
+                    variation.toLowerCase().includes(name.toLowerCase())
+                  )) {
+                    matchedIngredient = { id, name };
+                    console.log(`[SERVER] Matched "${ingredientText}" → "${name}" using variation "${variation}"`);
+                    break;
+                  }
                 }
+                if (matchedIngredient) break;
               }
             }
 
             const ingredientId = matchedIngredient ? String(matchedIngredient.id) : 'unknown';
-            const ingredientName = matchedIngredient ? matchedIngredient.name : 'Unknown';
+            const ingredientName = matchedIngredient ? matchedIngredient.name : fullText; // Use original text as fallback name
 
             return {
               id: ingredientId,
