@@ -345,10 +345,30 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     ingredientNameById.set(String(ing.id), ing.name);
   });
 
+  // Create mapping from numeric legacy_id to UUID for cocktails that have it
+  const numericToUUID = new Map<number, string>();
+  cocktailData.forEach(cocktail => {
+    if (cocktail.legacy_id) {
+      numericToUUID.set(cocktail.legacy_id, cocktail.id);
+    }
+  });
+
   // Group ingredients by cocktail UUID
   const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
   (cocktailIngredients || []).forEach((ci: any) => {
-    const cocktailUUID = String(ci.cocktail_id);
+    let cocktailUUID: string | null = null;
+
+    // Handle both UUID and numeric cocktail_id formats
+    const cocktailIdValue = ci.cocktail_id;
+    if (typeof cocktailIdValue === 'string' && cocktailIdValue.includes('-')) {
+      // Already a UUID
+      cocktailUUID = cocktailIdValue;
+    } else {
+      // Numeric ID - convert using legacy_id mapping
+      const numericId = typeof cocktailIdValue === 'string' ? parseInt(cocktailIdValue, 10) : cocktailIdValue;
+      cocktailUUID = numericToUUID.get(numericId) || null;
+    }
+
     if (!cocktailUUID) return;
 
     const ingredientId = String(ci.ingredient_id);
@@ -372,6 +392,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   console.log(`[MIX-DEBUG] Sample cocktail IDs with ingredients:`, Array.from(ingredientsByCocktail.keys()).slice(0, 3));
   console.log(`[MIX-DEBUG] cocktailData length: ${cocktailData.length}`);
   console.log(`[MIX-DEBUG] Sample cocktail IDs from cocktails table:`, cocktailData.slice(0, 3).map(c => c.id));
+  console.log(`[MIX-DEBUG] numericToUUID mapping size: ${numericToUUID.size}`);
 
   // Process cocktails and attach their ingredients
   const processedCocktails = cocktailData.map(cocktail => {
