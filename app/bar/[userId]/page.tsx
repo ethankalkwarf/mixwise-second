@@ -133,9 +133,8 @@ export default async function PublicBarPage({ params }: PageProps) {
   const userInitial = displayName.charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <div className="py-8 sm:py-16">
-        <MainContainer>
+    <div className="py-8 sm:py-12">
+      <MainContainer>
           {/* Header */}
           <div className="relative mb-12">
             <div className="absolute inset-0 bg-gradient-to-r from-lime-500/10 via-transparent to-terracotta/10 rounded-3xl blur-3xl"></div>
