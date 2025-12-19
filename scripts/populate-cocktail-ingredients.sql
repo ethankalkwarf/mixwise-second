@@ -18,16 +18,15 @@ FROM
     cocktails c,
     json_array_elements(
         CASE
-            WHEN c.ingredients IS NULL OR c.ingredients = 'null' OR c.ingredients::text = '' THEN '[]'::json
-            WHEN json_typeof(c.ingredients) = 'array' THEN c.ingredients
-            WHEN json_typeof(c.ingredients) = 'string' THEN c.ingredients::json
-            ELSE '[]'::json
+            WHEN c.ingredients IS NULL OR c.ingredients::text = '' THEN '[]'::jsonb
+            WHEN jsonb_typeof(c.ingredients) = 'array' THEN c.ingredients
+            WHEN jsonb_typeof(c.ingredients) = 'string' THEN c.ingredients::jsonb
+            ELSE '[]'::jsonb
         END
     ) as ing
 WHERE
     c.ingredients IS NOT NULL
     AND c.ingredients::text != ''
-    AND c.ingredients::text != 'null'
     AND ing->>'id' IS NOT NULL
     AND CAST(ing->>'id' AS INTEGER) > 0;
 
