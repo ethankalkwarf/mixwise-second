@@ -43,27 +43,22 @@ LIMIT 5;
 -- Clear existing data (optional, for re-running)
 TRUNCATE TABLE cocktail_ingredients_uuid;
 
--- Insert ingredient relationships from cocktails.ingredients JSON
--- Note: Only insert cocktail_id and ingredient_id since those are the only columns that exist
+-- Insert ingredient relationships by matching text to ingredient names
+-- The ingredients data has "text" fields, not "id" fields, so we need to match by name
 INSERT INTO cocktail_ingredients_uuid (cocktail_id, ingredient_id)
-SELECT
+SELECT DISTINCT
     c.id as cocktail_id,
-    CAST(ing->>'id' AS INTEGER) as ingredient_id
+    i.id as ingredient_id
 FROM
     cocktails c,
-    jsonb_array_elements(
-        CASE
-            WHEN c.ingredients IS NULL OR c.ingredients::text = '' THEN '[]'::jsonb
-            WHEN jsonb_typeof(c.ingredients) = 'array' THEN c.ingredients
-            WHEN jsonb_typeof(c.ingredients) = 'string' THEN c.ingredients::jsonb
-            ELSE '[]'::jsonb
-        END
-    ) as ing
+    jsonb_array_elements(c.ingredients) as ing,
+    ingredients i
 WHERE
     c.ingredients IS NOT NULL
-    AND c.ingredients::text != ''
-    AND ing->>'id' IS NOT NULL
-    AND CAST(ing->>'id' AS INTEGER) > 0;
+    AND jsonb_typeof(c.ingredients) = 'array'
+    AND ing->>'text' IS NOT NULL
+    AND LOWER(TRIM(ing->>'text')) LIKE LOWER(TRIM(i.name || '%'))
+    AND i.id > 0;
 
 -- Verify the data was inserted
 SELECT
