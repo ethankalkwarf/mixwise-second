@@ -14,6 +14,7 @@
     "seed:cocktails": "npx tsx scripts/seedCocktailsFromExcel.ts",
     "verify:cocktails": "npx tsx scripts/verifyCocktails.ts",
     "clear:sanity-cocktails": "npx tsx scripts/clearSanityCocktails.ts",
+    "populate:cocktail-ingredients": "node scripts/populate-cocktail-ingredients.js",
     "migrate:cocktail-uuids": "node scripts/migrate-cocktail-uuids.js",
     "verify:cocktail-uuids": "node scripts/verify-cocktail-uuids.js"
   },

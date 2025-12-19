@@ -284,10 +284,10 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
 
   if (!cocktailData) return [];
 
-  // Get cocktail ingredients from cocktail_ingredients_uuid table
+  // Get cocktail ingredients from cocktail_ingredients table
   const { data: cocktailIngredients, error: ingredientsError } = await supabase
-    .from('cocktail_ingredients_uuid')
-    .select('cocktail_id, ingredient_id, raw_text, amount, is_optional, notes');
+    .from('cocktail_ingredients')
+    .select('cocktail_id, ingredient_id, amount, is_optional, notes');
 
   if (ingredientsError) {
     console.error('Error fetching cocktail ingredients:', ingredientsError);
@@ -320,7 +320,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     const ingredient = {
       id: ingredientId,
       name,
-      amount: ci.amount ?? ci.raw_text ?? null,
+      amount: ci.amount ?? null,
       isOptional: ci.is_optional ?? false,
       notes: ci.notes ?? null
     };
