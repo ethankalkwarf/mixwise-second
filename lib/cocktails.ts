@@ -129,11 +129,13 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
       .select('id, name, type, category, image_url, is_staple')
       .order('name');
 
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Ingredients query timed out after 20 seconds - DEPLOYMENT TEST')), 20000);
-    });
+    // Temporarily remove timeout to allow full ingredients load
+    // const timeoutPromise = new Promise<never>((_, reject) => {
+    //   setTimeout(() => reject(new Error('Ingredients query timed out')), 30000);
+    // });
 
-    const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+    // Temporarily run without timeout to allow full ingredients load
+    const { data, error } = await queryPromise;
     console.log('[MIX-DEBUG] Ingredients query completed, error:', error, 'data length:', data?.length);
 
     if (error) {
