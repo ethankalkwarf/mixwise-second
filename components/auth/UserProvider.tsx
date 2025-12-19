@@ -94,10 +94,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Wait for session context to be ready
+    // Wait for session context to be ready, but add a timeout to prevent infinite loading
     if (sessionContextLoading) {
       console.log("[UserProvider] Session context still loading...");
-      return;
+
+      // Add a timeout to prevent infinite loading state
+      const timeoutId = setTimeout(() => {
+        if (mounted) {
+          console.warn("[UserProvider] Session context loading timeout - proceeding anyway");
+          setIsLoading(false);
+          setError(new Error("Session context loading timeout"));
+        }
+      }, 5000); // 5 second timeout
+
+      return () => clearTimeout(timeoutId);
     }
 
     // Function to update auth state
