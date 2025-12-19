@@ -227,7 +227,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   if (!cocktailData) return [];
 
   // Get cocktail ingredients from cocktail_ingredients table
-  // Try with new column names first, fallback to old names if needed
+  // Try with all columns first, fallback to available columns
   let queryResult = await supabase
     .from('cocktail_ingredients')
     .select('cocktail_id, ingredient_id, measure, is_optional, notes');
@@ -235,16 +235,16 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   let cocktailIngredients = queryResult.data;
   let ingredientsError = queryResult.error;
 
-  // If the query fails due to missing columns, try fallback
+  // If the query fails due to missing columns, try with only available columns
   if (ingredientsError && (
     ingredientsError.message?.includes('column') ||
     ingredientsError.message?.includes('does not exist') ||
     ingredientsError.code === 'PGRST116' // Column does not exist
   )) {
-    console.warn('Falling back to old column names for cocktail_ingredients');
+    console.warn('Falling back to available columns for cocktail_ingredients');
     queryResult = await supabase
       .from('cocktail_ingredients')
-      .select('cocktail_id, ingredient_id, amount, is_optional, notes');
+      .select('cocktail_id, ingredient_id, measure');
     cocktailIngredients = queryResult.data;
     ingredientsError = queryResult.error;
   }
@@ -283,8 +283,8 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
       id: ingredientId,
       name,
       amount: ci.measure ?? ci.amount ?? null, // Handle both column names
-      isOptional: ci.is_optional ?? false,
-      notes: ci.notes ?? null
+      isOptional: ci.is_optional ?? false, // Default to false if column doesn't exist
+      notes: ci.notes ?? null // Default to null if column doesn't exist
     };
 
     if (!ingredientsByCocktail.has(cocktailUUID)) {
