@@ -285,22 +285,25 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
 
   // Get cocktail ingredients from cocktail_ingredients table
   // Try with new column names first, fallback to old names if needed
-  let cocktailIngredients, ingredientsError;
+  let queryResult = await supabase
+    .from('cocktail_ingredients')
+    .select('cocktail_id, ingredient_id, measure, is_optional, notes');
 
-  try {
-    const result = await supabase
-      .from('cocktail_ingredients')
-      .select('cocktail_id, ingredient_id, measure, is_optional, notes');
-    cocktailIngredients = result.data;
-    ingredientsError = result.error;
-  } catch (e) {
-    // Fallback to old column names if migration hasn't run
+  let cocktailIngredients = queryResult.data;
+  let ingredientsError = queryResult.error;
+
+  // If the query fails due to missing columns, try fallback
+  if (ingredientsError && (
+    ingredientsError.message?.includes('column') ||
+    ingredientsError.message?.includes('does not exist') ||
+    ingredientsError.code === 'PGRST116' // Column does not exist
+  )) {
     console.warn('Falling back to old column names for cocktail_ingredients');
-    const result = await supabase
+    queryResult = await supabase
       .from('cocktail_ingredients')
       .select('cocktail_id, ingredient_id, amount, is_optional, notes');
-    cocktailIngredients = result.data;
-    ingredientsError = result.error;
+    cocktailIngredients = queryResult.data;
+    ingredientsError = queryResult.error;
   }
 
   if (ingredientsError) {
@@ -348,7 +351,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   });
 
   // Process cocktails and attach their ingredients
-  const result = cocktailData.map(cocktail => {
+  const processedCocktails = cocktailData.map(cocktail => {
     const ingredientsWithIds = ingredientsByCocktail.get(cocktail.id) || [];
 
     return {
