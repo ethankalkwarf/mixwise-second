@@ -17,7 +17,7 @@ import { createClient } from "@/lib/supabase/client";
 const PROMPT_THRESHOLD = 3;
 
 export default function MixPage() {
-  console.log('[MIX-DEBUG] MixPage component mounted');
+  console.log('[MIX-DEBUG] 🔄 MixPage component rendered/mounted');
 
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<MixCocktail[]>([]);
@@ -25,6 +25,13 @@ export default function MixPage() {
   const [dataError, setDataError] = useState<string | null>(null);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [promptDismissed, setPromptDismissed] = useState(false);
+
+  console.log('[MIX-DEBUG] Component state:', {
+    dataLoading,
+    cocktailsCount: allCocktails.length,
+    ingredientsCount: allIngredients.length,
+    hasError: !!dataError
+  });
 
   const { isAuthenticated, user } = useUser();
   const {
@@ -40,34 +47,50 @@ export default function MixPage() {
   // Load data from Supabase
   useEffect(() => {
     async function loadData() {
+      console.log('[MIX-DEBUG] 🚀 Starting data load...');
       try {
-        console.log('[MIX-DEBUG] Starting data load...');
         const { ingredients, cocktails } = await getMixDataClient();
-        console.log('[MIX-DEBUG] Data loaded - ingredients:', ingredients.length, 'cocktails:', cocktails.length);
+        console.log('[MIX-DEBUG] ✅ Data loaded - ingredients:', ingredients.length, 'cocktails:', cocktails.length);
 
         // Check if cocktails have ingredients
         if (cocktails.length > 0) {
           const margarita = cocktails.find(c => c.name === 'Margarita');
+          const cocktailsWithIngredients = cocktails.filter(c => c.ingredients && c.ingredients.length > 0);
           console.log('[MIX-DEBUG] Margarita in loaded data:', margarita ? {
             name: margarita.name,
             ingredientsCount: margarita.ingredients?.length || 0,
             firstIngredient: margarita.ingredients?.[0]
           } : 'Not found');
+          console.log('[MIX-DEBUG] Cocktails with ingredients:', cocktailsWithIngredients.length, '/', cocktails.length);
         }
 
         setAllIngredients(ingredients);
         setAllCocktails(cocktails);
-        console.log('[MIX-DEBUG] State updated');
+        console.log('[MIX-DEBUG] ✅ State updated with', cocktails.length, 'cocktails');
       } catch (error) {
-        console.error("Failed to load data from Supabase:", error);
+        console.error('[MIX-DEBUG] ❌ Failed to load data from Supabase:', error);
         setDataError(error instanceof Error ? error.message : "Unknown error");
+        // Still set empty data to prevent infinite loading
+        setAllIngredients([]);
+        setAllCocktails([]);
       } finally {
         setDataLoading(false);
-        console.log('[MIX-DEBUG] Data loading complete, dataLoading set to false');
+        console.log('[MIX-DEBUG] 🏁 Data loading complete, dataLoading set to false');
       }
     }
+
+    console.log('[MIX-DEBUG] 📡 useEffect triggered, calling loadData');
     loadData();
   }, []);
+
+  // Log state changes
+  useEffect(() => {
+    console.log('[MIX-DEBUG] 📊 State changed:', {
+      cocktailsCount: allCocktails.length,
+      ingredientsCount: allIngredients.length,
+      dataLoading
+    });
+  }, [allCocktails.length, allIngredients.length, dataLoading]);
 
 
 
@@ -117,26 +140,42 @@ export default function MixPage() {
       .filter((i): i is MixIngredient => i !== undefined);
   }, [ingredientIds, allIngredients]);
 
-  // Get match counts for display
+  // Get match counts for display - only run when all data is loaded and stable
   const matchCounts = useMemo(() => {
-    // Don't run matching if data isn't loaded yet
-    if (dataLoading || allCocktails.length === 0 || allIngredients.length === 0) {
+    // CRITICAL: Only run matching when ALL data is loaded and we have cocktails with ingredients
+    if (dataLoading || allCocktails.length === 0 || allIngredients.length === 0 || !ingredientIds) {
+      console.log('[MIX-DEBUG] Skipping matching - data not ready:', {
+        dataLoading,
+        cocktailsLoaded: allCocktails.length,
+        ingredientsLoaded: allIngredients.length,
+        hasIngredientIds: !!ingredientIds
+      });
+      return { canMake: 0, almostThere: 0 };
+    }
+
+    // Additional check: ensure at least one cocktail has ingredients
+    const cocktailsWithIngredients = allCocktails.filter(c => c.ingredients && c.ingredients.length > 0);
+    if (cocktailsWithIngredients.length === 0) {
+      console.log('[MIX-DEBUG] Skipping matching - no cocktails have ingredients data');
       return { canMake: 0, almostThere: 0 };
     }
 
     const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
 
     // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
-    console.log('[MIX-DEBUG] ownedIngredientIds (first 10):', ingredientIds?.slice(0, 10) || []);
+    console.log('[MIX-DEBUG] 🟢 RUNNING MATCHING LOGIC');
+    console.log('[MIX-DEBUG] ownedIngredientIds (first 10):', ingredientIds.slice(0, 10));
     console.log('[MIX-DEBUG] stapleIds (first 10):', stapleIds.slice(0, 10));
     console.log('[MIX-DEBUG] cocktailsLoaded:', allCocktails.length);
+    console.log('[MIX-DEBUG] cocktailsWithIngredients:', cocktailsWithIngredients.length);
+
     if (allCocktails.length > 0) {
-      console.log('[MIX-DEBUG] first cocktail ingredients (first 10):', allCocktails[0]?.ingredientsWithIds?.slice(0, 10) || []);
+      console.log('[MIX-DEBUG] first cocktail ingredients (first 3):', allCocktails[0]?.ingredients?.slice(0, 3) || []);
       // Find Margarita specifically
       const margarita = allCocktails.find(c => c.name === 'Margarita');
       if (margarita) {
-        console.log('[MIX-DEBUG] Margarita found with ingredients:', margarita.ingredientsWithIds);
-        console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredientsWithIds?.map(i => i.id) || []);
+        console.log('[MIX-DEBUG] Margarita found with ingredients:', margarita.ingredients);
+        console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredients?.map(i => i.id) || []);
       } else {
         console.log('[MIX-DEBUG] Margarita not found in cocktails');
       }
@@ -144,14 +183,15 @@ export default function MixPage() {
 
     const result = getMixMatchGroups({
       cocktails: allCocktails,
-      ownedIngredientIds: ingredientIds || [],
+      ownedIngredientIds: ingredientIds,
       stapleIngredientIds: stapleIds,
     });
 
     // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
     console.log('[MIX-DEBUG] match result:', {
       canMake: result.makeNow.length,
-      almostThere: result.almostThere.length
+      almostThere: result.almostThere.length,
+      canMakeCocktails: result.makeNow.slice(0, 3).map(c => c.cocktail.name)
     });
 
     return {
