@@ -48,6 +48,7 @@ export type MixMatchResult = {
   cocktail: MixCocktail;
   score: number; // Legacy field, kept for compatibility
   missingRequiredIngredientIds: string[];
+  missingIngredientIds: string[]; // Legacy field, kept for compatibility
   missingIngredientNames: string[]; // Legacy field, kept for compatibility
   missingCount: number; // Number of missing required ingredients
   matchPercent: number; // Percentage of required ingredients owned (0-1)

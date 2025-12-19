@@ -65,6 +65,7 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
       cocktail,
       score: matchPercent, // Legacy compatibility
       missingRequiredIngredientIds: missingRequiredIds,
+      missingIngredientIds: missingRequiredIds, // Legacy compatibility
       missingIngredientNames: missingNames, // Legacy compatibility
       missingCount,
       matchPercent,
