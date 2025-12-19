@@ -95,7 +95,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
     let timeoutId: NodeJS.Timeout | null = null;
 
-    // Wait for session context to be ready, but add a timeout to prevent infinite loading
+    // Always clear any existing timeout when this effect runs
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+
+    // If session context is still loading, set up a timeout
     if (sessionContextLoading) {
       console.log("[UserProvider] Session context still loading...");
 
@@ -106,145 +112,143 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           setIsLoading(false);
           setError(new Error("Session context loading timeout"));
         }
-      }, 5000); // 5 second timeout
+      }, 10000); // 10 second timeout
 
       return () => {
         if (timeoutId) clearTimeout(timeoutId);
       };
     }
 
-    // Only proceed with initialization if session context is ready
-    if (!sessionContextLoading) {
-      // Function to update auth state
-      const updateAuthState = async (newSession: Session | null) => {
-        if (!mounted) return;
+    // Session context is ready - proceed with auth initialization
+    // Function to update auth state
+    const updateAuthState = async (newSession: Session | null) => {
+      if (!mounted) return;
 
-        console.log("[UserProvider] Updating auth state:", {
-          hasSession: !!newSession,
-          hasUser: !!newSession?.user,
-          userId: newSession?.user?.id,
-          userEmail: newSession?.user?.email
-        });
+      console.log("[UserProvider] Updating auth state:", {
+        hasSession: !!newSession,
+        hasUser: !!newSession?.user,
+        userId: newSession?.user?.id,
+        userEmail: newSession?.user?.email
+      });
 
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
 
-        if (newSession?.user) {
-          // Fetch profile for authenticated user
-          console.log("[UserProvider] Fetching profile for user:", newSession.user.id);
-          const userProfile = await fetchProfile(newSession.user.id);
-          if (mounted) {
-            console.log("[UserProvider] Profile fetched:", !!userProfile);
-            setProfile(userProfile);
+      if (newSession?.user) {
+        // Fetch profile for authenticated user
+        console.log("[UserProvider] Fetching profile for user:", newSession.user.id);
+        const userProfile = await fetchProfile(newSession.user.id);
+        if (mounted) {
+          console.log("[UserProvider] Profile fetched:", !!userProfile);
+          setProfile(userProfile);
 
-            // Track new signups (users created in last minute)
-            if (userProfile) {
-              const createdAt = new Date(userProfile.created_at);
-              const now = new Date();
-              const isNewUser = (now.getTime() - createdAt.getTime()) < 60000;
-              if (isNewUser && !initialCheckDone.current) {
-                trackUserSignup(newSession.user.id, newSession.user.email);
-              }
+          // Track new signups (users created in last minute)
+          if (userProfile) {
+            const createdAt = new Date(userProfile.created_at);
+            const now = new Date();
+            const isNewUser = (now.getTime() - createdAt.getTime()) < 60000;
+            if (isNewUser && !initialCheckDone.current) {
+              trackUserSignup(newSession.user.id, newSession.user.email);
             }
           }
-        } else {
-          if (mounted) {
-            console.log("[UserProvider] No user session, clearing profile");
-            setProfile(null);
-          }
         }
-
+      } else {
         if (mounted) {
-          console.log("[UserProvider] Setting loading to false");
+          console.log("[UserProvider] No user session, clearing profile");
+          setProfile(null);
+        }
+      }
+
+      if (mounted) {
+        console.log("[UserProvider] Setting loading to false");
+        setIsLoading(false);
+        initialCheckDone.current = true;
+      }
+    };
+
+    // Initial session check
+    const initializeAuth = async () => {
+      try {
+        console.log("[UserProvider] Initializing auth - getting session...");
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error("[UserProvider] Initial session error:", sessionError);
+          setError(sessionError);
           setIsLoading(false);
-          initialCheckDone.current = true;
+          return;
         }
-      };
 
-      // Initial session check
-      const initializeAuth = async () => {
-        try {
-          console.log("[UserProvider] Initializing auth - getting session...");
-          const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        console.log("[UserProvider] Initial session result:", {
+          hasSession: !!currentSession,
+          hasUser: !!currentSession?.user,
+          sessionExpiry: currentSession?.expires_at
+        });
 
-          if (sessionError) {
-            console.error("[UserProvider] Initial session error:", sessionError);
-            setError(sessionError);
-            setIsLoading(false);
-            return;
-          }
-
-          console.log("[UserProvider] Initial session result:", {
-            hasSession: !!currentSession,
-            hasUser: !!currentSession?.user,
-            sessionExpiry: currentSession?.expires_at
-          });
-
-          await updateAuthState(currentSession);
-        } catch (err) {
-          console.error("[UserProvider] Initialize auth error:", err);
-          if (mounted) {
-            setError(err instanceof Error ? err : new Error("Auth initialization failed"));
-            setIsLoading(false);
-          }
+        await updateAuthState(currentSession);
+      } catch (err) {
+        console.error("[UserProvider] Initialize auth error:", err);
+        if (mounted) {
+          setError(err instanceof Error ? err : new Error("Auth initialization failed"));
+          setIsLoading(false);
         }
-      };
+      }
+    };
 
-      // Subscribe to auth state changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, newSession) => {
-          console.log("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        console.log("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
 
-          // Handle different auth events
-          switch (event) {
-            case "SIGNED_IN":
-            case "TOKEN_REFRESHED":
+        // Handle different auth events
+        switch (event) {
+          case "SIGNED_IN":
+          case "TOKEN_REFRESHED":
+            await updateAuthState(newSession);
+            break;
+
+          case "SIGNED_OUT":
+            if (mounted) {
+              setSession(null);
+              setUser(null);
+              setProfile(null);
+              setIsLoading(false);
+            }
+            break;
+
+          case "INITIAL_SESSION":
+            // Only process if we haven't done the initial check yet
+            if (!initialCheckDone.current) {
               await updateAuthState(newSession);
-              break;
+            }
+            break;
 
-            case "SIGNED_OUT":
+          case "USER_UPDATED":
+            // User data was updated, refresh profile
+            if (newSession?.user && mounted) {
+              setUser(newSession.user);
+              const userProfile = await fetchProfile(newSession.user.id);
               if (mounted) {
-                setSession(null);
-                setUser(null);
-                setProfile(null);
-                setIsLoading(false);
+                setProfile(userProfile);
               }
-              break;
+            }
+            break;
 
-            case "INITIAL_SESSION":
-              // Only process if we haven't done the initial check yet
-              if (!initialCheckDone.current) {
-                await updateAuthState(newSession);
-              }
-              break;
-
-            case "USER_UPDATED":
-              // User data was updated, refresh profile
-              if (newSession?.user && mounted) {
-                setUser(newSession.user);
-                const userProfile = await fetchProfile(newSession.user.id);
-                if (mounted) {
-                  setProfile(userProfile);
-                }
-              }
-              break;
-
-            case "PASSWORD_RECOVERY":
-              // Handle password recovery if needed
-              break;
-          }
+          case "PASSWORD_RECOVERY":
+            // Handle password recovery if needed
+            break;
         }
-      );
+      }
+    );
 
-      // Run initial auth check
-      initializeAuth();
+    // Run initial auth check
+    initializeAuth();
 
-      // Cleanup
-      return () => {
-        mounted = false;
-        subscription.unsubscribe();
-      };
-    }
+    // Cleanup
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [supabase, sessionContextLoading, fetchProfile]);
 
   // Get the correct redirect URL for auth
