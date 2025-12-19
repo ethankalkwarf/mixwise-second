@@ -96,22 +96,32 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     // Wait for session context to be ready
     if (sessionContextLoading) {
+      console.log("[UserProvider] Session context still loading...");
       return;
     }
 
     // Function to update auth state
     const updateAuthState = async (newSession: Session | null) => {
       if (!mounted) return;
-      
+
+      console.log("[UserProvider] Updating auth state:", {
+        hasSession: !!newSession,
+        hasUser: !!newSession?.user,
+        userId: newSession?.user?.id,
+        userEmail: newSession?.user?.email
+      });
+
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      
+
       if (newSession?.user) {
         // Fetch profile for authenticated user
+        console.log("[UserProvider] Fetching profile for user:", newSession.user.id);
         const userProfile = await fetchProfile(newSession.user.id);
         if (mounted) {
+          console.log("[UserProvider] Profile fetched:", !!userProfile);
           setProfile(userProfile);
-          
+
           // Track new signups (users created in last minute)
           if (userProfile) {
             const createdAt = new Date(userProfile.created_at);
@@ -124,11 +134,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         if (mounted) {
+          console.log("[UserProvider] No user session, clearing profile");
           setProfile(null);
         }
       }
-      
+
       if (mounted) {
+        console.log("[UserProvider] Setting loading to false");
         setIsLoading(false);
         initialCheckDone.current = true;
       }
@@ -137,15 +149,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Initial session check
     const initializeAuth = async () => {
       try {
+        console.log("[UserProvider] Initializing auth - getting session...");
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-        
+
         if (sessionError) {
           console.error("[UserProvider] Initial session error:", sessionError);
           setError(sessionError);
           setIsLoading(false);
           return;
         }
-        
+
+        console.log("[UserProvider] Initial session result:", {
+          hasSession: !!currentSession,
+          hasUser: !!currentSession?.user,
+          sessionExpiry: currentSession?.expires_at
+        });
+
         await updateAuthState(currentSession);
       } catch (err) {
         console.error("[UserProvider] Initialize auth error:", err);
