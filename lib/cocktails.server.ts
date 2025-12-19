@@ -193,7 +193,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   drinkCategories: string[];
   tags: string[];
   garnish: string | null;
-  ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+  ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
   try {
     console.log('[SERVER] getCocktailsWithIngredients starting...');
@@ -320,7 +320,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
         drinkCategories: cocktail.categories_all || [],
         tags: cocktail.tags || [],
         garnish: cocktail.garnish || null,
-        ingredients: ingredients
+        ingredientsWithIds: ingredients
       };
     });
 
