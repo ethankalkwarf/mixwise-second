@@ -295,8 +295,25 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     }
 
     console.log('[MIX-DEBUG] Making Supabase query...');
-    // Get all cocktails with ingredients from the ingredients JSON field
-    const { data: cocktailData, error: cocktailError } = await supabase
+
+    // Start with a very simple query to test connectivity
+    console.log('[MIX-DEBUG] Testing simple query first...');
+    const simpleQuery = await supabase
+      .from('cocktails')
+      .select('id, name, slug')
+      .limit(1);
+
+    console.log('[MIX-DEBUG] Simple query result:', simpleQuery);
+
+    if (simpleQuery.error) {
+      console.error('[MIX-DEBUG] Simple query failed:', simpleQuery.error);
+      throw simpleQuery.error;
+    }
+
+    console.log('[MIX-DEBUG] Simple query successful, proceeding with full query...');
+
+    // Add timeout to catch hanging queries
+    const queryPromise = supabase
       .from('cocktails')
       .select(`
         id,
@@ -318,7 +335,20 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
       `)
       .order('name');
 
-    console.log('[MIX-DEBUG] Query completed, error:', cocktailError, 'data length:', cocktailData?.length);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000);
+    });
+
+    let cocktailData, cocktailError;
+    try {
+      const result = await Promise.race([queryPromise, timeoutPromise]);
+      cocktailData = result.data;
+      cocktailError = result.error;
+      console.log('[MIX-DEBUG] Query completed successfully, error:', cocktailError, 'data length:', cocktailData?.length);
+    } catch (timeoutError) {
+      console.error('[MIX-DEBUG] Query failed or timed out:', timeoutError);
+      throw timeoutError;
+    }
 
     if (cocktailError) {
       console.error('Error fetching cocktails:', cocktailError);
