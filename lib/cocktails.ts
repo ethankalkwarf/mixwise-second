@@ -374,10 +374,21 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     }
   });
 
+  // Create sequential mapping as fallback (cocktail_ingredients might use 1-based sequential IDs)
+  const sortedCocktails = [...cocktailData].sort((a, b) => a.name.localeCompare(b.name));
+  sortedCocktails.forEach((cocktail, index) => {
+    const sequentialId = String(index + 1); // 1-based
+    cocktailIdMap.set(sequentialId, cocktail.id);
+  });
+
   if (process.env.NODE_ENV === 'development') {
     console.log('[MIX-DEBUG] First few cocktail mappings:');
-    Array.from(cocktailIdMap.entries()).slice(0, 5).forEach(([key, value]) => {
+    Array.from(cocktailIdMap.entries()).slice(0, 10).forEach(([key, value]) => {
       console.log(`  ${key} -> ${value}`);
+    });
+    console.log('[MIX-DEBUG] Sequential mapping sample:');
+    sortedCocktails.slice(0, 5).forEach((cocktail, index) => {
+      console.log(`  ${index + 1} -> ${cocktail.name} (${cocktail.id})`);
     });
   }
 
