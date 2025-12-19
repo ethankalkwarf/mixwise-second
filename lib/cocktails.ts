@@ -377,7 +377,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   });
 
 
-  return result;
+  return processedCocktails;
 }
 
 
