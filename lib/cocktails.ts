@@ -374,8 +374,18 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     }
   });
 
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[MIX-DEBUG] First few cocktail mappings:');
+    Array.from(cocktailIdMap.entries()).slice(0, 5).forEach(([key, value]) => {
+      console.log(`  ${key} -> ${value}`);
+    });
+  }
+
   // Group ingredients by cocktail UUID
   const ingredientsByCocktail = new Map<string, Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>>();
+  let mappedCount = 0;
+  let failedCount = 0;
+
   (cocktailIngredients || []).forEach((ci: any) => {
     let cocktailUUID: string | null = null;
 
@@ -390,11 +400,14 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
     }
 
     if (!cocktailUUID) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[MIX-DEBUG] Could not map cocktail_id ${ci.cocktail_id} to any cocktail UUID`);
+      failedCount++;
+      if (process.env.NODE_ENV === 'development' && failedCount <= 5) { // Only log first 5 failures
+        console.log(`[MIX-DEBUG] Could not map cocktail_id ${ci.cocktail_id} (type: ${typeof ci.cocktail_id}) to any cocktail UUID`);
       }
       return;
     }
+
+    mappedCount++;
 
     const ingredientId = String(ci.ingredient_id);
     const name = ingredientNameById.get(ingredientId) ?? 'Unknown';
@@ -424,6 +437,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   console.log(`[MIX-DEBUG] cocktailData length: ${cocktailData.length}`);
   console.log(`[MIX-DEBUG] Sample cocktail IDs from cocktails table:`, cocktailData.slice(0, 3).map(c => c.id));
   console.log(`[MIX-DEBUG] numericToUUID mapping size: ${numericToUUID.size}`);
+  console.log(`[MIX-DEBUG] Mapping results: ${mappedCount} ingredients mapped, ${failedCount} failed`);
 
   // Process cocktails and attach their ingredients
   const processedCocktails = cocktailData.map(cocktail => {
