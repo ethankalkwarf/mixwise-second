@@ -760,6 +760,13 @@ export default function DashboardPage() {
                   <span className="text-forest group-hover:text-terracotta transition-colors">Share My Bar</span>
                   <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
                 </Link>
+                <button
+                  onClick={() => router.push("/onboarding")}
+                  className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group w-full text-left"
+                >
+                  <span className="text-forest group-hover:text-terracotta transition-colors">Update Preferences</span>
+                  <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
+                </button>
               </div>
             </section>
           </div>

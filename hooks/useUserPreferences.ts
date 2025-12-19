@@ -71,7 +71,9 @@ export function useUserPreferences() {
     [user, supabase, fetchPreferences]
   );
 
-  const needsOnboarding = isAuthenticated && !isLoading && (!preferences || !preferences.onboarding_completed);
+  // Only redirect to onboarding if we explicitly know the user hasn't completed it
+  // This prevents redirecting users who have completed onboarding but whose preferences fail to load
+  const needsOnboarding = isAuthenticated && !isLoading && preferences && !preferences.onboarding_completed;
 
   return {
     preferences,
