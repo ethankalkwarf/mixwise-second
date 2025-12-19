@@ -450,7 +450,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
         console.log(`[MIX-DEBUG] Could not map cocktail_id ${ci.cocktail_id} (type: ${typeof ci.cocktail_id}) to any cocktail UUID`);
         console.log(`[MIX-DEBUG] Available cocktailIdMap keys sample:`, Array.from(cocktailIdMap.keys()).slice(0, 10));
       }
-      continue; // Skip this ingredient instead of failing the whole function
+      return; // Skip this ingredient instead of failing the whole function
     }
 
     mappedCount++;
