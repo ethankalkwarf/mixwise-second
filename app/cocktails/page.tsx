@@ -40,7 +40,7 @@ const COCKTAILS_QUERY = `*[_type == "cocktail"] {
 }`;
 
 // Temporary mapping function to convert Supabase types to Sanity types for component compatibility
-function mapCocktailListToSanity(cocktails: CocktailListItem[]): SanityCocktail[] {
+function mapCocktailListToSanity(cocktails: any[]): SanityCocktail[] {
   return cocktails.map(cocktail => ({
     _id: cocktail.id,
     _type: "cocktail" as const,
@@ -58,12 +58,22 @@ function mapCocktailListToSanity(cocktails: CocktailListItem[]): SanityCocktail[
     isPopular: false,
     isFavorite: false,
     isTrending: false,
-    ingredients: [], // Will be populated when needed
+    ingredients: (cocktail.ingredients || []).map((ing: any, index: number) => ({
+      _key: `ing${index}`,
+      ingredient: ing.ingredient ? {
+        _id: ing.ingredient.id,
+        name: ing.ingredient.name,
+        type: ing.ingredient.type || 'other'
+      } : null,
+      amount: ing.amount,
+      isOptional: ing.isOptional,
+      notes: ing.notes,
+    })),
   }));
 }
 
 export default async function CocktailsPage() {
-  const cocktails: CocktailListItem[] = await getCocktailsList();
+  const cocktails = await getCocktailsList({ includeIngredients: true });
   const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);
 
   // Sort cocktails: images first, then alphabetically by name (cocktails without images at the end)
