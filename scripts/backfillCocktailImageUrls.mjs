@@ -14,10 +14,14 @@
  * This script is NOT automatic and must be run manually from the terminal.
  */
 
+import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+
+// Load environment variables
+config();
 
 // Configuration
 const BUCKET_NAME = 'cocktail-images-fullsize';
@@ -45,6 +49,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('❌ Missing required environment variables: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY');
+  console.error('💡 Make sure your .env file contains these variables or set them in your environment');
   process.exit(1);
 }
 
