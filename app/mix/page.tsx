@@ -162,7 +162,13 @@ export default function MixPage() {
   }, [removeIngredient]);
 
   const handleClearAll = useCallback(async () => {
-    await clearAll();
+    if (window.confirm('Are you sure you want to clear your entire bar? This will restart the onboarding experience.')) {
+      await clearAll();
+      // Reset onboarding so it shows again
+      localStorage.removeItem('mixwise_mix_onboarding_completed');
+      // Reload the page to restart the onboarding flow
+      window.location.reload();
+    }
   }, [clearAll]);
 
   const handleDismissPrompt = () => {
