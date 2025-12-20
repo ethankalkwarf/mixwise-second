@@ -18,7 +18,7 @@ export function Hero({ title, subtitle }: HeroProps) {
           <div className="relative flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
             {/* Content */}
             <div className="flex-1 text-center lg:text-left">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-forest leading-tight mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-semibold text-forest leading-tight mb-4 tracking-tight">
                 Find Your <span className="italic text-olive">Next Favorite</span> Cocktail
               </h1>
               <p className="text-base sm:text-lg text-sage leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
@@ -47,7 +47,7 @@ export function Hero({ title, subtitle }: HeroProps) {
                 />
                 {/* Floating badge */}
                 <div className="absolute -bottom-3 -right-3 bg-white text-charcoal rounded-full px-4 py-2 text-xs font-medium shadow-card border border-mist">
-                  ✨ 400+ Recipes
+                  ✨ 190+ Recipes
                 </div>
               </div>
             </div>
