@@ -117,25 +117,23 @@ export function MixResultsPanel({
     return Array.from(immediateUnlockCounts.entries())
       .map(([id, data]) => {
         const ing = allIngredients.find((i) => i.id === id);
-        // Debug ingredient lookup issues
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[MIX-DEBUG] Looking up ingredient ID:', id, 'Type:', typeof id);
-          console.log('[MIX-DEBUG] allIngredients sample (first 3):', allIngredients.slice(0, 3).map(i => ({id: i.id, name: i.name, type: typeof i.id})));
-          if (!ing) {
-            console.log('[MIX-DEBUG] ❌ Ingredient lookup FAILED for ID:', id);
-            console.log('[MIX-DEBUG] Available IDs (all):', allIngredients.map(i => i.id));
-          } else {
-            console.log('[MIX-DEBUG] ✅ Ingredient found:', {id: ing.id, name: ing.name, category: ing.category});
-          }
+
+        // Skip ingredients that can't be found in the ingredients list
+        // This prevents showing "Unknown Ingredient" for data integrity issues
+        if (!ing) {
+          console.warn('[MIX-WARN] Skipping unknown ingredient ID:', id, '- not found in ingredients list');
+          return null;
         }
+
         return {
           id,
-          name: ing?.name || "Unknown Ingredient",
-          category: ing?.category || "Other",
+          name: ing.name,
+          category: ing.category,
           count: data.count,
           drinks: data.drinks
         };
       })
+      .filter(Boolean) // Remove null entries
       .sort((a, b) => b.count - a.count)
       .slice(0, 6);
   }, [almostThere, allIngredients]);
