@@ -203,6 +203,15 @@ export default function DashboardPage() {
         // Fetch cocktails with ingredients from Supabase
         const cocktails = await getCocktailsWithIngredientsClient();
 
+        console.log('[DASHBOARD] Fetched cocktails:', cocktails.length);
+        console.log('[DASHBOARD] First cocktail structure:', cocktails[0] ? {
+          id: cocktails[0].id,
+          name: cocktails[0].name,
+          hasIngredientsWithIds: !!cocktails[0].ingredientsWithIds,
+          ingredientsWithIdsLength: cocktails[0].ingredientsWithIds?.length || 0,
+          firstIngredient: cocktails[0].ingredientsWithIds?.[0]
+        } : 'No cocktails');
+
         // Convert to expected format
         const formattedCocktails: RecommendedCocktail[] = cocktails.map(cocktail => ({
           _id: cocktail.id,
@@ -210,17 +219,29 @@ export default function DashboardPage() {
           slug: { current: cocktail.slug },
           externalImageUrl: cocktail.imageUrl || undefined,
           primarySpirit: cocktail.primarySpirit || undefined,
-          ingredientIds: cocktail.ingredients.map(ing => ing.id)
+          ingredientIds: cocktail.ingredientsWithIds?.map(ing => ing.id) || []
         }));
 
         // Score cocktails by how many ingredients user has
         const ingredientSet = new Set(ingredientIds); // Use string IDs directly like mix tool
+
+        console.log('[DASHBOARD] Matching cocktails:');
+        console.log('[DASHBOARD] User ingredient IDs:', ingredientIds);
+        console.log('[DASHBOARD] Total cocktails to check:', formattedCocktails.length);
+
         const scoredCocktails = formattedCocktails
           .map((cocktail) => {
             const cocktailIngredients = cocktail.ingredientIds || [];
             const matchCount = cocktailIngredients.filter((id) => ingredientSet.has(id)).length;
             const totalIngredients = cocktailIngredients.length || 1;
             const matchScore = totalIngredients > 0 ? matchCount / totalIngredients : 0;
+
+            // Debug first few cocktails
+            if (formattedCocktails.indexOf(cocktail) < 3) {
+              console.log(`[DASHBOARD] ${cocktail.name}: ${matchCount}/${totalIngredients} ingredients match (${matchScore.toFixed(2)} score)`);
+              console.log(`[DASHBOARD]   Cocktail ingredients:`, cocktailIngredients);
+              console.log(`[DASHBOARD]   Matching user ingredients:`, cocktailIngredients.filter(id => ingredientSet.has(id)));
+            }
 
             // Boost score if matches user preferences
             let finalScore = matchScore;
@@ -233,6 +254,8 @@ export default function DashboardPage() {
           .filter((c) => c.matchScore && c.matchScore > 0.3)
           .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
           .slice(0, 10);
+
+        console.log('[DASHBOARD] Final results:', scoredCocktails.length, 'cocktails match');
 
         setRecommendations(scoredCocktails);
       } catch (error) {
