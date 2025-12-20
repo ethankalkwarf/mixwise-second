@@ -66,6 +66,13 @@ export default async function CocktailsPage() {
   const cocktails: CocktailListItem[] = await getCocktailsList();
   const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);
 
+  // Debug: Check what image URLs look like
+  console.log('Sample cocktails and their image status:');
+  sanityCocktails.slice(0, 10).forEach((cocktail, i) => {
+    const hasImage = cocktail.externalImageUrl && typeof cocktail.externalImageUrl === 'string' && cocktail.externalImageUrl.trim().length > 0;
+    console.log(`${i+1}. ${cocktail.name}: externalImageUrl = "${cocktail.externalImageUrl}" (type: ${typeof cocktail.externalImageUrl}, hasImage: ${hasImage})`);
+  });
+
   // Sort cocktails: images first, then alphabetically by name (cocktails without images at the end)
   const sortedCocktails = [...sanityCocktails].sort((a, b) => {
     // Prioritize cocktails with valid images (non-empty string)
@@ -77,6 +84,16 @@ export default async function CocktailsPage() {
 
     // If both have or don't have images, sort alphabetically by name
     return a.name.localeCompare(b.name);
+  });
+
+  console.log('After sorting - first 5 and last 5:');
+  sortedCocktails.slice(0, 5).forEach((cocktail, i) => {
+    const hasImage = cocktail.externalImageUrl && typeof cocktail.externalImageUrl === 'string' && cocktail.externalImageUrl.trim().length > 0;
+    console.log(`First ${i+1}: ${cocktail.name} (${hasImage ? 'HAS IMAGE' : 'no image'})`);
+  });
+  sortedCocktails.slice(-5).forEach((cocktail, i) => {
+    const hasImage = cocktail.externalImageUrl && typeof cocktail.externalImageUrl === 'string' && cocktail.externalImageUrl.trim().length > 0;
+    console.log(`Last ${i+1}: ${cocktail.name} (${hasImage ? 'HAS IMAGE' : 'no image'})`);
   });
 
   return (
