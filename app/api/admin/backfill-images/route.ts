@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // This is a temporary admin endpoint for backfilling cocktail images
 // DELETE THIS FILE AFTER RUNNING THE BACKFILL
+// Updated: Dec 20, 2025
 
 const BUCKET_NAME = 'cocktail-images-fullsize';
 const SUPPORTED_EXTENSIONS = ['.webp', '.jpg', '.jpeg', '.png'];
