@@ -79,16 +79,6 @@ export default async function CocktailsPage() {
     return a.name.localeCompare(b.name);
   });
 
-  // Debug logging (remove in production)
-  if (process.env.NODE_ENV === 'development') {
-    const withImages = sortedCocktails.filter(c => c.externalImageUrl && typeof c.externalImageUrl === 'string' && c.externalImageUrl.trim().length > 0);
-    const withoutImages = sortedCocktails.filter(c => !c.externalImageUrl || typeof c.externalImageUrl !== 'string' || c.externalImageUrl.trim().length === 0);
-
-    console.log(`[COCKTAILS SORT] Total: ${sortedCocktails.length}, With images: ${withImages.length}, Without images: ${withoutImages.length}`);
-    console.log(`[COCKTAILS SORT] First 5: ${sortedCocktails.slice(0, 5).map(c => `${c.name} (${c.externalImageUrl ? 'has image' : 'no image'})`).join(', ')}`);
-    console.log(`[COCKTAILS SORT] Last 5: ${sortedCocktails.slice(-5).map(c => `${c.name} (${c.externalImageUrl ? 'has image' : 'no image'})`).join(', ')}`);
-  }
-
   return (
     <div className="py-10 bg-cream min-h-screen">
       <MainContainer>
