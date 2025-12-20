@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { getMixMatchGroups } from "@/lib/mixMatching";
-import { getNextIngredientSuggestionsWithNames } from "@/lib/nextIngredientSuggestions";
 import type { MixIngredient, MixCocktail, MixMatchResult } from "@/lib/mixTypes";
 import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
@@ -141,19 +140,6 @@ export function MixResultsPanel({
       .slice(0, 6);
   }, [almostThere, allIngredients]);
 
-  // Best next ingredient suggestions
-  const nextIngredientSuggestions = useMemo(() => {
-    if (searchQuery) return []; // Don't show suggestions during search
-
-    return getNextIngredientSuggestionsWithNames({
-      cocktails: allCocktails,
-      ownedIngredientIds: inventoryIds,
-      stapleIngredientIds: stapleIds,
-      maxMissing: 2,
-      limit: 8
-    });
-  }, [allCocktails, inventoryIds, stapleIds, searchQuery]);
-
   return (
     <section className="space-y-10 pb-24" aria-label="Cocktail results">
       {/* Header & Search */}
@@ -282,50 +268,15 @@ export function MixResultsPanel({
         )}
       </div>
 
-      {/* Best Next Ingredient */}
-      {!searchQuery && nextIngredientSuggestions.length > 0 && (
-        <div className="border-t border-mist pt-10" aria-labelledby="next-ingredient-title">
-          <div className="flex items-center gap-4 mb-6">
-            <h2 id="next-ingredient-title" className="text-2xl sm:text-3xl font-display font-bold text-forest">
-              Best next ingredient
-            </h2>
-            <span className="text-base text-sage">Add to unlock the most cocktails</span>
-          </div>
-
-          <div className="flex flex-wrap gap-3" role="list">
-            {nextIngredientSuggestions.map((suggestion) => (
-              <button
-                key={suggestion.ingredientId}
-                onClick={() => onAddToInventory(suggestion.ingredientId)}
-                className="group flex items-center gap-3 px-4 py-3 rounded-2xl bg-white border border-mist hover:border-olive/30 transition-all shadow-soft hover:shadow-md focus:outline-none focus:ring-2 focus:ring-olive/50"
-                aria-label={`Add ${suggestion.ingredientName} to unlock ${suggestion.unlockScore} cocktails`}
-                role="listitem"
-              >
-                <div className="flex flex-col items-start min-w-0">
-                  <span className="font-bold text-forest text-sm leading-tight truncate">
-                    {suggestion.ingredientName}
-                  </span>
-                  <span className="text-xs text-sage font-medium">
-                    Unlocks {suggestion.unlockScore} cocktail{suggestion.unlockScore !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <div className="flex-shrink-0">
-                  <PlusIcon className="w-5 h-5 text-olive group-hover:text-forest transition-colors" />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Smart Additions */}
       {!searchQuery && unlockPotential.length > 0 && (
         <div className="border-t border-mist pt-10" aria-labelledby="smart-additions-title">
           <div className="flex items-center gap-4 mb-6">
             <h2 id="smart-additions-title" className="text-2xl sm:text-3xl font-display font-bold text-forest">
-              Smart Additions
+              Recipe Boosters
             </h2>
-            <span className="text-base text-sage">Unlocks new recipes</span>
+            <span className="text-base text-sage">Add these to unlock new cocktail possibilities</span>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2" role="list">

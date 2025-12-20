@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { MixInventoryPanel } from "@/components/mix/MixInventoryPanel";
 import { MixResultsPanel } from "@/components/mix/MixResultsPanel";
-import { MixSelectedBar } from "@/components/mix/MixSelectedBar";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
+import { MixOnboardingDialog } from "@/components/mix/MixOnboardingDialog";
+import { CategoryPicker } from "@/components/mix/CategoryPicker";
+import { IngredientTile } from "@/components/mix/IngredientTile";
+import { YourBarPanel } from "@/components/mix/YourBarPanel";
 import { getMixDataClient, getUserBarIngredientIdsClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
 import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
-import { InformationCircleIcon, BookmarkIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, BookmarkIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { createClient } from "@/lib/supabase/client";
 
 // Show sign-up prompt after adding this many ingredients
@@ -23,6 +25,11 @@ export default function MixPage() {
   const [dataError, setDataError] = useState<string | null>(null);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [promptDismissed, setPromptDismissed] = useState(false);
+
+  // New state for redesigned UI
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { isAuthenticated, user } = useUser();
   const {
@@ -116,6 +123,16 @@ export default function MixPage() {
     loadData();
   }, []);
 
+  // Check for first-time onboarding
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !dataLoading) {
+      const hasCompletedOnboarding = localStorage.getItem('mixwise_mix_onboarding_completed');
+      if (!hasCompletedOnboarding) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [dataLoading]);
+
 
 
 
@@ -158,6 +175,11 @@ export default function MixPage() {
     promptToSave();
   };
 
+  const handleCloseOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('mixwise_mix_onboarding_completed', 'true');
+  };
+
   // Get selected ingredient objects
   const selectedIngredients = useMemo(() => {
     if (!ingredientIds || !allIngredients) return [];
@@ -165,6 +187,36 @@ export default function MixPage() {
       .map((id) => allIngredients.find((i) => i.id === id))
       .filter((i): i is MixIngredient => i !== undefined);
   }, [ingredientIds, allIngredients]);
+
+  // Get selected ingredients for current category (for "Selected" section)
+  const selectedInCategory = useMemo(() => {
+    if (!selectedCategory) return [];
+    return selectedIngredients.filter((i) => i.category === selectedCategory);
+  }, [selectedIngredients, selectedCategory]);
+
+  // Filter ingredients for display
+  const filteredIngredients = useMemo(() => {
+    if (!allIngredients || allIngredients.length === 0) return [];
+
+    let filtered = allIngredients.filter((i) => !stapleIds.includes(i.id));
+
+    // Apply category filter
+    if (selectedCategory) {
+      filtered = filtered.filter((i) => (i.category || "Other") === selectedCategory);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((i) => i.name?.toLowerCase().includes(query));
+    }
+
+    return filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  }, [allIngredients, selectedCategory, searchQuery, stapleIds]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+  }, []);
 
   // Get match counts for display - only run when all data is loaded and stable
   const matchCounts = useMemo(() => {
@@ -308,15 +360,15 @@ export default function MixPage() {
   return (
     <div className="mix-page bg-cream min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header with Instructions */}
+        {/* Page Header */}
         <header className="mb-8" role="banner">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-3xl sm:text-4xl font-display font-bold text-forest mb-2">
-                Mix Tool
+                Stock Your Bar
               </h1>
               <p className="text-lg text-sage max-w-xl">
-                Discover cocktails you can make with ingredients you already have.
+                Build your home bar and discover cocktails you can make.
               </p>
             </div>
             {ingredientIds.length > 0 && (
@@ -334,25 +386,9 @@ export default function MixPage() {
             )}
           </div>
 
-          {/* Helper Instructions */}
-          <div
-            className="flex items-start gap-3 p-4 bg-white border border-mist rounded-2xl text-base shadow-soft"
-            role="note"
-            aria-label="How to use the Mix tool"
-          >
-            <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center flex-shrink-0">
-              <InformationCircleIcon className="w-5 h-5 text-olive" />
-            </div>
-            <div className="text-sage">
-              <span className="font-semibold text-forest">How it works:</span>{" "}
-              Select the ingredients you have in your bar from the panel below. We&apos;ll instantly show you
-              all the cocktails you can make, plus suggestions for ingredients that unlock the most new recipes.
-            </div>
-          </div>
-
           {/* Save Bar Prompt for Anonymous Users */}
           {showSavePrompt && !isAuthenticated && (
-            <div className="mt-4 flex items-center justify-between p-4 bg-olive/10 border border-olive/30 rounded-2xl">
+            <div className="flex items-center justify-between p-4 bg-olive/10 border border-olive/30 rounded-2xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center">
                   <BookmarkIcon className="w-5 h-5 text-olive" />
@@ -380,38 +416,204 @@ export default function MixPage() {
           )}
         </header>
 
-        {/* Selected Ingredients Bar */}
-        {selectedIngredients.length > 0 && (
-          <MixSelectedBar
-            selectedIngredients={selectedIngredients}
-            onRemove={handleRemoveFromInventory}
-            onClearAll={handleClearAll}
-          />
-        )}
+        {/* Main Content Layout */}
+        <div className="grid lg:grid-cols-[1fr_320px] gap-8 items-start">
+          {/* Left Column: Ingredient Selection */}
+          <main role="main" aria-label="Ingredient selection">
+            {/* Search Bar */}
+            <div className="mb-6">
+              <div className="relative max-w-md">
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search ingredients..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="input-botanical pl-11 pr-10"
+                  aria-label="Search ingredients"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-sage hover:text-forest transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            </div>
 
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-[380px_1fr] gap-8 items-start">
-          {/* Inventory Panel */}
-          <aside className="lg:sticky lg:top-24" role="complementary" aria-label="Ingredient selection">
-            <MixInventoryPanel
-              ingredients={allIngredients}
-              selectedIds={ingredientIds}
-              onChange={handleInventoryChange}
-              stapleIds={stapleIds}
+            {/* Category Picker or Ingredient Grid */}
+            {!selectedCategory && !searchQuery ? (
+              <CategoryPicker
+                ingredients={allIngredients.filter((i) => !stapleIds.includes(i.id))}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+              />
+            ) : searchQuery && !selectedCategory ? (
+              <div className="space-y-6">
+                {/* Search Results Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-display font-bold text-forest">
+                      Search Results
+                    </h2>
+                    <p className="text-sage">
+                      {filteredIngredients.length} ingredient{filteredIngredients.length !== 1 ? "s" : ""} matching "{searchQuery}"
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
+                  >
+                    Clear search
+                  </button>
+                </div>
+
+                {/* Search Results */}
+                {filteredIngredients.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {filteredIngredients
+                      .filter((ing) => !ingredientIds.includes(ing.id))
+                      .map((ingredient) => (
+                        <IngredientTile
+                          key={ingredient.id}
+                          ingredient={ingredient}
+                          isSelected={false}
+                          onToggle={handleAddToInventory}
+                        />
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <div className="text-4xl mb-4">🔍</div>
+                    <p className="text-base text-sage">
+                      No ingredients found matching "{searchQuery}"
+                    </p>
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="mt-4 text-terracotta hover:text-terracotta-dark font-medium"
+                    >
+                      Clear search
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Category Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-display font-bold text-forest">
+                      {selectedCategory}
+                    </h2>
+                    <p className="text-sage">
+                      {filteredIngredients.length} ingredient{filteredIngredients.length !== 1 ? "s" : ""}
+                      {searchQuery && ` matching "${searchQuery}"`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
+                  >
+                    ← Back to categories
+                  </button>
+                </div>
+
+                {/* Selected in Category */}
+                {selectedInCategory.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-forest flex items-center gap-2">
+                      <span className="w-2 h-2 bg-olive rounded-full"></span>
+                      Selected ({selectedInCategory.length})
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {selectedInCategory.map((ingredient) => (
+                        <IngredientTile
+                          key={ingredient.id}
+                          ingredient={ingredient}
+                          isSelected={true}
+                          onToggle={handleRemoveFromInventory}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Available Ingredients */}
+                {filteredIngredients.length > 0 ? (
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-forest">
+                      {selectedInCategory.length > 0 ? "More options" : "Available ingredients"}
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {filteredIngredients
+                        .filter((ing) => !ingredientIds.includes(ing.id))
+                        .map((ingredient) => (
+                          <IngredientTile
+                            key={ingredient.id}
+                            ingredient={ingredient}
+                            isSelected={false}
+                            onToggle={handleAddToInventory}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <div className="text-4xl mb-4">🔍</div>
+                    <p className="text-base text-sage">
+                      No ingredients found in this category
+                      {searchQuery && ` matching "${searchQuery}"`}
+                    </p>
+                    {(searchQuery || selectedCategory) && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery("");
+                          setSelectedCategory(null);
+                        }}
+                        className="mt-4 text-terracotta hover:text-terracotta-dark font-medium"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Results Panel */}
+            <div className="mt-12">
+              <MixResultsPanel
+                inventoryIds={ingredientIds}
+                allCocktails={allCocktails}
+                allIngredients={allIngredients}
+                onAddToInventory={handleAddToInventory}
+              />
+            </div>
+          </main>
+
+          {/* Right Column: Your Bar Panel */}
+          <aside className="lg:sticky lg:top-24" role="complementary" aria-label="Your bar">
+            <YourBarPanel
+              selectedIngredients={selectedIngredients}
+              onRemove={handleRemoveFromInventory}
+              onClearAll={handleClearAll}
+              matchCounts={matchCounts}
             />
           </aside>
-
-          {/* Results Panel */}
-          <main role="main" aria-label="Cocktail results">
-            <MixResultsPanel
-              inventoryIds={ingredientIds}
-              allCocktails={allCocktails}
-              allIngredients={allIngredients}
-              onAddToInventory={handleAddToInventory}
-            />
-          </main>
         </div>
       </div>
+
+      {/* Onboarding Modal */}
+      <MixOnboardingDialog
+        ingredients={allIngredients}
+        selectedIds={ingredientIds}
+        onAddIngredient={handleAddToInventory}
+        isOpen={showOnboarding}
+        onClose={handleCloseOnboarding}
+      />
     </div>
   );
 }
