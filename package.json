@@ -19,6 +19,7 @@
     "create:test-data": "node scripts/create-test-data.js",
     "migrate:cocktail-uuids": "node scripts/migrate-cocktail-uuids.js",
     "verify:cocktail-uuids": "node scripts/verify-cocktail-uuids.js",
+    "analyze:unused-images": "node scripts/analyze-unused-images.mjs",
     "debug:cocktail-mapping": "npx tsx scripts/debug-cocktail-mapping.ts",
     "backfill:images:dry": "node scripts/backfillCocktailImageUrls.mjs --dry-run",
     "backfill:images:apply": "node scripts/backfillCocktailImageUrls.mjs --apply"
