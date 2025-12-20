@@ -8,7 +8,7 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 export const revalidate = 300; // Revalidate every 5 minutes for better performance
 
 // GROQ query to fetch all cocktails with their ingredients
-// Temporary random ordering until search/filters are implemented
+// Default ordering: cocktails with images first, then alphabetically
 const COCKTAILS_QUERY = `*[_type == "cocktail"] {
   _id,
   name,
@@ -66,8 +66,18 @@ export default async function CocktailsPage() {
   const cocktails: CocktailListItem[] = await getCocktailsList();
   const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);
 
-  // Temporary random ordering until search/filters are implemented
-  const shuffledCocktails = [...sanityCocktails].sort(() => Math.random() - 0.5);
+  // Sort cocktails: images first, then alphabetically by name (cocktails without images at the end)
+  const sortedCocktails = [...sanityCocktails].sort((a, b) => {
+    // Prioritize cocktails with images
+    const aHasImage = !!a.externalImageUrl;
+    const bHasImage = !!b.externalImageUrl;
+
+    if (aHasImage && !bHasImage) return -1;
+    if (!aHasImage && bHasImage) return 1;
+
+    // If both have or don't have images, sort alphabetically by name
+    return a.name.localeCompare(b.name);
+  });
 
   return (
     <div className="py-10 bg-cream min-h-screen">
@@ -100,7 +110,7 @@ export default async function CocktailsPage() {
         )}
 
         {/* Cocktail Directory with Search, Filters, and Grid */}
-        {cocktails.length > 0 && <CocktailsDirectory cocktails={shuffledCocktails} />}
+        {cocktails.length > 0 && <CocktailsDirectory cocktails={sortedCocktails} />}
       </MainContainer>
     </div>
   );
