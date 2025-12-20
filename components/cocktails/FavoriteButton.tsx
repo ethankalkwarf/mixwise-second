@@ -25,6 +25,9 @@ export function FavoriteButton({
   const { isFavorite, toggleFavorite, isLoading } = useFavorites();
   const favorited = isFavorite(cocktail.id);
 
+  // Debug logging
+  console.log(`[FavoriteButton] ${cocktail.name}: isLoading=${isLoading}, favorited=${favorited}`);
+
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
