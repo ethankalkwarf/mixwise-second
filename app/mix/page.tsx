@@ -7,6 +7,7 @@ import { MixOnboardingDialog } from "@/components/mix/MixOnboardingDialog";
 import { CategoryPicker } from "@/components/mix/CategoryPicker";
 import { IngredientTile } from "@/components/mix/IngredientTile";
 import { YourBarPanel } from "@/components/mix/YourBarPanel";
+import { ClearBarConfirmDialog } from "@/components/mix/ClearBarConfirmDialog";
 import { getMixDataClient, getUserBarIngredientIdsClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
@@ -30,6 +31,7 @@ export default function MixPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const { isAuthenticated, user } = useUser();
   const {
@@ -162,14 +164,21 @@ export default function MixPage() {
   }, [removeIngredient]);
 
   const handleClearAll = useCallback(async () => {
-    if (window.confirm('Are you sure you want to clear your entire bar? This will restart the onboarding experience.')) {
-      await clearAll();
-      // Reset onboarding so it shows again
-      localStorage.removeItem('mixwise_mix_onboarding_completed');
-      // Reload the page to restart the onboarding flow
-      window.location.reload();
-    }
+    setShowClearConfirm(true);
+  }, []);
+
+  const handleConfirmClear = useCallback(async () => {
+    setShowClearConfirm(false);
+    await clearAll();
+    // Reset onboarding so it shows again
+    localStorage.removeItem('mixwise_mix_onboarding_completed');
+    // Reload the page to restart the onboarding flow
+    window.location.reload();
   }, [clearAll]);
+
+  const handleCancelClear = useCallback(() => {
+    setShowClearConfirm(false);
+  }, []);
 
   const handleDismissPrompt = () => {
     setShowSavePrompt(false);
@@ -619,6 +628,13 @@ export default function MixPage() {
         onAddIngredient={handleAddToInventory}
         isOpen={showOnboarding}
         onClose={handleCloseOnboarding}
+      />
+
+      {/* Clear Bar Confirmation Dialog */}
+      <ClearBarConfirmDialog
+        isOpen={showClearConfirm}
+        onConfirm={handleConfirmClear}
+        onCancel={handleCancelClear}
       />
     </div>
   );

@@ -42,9 +42,9 @@ const ONBOARDING_STEPS: Step[] = [
     description: "Start with these core spirits for the most cocktail recipes",
     ingredients: [
       { name: "Vodka", icon: "🥃" },
-      { name: "Gin", icon: "🥃" },
-      { name: "Tequila", icon: "🥃" },
-      { name: "Rum", icon: "🥃" },
+      { name: "Gin", icon: "🌿" },
+      { name: "Tequila", icon: "🌵" },
+      { name: "Rum", icon: "🍹" },
       { name: "Whiskey", icon: "🥃" },
     ],
   },
@@ -52,7 +52,7 @@ const ONBOARDING_STEPS: Step[] = [
     title: "Essential Mixers",
     description: "These basics unlock hundreds of recipes",
     ingredients: [
-      { name: "Club Soda", icon: "🥤" },
+      { name: "Club Soda", icon: "🫧" },
       { name: "Tonic Water", icon: "🥤" },
       { name: "Simple Syrup", icon: "🍯" },
       { name: "Lime Juice", icon: "🍋" },
@@ -63,7 +63,7 @@ const ONBOARDING_STEPS: Step[] = [
     title: "Bitters & Vermouth",
     description: "Optional but recommended for more complex cocktails",
     ingredients: [
-      { name: "Angostura Bitters", icon: "💧" },
+      { name: "Angostura Bitters", icon: "🧪" },
       { name: "Dry Vermouth", icon: "🍷" },
       { name: "Sweet Vermouth", icon: "🍷" },
     ],
