@@ -130,7 +130,7 @@ export function MixResultsPanel({
         }
         return {
           id,
-          name: ing?.name || "Ingredient (Fixed)",
+          name: ing?.name || "Unknown Ingredient",
           category: ing?.category || "Other",
           count: data.count,
           drinks: data.drinks
