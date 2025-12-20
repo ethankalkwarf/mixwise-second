@@ -141,7 +141,7 @@ export function RecipeContent({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full">
-                    {cocktail.base_spirit}
+                    {cocktail.base_spirit.charAt(0).toUpperCase() + cocktail.base_spirit.slice(1).toLowerCase()}
                   </span>
                 </div>
               </div>
@@ -158,7 +158,7 @@ export function RecipeContent({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full">
-                    {cocktail.category_primary}
+                    {cocktail.category_primary.charAt(0).toUpperCase() + cocktail.category_primary.slice(1).toLowerCase()}
                   </span>
                 </div>
               </div>
@@ -175,28 +175,12 @@ export function RecipeContent({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full">
-                    {cocktail.glassware}
+                    {cocktail.glassware.charAt(0).toUpperCase() + cocktail.glassware.slice(1).toLowerCase()}
                   </span>
                 </div>
               </div>
             )}
 
-            {/* Difficulty */}
-            {cocktail.difficulty && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <ChartBarIcon className="w-4 h-4 text-sage" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Difficulty
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full">
-                    {cocktail.difficulty}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
 
           <hr className="border-mist mb-6" />
