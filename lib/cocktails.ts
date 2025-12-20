@@ -125,29 +125,6 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
     // Add timeout to prevent hanging queries
     console.log('[MIX-DEBUG] Making ingredients query...');
     console.log('[MIX-DEBUG] Creating ingredients query...');
-    // Try a simpler query first to test connectivity
-    const simpleQueryPromise = supabase
-      .from('ingredients')
-      .select('count', { count: 'exact', head: true })
-      .then(countResult => {
-        console.log('[MIX-DEBUG] Ingredients count query result:', countResult);
-        if (countResult.error) {
-          console.error('[MIX-DEBUG] Count query failed:', countResult.error);
-        }
-        return countResult;
-      });
-
-    console.log('[MIX-DEBUG] Testing ingredients count query...');
-    const countTest = await Promise.race([
-      simpleQueryPromise,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Count query timeout')), 10000))
-    ]).catch(error => {
-      console.error('[MIX-DEBUG] Count query failed:', error);
-      return null;
-    });
-
-    console.log('[MIX-DEBUG] Count test completed, proceeding with full query...');
-
     const queryPromise = supabase
       .from('ingredients')
       .select('id, name, category, image_url, is_staple')
@@ -161,21 +138,13 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
     //   setTimeout(() => reject(new Error('Ingredients query timed out')), 30000);
     // });
 
-    // Increase timeout significantly for ingredients query
+    // Set reasonable timeout for ingredients query
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Ingredients query timed out after 60 seconds')), 60000);
+      setTimeout(() => reject(new Error('Ingredients query timed out after 30 seconds')), 30000);
     });
 
     console.log('[MIX-DEBUG] Starting Promise.race for ingredients query...');
-
-    // Add a progress indicator
-    let timeoutId = setTimeout(() => {
-      console.log('[MIX-DEBUG] Ingredients query still running after 10 seconds...');
-    }, 10000);
-
     const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
-
-    clearTimeout(timeoutId);
     console.log('[MIX-DEBUG] Promise.race completed for ingredients');
     console.log('[MIX-DEBUG] Ingredients query completed, error:', error, 'data length:', data?.length);
 
@@ -191,7 +160,10 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
       return getFallbackIngredients();
     }
 
-    return (data || []).map(ingredient => {
+    // Sort ingredients by name in JavaScript (more efficient than DB sorting for large datasets)
+    const sortedData = (data || []).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    return sortedData.map(ingredient => {
       // Use ONLY ingredients.id as canonical ID, converted to string
       const id = String(ingredient.id);
 
