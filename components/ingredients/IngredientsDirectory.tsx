@@ -31,7 +31,6 @@ const INGREDIENT_TYPES = [
   { value: "bitters", label: "Bitters" },
   { value: "garnish", label: "Garnishes" },
   { value: "wine", label: "Wine & Vermouth" },
-  { value: "other", label: "Other" },
 ];
 
 export function IngredientsDirectory({ ingredients }: IngredientsDirectoryProps) {

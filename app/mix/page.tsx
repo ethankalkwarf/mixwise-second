@@ -217,7 +217,7 @@ export default function MixPage() {
 
     // Apply category filter
     if (selectedCategory) {
-      filtered = filtered.filter((i) => (i.category || "Other") === selectedCategory);
+      filtered = filtered.filter((i) => (i.category || "Garnish") === selectedCategory);
     }
 
     // Apply search filter

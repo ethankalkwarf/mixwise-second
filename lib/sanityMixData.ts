@@ -56,7 +56,7 @@ const TYPE_TO_CATEGORY: Record<string, string> = {
   syrup: "Syrup",
   bitters: "Bitters",
   garnish: "Garnish",
-  other: "Other"
+  other: "Garnish"
 };
 
 /**
@@ -68,7 +68,7 @@ export async function fetchMixIngredients(): Promise<MixIngredient[]> {
   return data.map((item: any) => ({
     id: item._id,
     name: item.name,
-    category: TYPE_TO_CATEGORY[item.type] || "Other",
+    category: TYPE_TO_CATEGORY[item.type] || "Garnish",
     imageUrl: getImageUrl(item.image, { width: 100, height: 100 }) || item.externalImageUrl || null,
     isStaple: item.isStaple || false
   }));

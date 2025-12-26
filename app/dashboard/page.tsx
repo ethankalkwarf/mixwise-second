@@ -280,7 +280,7 @@ export default function DashboardPage() {
           return {
             id,
             name: ingredient.name,
-            category: ingredient.category || 'other',
+            category: ingredient.category || 'Garnish',
             imageUrl: ingredient.image_url || null,
             isStaple: ingredient.is_staple || false,
           };

@@ -1,0 +1,1540 @@
+{
+  "timestamp": "2025-12-21T22:40:26.672Z",
+  "totalIngredients": 307,
+  "usedIngredients": 116,
+  "unusedIngredients": [
+    {
+      "id": 87,
+      "name": "Surge",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Surge-Small.png",
+      "is_staple": false,
+      "name_normalized": "surge"
+    },
+    {
+      "id": 2099,
+      "name": "Midori melon liqueur",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Midori%20melon%20liqueur-Small.png",
+      "is_staple": false,
+      "name_normalized": "midori melon liqueur"
+    },
+    {
+      "id": 91,
+      "name": "Southern Comfort",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Southern%20Comfort-Small.png",
+      "is_staple": false,
+      "name_normalized": "southern comfort"
+    },
+    {
+      "id": 2102,
+      "name": "Lime",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lime-Small.png",
+      "is_staple": false,
+      "name_normalized": "lime"
+    },
+    {
+      "id": 2345,
+      "name": "Roses sweetened lime juice",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Roses%20sweetened%20lime%20juice-Small.png",
+      "is_staple": false,
+      "name_normalized": "roses sweetened lime juice"
+    },
+    {
+      "id": 50,
+      "name": "Blackberry Brandy",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Blackberry%20brandy-Small.png",
+      "is_staple": false,
+      "name_normalized": "blackberry brandy"
+    },
+    {
+      "id": 244,
+      "name": "Cayenne Pepper",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cayenne%20pepper-Small.png",
+      "is_staple": false,
+      "name_normalized": "cayenne pepper"
+    },
+    {
+      "id": 98,
+      "name": "Cherry",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cherry-Small.png",
+      "is_staple": false,
+      "name_normalized": "cherry"
+    },
+    {
+      "id": 102,
+      "name": "Coffee",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Coffee-Small.png",
+      "is_staple": false,
+      "name_normalized": "coffee"
+    },
+    {
+      "id": 104,
+      "name": "Cachaca",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cachaca-Small.png",
+      "is_staple": false,
+      "name_normalized": "cachaca"
+    },
+    {
+      "id": 2115,
+      "name": "Spiced rum",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Spiced%20rum-Small.png",
+      "is_staple": false,
+      "name_normalized": "spiced rum"
+    },
+    {
+      "id": 2116,
+      "name": "Ginger ale",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Ginger%20ale-Small.png",
+      "is_staple": false,
+      "name_normalized": "ginger ale"
+    },
+    {
+      "id": 2117,
+      "name": "Coca-Cola",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Coca-Cola-Small.png",
+      "is_staple": false,
+      "name_normalized": "coca-cola"
+    },
+    {
+      "id": 113,
+      "name": "Lager",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lager-Small.png",
+      "is_staple": false,
+      "name_normalized": "lager"
+    },
+    {
+      "id": 114,
+      "name": "Port",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Port-Small.png",
+      "is_staple": false,
+      "name_normalized": "port"
+    },
+    {
+      "id": 2125,
+      "name": "Carbonated water",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Carbonated%20water-Small.png",
+      "is_staple": false,
+      "name_normalized": "carbonated water"
+    },
+    {
+      "id": 118,
+      "name": "Vanilla",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Vanilla-Small.png",
+      "is_staple": false,
+      "name_normalized": "vanilla"
+    },
+    {
+      "id": 232,
+      "name": "Bitter Lemon",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Bitter%20lemon-Small.png",
+      "is_staple": false,
+      "name_normalized": "bitter lemon"
+    },
+    {
+      "id": 151,
+      "name": "Chocolate Syrup",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Chocolate%20syrup-Small.png",
+      "is_staple": false,
+      "name_normalized": "chocolate syrup"
+    },
+    {
+      "id": 282,
+      "name": "Coconut Milk",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Coconut%20milk-Small.png",
+      "is_staple": false,
+      "name_normalized": "coconut milk"
+    },
+    {
+      "id": 157,
+      "name": "Condensed Milk",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Condensed%20milk-Small.png",
+      "is_staple": false,
+      "name_normalized": "condensed milk"
+    },
+    {
+      "id": 235,
+      "name": "Cranberry Vodka",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cranberry%20vodka-Small.png",
+      "is_staple": false,
+      "name_normalized": "cranberry vodka"
+    },
+    {
+      "id": 322,
+      "name": "Cream Of Coconut",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cream%20of%20coconut-Small.png",
+      "is_staple": false,
+      "name_normalized": "cream of coconut"
+    },
+    {
+      "id": 44,
+      "name": "Creme De Cacao",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Creme%20de%20Cacao-Small.png",
+      "is_staple": false,
+      "name_normalized": "creme de cacao"
+    },
+    {
+      "id": 229,
+      "name": "Creme De Cassis",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Creme%20de%20Cassis-Small.png",
+      "is_staple": false,
+      "name_normalized": "creme de cassis"
+    },
+    {
+      "id": 159,
+      "name": "Elderflower Cordial",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Elderflower%20cordial-Small.png",
+      "is_staple": false,
+      "name_normalized": "elderflower cordial"
+    },
+    {
+      "id": 184,
+      "name": "Fruit Juice",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Fruit%20juice-Small.png",
+      "is_staple": false,
+      "name_normalized": "fruit juice"
+    },
+    {
+      "id": 302,
+      "name": "Godiva Liqueur",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Godiva%20liqueur-Small.png",
+      "is_staple": false,
+      "name_normalized": "godiva liqueur"
+    },
+    {
+      "id": 325,
+      "name": "Gold Rum",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Gold%20rum-Small.png",
+      "is_staple": false,
+      "name_normalized": "gold rum"
+    },
+    {
+      "id": 230,
+      "name": "Grain Alcohol",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Grain%20alcohol-Small.png",
+      "is_staple": false,
+      "name_normalized": "grain alcohol"
+    },
+    {
+      "id": 219,
+      "name": "Guinness Stout",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Guinness%20stout-Small.png",
+      "is_staple": false,
+      "name_normalized": "guinness stout"
+    },
+    {
+      "id": 280,
+      "name": "Islay Single Malt Scotch",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Islay%20single%20malt%20Scotch-Small.png",
+      "is_staple": false,
+      "name_normalized": "islay single malt scotch"
+    },
+    {
+      "id": 231,
+      "name": "Kiwi Liqueur",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Kiwi%20liqueur-Small.png",
+      "is_staple": false,
+      "name_normalized": "kiwi liqueur"
+    },
+    {
+      "id": 2106,
+      "name": "Lemon",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lemon-Small.png",
+      "is_staple": false,
+      "name_normalized": "lemon"
+    },
+    {
+      "id": 45,
+      "name": "Light Cream",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Light%20cream-Small.png",
+      "is_staple": false,
+      "name_normalized": "light cream"
+    },
+    {
+      "id": 240,
+      "name": "Lime Peel",
+      "category": "Garnish",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lime%20peel-Small.png",
+      "is_staple": false,
+      "name_normalized": "lime peel"
+    },
+    {
+      "id": 317,
+      "name": "Maple Syrup",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Maple%20syrup-Small.png",
+      "is_staple": false,
+      "name_normalized": "maple syrup"
+    },
+    {
+      "id": 323,
+      "name": "Peachtree Schnapps",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Peachtree%20schnapps-Small.png",
+      "is_staple": false,
+      "name_normalized": "peachtree schnapps"
+    },
+    {
+      "id": 175,
+      "name": "Pomegranate Juice",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Pomegranate%20juice-Small.png",
+      "is_staple": false,
+      "name_normalized": "pomegranate juice"
+    },
+    {
+      "id": 324,
+      "name": "Root Beer",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Root%20beer-Small.png",
+      "is_staple": false,
+      "name_normalized": "root beer"
+    },
+    {
+      "id": 2144,
+      "name": "Sprite",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Sprite-Small.png",
+      "is_staple": false,
+      "name_normalized": "sprite"
+    },
+    {
+      "id": 149,
+      "name": "Cinnamon",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cinnamon-Small.png",
+      "is_staple": false,
+      "name_normalized": "cinnamon"
+    },
+    {
+      "id": 163,
+      "name": "Strawberries",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Strawberries-Small.png",
+      "is_staple": false,
+      "name_normalized": "strawberries"
+    },
+    {
+      "id": 2174,
+      "name": "Orange",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Orange-Small.png",
+      "is_staple": false,
+      "name_normalized": "orange"
+    },
+    {
+      "id": 166,
+      "name": "Figs",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Figs-Small.png",
+      "is_staple": false,
+      "name_normalized": "figs"
+    },
+    {
+      "id": 167,
+      "name": "Thyme",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Thyme-Small.png",
+      "is_staple": false,
+      "name_normalized": "thyme"
+    },
+    {
+      "id": 170,
+      "name": "Yoghurt",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Yoghurt-Small.png",
+      "is_staple": false,
+      "name_normalized": "yoghurt"
+    },
+    {
+      "id": 171,
+      "name": "Banana",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Banana-Small.png",
+      "is_staple": false,
+      "name_normalized": "banana"
+    },
+    {
+      "id": 173,
+      "name": "Apple",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Apple-Small.png",
+      "is_staple": false,
+      "name_normalized": "apple"
+    },
+    {
+      "id": 174,
+      "name": "Apricot Nectar",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Apricot%20Nectar-Small.png",
+      "is_staple": false,
+      "name_normalized": "apricot nectar"
+    },
+    {
+      "id": 177,
+      "name": "Raspberry Liqueur",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Raspberry%20Liqueur-Small.png",
+      "is_staple": false,
+      "name_normalized": "raspberry liqueur"
+    },
+    {
+      "id": 179,
+      "name": "Lillet",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lillet-Small.png",
+      "is_staple": false,
+      "name_normalized": "lillet"
+    },
+    {
+      "id": 181,
+      "name": "Firewater",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Firewater-Small.png",
+      "is_staple": false,
+      "name_normalized": "firewater"
+    },
+    {
+      "id": 182,
+      "name": "Absolut Peppar",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Absolut%20Peppar-Small.png",
+      "is_staple": false,
+      "name_normalized": "absolut peppar"
+    },
+    {
+      "id": 185,
+      "name": "Dr. Pepper",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Dr.%20Pepper-Small.png",
+      "is_staple": false,
+      "name_normalized": "dr. pepper"
+    },
+    {
+      "id": 2206,
+      "name": "Malibu rum",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Malibu%20rum-Small.png",
+      "is_staple": false,
+      "name_normalized": "malibu rum"
+    },
+    {
+      "id": 2220,
+      "name": "Corn syrup",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Corn%20syrup-Small.png",
+      "is_staple": false,
+      "name_normalized": "corn syrup"
+    },
+    {
+      "id": 20,
+      "name": "Strawberry Schnapps",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Strawberry%20schnapps-Small.png",
+      "is_staple": false,
+      "name_normalized": "strawberry schnapps"
+    },
+    {
+      "id": 183,
+      "name": "Tabasco Sauce",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Tabasco%20sauce-Small.png",
+      "is_staple": false,
+      "name_normalized": "tabasco sauce"
+    },
+    {
+      "id": 228,
+      "name": "Tennessee Whiskey",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Tennessee%20whiskey-Small.png",
+      "is_staple": false,
+      "name_normalized": "tennessee whiskey"
+    },
+    {
+      "id": 154,
+      "name": "Vanilla Syrup",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Vanilla%20syrup-Small.png",
+      "is_staple": false,
+      "name_normalized": "vanilla syrup"
+    },
+    {
+      "id": 153,
+      "name": "Whipping Cream",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Whipping%20cream-Small.png",
+      "is_staple": false,
+      "name_normalized": "whipping cream"
+    },
+    {
+      "id": 199,
+      "name": "Green Creme De Menthe",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Green%20Creme%20de%20Menthe-Small.png",
+      "is_staple": false,
+      "name_normalized": "green creme de menthe"
+    },
+    {
+      "id": 2232,
+      "name": "Jack Daniels",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Jack%20Daniels-Small.png",
+      "is_staple": false,
+      "name_normalized": "jack daniels"
+    },
+    {
+      "id": 237,
+      "name": "Schweppes Russchian",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Schweppes%20Russchian-Small.png",
+      "is_staple": false,
+      "name_normalized": "schweppes russchian"
+    },
+    {
+      "id": 238,
+      "name": "Kool-Aid",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Kool-Aid-Small.png",
+      "is_staple": false,
+      "name_normalized": "kool-aid"
+    },
+    {
+      "id": 239,
+      "name": "Papaya",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Papaya-Small.png",
+      "is_staple": false,
+      "name_normalized": "papaya"
+    },
+    {
+      "id": 2251,
+      "name": "Absolut Citron",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Absolut%20Citron-Small.png",
+      "is_staple": false,
+      "name_normalized": "absolut citron"
+    },
+    {
+      "id": 243,
+      "name": "Asafoetida",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Asafoetida-Small.png",
+      "is_staple": false,
+      "name_normalized": "asafoetida"
+    },
+    {
+      "id": 2257,
+      "name": "Tia maria",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Tia%20maria-Small.png",
+      "is_staple": false,
+      "name_normalized": "tia maria"
+    },
+    {
+      "id": 2299,
+      "name": "Lime vodka",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lime%20vodka-Small.png",
+      "is_staple": false,
+      "name_normalized": "lime vodka"
+    },
+    {
+      "id": 298,
+      "name": "Blood Orange",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Blood%20Orange-Small.png",
+      "is_staple": false,
+      "name_normalized": "blood orange"
+    },
+    {
+      "id": 299,
+      "name": "Allspice",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Allspice-Small.png",
+      "is_staple": false,
+      "name_normalized": "allspice"
+    },
+    {
+      "id": 300,
+      "name": "Advocaat",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Advocaat-Small.png",
+      "is_staple": false,
+      "name_normalized": "advocaat"
+    },
+    {
+      "id": 2311,
+      "name": "Jim Beam",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Jim%20Beam-Small.png",
+      "is_staple": false,
+      "name_normalized": "jim beam"
+    },
+    {
+      "id": 303,
+      "name": "Anisette",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Anisette-Small.png",
+      "is_staple": false,
+      "name_normalized": "anisette"
+    },
+    {
+      "id": 2315,
+      "name": "Cherries",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cherries-Small.png",
+      "is_staple": false,
+      "name_normalized": "cherries"
+    },
+    {
+      "id": 316,
+      "name": "Yukon Jack",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Yukon%20Jack-Small.png",
+      "is_staple": false,
+      "name_normalized": "yukon jack"
+    },
+    {
+      "id": 213,
+      "name": "Half-And-Half",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Half-and-half-Small.png",
+      "is_staple": false,
+      "name_normalized": "half-and-half"
+    },
+    {
+      "id": 216,
+      "name": "Iced Tea",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Iced%20tea-Small.png",
+      "is_staple": false,
+      "name_normalized": "iced tea"
+    },
+    {
+      "id": 194,
+      "name": "Lemon Peel",
+      "category": "Garnish",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lemon%20Peel-Small.png",
+      "is_staple": false,
+      "name_normalized": "lemon peel"
+    },
+    {
+      "id": 198,
+      "name": "Orange Spiral",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Orange%20spiral-Small.png",
+      "is_staple": false,
+      "name_normalized": "orange spiral"
+    },
+    {
+      "id": 192,
+      "name": "Red Wine",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Red%20wine-Small.png",
+      "is_staple": false,
+      "name_normalized": "red wine"
+    },
+    {
+      "id": 191,
+      "name": "Sirup Of Roses",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Sirup%20of%20roses-Small.png",
+      "is_staple": false,
+      "name_normalized": "sirup of roses"
+    },
+    {
+      "id": 253,
+      "name": "Tomato Juice",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Tomato%20Juice-Small.png",
+      "is_staple": false,
+      "name_normalized": "tomato juice"
+    },
+    {
+      "id": 43,
+      "name": "Mint Leaves",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Mint-Small.png",
+      "is_staple": false,
+      "name_normalized": "mint leaves"
+    },
+    {
+      "id": 47,
+      "name": "Crown Royal",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Crown%20Royal-Small.png",
+      "is_staple": false,
+      "name_normalized": "crown royal"
+    },
+    {
+      "id": 318,
+      "name": "Limeade",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Limeade-Small.png",
+      "is_staple": false,
+      "name_normalized": "limeade"
+    },
+    {
+      "id": 320,
+      "name": "White Wine",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/White%20Wine-Small.png",
+      "is_staple": false,
+      "name_normalized": "white wine"
+    },
+    {
+      "id": 2337,
+      "name": "Ouzo",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Ouzo-Small.png",
+      "is_staple": false,
+      "name_normalized": "ouzo"
+    },
+    {
+      "id": 2342,
+      "name": "Johnnie Walker",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Johnnie%20Walker-Small.png",
+      "is_staple": false,
+      "name_normalized": "johnnie walker"
+    },
+    {
+      "id": 12,
+      "name": "151 Proof Rum",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/151%20proof%20rum-Small.png",
+      "is_staple": false,
+      "name_normalized": "151 proof rum"
+    },
+    {
+      "id": 10,
+      "name": "Milk",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Milk-Small.png",
+      "is_staple": false,
+      "name_normalized": "milk"
+    },
+    {
+      "id": 13,
+      "name": "Wild Turkey",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Wild%20Turkey-Small.png",
+      "is_staple": false,
+      "name_normalized": "wild turkey"
+    },
+    {
+      "id": 18,
+      "name": "Applejack",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Applejack-Small.png",
+      "is_staple": false,
+      "name_normalized": "applejack"
+    },
+    {
+      "id": 25,
+      "name": "Pisang Ambon",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Pisang%20Ambon-Small.png",
+      "is_staple": false,
+      "name_normalized": "pisang ambon"
+    },
+    {
+      "id": 27,
+      "name": "Lemonade",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lemonade-Small.png",
+      "is_staple": false,
+      "name_normalized": "lemonade"
+    },
+    {
+      "id": 54,
+      "name": "Blended Whiskey",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Blended%20whiskey-Small.png",
+      "is_staple": false,
+      "name_normalized": "blended whiskey"
+    },
+    {
+      "id": 11,
+      "name": "Egg White",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Egg%20White-Small.png",
+      "is_staple": false,
+      "name_normalized": "egg white"
+    },
+    {
+      "id": 269,
+      "name": "Oreo Cookie",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Oreo%20cookie-Small.png",
+      "is_staple": false,
+      "name_normalized": "oreo cookie"
+    },
+    {
+      "id": 284,
+      "name": "Passion Fruit Syrup",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Passion%20fruit%20syrup-Small.png",
+      "is_staple": false,
+      "name_normalized": "passion fruit syrup"
+    },
+    {
+      "id": 218,
+      "name": "Peach Brandy",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Peach%20brandy-Small.png",
+      "is_staple": false,
+      "name_normalized": "peach brandy"
+    },
+    {
+      "id": 31,
+      "name": "Peach Nectar",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Peach%20nectar-Small.png",
+      "is_staple": false,
+      "name_normalized": "peach nectar"
+    },
+    {
+      "id": 110,
+      "name": "Añejo Rum",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/A%C3%B1ejo%20rum-Small.png",
+      "is_staple": false,
+      "name_normalized": "añejo rum"
+    },
+    {
+      "id": 62,
+      "name": "Goldschlager",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Goldschlager-Small.png",
+      "is_staple": false,
+      "name_normalized": "goldschlager"
+    },
+    {
+      "id": 67,
+      "name": "Blue Curacao",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Blue%20Curacao-Small.png",
+      "is_staple": false,
+      "name_normalized": "blue curacao"
+    },
+    {
+      "id": 111,
+      "name": "Blackstrap Rum",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/blackstrap%20rum-Small.png",
+      "is_staple": false,
+      "name_normalized": "blackstrap rum"
+    },
+    {
+      "id": 119,
+      "name": "Caramel Coloring",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Caramel%20coloring-Small.png",
+      "is_staple": false,
+      "name_normalized": "caramel coloring"
+    },
+    {
+      "id": 108,
+      "name": "Cherry Brandy",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cherry%20brandy-Small.png",
+      "is_staple": false,
+      "name_normalized": "cherry brandy"
+    },
+    {
+      "id": 66,
+      "name": "Creme De Mure",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Creme%20de%20Mure-Small.png",
+      "is_staple": false,
+      "name_normalized": "creme de mure"
+    },
+    {
+      "id": 71,
+      "name": "Maraschino Cherry",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Maraschino%20Cherry-Small.png",
+      "is_staple": false,
+      "name_normalized": "maraschino cherry"
+    },
+    {
+      "id": 79,
+      "name": "Hot Chocolate",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Hot%20Chocolate-Small.png",
+      "is_staple": false,
+      "name_normalized": "hot chocolate"
+    },
+    {
+      "id": 72,
+      "name": "Passion Fruit Juice",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Passion%20fruit%20juice-Small.png",
+      "is_staple": false,
+      "name_normalized": "passion fruit juice"
+    },
+    {
+      "id": 97,
+      "name": "Powdered Sugar",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Powdered%20sugar-Small.png",
+      "is_staple": false,
+      "name_normalized": "powdered sugar"
+    },
+    {
+      "id": 101,
+      "name": "Sweet And Sour",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Sweet%20and%20Sour-Small.png",
+      "is_staple": false,
+      "name_normalized": "sweet and sour"
+    },
+    {
+      "id": 95,
+      "name": "Vanilla Ice-Cream",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Vanilla%20ice-cream-Small.png",
+      "is_staple": false,
+      "name_normalized": "vanilla ice-cream"
+    },
+    {
+      "id": 128,
+      "name": "Almond Flavoring",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Almond%20flavoring-Small.png",
+      "is_staple": false,
+      "name_normalized": "almond flavoring"
+    },
+    {
+      "id": 122,
+      "name": "Lillet Blanc",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lillet%20Blanc-Small.png",
+      "is_staple": false,
+      "name_normalized": "lillet blanc"
+    },
+    {
+      "id": 125,
+      "name": "Wine",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Wine-Small.png",
+      "is_staple": false,
+      "name_normalized": "wine"
+    },
+    {
+      "id": 127,
+      "name": "Chocolate",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Chocolate-Small.png",
+      "is_staple": false,
+      "name_normalized": "chocolate"
+    },
+    {
+      "id": 130,
+      "name": "Peach Bitters",
+      "category": "Bitters",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Peach%20Bitters-Small.png",
+      "is_staple": false,
+      "name_normalized": "peach bitters"
+    },
+    {
+      "id": 131,
+      "name": "Cider",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cider-Small.png",
+      "is_staple": false,
+      "name_normalized": "cider"
+    },
+    {
+      "id": 136,
+      "name": "Olive",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Olive-Small.png",
+      "is_staple": false,
+      "name_normalized": "olive"
+    },
+    {
+      "id": 137,
+      "name": "Olive Brine",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Olive%20Brine-Small.png",
+      "is_staple": false,
+      "name_normalized": "olive brine"
+    },
+    {
+      "id": 132,
+      "name": "Blackcurrant Cordial",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Blackcurrant%20cordial-Small.png",
+      "is_staple": false,
+      "name_normalized": "blackcurrant cordial"
+    },
+    {
+      "id": 142,
+      "name": "Pineapple Syrup",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Pineapple%20Syrup-Small.png",
+      "is_staple": false,
+      "name_normalized": "pineapple syrup"
+    },
+    {
+      "id": 124,
+      "name": "Chocolate Liqueur",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Chocolate%20liqueur-Small.png",
+      "is_staple": false,
+      "name_normalized": "chocolate liqueur"
+    },
+    {
+      "id": 143,
+      "name": "St. Germain",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/St.%20Germain-Small.png",
+      "is_staple": false,
+      "name_normalized": "st. germain"
+    },
+    {
+      "id": 144,
+      "name": "Pepper",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Pepper-Small.png",
+      "is_staple": false,
+      "name_normalized": "pepper"
+    },
+    {
+      "id": 133,
+      "name": "Fruit Punch",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Fruit%20punch-Small.png",
+      "is_staple": false,
+      "name_normalized": "fruit punch"
+    },
+    {
+      "id": 145,
+      "name": "Lavender",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lavender-Small.png",
+      "is_staple": false,
+      "name_normalized": "lavender"
+    },
+    {
+      "id": 147,
+      "name": "Hot Damn",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Hot%20Damn-Small.png",
+      "is_staple": false,
+      "name_normalized": "hot damn"
+    },
+    {
+      "id": 126,
+      "name": "Vanilla Extract",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Vanilla%20extract-Small.png",
+      "is_staple": false,
+      "name_normalized": "vanilla extract"
+    },
+    {
+      "id": 148,
+      "name": "Dubonnet Rouge",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Dubonnet%20Rouge-Small.png",
+      "is_staple": false,
+      "name_normalized": "dubonnet rouge"
+    },
+    {
+      "id": 196,
+      "name": "Coconut Rum",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Malibu%20rum-Small.png",
+      "is_staple": false,
+      "name_normalized": "coconut rum"
+    },
+    {
+      "id": 187,
+      "name": "Sarsaparilla",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Sarsaparilla-Small.png",
+      "is_staple": false,
+      "name_normalized": "sarsaparilla"
+    },
+    {
+      "id": 190,
+      "name": "Peach Vodka",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Peach%20Vodka-Small.png",
+      "is_staple": false,
+      "name_normalized": "peach vodka"
+    },
+    {
+      "id": 193,
+      "name": "Cloves",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cloves-Small.png",
+      "is_staple": false,
+      "name_normalized": "cloves"
+    },
+    {
+      "id": 202,
+      "name": "Tea",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Tea-Small.png",
+      "is_staple": false,
+      "name_normalized": "tea"
+    },
+    {
+      "id": 203,
+      "name": "Blackberries",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Blackberries-Small.png",
+      "is_staple": false,
+      "name_normalized": "blackberries"
+    },
+    {
+      "id": 205,
+      "name": "Red Chili Flakes",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Red%20Chili%20Flakes-Small.png",
+      "is_staple": false,
+      "name_normalized": "red chili flakes"
+    },
+    {
+      "id": 206,
+      "name": "Ginger",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Ginger-Small.png",
+      "is_staple": false,
+      "name_normalized": "ginger"
+    },
+    {
+      "id": 209,
+      "name": "Sherbet",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Sherbet-Small.png",
+      "is_staple": false,
+      "name_normalized": "sherbet"
+    },
+    {
+      "id": 212,
+      "name": "Butter",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Butter-Small.png",
+      "is_staple": false,
+      "name_normalized": "butter"
+    },
+    {
+      "id": 214,
+      "name": "Marshmallows",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Marshmallows-Small.png",
+      "is_staple": false,
+      "name_normalized": "marshmallows"
+    },
+    {
+      "id": 223,
+      "name": "Anis",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Anis-Small.png",
+      "is_staple": false,
+      "name_normalized": "anis"
+    },
+    {
+      "id": 224,
+      "name": "Jello",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Jello-Small.png",
+      "is_staple": false,
+      "name_normalized": "jello"
+    },
+    {
+      "id": 233,
+      "name": "Absolut Kurant",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Absolut%20Kurant-Small.png",
+      "is_staple": false,
+      "name_normalized": "absolut kurant"
+    },
+    {
+      "id": 236,
+      "name": "Apfelkorn",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Apfelkorn-Small.png",
+      "is_staple": false,
+      "name_normalized": "apfelkorn"
+    },
+    {
+      "id": 215,
+      "name": "Brown Sugar",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Brown%20sugar-Small.png",
+      "is_staple": false,
+      "name_normalized": "brown sugar"
+    },
+    {
+      "id": 208,
+      "name": "Carbonated Soft Drink",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Carbonated%20soft%20drink-Small.png",
+      "is_staple": false,
+      "name_normalized": "carbonated soft drink"
+    },
+    {
+      "id": 217,
+      "name": "Coconut Syrup",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Coconut%20syrup-Small.png",
+      "is_staple": false,
+      "name_normalized": "coconut syrup"
+    },
+    {
+      "id": 207,
+      "name": "Grape Juice",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Grape%20juice-Small.png",
+      "is_staple": false,
+      "name_normalized": "grape juice"
+    },
+    {
+      "id": 254,
+      "name": "Hot Sauce",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Hot%20Sauce-Small.png",
+      "is_staple": false,
+      "name_normalized": "hot sauce"
+    },
+    {
+      "id": 255,
+      "name": "Worcestershire Sauce",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Worcestershire%20Sauce-Small.png",
+      "is_staple": false,
+      "name_normalized": "worcestershire sauce"
+    },
+    {
+      "id": 256,
+      "name": "Soy Sauce",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Soy%20Sauce-Small.png",
+      "is_staple": false,
+      "name_normalized": "soy sauce"
+    },
+    {
+      "id": 257,
+      "name": "Ricard",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Ricard-Small.png",
+      "is_staple": false,
+      "name_normalized": "ricard"
+    },
+    {
+      "id": 259,
+      "name": "Pepsi Cola",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Pepsi%20Cola-Small.png",
+      "is_staple": false,
+      "name_normalized": "pepsi cola"
+    },
+    {
+      "id": 262,
+      "name": "Cardamom",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cardamom-Small.png",
+      "is_staple": false,
+      "name_normalized": "cardamom"
+    },
+    {
+      "id": 266,
+      "name": "Frangelico",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Frangelico-Small.png",
+      "is_staple": false,
+      "name_normalized": "frangelico"
+    },
+    {
+      "id": 271,
+      "name": "Jagermeister",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Jagermeister-Small.png",
+      "is_staple": false,
+      "name_normalized": "jagermeister"
+    },
+    {
+      "id": 272,
+      "name": "Rosemary Syrup",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Rosemary%20Syrup-Small.png",
+      "is_staple": false,
+      "name_normalized": "rosemary syrup"
+    },
+    {
+      "id": 273,
+      "name": "Rosemary",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Rosemary-Small.png",
+      "is_staple": false,
+      "name_normalized": "rosemary"
+    },
+    {
+      "id": 274,
+      "name": "Grape Soda",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Grape%20Soda-Small.png",
+      "is_staple": false,
+      "name_normalized": "grape soda"
+    },
+    {
+      "id": 276,
+      "name": "Orange Curacao",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Orange%20Curacao-Small.png",
+      "is_staple": false,
+      "name_normalized": "orange curacao"
+    },
+    {
+      "id": 263,
+      "name": "Black Pepper",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Black%20pepper-Small.png",
+      "is_staple": false,
+      "name_normalized": "black pepper"
+    },
+    {
+      "id": 251,
+      "name": "Cocoa Powder",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cocoa%20powder-Small.png",
+      "is_staple": false,
+      "name_normalized": "cocoa powder"
+    },
+    {
+      "id": 283,
+      "name": "Passoa",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Passoa-Small.png",
+      "is_staple": false,
+      "name_normalized": "passoa"
+    },
+    {
+      "id": 248,
+      "name": "Coconut Liqueur",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Coconut%20Liqueur-Small.png",
+      "is_staple": false,
+      "name_normalized": "coconut liqueur"
+    },
+    {
+      "id": 297,
+      "name": "Ruby Port",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Ruby%20Port-Small.png",
+      "is_staple": false,
+      "name_normalized": "ruby port"
+    },
+    {
+      "id": 250,
+      "name": "Cumin Seed",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Cumin%20seed-Small.png",
+      "is_staple": false,
+      "name_normalized": "cumin seed"
+    },
+    {
+      "id": 261,
+      "name": "Daiquiri Mix",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Daiquiri%20mix-Small.png",
+      "is_staple": false,
+      "name_normalized": "daiquiri mix"
+    },
+    {
+      "id": 281,
+      "name": "Egg Yolk",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Egg%20Yolk-Small.png",
+      "is_staple": false,
+      "name_normalized": "egg yolk"
+    },
+    {
+      "id": 267,
+      "name": "Lemon-Lime Soda",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Lemon-lime%20soda-Small.png",
+      "is_staple": false,
+      "name_normalized": "lemon-lime soda"
+    },
+    {
+      "id": 260,
+      "name": "Pina Colada Mix",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Pina%20colada%20mix-Small.png",
+      "is_staple": false,
+      "name_normalized": "pina colada mix"
+    },
+    {
+      "id": 291,
+      "name": "Black Sambuca",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Black%20Sambuca-Small.png",
+      "is_staple": false,
+      "name_normalized": "black sambuca"
+    },
+    {
+      "id": 306,
+      "name": "Fresca",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Fresca-Small.png",
+      "is_staple": false,
+      "name_normalized": "fresca"
+    },
+    {
+      "id": 309,
+      "name": "Coriander",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Coriander-Small.png",
+      "is_staple": false,
+      "name_normalized": "coriander"
+    },
+    {
+      "id": 312,
+      "name": "Rosso Vermouth",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Rosso%20Vermouth-Small.png",
+      "is_staple": false,
+      "name_normalized": "rosso vermouth"
+    },
+    {
+      "id": 314,
+      "name": "Melon Liqueur",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Melon%20Liqueur-Small.png",
+      "is_staple": false,
+      "name_normalized": "melon liqueur"
+    },
+    {
+      "id": 326,
+      "name": "Pernod",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Pernod-Small.png",
+      "is_staple": false,
+      "name_normalized": "pernod"
+    },
+    {
+      "id": 328,
+      "name": "Zima",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Zima-Small.png",
+      "is_staple": false,
+      "name_normalized": "zima"
+    },
+    {
+      "id": 313,
+      "name": "7-Up",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/7-Up-Small.png",
+      "is_staple": false,
+      "name_normalized": "7-up"
+    },
+    {
+      "id": 334,
+      "name": "Blueberry Schnapps",
+      "category": "Liqueur",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Blueberry%20schnapps-Small.png",
+      "is_staple": false,
+      "name_normalized": "blueberry schnapps"
+    },
+    {
+      "id": 331,
+      "name": "Rumple Minze",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Rumple%20Minze-Small.png",
+      "is_staple": false,
+      "name_normalized": "rumple minze"
+    },
+    {
+      "id": 311,
+      "name": "Celery Salt",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Celery%20salt-Small.png",
+      "is_staple": false,
+      "name_normalized": "celery salt"
+    },
+    {
+      "id": 288,
+      "name": "Coffee Brandy",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Coffee%20brandy-Small.png",
+      "is_staple": false,
+      "name_normalized": "coffee brandy"
+    },
+    {
+      "id": 307,
+      "name": "Creme De Banane",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Creme%20De%20Banane-Small.png",
+      "is_staple": false,
+      "name_normalized": "creme de banane"
+    },
+    {
+      "id": 295,
+      "name": "Peychaud Bitters",
+      "category": "Bitters",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Peychaud%20bitters-Small.png",
+      "is_staple": false,
+      "name_normalized": "peychaud bitters"
+    },
+    {
+      "id": 287,
+      "name": "Pink Lemonade",
+      "category": "Mixer",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Pink%20lemonade-Small.png",
+      "is_staple": false,
+      "name_normalized": "pink lemonade"
+    },
+    {
+      "id": 294,
+      "name": "Raspberry Vodka",
+      "category": "Spirit",
+      "image_url": "https://www.thecocktaildb.com/images/ingredients/Raspberry%20vodka-Small.png",
+      "is_staple": false,
+      "name_normalized": "raspberry vodka"
+    }
+  ],
+  "usageRate": "37.8%",
+  "metadata": {
+    "cocktailsCount": 192,
+    "relationshipsCount": 665
+  }
+}

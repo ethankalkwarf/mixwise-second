@@ -53,13 +53,6 @@ const CATEGORIES: CategoryInfo[] = [
     description: "Sweet syrups and cordials",
     color: "bg-olive/30 border-olive/40",
   },
-  {
-    key: "Other",
-    label: "Other",
-    icon: "📦",
-    description: "Garnishes and specialty items",
-    color: "bg-mist border-stone/30",
-  },
 ];
 
 type Props = {
@@ -77,7 +70,7 @@ export function CategoryPicker({
 }: Props) {
   // Count ingredients per category
   const categoryCounts = ingredients.reduce((acc, ingredient) => {
-    const category = ingredient.category || "Other";
+    const category = ingredient.category || "Garnish";
     acc[category] = (acc[category] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);

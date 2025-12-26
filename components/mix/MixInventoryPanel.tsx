@@ -20,12 +20,11 @@ const CATEGORY_CONFIG: Record<string, { icon: string; color: string }> = {
   Wine: { icon: "🍷", color: "bg-terracotta/30" },
   Beer: { icon: "🍺", color: "bg-olive/30" },
   Bitters: { icon: "💧", color: "bg-sage/30" },
-  Other: { icon: "📦", color: "bg-mist" },
   Syrup: { icon: "🍯", color: "bg-terracotta/20" },
   Citrus: { icon: "🍋", color: "bg-olive/30" },
 };
 
-const FILTER_CATEGORIES = ["Spirit", "Liqueur", "Mixer", "Garnish", "Bitters", "Syrup"];
+const FILTER_CATEGORIES = ["Spirit", "Liqueur", "Mixer", "Garnish", "Bitters", "Syrup", "Citrus"];
 
 // Normalize ingredient names for consistent display
 function normalizeIngredientName(name: string): string {
@@ -286,7 +285,7 @@ export function MixInventoryPanel({ ingredients, selectedIds, onChange, stapleId
                 <div className="flex flex-col">
                   {items.map((ing) => {
                     const isSelected = selectedSet.has(ing.id);
-                    const config = CATEGORY_CONFIG[ing.category] || CATEGORY_CONFIG.Other;
+                    const config = CATEGORY_CONFIG[ing.category] || CATEGORY_CONFIG.Garnish;
 
                     return (
                       <button

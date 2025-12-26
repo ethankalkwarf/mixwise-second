@@ -38,10 +38,9 @@ export function IngredientTile({
     Beer: "🍺",
     Syrup: "🍯",
     Garnish: "🍒",
-    Other: "📦",
   };
 
-  const icon = categoryIcons[ingredient.category || "Other"] || "📦";
+  const icon = categoryIcons[ingredient.category || "Garnish"] || "🍒";
 
   return (
     <button

@@ -27,7 +27,7 @@ export function YourBarPanel({
     const groups = new Map<string, MixIngredient[]>();
 
     selectedIngredients.forEach((ingredient) => {
-      const category = ingredient.category || "Other";
+      const category = ingredient.category || "Garnish";
       const list = groups.get(category) || [];
       list.push(ingredient);
       groups.set(category, list);
@@ -58,7 +58,6 @@ export function YourBarPanel({
     Beer: "🍺",
     Syrup: "🍯",
     Garnish: "🍒",
-    Other: "📦",
   };
 
   if (selectedIngredients.length === 0) {
