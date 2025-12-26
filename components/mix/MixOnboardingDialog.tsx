@@ -275,11 +275,11 @@ export function MixOnboardingDialog({
               <button
                 onClick={handleNext}
                 className={`px-6 py-3 font-bold rounded-2xl transition-all ${
-                  hasCompletedStep || currentStep === 0
+                  hasCompletedStep || currentStep === 0 || currentStep === 2
                     ? "bg-terracotta text-cream hover:bg-terracotta-dark shadow-lg shadow-terracotta/20"
                     : "bg-stone text-mist cursor-not-allowed"
                 }`}
-                disabled={!hasCompletedStep && currentStep > 0}
+                disabled={!hasCompletedStep && currentStep > 0 && currentStep !== 2}
               >
                 {isLastStep ? "Finish" : "Next"}
               </button>
