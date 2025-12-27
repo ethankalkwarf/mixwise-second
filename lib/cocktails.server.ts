@@ -44,9 +44,8 @@ export async function getCocktailBySlug(slug: string): Promise<Cocktail | null> 
 /**
  * Get cocktails list with optional filters (server-side)
  * Use includeIngredients: true for bar matching logic
- * Use randomizeWithSeed to enable deterministic random ordering instead of alphabetical
  */
-export async function getCocktailsList(filters: CocktailFilters & { includeIngredients?: boolean; randomizeWithSeed?: string } = {}): Promise<CocktailListItem[]> {
+export async function getCocktailsList(filters: CocktailFilters & { includeIngredients?: boolean } = {}): Promise<CocktailListItem[]> {
   const supabase = createServerSupabaseClient();
 
   // Build select fields
@@ -80,14 +79,8 @@ export async function getCocktailsList(filters: CocktailFilters & { includeIngre
     .from('cocktails')
     .select(selectFields);
 
-  // Use deterministic random ordering if seed provided and no explicit sort filters
-  if (filters.randomizeWithSeed && !filters.search && !filters.base_spirit && !filters.category_primary && !filters.difficulty && !filters.tags && !filters.categories_all) {
-    // Use md5 hash of seed + id for deterministic random ordering
-    query = query.order(`md5(${filters.randomizeWithSeed} || cocktails.id::text)`, { ascending: true });
-  } else {
-    // Default alphabetical ordering
-    query = query.order('name');
-  }
+  // Default alphabetical ordering (we'll shuffle client-side for randomization)
+  query = query.order('name');
 
   // Apply filters
   if (filters.base_spirit) {

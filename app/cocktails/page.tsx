@@ -1,5 +1,5 @@
 import { getCocktailsList } from "@/lib/cocktails.server";
-import { getCocktailsRandomizationSeed } from "@/lib/randomization";
+import { getCocktailsRandomizationSeed, seededRandom } from "@/lib/randomization";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { CocktailsDirectory } from "@/components/cocktails/CocktailsDirectory";
 import Link from "next/link";
@@ -40,6 +40,22 @@ const COCKTAILS_QUERY = `*[_type == "cocktail"] {
   }
 }`;
 
+// Deterministic shuffle using Fisher-Yates algorithm with seeded randomness
+function deterministicShuffle<T>(array: T[], seed: string): T[] {
+  const shuffled = [...array];
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    // Generate a seeded random index between 0 and i
+    const randomValue = seededRandom(seed + i.toString(), 'shuffle');
+    const j = Math.floor(randomValue * (i + 1));
+
+    // Swap elements
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
+}
+
 // Temporary mapping function to convert Supabase types to Sanity types for component compatibility
 function mapCocktailListToSanity(cocktails: any[]): SanityCocktail[] {
   return cocktails.map(cocktail => ({
@@ -77,11 +93,11 @@ export default async function CocktailsPage() {
   // Get stable randomization seed for consistent ordering within session
   const randomizationSeed = getCocktailsRandomizationSeed();
 
-  const cocktails = await getCocktailsList({
-    includeIngredients: true,
-    randomizeWithSeed: randomizationSeed
-  });
+  const cocktails = await getCocktailsList({ includeIngredients: true });
   const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);
+
+  // Apply deterministic randomization when no filters are applied
+  const randomizedCocktails = deterministicShuffle(sanityCocktails, randomizationSeed);
 
   return (
     <div className="py-10 bg-cream min-h-screen">
@@ -114,7 +130,7 @@ export default async function CocktailsPage() {
         )}
 
         {/* Cocktail Directory with Search, Filters, and Grid */}
-        {cocktails.length > 0 && <CocktailsDirectory cocktails={sanityCocktails} />}
+        {cocktails.length > 0 && <CocktailsDirectory cocktails={randomizedCocktails} />}
       </MainContainer>
     </div>
   );
