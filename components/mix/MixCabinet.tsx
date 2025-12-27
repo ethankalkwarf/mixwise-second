@@ -22,10 +22,12 @@ type Props = {
 };
 
 const POPULAR_INGREDIENTS = [
-  // High-impact ingredients that unlock many cocktails (prioritize by versatility)
-  "Lime Juice", "Simple Syrup", "Agave Syrup", "Vodka", "Gin", // Most versatile - appear in dozens of cocktails
-  "Tonic Water", "Club Soda", "Lemon Juice", "Rum", "Angostura Bitters", // High versatility
-  "Tequila", "Dry Vermouth", "Sweet Vermouth", "Triple Sec" // Good versatility
+  // Prioritize basic spirits first to maximize cocktails quickly
+  "Vodka", "Tequila", "Gin", "Bourbon", // Basic spirits - unlock many cocktails
+  // Then essential mixers and juices
+  "Lime Juice", "Lemon Juice", "Simple Syrup", "Agave Syrup", // Essential mixers/juices
+  "Tonic Water", "Club Soda", "Rum", "Angostura Bitters", // Additional versatile ingredients
+  "Dry Vermouth", "Sweet Vermouth", "Triple Sec" // Specialized ingredients
 ];
 
 export function MixCabinet({
