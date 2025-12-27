@@ -166,11 +166,13 @@ function mapSupabaseToSanityCocktail(cocktail: any) {
 
 type PageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const { daily } = await searchParams;
   const cocktail = await getCocktailBySlug(slug);
   const sanityCocktail = cocktail ? mapSupabaseToSanityCocktail(cocktail) : null;
 
@@ -178,8 +180,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Cocktail Not Found" };
   }
 
-  const title = sanityCocktail.seoTitle || sanityCocktail.name;
-  const description = sanityCocktail.metaDescription || sanityCocktail.description || `${sanityCocktail.name} cocktail recipe with ingredients and instructions.`;
+  const isDailyCocktail = daily === 'true';
+  const baseTitle = sanityCocktail.seoTitle || sanityCocktail.name;
+  const title = isDailyCocktail ? `Cocktail of the Day: ${baseTitle}` : baseTitle;
+  const baseDescription = sanityCocktail.metaDescription || sanityCocktail.description || `${sanityCocktail.name} cocktail recipe with ingredients and instructions.`;
+  const description = isDailyCocktail
+    ? `Today's featured cocktail: ${baseDescription}`
+    : baseDescription;
 
   return {
     title,
@@ -237,8 +244,9 @@ function generateRecipeSchema(cocktail: SanityCocktail, imageUrl: string | null)
   };
 }
 
-export default async function CocktailDetailPage({ params }: PageProps) {
+export default async function CocktailDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const { daily } = await searchParams;
   const cocktail = await getCocktailBySlug(slug);
 
   if (!cocktail) {
@@ -246,6 +254,20 @@ export default async function CocktailDetailPage({ params }: PageProps) {
   }
 
   const sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
+
+  // Only show daily banner if this cocktail is actually today's daily cocktail
+  const allCocktails = await getCocktailsList();
+  const today = new Date();
+  const dateString = today.toISOString().split('T')[0];
+  let hash = 0;
+  for (let i = 0; i < dateString.length; i++) {
+    const char = dateString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  const dailyCocktailIndex = Math.abs(hash) % allCocktails.length;
+  const actualDailyCocktail = allCocktails[dailyCocktailIndex];
+  const isDailyCocktail = daily === 'true' && cocktail.id === actualDailyCocktail.id;
 
   // Normalize data from Supabase
   const ingredients = normalizeIngredients(cocktail.ingredients as any);
@@ -278,13 +300,35 @@ export default async function CocktailDetailPage({ params }: PageProps) {
       <BreadcrumbSchema
         items={[
           { name: "Home", url: SITE_CONFIG.url },
-          { name: "Cocktails", url: `${SITE_CONFIG.url}/cocktails` },
+          ...(isDailyCocktail ? [
+            { name: "Cocktail of the Day", url: `${SITE_CONFIG.url}/cocktail-of-the-day` }
+          ] : [
+            { name: "Cocktails", url: `${SITE_CONFIG.url}/cocktails` }
+          ]),
           { name: sanityCocktail.name, url: `${SITE_CONFIG.url}/cocktails/${sanityCocktail.slug.current}` },
         ]}
       />
 
       {/* MAIN PAGE WRAPPER */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+        {/* Cocktail of the Day Banner */}
+        {isDailyCocktail && (
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 bg-terracotta/10 text-terracotta px-4 py-2 rounded-full text-sm font-medium">
+              <span>⭐</span>
+              <span>Cocktail of the Day</span>
+              <span className="text-xs opacity-75">
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Back Link */}
         <div className="mb-8">
           <a

@@ -12,15 +12,16 @@ type Props = {
   allCocktails: MixCocktail[];
   allIngredients: MixIngredient[];
   onAddToInventory: (id: string) => void;
+  showAllRecipes?: boolean;
 };
 
 export function MixResultsPanel({
   inventoryIds,
   allCocktails,
   allIngredients,
-  onAddToInventory
+  onAddToInventory,
+  showAllRecipes = false
 }: Props) {
-  const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   // Get staple ingredient IDs
@@ -42,39 +43,22 @@ export function MixResultsPanel({
 
   // Get available categories
   const availableCategories = useMemo(() => {
-    const source = searchQuery ? far : ready;
+    const source = ready;
     const cats = new Set(source.map((m) => m.cocktail.primarySpirit).filter(Boolean));
     return Array.from(cats).sort() as string[];
-  }, [ready, far, searchQuery]);
+  }, [ready]);
 
   // Filter and sort displayed drinks
   const displayedDrinks = useMemo(() => {
-    let results = searchQuery ? [...far] : [...ready];
-
-    // Filter by search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      
-      const keywordFilters: Record<string, (c: MixCocktail) => boolean> = {
-        popular: (c) => c.isPopular === true,
-        featured: (c) => c.isPopular === true,
-        favorite: (c) => c.isFavorite === true,
-        favourites: (c) => c.isFavorite === true,
-        trending: (c) => c.isTrending === true,
-        hot: (c) => c.isTrending === true,
-      };
-      
-      results = results.filter((r) => {
-        const c = r.cocktail;
-        const keywordFilter = keywordFilters[q];
-        if (keywordFilter && keywordFilter(c)) return true;
-        if (c.name.toLowerCase().includes(q)) return true;
-        if (c.ingredients.some(ing => ing.name.toLowerCase().includes(q))) return true;
-        if (c.primarySpirit?.toLowerCase().includes(q)) return true;
-        if (c.drinkCategories?.some(cat => cat.toLowerCase().includes(q))) return true;
-        if (c.tags?.some(tag => tag.toLowerCase().includes(q))) return true;
-        return false;
-      });
+    let results;
+    if (showAllRecipes) {
+      results = allCocktails.map(c => ({
+        cocktail: c,
+        missingIngredientIds: [], // We'll calculate this if needed
+        missingIngredientNames: []
+      }));
+    } else {
+      results = [...ready];
     }
 
     // Filter by category
@@ -84,17 +68,11 @@ export function MixResultsPanel({
 
     // Sort
     return results.sort((a, b) => {
-      if (searchQuery) {
-        const aReady = a.missingIngredientIds.length === 0;
-        const bReady = b.missingIngredientIds.length === 0;
-        if (aReady && !bReady) return -1;
-        if (!aReady && bReady) return 1;
-      }
       if (a.cocktail.isPopular && !b.cocktail.isPopular) return -1;
       if (!a.cocktail.isPopular && b.cocktail.isPopular) return 1;
       return a.cocktail.name.localeCompare(b.cocktail.name);
     });
-  }, [ready, far, searchQuery, activeCategory]);
+  }, [ready, activeCategory]);
 
   // Smart additions
   const unlockPotential = useMemo(() => {
@@ -134,7 +112,7 @@ export function MixResultsPanel({
         };
       })
       .filter(Boolean) // Remove null entries
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => (b?.count || 0) - (a?.count || 0))
       .slice(0, 6);
   }, [almostThere, allIngredients]);
 
@@ -145,13 +123,13 @@ export function MixResultsPanel({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest">
-              {searchQuery ? "Search Results" : "Ready to Mix"}
+              {showAllRecipes ? "All Recipes" : "Ready to Mix"}
             </h2>
             {displayedDrinks.length > 0 && (
               <span
                 className={`px-3 py-1 rounded-full text-base font-bold font-mono border ${
-                  searchQuery
-                    ? "bg-forest/10 border-forest/20 text-forest"
+                  showAllRecipes
+                    ? "bg-sage/10 border-sage/20 text-sage"
                     : "bg-olive/10 border-olive/20 text-olive"
                 }`}
                 aria-label={`${displayedDrinks.length} cocktails`}
@@ -161,27 +139,6 @@ export function MixResultsPanel({
             )}
           </div>
 
-          {/* Search Input */}
-          <div className="relative w-full sm:w-72">
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search all recipes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-botanical pl-11 pr-10"
-              aria-label="Search cocktail recipes"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-sage hover:text-forest transition-colors"
-                aria-label="Clear search"
-              >
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            )}
-          </div>
         </div>
 
         {/* Category Filters */}
@@ -223,26 +180,26 @@ export function MixResultsPanel({
 
         {/* Empty State */}
         {displayedDrinks.length === 0 && (
-          <div 
+          <div
             className="flex flex-col items-center justify-center p-12 sm:p-16 border border-dashed border-mist rounded-3xl bg-white text-center min-h-[350px]"
             role="status"
           >
             <div className="text-7xl mb-6 opacity-70" aria-hidden="true">🍹</div>
             <h3 className="text-forest font-display font-bold mb-4 text-2xl sm:text-3xl">
-              {searchQuery 
-                ? "No matches found" 
-                : inventoryIds.length === 0 
-                ? "What's in your bar?" 
+              {showAllRecipes
+                ? "No recipes available"
+                : inventoryIds.length === 0
+                ? "What's in your bar?"
                 : "Almost there!"}
             </h3>
             <p className="text-sage text-base sm:text-lg max-w-md leading-relaxed mx-auto">
-              {searchQuery
-                ? "Try adjusting your search terms or clear the search to see available drinks."
+              {showAllRecipes
+                ? "There are no cocktail recipes available at the moment."
                 : inventoryIds.length === 0
-                ? "Select the ingredients you have from the panel on the left. We'll show you all the cocktails you can make."
+                ? "Select the ingredients you have from the cabinet. We'll show you all the cocktails you can make."
                 : "Add a few more ingredients to unlock your first cocktails. Check the suggestions below!"}
             </p>
-            {!searchQuery && inventoryIds.length > 0 && (
+            {!showAllRecipes && inventoryIds.length > 0 && (
               <div className="mt-6 text-base text-sage">
                 <span className="text-olive font-bold">{inventoryIds.length}</span>{" "}
                 ingredient{inventoryIds.length !== 1 ? "s" : ""} selected
@@ -267,34 +224,70 @@ export function MixResultsPanel({
       </div>
 
 
-      {/* Smart Additions */}
-      {!searchQuery && unlockPotential.length > 0 && (
-        <div className="border-t border-mist pt-10" aria-labelledby="smart-additions-title">
-          <div className="flex items-center gap-4 mb-6">
-            <h2 id="smart-additions-title" className="text-2xl sm:text-3xl font-display font-bold text-forest">
-              Recipe Boosters
-            </h2>
-            <span className="text-base text-sage">Add these to unlock new cocktail possibilities</span>
+      {/* Smart Additions - Enhanced Recipe Boosters */}
+      {!showAllRecipes && unlockPotential.length > 0 && (
+        <div className="border-t border-mist pt-12" aria-labelledby="smart-additions-title">
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-terracotta/20 rounded-2xl flex items-center justify-center border border-terracotta/30">
+                <span className="text-2xl">🚀</span>
+              </div>
+              <div>
+                <h2 id="smart-additions-title" className="text-2xl sm:text-3xl font-display font-bold text-forest">
+                  Strategic Acquisitions
+                </h2>
+                <p className="text-base text-sage">Curated additions to unlock new realms of possibility</p>
+              </div>
+            </div>
+
+            {/* Impact Summary */}
+            <div className="bg-gradient-to-r from-terracotta/5 to-olive/5 border border-terracotta/20 rounded-2xl p-4 mb-6">
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-terracotta font-bold">+{unlockPotential.reduce((sum, item) => sum + (item?.count || 0), 0)}</span>
+                  <span className="text-sage">additional masterpieces</span>
+                </div>
+                <div className="text-sage">•</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-olive font-bold">{unlockPotential.length}</span>
+                  <span className="text-sage">curated selections</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2" role="list">
-            {unlockPotential.map((item) => (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" role="list">
+            {unlockPotential.slice(0, 9).map((item, index) => (
+              item && (
               <div
                 key={item.id}
-                className="group flex flex-col p-5 rounded-3xl bg-white border border-mist hover:border-olive/30 transition-all h-full shadow-soft"
+                className={`group flex flex-col p-5 rounded-3xl bg-white border transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 ${
+                  index === 0
+                    ? "border-terracotta/30 bg-gradient-to-br from-terracotta/5 to-transparent shadow-lg"
+                    : "border-mist hover:border-terracotta/30"
+                }`}
                 role="listitem"
               >
+                {/* Priority badge for top recommendation */}
+                {index === 0 && (
+                  <div className="flex justify-end mb-2">
+                    <div className="bg-terracotta text-cream text-xs font-bold px-2 py-1 rounded-full">
+                      ⭐ TOP PICK
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-start gap-4 mb-4">
-                  <div className="flex-shrink-0 w-16 h-16 bg-olive/10 rounded-2xl flex flex-col items-center justify-center border border-olive/20">
-                    <span className="text-2xl font-bold text-olive leading-none">
+                  <div className="flex-shrink-0 w-20 h-16 bg-terracotta/10 rounded-2xl flex flex-col items-center justify-center border border-terracotta/20 px-2">
+                    <span className="text-xl font-bold text-terracotta leading-none">
                       +{item.count}
                     </span>
-                    <span className="font-mono text-[10px] font-bold text-sage uppercase mt-1">
-                      Drinks
+                    <span className="font-mono text-[9px] font-bold text-sage uppercase mt-1 tracking-wide text-center leading-tight">
+                      More Drinks
                     </span>
                   </div>
 
-                  <div className="flex flex-col min-w-0 pt-1">
+                  <div className="flex flex-col min-w-0 pt-1 flex-1">
                     <h4 className="font-bold text-forest text-lg leading-tight break-words">
                       {item.name}
                     </h4>
@@ -302,24 +295,42 @@ export function MixResultsPanel({
                       {item.category}
                     </span>
                     {item.drinks.length > 0 && (
-                      <p className="text-sm text-sage mt-2 line-clamp-2">
-                        Unlocks: {item.drinks.join(", ")}
-                      </p>
+                      <div className="mt-3">
+                        <p className="text-xs font-bold text-sage uppercase tracking-wider mb-1">
+                          Unlocks these drinks:
+                        </p>
+                        <p className="text-sm text-forest font-medium line-clamp-2">
+                          {item.drinks.join(", ")}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
 
                 <button
                   onClick={() => onAddToInventory(item.id)}
-                  className="mt-auto w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-olive/10 text-olive border border-olive/20 hover:bg-olive hover:text-cream hover:border-olive transition-all font-bold text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-olive/50"
-                  aria-label={`Add ${item.name} to your bar`}
+                  className={`mt-auto w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border transition-all font-bold text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-terracotta/50 ${
+                    index === 0
+                      ? "bg-terracotta text-cream border-terracotta hover:bg-terracotta-dark hover:border-terracotta-dark shadow-lg shadow-terracotta/20"
+                      : "bg-terracotta/10 text-terracotta border-terracotta/20 hover:bg-terracotta hover:text-cream hover:border-terracotta"
+                  }`}
+                  aria-label={`Add ${item.name} to unlock ${item.count} more cocktails`}
                 >
                   <PlusIcon className="w-5 h-5" aria-hidden="true" />
-                  Add to Bar
+                  Add & Unlock {item.count} More
                 </button>
               </div>
+              )
             ))}
           </div>
+
+          {unlockPotential.length > 9 && (
+            <div className="text-center mt-6">
+              <p className="text-sm text-sage">
+                Plus {unlockPotential.length - 9} additional selections waiting to elevate your repertoire...
+              </p>
+            </div>
+          )}
         </div>
       )}
     </section>

@@ -55,3 +55,4 @@ CREATE TRIGGER update_ingredients_updated_at
   BEFORE UPDATE ON public.ingredients
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
+

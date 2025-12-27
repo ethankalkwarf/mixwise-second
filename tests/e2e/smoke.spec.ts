@@ -96,3 +96,4 @@ test.describe('MixWise Smoke Tests', () => {
     await expect(page.locator('text=Page not found').or(page.locator('text=404'))).toBeVisible();
   });
 });
+

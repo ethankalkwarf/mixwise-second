@@ -26,7 +26,7 @@ export function Navbar() {
 
   return (
     <header className="border-b border-mist bg-cream/95 backdrop-blur-md sticky top-0 z-50">
-      <nav className="max-w-5xl mx-auto px-4 sm:px-6" aria-label="Main navigation">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6" aria-label="Main navigation">
         <div className="h-16 sm:h-18 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
@@ -35,6 +35,12 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
+            <Link
+              href="/cocktail-of-the-day"
+              className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
+            >
+              Cocktail of the Day
+            </Link>
             <Link
               href="/cocktails"
               className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
@@ -174,6 +180,13 @@ export function Navbar() {
         >
           <div className="md:hidden border-t border-mist bg-cream py-4">
             <div className="space-y-1">
+              <Link
+                href="/cocktail-of-the-day"
+                className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Cocktail of the Day
+              </Link>
               <Link
                 href="/cocktails"
                 className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"

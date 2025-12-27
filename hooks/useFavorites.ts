@@ -6,6 +6,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
 import { trackCocktailFavorited } from "@/lib/analytics";
+import { checkFavoritesBadges } from "@/lib/badgeEngine";
 import type { Favorite } from "@/lib/supabase/database.types";
 
 interface UseFavoritesResult {
@@ -157,6 +158,13 @@ export function useFavorites(): UseFavoritesResult {
         setFavorites(prev => [data, ...prev.filter(f => f.cocktail_id !== cocktail.id)]);
         trackCocktailFavorited(user.id, cocktail.id, cocktail.name);
         toast.success("Added to favorites");
+
+        // Check for badge unlocks
+        try {
+          await checkFavoritesBadges(supabase, user.id, favorites.length + 1);
+        } catch (badgeError) {
+          console.error("Error checking favorites badges:", badgeError);
+        }
       }
     }
   }, [isAuthenticated, user, favoriteIds, openAuthDialog, supabase, loadFavorites, toast]);

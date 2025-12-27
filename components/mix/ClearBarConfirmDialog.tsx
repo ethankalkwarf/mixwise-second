@@ -16,10 +16,10 @@ export function ClearBarConfirmDialog({
   isOpen,
   onConfirm,
   onCancel,
-  title = "Clear Your Bar?",
-  message = "Are you sure you want to clear your entire bar? This will restart the onboarding experience and remove all selected ingredients.",
-  confirmText = "Clear Everything",
-  cancelText = "Keep My Bar",
+  title = "Start Over?",
+  message = "This will clear all ingredients and restart from the beginning.",
+  confirmText = "Start Over",
+  cancelText = "Keep Ingredients",
 }: Props) {
   if (!isOpen) return null;
 
@@ -51,24 +51,6 @@ export function ClearBarConfirmDialog({
           </p>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          <div className="bg-cream/50 rounded-2xl p-4 border border-mist">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-olive/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-sm">🔄</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-forest mb-1">
-                  What happens next?
-                </p>
-                <p className="text-xs text-sage leading-relaxed">
-                  You'll restart with the guided onboarding to help you build your bar from scratch.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Footer */}
         <div className="p-6 border-t border-mist bg-mist/30">

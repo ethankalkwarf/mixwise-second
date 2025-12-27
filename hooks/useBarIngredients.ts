@@ -5,6 +5,7 @@ import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
+import { checkBarBadges } from "@/lib/badgeEngine";
 import type { BarIngredient } from "@/lib/supabase/database.types";
 
 const LOCAL_STORAGE_KEY = "mixwise-bar-inventory";
@@ -295,6 +296,13 @@ export function useBarIngredients(): UseBarIngredientsResult {
         });
       } else {
         toast.success("Ingredient added to your bar");
+
+        // Check for badge unlocks
+        try {
+          await checkBarBadges(supabase, user.id, newIds.length);
+        } catch (badgeError) {
+          console.error("Error checking bar badges:", badgeError);
+        }
       }
     } else {
       // Save to localStorage

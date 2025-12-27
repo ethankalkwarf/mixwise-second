@@ -50,6 +50,7 @@ export function IngredientTile({
           ? "border-olive bg-olive/5 shadow-lg scale-105"
           : "border-mist bg-white hover:border-sage hover:bg-cream hover:shadow-md"
       } ${isAnimating ? "animate-pulse" : ""} ${className}`}
+      data-ingredient={ingredient.name?.toLowerCase().replace(/\s+/g, '-')}
     >
       {/* Selected overlay */}
       {isSelected && (

@@ -114,3 +114,4 @@ DEBUG=pw:api npx playwright test
 - Test user-visible behavior, not implementation details
 - Keep tests fast and reliable
 - Use page objects for complex interactions
+

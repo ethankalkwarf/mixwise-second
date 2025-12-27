@@ -207,7 +207,16 @@ export function RecipeContent({
 
           {/* Share icons */}
           <div>
-            <RecipeActions cocktail={cocktail} />
+            <RecipeActions
+              cocktail={{
+                id: cocktail.id,
+                name: cocktail.name,
+                slug: cocktail.slug,
+                imageUrl: cocktail.image_url,
+                base_spirit: cocktail.base_spirit,
+                categories_all: cocktail.categories_all,
+              }}
+            />
           </div>
         </div>
 

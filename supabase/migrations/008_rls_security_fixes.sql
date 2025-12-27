@@ -47,3 +47,4 @@ DROP POLICY IF EXISTS "Users can view all badges for public profiles" ON public.
 -- Test queries (should fail for non-owner):
 -- SELECT * FROM ratings WHERE user_id != auth.uid() LIMIT 1;
 -- SELECT * FROM user_badges WHERE user_id != auth.uid() LIMIT 1;
+

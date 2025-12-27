@@ -87,10 +87,10 @@ export function CategoryPicker({
     <div className={`space-y-4 ${className}`}>
       <div>
         <h2 className="text-xl font-display font-bold text-forest mb-2">
-          What do you have in your bar?
+          What's in Your Cellar?
         </h2>
         <p className="text-sage">
-          Select a category to browse ingredients
+          Explore our curated categories to build your collection
         </p>
       </div>
 
@@ -108,6 +108,7 @@ export function CategoryPicker({
                   ? `${category.color} border-terracotta shadow-lg scale-105`
                   : "bg-white border-mist hover:border-sage hover:bg-cream"
               }`}
+              data-category={category.key}
             >
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-2xl">{category.icon}</span>

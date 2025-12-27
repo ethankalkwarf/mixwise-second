@@ -32,7 +32,7 @@ async function addMoreCocktails() {
     // Find common cocktails and their positions - using correct ingredient IDs
     const cocktailMappings = [
       { name: 'Gin and Tonic', ingredients: [2, 168] }, // Gin (2), Tonic Water (168)
-      { name: 'Vodka Soda', ingredients: [2024, 2033] }, // Absolut Vodka (2024), Club soda (2033)
+      { name: 'Vodka Soda', ingredients: [24, 2033] }, // Vodka (24), Club soda (2033)
     ];
 
     console.log('Finding cocktail positions...');

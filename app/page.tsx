@@ -67,7 +67,7 @@ export default async function HomePage() {
 
       {/* Personalized Sections for Logged-in Users */}
       <section className="bg-cream py-12 sm:py-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <PersonalizedSections
             allCocktails={allCocktails}
             featuredCocktails={featuredCocktails}

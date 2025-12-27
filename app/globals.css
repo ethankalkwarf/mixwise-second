@@ -268,3 +268,74 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* Mix Page Visual Feedback Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Pulse animation for added ingredients */
+@keyframes ingredient-added {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(188, 90, 69, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(188, 90, 69, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(188, 90, 69, 0);
+  }
+}
+
+.ingredient-added {
+  animation: ingredient-added 1s ease-out;
+}
+
+/* Processing dots animation */
+@keyframes processing-dots {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+.processing-dots span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #BC5A45;
+  animation: processing-dots 1.4s ease-in-out infinite both;
+}
+
+.processing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.processing-dots span:nth-child(2) { animation-delay: -0.16s; }

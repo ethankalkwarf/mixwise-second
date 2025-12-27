@@ -37,3 +37,4 @@ export function formatCocktailName(name: string): string {
     })
     .join(' '); // Rejoin with spaces
 }
+

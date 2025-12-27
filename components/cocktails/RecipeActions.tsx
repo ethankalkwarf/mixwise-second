@@ -37,3 +37,4 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
     </div>
   );
 }
+

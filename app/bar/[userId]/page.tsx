@@ -3,7 +3,7 @@ import { Metadata } from "next";
 export default function PublicBarPage({ params }: { params: { userId: string } }) {
   return (
     <div className="min-h-screen bg-botanical-gradient py-8 sm:py-16">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="card p-12 text-center">
           <div className="w-20 h-20 bg-stone/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">🚧</span>
