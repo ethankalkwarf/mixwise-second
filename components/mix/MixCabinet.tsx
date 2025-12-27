@@ -23,7 +23,7 @@ type Props = {
 
 const POPULAR_INGREDIENTS = [
   // Prioritize basic spirits first to maximize cocktails quickly
-  "Vodka", "Tequila", "Gin", "Bourbon", // Basic spirits - unlock many cocktails
+  "Vodka", "Tequila", "Gin", "Whiskey", // Basic spirits - unlock many cocktails
   // Then essential mixers and juices
   "Lime Juice", "Lemon Juice", "Simple Syrup", "Agave Syrup", // Essential mixers/juices
   "Tonic Water", "Club Soda", "Rum", "Angostura Bitters", // Additional versatile ingredients
@@ -60,11 +60,20 @@ export function MixCabinet({
   // Get popular ingredients that aren't already added
   const popularAvailable = useMemo(() => {
     return POPULAR_INGREDIENTS.map(name => {
-      const ingredient = allIngredients.find(i =>
-        i.name?.toLowerCase().includes(name.toLowerCase())
+      // First try exact match, then fallback to includes match
+      const exactMatch = allIngredients.find(i =>
+        i.name?.toLowerCase() === name.toLowerCase()
       );
-      return ingredient && !ingredientIds.includes(ingredient.id) ? ingredient : null;
-    }).filter(Boolean).slice(0, 12);
+      if (exactMatch && !ingredientIds.includes(exactMatch.id)) {
+        return exactMatch;
+      }
+
+      // Fallback to partial match
+      const partialMatch = allIngredients.find(i =>
+        i.name?.toLowerCase().includes(name.toLowerCase()) && i.name?.toLowerCase() !== name.toLowerCase()
+      );
+      return partialMatch && !ingredientIds.includes(partialMatch.id) ? partialMatch : null;
+    }).filter(Boolean).slice(0, 8);
   }, [allIngredients, ingredientIds]);
 
   // Handle ingredient addition with visual feedback
