@@ -42,18 +42,24 @@ const COCKTAILS_QUERY = `*[_type == "cocktail"] {
 
 // Deterministic shuffle using Fisher-Yates algorithm with seeded randomness
 function deterministicShuffle<T>(array: T[], seed: string): T[] {
-  const shuffled = [...array];
+  try {
+    const shuffled = [...array];
 
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    // Generate a seeded random index between 0 and i
-    const randomValue = seededRandom(seed + i.toString(), 'shuffle');
-    const j = Math.floor(randomValue * (i + 1));
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      // Generate a seeded random index between 0 and i
+      const randomValue = seededRandom(seed + i.toString(), 'shuffle');
+      const j = Math.floor(randomValue * (i + 1));
 
-    // Swap elements
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      // Swap elements
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return shuffled;
+  } catch (error) {
+    console.warn('Error in deterministicShuffle, returning original array:', error);
+    // Return original array if shuffle fails
+    return [...array];
   }
-
-  return shuffled;
 }
 
 // Temporary mapping function to convert Supabase types to Sanity types for component compatibility

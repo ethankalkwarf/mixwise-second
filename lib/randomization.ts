@@ -11,23 +11,29 @@ const COCKTAILS_SEED_COOKIE = 'mw_cocktails_seed';
  * @returns A UUID string to use as seed
  */
 export function getCocktailsRandomizationSeed(): string {
-  // On server side, use cookies
-  const cookieStore = cookies();
-  let seed = cookieStore.get(COCKTAILS_SEED_COOKIE)?.value;
+  try {
+    // On server side, use cookies
+    const cookieStore = cookies();
+    let seed = cookieStore.get(COCKTAILS_SEED_COOKIE)?.value;
 
-  if (!seed) {
-    // Generate a new UUID v4 as seed
-    seed = generateUUID();
-    // Set cookie with session scope (expires when browser closes)
-    cookieStore.set(COCKTAILS_SEED_COOKIE, seed, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      // No maxAge or expires means session cookie
-    });
+    if (!seed) {
+      // Generate a new UUID v4 as seed
+      seed = generateUUID();
+      // Set cookie with session scope (expires when browser closes)
+      cookieStore.set(COCKTAILS_SEED_COOKIE, seed, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        // No maxAge or expires means session cookie
+      });
+    }
+
+    return seed;
+  } catch (error) {
+    // Fallback to a simple seed if cookies fail
+    console.warn('Failed to get/set randomization seed cookie, using fallback:', error);
+    return 'fallback-seed-' + Date.now().toString();
   }
-
-  return seed;
 }
 
 /**
@@ -47,15 +53,26 @@ function generateUUID(): string {
  * using a seed and input string. Uses a simple hash function for consistency.
  */
 export function seededRandom(seed: string, input: string): number {
-  const combined = seed + input;
-  let hash = 0;
+  try {
+    const combined = (seed || 'default-seed') + (input || 'default-input');
+    let hash = 0;
 
-  for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+    for (let i = 0; i < combined.length; i++) {
+      const char = combined.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash | 0; // Convert to 32-bit integer
+    }
+
+    // Convert hash to a number between 0 and 1
+    // Use absolute value and ensure positive result
+    const positiveHash = Math.abs(hash);
+    const result = (positiveHash % 1000000) / 1000000;
+
+    // Ensure result is a valid number between 0 and 1
+    return Math.max(0, Math.min(1, result || 0.5));
+  } catch (error) {
+    console.warn('Error in seededRandom, using fallback:', error);
+    // Fallback to Math.random() if something goes wrong
+    return Math.random();
   }
-
-  // Convert hash to a number between 0 and 1
-  return (hash % 1000000) / 1000000;
 }
