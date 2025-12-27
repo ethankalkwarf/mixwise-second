@@ -116,6 +116,41 @@ const ingredient = {
       subtitle?: string;
       media?: any;
     }) {
+      // More specific emoji mappings for common ingredients
+      const specificEmojis: Record<string, string> = {
+        "vodka": "💎",
+        "gin": "🌿",
+        "rum": "🌴",
+        "whiskey": "🥃",
+        "bourbon": "🥃",
+        "scotch": "🥃",
+        "tequila": "🌵",
+        "mezcal": "🔥",
+        "brandy": "🍇",
+        "cognac": "🍇",
+        "cachaca": "🇧🇷",
+        "cachaça": "🇧🇷",
+        "triple sec": "🍊",
+        "cointreau": "🍊",
+        "amaretto": "🥜",
+        "kahlua": "☕",
+        "baileys": "🥛",
+        "aperol": "🍊",
+        "campari": "🍊",
+        "cola": "🥤",
+        "tonic": "🥤",
+        "cranberry juice": "🫐",
+        "pineapple juice": "🍍",
+        "orange juice": "🍊",
+        "lime juice": "🍋",
+        "lemon juice": "🍋",
+        "simple syrup": "🍯",
+        "honey": "🍯",
+        "maple syrup": "🍁",
+        "agave": "🌵",
+        "vermouth": "🍷"
+      };
+
       const typeLabels: Record<string, string> = {
         spirit: "🥃 Spirit",
         liqueur: "🏺 Liqueur",
@@ -128,9 +163,15 @@ const ingredient = {
         garnish: "🍒 Garnish",
         other: "📦 Other"
       };
+
+      // Use specific emoji if available, otherwise use category emoji
+      const nameKey = title?.toLowerCase().replace(/\s+/g, '');
+      const emoji = nameKey && specificEmojis[nameKey] ? specificEmojis[nameKey] : (subtitle ? typeLabels[subtitle]?.split(' ')[0] : undefined);
+      const label = subtitle ? typeLabels[subtitle] || subtitle : undefined;
+
       return {
         title,
-        subtitle: subtitle ? typeLabels[subtitle] || subtitle : undefined,
+        subtitle: emoji && label ? `${emoji} ${label.split(' ').slice(1).join(' ')}` : label,
         media
       };
     }

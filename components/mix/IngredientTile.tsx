@@ -28,6 +28,55 @@ export function IngredientTile({
     setTimeout(() => setIsAnimating(false), 300);
   };
 
+  // Ingredient-specific emoji mappings for better accuracy
+  const ingredientEmojis: Record<string, string> = {
+    // Spirits
+    "vodka": "💎", // Crystal/clear like vodka
+    "gin": "🌿", // Botanical/herbal like gin
+    "rum": "🌴", // Tropical like rum
+    "whiskey": "🥃", // Whiskey glass for whiskey
+    "bourbon": "🥃", // Whiskey glass for bourbon
+    "scotch": "🥃", // Whiskey glass for scotch
+    "rye": "🥃", // Whiskey glass for rye
+    "tequila": "🌵", // Cactus for tequila
+    "mezcal": "🔥", // Smoky/fire for mezcal
+    "brandy": "🍇", // Grapes for brandy/cognac
+    "cognac": "🍇", // Grapes for cognac
+    "cachaca": "🇧🇷", // Brazil flag for cachaça
+    "cachaça": "🇧🇷", // Brazil flag for cachaça
+
+    // Liqueurs
+    "triple sec": "🍊", // Orange for triple sec
+    "cointreau": "🍊", // Orange for Cointreau
+    "grand marnier": "🍊", // Orange for Grand Marnier
+    "amaretto": "🥜", // Almond for amaretto
+    "kahlua": "☕", // Coffee for Kahlúa
+    "baileys": "🥛", // Cream for Baileys
+    "creme de menthe": "🌿", // Mint for crème de menthe
+    "creme de cacao": "🥜", // Chocolate/nut for crème de cacao
+    "aperol": "🍊", // Orange for Aperol
+    "campari": "🍊", // Orange/red for Campari
+
+    // Mixers
+    "cola": "🥤", // Glass for cola
+    "tonic": "🥤", // Glass for tonic
+    "soda": "🥤", // Glass for soda
+    "ginger beer": "🍺", // Beer glass for ginger beer
+    "cranberry juice": "🫐", // Berries for cranberry
+    "pineapple juice": "🍍", // Pineapple for pineapple juice
+    "orange juice": "🍊", // Orange for OJ
+    "lime juice": "🍋", // Lime for lime juice
+    "lemon juice": "🍋", // Lemon for lemon juice
+
+    // Other common ingredients
+    "simple syrup": "🍯", // Honey for syrup
+    "honey": "🍯", // Honey
+    "maple syrup": "🍁", // Maple leaf for maple syrup
+    "agave": "🌵", // Cactus for agave
+    "vermouth": "🍷", // Wine glass for vermouth
+    "bitters": "💧", // Drop for bitters
+  };
+
   const categoryIcons: Record<string, string> = {
     Spirit: "🥃",
     Liqueur: "🍸",
@@ -40,7 +89,9 @@ export function IngredientTile({
     Garnish: "🍒",
   };
 
-  const icon = categoryIcons[ingredient.category || "Garnish"] || "🍒";
+  // Use ingredient-specific emoji if available, otherwise fall back to category
+  const ingredientKey = ingredient.name?.toLowerCase().replace(/\s+/g, '');
+  const icon = ingredientEmojis[ingredientKey] || categoryIcons[ingredient.category || "Garnish"] || "🍒";
 
   return (
     <button

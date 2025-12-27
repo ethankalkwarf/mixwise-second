@@ -16,12 +16,12 @@ import {
 
 // Spirit options for step 1
 const SPIRITS = [
-  { id: "vodka", name: "Vodka", emoji: "🍸" },
+  { id: "vodka", name: "Vodka", emoji: "💎" },
   { id: "gin", name: "Gin", emoji: "🌿" },
-  { id: "rum", name: "Rum", emoji: "🥃" },
+  { id: "rum", name: "Rum", emoji: "🌴" },
   { id: "tequila", name: "Tequila", emoji: "🌵" },
   { id: "whiskey", name: "Whiskey", emoji: "🥃" },
-  { id: "bourbon", name: "Bourbon", emoji: "🍂" },
+  { id: "bourbon", name: "Bourbon", emoji: "🥃" },
   { id: "brandy", name: "Brandy", emoji: "🍇" },
   { id: "mezcal", name: "Mezcal", emoji: "🔥" },
   { id: "cachaca", name: "Cachaça", emoji: "🇧🇷" },

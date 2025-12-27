@@ -26,6 +26,73 @@ export function MixMixer({
   const [currentStep, setCurrentStep] = useState(0);
   const [showResults, setShowResults] = useState(false);
 
+  // Ingredient-specific emoji mappings for better accuracy
+  const ingredientEmojis: Record<string, string> = {
+    // Spirits
+    "vodka": "💎", // Crystal/clear like vodka
+    "gin": "🌿", // Botanical/herbal like gin
+    "rum": "🌴", // Tropical like rum
+    "whiskey": "🥃", // Whiskey glass for whiskey
+    "bourbon": "🥃", // Whiskey glass for bourbon
+    "scotch": "🥃", // Whiskey glass for scotch
+    "rye": "🥃", // Whiskey glass for rye
+    "tequila": "🌵", // Cactus for tequila
+    "mezcal": "🔥", // Smoky/fire for mezcal
+    "brandy": "🍇", // Grapes for brandy/cognac
+    "cognac": "🍇", // Grapes for cognac
+    "cachaca": "🇧🇷", // Brazil flag for cachaça
+    "cachaça": "🇧🇷", // Brazil flag for cachaça
+
+    // Liqueurs
+    "triple sec": "🍊", // Orange for triple sec
+    "cointreau": "🍊", // Orange for Cointreau
+    "grand marnier": "🍊", // Orange for Grand Marnier
+    "amaretto": "🥜", // Almond for amaretto
+    "kahlua": "☕", // Coffee for Kahlúa
+    "baileys": "🥛", // Cream for Baileys
+    "creme de menthe": "🌿", // Mint for crème de menthe
+    "creme de cacao": "🥜", // Chocolate/nut for crème de cacao
+    "aperol": "🍊", // Orange for Aperol
+    "campari": "🍊", // Orange/red for Campari
+
+    // Mixers
+    "cola": "🥤", // Glass for cola
+    "tonic": "🥤", // Glass for tonic
+    "soda": "🥤", // Glass for soda
+    "ginger beer": "🍺", // Beer glass for ginger beer
+    "cranberry juice": "🫐", // Berries for cranberry
+    "pineapple juice": "🍍", // Pineapple for pineapple juice
+    "orange juice": "🍊", // Orange for OJ
+    "lime juice": "🍋", // Lime for lime juice
+    "lemon juice": "🍋", // Lemon for lemon juice
+
+    // Other common ingredients
+    "simple syrup": "🍯", // Honey for syrup
+    "honey": "🍯", // Honey
+    "maple syrup": "🍁", // Maple leaf for maple syrup
+    "agave": "🌵", // Cactus for agave
+    "vermouth": "🍷", // Wine glass for vermouth
+    "bitters": "💧", // Drop for bitters
+  };
+
+  const categoryIcons: Record<string, string> = {
+    Spirit: "🥃",
+    Liqueur: "🍸",
+    Mixer: "🥤",
+    Citrus: "🍋",
+    Bitters: "💧",
+    Wine: "🍷",
+    Beer: "🍺",
+    Syrup: "🍯",
+    Garnish: "🍒",
+  };
+
+  // Helper function to get emoji for ingredient
+  const getIngredientEmoji = (ingredient: { name?: string; category?: string }) => {
+    const ingredientKey = ingredient.name?.toLowerCase().replace(/\s+/g, '');
+    return ingredientEmojis[ingredientKey] || categoryIcons[ingredient.category || "Garnish"] || "🍒";
+  };
+
   const processingSteps = [
     "Analyzing your ingredients...",
     "Checking cocktail recipes...",
@@ -77,11 +144,7 @@ export function MixMixer({
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="text-2xl mb-2">
-                  {ingredient.category === "Spirit" && "🥃"}
-                  {ingredient.category === "Liqueur" && "🍸"}
-                  {ingredient.category === "Mixer" && "🥤"}
-                  {ingredient.category === "Citrus" && "🍋"}
-                  {ingredient.category === "Bitters" && "💧"}
+                  {getIngredientEmoji(ingredient)}
                   {ingredient.category === "Syrup" && "🍯"}
                   {!["Spirit", "Liqueur", "Mixer", "Citrus", "Bitters", "Syrup"].includes(ingredient.category || "") && "📦"}
                 </div>
@@ -117,13 +180,7 @@ export function MixMixer({
                 }}
               >
                 <div className="text-2xl opacity-70">
-                  {ingredient.category === "Spirit" && "🥃"}
-                  {ingredient.category === "Liqueur" && "🍸"}
-                  {ingredient.category === "Mixer" && "🥤"}
-                  {ingredient.category === "Citrus" && "🍋"}
-                  {ingredient.category === "Bitters" && "💧"}
-                  {ingredient.category === "Syrup" && "🍯"}
-                  {!["Spirit", "Liqueur", "Mixer", "Citrus", "Bitters", "Syrup"].includes(ingredient.category || "") && "📦"}
+                  {getIngredientEmoji(ingredient)}
                 </div>
               </div>
             ))}
