@@ -1,0 +1,61 @@
+import { cookies } from 'next/headers';
+
+/**
+ * Cookie name for storing the cocktails randomization seed
+ */
+const COCKTAILS_SEED_COOKIE = 'mw_cocktails_seed';
+
+/**
+ * Get or generate a stable seed for cocktails randomization.
+ * Uses a session cookie to ensure consistent ordering within a browser session.
+ * @returns A UUID string to use as seed
+ */
+export function getCocktailsRandomizationSeed(): string {
+  // On server side, use cookies
+  const cookieStore = cookies();
+  let seed = cookieStore.get(COCKTAILS_SEED_COOKIE)?.value;
+
+  if (!seed) {
+    // Generate a new UUID v4 as seed
+    seed = generateUUID();
+    // Set cookie with session scope (expires when browser closes)
+    cookieStore.set(COCKTAILS_SEED_COOKIE, seed, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      // No maxAge or expires means session cookie
+    });
+  }
+
+  return seed;
+}
+
+/**
+ * Generate a UUID v4 string for use as randomization seed
+ */
+function generateUUID(): string {
+  // Simple UUID v4 generator (not cryptographically secure, but fine for ordering)
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+/**
+ * Generate a deterministic pseudo-random number between 0 and 1
+ * using a seed and input string. Uses a simple hash function for consistency.
+ */
+export function seededRandom(seed: string, input: string): number {
+  const combined = seed + input;
+  let hash = 0;
+
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+
+  // Convert hash to a number between 0 and 1
+  return (hash % 1000000) / 1000000;
+}

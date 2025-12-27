@@ -1,4 +1,5 @@
 import { getCocktailsList } from "@/lib/cocktails.server";
+import { getCocktailsRandomizationSeed } from "@/lib/randomization";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { CocktailsDirectory } from "@/components/cocktails/CocktailsDirectory";
 import Link from "next/link";
@@ -73,21 +74,14 @@ function mapCocktailListToSanity(cocktails: any[]): SanityCocktail[] {
 }
 
 export default async function CocktailsPage() {
-  const cocktails = await getCocktailsList({ includeIngredients: true });
-  const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);
+  // Get stable randomization seed for consistent ordering within session
+  const randomizationSeed = getCocktailsRandomizationSeed();
 
-  // Sort cocktails: images first, then alphabetically by name (cocktails without images at the end)
-  const sortedCocktails = [...sanityCocktails].sort((a, b) => {
-    // Prioritize cocktails with valid images (non-empty string)
-    const aHasImage = a.externalImageUrl && typeof a.externalImageUrl === 'string' && a.externalImageUrl.trim().length > 0;
-    const bHasImage = b.externalImageUrl && typeof b.externalImageUrl === 'string' && b.externalImageUrl.trim().length > 0;
-
-    if (aHasImage && !bHasImage) return -1;
-    if (!aHasImage && bHasImage) return 1;
-
-    // If both have or don't have images, sort alphabetically by name
-    return a.name.localeCompare(b.name);
+  const cocktails = await getCocktailsList({
+    includeIngredients: true,
+    randomizeWithSeed: randomizationSeed
   });
+  const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);
 
   return (
     <div className="py-10 bg-cream min-h-screen">
@@ -120,7 +114,7 @@ export default async function CocktailsPage() {
         )}
 
         {/* Cocktail Directory with Search, Filters, and Grid */}
-        {cocktails.length > 0 && <CocktailsDirectory cocktails={sortedCocktails} />}
+        {cocktails.length > 0 && <CocktailsDirectory cocktails={sanityCocktails} />}
       </MainContainer>
     </div>
   );

@@ -7,7 +7,7 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 import { getImageUrl } from "@/lib/sanityImage";
 import { formatCocktailName } from "@/lib/formatters";
 
-type SortOption = "name-asc" | "name-desc" | "popular";
+type SortOption = "default" | "name-asc" | "name-desc" | "popular";
 
 type Props = {
   cocktails: SanityCocktail[];
@@ -81,7 +81,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
   
   // Initialize state from sessionStorage if available
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<SortOption>("name-asc");
+  const [sortBy, setSortBy] = useState<SortOption>("default");
   const [filterSpirit, setFilterSpirit] = useState<string | null>(null);
   const [filterGlass, setFilterGlass] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
@@ -97,7 +97,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
       if (saved) {
         const state: FilterState = JSON.parse(saved);
         setSearchQuery(state.searchQuery || "");
-        setSortBy(state.sortBy || "name-asc");
+        setSortBy(state.sortBy || "default");
         setFilterSpirit(state.filterSpirit);
         setFilterGlass(state.filterGlass);
         setFilterCategory(state.filterCategory);
@@ -231,6 +231,9 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
     // Sort
     switch (sortBy) {
+      case "default":
+        // Preserve server-provided order (randomized by default)
+        break;
       case "name-asc":
         results.sort((a, b) => a.name.localeCompare(b.name));
         break;
@@ -332,6 +335,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
             onChange={(e) => setSortBy(e.target.value as SortOption)}
             className="bg-cream border border-mist rounded-xl px-4 py-3 text-sm text-forest focus:outline-none focus:border-terracotta cursor-pointer"
           >
+            <option value="default">Default</option>
             <option value="name-asc">A → Z</option>
             <option value="name-desc">Z → A</option>
             <option value="popular">Popular First</option>
