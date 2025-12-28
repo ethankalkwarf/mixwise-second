@@ -1,0 +1,9 @@
+{
+  "name": "MixWise - Cocktail Discovery",
+  "short_name": "MixWise",
+  "description": "Discover and mix amazing cocktails with your bar ingredients",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f0",
+  "theme_color": "#8b5a3c"
+}

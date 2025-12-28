@@ -117,15 +117,39 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
         isAlmostThere ? 'opacity-75' : ''
       }`}
     >
-      <div className="aspect-square relative mb-3 rounded-lg overflow-hidden bg-mist">
-        {cocktail.imageUrl && (
+      <div className="aspect-square relative mb-3 rounded-lg overflow-hidden bg-mist flex items-center justify-center">
+        {cocktail.imageUrl && cocktail.imageUrl.startsWith('http') ? (
           <Image
             src={cocktail.imageUrl}
             alt={cocktail.name}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-200"
+            onError={(e) => {
+              // Hide broken images and show fallback
+              e.currentTarget.style.display = 'none';
+              const parent = e.currentTarget.parentElement;
+              if (parent) {
+                const fallback = parent.querySelector('.image-fallback');
+                if (fallback) (fallback as HTMLElement).style.display = 'flex';
+              }
+            }}
+            onLoad={() => {
+              // Hide fallback when image loads successfully
+              const parent = document.querySelector(`[data-cocktail="${cocktail.id}"]`);
+              if (parent) {
+                const fallback = parent.querySelector('.image-fallback');
+                if (fallback) (fallback as HTMLElement).style.display = 'none';
+              }
+            }}
           />
-        )}
+        ) : null}
+        {/* Fallback icon - shown when no image or image fails */}
+        <div
+          className="image-fallback text-4xl flex items-center justify-center"
+          style={{ display: cocktail.imageUrl && cocktail.imageUrl.startsWith('http') ? 'none' : 'flex' }}
+        >
+          🍸
+        </div>
       </div>
       <h4 className="font-semibold text-forest text-sm line-clamp-2 mb-1">
         {cocktail.name}
