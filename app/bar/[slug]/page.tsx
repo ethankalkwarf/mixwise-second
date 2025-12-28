@@ -57,9 +57,6 @@ async function getProfileData(slug: string): Promise<{
     .from("profiles")
     .select("id, display_name, username, public_slug, avatar_url");
 
-  // Determine if this is an owner view (UUID) or public view (username/slug)
-  const isOwnerView = isUUID(slug);
-
   if (isOwnerView) {
     // Owner view: slug is a userId (UUID)
     profileQuery = profileQuery.eq("id", slug);
