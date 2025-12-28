@@ -18,14 +18,6 @@ function createPublicClient() {
   return createClient<Database>(supabaseUrl, supabaseAnonKey);
 }
 
-// Create a Supabase client with anon key for public reads
-function createPublicClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  return createClient<Database>(supabaseUrl, supabaseAnonKey);
-}
-
 interface PublicProfile {
   id: string;
   display_name: string | null;
