@@ -196,23 +196,18 @@ export default function AccountPage() {
         return;
       }
 
-      // Now enable public bar - ensure user_preferences row exists first
+      // Now enable public bar using upsert
       try {
-        // First, check if user_preferences row exists
-        const { data: existingPrefs, error: checkError } = await supabase
+        const { error: prefError } = await supabase
           .from("user_preferences")
-          .select("id")
-          .eq("user_id", user!.id)
-          .single();
+          .upsert({
+            user_id: user!.id,
+            public_bar_enabled: true,
+          });
 
-        if (checkError && checkError.code !== "PGRST116") {
-          console.error('Error checking user preferences:', checkError);
-          setUsernameError('Username updated but failed to enable public bar');
-          return;
-        }
-
-        // If no row exists, insert first
-        if (!existingPrefs) {
+        if (prefError) {
+          console.error('Failed to enable public bar:', prefError);
+          // Try insert if upsert fails (might be a permission issue)
           const { error: insertError } = await supabase
             .from("user_preferences")
             .insert({
@@ -220,20 +215,8 @@ export default function AccountPage() {
               public_bar_enabled: true,
             });
 
-          if (insertError) {
-            console.error('Failed to create user preferences:', insertError);
-            setUsernameError('Username updated but failed to enable public bar');
-            return;
-          }
-        } else {
-          // Row exists, update it
-          const { error: updateError } = await supabase
-            .from("user_preferences")
-            .update({ public_bar_enabled: true })
-            .eq("user_id", user!.id);
-
-          if (updateError) {
-            console.error('Failed to update public bar setting:', updateError);
+          if (insertError && insertError.code !== '23505') { // Ignore duplicate key error
+            console.error('Insert also failed:', insertError);
             setUsernameError('Username updated but failed to enable public bar');
             return;
           }

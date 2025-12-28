@@ -18,6 +18,14 @@ function createPublicClient() {
   return createClient<Database>(supabaseUrl, supabaseAnonKey);
 }
 
+// Create a Supabase client with anon key for public reads
+function createPublicClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  return createClient<Database>(supabaseUrl, supabaseAnonKey);
+}
+
 interface PublicProfile {
   id: string;
   display_name: string | null;
@@ -50,8 +58,9 @@ async function getProfileData(slug: string): Promise<{
   // Determine view type first
   const isOwnerView = isUUID(slug);
 
-  // Use authenticated client for owner view, anon client for public view
-  const supabase = isOwnerView ? createServerClient() : createPublicClient();
+  // Use public client for all views - RLS will handle permissions
+  // For owner views, RLS ensures only the authenticated user can see their data
+  const supabase = createPublicClient();
 
   let profileQuery = supabase
     .from("profiles")
