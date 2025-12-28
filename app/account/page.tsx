@@ -196,9 +196,22 @@ export default function AccountPage() {
         return;
       }
 
-      // Now enable public bar
-      const prefResult = await updatePreferences({ public_bar_enabled: true });
-      if (prefResult.error) {
+      // Now enable public bar - direct upsert to ensure it works
+      try {
+        const { error: prefError } = await supabase
+          .from("user_preferences")
+          .upsert({
+            user_id: user!.id,
+            public_bar_enabled: true,
+          });
+
+        if (prefError) {
+          console.error('Failed to enable public bar:', prefError);
+          setUsernameError('Username updated but failed to enable public bar');
+          return;
+        }
+      } catch (prefErr) {
+        console.error('Exception enabling public bar:', prefErr);
         setUsernameError('Username updated but failed to enable public bar');
         return;
       }
