@@ -196,19 +196,47 @@ export default function AccountPage() {
         return;
       }
 
-      // Now enable public bar - direct upsert to ensure it works
+      // Now enable public bar - ensure user_preferences row exists first
       try {
-        const { error: prefError } = await supabase
+        // First, check if user_preferences row exists
+        const { data: existingPrefs, error: checkError } = await supabase
           .from("user_preferences")
-          .upsert({
-            user_id: user!.id,
-            public_bar_enabled: true,
-          });
+          .select("id")
+          .eq("user_id", user!.id)
+          .single();
 
-        if (prefError) {
-          console.error('Failed to enable public bar:', prefError);
+        if (checkError && checkError.code !== "PGRST116") {
+          console.error('Error checking user preferences:', checkError);
           setUsernameError('Username updated but failed to enable public bar');
           return;
+        }
+
+        // If no row exists, insert first
+        if (!existingPrefs) {
+          const { error: insertError } = await supabase
+            .from("user_preferences")
+            .insert({
+              user_id: user!.id,
+              public_bar_enabled: true,
+            });
+
+          if (insertError) {
+            console.error('Failed to create user preferences:', insertError);
+            setUsernameError('Username updated but failed to enable public bar');
+            return;
+          }
+        } else {
+          // Row exists, update it
+          const { error: updateError } = await supabase
+            .from("user_preferences")
+            .update({ public_bar_enabled: true })
+            .eq("user_id", user!.id);
+
+          if (updateError) {
+            console.error('Failed to update public bar setting:', updateError);
+            setUsernameError('Username updated but failed to enable public bar');
+            return;
+          }
         }
       } catch (prefErr) {
         console.error('Exception enabling public bar:', prefErr);

@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@/lib/supabase/server";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
 import { SITE_CONFIG } from "@/lib/seo";
@@ -46,7 +47,11 @@ async function getProfileData(slug: string): Promise<{
   ingredients: BarIngredient[];
   isOwnerView: boolean;
 }> {
-  const supabase = createPublicClient();
+  // Determine view type first
+  const isOwnerView = isUUID(slug);
+
+  // Use authenticated client for owner view, anon client for public view
+  const supabase = isOwnerView ? createServerClient() : createPublicClient();
 
   let profileQuery = supabase
     .from("profiles")
