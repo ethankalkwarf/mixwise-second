@@ -13,6 +13,7 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 export const dynamic = 'force-dynamic';
 import Image from "next/image";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { useToast } from "@/components/ui/toast";
 import { sanityClient } from "@/lib/sanityClient";
 import { BADGES, BADGE_LIST, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
 import { TrophyIcon } from "@heroicons/react/24/outline";
@@ -47,6 +48,16 @@ export default function AccountPage() {
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
   const { ingredientIds } = useBarIngredients();
   const { preferences, updatePreferences } = useUserPreferences();
+  const toast = useToast();
+
+  // Get the shareable bar URL (username or public_slug)
+  const shareableBarUrl = profile?.username || profile?.public_slug;
+
+  // Username management for public profiles
+  const [showUsernameInput, setShowUsernameInput] = useState(false);
+  const [usernameInput, setUsernameInput] = useState('');
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   
   // Fetch ingredient names from Sanity for fallback lookup
   const [sanityNames, setSanityNames] = useState<Map<string, string>>(new Map());
@@ -79,6 +90,129 @@ export default function AccountPage() {
 
     fetchBadges();
   }, [user]);
+
+  // Generate default username suggestion
+  const generateDefaultUsername = useCallback(() => {
+    if (!profile?.display_name && !profile?.email) return '';
+    const base = (profile?.display_name || profile?.email?.split('@')[0] || '').toLowerCase();
+    // Remove special chars and replace spaces with underscores
+    return base.replace(/[^a-z0-9]/g, '').substring(0, 20);
+  }, [profile]);
+
+  // Check username uniqueness via API
+  const checkUsernameUnique = useCallback(async (username: string): Promise<boolean> => {
+    if (!username.trim()) return false;
+
+    try {
+      const response = await fetch(`/api/username?username=${encodeURIComponent(username.trim())}`);
+      if (!response.ok) {
+        console.error('Error checking username availability:', response.statusText);
+        return false;
+      }
+
+      const data = await response.json();
+      return data.available === true;
+    } catch (err) {
+      console.error('Error checking username uniqueness:', err);
+      return false;
+    }
+  }, []);
+
+  // Update username via API
+  const updateUsername = useCallback(async (newUsername: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch('/api/username', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: newUsername.trim() }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Failed to update username' };
+      }
+
+      const data = await response.json();
+      return { success: true };
+    } catch (err) {
+      console.error('Error updating username:', err);
+      return { success: false, error: 'Failed to update username' };
+    }
+  }, []);
+
+  // Handle enabling public bar (with username check)
+  const handleTogglePublicBar = useCallback(async (enabled: boolean) => {
+    if (enabled && !profile?.username) {
+      // Need to set username first
+      const defaultUsername = generateDefaultUsername();
+      setUsernameInput(defaultUsername);
+      setUsernameError(null);
+      setShowUsernameInput(true);
+      return;
+    }
+
+    // Update the preference
+    const result = await updatePreferences({ public_bar_enabled: enabled });
+    if (result.error) {
+      console.error("Failed to update privacy setting:", result.error);
+      toast.error("Failed to update privacy setting");
+    }
+  }, [profile, generateDefaultUsername, updatePreferences, toast]);
+
+  // Handle username form submission
+  const handleUsernameSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUsernameError(null);
+
+    const username = usernameInput.trim();
+    if (!username) {
+      setUsernameError('Username is required');
+      return;
+    }
+
+    if (username.length < 3) {
+      setUsernameError('Username must be at least 3 characters');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      setUsernameError('Username can only contain letters, numbers, underscores, and hyphens');
+      return;
+    }
+
+    setIsCheckingUsername(true);
+    try {
+      const isUnique = await checkUsernameUnique(username);
+      if (!isUnique) {
+        setUsernameError('This username is already taken');
+        return;
+      }
+
+      const result = await updateUsername(username);
+      if (!result.success) {
+        setUsernameError(result.error || 'Failed to update username');
+        return;
+      }
+
+      // Now enable public bar
+      const prefResult = await updatePreferences({ public_bar_enabled: true });
+      if (prefResult.error) {
+        setUsernameError('Username updated but failed to enable public bar');
+        return;
+      }
+
+      setShowUsernameInput(false);
+      toast.success('Public bar enabled!');
+
+    } catch (err) {
+      console.error('Error in username submission:', err);
+      setUsernameError('An unexpected error occurred');
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  }, [usernameInput, checkUsernameUnique, updateUsername, updatePreferences, toast]);
 
   // Badge display data - show all badges with earned status
   const allBadgeData = useMemo(() => {
@@ -238,7 +372,7 @@ export default function AccountPage() {
                     <p className="text-sm text-sage">
                       {preferences?.public_bar_enabled
                         ? "Your bar is visible to anyone with the link"
-                        : "Your bar is private and only visible to you"
+                        : "Your bar is private and only visible to you. Enable to share what cocktails you can make!"
                       }
                     </p>
                   </div>
@@ -248,19 +382,12 @@ export default function AccountPage() {
                     type="checkbox"
                     className="sr-only peer"
                     checked={preferences?.public_bar_enabled || false}
-                    onChange={async (e) => {
-                      const result = await updatePreferences({
-                        public_bar_enabled: e.target.checked,
-                      });
-                      if (result.error) {
-                        console.error("Failed to update privacy setting:", result.error);
-                      }
-                    }}
+                    onChange={(e) => handleTogglePublicBar(e.target.checked)}
                   />
                   <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta"></div>
                 </label>
               </div>
-              {preferences?.public_bar_enabled && (
+              {preferences?.public_bar_enabled && shareableBarUrl && (
                 <div className="p-4 bg-olive/10 border border-olive/20 rounded-xl">
                   <div className="flex items-start gap-3">
                     <GlobeAltIcon className="w-5 h-5 text-olive mt-0.5" />
@@ -271,12 +398,13 @@ export default function AccountPage() {
                       </p>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 px-3 py-2 bg-cream text-forest text-sm rounded-lg border border-mist font-mono">
-                          {typeof window !== 'undefined' ? `${window.location.origin}/bar/${user?.id}` : ''}
+                          {typeof window !== 'undefined' ? `${window.location.origin}/bar/${shareableBarUrl}` : `/bar/${shareableBarUrl}`}
                         </code>
                         <button
                           onClick={() => {
-                            const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/bar/${user?.id}`;
+                            const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/bar/${shareableBarUrl}`;
                             navigator.clipboard.writeText(url);
+                            toast.success('Link copied to clipboard!');
                           }}
                           className="px-3 py-2 bg-terracotta hover:bg-terracotta-dark text-cream text-sm rounded-lg transition-colors font-medium"
                         >
@@ -284,6 +412,79 @@ export default function AccountPage() {
                         </button>
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {preferences?.public_bar_enabled && !shareableBarUrl && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center mt-0.5">
+                      <span className="text-white text-xs">!</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-forest mb-1">Username Required</h4>
+                      <p className="text-sm text-sage mb-3">
+                        You need to set a username to make your bar fully public. Click the toggle again to set one.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Username Input Modal */}
+              {showUsernameInput && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-cream rounded-2xl p-6 max-w-md w-full">
+                    <div className="flex items-center gap-3 mb-4">
+                      <GlobeAltIcon className="w-6 h-6 text-olive" />
+                      <h3 className="text-lg font-serif font-bold text-forest">Set Your Username</h3>
+                    </div>
+                    <p className="text-sage text-sm mb-4">
+                      To make your bar public, you need a unique username for your profile URL.
+                    </p>
+                    <form onSubmit={handleUsernameSubmit}>
+                      <div className="mb-4">
+                        <label htmlFor="username" className="label-botanical block mb-2">
+                          Username
+                        </label>
+                        <input
+                          id="username"
+                          type="text"
+                          value={usernameInput}
+                          onChange={(e) => {
+                            setUsernameInput(e.target.value);
+                            setUsernameError(null);
+                          }}
+                          className="input-botanical w-full"
+                          placeholder="Enter your username"
+                          disabled={isCheckingUsername}
+                        />
+                        <p className="text-xs text-sage mt-1">
+                          Your public URL will be: /bar/{usernameInput || 'username'}
+                        </p>
+                        {usernameError && (
+                          <p className="text-xs text-terracotta mt-1">{usernameError}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setShowUsernameInput(false)}
+                          className="flex-1 px-4 py-2 bg-mist hover:bg-stone text-forest rounded-xl transition-colors font-medium"
+                          disabled={isCheckingUsername}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="flex-1 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors font-medium disabled:opacity-50"
+                          disabled={isCheckingUsername || !usernameInput.trim()}
+                        >
+                          {isCheckingUsername ? 'Checking...' : 'Enable Public Bar'}
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 </div>
               )}

@@ -24,6 +24,8 @@ export interface Database {
           avatar_url: string | null;
           role: "free" | "paid" | "admin";
           preferences: Json;
+          username: string | null;
+          public_slug: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -34,6 +36,8 @@ export interface Database {
           avatar_url?: string | null;
           role?: "free" | "paid" | "admin";
           preferences?: Json;
+          username?: string | null;
+          public_slug?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -44,6 +48,8 @@ export interface Database {
           avatar_url?: string | null;
           role?: "free" | "paid" | "admin";
           preferences?: Json;
+          username?: string | null;
+          public_slug?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -234,6 +240,7 @@ export interface Database {
           skill_level?: string;
           onboarding_completed?: boolean;
           onboarding_completed_at?: string | null;
+          public_bar_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -245,6 +252,7 @@ export interface Database {
           skill_level?: string;
           onboarding_completed?: boolean;
           onboarding_completed_at?: string | null;
+          public_bar_enabled?: boolean;
           created_at?: string;
           updated_at?: string;
         };
