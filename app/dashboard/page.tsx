@@ -415,22 +415,24 @@ export default function DashboardPage() {
     );
   }
 
-  return (
-    <div className="py-8 sm:py-12 bg-cream min-h-screen">
-      <MainContainer>
-        {/* Dynamic Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-forest">
-              {getDynamicGreeting}
-            </h1>
-            <p className="text-sage mt-1">
-              Track your bar, favorites, and progress
-            </p>
-          </div>
-          {ingredientIds.length > 0 && (
+  // Add error boundary for debugging
+  try {
+    return (
+      <div className="py-8 sm:py-12 bg-cream min-h-screen">
+        <MainContainer>
+          {/* Dynamic Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl font-display font-bold text-forest">
+                {getDynamicGreeting || "Welcome back"}
+              </h1>
+              <p className="text-sage mt-1">
+                Track your bar, favorites, and progress
+              </p>
+            </div>
+          {ingredientIds.length > 0 && user?.id && (
             <Link
-              href={`/bar/${user?.id}`}
+              href={`/bar/${user.id}`}
               className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
             >
               <ShareIcon className="w-4 h-4" />
@@ -774,6 +776,32 @@ export default function DashboardPage() {
       </MainContainer>
     </div>
   );
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    return (
+      <div className="py-12 bg-cream min-h-screen">
+        <MainContainer>
+          <div className="text-center py-20">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <XMarkIcon className="w-10 h-10 text-red-500" />
+            </div>
+            <h1 className="text-3xl font-display font-bold text-forest mb-3">
+              Something went wrong
+            </h1>
+            <p className="text-sage mb-8 max-w-md mx-auto">
+              We encountered an error loading your dashboard. Please try refreshing the page.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl font-medium"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </MainContainer>
+      </div>
+    );
+  }
 }
 
 // Stat Card Component

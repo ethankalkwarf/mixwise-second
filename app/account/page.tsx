@@ -531,9 +531,9 @@ export default function AccountPage() {
                 </div>
                 <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-forest" />
               </button>
-              {ingredientIds.length > 0 && (
+              {ingredientIds.length > 0 && user?.id && (
                 <Link
-                  href={`/bar/${user?.id}`}
+                  href={`/bar/${user.id}`}
                   className="flex items-center justify-between p-4 bg-mist/50 hover:bg-mist rounded-xl transition-colors group"
                 >
                   <div className="flex items-center gap-3">
