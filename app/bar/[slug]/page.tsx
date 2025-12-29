@@ -41,6 +41,60 @@ function isUUID(str: string): boolean {
   return uuidRegex.test(str);
 }
 
+// Helper function to process profile result and get ingredients
+async function processProfileResult(profile: any, isOwnerView: boolean, supabase: any) {
+  console.log('[BAR PAGE] Processing profile result for:', profile.id);
+
+  try {
+    // For owner view, we don't check public_bar_enabled
+    // For public view, the profiles RLS policy already ensures we only get public profiles
+    // So we don't need to separately check public_bar_enabled - if we got a profile, it's public
+    if (!isOwnerView) {
+      // Get bar ingredients for public profiles
+      console.log('[BAR PAGE] Fetching ingredients for public profile');
+      const { data: ingredients, error: ingError } = await supabase
+        .from("bar_ingredients")
+        .select("ingredient_id, ingredient_name")
+        .eq("user_id", profile.id);
+
+      if (ingError) {
+        console.error('[BAR PAGE] Error fetching ingredients:', ingError);
+      }
+
+      // For public view, we assume it's enabled since profiles RLS filtered it
+      const preferences = { public_bar_enabled: true };
+
+      return {
+        profile,
+        preferences,
+        ingredients: ingredients || [],
+        isOwnerView
+      };
+    }
+
+    // For owner view, we still need to get ingredients (but no public check needed)
+    console.log('[BAR PAGE] Fetching ingredients for owner view');
+    const { data: ingredients, error: ingError } = await supabase
+      .from("bar_ingredients")
+      .select("ingredient_id, ingredient_name")
+      .eq("user_id", profile.id);
+
+    if (ingError) {
+      console.error('[BAR PAGE] Error fetching ingredients:', ingError);
+    }
+
+    return {
+      profile,
+      preferences: null, // Not needed for owner view
+      ingredients: ingredients || [],
+      isOwnerView
+    };
+  } catch (error) {
+    console.error('[BAR PAGE] Error in processProfileResult:', error);
+    return { profile: null, preferences: null, ingredients: [], isOwnerView };
+  }
+}
+
 async function getProfileData(slug: string): Promise<{
   profile: PublicProfile | null;
   preferences: UserPreferences | null;
@@ -58,20 +112,62 @@ async function getProfileData(slug: string): Promise<{
     const supabase = isOwnerView ? createServerClient() : createPublicClient();
     console.log('[BAR PAGE] Supabase client created, type:', isOwnerView ? 'authenticated' : 'anonymous');
 
+    // Build query dynamically to handle missing columns gracefully
+    let selectFields = "id, display_name, avatar_url";
+    if (!isOwnerView) {
+      // For public views, try to include username/public_slug if they exist
+      selectFields += ", username, public_slug";
+    }
+
     let profileQuery = supabase
       .from("profiles")
-      .select("id, display_name, username, public_slug, avatar_url");
+      .select(selectFields);
 
-    console.log('[BAR PAGE] Querying for slug:', slug, 'isOwnerView:', isOwnerView);
+    console.log('[BAR PAGE] Querying for slug:', slug, 'isOwnerView:', isOwnerView, 'fields:', selectFields);
 
     if (isOwnerView) {
       // Owner view: slug is a userId (UUID)
       console.log('[BAR PAGE] Owner view - querying by ID');
       profileQuery = profileQuery.eq("id", slug);
     } else {
-      // Public view: slug is username or public_slug
-      console.log('[BAR PAGE] Public view - querying by username or public_slug');
-      profileQuery = profileQuery.or(`username.eq.${slug},public_slug.eq.${slug}`);
+      // Public view: try username first, fallback to public_slug if column exists
+      console.log('[BAR PAGE] Public view - attempting flexible query');
+      try {
+        // First try with username
+        const usernameQuery = supabase
+          .from("profiles")
+          .select(selectFields)
+          .eq("username", slug);
+
+        const { data: usernameResult, error: usernameError } = await usernameQuery.single();
+
+        if (usernameResult && !usernameError) {
+          console.log('[BAR PAGE] Found profile by username');
+          return await processProfileResult(usernameResult, isOwnerView, supabase);
+        }
+
+        // If username didn't work, try public_slug
+        console.log('[BAR PAGE] Username query failed, trying public_slug');
+        const slugQuery = supabase
+          .from("profiles")
+          .select(selectFields)
+          .eq("public_slug", slug);
+
+        const { data: slugResult, error: slugError } = await slugQuery.single();
+
+        if (slugResult && !slugError) {
+          console.log('[BAR PAGE] Found profile by public_slug');
+          return await processProfileResult(slugResult, isOwnerView, supabase);
+        }
+
+        // If both fail, the profile doesn't exist
+        console.log('[BAR PAGE] No profile found by username or public_slug');
+        return { profile: null, preferences: null, ingredients: [], isOwnerView };
+
+      } catch (queryError) {
+        console.error('[BAR PAGE] Query error:', queryError);
+        return { profile: null, preferences: null, ingredients: [], isOwnerView };
+      }
     }
 
     console.log('[BAR PAGE] Executing profile query...');
@@ -80,9 +176,7 @@ async function getProfileData(slug: string): Promise<{
     console.log('[BAR PAGE] Profile query result:', {
       profile: profile ? 'found' : 'null',
       profileError: profileError ? profileError.message : 'none',
-      profileId: profile?.id,
-      profileUsername: profile?.username,
-      profileSlug: profile?.public_slug
+      profileId: profile?.id
     });
 
     if (profileError || !profile) {
@@ -92,6 +186,8 @@ async function getProfileData(slug: string): Promise<{
       }
       return { profile: null, preferences: null, ingredients: [], isOwnerView };
     }
+
+    return await processProfileResult(profile, isOwnerView, supabase);
 
     // For owner view, we don't check public_bar_enabled
     // For public view, the profiles RLS policy already ensures we only get public profiles
@@ -140,23 +236,26 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
+    console.log('[BAR PAGE] generateMetadata called with slug:', params.slug);
     const { profile, isOwnerView } = await getProfileData(params.slug);
 
-  if (!profile) {
-    return {
-      title: "Bar Not Found | MixWise",
-      description: "This bar profile could not be found.",
-    };
-  }
+    if (!profile) {
+      console.log('[BAR PAGE] No profile found for metadata');
+      return {
+        title: "Bar Not Found | MixWise",
+        description: "This bar profile could not be found.",
+      };
+    }
 
-  const displayName = profile.display_name || profile.username || "Anonymous Bartender";
+    const displayName = profile.display_name || profile.username || "Anonymous Bartender";
+    console.log('[BAR PAGE] Generated metadata for:', displayName, 'isOwnerView:', isOwnerView);
 
-  if (isOwnerView) {
-    return {
-      title: `${displayName} | MixWise`,
-      description: `Manage your bar with ingredients and discover new cocktails!`,
-    };
-  }
+    if (isOwnerView) {
+      return {
+        title: `${displayName} | MixWise`,
+        description: `Manage your bar with ingredients and discover new cocktails!`,
+      };
+    }
 
     return {
       title: `${displayName}'s Bar | MixWise`,
@@ -178,8 +277,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BarPage({ params }: Props) {
   try {
-    console.log('[BAR PAGE] Loading bar for slug:', params.slug);
+    console.log('[BAR PAGE] Loading bar page for slug:', params.slug);
     const { profile, preferences, ingredients, isOwnerView } = await getProfileData(params.slug);
+    console.log('[BAR PAGE] getProfileData returned:', { hasProfile: !!profile, isOwnerView });
     console.log('[BAR PAGE] Profile data loaded:', { profile: !!profile, preferences: !!preferences, ingredientsCount: ingredients.length, isOwnerView });
 
   // Profile not found
@@ -418,11 +518,16 @@ export default async function BarPage({ params }: Props) {
                 <span className="text-red-600 text-2xl">⚠️</span>
               </div>
               <h1 className="text-2xl font-serif font-bold text-forest mb-4">
-                Something went wrong
+                Bar Profile Unavailable
               </h1>
               <p className="text-sage text-lg mb-8 max-w-2xl mx-auto">
-                We encountered an error while loading this bar profile. Please try again later.
+                We're having trouble loading this bar profile. This might be because the feature is still being set up or there was a temporary error.
               </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
+                <p className="text-amber-800 text-sm">
+                  <strong>If you're the bar owner:</strong> Make sure you've enabled public bar sharing in your account settings and set a username.
+                </p>
+              </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href="/"
@@ -430,12 +535,12 @@ export default async function BarPage({ params }: Props) {
                 >
                   ← Back to Home
                 </Link>
-                <button
-                  onClick={() => window.location.reload()}
+                <Link
+                  href="/account"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-mist hover:bg-stone text-forest rounded-xl transition-colors font-medium"
                 >
-                  Try Again
-                </button>
+                  Account Settings
+                </Link>
               </div>
             </div>
           </div>
