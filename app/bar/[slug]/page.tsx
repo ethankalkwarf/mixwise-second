@@ -50,9 +50,8 @@ async function getProfileData(slug: string): Promise<{
   // Determine view type first
   const isOwnerView = isUUID(slug);
 
-  // Use public client for all views - RLS will handle permissions
-  // For owner views, RLS ensures only the authenticated user can see their data
-  const supabase = createPublicClient();
+  // Use authenticated server client for owner views, anon client for public views
+  const supabase = isOwnerView ? createServerClient() : createPublicClient();
 
   let profileQuery = supabase
     .from("profiles")

@@ -59,14 +59,32 @@ export function useUserPreferences() {
       if (!user) return { error: "Not authenticated" };
 
       try {
-        const { error } = await supabase
+        // First try to update existing row
+        const { data: existing } = await supabase
           .from("user_preferences")
-          .upsert({
-            user_id: user.id,
-            ...updates,
-          });
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
 
-        if (error) throw error;
+        if (existing) {
+          // Update existing row
+          const { error } = await supabase
+            .from("user_preferences")
+            .update(updates)
+            .eq("user_id", user.id);
+
+          if (error) throw error;
+        } else {
+          // Insert new row
+          const { error } = await supabase
+            .from("user_preferences")
+            .insert({
+              user_id: user.id,
+              ...updates,
+            });
+
+          if (error) throw error;
+        }
 
         await fetchPreferences();
         return { success: true };
