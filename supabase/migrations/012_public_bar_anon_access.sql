@@ -1,6 +1,9 @@
 -- Allow anonymous users to check if a bar is public
 -- This is needed for public bar profile access
 
+-- Drop existing policy if it exists
+DROP POLICY IF EXISTS "Anonymous users can check if bar is public" ON public.user_preferences;
+
 -- Add policy for anonymous read access to public_bar_enabled field
 CREATE POLICY "Anonymous users can check if bar is public"
   ON public.user_preferences FOR SELECT

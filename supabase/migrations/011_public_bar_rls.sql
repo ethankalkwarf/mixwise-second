@@ -22,6 +22,7 @@ ADD COLUMN IF NOT EXISTS public_bar_enabled BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- Drop existing restrictive SELECT policy
 DROP POLICY IF EXISTS "Profiles are viewable by owner" ON public.profiles;
+DROP POLICY IF EXISTS "Profiles are viewable by owner or public when enabled" ON public.profiles;
 
 -- Create new SELECT policy allowing public access for enabled profiles
 CREATE POLICY "Profiles are viewable by owner or public when enabled"
@@ -44,8 +45,12 @@ CREATE POLICY "Profiles are viewable by owner or public when enabled"
 -- Allow anyone to view bar ingredients for users with public_bar_enabled = true
 -- Keep owner-only policies for modifications
 
--- Drop existing restrictive SELECT policy
+-- Drop existing policies that might conflict
 DROP POLICY IF EXISTS "Users manage their own bar ingredients" ON public.bar_ingredients;
+DROP POLICY IF EXISTS "Bar ingredients viewable by owner or public when enabled" ON public.bar_ingredients;
+DROP POLICY IF EXISTS "Users can insert their own bar ingredients" ON public.bar_ingredients;
+DROP POLICY IF EXISTS "Users can update their own bar ingredients" ON public.bar_ingredients;
+DROP POLICY IF EXISTS "Users can delete their own bar ingredients" ON public.bar_ingredients;
 
 -- Create separate policies for different operations
 CREATE POLICY "Bar ingredients viewable by owner or public when enabled"
