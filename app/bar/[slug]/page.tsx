@@ -47,11 +47,20 @@ async function getProfileData(slug: string): Promise<{
   ingredients: BarIngredient[];
   isOwnerView: boolean;
 }> {
-  // Determine view type first
-  const isOwnerView = isUUID(slug);
+  try {
+    console.log('[BAR PAGE] getProfileData called with slug:', slug);
 
-  // Use authenticated server client for owner views, anon client for public views
-  const supabase = isOwnerView ? createServerClient() : createPublicClient();
+    // Determine view type first
+    const isOwnerView = isUUID(slug);
+    console.log('[BAR PAGE] isOwnerView determined:', isOwnerView);
+
+    // Use authenticated server client for owner views, anon client for public views
+    const supabase = isOwnerView ? createServerClient() : createPublicClient();
+    console.log('[BAR PAGE] Supabase client created, type:', isOwnerView ? 'authenticated' : 'anonymous');
+  } catch (error) {
+    console.error('[BAR PAGE] Error in getProfileData setup:', error);
+    return { profile: null, preferences: null, ingredients: [], isOwnerView: false };
+  }
 
   let profileQuery = supabase
     .from("profiles")
@@ -69,12 +78,22 @@ async function getProfileData(slug: string): Promise<{
     profileQuery = profileQuery.or(`username.eq.${slug},public_slug.eq.${slug}`);
   }
 
+  console.log('[BAR PAGE] Executing profile query...');
   const { data: profile, error: profileError } = await profileQuery.single();
 
-  console.log('[BAR PAGE] Profile query result:', { profile, profileError });
+  console.log('[BAR PAGE] Profile query result:', {
+    profile: profile ? 'found' : 'null',
+    profileError: profileError ? profileError.message : 'none',
+    profileId: profile?.id,
+    profileUsername: profile?.username,
+    profileSlug: profile?.public_slug
+  });
 
   if (profileError || !profile) {
-    console.log('[BAR PAGE] No profile found, returning notFound');
+    console.log('[BAR PAGE] No profile found or query error, returning notFound');
+    if (profileError) {
+      console.error('[BAR PAGE] Profile query error details:', profileError);
+    }
     return { profile: null, preferences: null, ingredients: [], isOwnerView };
   }
 
@@ -105,12 +124,16 @@ async function getProfileData(slug: string): Promise<{
     .select("ingredient_id, ingredient_name")
     .eq("user_id", profile.id);
 
-  return {
-    profile,
-    preferences: null, // Not needed for owner view
-    ingredients: ingredients || [],
-    isOwnerView
-  };
+    return {
+      profile,
+      preferences: null, // Not needed for owner view
+      ingredients: ingredients || [],
+      isOwnerView
+    };
+  } catch (error) {
+    console.error('[BAR PAGE] Error in getProfileData:', error);
+    return { profile: null, preferences: null, ingredients: [], isOwnerView: false };
+  }
 }
 
 
@@ -120,7 +143,8 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { profile, isOwnerView } = await getProfileData(params.slug);
+  try {
+    const { profile, isOwnerView } = await getProfileData(params.slug);
 
   if (!profile) {
     return {
@@ -138,15 +162,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  return {
-    title: `${displayName}'s Bar | MixWise`,
-    description: `Check out ${displayName}'s bar and see what cocktails they can make!`,
-    openGraph: {
+    return {
       title: `${displayName}'s Bar | MixWise`,
       description: `Check out ${displayName}'s bar and see what cocktails they can make!`,
-      type: "profile",
-    },
-  };
+      openGraph: {
+        title: `${displayName}'s Bar | MixWise`,
+        description: `Check out ${displayName}'s bar and see what cocktails they can make!`,
+        type: "profile",
+      },
+    };
+  } catch (error) {
+    console.error('[BAR PAGE] Error in generateMetadata:', error);
+    return {
+      title: "Bar Not Found | MixWise",
+      description: "This bar profile could not be found.",
+    };
+  }
 }
 
 export default async function BarPage({ params }: Props) {
