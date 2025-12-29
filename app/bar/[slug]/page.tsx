@@ -72,23 +72,17 @@ async function getProfileData(slug: string): Promise<{
   }
 
   // For owner view, we don't check public_bar_enabled
-  // For public view, we need to check if the bar is public
+  // For public view, the profiles RLS policy already ensures we only get public profiles
+  // So we don't need to separately check public_bar_enabled - if we got a profile, it's public
   if (!isOwnerView) {
-    const { data: preferences, error: prefError } = await supabase
-      .from("user_preferences")
-      .select("public_bar_enabled")
-      .eq("user_id", profile.id)
-      .single();
-
-    if (prefError || !preferences?.public_bar_enabled) {
-      return { profile, preferences: null, ingredients: [], isOwnerView };
-    }
-
     // Get bar ingredients for public profiles
     const { data: ingredients, error: ingError } = await supabase
       .from("bar_ingredients")
       .select("ingredient_id, ingredient_name")
       .eq("user_id", profile.id);
+
+    // For public view, we assume it's enabled since profiles RLS filtered it
+    const preferences = { public_bar_enabled: true };
 
     return {
       profile,
