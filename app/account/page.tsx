@@ -50,8 +50,44 @@ export default function AccountPage() {
   const { preferences, updatePreferences } = useUserPreferences();
   const toast = useToast();
 
+  // Ensure public_slug exists if public bar is enabled but no username/slug
+  useEffect(() => {
+    const ensurePublicSlug = async () => {
+      if (preferences?.public_bar_enabled && user && !profile?.username && !profile?.public_slug) {
+        console.log("User has public bar enabled but no username/slug, updating profile...");
+        try {
+          // Trigger the database to generate a public_slug by updating the profile
+          const { error } = await supabaseClient
+            .from('profiles')
+            .update({ updated_at: new Date().toISOString() }) // Trigger update to generate slug
+            .eq('id', user.id);
+
+          if (error) {
+            console.error("Failed to update profile for slug generation:", error);
+          } else {
+            console.log("Profile updated to generate public_slug");
+            // Refresh the profile data
+            window.location.reload();
+          }
+        } catch (err) {
+          console.error("Error ensuring public slug:", err);
+        }
+      }
+    };
+
+    ensurePublicSlug();
+  }, [preferences?.public_bar_enabled, user, profile?.username, profile?.public_slug, supabaseClient]);
+
   // Get the shareable bar URL (username or public_slug)
   const shareableBarUrl = profile?.username || profile?.public_slug;
+
+  // Debug logging for share button
+  console.log("Share button state:", {
+    preferences: preferences?.public_bar_enabled,
+    profileUsername: profile?.username,
+    profileSlug: profile?.public_slug,
+    shareableBarUrl
+  });
 
   // Username management for public profiles
   const [showUsernameInput, setShowUsernameInput] = useState(false);
@@ -146,8 +182,8 @@ export default function AccountPage() {
   const handleTogglePublicBar = useCallback(async (enabled: boolean) => {
     console.log("Toggle public bar:", enabled, "Profile:", profile);
 
-    if (enabled && !profile?.username) {
-      // Need to set username first
+    if (enabled && !profile?.username && !profile?.public_slug) {
+      // Need to set username first (will generate public_slug as fallback)
       const defaultUsername = generateDefaultUsername();
       setUsernameInput(defaultUsername);
       setUsernameError(null);
