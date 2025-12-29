@@ -57,72 +57,68 @@ async function getProfileData(slug: string): Promise<{
     // Use authenticated server client for owner views, anon client for public views
     const supabase = isOwnerView ? createServerClient() : createPublicClient();
     console.log('[BAR PAGE] Supabase client created, type:', isOwnerView ? 'authenticated' : 'anonymous');
-  } catch (error) {
-    console.error('[BAR PAGE] Error in getProfileData setup:', error);
-    return { profile: null, preferences: null, ingredients: [], isOwnerView: false };
-  }
 
-  let profileQuery = supabase
-    .from("profiles")
-    .select("id, display_name, username, public_slug, avatar_url");
+    let profileQuery = supabase
+      .from("profiles")
+      .select("id, display_name, username, public_slug, avatar_url");
 
-  console.log('[BAR PAGE] Querying for slug:', slug, 'isOwnerView:', isOwnerView);
+    console.log('[BAR PAGE] Querying for slug:', slug, 'isOwnerView:', isOwnerView);
 
-  if (isOwnerView) {
-    // Owner view: slug is a userId (UUID)
-    console.log('[BAR PAGE] Owner view - querying by ID');
-    profileQuery = profileQuery.eq("id", slug);
-  } else {
-    // Public view: slug is username or public_slug
-    console.log('[BAR PAGE] Public view - querying by username or public_slug');
-    profileQuery = profileQuery.or(`username.eq.${slug},public_slug.eq.${slug}`);
-  }
-
-  console.log('[BAR PAGE] Executing profile query...');
-  const { data: profile, error: profileError } = await profileQuery.single();
-
-  console.log('[BAR PAGE] Profile query result:', {
-    profile: profile ? 'found' : 'null',
-    profileError: profileError ? profileError.message : 'none',
-    profileId: profile?.id,
-    profileUsername: profile?.username,
-    profileSlug: profile?.public_slug
-  });
-
-  if (profileError || !profile) {
-    console.log('[BAR PAGE] No profile found or query error, returning notFound');
-    if (profileError) {
-      console.error('[BAR PAGE] Profile query error details:', profileError);
+    if (isOwnerView) {
+      // Owner view: slug is a userId (UUID)
+      console.log('[BAR PAGE] Owner view - querying by ID');
+      profileQuery = profileQuery.eq("id", slug);
+    } else {
+      // Public view: slug is username or public_slug
+      console.log('[BAR PAGE] Public view - querying by username or public_slug');
+      profileQuery = profileQuery.or(`username.eq.${slug},public_slug.eq.${slug}`);
     }
-    return { profile: null, preferences: null, ingredients: [], isOwnerView };
-  }
 
-  // For owner view, we don't check public_bar_enabled
-  // For public view, the profiles RLS policy already ensures we only get public profiles
-  // So we don't need to separately check public_bar_enabled - if we got a profile, it's public
-  if (!isOwnerView) {
-    // Get bar ingredients for public profiles
+    console.log('[BAR PAGE] Executing profile query...');
+    const { data: profile, error: profileError } = await profileQuery.single();
+
+    console.log('[BAR PAGE] Profile query result:', {
+      profile: profile ? 'found' : 'null',
+      profileError: profileError ? profileError.message : 'none',
+      profileId: profile?.id,
+      profileUsername: profile?.username,
+      profileSlug: profile?.public_slug
+    });
+
+    if (profileError || !profile) {
+      console.log('[BAR PAGE] No profile found or query error, returning notFound');
+      if (profileError) {
+        console.error('[BAR PAGE] Profile query error details:', profileError);
+      }
+      return { profile: null, preferences: null, ingredients: [], isOwnerView };
+    }
+
+    // For owner view, we don't check public_bar_enabled
+    // For public view, the profiles RLS policy already ensures we only get public profiles
+    // So we don't need to separately check public_bar_enabled - if we got a profile, it's public
+    if (!isOwnerView) {
+      // Get bar ingredients for public profiles
+      const { data: ingredients, error: ingError } = await supabase
+        .from("bar_ingredients")
+        .select("ingredient_id, ingredient_name")
+        .eq("user_id", profile.id);
+
+      // For public view, we assume it's enabled since profiles RLS filtered it
+      const preferences = { public_bar_enabled: true };
+
+      return {
+        profile,
+        preferences,
+        ingredients: ingredients || [],
+        isOwnerView
+      };
+    }
+
+    // For owner view, we still need to get ingredients (but no public check needed)
     const { data: ingredients, error: ingError } = await supabase
       .from("bar_ingredients")
       .select("ingredient_id, ingredient_name")
       .eq("user_id", profile.id);
-
-    // For public view, we assume it's enabled since profiles RLS filtered it
-    const preferences = { public_bar_enabled: true };
-
-    return {
-      profile,
-      preferences,
-      ingredients: ingredients || [],
-      isOwnerView
-    };
-  }
-
-  // For owner view, we still need to get ingredients (but no public check needed)
-  const { data: ingredients, error: ingError } = await supabase
-    .from("bar_ingredients")
-    .select("ingredient_id, ingredient_name")
-    .eq("user_id", profile.id);
 
     return {
       profile,
