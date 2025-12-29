@@ -57,17 +57,24 @@ async function getProfileData(slug: string): Promise<{
     .from("profiles")
     .select("id, display_name, username, public_slug, avatar_url");
 
+  console.log('[BAR PAGE] Querying for slug:', slug, 'isOwnerView:', isOwnerView);
+
   if (isOwnerView) {
     // Owner view: slug is a userId (UUID)
+    console.log('[BAR PAGE] Owner view - querying by ID');
     profileQuery = profileQuery.eq("id", slug);
   } else {
     // Public view: slug is username or public_slug
+    console.log('[BAR PAGE] Public view - querying by username or public_slug');
     profileQuery = profileQuery.or(`username.eq.${slug},public_slug.eq.${slug}`);
   }
 
   const { data: profile, error: profileError } = await profileQuery.single();
 
+  console.log('[BAR PAGE] Profile query result:', { profile, profileError });
+
   if (profileError || !profile) {
+    console.log('[BAR PAGE] No profile found, returning notFound');
     return { profile: null, preferences: null, ingredients: [], isOwnerView };
   }
 
