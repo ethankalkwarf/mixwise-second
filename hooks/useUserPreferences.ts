@@ -58,24 +58,33 @@ export function useUserPreferences() {
     async (updates: Partial<UserPreferences>) => {
       if (!user) return { error: "Not authenticated" };
 
+      console.log("Updating preferences for user:", user.id, "Updates:", updates);
+
       try {
         // First try to update existing row
-        const { data: existing } = await supabase
+        const { data: existing, error: selectError } = await supabase
           .from("user_preferences")
           .select("id")
           .eq("user_id", user.id)
           .single();
 
+        console.log("Existing preferences check:", { existing, selectError });
+
         if (existing) {
           // Update existing row
+          console.log("Updating existing preferences row");
           const { error } = await supabase
             .from("user_preferences")
             .update(updates)
             .eq("user_id", user.id);
 
-          if (error) throw error;
+          if (error) {
+            console.error("Update error:", error);
+            throw error;
+          }
         } else {
           // Insert new row
+          console.log("Inserting new preferences row");
           const { error } = await supabase
             .from("user_preferences")
             .insert({
@@ -83,7 +92,10 @@ export function useUserPreferences() {
               ...updates,
             });
 
-          if (error) throw error;
+          if (error) {
+            console.error("Insert error:", error);
+            throw error;
+          }
         }
 
         await fetchPreferences();

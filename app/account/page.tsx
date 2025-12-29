@@ -144,6 +144,8 @@ export default function AccountPage() {
 
   // Handle enabling public bar (with username check)
   const handleTogglePublicBar = useCallback(async (enabled: boolean) => {
+    console.log("Toggle public bar:", enabled, "Profile:", profile);
+
     if (enabled && !profile?.username) {
       // Need to set username first
       const defaultUsername = generateDefaultUsername();
@@ -158,6 +160,9 @@ export default function AccountPage() {
     if (result.error) {
       console.error("Failed to update privacy setting:", result.error);
       toast.error("Failed to update privacy setting");
+    } else {
+      console.log("Successfully updated privacy setting");
+      toast.success(enabled ? "Your bar is now public!" : "Your bar is now private");
     }
   }, [profile, generateDefaultUsername, updatePreferences, toast]);
 
