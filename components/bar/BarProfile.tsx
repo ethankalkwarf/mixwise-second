@@ -26,7 +26,9 @@ export async function BarProfile({
   subtitle,
 }: BarProfileProps) {
   // Fetch cocktails if not provided
+  console.log('[BAR PROFILE] Fetching cocktails...');
   const cocktails = allCocktails || await getMixCocktails();
+  console.log('[BAR PROFILE] Fetched', cocktails.length, 'cocktails');
 
   return (
     <div className="space-y-12">

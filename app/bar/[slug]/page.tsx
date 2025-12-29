@@ -143,7 +143,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BarPage({ params }: Props) {
-  const { profile, preferences, ingredients, isOwnerView } = await getProfileData(params.slug);
+  try {
+    console.log('[BAR PAGE] Loading bar for slug:', params.slug);
+    const { profile, preferences, ingredients, isOwnerView } = await getProfileData(params.slug);
+    console.log('[BAR PAGE] Profile data loaded:', { profile: !!profile, preferences: !!preferences, ingredientsCount: ingredients.length, isOwnerView });
 
   // Profile not found
   if (!profile) {
@@ -358,4 +361,52 @@ export default async function BarPage({ params }: Props) {
       </MainContainer>
     </div>
   );
+  } catch (error) {
+    console.error('[BAR PAGE] Error loading bar page:', error);
+
+    // Return error page for anonymous users
+    return (
+      <div className="min-h-screen bg-botanical-gradient py-8 sm:py-16">
+        <MainContainer>
+          <div className="max-w-4xl mx-auto space-y-8">
+            {/* Back Navigation */}
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-sage hover:text-forest transition-colors"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              Back to MixWise
+            </Link>
+
+            {/* Error Message */}
+            <div className="card p-12 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-red-600 text-2xl">⚠️</span>
+              </div>
+              <h1 className="text-2xl font-serif font-bold text-forest mb-4">
+                Something went wrong
+              </h1>
+              <p className="text-sage text-lg mb-8 max-w-2xl mx-auto">
+                We encountered an error while loading this bar profile. Please try again later.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors font-medium"
+                >
+                  ← Back to Home
+                </Link>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-mist hover:bg-stone text-forest rounded-xl transition-colors font-medium"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+        </MainContainer>
+      </div>
+    );
+  }
 }
