@@ -490,7 +490,33 @@ export default async function BarPage({ params }: Props) {
             ingredientIds={ingredientIds}
             ingredients={ingredients}
             isOwner={false}
+            showAlmostThere={false}
+            isPublicView={true}
           />
+
+          {/* CTA to Join MixWise */}
+          <div className="card p-8 text-center bg-gradient-to-r from-terracotta/10 to-olive/10 border-terracotta/20">
+            <h3 className="text-xl font-serif font-bold text-forest mb-2">
+              Ready to Mix Your Own Cocktails?
+            </h3>
+            <p className="text-sage mb-6 max-w-md mx-auto">
+              Join MixWise to create your own bar, discover new recipes, and share your cocktail creations with friends.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/auth"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors font-medium"
+              >
+                Join MixWise
+              </Link>
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-mist hover:bg-stone text-forest rounded-xl transition-colors font-medium"
+              >
+                Browse Cocktails
+              </Link>
+            </div>
+          </div>
         </div>
       </MainContainer>
     </div>

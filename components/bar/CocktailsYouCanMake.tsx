@@ -11,6 +11,8 @@ interface CocktailsYouCanMakeProps {
   stapleIngredientIds?: string[];
   maxResults?: number;
   showAllRecipesLink?: boolean;
+  showAlmostThere?: boolean;
+  isPublicView?: boolean;
 }
 
 export function CocktailsYouCanMake({
@@ -19,6 +21,8 @@ export function CocktailsYouCanMake({
   stapleIngredientIds = ["ice", "water", "salt", "simple-syrup"],
   maxResults = 12,
   showAllRecipesLink = false,
+  showAlmostThere = true,
+  isPublicView = false,
 }: CocktailsYouCanMakeProps) {
   // Run cocktail matching
   const { ready, almostThere } = getMixMatchGroups({
@@ -51,7 +55,7 @@ export function CocktailsYouCanMake({
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-serif font-bold text-forest">
-              🍸 Cocktails You Can Make ({ready.length})
+              🍸 Cocktails {isPublicView ? 'They' : 'You'} Can Make ({ready.length})
             </h3>
             {showAllRecipesLink && (
               <Link
@@ -75,8 +79,8 @@ export function CocktailsYouCanMake({
         </section>
       )}
 
-      {/* Almost There */}
-      {almostThere.length > 0 && (
+      {/* Almost There - Only show for owner views */}
+      {almostThere.length > 0 && showAlmostThere && (
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-serif font-bold text-forest">

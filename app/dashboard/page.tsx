@@ -430,13 +430,23 @@ export default function DashboardPage() {
                 Track your bar, favorites, and progress
               </p>
             </div>
-          {ingredientIds.length > 0 && user?.id && (
+          {ingredientIds.length > 0 && user?.id && preferences?.public_bar_enabled && (
             <Link
-              href={`/bar/${user.id}`}
+              href={`/bar/${profile?.username || profile?.public_slug || user.id}`}
               className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
             >
               <ShareIcon className="w-4 h-4" />
               Share My Bar
+            </Link>
+          )}
+
+          {ingredientIds.length > 0 && user?.id && !preferences?.public_bar_enabled && (
+            <Link
+              href="/account"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-olive hover:bg-olive-dark text-cream rounded-2xl transition-all text-sm font-medium shadow-soft"
+            >
+              <ShareIcon className="w-4 h-4" />
+              Enable Public Bar
             </Link>
           )}
         </div>
@@ -755,13 +765,23 @@ export default function DashboardPage() {
                   <span className="text-forest group-hover:text-terracotta transition-colors">Browse Cocktails</span>
                   <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
                 </Link>
-                {ingredientIds.length > 0 && (
+                {ingredientIds.length > 0 && preferences?.public_bar_enabled && (
                   <Link
-                    href={`/bar/${user?.id}`}
+                    href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
                     className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
                   >
                     <span className="text-forest group-hover:text-terracotta transition-colors">Share My Bar</span>
                     <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
+                  </Link>
+                )}
+
+                {ingredientIds.length > 0 && !preferences?.public_bar_enabled && (
+                  <Link
+                    href="/account"
+                    className="flex items-center justify-between p-3 bg-olive/20 hover:bg-olive/30 rounded-xl transition-colors group"
+                  >
+                    <span className="text-olive group-hover:text-olive-dark transition-colors">Enable Public Bar</span>
+                    <ArrowRightIcon className="w-4 h-4 text-olive group-hover:text-olive-dark transition-colors" />
                   </Link>
                 )}
                 <button

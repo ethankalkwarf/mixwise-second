@@ -14,6 +14,8 @@ interface BarProfileProps {
   isOwner?: boolean;
   title?: string;
   subtitle?: string;
+  showAlmostThere?: boolean;
+  isPublicView?: boolean;
 }
 
 export async function BarProfile({
@@ -24,6 +26,8 @@ export async function BarProfile({
   isOwner = false,
   title,
   subtitle,
+  showAlmostThere = true,
+  isPublicView = false,
 }: BarProfileProps) {
   // Fetch cocktails if not provided
   console.log('[BAR PROFILE] Fetching cocktails...');
@@ -38,6 +42,8 @@ export async function BarProfile({
           ingredientIds={ingredientIds}
           allCocktails={cocktails}
           showAllRecipesLink={showAllRecipesLink}
+          showAlmostThere={showAlmostThere}
+          isPublicView={isPublicView}
         />
       </section>
 
