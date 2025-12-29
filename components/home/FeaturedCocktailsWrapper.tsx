@@ -9,12 +9,6 @@ interface FeaturedCocktailsWrapperProps {
 }
 
 export function FeaturedCocktailsWrapper({ cocktails }: FeaturedCocktailsWrapperProps) {
-  const { isAuthenticated } = useUser();
-
-  // Only show Featured Cocktails for non-authenticated users
-  if (isAuthenticated) {
-    return null;
-  }
-
+  // Show Featured Cocktails for all users
   return <FeaturedCocktails cocktails={cocktails} />;
 }

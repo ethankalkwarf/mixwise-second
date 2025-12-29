@@ -11,8 +11,8 @@ interface FeaturedCocktailsProps {
 
 export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
   return (
-    <section className="bg-cream py-8 sm:py-12">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+    <section className="bg-cream py-8 sm:py-12 lg:py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-3">
             Featured Recipes
@@ -22,7 +22,7 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 lg:gap-8">
           {cocktails.map((cocktail, index) => (
             <FeaturedCocktailCard
               key={cocktail._id}

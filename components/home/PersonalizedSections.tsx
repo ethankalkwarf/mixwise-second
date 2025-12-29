@@ -99,7 +99,9 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
   }
 
   return (
-    <div className="space-y-16">
+    <section className="bg-cream py-12 sm:py-16 lg:py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="space-y-16">
       {/* Cocktails You Can Make */}
       {hasBar && readyToMake.length > 0 && (
         <section aria-labelledby="canmake-title">
@@ -112,7 +114,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
               View all in Mix <ArrowRightIcon className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" role="list">
             {readyToMake.map((cocktail) => (
               <SmallCocktailCard key={cocktail._id} cocktail={cocktail} badge="Ready!" badgeColor="bg-olive" />
             ))}
@@ -125,7 +127,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
         <section aria-labelledby="oneaway-title">
           <SectionHeader title="Just One Ingredient Away" id="oneaway-title" />
           <p className="text-sage text-sm mb-6">Add one ingredient to unlock these recipes!</p>
-          <div className="grid gap-5 sm:grid-cols-2" role="list">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" role="list">
             {oneAway.map(({ cocktail, missingIngredient }) => (
               <OneAwayCard
                 key={cocktail._id}
@@ -150,8 +152,8 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
               View all <ArrowRightIcon className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
-            {favorites.slice(0, 6).map((fav) => (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" role="list">
+            {favorites.slice(0, 8).map((fav) => (
               <SmallCocktailCard
                 key={fav.cocktail_id}
                 cocktail={{
@@ -188,7 +190,9 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
           </div>
         </section>
       )}
-    </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

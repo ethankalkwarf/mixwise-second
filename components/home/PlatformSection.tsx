@@ -2,8 +2,8 @@
 
 export function PlatformSection() {
   return (
-    <section className="bg-[#2C3628] text-[#F9F7F2] py-32 rounded-t-[3rem] relative overflow-hidden mt-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <section className="bg-[#2C3628] text-[#F9F7F2] py-32 lg:py-40 xl:py-48 rounded-t-[3rem] relative overflow-hidden mt-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Background Pattern */}
       <div
         className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -13,7 +13,7 @@ export function PlatformSection() {
         }}
       ></div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-24 text-center md:text-left">
           <h2 className="text-4xl md:text-6xl font-display max-w-2xl leading-[1.1] mb-6 text-[#E6EBE4]">
             Everything you need to master home mixology.

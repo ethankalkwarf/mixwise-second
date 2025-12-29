@@ -7,6 +7,7 @@ import { FeaturedCocktails } from "@/components/home/FeaturedCocktails";
 import { PlatformSection } from "@/components/home/PlatformSection";
 import { PersonalizedSections } from "@/components/home/PersonalizedSections";
 import { FeaturedCocktailsWrapper } from "@/components/home/FeaturedCocktailsWrapper";
+import { GuestExperienceSection } from "@/components/home/GuestExperienceSection";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
 export const revalidate = 60;
@@ -45,9 +46,11 @@ export default async function HomePage() {
   // Convert to Sanity format for compatibility
   const allCocktails = mapSupabaseToSanityForHome(allCocktailsList);
 
-  // Filter for popular cocktails and randomize
+  // Filter for popular cocktails, fallback to first 20 cocktails if no popular ones exist
   const popularCocktails = allCocktails.filter(c => c.isPopular);
-  const featuredCocktails = [...popularCocktails].sort(() => Math.random() - 0.5).slice(0, 8);
+  const featuredCocktails = popularCocktails.length > 0
+    ? [...popularCocktails].sort(() => Math.random() - 0.5).slice(0, 5)
+    : [...allCocktails].sort(() => Math.random() - 0.5).slice(0, 5);
 
   const heroTitle = settings?.heroTitle || "Discover Your Next Favorite Cocktail";
   const heroSubtitle =
@@ -65,20 +68,19 @@ export default async function HomePage() {
       {/* Hero Section */}
       <Hero title={heroTitle} subtitle={heroSubtitle} />
 
-      {/* Personalized Sections for Logged-in Users */}
-      <section className="bg-cream py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <PersonalizedSections
-            allCocktails={allCocktails}
-            featuredCocktails={featuredCocktails}
-          />
-        </div>
-      </section>
+      {/* Personalized Sections for Logged-in Users - Only render if user is authenticated */}
+      <PersonalizedSections
+        allCocktails={allCocktails}
+        featuredCocktails={featuredCocktails}
+      />
 
       {/* Featured Cocktails */}
       {featuredCocktails.length > 0 && (
         <FeaturedCocktailsWrapper cocktails={featuredCocktails} />
       )}
+
+      {/* Guest Experience Section */}
+      <GuestExperienceSection />
 
       {/* Platform Section */}
       <PlatformSection />
