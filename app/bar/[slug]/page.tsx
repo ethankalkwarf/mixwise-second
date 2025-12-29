@@ -288,6 +288,7 @@ export default async function BarPage({ params }: Props) {
   }
 
   const displayName = profile.display_name || profile.username || "Anonymous Bartender";
+  const firstName = displayName.split(' ')[0] || displayName; // Get first name for personalized heading
   const isPublic = preferences?.public_bar_enabled === true;
   const ingredientIds = ingredients.map(ing => ing.ingredient_id);
 
@@ -443,41 +444,6 @@ export default async function BarPage({ params }: Props) {
                 {profile.username && (
                   <p className="text-sage mb-4">@{profile.username}</p>
                 )}
-                {!isPublic && (
-                  <div className="flex items-center gap-2 text-sage">
-                    <LockClosedIcon className="w-5 h-5" />
-                    <span>This bar is private</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Profile Header */}
-          <div className="card p-8">
-            <div className="flex items-start gap-6">
-              <div className="flex-shrink-0">
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-olive/20 flex items-center justify-center">
-                  {profile.avatar_url ? (
-                    <Image
-                      src={profile.avatar_url}
-                      alt={displayName}
-                      width={80}
-                      height={80}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <UserCircleIcon className="w-10 h-10 text-olive" />
-                  )}
-                </div>
-              </div>
-              <div className="flex-grow">
-                <h1 className="text-3xl font-serif font-bold text-forest mb-2">
-                  {displayName}'s Bar
-                </h1>
-                {profile.username && (
-                  <p className="text-sage mb-4">@{profile.username}</p>
-                )}
                 <p className="text-sage">
                   Public bar • {ingredients.length} ingredients
                 </p>
@@ -492,6 +458,7 @@ export default async function BarPage({ params }: Props) {
             isOwner={false}
             showAlmostThere={false}
             isPublicView={true}
+            userFirstName={firstName}
           />
 
           {/* CTA to Join MixWise */}

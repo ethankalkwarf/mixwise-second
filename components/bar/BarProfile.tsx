@@ -16,6 +16,7 @@ interface BarProfileProps {
   subtitle?: string;
   showAlmostThere?: boolean;
   isPublicView?: boolean;
+  userFirstName?: string;
 }
 
 export async function BarProfile({
@@ -28,6 +29,7 @@ export async function BarProfile({
   subtitle,
   showAlmostThere = true,
   isPublicView = false,
+  userFirstName,
 }: BarProfileProps) {
   // Fetch cocktails if not provided
   console.log('[BAR PROFILE] Fetching cocktails...');
@@ -44,6 +46,7 @@ export async function BarProfile({
           showAllRecipesLink={showAllRecipesLink}
           showAlmostThere={showAlmostThere}
           isPublicView={isPublicView}
+          userFirstName={userFirstName}
         />
       </section>
 

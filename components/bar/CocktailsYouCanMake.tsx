@@ -13,6 +13,7 @@ interface CocktailsYouCanMakeProps {
   showAllRecipesLink?: boolean;
   showAlmostThere?: boolean;
   isPublicView?: boolean;
+  userFirstName?: string;
 }
 
 export function CocktailsYouCanMake({
@@ -23,6 +24,7 @@ export function CocktailsYouCanMake({
   showAllRecipesLink = false,
   showAlmostThere = true,
   isPublicView = false,
+  userFirstName,
 }: CocktailsYouCanMakeProps) {
   // Run cocktail matching
   const { ready, almostThere } = getMixMatchGroups({
@@ -55,7 +57,7 @@ export function CocktailsYouCanMake({
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-serif font-bold text-forest">
-              🍸 Cocktails {isPublicView ? 'They' : 'You'} Can Make ({ready.length})
+              🍸 Cocktails {isPublicView ? `${userFirstName || 'They'}` : 'You'} Can Make ({ready.length})
             </h3>
             {showAllRecipesLink && (
               <Link
