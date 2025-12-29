@@ -54,29 +54,15 @@ export default function AccountPage() {
   useEffect(() => {
     const ensurePublicSlug = async () => {
       if (preferences?.public_bar_enabled && user && !profile?.username && !profile?.public_slug) {
-        console.log("User has public bar enabled but no username/slug, updating profile...");
-        try {
-          // Trigger the database to generate a public_slug by updating the profile
-          const { error } = await supabaseClient
-            .from('profiles')
-            .update({ updated_at: new Date().toISOString() }) // Trigger update to generate slug
-            .eq('id', user.id);
-
-          if (error) {
-            console.error("Failed to update profile for slug generation:", error);
-          } else {
-            console.log("Profile updated to generate public_slug");
-            // Refresh the profile data
-            window.location.reload();
-          }
-        } catch (err) {
-          console.error("Error ensuring public slug:", err);
-        }
+        console.log("User has public bar enabled but no username/slug, this should not happen with proper migrations");
+        // Note: This logic is now handled by the database trigger on profile creation
+        // If we reach here, it means the migrations haven't been applied yet
+        console.warn("Public bar enabled but no username/slug - migrations may not be applied");
       }
     };
 
     ensurePublicSlug();
-  }, [preferences?.public_bar_enabled, user, profile?.username, profile?.public_slug, supabaseClient]);
+  }, [preferences?.public_bar_enabled, user, profile?.username, profile?.public_slug]);
 
   // Get the shareable bar URL (username or public_slug)
   const shareableBarUrl = profile?.username || profile?.public_slug;
