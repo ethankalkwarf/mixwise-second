@@ -137,31 +137,6 @@ function mapSupabaseToSanityCocktail(cocktail: any) {
     seoTitle: cocktail.metadata_json?.seoTitle || cocktail.seo_description,
     metaDescription: cocktail.seo_description,
     imageAltOverride: cocktail.image_alt,
-    // Map ingredients from Supabase format
-    ingredients: (cocktail.ingredients || []).map((ing: any, index: number) => ({
-      _key: `ing${index}`,
-      ingredient: ing.ingredient ? {
-        _id: ing.ingredient.id,
-        name: ing.ingredient.name,
-        type: ing.ingredient.type || 'other'
-      } : null,
-      amount: ing.amount,
-      isOptional: ing.isOptional,
-      notes: ing.notes,
-    })),
-    // Map instructions - convert from text to block format
-    instructions: cocktail.instructions ? [{
-      _key: "inst1",
-      _type: "block",
-      children: [{
-        _key: "s1",
-        _type: "span",
-        marks: [],
-        text: cocktail.instructions
-      }],
-      markDefs: [],
-      style: "normal"
-    }] : [],
   };
 }
 
@@ -207,31 +182,29 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 }
 
 // Generate JSON-LD Recipe Schema
-function generateRecipeSchema(cocktail: SanityCocktail, imageUrl: string | null) {
-  const ingredients = cocktail.ingredients?.map((item) =>
-    `${item.amount ? item.amount + " " : ""}${item.ingredient?.name || "Ingredient"}`
-  ) || [];
-
-  const instructions = cocktail.instructions?.map((instruction, index) => ({
+function generateRecipeSchema(args: {
+  name: string;
+  description?: string | null;
+  imageUrl: string | null;
+  ingredients: string[];
+  instructionSteps: string[];
+  keywords: string[];
+}) {
+  const instructions = args.instructionSteps.map((text, index) => ({
     "@type": "HowToStep",
-    "text": instruction.children?.map(child => child.text).join("") || "",
-    "position": index + 1
-  })) || [];
-
-  const keywords = [
-    ...(cocktail.tags || []),
-    ...(cocktail.bestFor || [])
-  ].join(", ");
+    text,
+    position: index + 1,
+  }));
 
   return {
     "@context": "https://schema.org/",
     "@type": "Recipe",
-    "name": cocktail.name,
-    "description": cocktail.description,
-    "image": imageUrl,
-    "recipeIngredient": ingredients,
+    name: args.name,
+    description: args.description || undefined,
+    image: args.imageUrl || undefined,
+    recipeIngredient: args.ingredients,
     "recipeInstructions": instructions,
-    "keywords": keywords,
+    keywords: args.keywords.join(", "),
     "recipeCategory": "Cocktail",
     "recipeCuisine": "Cocktail",
     "author": {
@@ -268,7 +241,14 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
   // Use external image URL from Supabase
   const imageUrl = sanityCocktail.externalImageUrl || null;
 
-  const recipeSchema = generateRecipeSchema(sanityCocktail, imageUrl);
+  const recipeSchema = generateRecipeSchema({
+    name: sanityCocktail.name,
+    description: sanityCocktail.description,
+    imageUrl,
+    ingredients: ingredients.map((i) => i.text),
+    instructionSteps,
+    keywords: [...tags, ...(sanityCocktail.bestFor || [])].filter(Boolean),
+  });
 
   // Get similar recipes for recommendations
   const similarRecipes = await getSimilarRecipes(
