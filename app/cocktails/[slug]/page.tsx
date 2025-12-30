@@ -23,6 +23,24 @@ type IngredientLike =
   | { text?: string }
   | Array<string | { text?: string }>;
 
+function asString(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (value == null) return null;
+  try {
+    return String(value);
+  } catch {
+    return null;
+  }
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map((v) => asString(v)).filter(Boolean) as string[];
+  // Allow a single string value to be treated as a one-item list
+  if (typeof value === "string") return [value];
+  return [];
+}
+
 function normalizeIngredients(raw: IngredientLike): { text: string }[] {
   if (!raw) return [];
 
@@ -110,6 +128,10 @@ export const dynamic = 'force-dynamic';
 
 // Helper function to map Supabase cocktail to expected shape for the component
 function mapSupabaseToSanityCocktail(cocktail: any) {
+  const tags = asStringArray(cocktail.tags);
+  const bestFor = asStringArray(cocktail.metadata_json?.bestFor);
+  const funFactSource = asString(cocktail.fun_fact_source);
+
   return {
     _id: cocktail.id,
     _type: "cocktail" as const,
@@ -119,11 +141,11 @@ function mapSupabaseToSanityCocktail(cocktail: any) {
     externalImageUrl: cocktail.image_url,
     glass: cocktail.glassware,
     method: cocktail.technique,
-    tags: cocktail.tags || [],
+    tags,
     funFact: cocktail.fun_fact,
-    funFactSources: cocktail.fun_fact_source ? [{
-      label: cocktail.fun_fact_source,
-      url: cocktail.fun_fact_source.startsWith('http') ? cocktail.fun_fact_source : ""
+    funFactSources: funFactSource ? [{
+      label: funFactSource,
+      url: funFactSource.startsWith('http') ? funFactSource : ""
     }] : [],
     flavorProfile: cocktail.flavor_strength || cocktail.flavor_sweetness || cocktail.flavor_tartness || cocktail.flavor_bitterness ? {
       strength: cocktail.flavor_strength,
@@ -133,7 +155,7 @@ function mapSupabaseToSanityCocktail(cocktail: any) {
       aroma: cocktail.flavor_aroma,
       texture: cocktail.flavor_texture,
     } : undefined,
-    bestFor: cocktail.metadata_json?.bestFor || [],
+    bestFor,
     seoTitle: cocktail.metadata_json?.seoTitle || cocktail.seo_description,
     metaDescription: cocktail.seo_description,
     imageAltOverride: cocktail.image_alt,
@@ -247,7 +269,7 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
     imageUrl,
     ingredients: ingredients.map((i) => i.text),
     instructionSteps,
-    keywords: [...tags, ...(sanityCocktail.bestFor || [])].filter(Boolean),
+    keywords: [...tags, ...asStringArray(sanityCocktail.bestFor)].filter(Boolean),
   });
 
   // Get similar recipes for recommendations
