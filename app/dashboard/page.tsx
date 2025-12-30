@@ -11,7 +11,8 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
-import { getCocktailsWithIngredientsClient } from "@/lib/cocktails";
+import { getCocktailsWithIngredientsClient, getMixDataClient } from "@/lib/cocktails";
+import { getMixMatchGroups } from "@/lib/mixMatching";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import type { MixIngredient } from "@/lib/mixTypes";
@@ -54,6 +55,7 @@ export default function DashboardPage() {
   const { preferences, needsOnboarding } = useUserPreferences();
 
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
+  const [allCocktails, setAllCocktails] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendedCocktail[]>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
@@ -190,51 +192,55 @@ export default function DashboardPage() {
     }
   }, [authLoading, isAuthenticated, openAuthDialog]);
 
-  // Fetch recommendations
+  // Fetch recommendations and cocktail data
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch ingredients and cocktails data (same as mix wizard)
+        const { ingredients, cocktails } = await getMixDataClient();
+        setAllIngredients(ingredients || []);
+        setAllCocktails(cocktails || []);
+      } catch (error) {
+        console.error("Error fetching mix data:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  // Fetch recommendations using same logic as mix wizard
   useEffect(() => {
     async function fetchRecommendations() {
-      if (!isAuthenticated || ingredientIds.length === 0) {
+      if (!isAuthenticated || ingredientIds.length === 0 || allCocktails.length === 0 || allIngredients.length === 0) {
         setRecommendations([]);
         setLoadingRecs(false);
         return;
       }
 
       try {
-        // Fetch cocktails with ingredients from Supabase
-        const cocktails = await getCocktailsWithIngredientsClient();
+        // Calculate staple IDs (same logic as mix wizard)
+        const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
+        const manualStaples = ['ice', 'water']; // Only truly universal basics
+        const stapleIds = [...new Set([...dbStaples, ...manualStaples])];
 
-        // Convert to expected format
-        const formattedCocktails: RecommendedCocktail[] = cocktails.map(cocktail => ({
+        // Use same matching logic as mix wizard
+        const result = getMixMatchGroups({
+          cocktails: allCocktails,
+          ownedIngredientIds: ingredientIds,
+          stapleIngredientIds: stapleIds,
+        });
+
+        // Convert ready cocktails to expected format
+        const formattedCocktails: RecommendedCocktail[] = result.ready.map(cocktail => ({
           _id: cocktail.id,
           name: cocktail.name,
           slug: { current: cocktail.slug },
           externalImageUrl: cocktail.imageUrl || undefined,
           primarySpirit: cocktail.primarySpirit || undefined,
-          ingredientIds: cocktail.ingredientsWithIds?.map(ing => ing.id) || []
+          ingredientIds: cocktail.ingredients?.map(ing => ing.id) || []
         }));
 
-        // Score cocktails by how many ingredients user has
-        const ingredientSet = new Set(ingredientIds); // Use string IDs directly like mix tool
-        const scoredCocktails = formattedCocktails
-          .map((cocktail) => {
-            const cocktailIngredients = cocktail.ingredientIds || [];
-            const matchCount = cocktailIngredients.filter((id) => ingredientSet.has(id)).length;
-            const totalIngredients = cocktailIngredients.length || 1;
-            const matchScore = totalIngredients > 0 ? matchCount / totalIngredients : 0;
-
-            // Boost score if matches user preferences
-            let finalScore = matchScore;
-            if (preferences?.preferred_spirits?.includes(cocktail.primarySpirit?.toLowerCase() || "")) {
-              finalScore += 0.2;
-            }
-
-            return { ...cocktail, matchScore: finalScore };
-          })
-          .filter((c) => c.matchScore && c.matchScore > 0.3)
-          .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
-          .slice(0, 10);
-
-        setRecommendations(scoredCocktails);
+        setRecommendations(formattedCocktails.slice(0, 10));
       } catch (error) {
         console.error("Error fetching recommendations:", error);
       } finally {
@@ -243,7 +249,7 @@ export default function DashboardPage() {
     }
 
     fetchRecommendations();
-  }, [isAuthenticated, ingredientIds, preferences]);
+  }, [isAuthenticated, ingredientIds, allCocktails, allIngredients, preferences]);
 
   // Fetch ingredients for display
   useEffect(() => {

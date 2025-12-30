@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getMixMatchGroups } from "@/lib/mixMatching";
-import type { MixCocktail, MixMatchResult } from "@/lib/mixTypes";
+import { getMixIngredients } from "@/lib/cocktails";
+import type { MixCocktail, MixMatchResult, MixIngredient } from "@/lib/mixTypes";
 
 interface CocktailsYouCanMakeProps {
   ingredientIds: string[];
@@ -19,13 +21,41 @@ interface CocktailsYouCanMakeProps {
 export function CocktailsYouCanMake({
   ingredientIds,
   allCocktails,
-  stapleIngredientIds = ["ice", "water", "salt", "simple-syrup"],
+  stapleIngredientIds: providedStapleIds,
   maxResults = 12,
   showAllRecipesLink = false,
   showAlmostThere = true,
   isPublicView = false,
   userFirstName,
 }: CocktailsYouCanMakeProps) {
+  const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch ingredients to calculate staple IDs (same logic as mix wizard)
+  useEffect(() => {
+    async function fetchIngredients() {
+      try {
+        const ingredients = await getMixIngredients();
+        setAllIngredients(ingredients);
+      } catch (error) {
+        console.error("Error fetching ingredients for staple calculation:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchIngredients();
+  }, []);
+
+  // Calculate staple IDs (same logic as mix wizard)
+  const stapleIngredientIds = providedStapleIds || (() => {
+    if (loading || allIngredients.length === 0) return ["ice", "water"]; // Default while loading
+
+    const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
+    const manualStaples = ['ice', 'water']; // Only truly universal basics
+    return [...new Set([...dbStaples, ...manualStaples])];
+  })();
+
   // Run cocktail matching
   const { ready, almostThere } = getMixMatchGroups({
     cocktails: allCocktails,
