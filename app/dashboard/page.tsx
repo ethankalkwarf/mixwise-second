@@ -250,6 +250,8 @@ export default function DashboardPage() {
           ingredientIds: cocktail.ingredients?.map(ing => ing.id) || []
         }));
 
+        console.log('[DASHBOARD DEBUG] Formatted cocktails sample:', formattedCocktails.slice(0, 3).map(c => ({ name: c.name, slug: c.slug?.current })));
+
             setRecommendations(formattedCocktails);
       } catch (error) {
         console.error("Error fetching recommendations:", error);

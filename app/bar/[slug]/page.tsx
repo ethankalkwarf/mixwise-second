@@ -310,7 +310,7 @@ export default async function BarPage({ params }: Props) {
 
   // For owner view, get user's owned ingredients (what they can actually make cocktails with)
   // For public view, use bar ingredients (what they display in their bar)
-  let cocktailIngredientIds = ingredientIds;
+  let cocktailIngredientIds: string[];
   if (isOwnerView) {
     // For owner view, get user's owned ingredients from bar_ingredients table
     const supabase = createServerClient();
@@ -481,7 +481,7 @@ export default async function BarPage({ params }: Props) {
 
           {/* Bar Content */}
           <BarProfile
-            ingredientIds={ingredientIds}
+            ingredientIds={cocktailIngredientIds}
             ingredients={ingredients}
             isOwner={false}
             showAlmostThere={false}
