@@ -1,6 +1,7 @@
 interface InventoryItem {
   ingredient_id: string;
   ingredient_name: string | null;
+  ingredient_category?: string | null;
 }
 
 interface InventoryListProps {
@@ -30,11 +31,27 @@ export function InventoryList({
     );
   }
 
-  // Group ingredients by first letter for better organization
+  // Group ingredients by category (no alphabetical sorting within categories).
+  // Category order mirrors Mix categories as closely as possible.
+  const CATEGORY_ORDER = [
+    "Spirit",
+    "Liqueur",
+    "Wine",
+    "Beer",
+    "Mixer",
+    "Citrus",
+    "Syrup",
+    "Bitters",
+    "Garnish",
+    "Other",
+  ];
+
+  const categoryRank = new Map<string, number>(CATEGORY_ORDER.map((c, i) => [c, i]));
+
   const groupedIngredients = ingredients.reduce((acc, ing) => {
-    const firstLetter = ing.ingredient_name?.[0]?.toUpperCase() || 'Other';
-    if (!acc[firstLetter]) acc[firstLetter] = [];
-    acc[firstLetter].push(ing);
+    const category = ing.ingredient_category || "Other";
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(ing);
     return acc;
   }, {} as Record<string, InventoryItem[]>);
 
@@ -50,11 +67,11 @@ export function InventoryList({
       </div>
 
       {Object.entries(groupedIngredients)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([letter, groupIngredients]) => (
-          <div key={letter}>
+        .sort(([a], [b]) => (categoryRank.get(a) ?? 999) - (categoryRank.get(b) ?? 999))
+        .map(([category, groupIngredients]) => (
+          <div key={category}>
             <h4 className="text-lg font-semibold text-forest mb-3 border-b border-mist pb-2">
-              {letter}
+              {category}
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {groupIngredients.map((ingredient) => (

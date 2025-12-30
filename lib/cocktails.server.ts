@@ -433,6 +433,7 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
   id: string;
   ingredient_id: number;
   ingredient_name: string | null;
+  ingredient_category?: string | null;
   inventory_id?: string;
 }>> {
   const supabase = createServerSupabaseClient();
@@ -440,7 +441,7 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
   // First, fetch all ingredients to create name-to-ID mapping
   const { data: allIngredients, error: ingredientsError } = await supabase
     .from('ingredients')
-    .select('id, name');
+    .select('id, name, category');
 
   if (ingredientsError) {
     console.error('Error fetching ingredients list:', ingredientsError);
@@ -451,10 +452,12 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
   const nameToIdMap = new Map<string, number>();
   // Create mapping from numeric ID to ingredient name for lookup
   const idToNameMap = new Map<number, string>();
+  const idToCategoryMap = new Map<number, string | null>();
   (allIngredients || []).forEach(ing => {
     if (ing.name) {
       nameToIdMap.set(ing.name.toLowerCase(), ing.id);
       idToNameMap.set(ing.id, ing.name);
+      idToCategoryMap.set(ing.id, (ing as any).category ?? null);
     }
   });
 
@@ -556,6 +559,7 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
               id: item.id.toString(),
               ingredient_id: numericId,
               ingredient_name: properName,
+              ingredient_category: idToCategoryMap.get(numericId) ?? null,
               inventory_id: inventoryId,
             };
           })
@@ -592,10 +596,73 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
         id: item.id.toString(),
         ingredient_id: numericId,
         ingredient_name: properName,
+        ingredient_category: idToCategoryMap.get(numericId) ?? null,
         // No inventory_id for bar_ingredients
       };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);
+}
+
+/**
+ * Get staple ingredient IDs (server-side)
+ * Mirrors the Mix/Dashboard staple logic: DB staples + manual ice/water.
+ */
+export async function getStapleIngredientIds(): Promise<string[]> {
+  const supabase = createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("ingredients")
+    .select("id")
+    .eq("is_staple", true);
+
+  if (error) {
+    console.error("Error fetching staple ingredient IDs:", error);
+    return ["ice", "water"];
+  }
+
+  const dbStaples = (data || []).map((r: any) => String(r.id)).filter(Boolean);
+  const manualStaples = ["ice", "water"];
+  return [...new Set([...dbStaples, ...manualStaples])];
+}
+
+/**
+ * Get a user's favorites (server-side).
+ * Used for public bar profile rendering (service-role context).
+ */
+export async function getUserFavorites(userId: string): Promise<Array<{
+  cocktail_id: string;
+  cocktail_name: string | null;
+  cocktail_slug: string | null;
+  cocktail_image_url: string | null;
+}>> {
+  const supabase = createServerSupabaseClient();
+
+  // Only expose favorites for users who have enabled public bar.
+  const { data: pref, error: prefError } = await supabase
+    .from("user_preferences")
+    .select("public_bar_enabled")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (prefError) {
+    console.error("Error checking public_bar_enabled for favorites:", prefError);
+    return [];
+  }
+
+  if (!pref?.public_bar_enabled) return [];
+
+  const { data, error } = await supabase
+    .from("favorites")
+    .select("cocktail_id, cocktail_name, cocktail_slug, cocktail_image_url")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching user favorites:", error);
+    return [];
+  }
+
+  return (data || []) as any;
 }
 
 /**

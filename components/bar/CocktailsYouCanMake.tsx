@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { getMixIngredients } from "@/lib/cocktails";
+import { formatCocktailName } from "@/lib/formatters";
 import type { MixCocktail, MixMatchResult, MixIngredient } from "@/lib/mixTypes";
 
 interface CocktailsYouCanMakeProps {
@@ -217,7 +218,7 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
         </div>
       </div>
       <h4 className="font-semibold text-forest text-sm line-clamp-2 mb-1">
-        {cocktail.name}
+        {formatCocktailName(cocktail.name)}
       </h4>
       <p className="text-sage text-xs mb-2">
         {cocktail.primarySpirit}

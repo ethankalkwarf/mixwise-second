@@ -30,6 +30,7 @@ interface PublicProfile {
 interface BarIngredient {
   ingredient_id: string;
   ingredient_name: string | null;
+  ingredient_category?: string | null;
 }
 
 interface UserPreferences {
@@ -56,6 +57,7 @@ async function processProfileResult(profile: any, isOwnerView: boolean, supabase
     const ingredients: BarIngredient[] = normalized.map((item) => ({
       ingredient_id: String(item.ingredient_id),
       ingredient_name: item.ingredient_name,
+      ingredient_category: item.ingredient_category ?? null,
     }));
 
     if (!isOwnerView) {
@@ -448,6 +450,7 @@ export default async function BarPage({ params }: Props) {
             showAlmostThere={false}
             isPublicView={true}
             userFirstName={firstName}
+            userId={profile.id}
           />
 
           {/* CTA to Join MixWise */}
