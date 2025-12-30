@@ -241,13 +241,13 @@ export default function DashboardPage() {
         });
 
         // Convert ready cocktails to expected format
-        const formattedCocktails: RecommendedCocktail[] = result.ready.map(cocktail => ({
-          _id: cocktail.id,
-          name: cocktail.name,
-          slug: { current: cocktail.slug },
-          externalImageUrl: cocktail.imageUrl || undefined,
-          primarySpirit: cocktail.primarySpirit || undefined,
-          ingredientIds: cocktail.ingredients?.map(ing => ing.id) || []
+        const formattedCocktails: RecommendedCocktail[] = result.ready.map(match => ({
+          _id: match.cocktail.id,
+          name: match.cocktail.name,
+          slug: { current: match.cocktail.slug },
+          externalImageUrl: match.cocktail.imageUrl || undefined,
+          primarySpirit: match.cocktail.primarySpirit || undefined,
+          ingredientIds: match.cocktail.ingredients?.map(ing => ing.id) || []
         }));
 
         console.log('[DASHBOARD DEBUG] Formatted cocktails sample:', formattedCocktails.slice(0, 3).map(c => ({ name: c.name, slug: c.slug?.current })));

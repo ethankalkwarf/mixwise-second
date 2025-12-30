@@ -8,7 +8,7 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
 import { SITE_CONFIG } from "@/lib/seo";
 import type { Database } from "@/lib/supabase/database.types";
-import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, ShareIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 
 // Create a Supabase client with anon key for public reads
 function createPublicClient() {
