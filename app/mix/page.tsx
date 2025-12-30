@@ -38,6 +38,17 @@ export default function MixPage() {
   const [currentStep, setCurrentStep] = useState<'cabinet' | 'mixer' | 'menu'>('cabinet');
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Check URL for step parameter
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const stepParam = params.get('step');
+      if (stepParam === 'menu' && ingredientIds.length > 0) {
+        setCurrentStep('menu');
+      }
+    }
+  }, [ingredientIds.length]);
+
   const { isAuthenticated, user } = useUser();
   const {
     ingredientIds,

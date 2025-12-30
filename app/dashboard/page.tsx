@@ -492,7 +492,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <Link
-                  href="/mix"
+                  href="/mix?step=menu"
                   className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium"
                 >
                   View all →
@@ -527,9 +527,11 @@ export default function DashboardPage() {
                           <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
                             {cocktail.name}
                           </p>
-                          <p className="text-sm text-sage">
-                            100% match
-                          </p>
+                          {cocktail.primarySpirit && (
+                            <p className="text-sm text-sage">
+                              {cocktail.primarySpirit}
+                            </p>
+                          )}
                         </div>
                       </Link>
                     ))}

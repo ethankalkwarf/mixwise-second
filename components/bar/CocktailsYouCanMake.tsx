@@ -22,7 +22,7 @@ export function CocktailsYouCanMake({
   ingredientIds,
   allCocktails,
   stapleIngredientIds: providedStapleIds,
-  maxResults = 12,
+  maxResults = 999,
   showAllRecipesLink = false,
   showAlmostThere = true,
   isPublicView = false,
