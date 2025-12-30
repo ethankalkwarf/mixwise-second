@@ -9,16 +9,25 @@ export interface CocktailWithId {
 }
 
 /**
- * Get the daily cocktail index for a given date
- * Uses a deterministic hash function to ensure the same date always returns the same cocktail
+ * Get the daily cocktail index for a given date.
+ * Uses a deterministic hash function so the same day always returns the same cocktail.
+ *
+ * IMPORTANT: This uses a UTC YYYY-MM-DD date string so all users see the same cocktail each day
+ * (and server-side redirects remain consistent).
  */
 export function getDailyCocktailIndex(cocktails: CocktailWithId[], date: Date): number {
   if (!cocktails.length) return 0;
 
-  // Use the LOCAL date in YYYY-MM-DD format (not UTC!)
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  return getDailyIndexFromCount(cocktails.length, date);
+}
+
+export function getDailyIndexFromCount(count: number, date: Date): number {
+  if (!count) return 0;
+
+  // Use the UTC date in YYYY-MM-DD format
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   const dateString = `${year}-${month}-${day}`;
 
   // Simple hash function for the date
@@ -30,7 +39,7 @@ export function getDailyCocktailIndex(cocktails: CocktailWithId[], date: Date): 
   }
 
   // Use absolute value to ensure positive index
-  return Math.abs(hash) % cocktails.length;
+  return Math.abs(hash) % count;
 }
 
 /**
@@ -62,8 +71,8 @@ export function isTodaysDailyCocktail(cocktailId: string, cocktails: CocktailWit
  */
 export function getCurrentLocalDateString(): string {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(now.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }

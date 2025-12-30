@@ -68,6 +68,7 @@ export default function DashboardPage() {
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const [numericIngredientIds, setNumericIngredientIds] = useState<number[]>([]);
+  const DASHBOARD_READY_LIMIT = 10;
 
   // Redirect to onboarding if needed
   useEffect(() => {
@@ -525,7 +526,7 @@ export default function DashboardPage() {
                   </div>
                 ) : recommendations.length > 0 ? (
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {recommendations.map((cocktail) => (
+                    {recommendations.slice(0, DASHBOARD_READY_LIMIT).map((cocktail) => (
                       <Link
                         key={cocktail._id}
                         href={`/cocktails/${cocktail.slug?.current}`}
@@ -561,6 +562,19 @@ export default function DashboardPage() {
                       <PlusCircleIcon className="w-5 h-5" />
                       Build Your Bar
                     </Link>
+                  </div>
+                )}
+
+                {!loadingRecs && recommendations.length > DASHBOARD_READY_LIMIT && (
+                  <div className="mt-4 text-sm text-sage">
+                    Showing {DASHBOARD_READY_LIMIT} of {recommendations.length}.{" "}
+                    <Link
+                      href="/mix?step=menu"
+                      className="text-terracotta hover:text-terracotta-dark font-medium"
+                    >
+                      View all
+                    </Link>
+                    .
                   </div>
                 )}
               </div>
