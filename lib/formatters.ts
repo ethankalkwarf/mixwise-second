@@ -38,4 +38,30 @@ export function formatCocktailName(name: string): string {
     .join(' '); // Rejoin with spaces
 }
 
+/**
+ * Formats an ingredient category label for display (pluralized).
+ *
+ * Note: category keys in the data model remain singular (e.g. "Spirit"),
+ * but UI should display plural labels (e.g. "Spirits").
+ */
+export function formatIngredientCategory(category: string): string {
+  if (!category) return category;
+
+  const normalized = category.trim();
+  const map: Record<string, string> = {
+    Spirit: "Spirits",
+    Liqueur: "Liqueurs",
+    Wine: "Wines",
+    Beer: "Beers",
+    Mixer: "Mixers",
+    Citrus: "Citrus",
+    Syrup: "Syrups",
+    Bitters: "Bitters",
+    Garnish: "Garnishes",
+    Other: "Others",
+  };
+
+  return map[normalized] || normalized;
+}
+
 

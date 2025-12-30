@@ -5,6 +5,7 @@ import type { MixIngredient } from "@/lib/mixTypes";
 import { PlusIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { formatIngredientCategory } from "@/lib/formatters";
 
 type Props = {
   allIngredients: MixIngredient[];
@@ -262,7 +263,7 @@ export function MixCabinet({
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-display font-bold text-forest">
-                {selectedCategory}
+                {formatIngredientCategory(selectedCategory)}
               </h2>
               <p className="text-sage">
                 {filteredIngredients.length} ingredients available

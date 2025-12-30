@@ -17,7 +17,14 @@ import type {
 // Create a Supabase client for server-side operations that works during build time
 function createServerSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  // Prefer service role when available, but fall back to anon key for read-only queries.
+  // This prevents server-side crashes in environments where service role isn't set.
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseKey) {
+    throw new Error("Missing Supabase key: set SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  }
 
   return createClient<Database>(supabaseUrl, supabaseKey);
 }

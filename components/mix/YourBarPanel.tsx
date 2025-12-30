@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { MixIngredient } from "@/lib/mixTypes";
 import { XMarkIcon, TrashIcon, CheckCircleIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { formatIngredientCategory } from "@/lib/formatters";
 
 type Props = {
   selectedIngredients: MixIngredient[];
@@ -220,7 +221,7 @@ export function YourBarPanel({
                         : 'bg-mist text-sage hover:bg-terracotta/20 hover:text-terracotta'
                     }`}
                   >
-                    {category}
+                    {category === "All" ? "All" : formatIngredientCategory(category)}
                   </button>
                 ))}
               </div>
@@ -242,7 +243,7 @@ export function YourBarPanel({
                       {ingredient.name}
                     </span>
                     <span className="text-xs text-sage ml-2">
-                      {ingredient.category}
+                      {formatIngredientCategory(ingredient.category || "Other")}
                     </span>
                   </div>
                   <div className="text-xs text-olive font-medium">

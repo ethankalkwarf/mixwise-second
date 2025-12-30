@@ -1,3 +1,5 @@
+import { formatIngredientCategory } from "@/lib/formatters";
+
 interface InventoryItem {
   ingredient_id: string;
   ingredient_name: string | null;
@@ -71,10 +73,16 @@ export function InventoryList({
         .map(([category, groupIngredients]) => (
           <div key={category}>
             <h4 className="text-lg font-semibold text-forest mb-3 border-b border-mist pb-2">
-              {category}
+              {formatIngredientCategory(category)}
             </h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {groupIngredients.map((ingredient) => (
+              {[...groupIngredients]
+                .sort((a, b) => {
+                  const an = (a.ingredient_name || a.ingredient_id || "").toLowerCase();
+                  const bn = (b.ingredient_name || b.ingredient_id || "").toLowerCase();
+                  return an.localeCompare(bn);
+                })
+                .map((ingredient) => (
                 <div
                   key={ingredient.ingredient_id}
                   className="p-3 bg-cream/30 rounded-lg border border-mist hover:bg-cream/50 transition-colors"
