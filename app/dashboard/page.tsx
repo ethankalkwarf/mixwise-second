@@ -250,7 +250,7 @@ export default function DashboardPage() {
           ingredientIds: cocktail.ingredients?.map(ing => ing.id) || []
         }));
 
-        setRecommendations(formattedCocktails.slice(0, 10));
+            setRecommendations(formattedCocktails);
       } catch (error) {
         console.error("Error fetching recommendations:", error);
       } finally {

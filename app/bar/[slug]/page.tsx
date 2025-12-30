@@ -41,6 +41,23 @@ function isUUID(str: string): boolean {
   return uuidRegex.test(str);
 }
 
+// Helper function to get user's owned ingredients (from bar_ingredients table)
+async function getUserOwnedIngredients(userId: string, supabase: any): Promise<string[]> {
+  console.log('[BAR PAGE] Getting user owned ingredients for:', userId);
+
+  const { data, error } = await supabase
+    .from("bar_ingredients")
+    .select("ingredient_id")
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error('[BAR PAGE] Error getting user owned ingredients:', error);
+    return [];
+  }
+
+  return (data || []).map(item => item.ingredient_id);
+}
+
 // Helper function to process profile result and get ingredients
 async function processProfileResult(profile: any, isOwnerView: boolean, supabase: any) {
   console.log('[BAR PAGE] Processing profile result for:', profile.id);
@@ -290,7 +307,18 @@ export default async function BarPage({ params }: Props) {
   const displayName = profile.display_name || profile.username || "Anonymous Bartender";
   const firstName = displayName.split(' ')[0] || displayName; // Get first name for personalized heading
   const isPublic = preferences?.public_bar_enabled === true;
-  const ingredientIds = ingredients.map(ing => ing.ingredient_id);
+
+  // For owner view, get user's owned ingredients (what they can actually make cocktails with)
+  // For public view, use bar ingredients (what they display in their bar)
+  let cocktailIngredientIds = ingredientIds;
+  if (isOwnerView) {
+    // For owner view, get user's owned ingredients from bar_ingredients table
+    const supabase = createServerClient();
+    cocktailIngredientIds = await getUserOwnedIngredients(params.slug, supabase);
+    console.log('[BAR PAGE] Owner view - using owned ingredients:', cocktailIngredientIds.length);
+  } else {
+    cocktailIngredientIds = ingredients.map(ing => ing.ingredient_id);
+  }
 
   // For owner view, show owner interface
   if (isOwnerView) {
@@ -345,7 +373,7 @@ export default async function BarPage({ params }: Props) {
 
             {/* Bar Content */}
             <BarProfile
-              ingredientIds={ingredientIds}
+              ingredientIds={cocktailIngredientIds}
               ingredients={ingredients}
               isOwner={true}
               showAllRecipesLink={true}
