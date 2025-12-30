@@ -1,35 +1,41 @@
+"use client";
+
 import { getCocktailsList } from "@/lib/cocktails.server";
+import { getTodaysDailyCocktail } from "@/lib/dailyCocktail";
 import { redirect } from "next/navigation";
+import { useEffect } from "react";
 
-// Helper function to get a deterministic daily cocktail
-function getDailyCocktail(cocktails: any[]): any {
-  if (!cocktails.length) return null;
+export default function CocktailOfTheDayPage() {
+  useEffect(() => {
+    // Fetch cocktails and determine daily cocktail on the client side
+    const fetchAndRedirect = async () => {
+      try {
+        const cocktails = await getCocktailsList();
+        const dailyCocktail = getTodaysDailyCocktail(cocktails);
 
-  // Use current date to create a deterministic seed
-  const today = new Date();
-  const dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+        if (!dailyCocktail) {
+          redirect('/cocktails');
+          return;
+        }
 
-  // Simple hash function for the date
-  let hash = 0;
-  for (let i = 0; i < dateString.length; i++) {
-    const char = dateString.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
+        // Redirect to the daily cocktail page with a query parameter to indicate it's the daily cocktail
+        redirect(`/cocktails/${dailyCocktail.slug}?daily=true`);
+      } catch (error) {
+        console.error('Error fetching daily cocktail:', error);
+        redirect('/cocktails');
+      }
+    };
 
-  // Use absolute value to ensure positive index
-  const index = Math.abs(hash) % cocktails.length;
-  return cocktails[index];
-}
+    fetchAndRedirect();
+  }, []);
 
-export default async function CocktailOfTheDayPage() {
-  const cocktails = await getCocktailsList();
-  const dailyCocktail = getDailyCocktail(cocktails);
-
-  if (!dailyCocktail) {
-    redirect('/cocktails');
-  }
-
-  // Redirect to the daily cocktail page with a query parameter to indicate it's the daily cocktail
-  redirect(`/cocktails/${dailyCocktail.slug}?daily=true`);
+  // Show loading state while redirecting
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-terracotta mx-auto mb-4"></div>
+        <p className="text-sage">Finding today's cocktail...</p>
+      </div>
+    </div>
+  );
 }

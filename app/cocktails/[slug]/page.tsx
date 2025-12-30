@@ -12,6 +12,7 @@ import { RecipeActions } from "@/components/cocktails/RecipeActions";
 import { getSimilarRecipes } from "@/lib/similarRecipes";
 import { ShoppingListButton } from "@/components/cocktails/ShoppingListButton";
 import { RecipeContent } from "./RecipeContent";
+import { DailyCocktailBanner } from "@/components/cocktails/DailyCocktailBanner";
 
 // --- helpers for data normalization ---
 
@@ -255,19 +256,8 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
 
   const sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
 
-  // Only show daily banner if this cocktail is actually today's daily cocktail
+  // Get all cocktails for daily cocktail comparison
   const allCocktails = await getCocktailsList();
-  const today = new Date();
-  const dateString = today.toISOString().split('T')[0];
-  let hash = 0;
-  for (let i = 0; i < dateString.length; i++) {
-    const char = dateString.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  const dailyCocktailIndex = Math.abs(hash) % allCocktails.length;
-  const actualDailyCocktail = allCocktails[dailyCocktailIndex];
-  const isDailyCocktail = daily === 'true' && cocktail.id === actualDailyCocktail.id;
 
   // Normalize data from Supabase
   const ingredients = normalizeIngredients(cocktail.ingredients as any);
@@ -312,22 +302,11 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
       {/* MAIN PAGE WRAPPER */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
         {/* Cocktail of the Day Banner */}
-        {isDailyCocktail && (
-          <div className="mb-8">
-            <div className="inline-flex items-center gap-2 bg-terracotta/10 text-terracotta px-4 py-2 rounded-full text-sm font-medium">
-              <span>⭐</span>
-              <span>Cocktail of the Day</span>
-              <span className="text-xs opacity-75">
-                {new Date().toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </span>
-            </div>
-          </div>
-        )}
+        <DailyCocktailBanner
+          cocktailId={cocktail.id}
+          allCocktails={allCocktails}
+          isInitiallyDaily={daily === 'true'}
+        />
 
         {/* Back Link */}
         <div className="mb-8">

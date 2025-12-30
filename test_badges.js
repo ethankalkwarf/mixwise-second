@@ -23,3 +23,4 @@ Object.values(BADGES).forEach(badge => {
 });
 
 console.log('\nBadge system test completed.');
+

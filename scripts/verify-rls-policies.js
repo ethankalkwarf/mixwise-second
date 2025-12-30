@@ -101,3 +101,4 @@ async function verifyRLSPolicies() {
 // Run verification
 verifyRLSPolicies().catch(console.error);
 
+

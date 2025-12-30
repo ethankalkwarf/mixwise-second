@@ -312,7 +312,7 @@ export function MixCabinet({
                         {categoryIcons[ingredient.category || "Garnish"] || "📦"}
                       </div>
                       <div className={`font-medium text-sm leading-tight ${
-                        isSelected || isJustAdded ? 'text-cream' : 'text-forest'
+                        isSelected || isJustAdded ? 'text-charcoal' : 'text-forest'
                       }`}>
                         {ingredient.name}
                       </div>

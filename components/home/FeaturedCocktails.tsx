@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { getImageUrl } from "@/lib/sanityImage";
+import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
 interface FeaturedCocktailsProps {
@@ -51,7 +51,12 @@ interface FeaturedCocktailCardProps {
 }
 
 function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 400, height: 300 }) || cocktail.externalImageUrl;
+  const imageUrl = getImageUrl(cocktail.image, {
+    width: 400,
+    height: 300,
+    quality: 80,
+    auto: 'format'
+  }) || cocktail.externalImageUrl;
 
   return (
     <Link
@@ -69,6 +74,8 @@ function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps)
             width={400}
             height={300}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            placeholder="blur"
+            blurDataURL={COCKTAIL_BLUR_DATA_URL}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-sage text-3xl">

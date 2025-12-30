@@ -348,3 +348,4 @@ CREATE TRIGGER update_ratings_updated_at
   BEFORE UPDATE ON public.ratings
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+

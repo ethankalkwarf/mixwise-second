@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getImageUrl } from "@/lib/sanityImage";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import { BeakerIcon, Square3Stack3DIcon } from "@heroicons/react/24/outline";
 
@@ -8,19 +9,31 @@ interface CocktailHeroProps {
 }
 
 export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
+  // Generate optimized image URL with proper transformations
+  const optimizedImageUrl = cocktail.image ?
+    getImageUrl(cocktail.image, {
+      width: 800,
+      height: 1000,
+      quality: 90,
+      auto: 'format'
+    }) : imageUrl;
+
   return (
     <>
       {/* IMAGE SIDE */}
       <div className="relative group">
         <div className="aspect-[4/5] md:aspect-square w-full overflow-hidden rounded-2xl shadow-soft bg-gray-200 relative">
-          {imageUrl ? (
+          {optimizedImageUrl ? (
             <Image
-              src={imageUrl}
+              src={optimizedImageUrl}
               alt={cocktail.imageAltOverride || cocktail.image?.alt || `${cocktail.name} cocktail`}
               fill
               priority
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+              quality={90}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAoACgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAMEB//EACUQAAIBAwMEAwEBAAAAAAAAAAECAwAEEQUSITFBURNhcZEigf/EABUBAFEAAAAAAAAAAAAAAAAAAAH/xAAVEQEBAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACEQMRAD8A4+iiigAooooAKKKKACiiigAooooAKKKKACiiigD/2Q=="
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-sage text-6xl">
