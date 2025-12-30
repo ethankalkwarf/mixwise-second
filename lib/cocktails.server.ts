@@ -13,6 +13,7 @@ import type {
   MixIngredient,
   MixCocktailIngredient
 } from './cocktailTypes';
+import { getDailyIndexFromCount } from "./dailyCocktail";
 
 // Create a Supabase client for server-side operations that works during build time
 function createServerSupabaseClient() {
@@ -429,6 +430,46 @@ export async function getCocktailCount(): Promise<number> {
   }
 
   return count || 0;
+}
+
+/**
+ * Get today's cocktail slug deterministically (server-side).
+ * Uses UTC date string hashing so all users see the same cocktail each day.
+ *
+ * Uses the server Supabase client (service role when available, anon fallback),
+ * so this works consistently in production where the cocktails table may not be publicly countable.
+ */
+export async function getTodaysDailyCocktailSlug(): Promise<string | null> {
+  try {
+    const supabase = createServerSupabaseClient();
+
+    // Only choose cocktails that have a usable slug
+    const { count, error: countError } = await supabase
+      .from("cocktails")
+      .select("id", { count: "exact", head: true })
+      .not("slug", "is", null)
+      .neq("slug", "");
+
+    if (countError || !count || count <= 0) return null;
+
+    const index = getDailyIndexFromCount(count, new Date());
+
+    const { data, error } = await supabase
+      .from("cocktails")
+      .select("slug")
+      .not("slug", "is", null)
+      .neq("slug", "")
+      .order("slug", { ascending: true })
+      .range(index, index);
+
+    if (error) return null;
+
+    const slug = (data?.[0] as any)?.slug;
+    return slug ? String(slug) : null;
+  } catch (e) {
+    console.error("getTodaysDailyCocktailSlug failed:", e);
+    return null;
+  }
 }
 
 /**
