@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase/server";
+import { getUserBarIngredients } from "@/lib/cocktails.server";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
 import { SITE_CONFIG } from "@/lib/seo";
@@ -41,23 +42,6 @@ function isUUID(str: string): boolean {
   return uuidRegex.test(str);
 }
 
-// Helper function to get user's owned ingredients (from bar_ingredients table)
-async function getUserOwnedIngredients(userId: string, supabase: any): Promise<string[]> {
-  console.log('[BAR PAGE] Getting user owned ingredients for:', userId);
-
-  const { data, error } = await supabase
-    .from("bar_ingredients")
-    .select("ingredient_id")
-    .eq("user_id", userId);
-
-  if (error) {
-    console.error('[BAR PAGE] Error getting user owned ingredients:', error);
-    return [];
-  }
-
-  return (data || []).map(item => item.ingredient_id);
-}
-
 // Helper function to process profile result and get ingredients
 async function processProfileResult(profile: any, isOwnerView: boolean, supabase: any) {
   console.log('[BAR PAGE] Processing profile result for:', profile.id);
@@ -66,44 +50,30 @@ async function processProfileResult(profile: any, isOwnerView: boolean, supabase
     // For owner view, we don't check public_bar_enabled
     // For public view, the profiles RLS policy already ensures we only get public profiles
     // So we don't need to separately check public_bar_enabled - if we got a profile, it's public
+    // Normalize ingredient IDs to canonical numeric IDs (strings).
+    // This prevents Public Bar from undercounting due to legacy/non-canonical IDs in `bar_ingredients`.
+    const normalized = await getUserBarIngredients(profile.id);
+    const ingredients: BarIngredient[] = normalized.map((item) => ({
+      ingredient_id: String(item.ingredient_id),
+      ingredient_name: item.ingredient_name,
+    }));
+
     if (!isOwnerView) {
-      // Get bar ingredients for public profiles
-      console.log('[BAR PAGE] Fetching ingredients for public profile');
-      const { data: ingredients, error: ingError } = await supabase
-        .from("bar_ingredients")
-        .select("ingredient_id, ingredient_name")
-        .eq("user_id", profile.id);
-
-      if (ingError) {
-        console.error('[BAR PAGE] Error fetching ingredients:', ingError);
-      }
-
       // For public view, we assume it's enabled since profiles RLS filtered it
       const preferences = { public_bar_enabled: true };
 
       return {
         profile,
         preferences,
-        ingredients: ingredients || [],
+        ingredients,
         isOwnerView
       };
-    }
-
-    // For owner view, we still need to get ingredients (but no public check needed)
-    console.log('[BAR PAGE] Fetching ingredients for owner view');
-    const { data: ingredients, error: ingError } = await supabase
-      .from("bar_ingredients")
-      .select("ingredient_id, ingredient_name")
-      .eq("user_id", profile.id);
-
-    if (ingError) {
-      console.error('[BAR PAGE] Error fetching ingredients:', ingError);
     }
 
     return {
       profile,
       preferences: null, // Not needed for owner view
-      ingredients: ingredients || [],
+      ingredients,
       isOwnerView
     };
   } catch (error) {
@@ -308,17 +278,8 @@ export default async function BarPage({ params }: Props) {
   const firstName = displayName.split(' ')[0] || displayName; // Get first name for personalized heading
   const isPublic = preferences?.public_bar_enabled === true;
 
-  // For owner view, get user's owned ingredients (what they can actually make cocktails with)
-  // For public view, use bar ingredients (what they display in their bar)
-  let cocktailIngredientIds: string[];
-  if (isOwnerView) {
-    // For owner view, get user's owned ingredients from bar_ingredients table
-    const supabase = createServerClient();
-    cocktailIngredientIds = await getUserOwnedIngredients(params.slug, supabase);
-    console.log('[BAR PAGE] Owner view - using owned ingredients:', cocktailIngredientIds.length);
-  } else {
-    cocktailIngredientIds = ingredients.map(ing => ing.ingredient_id);
-  }
+  // Use normalized ingredient IDs for matching (canonical numeric strings)
+  const cocktailIngredientIds = ingredients.map(ing => ing.ingredient_id);
 
   // For owner view, show owner interface
   if (isOwnerView) {

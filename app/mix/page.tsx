@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { MixResultsPanel } from "@/components/mix/MixResultsPanel";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
 import { CategoryPicker } from "@/components/mix/CategoryPicker";
@@ -38,17 +39,6 @@ export default function MixPage() {
   const [currentStep, setCurrentStep] = useState<'cabinet' | 'mixer' | 'menu'>('cabinet');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Check URL for step parameter
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const stepParam = params.get('step');
-      if (stepParam === 'menu' && ingredientIds.length > 0) {
-        setCurrentStep('menu');
-      }
-    }
-  }, [ingredientIds.length]);
-
   const { isAuthenticated, user } = useUser();
   const {
     ingredientIds,
@@ -59,6 +49,16 @@ export default function MixPage() {
     clearAll,
     promptToSave,
   } = useBarIngredients();
+
+  const searchParams = useSearchParams();
+
+  // Allow deep-linking to the Menu step when the user already has ingredients
+  useEffect(() => {
+    const stepParam = searchParams?.get("step");
+    if (stepParam === "menu" && ingredientIds.length > 0) {
+      setCurrentStep("menu");
+    }
+  }, [searchParams, ingredientIds.length]);
 
   // Calculate staple IDs for filtering out basic ingredients
   const stapleIds = useMemo(() => {

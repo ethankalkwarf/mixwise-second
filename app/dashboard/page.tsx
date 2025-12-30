@@ -14,6 +14,7 @@ import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { getCocktailsWithIngredientsClient, getMixDataClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { createClient } from "@/lib/supabase/client";
+import { formatCocktailName } from "@/lib/formatters";
 import Image from "next/image";
 import type { MixIngredient } from "@/lib/mixTypes";
 import type { BadgeDefinition } from "@/lib/badges";
@@ -57,6 +58,13 @@ export default function DashboardPage() {
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendedCocktail[]>([]);
+  const [almostThereCocktails, setAlmostThereCocktails] = useState<Array<{
+    _id: string;
+    name: string;
+    slug: { current: string };
+    externalImageUrl?: string;
+    missingIngredientNames: string[];
+  }>>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const [numericIngredientIds, setNumericIngredientIds] = useState<number[]>([]);
@@ -230,15 +238,17 @@ export default function DashboardPage() {
           stapleIngredientIds: stapleIds,
         });
 
-        console.log('[DASHBOARD DEBUG] Matching results:', {
-          totalCocktails: allCocktails.length,
-          ingredientIdsCount: ingredientIds.length,
-          stapleIds: stapleIds,
-          readyCount: result.ready.length,
-          almostThereCount: result.almostThere.length,
-          farCount: result.far.length,
-          readySample: result.ready.slice(0, 3).map(c => c.cocktail.name)
-        });
+        if (process.env.NODE_ENV === "development") {
+          console.log("[DASHBOARD DEBUG] Matching results:", {
+            totalCocktails: allCocktails.length,
+            ingredientIdsCount: ingredientIds.length,
+            stapleIds,
+            readyCount: result.ready.length,
+            almostThereCount: result.almostThere.length,
+            farCount: result.far.length,
+            readySample: result.ready.slice(0, 3).map((c) => c.cocktail.name),
+          });
+        }
 
         // Convert ready cocktails to expected format
         const formattedCocktails: RecommendedCocktail[] = result.ready.map(match => ({
@@ -250,9 +260,17 @@ export default function DashboardPage() {
           ingredientIds: match.cocktail.ingredients?.map(ing => ing.id) || []
         }));
 
-        console.log('[DASHBOARD DEBUG] Formatted cocktails sample:', formattedCocktails.slice(0, 3).map(c => ({ name: c.name, slug: c.slug?.current })));
+        // Convert almost-there cocktails (missing up to 2 required ingredients per mix engine default)
+        const formattedAlmostThere = result.almostThere.map(match => ({
+          _id: match.cocktail.id,
+          name: match.cocktail.name,
+          slug: { current: match.cocktail.slug },
+          externalImageUrl: match.cocktail.imageUrl || undefined,
+          missingIngredientNames: match.missingIngredientNames || [],
+        }));
 
-            setRecommendations(formattedCocktails);
+        setRecommendations(formattedCocktails);
+        setAlmostThereCocktails(formattedAlmostThere);
       } catch (error) {
         console.error("Error fetching recommendations:", error);
       } finally {
@@ -525,13 +543,8 @@ export default function DashboardPage() {
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
-                            {cocktail.name}
+                            {formatCocktailName(cocktail.name)}
                           </p>
-                          {cocktail.primarySpirit && (
-                            <p className="text-sm text-sage">
-                              {cocktail.primarySpirit}
-                            </p>
-                          )}
                         </div>
                       </Link>
                     ))}
@@ -553,44 +566,65 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* Almost There - Missing 1 ingredient */}
-            <section className="card overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-mist">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-terracotta/20 rounded-xl flex items-center justify-center">
-                    <BeakerIcon className="w-5 h-5 text-terracotta" />
+            {/* Almost There */}
+            {!loadingRecs && almostThereCocktails.length > 0 && (
+              <section className="card overflow-hidden">
+                <div className="flex items-center justify-between p-6 border-b border-mist">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-terracotta/20 rounded-xl flex items-center justify-center">
+                      <BeakerIcon className="w-5 h-5 text-terracotta" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-display font-bold text-forest">
+                        Almost There
+                      </h2>
+                      <span className="text-sm text-sage">
+                        {almostThereCocktails.length} cocktail{almostThereCocktails.length !== 1 ? "s" : ""} close to ready
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-display font-bold text-forest">
-                      Almost There
-                    </h2>
-                    <span className="text-sm text-sage">
-                      Add one ingredient to unlock
-                    </span>
-                  </div>
-                </div>
-                <Link
-                  href="/mix"
-                  className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium"
-                >
-                  Add ingredients →
-                </Link>
-              </div>
-              <div className="p-6">
-                <div className="text-center py-8">
-                  <p className="text-sage mb-4">
-                    Cocktails that need just one more ingredient will appear here.
-                  </p>
                   <Link
                     href="/mix"
-                    className="inline-flex items-center gap-2 text-terracotta hover:text-terracotta-dark font-medium"
+                    className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium"
                   >
-                    <PlusCircleIcon className="w-5 h-5" />
-                    Expand Your Bar
+                    Add ingredients →
                   </Link>
                 </div>
-              </div>
-            </section>
+                <div className="p-6">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {almostThereCocktails.slice(0, 6).map((cocktail) => (
+                      <Link
+                        key={cocktail._id}
+                        href={`/cocktails/${cocktail.slug?.current}`}
+                        className="flex items-center gap-4 p-3 bg-cream hover:bg-mist rounded-2xl transition-all group"
+                      >
+                        <Image
+                          src={cocktail.externalImageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
+                          alt={cocktail.name}
+                          width={56}
+                          height={56}
+                          className="w-14 h-14 rounded-xl object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
+                            {formatCocktailName(cocktail.name)}
+                          </p>
+                          {cocktail.missingIngredientNames.length > 0 && (
+                            <p className="text-sm text-sage truncate">
+                              Missing: {cocktail.missingIngredientNames.slice(0, 2).join(", ")}
+                              {cocktail.missingIngredientNames.length > 2 ? "…" : ""}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* Recent Activity - Favorites + Recently Viewed */}
             <section className="card overflow-hidden">

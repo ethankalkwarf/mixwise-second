@@ -22,7 +22,7 @@ export function CocktailsYouCanMake({
   ingredientIds,
   allCocktails,
   stapleIngredientIds: providedStapleIds,
-  maxResults = 999,
+  maxResults,
   showAllRecipesLink = false,
   showAlmostThere = true,
   isPublicView = false,
@@ -77,22 +77,18 @@ export function CocktailsYouCanMake({
     maxMissing: 2
   });
 
-  console.log('[CocktailsYouCanMake] Matching results:', {
-    totalCocktails: allCocktails.length,
-    cocktailsWithIngredients: allCocktails.filter(c => c.ingredients && c.ingredients.length > 0).length,
-    ingredientIdsCount: ingredientIds.length,
-    ingredientIdsSample: ingredientIds.slice(0, 10),
-    stapleIngredientIds: stapleIngredientIds,
-    readyCount: ready.length,
-    almostThereCount: almostThere.length,
-    readySample: ready.slice(0, 5).map(c => c.cocktail.name),
-    almostThereSample: almostThere.slice(0, 3).map(c => c.cocktail.name),
-    firstCocktailSample: allCocktails.length > 0 ? {
-      name: allCocktails[0].name,
-      ingredientsCount: allCocktails[0].ingredients?.length || 0,
-      hasIngredients: !!allCocktails[0].ingredients
-    } : null
-  });
+  // Debug logging (dev only)
+  if (process.env.NODE_ENV === "development") {
+    console.log("[CocktailsYouCanMake] Matching results:", {
+      totalCocktails: allCocktails.length,
+      cocktailsWithIngredients: allCocktails.filter((c) => c.ingredients && c.ingredients.length > 0).length,
+      ingredientIdsCount: ingredientIds.length,
+      stapleIngredientIds,
+      readyCount: ready.length,
+      almostThereCount: almostThere.length,
+      readySample: ready.slice(0, 5).map((c) => c.cocktail.name),
+    });
+  }
 
   if (ready.length === 0 && almostThere.length === 0) {
     return (
@@ -129,11 +125,11 @@ export function CocktailsYouCanMake({
             )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ready.slice(0, maxResults).map((match) => (
+            {(typeof maxResults === "number" ? ready.slice(0, maxResults) : ready).map((match) => (
               <CocktailCard key={match.cocktail.id} match={match} />
             ))}
           </div>
-          {ready.length > maxResults && (
+          {typeof maxResults === "number" && ready.length > maxResults && (
             <p className="text-sage text-sm mt-4">
               And {ready.length - maxResults} more cocktails...
             </p>
@@ -158,7 +154,10 @@ export function CocktailsYouCanMake({
             )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {almostThere.slice(0, Math.min(6, maxResults)).map((match) => (
+            {(typeof maxResults === "number"
+              ? almostThere.slice(0, Math.min(6, maxResults))
+              : almostThere.slice(0, 6)
+            ).map((match) => (
               <CocktailCard key={match.cocktail.id} match={match} isAlmostThere />
             ))}
           </div>
