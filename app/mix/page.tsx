@@ -361,10 +361,20 @@ export default function MixPage() {
       stapleIngredientIds: stapleIds,
     });
 
-    return {
+    const matchCounts = {
       canMake: result.ready.length,
       almostThere: result.almostThere.length,
     };
+
+    console.log('[MIX WIZARD DEBUG] Final match counts:', {
+      canMake: matchCounts.canMake,
+      almostThere: matchCounts.almostThere,
+      totalCocktails: allCocktails.length,
+      ingredientIdsCount: ingredientIds.length,
+      stapleIds: stapleIds
+    });
+
+    return matchCounts;
   }, [allCocktails, allIngredients, ingredientIds, dataLoading]);
 
   if (dataLoading || barLoading) {

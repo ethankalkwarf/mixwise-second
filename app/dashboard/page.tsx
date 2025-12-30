@@ -230,6 +230,16 @@ export default function DashboardPage() {
           stapleIngredientIds: stapleIds,
         });
 
+        console.log('[DASHBOARD DEBUG] Matching results:', {
+          totalCocktails: allCocktails.length,
+          ingredientIdsCount: ingredientIds.length,
+          stapleIds: stapleIds,
+          readyCount: result.ready.length,
+          almostThereCount: result.almostThere.length,
+          farCount: result.far.length,
+          readySample: result.ready.slice(0, 3).map(c => c.cocktail.name)
+        });
+
         // Convert ready cocktails to expected format
         const formattedCocktails: RecommendedCocktail[] = result.ready.map(cocktail => ({
           _id: cocktail.id,

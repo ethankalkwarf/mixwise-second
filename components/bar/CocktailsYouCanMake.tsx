@@ -49,11 +49,24 @@ export function CocktailsYouCanMake({
 
   // Calculate staple IDs (same logic as mix wizard)
   const stapleIngredientIds = providedStapleIds || (() => {
-    if (loading || allIngredients.length === 0) return ["ice", "water"]; // Default while loading
+    if (loading || allIngredients.length === 0) {
+      console.log('[BAR DEBUG] Still loading ingredients or no ingredients found, using default staples');
+      return ["ice", "water"]; // Default while loading
+    }
 
     const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
     const manualStaples = ['ice', 'water']; // Only truly universal basics
-    return [...new Set([...dbStaples, ...manualStaples])];
+    const calculatedStaples = [...new Set([...dbStaples, ...manualStaples])];
+
+    console.log('[BAR DEBUG] Staple calculation:', {
+      allIngredientsCount: allIngredients.length,
+      dbStaples: dbStaples,
+      manualStaples: manualStaples,
+      calculatedStaples: calculatedStaples,
+      ingredientIds: ingredientIds.slice(0, 5)
+    });
+
+    return calculatedStaples;
   })();
 
   // Run cocktail matching
@@ -62,6 +75,16 @@ export function CocktailsYouCanMake({
     ownedIngredientIds: ingredientIds,
     stapleIngredientIds,
     maxMissing: 2
+  });
+
+  console.log('[BAR DEBUG] Matching results:', {
+    totalCocktails: allCocktails.length,
+    ingredientIdsCount: ingredientIds.length,
+    stapleIngredientIds: stapleIngredientIds,
+    readyCount: ready.length,
+    almostThereCount: almostThere.length,
+    readySample: ready.slice(0, 3).map(c => c.cocktail.name),
+    almostThereSample: almostThere.slice(0, 3).map(c => c.cocktail.name)
   });
 
   if (ready.length === 0 && almostThere.length === 0) {
