@@ -48,7 +48,7 @@ const nextConfig = {
   swcMinify: true,
   // Experimental features for better performance
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled - causing critters dependency issues
     scrollRestoration: true,
   },
   // Ignore ESLint errors during production builds
