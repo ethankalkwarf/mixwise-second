@@ -3,13 +3,14 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { AuthDialog } from "./AuthDialog";
 
-export type AuthDialogMode = "signup" | "login";
+export type AuthDialogMode = "signup" | "login" | "reset";
 
 interface AuthDialogContextType {
   isOpen: boolean;
   openAuthDialog: (options?: AuthDialogOptions) => void;
   openLoginDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
   openSignupDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
+  openResetDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
   closeAuthDialog: () => void;
 }
 
@@ -41,6 +42,11 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
     setIsOpen(true);
   }, []);
 
+  const openResetDialog = useCallback((opts?: Omit<AuthDialogOptions, "mode">) => {
+    setOptions({ ...opts, mode: "reset" });
+    setIsOpen(true);
+  }, []);
+
   const closeAuthDialog = useCallback(() => {
     setIsOpen(false);
     setOptions({});
@@ -51,7 +57,7 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   return (
-    <AuthDialogContext.Provider value={{ isOpen, openAuthDialog, openLoginDialog, openSignupDialog, closeAuthDialog }}>
+    <AuthDialogContext.Provider value={{ isOpen, openAuthDialog, openLoginDialog, openSignupDialog, openResetDialog, closeAuthDialog }}>
       {children}
       <AuthDialog
         isOpen={isOpen}

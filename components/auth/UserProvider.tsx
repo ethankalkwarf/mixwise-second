@@ -29,6 +29,8 @@ interface UserContextType {
   error: Error | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<{ error?: string }>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
+  resetPassword: (email: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -282,36 +284,81 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase, getAuthRedirectUrl]);
 
+  // Sign up with email and password
+  const signUpWithEmail = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {
+    const redirectUrl = getAuthRedirectUrl();
+
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
+    });
+
+    if (signUpError) {
+      console.error("[UserProvider] Email sign-up error:", signUpError);
+      return { error: signUpError.message };
+    }
+
+    return {};
+  }, [supabase, getAuthRedirectUrl]);
+
   // Sign in with email (magic link)
   const signInWithEmail = useCallback(async (email: string): Promise<{ error?: string }> => {
     const redirectUrl = getAuthRedirectUrl();
-    
+
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: redirectUrl,
       },
     });
-    
+
     if (signInError) {
       console.error("[UserProvider] Email sign-in error:", signInError);
       return { error: signInError.message };
     }
-    
+
     return {};
   }, [supabase, getAuthRedirectUrl]);
+
+  // Reset password
+  const resetPassword = useCallback(async (email: string): Promise<{ error?: string }> => {
+    try {
+      const response = await fetch("/api/auth/send-password-reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        console.error("[UserProvider] Password reset API error:", data);
+        return { error: "Failed to send password reset email. Please try again." };
+      }
+
+      return {};
+    } catch (error) {
+      console.error("[UserProvider] Password reset request failed:", error);
+      return { error: "Failed to send password reset email. Please try again." };
+    }
+  }, []);
 
   // Sign out
   const signOut = useCallback(async () => {
     console.log("[UserProvider] Signing out");
     const { error: signOutError } = await supabase.auth.signOut();
-    
+
     if (signOutError) {
       console.error("[UserProvider] Sign-out error:", signOutError);
       setError(signOutError);
       throw signOutError;
     }
-    
+
     // Clear state immediately
     setUser(null);
     setProfile(null);
@@ -327,6 +374,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     error,
     signInWithGoogle,
     signInWithEmail,
+    signUpWithEmail,
+    resetPassword,
     signOut,
     refreshProfile,
   };

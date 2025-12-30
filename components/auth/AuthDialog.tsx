@@ -29,26 +29,31 @@ interface AuthDialogProps {
   onModeChange?: (mode: AuthDialogMode) => void;
 }
 
-export function AuthDialog({ 
-  isOpen, 
-  onClose, 
+export function AuthDialog({
+  isOpen,
+  onClose,
   mode = "signup",
   title,
   subtitle,
   onSuccess,
   onModeChange,
 }: AuthDialogProps) {
-  const { signInWithGoogle, signInWithEmail, isAuthenticated } = useUser();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, isAuthenticated } = useUser();
   const toast = useToast();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Default titles based on mode
-  const defaultTitle = mode === "login" 
-    ? "Welcome back to MixWise" 
+  const defaultTitle = mode === "login"
+    ? "Welcome back to MixWise"
+    : mode === "reset"
+    ? "Reset your password"
     : "Create your free MixWise account";
   
   const displayTitle = title || defaultTitle;
@@ -72,29 +77,104 @@ export function AuthDialog({
     }
   };
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    
+
     setIsEmailLoading(true);
     setError(null);
-    
-    const result = await signInWithEmail(email.trim());
-    
-    if (result.error) {
-      setError(result.error);
-      toast.error(result.error);
-      setIsEmailLoading(false);
+
+    if (mode === "signup") {
+      // Validate password for signup
+      if (!password.trim()) {
+        setError("Password is required");
+        setIsEmailLoading(false);
+        return;
+      }
+
+      if (password.length < 8) {
+        setError("Password must be at least 8 characters long");
+        setIsEmailLoading(false);
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        setIsEmailLoading(false);
+        return;
+      }
+
+      // Sign up with email and password
+      const result = await signUpWithEmail(email.trim(), password.trim());
+
+      if (result.error) {
+        setError(result.error);
+        toast.error(result.error);
+        setIsEmailLoading(false);
+      } else {
+        // Now send confirmation email via our API
+        try {
+          const response = await fetch("/api/auth/send-confirmation", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: email.trim() }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            console.error("Failed to send confirmation email:", data);
+            setError("Account created but failed to send confirmation email. Please try logging in.");
+            setIsEmailLoading(false);
+            return;
+          }
+
+          setSignupSuccess(true);
+          setIsEmailLoading(false);
+          toast.success("Check your email to confirm your account");
+        } catch (apiError) {
+          console.error("API call failed:", apiError);
+          setError("Account created but failed to send confirmation email. Please try logging in.");
+          setIsEmailLoading(false);
+        }
+      }
+    } else if (mode === "reset") {
+      // Reset password
+      const result = await resetPassword(email.trim());
+
+      if (result.error) {
+        setError(result.error);
+        toast.error(result.error);
+        setIsEmailLoading(false);
+      } else {
+        setEmailSent(true);
+        setIsEmailLoading(false);
+        toast.success("If an account with that email exists, we've sent you a password reset link");
+      }
     } else {
-      setEmailSent(true);
-      setIsEmailLoading(false);
-      toast.success("Check your email for the magic link");
+      // Sign in with email (magic link)
+      const result = await signInWithEmail(email.trim());
+
+      if (result.error) {
+        setError(result.error);
+        toast.error(result.error);
+        setIsEmailLoading(false);
+      } else {
+        setEmailSent(true);
+        setIsEmailLoading(false);
+        toast.success("Check your email for the magic link");
+      }
     }
   };
 
   const handleClose = () => {
     setEmail("");
+    setPassword("");
+    setConfirmPassword("");
     setEmailSent(false);
+    setSignupSuccess(false);
     setError(null);
     onClose();
   };
@@ -137,7 +217,7 @@ export function AuthDialog({
                   <XMarkIcon className="w-5 h-5" />
                 </button>
 
-                {emailSent ? (
+                {emailSent || signupSuccess ? (
                   // Email sent confirmation
                   <div className="text-center py-6">
                     <div className="mx-auto w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center mb-4">
@@ -147,11 +227,16 @@ export function AuthDialog({
                       Check your email
                     </Dialog.Title>
                     <p className="text-sage mb-6">
-                      We sent a magic link to <span className="text-forest font-medium">{email}</span>.
-                      Click the link to sign in.
+                      {signupSuccess
+                        ? `We sent a confirmation link to ${email}. Click the link to verify your account.`
+                        : `We sent a magic link to ${email}. Click the link to sign in.`
+                      }
                     </p>
                     <button
-                      onClick={() => setEmailSent(false)}
+                      onClick={() => {
+                        setEmailSent(false);
+                        setSignupSuccess(false);
+                      }}
                       className="text-sm text-terracotta hover:text-terracotta-dark font-medium"
                     >
                       Use a different email
@@ -169,8 +254,10 @@ export function AuthDialog({
                         {displayTitle}
                       </Dialog.Title>
                       <p className="text-sage text-sm">
-                        {subtitle || (mode === "login" 
+                        {subtitle || (mode === "login"
                           ? "Sign in to access your saved cocktails, bar inventory, and more."
+                          : mode === "reset"
+                          ? "Enter your email address and we'll send you a link to reset your password."
                           : "Save your bar, favorite cocktails, and get personalized recommendations.")}
                       </p>
                     </div>
@@ -206,8 +293,8 @@ export function AuthDialog({
                       </div>
                     </div>
 
-                    {/* Email sign in */}
-                    <form onSubmit={handleEmailSignIn}>
+                    {/* Email auth */}
+                    <form onSubmit={handleEmailAuth}>
                       <label className="label-botanical">Email Address</label>
                       <div className="relative mb-4">
                         <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
@@ -220,14 +307,47 @@ export function AuthDialog({
                           required
                         />
                       </div>
+
+                      {mode === "signup" && (
+                        <>
+                          <label className="label-botanical">Password</label>
+                          <div className="relative mb-4">
+                            <input
+                              type="password"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              placeholder="Create a password"
+                              className="input-botanical"
+                              required
+                              minLength={8}
+                            />
+                          </div>
+
+                          <label className="label-botanical">Confirm Password</label>
+                          <div className="relative mb-4">
+                            <input
+                              type="password"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              placeholder="Confirm your password"
+                              className="input-botanical"
+                              required
+                              minLength={8}
+                            />
+                          </div>
+                        </>
+                      )}
+
                       <button
                         type="submit"
-                        disabled={isEmailLoading || !email.trim()}
+                        disabled={isEmailLoading || !email.trim() || (mode === "signup" && (!password.trim() || !confirmPassword.trim()))}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isEmailLoading ? (
                           <div className="spinner border-cream/30 border-t-cream" />
                         ) : (
+                          mode === "signup" ? "Create Account" :
+                          mode === "reset" ? "Send Reset Link" :
                           "Continue with email"
                         )}
                       </button>
@@ -266,16 +386,38 @@ export function AuthDialog({
                             Log in
                           </button>
                         </p>
+                      ) : mode === "reset" ? (
+                        <div className="space-y-2">
+                          <p className="text-sm text-sage">
+                            Remember your password?{" "}
+                            <button
+                              onClick={() => onModeChange?.("login")}
+                              className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
+                            >
+                              Back to login
+                            </button>
+                          </p>
+                        </div>
                       ) : (
-                        <p className="text-sm text-sage">
-                          Don&apos;t have an account?{" "}
-                          <button
-                            onClick={() => onModeChange?.("signup")}
-                            className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
-                          >
-                            Create one for free
-                          </button>
-                        </p>
+                        <div className="space-y-2">
+                          <p className="text-sm text-sage">
+                            <button
+                              onClick={() => onModeChange?.("reset")}
+                              className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
+                            >
+                              Forgot your password?
+                            </button>
+                          </p>
+                          <p className="text-sm text-sage">
+                            Don&apos;t have an account?{" "}
+                            <button
+                              onClick={() => onModeChange?.("signup")}
+                              className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
+                            >
+                              Create one for free
+                            </button>
+                          </p>
+                        </div>
                       )}
                     </div>
 
