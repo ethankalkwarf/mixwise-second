@@ -162,8 +162,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
                   slug: { current: fav.cocktail_slug || "" },
                   externalImageUrl: fav.cocktail_image_url || undefined,
                 }}
-                badge="❤️"
-                badgeColor="bg-terracotta"
+                badge={undefined}
               />
             ))}
           </div>
