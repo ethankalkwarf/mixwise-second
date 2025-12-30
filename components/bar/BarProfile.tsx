@@ -111,7 +111,7 @@ export async function BarProfile({
               {favoriteReady.map((c) => (
                 <Link
                   key={c.id}
-                  href={`/cocktails/${c.slug}`}
+                  href={c.slug ? `/cocktails/${encodeURIComponent(c.slug)}` : "/cocktails"}
                   className="block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group"
                 >
                   <div className="aspect-square relative mb-3 rounded-lg overflow-hidden bg-mist flex items-center justify-center">

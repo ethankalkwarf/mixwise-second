@@ -114,7 +114,7 @@ export function CocktailsYouCanMake({
         <section>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-serif font-bold text-forest">
-              🍸 Cocktails {isPublicView ? `${userFirstName || 'They'}` : 'You'} Can Make ({ready.length})
+              Cocktails {isPublicView ? `${userFirstName || 'They'}` : 'You'} Can Make ({ready.length})
             </h3>
             {showAllRecipesLink && (
               <Link
@@ -175,10 +175,11 @@ interface CocktailCardProps {
 
 function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
   const { cocktail } = match;
+  const href = cocktail.slug ? `/cocktails/${encodeURIComponent(cocktail.slug)}` : "/cocktails";
 
   return (
     <Link
-      href={`/cocktails/${cocktail.slug}`}
+      href={href}
       className={`block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group ${
         isAlmostThere ? 'opacity-75' : ''
       }`}
@@ -220,9 +221,11 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
       <h4 className="font-semibold text-forest text-sm line-clamp-2 mb-1">
         {formatCocktailName(cocktail.name)}
       </h4>
-      <p className="text-sage text-xs mb-2">
-        {cocktail.primarySpirit}
-      </p>
+      {cocktail.primarySpirit ? (
+        <p className="text-sage text-xs mb-2">
+          {formatCocktailName(cocktail.primarySpirit)}
+        </p>
+      ) : null}
       {isAlmostThere && (
         <p className="text-terracotta text-xs">
           Missing: {match.missingIngredientNames.slice(0, 2).join(", ")}
