@@ -77,14 +77,21 @@ export function CocktailsYouCanMake({
     maxMissing: 2
   });
 
-  console.log('[BAR DEBUG] Matching results:', {
+  console.log('[CocktailsYouCanMake] Matching results:', {
     totalCocktails: allCocktails.length,
+    cocktailsWithIngredients: allCocktails.filter(c => c.ingredients && c.ingredients.length > 0).length,
     ingredientIdsCount: ingredientIds.length,
+    ingredientIdsSample: ingredientIds.slice(0, 10),
     stapleIngredientIds: stapleIngredientIds,
     readyCount: ready.length,
     almostThereCount: almostThere.length,
-    readySample: ready.slice(0, 3).map(c => c.cocktail.name),
-    almostThereSample: almostThere.slice(0, 3).map(c => c.cocktail.name)
+    readySample: ready.slice(0, 5).map(c => c.cocktail.name),
+    almostThereSample: almostThere.slice(0, 3).map(c => c.cocktail.name),
+    firstCocktailSample: allCocktails.length > 0 ? {
+      name: allCocktails[0].name,
+      ingredientsCount: allCocktails[0].ingredients?.length || 0,
+      hasIngredients: !!allCocktails[0].ingredients
+    } : null
   });
 
   if (ready.length === 0 && almostThere.length === 0) {

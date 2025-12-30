@@ -492,7 +492,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <Link
-                  href="/cocktails"
+                  href="/mix"
                   className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium"
                 >
                   View all →
@@ -507,7 +507,7 @@ export default function DashboardPage() {
                   </div>
                 ) : recommendations.length > 0 ? (
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {recommendations.slice(0, 6).map((cocktail) => (
+                    {recommendations.map((cocktail) => (
                       <Link
                         key={cocktail._id}
                         href={`/cocktails/${cocktail.slug?.current}`}

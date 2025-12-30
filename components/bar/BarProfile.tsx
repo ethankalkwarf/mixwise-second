@@ -32,9 +32,25 @@ export async function BarProfile({
   userFirstName,
 }: BarProfileProps) {
   // Fetch cocktails if not provided
+  console.log('[BAR PROFILE] Starting with ingredientIds:', ingredientIds.length, 'ingredients:', ingredients.length);
+  console.log('[BAR PROFILE] ingredientIds sample:', ingredientIds.slice(0, 10));
   console.log('[BAR PROFILE] Fetching cocktails...');
   const cocktails = allCocktails || await getMixCocktails();
   console.log('[BAR PROFILE] Fetched', cocktails.length, 'cocktails');
+  console.log('[BAR PROFILE] First cocktail:', cocktails[0] ? {
+    name: cocktails[0].name,
+    ingredientsCount: cocktails[0].ingredients?.length || 0
+  } : 'no cocktails');
+
+  // Filter out cocktails without valid ingredients
+  const validCocktails = cocktails.filter(cocktail => 
+    cocktail && 
+    cocktail.ingredients && 
+    Array.isArray(cocktail.ingredients) && 
+    cocktail.ingredients.length > 0
+  );
+
+  console.log('[BAR PROFILE] Valid cocktails with ingredients:', validCocktails.length);
 
   return (
     <div className="space-y-12">
@@ -42,7 +58,7 @@ export async function BarProfile({
       <section className="card p-8">
         <CocktailsYouCanMake
           ingredientIds={ingredientIds}
-          allCocktails={cocktails}
+          allCocktails={validCocktails}
           showAllRecipesLink={showAllRecipesLink}
           showAlmostThere={showAlmostThere}
           isPublicView={isPublicView}
