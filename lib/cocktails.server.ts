@@ -443,29 +443,29 @@ export async function getTodaysDailyCocktailSlug(): Promise<string | null> {
   try {
     const supabase = createServerSupabaseClient();
 
-    // Only choose cocktails that have a usable slug
-    const { count, error: countError } = await supabase
-      .from("cocktails")
-      .select("id", { count: "exact", head: true })
-      .not("slug", "is", null)
-      .neq("slug", "");
-
-    if (countError || !count || count <= 0) return null;
-
-    const index = getDailyIndexFromCount(count, new Date());
-
+    // Fetch ONLY slugs (lightweight) and pick deterministically.
+    // This avoids relying on PostgREST count semantics (which can vary under RLS).
     const { data, error } = await supabase
       .from("cocktails")
       .select("slug")
       .not("slug", "is", null)
       .neq("slug", "")
       .order("slug", { ascending: true })
-      .range(index, index);
+      .limit(5000);
 
-    if (error) return null;
+    if (error) {
+      console.error("getTodaysDailyCocktailSlug query error:", error);
+      return null;
+    }
 
-    const slug = (data?.[0] as any)?.slug;
-    return slug ? String(slug) : null;
+    const slugs = (data || [])
+      .map((r: any) => (r?.slug ? String(r.slug) : ""))
+      .filter(Boolean);
+
+    if (slugs.length === 0) return null;
+
+    const index = getDailyIndexFromCount(slugs.length, new Date());
+    return slugs[index] || null;
   } catch (e) {
     console.error("getTodaysDailyCocktailSlug failed:", e);
     return null;
