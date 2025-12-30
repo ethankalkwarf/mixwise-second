@@ -14,6 +14,8 @@ import type {
   MixCocktailIngredient
 } from './cocktailTypes';
 import { getDailyIndexFromCount } from "./dailyCocktail";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 // Create a Supabase client for server-side operations that works during build time
 function createServerSupabaseClient() {
@@ -455,17 +457,49 @@ export async function getTodaysDailyCocktailSlug(): Promise<string | null> {
 
     if (error) {
       console.error("getTodaysDailyCocktailSlug query error:", error);
-      return null;
+      // fall through to file-based fallback
     }
 
     const slugs = (data || [])
       .map((r: any) => (r?.slug ? String(r.slug) : ""))
       .filter(Boolean);
 
-    if (slugs.length === 0) return null;
+    if (slugs.length > 0) {
+      const index = getDailyIndexFromCount(slugs.length, new Date());
+      return slugs[index] || null;
+    }
 
-    const index = getDailyIndexFromCount(slugs.length, new Date());
-    return slugs[index] || null;
+    // Fallback: use the checked-in dataset to select a daily slug.
+    // This ensures Cocktail of the Day still works even if Supabase keys/RLS break in prod.
+    try {
+      const filePath = path.join(process.cwd(), "cocktails.enriched.ndjson");
+      const raw = await fs.readFile(filePath, "utf8");
+      const fileSlugs = raw
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => {
+          try {
+            const obj = JSON.parse(line);
+            // Skip hidden cocktails if present
+            if (obj?.hidden === true) return null;
+            const s = obj?.slug?.current;
+            return s ? String(s) : null;
+          } catch {
+            return null;
+          }
+        })
+        .filter((s): s is string => !!s);
+
+      const unique = Array.from(new Set(fileSlugs)).sort();
+      if (unique.length === 0) return null;
+
+      const index = getDailyIndexFromCount(unique.length, new Date());
+      return unique[index] || null;
+    } catch (fallbackError) {
+      console.error("getTodaysDailyCocktailSlug file fallback failed:", fallbackError);
+      return null;
+    }
   } catch (e) {
     console.error("getTodaysDailyCocktailSlug failed:", e);
     return null;
