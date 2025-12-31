@@ -181,17 +181,10 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
 
   console.log('[COCKTAIL CARD] Cocktail:', cocktail.name, 'slug:', cocktail.slug, 'id:', cocktail.id, 'href:', href);
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    console.log('[COCKTAIL CARD] Clicking on:', href);
-    window.location.href = href; // Force navigation to test
-  };
-
   return (
-    <a
+    <Link
       href={href}
-      onClick={handleClick}
-      className={`block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group cursor-pointer ${
+      className={`block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group ${
         isAlmostThere ? 'opacity-75' : ''
       }`}
     >
@@ -243,6 +236,6 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
           {match.missingIngredientNames.length > 2 && ` +${match.missingIngredientNames.length - 2} more`}
         </p>
       )}
-    </a>
+    </Link>
   );
 }
