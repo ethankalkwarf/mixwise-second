@@ -38,10 +38,14 @@ export async function POST(request: NextRequest) {
 
     let emailContent: { subject: string; html: string; text: string };
 
+    // Generate realistic-looking test tokens (UUIDs)
+    const testUserId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+    const testToken = "b2c3d4e5-f6a7-8901-bcde-f12345678901";
+
     switch (template) {
       case "confirmation":
         emailContent = confirmEmailTemplate({
-          confirmUrl: "https://www.getmixwise.com/auth/callback?token=test-token",
+          confirmUrl: `https://www.getmixwise.com/auth/callback?token=${testToken}&type=signup`,
           userEmail: email,
         });
         break;
@@ -50,7 +54,7 @@ export async function POST(request: NextRequest) {
         emailContent = welcomeEmailTemplate({
           displayName: email.split("@")[0],
           userEmail: email,
-          unsubscribeUrl: "https://www.getmixwise.com/unsubscribe?token=test",
+          unsubscribeUrl: `https://www.getmixwise.com/api/email/unsubscribe?token=${testUserId}&emailType=all`,
         });
         break;
 
@@ -58,7 +62,7 @@ export async function POST(request: NextRequest) {
         emailContent = weeklyDigestTemplate({
           displayName: email.split("@")[0],
           userEmail: email,
-          unsubscribeUrl: "https://www.getmixwise.com/unsubscribe?token=test",
+          unsubscribeUrl: `https://www.getmixwise.com/api/email/unsubscribe?token=${testUserId}&emailType=weekly_digest`,
           cocktailsYouCanMake: [
             { name: "Margarita", slug: "margarita" },
             { name: "Moscow Mule", slug: "moscow-mule" },
@@ -78,7 +82,7 @@ export async function POST(request: NextRequest) {
         emailContent = weeklyDigestTemplate({
           displayName: email.split("@")[0],
           userEmail: email,
-          unsubscribeUrl: "https://www.getmixwise.com/unsubscribe?token=test",
+          unsubscribeUrl: `https://www.getmixwise.com/api/email/unsubscribe?token=${testUserId}&emailType=weekly_digest`,
           cocktailsYouCanMake: [],
           featuredCocktail: {
             name: "Negroni",
@@ -92,7 +96,7 @@ export async function POST(request: NextRequest) {
 
       case "password-reset":
         emailContent = resetPasswordTemplate({
-          resetUrl: "https://www.getmixwise.com/reset-password?token=test-token",
+          resetUrl: `https://www.getmixwise.com/reset-password?token=${testToken}&type=recovery`,
           userEmail: email,
         });
         break;
@@ -109,6 +113,11 @@ export async function POST(request: NextRequest) {
       subject: `[TEST] ${emailContent.subject}`,
       html: emailContent.html,
       text: emailContent.text,
+      headers: {
+        "Reply-To": "hello@getmixwise.com",
+        "List-Unsubscribe": `<https://www.getmixwise.com/unsubscribe>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
 
     if (error) {

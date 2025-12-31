@@ -335,8 +335,8 @@ export function confirmEmailTemplate({
       
       <!-- Header -->
       <tr>
-        <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+        <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
+          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
@@ -362,7 +362,7 @@ export function confirmEmailTemplate({
           </div>
           
           <div class="button-wrapper" style="text-align: center; margin: 32px 0;">
-            <a href="${confirmUrl}" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px; box-shadow: 0 10px 25px -5px rgba(188, 90, 69, 0.3);">
+            <a href="${confirmUrl}" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
               Confirm Your Email
             </a>
           </div>
@@ -468,8 +468,8 @@ export function resetPasswordTemplate({
       
       <!-- Header -->
       <tr>
-        <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+        <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
+          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
@@ -495,7 +495,7 @@ export function resetPasswordTemplate({
           </div>
           
           <div class="button-wrapper" style="text-align: center; margin: 32px 0;">
-            <a href="${resetUrl}" class="btn-warning" style="display: inline-block; background: linear-gradient(135deg, #3A4D39 0%, #2C3628 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px; box-shadow: 0 10px 25px -5px rgba(58, 77, 57, 0.3);">
+            <a href="${resetUrl}" class="btn-warning" style="display: inline-block; background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #2C3628 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
               Reset Your Password
             </a>
           </div>
@@ -602,8 +602,8 @@ export function welcomeEmailTemplate({
       
       <!-- Header -->
       <tr>
-        <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+        <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
+          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
@@ -678,7 +678,7 @@ export function welcomeEmailTemplate({
           </table>
           
           <div class="button-wrapper" style="text-align: center; margin: 32px 0;">
-            <a href="https://www.getmixwise.com/mix" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px; box-shadow: 0 10px 25px -5px rgba(188, 90, 69, 0.3);">
+            <a href="https://www.getmixwise.com/mix" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
               Start Mixing →
             </a>
           </div>
@@ -787,19 +787,29 @@ export function weeklyDigestTemplate({
   `).join('');
 
   const featuredSection = featuredCocktail ? `
-    <div style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); border-radius: 16px; overflow: hidden; margin: 24px 0;">
+    <!--[if mso]>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0;">
+      <tr>
+        <td bgcolor="#3A4D39" style="padding: 0;">
+    <![endif]-->
+    <div style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); border-radius: 16px; overflow: hidden; margin: 24px 0;">
       ${featuredCocktail.imageUrl ? `
       <div style="width: 100%; height: 200px; overflow: hidden;">
-        <img src="${featuredCocktail.imageUrl}" alt="${featuredCocktail.name}" style="width: 100%; height: 200px; object-fit: cover; display: block;" />
+        <img src="${featuredCocktail.imageUrl}" alt="${featuredCocktail.name}" width="560" height="200" style="width: 100%; height: 200px; object-fit: cover; display: block;" />
       </div>
       ` : ''}
-      <div style="padding: 24px; text-align: center;">
+      <div style="background-color: #3A4D39; padding: 24px; text-align: center;">
         <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #8A9A5B;">✨ Featured This Week</p>
-        <h3 style="margin: 0 0 12px 0; font-family: 'DM Serif Display', Georgia, serif; font-size: 28px; color: #FFFFFF;">${featuredCocktail.name}</h3>
+        <h3 style="margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 28px; color: #FFFFFF;">${featuredCocktail.name}</h3>
         ${featuredCocktail.description ? `<p style="margin: 0 0 16px 0; font-size: 14px; color: #E6EBE4; line-height: 1.5;">${featuredCocktail.description}</p>` : ''}
         <a href="https://www.getmixwise.com/cocktails/${featuredCocktail.slug}" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;">View Recipe →</a>
       </div>
     </div>
+    <!--[if mso]>
+        </td>
+      </tr>
+    </table>
+    <![endif]-->
   ` : '';
 
   const html = `
@@ -820,8 +830,8 @@ export function weeklyDigestTemplate({
       
       <!-- Header -->
       <tr>
-        <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+        <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
+          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
@@ -855,7 +865,7 @@ export function weeklyDigestTemplate({
           </div>
           ` : `
           <!-- Build Your Bar CTA for users with no ingredients -->
-          <div style="background: linear-gradient(135deg, #F9F7F2 0%, #E6EBE4 100%); border-radius: 16px; padding: 32px 24px; margin-bottom: 24px; text-align: center; border: 1px solid #D1DAD0;">
+          <div style="background-color: #F9F7F2; background: linear-gradient(135deg, #F9F7F2 0%, #E6EBE4 100%); border-radius: 16px; padding: 32px 24px; margin-bottom: 24px; text-align: center; border: 1px solid #D1DAD0;">
             <p style="margin: 0 0 16px 0; font-size: 40px;">🍾</p>
             <h3 style="margin: 0 0 12px 0; font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: #3A4D39;">Ready to discover what you can make?</h3>
             <p style="margin: 0 0 20px 0; font-size: 15px; color: #5F6F5E; line-height: 1.6;">Tell us what's in your bar and we'll show you all the cocktails you can make right now — no shopping required!</p>
