@@ -244,9 +244,8 @@ function generateRecipeSchema(args: {
 }
 
 export default async function CocktailDetailPage({ params, searchParams }: PageProps) {
-  try {
-    const { slug } = await params;
-    const { daily } = await searchParams;
+  const { slug } = await params;
+  const { daily } = await searchParams;
 
     console.log('[COCKTAIL PAGE] Received slug:', slug);
 
@@ -377,7 +376,6 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
       </main>
     </>
   );
-}
 
 // Generate static paths for known cocktails
 export async function generateStaticParams() {
