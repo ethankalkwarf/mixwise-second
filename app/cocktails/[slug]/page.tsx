@@ -247,7 +247,12 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
   try {
     const { slug } = await params;
     const { daily } = await searchParams;
+
+    console.log('[COCKTAIL PAGE] Received slug:', slug);
+
     const cocktail = await getCocktailBySlug(slug);
+
+    console.log('[COCKTAIL PAGE] Found cocktail:', cocktail ? cocktail.name : 'null');
 
     if (!cocktail) {
       notFound();

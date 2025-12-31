@@ -179,6 +179,8 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
   const slug = cocktail.slug || cocktail.id;
   const href = slug ? `/cocktails/${encodeURIComponent(slug)}` : "/cocktails";
 
+  console.log('[COCKTAIL CARD] Cocktail:', cocktail.name, 'slug:', cocktail.slug, 'id:', cocktail.id, 'href:', href);
+
   return (
     <Link
       href={href}

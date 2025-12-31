@@ -38,13 +38,24 @@ function createServerSupabaseClient() {
 export async function getCocktailBySlug(slug: string): Promise<Cocktail | null> {
   const supabase = createServerSupabaseClient();
 
+  console.log('[getCocktailBySlug] Looking for slug:', slug);
+
   const { data, error } = await supabase
     .from('cocktails')
     .select('*')
     .eq('slug', slug)
     .single();
 
+  console.log('[getCocktailBySlug] Query result:', { data: !!data, error: error?.message, slug });
+
   if (error || !data) {
+    // Try to find similar slugs for debugging
+    const { data: allSlugs } = await supabase
+      .from('cocktails')
+      .select('slug, name')
+      .limit(10);
+
+    console.log('[getCocktailBySlug] Available slugs:', allSlugs?.slice(0, 5));
     return null;
   }
 
