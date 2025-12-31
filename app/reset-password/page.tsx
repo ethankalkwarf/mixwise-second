@@ -17,23 +17,103 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
 
-  // Check if we have the required tokens in the URL
+  function getHashParams(): URLSearchParams {
+    if (typeof window === "undefined") return new URLSearchParams();
+    const hash = window.location.hash?.startsWith("#") ? window.location.hash.slice(1) : "";
+    return new URLSearchParams(hash);
+  }
+
+  function scrubUrl() {
+    // Remove sensitive tokens from URL (hash/query) after we capture them
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("code");
+    url.searchParams.delete("type");
+    url.searchParams.delete("access_token");
+    url.searchParams.delete("refresh_token");
+    url.hash = "";
+    window.history.replaceState({}, document.title, url.toString());
+  }
+
+  // Establish an auth session from Supabase recovery links.
+  // Supabase may redirect with:
+  // - `code` query param (PKCE flow), OR
+  // - `#access_token=...&refresh_token=...&type=recovery` hash fragment (implicit flow)
   useEffect(() => {
-    const accessToken = searchParams.get("access_token");
-    const refreshToken = searchParams.get("refresh_token");
-    const type = searchParams.get("type");
+    let cancelled = false;
 
-    if (!accessToken || !refreshToken || type !== "recovery") {
-      setError("Invalid or expired password reset link. Please request a new one.");
-      return;
-    }
+    const run = async () => {
+      setError(null);
 
-    // Set the session with the tokens from the URL
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
+      const code = searchParams.get("code");
+      const qsAccessToken = searchParams.get("access_token");
+      const qsRefreshToken = searchParams.get("refresh_token");
+      const qsType = searchParams.get("type");
+
+      const hashParams = getHashParams();
+      const hashAccessToken = hashParams.get("access_token");
+      const hashRefreshToken = hashParams.get("refresh_token");
+      const hashType = hashParams.get("type");
+
+      try {
+        // Preferred flow: exchange code for session (PKCE)
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            console.error("[ResetPassword] exchangeCodeForSession error:", exchangeError);
+            if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+            return;
+          }
+          if (!cancelled) setSessionReady(true);
+          scrubUrl();
+          return;
+        }
+
+        // Fallback: implicit flow tokens in querystring
+        if (qsAccessToken && qsRefreshToken && (!qsType || qsType === "recovery")) {
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: qsAccessToken,
+            refresh_token: qsRefreshToken,
+          });
+          if (setSessionError) {
+            console.error("[ResetPassword] setSession error (query tokens):", setSessionError);
+            if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+            return;
+          }
+          if (!cancelled) setSessionReady(true);
+          scrubUrl();
+          return;
+        }
+
+        // Fallback: implicit flow tokens in hash fragment
+        if (hashAccessToken && hashRefreshToken && (!hashType || hashType === "recovery")) {
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: hashAccessToken,
+            refresh_token: hashRefreshToken,
+          });
+          if (setSessionError) {
+            console.error("[ResetPassword] setSession error (hash tokens):", setSessionError);
+            if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+            return;
+          }
+          if (!cancelled) setSessionReady(true);
+          scrubUrl();
+          return;
+        }
+
+        if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+      } catch (err) {
+        console.error("[ResetPassword] Unexpected error establishing session:", err);
+        if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
   }, [searchParams, supabase.auth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,13 +138,21 @@ export default function ResetPasswordPage() {
     setError(null);
 
     try {
+      // Guard: ensure we have a session before attempting update
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        setError("Your reset session is missing or expired. Please request a new password reset email.");
+        setIsLoading(false);
+        return;
+      }
+
       const { error: updateError } = await supabase.auth.updateUser({
         password: password.trim(),
       });
 
       if (updateError) {
         console.error("Password update error:", updateError);
-        setError("Failed to update password. The link may have expired.");
+        setError(updateError.message || "Failed to update password. The link may have expired.");
         setIsLoading(false);
         return;
       }
@@ -122,6 +210,12 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
+        {!error && !sessionReady && (
+          <div className="mb-6 p-4 bg-cream border border-mist rounded-2xl text-forest text-sm">
+            Loading your secure reset session…
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="label-botanical">New Password</label>
@@ -133,7 +227,7 @@ export default function ResetPasswordPage() {
               className="input-botanical"
               required
               minLength={8}
-              disabled={isLoading}
+              disabled={isLoading || !sessionReady || !!error}
             />
             <p className="text-xs text-sage mt-1">
               Must be at least 8 characters long
@@ -150,13 +244,13 @@ export default function ResetPasswordPage() {
               className="input-botanical"
               required
               minLength={8}
-              disabled={isLoading}
+              disabled={isLoading || !sessionReady || !!error}
             />
           </div>
 
           <Button
             type="submit"
-            disabled={isLoading || !password.trim() || !confirmPassword.trim()}
+            disabled={isLoading || !sessionReady || !!error || !password.trim() || !confirmPassword.trim()}
             className="w-full"
           >
             {isLoading ? "Updating Password..." : "Update Password"}

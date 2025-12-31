@@ -336,7 +336,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       
       // Provide user-friendly error messages
       if (signInError.message?.includes("Invalid login credentials")) {
-        return { error: "Invalid email or password. Please try again." };
+        return { error: "Invalid email or password. If you just signed up, make sure you clicked the confirmation link in your email first." };
       }
       if (signInError.message?.includes("Email not confirmed")) {
         return { error: "Please check your email and click the confirmation link before logging in." };
