@@ -82,9 +82,9 @@ const baseStyles = `
     }
     
     .logo {
-      font-family: Georgia, 'Times New Roman', serif;
-      font-size: 32px;
-      font-weight: 400;
+      font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+      font-size: 36px;
+      font-weight: 700;
       color: #FFFFFF;
       margin: 0;
       letter-spacing: -0.5px;
@@ -336,7 +336,7 @@ export function confirmEmailTemplate({
       <!-- Header -->
       <tr>
         <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 32px; font-weight: 400; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+          <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise<span class="logo-dot" style="color: #BC5A45;">.</span>
           </h1>
         </td>
@@ -469,7 +469,7 @@ export function resetPasswordTemplate({
       <!-- Header -->
       <tr>
         <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 32px; font-weight: 400; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+          <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise<span class="logo-dot" style="color: #BC5A45;">.</span>
           </h1>
         </td>
