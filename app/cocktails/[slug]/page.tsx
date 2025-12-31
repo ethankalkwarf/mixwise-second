@@ -75,7 +75,9 @@ function normalizeInstructions(
   raw: string | string[] | null | undefined
 ): string[] {
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw.filter((s) => s.trim().length > 0);
+  if (Array.isArray(raw)) return raw.filter((s) => s && typeof s === 'string' && s.trim().length > 0);
+
+  if (typeof raw !== 'string') return [];
 
   const value = raw.trim();
 
@@ -103,7 +105,9 @@ function normalizeTags(
   raw: string | string[] | null | undefined
 ): string[] {
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw.filter((t) => t.trim().length > 0);
+  if (Array.isArray(raw)) return raw.filter((t) => t && typeof t === 'string' && t.trim().length > 0);
+
+  if (typeof raw !== 'string') return [];
 
   return raw
     .split("|")
@@ -124,7 +128,6 @@ function buildTagLine(tags: string[]): string {
 }
 
 export const revalidate = 300; // Revalidate every 5 minutes for better performance
-export const dynamic = 'force-dynamic';
 
 // Helper function to map Supabase cocktail to expected shape for the component
 function mapSupabaseToSanityCocktail(cocktail: any) {
@@ -241,44 +244,113 @@ function generateRecipeSchema(args: {
 }
 
 export default async function CocktailDetailPage({ params, searchParams }: PageProps) {
-  const { slug } = await params;
-  const { daily } = await searchParams;
-  const cocktail = await getCocktailBySlug(slug);
+  try {
+    const { slug } = await params;
+    const { daily } = await searchParams;
+    const cocktail = await getCocktailBySlug(slug);
 
-  if (!cocktail) {
-    notFound();
+    if (!cocktail) {
+      notFound();
+    }
+
+  let sanityCocktail, allCocktails, ingredients, instructionSteps, tags, tagLine, imageUrl, recipeSchema, similarRecipes;
+
+  try {
+    sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
+
+    // Get all cocktails for daily cocktail comparison
+    let rawAllCocktails = [];
+    try {
+      rawAllCocktails = await getCocktailsList();
+    } catch (error) {
+      console.error('[COCKTAIL PAGE] Error getting all cocktails:', error);
+    }
+    // Only pass id and slug to DailyCocktailBanner for performance
+    allCocktails = rawAllCocktails
+      .filter(c => c && c.id && c.slug)
+      .map(c => ({ id: c.id, slug: c.slug }));
+
+    // Normalize data from Supabase
+    ingredients = normalizeIngredients(cocktail.ingredients as any);
+    instructionSteps = normalizeInstructions(cocktail.instructions as any);
+    tags = normalizeTags(cocktail.tags as any);
+    tagLine = buildTagLine(tags);
+
+    // Use external image URL from Supabase
+    imageUrl = sanityCocktail.externalImageUrl || null;
+
+    recipeSchema = generateRecipeSchema({
+      name: sanityCocktail.name,
+      description: sanityCocktail.description,
+      imageUrl,
+      ingredients: ingredients.map((i) => i.text),
+      instructionSteps,
+      keywords: [...tags, ...asStringArray(sanityCocktail.bestFor)].filter(Boolean),
+    });
+
+    // Get similar recipes for recommendations
+    let rawSimilarRecipes = [];
+    try {
+      rawSimilarRecipes = await getSimilarRecipes(
+        cocktail.id,
+        cocktail.base_spirit,
+        cocktail.tags,
+        cocktail.categories_all
+      );
+    } catch (error) {
+      console.error('[COCKTAIL PAGE] Error getting similar recipes:', error);
+    }
+
+    // Sanitize similar recipes data for client components
+    similarRecipes = rawSimilarRecipes
+      .filter(recipe => recipe && recipe.id && recipe.name && recipe.slug)
+      .map(recipe => ({
+        id: recipe.id,
+        name: recipe.name,
+        slug: recipe.slug,
+        short_description: recipe.short_description || null,
+        image_url: recipe.image_url || null,
+      }));
+  } catch (error) {
+    console.error('[COCKTAIL PAGE] Error processing cocktail data:', error);
+    // Return a basic error state
+    sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
+    allCocktails = [];
+    ingredients = [];
+    instructionSteps = [];
+    tags = [];
+    tagLine = '';
+    imageUrl = null;
+    recipeSchema = generateRecipeSchema({
+      name: sanityCocktail.name,
+      description: sanityCocktail.description,
+      imageUrl: null,
+      ingredients: [],
+      instructionSteps: [],
+      keywords: [],
+    });
+    similarRecipes = [];
   }
 
-  const sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
-
-  // Get all cocktails for daily cocktail comparison
-  const allCocktails = await getCocktailsList();
-
-  // Normalize data from Supabase
-  const ingredients = normalizeIngredients(cocktail.ingredients as any);
-  const instructionSteps = normalizeInstructions(cocktail.instructions as any);
-  const tags = normalizeTags(cocktail.tags as any);
-  const tagLine = buildTagLine(tags);
-
-  // Use external image URL from Supabase
-  const imageUrl = sanityCocktail.externalImageUrl || null;
-
-  const recipeSchema = generateRecipeSchema({
-    name: sanityCocktail.name,
-    description: sanityCocktail.description,
-    imageUrl,
-    ingredients: ingredients.map((i) => i.text),
-    instructionSteps,
-    keywords: [...tags, ...asStringArray(sanityCocktail.bestFor)].filter(Boolean),
-  });
-
-  // Get similar recipes for recommendations
-  const similarRecipes = await getSimilarRecipes(
-    cocktail.id,
-    cocktail.base_spirit,
-    cocktail.tags,
-    cocktail.categories_all
-  );
+  // Create a sanitized cocktail object for client components
+  const sanitizedCocktail = {
+    id: cocktail.id,
+    name: cocktail.name,
+    slug: cocktail.slug,
+    short_description: cocktail.short_description,
+    long_description: cocktail.long_description,
+    base_spirit: cocktail.base_spirit,
+    category_primary: cocktail.category_primary,
+    glassware: cocktail.glassware,
+    image_url: cocktail.image_url,
+    image_alt: cocktail.image_alt,
+    categories_all: cocktail.categories_all,
+    notes: cocktail.notes,
+    metadata_json: cocktail.metadata_json ? {
+      is_community_favorite: cocktail.metadata_json.is_community_favorite,
+      is_mixwise_original: cocktail.metadata_json.is_mixwise_original,
+    } : undefined,
+  };
 
   return (
     <>
@@ -321,7 +393,7 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
         </div>
 
         <RecipeContent
-          cocktail={cocktail}
+          cocktail={sanitizedCocktail}
           sanityCocktail={sanityCocktail}
           ingredients={ingredients}
           instructionSteps={instructionSteps}
@@ -332,6 +404,41 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
       </main>
     </>
   );
+  } catch (error) {
+    console.error('[COCKTAIL PAGE] Error rendering cocktail page:', error);
+    // Return a basic error page
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org/",
+              "@type": "Recipe",
+              name: "Cocktail Recipe",
+              description: "Cocktail recipe",
+            }),
+          }}
+        />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-serif font-bold text-forest mb-4">
+              Recipe Unavailable
+            </h1>
+            <p className="text-sage mb-8">
+              We're having trouble loading this recipe. Please try again later.
+            </p>
+            <a
+              href="/cocktails"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors font-medium"
+            >
+              ← Back to Cocktails
+            </a>
+          </div>
+        </main>
+      </>
+    );
+  }
 }
 
 // Generate static paths for known cocktails
