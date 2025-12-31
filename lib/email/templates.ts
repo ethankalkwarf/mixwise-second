@@ -665,11 +665,11 @@ export function welcomeEmailTemplate({
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                   <tr>
                     <td style="width: 48px; vertical-align: top;">
-                      <span style="font-size: 32px;">🛒</span>
+                      <span style="font-size: 32px;">✨</span>
                     </td>
                     <td style="padding-left: 12px;">
-                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #3A4D39; font-size: 16px;">Shopping Lists</p>
-                      <p style="margin: 0; color: #5F6F5E; font-size: 14px; line-height: 1.5;">See what ingredients you're missing and create shopping lists for your next store run.</p>
+                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #3A4D39; font-size: 16px;">Daily Inspiration</p>
+                      <p style="margin: 0; color: #5F6F5E; font-size: 14px; line-height: 1.5;">Check out our Cocktail of the Day for fresh inspiration and expand your mixing repertoire.</p>
                     </td>
                   </tr>
                 </table>
@@ -727,8 +727,8 @@ Add the ingredients you have at home and see what cocktails you can make right n
 ❤️ SAVE YOUR FAVORITES  
 Heart the recipes you love and access them anytime from your dashboard.
 
-🛒 SHOPPING LISTS
-See what ingredients you're missing and create shopping lists for your next store run.
+✨ DAILY INSPIRATION
+Check out our Cocktail of the Day for fresh inspiration and expand your mixing repertoire.
 
 Get started: https://www.getmixwise.com/mix
 
