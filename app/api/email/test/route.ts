@@ -34,14 +34,24 @@ async function getFeaturedCocktail() {
       .not("image_url", "is", null)
       .limit(20);
     
-    if (error || !data || data.length === 0) {
-      console.error("[Email Test] Error fetching cocktail:", error);
+    if (error) {
+      console.error("[Email Test] Database error fetching cocktail:", error);
       return null;
     }
+    
+    if (!data || data.length === 0) {
+      console.log("[Email Test] No cocktails with image_url found in database");
+      return null;
+    }
+    
+    console.log(`[Email Test] Found ${data.length} cocktails with images`);
+    console.log("[Email Test] Sample image_url:", data[0]?.image_url);
     
     // Pick a random one
     const randomIndex = Math.floor(Math.random() * data.length);
     const cocktail = data[randomIndex];
+    
+    console.log(`[Email Test] Selected: ${cocktail.name}, image: ${cocktail.image_url}`);
     
     return {
       name: cocktail.name,

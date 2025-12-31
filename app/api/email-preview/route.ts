@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { confirmEmailTemplate, resetPasswordTemplate, welcomeEmailTemplate, weeklyDigestTemplate } from "@/lib/email/templates";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // Sample data for preview
 const SAMPLE_EMAIL = "user@example.com";
@@ -17,21 +18,62 @@ const SAMPLE_CONFIRM_URL = "https://www.getmixwise.com/auth/callback?token=sampl
 const SAMPLE_RESET_URL = "https://www.getmixwise.com/reset-password?token=sample-token-abc123xyz";
 const SAMPLE_UNSUBSCRIBE_URL = "https://www.getmixwise.com/unsubscribe?token=sample-token-abc123xyz";
 
-// Sample cocktails for weekly digest preview
-const SAMPLE_COCKTAILS = [
+// Fetch real cocktails from database for preview
+async function fetchCocktailsForPreview() {
+  try {
+    const supabase = createAdminClient();
+    
+    // Get cocktails with images
+    const { data, error } = await supabase
+      .from("cocktails")
+      .select("name, slug, short_description, image_url")
+      .not("image_url", "is", null)
+      .limit(10);
+    
+    if (error) {
+      console.error("[Email Preview] Database error:", error);
+      return { featured: null, samples: [] };
+    }
+    
+    if (!data || data.length === 0) {
+      console.log("[Email Preview] No cocktails with images found");
+      return { featured: null, samples: [] };
+    }
+    
+    console.log(`[Email Preview] Found ${data.length} cocktails with images`);
+    console.log("[Email Preview] Sample image_url:", data[0]?.image_url);
+    
+    const featured = {
+      name: data[0].name,
+      slug: data[0].slug,
+      description: data[0].short_description || undefined,
+      imageUrl: data[0].image_url || undefined,
+    };
+    
+    const samples = data.slice(0, 5).map(c => ({
+      name: c.name,
+      slug: c.slug,
+      imageUrl: c.image_url || undefined,
+    }));
+    
+    return { featured, samples };
+  } catch (err) {
+    console.error("[Email Preview] Failed to fetch cocktails:", err);
+    return { featured: null, samples: [] };
+  }
+}
+
+// Fallback data if database fails
+const FALLBACK_COCKTAILS = [
   { name: "Margarita", slug: "margarita" },
   { name: "Moscow Mule", slug: "moscow-mule" },
   { name: "Whiskey Sour", slug: "whiskey-sour" },
-  { name: "Mojito", slug: "mojito" },
-  { name: "Daiquiri", slug: "daiquiri" },
 ];
-const SAMPLE_FEATURED_COCKTAIL = {
+const FALLBACK_FEATURED = {
   name: "Negroni",
   slug: "negroni",
   description: "A perfectly balanced bitter-sweet Italian aperitivo with gin, Campari, and sweet vermouth.",
-  imageUrl: "https://images.unsplash.com/photo-1551751299-1b51cab2694c?w=600&h=400&fit=crop",
 };
-// Empty bar version for preview
 const EMPTY_COCKTAILS: Array<{ name: string; slug: string }> = [];
 
 // Preview page wrapper HTML
@@ -353,6 +395,13 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const template = searchParams.get("template") || "confirmation";
 
+  // Fetch real cocktail data from database
+  const { featured, samples } = await fetchCocktailsForPreview();
+  
+  // Use database data or fallback
+  const featuredCocktail = featured || FALLBACK_FEATURED;
+  const sampleCocktails = samples.length > 0 ? samples : FALLBACK_COCKTAILS;
+
   let templateName: string;
   let emailTemplate: { subject: string; html: string; text: string };
 
@@ -371,8 +420,8 @@ export async function GET(request: NextRequest) {
         displayName: SAMPLE_DISPLAY_NAME,
         userEmail: SAMPLE_EMAIL,
         unsubscribeUrl: SAMPLE_UNSUBSCRIBE_URL,
-        cocktailsYouCanMake: SAMPLE_COCKTAILS,
-        featuredCocktail: SAMPLE_FEATURED_COCKTAIL,
+        cocktailsYouCanMake: sampleCocktails,
+        featuredCocktail: featuredCocktail,
         barIngredientCount: 15,
       });
       break;
@@ -383,7 +432,7 @@ export async function GET(request: NextRequest) {
         userEmail: SAMPLE_EMAIL,
         unsubscribeUrl: SAMPLE_UNSUBSCRIBE_URL,
         cocktailsYouCanMake: EMPTY_COCKTAILS,
-        featuredCocktail: SAMPLE_FEATURED_COCKTAIL,
+        featuredCocktail: featuredCocktail,
         barIngredientCount: 0,
       });
       break;
