@@ -98,8 +98,45 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Signup API] Processing signup for email: ${trimmedEmail}, IP: ${clientIP}`);
 
+    // Validate environment variables early
+    if (!process.env.SUPABASE_URL) {
+      console.error("[Signup API] Missing SUPABASE_URL environment variable");
+      return NextResponse.json(
+        { error: "Server configuration error. Please contact support." },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("[Signup API] Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
+      return NextResponse.json(
+        { error: "Server configuration error. Please contact support." },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error("[Signup API] Missing RESEND_API_KEY environment variable");
+      return NextResponse.json(
+        { error: "Server configuration error. Please contact support." },
+        { status: 500 }
+      );
+    }
+
+    console.log("[Signup API] Environment variables validated, creating admin client...");
+
     // Create Supabase admin client
-    const supabaseAdmin = createAdminClient();
+    let supabaseAdmin;
+    try {
+      supabaseAdmin = createAdminClient();
+      console.log("[Signup API] Admin client created successfully");
+    } catch (adminError) {
+      console.error("[Signup API] Failed to create admin client:", adminError);
+      return NextResponse.json(
+        { error: "Server configuration error. Please contact support." },
+        { status: 500 }
+      );
+    }
 
     // Check if user already exists
     const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
@@ -247,9 +284,40 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[Signup API] Unexpected error:", error);
+    // Log detailed error information
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error("[Signup API] Unexpected error:", {
+      message: errorMessage,
+      stack: errorStack,
+      error: error,
+    });
+
+    // Check for specific error types and return appropriate messages
+    if (errorMessage.includes("SUPABASE_URL")) {
+      return NextResponse.json(
+        { error: "Server configuration error: Missing Supabase URL" },
+        { status: 500 }
+      );
+    }
+    
+    if (errorMessage.includes("SUPABASE_SERVICE_ROLE_KEY")) {
+      return NextResponse.json(
+        { error: "Server configuration error: Missing Supabase service key" },
+        { status: 500 }
+      );
+    }
+    
+    if (errorMessage.includes("RESEND_API_KEY")) {
+      return NextResponse.json(
+        { error: "Server configuration error: Missing email service key" },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "An unexpected error occurred. Please try again." },
+      { error: `An unexpected error occurred: ${errorMessage}` },
       { status: 500 }
     );
   }
