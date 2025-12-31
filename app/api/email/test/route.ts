@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { 
   confirmEmailTemplate, 
   resetPasswordTemplate, 
@@ -20,6 +21,63 @@ import {
 
 // Simple auth check - only allow in development or with secret
 const TEST_SECRET = process.env.EMAIL_TEST_SECRET;
+
+// Fetch a random featured cocktail from the database
+async function getFeaturedCocktail() {
+  try {
+    const supabase = createAdminClient();
+    
+    // Get a random cocktail with an image
+    const { data, error } = await supabase
+      .from("cocktails")
+      .select("name, slug, short_description, image_url")
+      .not("image_url", "is", null)
+      .limit(20);
+    
+    if (error || !data || data.length === 0) {
+      console.error("[Email Test] Error fetching cocktail:", error);
+      return null;
+    }
+    
+    // Pick a random one
+    const randomIndex = Math.floor(Math.random() * data.length);
+    const cocktail = data[randomIndex];
+    
+    return {
+      name: cocktail.name,
+      slug: cocktail.slug,
+      description: cocktail.short_description || undefined,
+      imageUrl: cocktail.image_url || undefined,
+    };
+  } catch (err) {
+    console.error("[Email Test] Failed to fetch cocktail:", err);
+    return null;
+  }
+}
+
+// Fetch some cocktails the user could make (for demo purposes)
+async function getSampleCocktails() {
+  try {
+    const supabase = createAdminClient();
+    
+    const { data, error } = await supabase
+      .from("cocktails")
+      .select("name, slug, image_url")
+      .limit(5);
+    
+    if (error || !data) {
+      return [];
+    }
+    
+    return data.map(c => ({
+      name: c.name,
+      slug: c.slug,
+      imageUrl: c.image_url || undefined,
+    }));
+  } catch {
+    return [];
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,14 +96,19 @@ export async function POST(request: NextRequest) {
 
     let emailContent: { subject: string; html: string; text: string };
 
-    // Generate realistic-looking test tokens (UUIDs)
-    const testUserId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
-    const testToken = "b2c3d4e5-f6a7-8901-bcde-f12345678901";
+    // For test emails, use simple URLs that won't trigger security warnings
+    // These go to real pages on the site, not auth endpoints with tokens
+    const unsubscribeUrl = "https://www.getmixwise.com/settings";
+    
+    // Fetch real cocktail data from the database
+    const featuredCocktail = await getFeaturedCocktail();
+    const sampleCocktails = await getSampleCocktails();
 
     switch (template) {
       case "confirmation":
         emailContent = confirmEmailTemplate({
-          confirmUrl: `https://www.getmixwise.com/auth/callback?token=${testToken}&type=signup`,
+          // Link to homepage for test - in production this would be a real auth callback
+          confirmUrl: "https://www.getmixwise.com/dashboard",
           userEmail: email,
         });
         break;
@@ -54,7 +117,7 @@ export async function POST(request: NextRequest) {
         emailContent = welcomeEmailTemplate({
           displayName: email.split("@")[0],
           userEmail: email,
-          unsubscribeUrl: `https://www.getmixwise.com/api/email/unsubscribe?token=${testUserId}&emailType=all`,
+          unsubscribeUrl,
         });
         break;
 
@@ -62,17 +125,16 @@ export async function POST(request: NextRequest) {
         emailContent = weeklyDigestTemplate({
           displayName: email.split("@")[0],
           userEmail: email,
-          unsubscribeUrl: `https://www.getmixwise.com/api/email/unsubscribe?token=${testUserId}&emailType=weekly_digest`,
-          cocktailsYouCanMake: [
+          unsubscribeUrl,
+          cocktailsYouCanMake: sampleCocktails.length > 0 ? sampleCocktails : [
             { name: "Margarita", slug: "margarita" },
             { name: "Moscow Mule", slug: "moscow-mule" },
             { name: "Whiskey Sour", slug: "whiskey-sour" },
           ],
-          featuredCocktail: {
+          featuredCocktail: featuredCocktail || {
             name: "Negroni",
             slug: "negroni",
             description: "A perfectly balanced bitter-sweet Italian aperitivo.",
-            imageUrl: "https://images.unsplash.com/photo-1551751299-1b51cab2694c?w=600&h=400&fit=crop",
           },
           barIngredientCount: 12,
         });
@@ -82,13 +144,12 @@ export async function POST(request: NextRequest) {
         emailContent = weeklyDigestTemplate({
           displayName: email.split("@")[0],
           userEmail: email,
-          unsubscribeUrl: `https://www.getmixwise.com/api/email/unsubscribe?token=${testUserId}&emailType=weekly_digest`,
+          unsubscribeUrl,
           cocktailsYouCanMake: [],
-          featuredCocktail: {
+          featuredCocktail: featuredCocktail || {
             name: "Negroni",
             slug: "negroni",
             description: "A perfectly balanced bitter-sweet Italian aperitivo.",
-            imageUrl: "https://images.unsplash.com/photo-1551751299-1b51cab2694c?w=600&h=400&fit=crop",
           },
           barIngredientCount: 0,
         });
@@ -96,7 +157,8 @@ export async function POST(request: NextRequest) {
 
       case "password-reset":
         emailContent = resetPasswordTemplate({
-          resetUrl: `https://www.getmixwise.com/reset-password?token=${testToken}&type=recovery`,
+          // Link to homepage for test - in production this would be a real reset page
+          resetUrl: "https://www.getmixwise.com/login",
           userEmail: email,
         });
         break;
