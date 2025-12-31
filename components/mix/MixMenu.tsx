@@ -161,7 +161,7 @@ export function MixMenu({
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium text-forest text-sm">
-                      Want to Add More Ingredients?
+                      Add more ingredients
                     </div>
                     <div className="text-xs text-sage">
                       Return to ingredient selector
