@@ -250,7 +250,18 @@ export async function POST(request: NextRequest) {
     });
 
     // Send email via Resend
-    const resend = createResendClient();
+    let resend;
+    try {
+      resend = createResendClient();
+      console.log("[Signup API] Resend client created successfully");
+    } catch (resendError) {
+      console.error("[Signup API] Failed to create Resend client:", resendError);
+      return NextResponse.json({
+        ok: true,
+        emailSent: false,
+        message: "Account created but confirmation email could not be sent. Please try logging in.",
+      });
+    }
 
     console.log(`[Signup API] Sending confirmation email via Resend to: ${trimmedEmail}`);
 
