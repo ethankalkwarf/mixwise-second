@@ -5,7 +5,7 @@ import { MixResultsPanel } from "./MixResultsPanel";
 import { YourBarPanel } from "./YourBarPanel";
 import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
 import { getMixMatchGroups } from "@/lib/mixMatching";
-import { ArrowPathIcon, LightBulbIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, LightBulbIcon, SparklesIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { MainContainer } from "@/components/layout/MainContainer";
 
 type Props = {
@@ -154,6 +154,23 @@ export function MixMenu({
                 </div>
               </button>
 
+              <button
+                onClick={() => window.location.href = '/mix'}
+                className="w-full text-left p-3 rounded-xl border border-mist hover:border-olive/30 hover:bg-olive/5 transition-all group"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-forest text-sm">
+                      Want to Add More Ingredients?
+                    </div>
+                    <div className="text-xs text-sage">
+                      Return to ingredient selector
+                    </div>
+                  </div>
+                  <PlusIcon className="w-4 h-4 text-sage group-hover:text-olive" />
+                </div>
+              </button>
+
               {randomSuggestion && (
                 <button
                   onClick={() => window.location.href = `/cocktails/${randomSuggestion.slug}`}
@@ -189,30 +206,6 @@ export function MixMenu({
             showAllRecipes={showAllRecipes}
           />
 
-          {/* Return to Ingredient Selector Prompt */}
-          {!showAllRecipes && (
-            <div className="bg-gradient-to-r from-olive/5 to-terracotta/5 border border-olive/20 rounded-3xl p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-olive/20 rounded-2xl flex items-center justify-center">
-                  <span className="text-2xl">🏠</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-display font-bold text-forest">
-                    Want to Add More Ingredients?
-                  </h3>
-                  <p className="text-sm text-sage">
-                    Return to the full ingredient selector to browse all categories and add more items to your cabinet.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => window.history.back()}
-                className="w-full bg-olive/10 text-olive border border-olive/20 rounded-xl py-3 px-4 text-sm font-medium hover:bg-olive hover:text-cream transition-all"
-              >
-                ← Back to Ingredient Selector
-              </button>
-            </div>
-          )}
 
           {/* Easy Ingredient Addition - Always visible in step 3 */}
 
