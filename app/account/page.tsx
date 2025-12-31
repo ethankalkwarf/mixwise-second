@@ -25,6 +25,7 @@ import {
   ShareIcon,
   GlobeAltIcon,
   LockClosedIcon,
+  EnvelopeIcon,
 } from "@heroicons/react/24/outline";
 
 // Simple query to get all ingredient names
@@ -81,6 +82,15 @@ export default function AccountPage() {
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   
+  // Email preferences state
+  const [emailPrefs, setEmailPrefs] = useState({
+    weekly_digest: true,
+    recommendations: true,
+    product_updates: true,
+  });
+  const [emailPrefsLoading, setEmailPrefsLoading] = useState(true);
+  const [emailPrefsSaving, setEmailPrefsSaving] = useState(false);
+  
   // Fetch ingredient names from Sanity for fallback lookup
   const [sanityNames, setSanityNames] = useState<Map<string, string>>(new Map());
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
@@ -112,6 +122,59 @@ export default function AccountPage() {
 
     fetchBadges();
   }, [user]);
+
+  // Fetch email preferences
+  useEffect(() => {
+    async function fetchEmailPrefs() {
+      if (!user) return;
+      
+      try {
+        const response = await fetch("/api/email-preferences");
+        if (response.ok) {
+          const data = await response.json();
+          setEmailPrefs({
+            weekly_digest: data.preferences?.weekly_digest ?? true,
+            recommendations: data.preferences?.recommendations ?? true,
+            product_updates: data.preferences?.product_updates ?? true,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch email preferences:", err);
+      } finally {
+        setEmailPrefsLoading(false);
+      }
+    }
+
+    fetchEmailPrefs();
+  }, [user]);
+
+  // Update email preference
+  const updateEmailPref = async (key: keyof typeof emailPrefs, value: boolean) => {
+    setEmailPrefsSaving(true);
+    const newPrefs = { ...emailPrefs, [key]: value };
+    setEmailPrefs(newPrefs);
+
+    try {
+      const response = await fetch("/api/email-preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPrefs),
+      });
+
+      if (response.ok) {
+        toast.success("Email preferences updated");
+      } else {
+        // Revert on error
+        setEmailPrefs(emailPrefs);
+        toast.error("Failed to update preferences");
+      }
+    } catch (err) {
+      setEmailPrefs(emailPrefs);
+      toast.error("Failed to update preferences");
+    } finally {
+      setEmailPrefsSaving(false);
+    }
+  };
 
   // Generate default username suggestion
   const generateDefaultUsername = useCallback(() => {
@@ -540,6 +603,87 @@ export default function AccountPage() {
                 </div>
               )}
             </div>
+          </section>
+
+          {/* Email Preferences */}
+          <section className="section-botanical">
+            <div className="flex items-center gap-3 mb-6">
+              <EnvelopeIcon className="w-6 h-6 text-olive" />
+              <h2 className="text-xl font-serif font-bold text-forest">Email Preferences</h2>
+            </div>
+            <p className="text-sage text-sm mb-6">
+              Choose which emails you'd like to receive from MixWise.
+            </p>
+            
+            {emailPrefsLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-16 bg-mist/50 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Weekly Digest */}
+                <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
+                  <div>
+                    <h3 className="font-semibold text-forest">Weekly Digest</h3>
+                    <p className="text-sm text-sage">
+                      Cocktails you can make, featured recipes, and inspiration every Sunday
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={emailPrefs.weekly_digest}
+                      onChange={(e) => updateEmailPref("weekly_digest", e.target.checked)}
+                      disabled={emailPrefsSaving}
+                    />
+                    <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>
+                  </label>
+                </div>
+
+                {/* Recommendations */}
+                <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
+                  <div>
+                    <h3 className="font-semibold text-forest">Personalized Recommendations</h3>
+                    <p className="text-sm text-sage">
+                      Cocktail suggestions based on your favorites and bar ingredients
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={emailPrefs.recommendations}
+                      onChange={(e) => updateEmailPref("recommendations", e.target.checked)}
+                      disabled={emailPrefsSaving}
+                    />
+                    <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>
+                  </label>
+                </div>
+
+                {/* Product Updates */}
+                <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
+                  <div>
+                    <h3 className="font-semibold text-forest">Product Updates</h3>
+                    <p className="text-sm text-sage">
+                      New features, improvements, and MixWise news
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={emailPrefs.product_updates}
+                      onChange={(e) => updateEmailPref("product_updates", e.target.checked)}
+                      disabled={emailPrefsSaving}
+                    />
+                    <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>
+                  </label>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Achievements */}
