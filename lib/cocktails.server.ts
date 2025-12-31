@@ -40,26 +40,41 @@ export async function getCocktailBySlug(slug: string): Promise<Cocktail | null> 
 
   console.log('[getCocktailBySlug] Looking for slug:', slug);
 
+  // First try to find by slug
   const { data, error } = await supabase
     .from('cocktails')
     .select('*')
     .eq('slug', slug)
     .single();
 
-  console.log('[getCocktailBySlug] Query result:', { data: !!data, error: error?.message, slug });
+  console.log('[getCocktailBySlug] Slug lookup result:', { data: !!data, error: error?.message });
 
-  if (error || !data) {
-    // Try to find similar slugs for debugging
-    const { data: allSlugs } = await supabase
-      .from('cocktails')
-      .select('slug, name')
-      .limit(10);
-
-    console.log('[getCocktailBySlug] Available slugs:', allSlugs?.slice(0, 5));
-    return null;
+  if (data) {
+    return data as Cocktail;
   }
 
-  return data as Cocktail;
+  // If slug lookup failed, try to find by ID (in case slug is actually an ID)
+  console.log('[getCocktailBySlug] Slug lookup failed, trying ID lookup for:', slug);
+  const { data: idData, error: idError } = await supabase
+    .from('cocktails')
+    .select('*')
+    .eq('id', slug)
+    .single();
+
+  console.log('[getCocktailBySlug] ID lookup result:', { data: !!idData, error: idError?.message });
+
+  if (idData) {
+    return idData as Cocktail;
+  }
+
+  // Debug: show some available cocktails
+  const { data: allCocktails } = await supabase
+    .from('cocktails')
+    .select('id, slug, name')
+    .limit(10);
+
+  console.log('[getCocktailBySlug] Available cocktails:', allCocktails?.slice(0, 5));
+  return null;
 }
 
 /**
