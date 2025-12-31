@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
       // Check if user needs onboarding (new users)
       if (data.user) {
         let needsOnboarding = false;
+        let isNewUser = false;
         
         try {
           const { data: preferences, error: prefError } = await supabase
@@ -91,6 +92,7 @@ export async function GET(request: NextRequest) {
           if (prefError?.code === "PGRST116") {
             // No row found - new user, needs onboarding
             needsOnboarding = true;
+            isNewUser = true;
             console.log("[Auth Callback] New user, needs onboarding");
           } else if (prefError?.code === "42P01") {
             // Table doesn't exist - skip onboarding entirely
@@ -98,12 +100,35 @@ export async function GET(request: NextRequest) {
             needsOnboarding = false;
           } else if (!prefError && (!preferences || !preferences.onboarding_completed)) {
             needsOnboarding = true;
+            isNewUser = true;
             console.log("[Auth Callback] Existing user, onboarding not completed");
           } else if (prefError) {
             console.error("[Auth Callback] Preferences check error:", prefError);
           }
         } catch (prefCheckError) {
           console.error("[Auth Callback] Preferences table check failed:", prefCheckError);
+        }
+        
+        // Send welcome email to new users (fire and forget - don't block redirect)
+        if (isNewUser && data.user.email) {
+          const displayName = data.user.user_metadata?.full_name || 
+                             data.user.user_metadata?.name || 
+                             data.user.email.split("@")[0];
+          
+          // Send welcome email asynchronously
+          fetch(`${baseUrl}/api/auth/send-welcome`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: data.user.id,
+              userEmail: data.user.email,
+              displayName,
+            }),
+          }).catch((err) => {
+            console.error("[Auth Callback] Failed to trigger welcome email:", err);
+          });
+          
+          console.log("[Auth Callback] Triggered welcome email for new user");
         }
         
         if (needsOnboarding) {

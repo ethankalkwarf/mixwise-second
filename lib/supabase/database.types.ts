@@ -280,6 +280,50 @@ export interface Database {
           metadata?: Json;
         };
       };
+      email_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          welcome_emails: boolean;
+          weekly_digest: boolean;
+          recommendations: boolean;
+          product_updates: boolean;
+          welcome_email_sent_at: string | null;
+          last_digest_sent_at: string | null;
+          unsubscribed_all_at: string | null;
+          unsubscribe_token: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          welcome_emails?: boolean;
+          weekly_digest?: boolean;
+          recommendations?: boolean;
+          product_updates?: boolean;
+          welcome_email_sent_at?: string | null;
+          last_digest_sent_at?: string | null;
+          unsubscribed_all_at?: string | null;
+          unsubscribe_token?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          welcome_emails?: boolean;
+          weekly_digest?: boolean;
+          recommendations?: boolean;
+          product_updates?: boolean;
+          welcome_email_sent_at?: string | null;
+          last_digest_sent_at?: string | null;
+          unsubscribed_all_at?: string | null;
+          unsubscribe_token?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       email_signups: {
         Row: {
           id: number;

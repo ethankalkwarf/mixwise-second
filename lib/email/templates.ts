@@ -560,3 +560,187 @@ https://www.getmixwise.com
 
   return { subject, html, text };
 }
+
+/**
+ * Welcome email template sent after email confirmation
+ */
+export function welcomeEmailTemplate({
+  displayName,
+  userEmail,
+  unsubscribeUrl,
+}: {
+  displayName: string;
+  userEmail: string;
+  unsubscribeUrl: string;
+}): EmailTemplate {
+  const subject = "Welcome to MixWise! 🍸 Let's make your first cocktail";
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+  <title>Welcome to MixWise!</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  ${baseStyles}
+</head>
+<body>
+  <div class="email-wrapper">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
+      
+      <!-- Header -->
+      <tr>
+        <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
+          <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+            mixwise.
+          </h1>
+        </td>
+      </tr>
+      
+      <!-- Content -->
+      <tr>
+        <td class="email-content" style="padding: 48px 40px;">
+          <div style="text-align: center; font-size: 48px; margin-bottom: 24px;">🎉</div>
+          
+          <h2 class="greeting" style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
+            Welcome, ${displayName}!
+          </h2>
+          
+          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
+            Your account is all set up and ready to go. You've just joined a community of cocktail enthusiasts who are discovering new drinks, perfecting classic recipes, and building their home bars.
+          </p>
+          
+          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 24px 0; line-height: 1.65;">
+            Here's what you can do with your MixWise account:
+          </p>
+          
+          <!-- Feature Cards -->
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 24px;">
+            <tr>
+              <td style="padding: 16px; background-color: #F9F7F2; border-radius: 16px; margin-bottom: 12px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                  <tr>
+                    <td style="width: 48px; vertical-align: top;">
+                      <span style="font-size: 32px;">🍸</span>
+                    </td>
+                    <td style="padding-left: 12px;">
+                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #3A4D39; font-size: 16px;">Build Your Bar</p>
+                      <p style="margin: 0; color: #5F6F5E; font-size: 14px; line-height: 1.5;">Add the ingredients you have at home and see what cocktails you can make right now.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr><td style="height: 12px;"></td></tr>
+            <tr>
+              <td style="padding: 16px; background-color: #F9F7F2; border-radius: 16px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                  <tr>
+                    <td style="width: 48px; vertical-align: top;">
+                      <span style="font-size: 32px;">❤️</span>
+                    </td>
+                    <td style="padding-left: 12px;">
+                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #3A4D39; font-size: 16px;">Save Your Favorites</p>
+                      <p style="margin: 0; color: #5F6F5E; font-size: 14px; line-height: 1.5;">Heart the recipes you love and access them anytime from your dashboard.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr><td style="height: 12px;"></td></tr>
+            <tr>
+              <td style="padding: 16px; background-color: #F9F7F2; border-radius: 16px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                  <tr>
+                    <td style="width: 48px; vertical-align: top;">
+                      <span style="font-size: 32px;">🛒</span>
+                    </td>
+                    <td style="padding-left: 12px;">
+                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #3A4D39; font-size: 16px;">Shopping Lists</p>
+                      <p style="margin: 0; color: #5F6F5E; font-size: 14px; line-height: 1.5;">See what ingredients you're missing and create shopping lists for your next store run.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+          
+          <div class="button-wrapper" style="text-align: center; margin: 32px 0;">
+            <a href="https://www.getmixwise.com/mix" class="btn-primary" style="display: inline-block; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px; box-shadow: 0 10px 25px -5px rgba(188, 90, 69, 0.3);">
+              Start Mixing →
+            </a>
+          </div>
+          
+          <div class="divider" style="height: 1px; background: linear-gradient(90deg, transparent, #D1DAD0, transparent); margin: 32px 0;"></div>
+          
+          <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 0; line-height: 1.6; text-align: center;">
+            Have questions? Just reply to this email – we'd love to hear from you!
+          </p>
+        </td>
+      </tr>
+      
+      <!-- Footer -->
+      <tr>
+        <td class="email-footer" style="background-color: #E6EBE4; padding: 32px 40px; text-align: center; border-top: 1px solid #D1DAD0;">
+          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">
+            This email was sent to <strong>${userEmail}</strong>
+          </p>
+          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0;">
+            © ${new Date().getFullYear()} MixWise · A smarter way to make cocktails at home
+          </p>
+          <div class="footer-links" style="margin: 16px 0 0 0;">
+            <a href="https://www.getmixwise.com" style="color: #3A4D39; text-decoration: none; font-size: 13px; margin: 0 8px;">Visit MixWise</a>
+            <span style="color: #D1DAD0;">|</span>
+            <a href="${unsubscribeUrl}" style="color: #5F6F5E; text-decoration: none; font-size: 13px; margin: 0 8px;">Unsubscribe</a>
+          </div>
+        </td>
+      </tr>
+      
+    </table>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Welcome to MixWise, ${displayName}! 🎉
+
+Your account is all set up and ready to go. You've just joined a community of cocktail enthusiasts who are discovering new drinks, perfecting classic recipes, and building their home bars.
+
+Here's what you can do:
+
+🍸 BUILD YOUR BAR
+Add the ingredients you have at home and see what cocktails you can make right now.
+
+❤️ SAVE YOUR FAVORITES  
+Heart the recipes you love and access them anytime from your dashboard.
+
+🛒 SHOPPING LISTS
+See what ingredients you're missing and create shopping lists for your next store run.
+
+Get started: https://www.getmixwise.com/mix
+
+Have questions? Just reply to this email – we'd love to hear from you!
+
+---
+This email was sent to ${userEmail}
+© ${new Date().getFullYear()} MixWise · A smarter way to make cocktails at home
+https://www.getmixwise.com
+
+Unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  return { subject, html, text };
+}

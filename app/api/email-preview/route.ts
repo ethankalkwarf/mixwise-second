@@ -8,17 +8,20 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { confirmEmailTemplate, resetPasswordTemplate } from "@/lib/email/templates";
+import { confirmEmailTemplate, resetPasswordTemplate, welcomeEmailTemplate } from "@/lib/email/templates";
 
 // Sample data for preview
 const SAMPLE_EMAIL = "user@example.com";
+const SAMPLE_DISPLAY_NAME = "Ethan";
 const SAMPLE_CONFIRM_URL = "https://www.getmixwise.com/auth/callback?token=sample-token-abc123xyz";
 const SAMPLE_RESET_URL = "https://www.getmixwise.com/reset-password?token=sample-token-abc123xyz";
+const SAMPLE_UNSUBSCRIBE_URL = "https://www.getmixwise.com/unsubscribe?token=sample-token-abc123xyz";
 
 // Preview page wrapper HTML
 function wrapInPreviewPage(templateName: string, emailHtml: string, subject: string): string {
   const templates = [
     { id: "confirmation", name: "Email Confirmation" },
+    { id: "welcome", name: "Welcome Email" },
     { id: "password-reset", name: "Password Reset" },
   ];
 
@@ -335,6 +338,14 @@ export async function GET(request: NextRequest) {
   let emailTemplate: { subject: string; html: string; text: string };
 
   switch (template) {
+    case "welcome":
+      templateName = "Welcome Email";
+      emailTemplate = welcomeEmailTemplate({
+        displayName: SAMPLE_DISPLAY_NAME,
+        userEmail: SAMPLE_EMAIL,
+        unsubscribeUrl: SAMPLE_UNSUBSCRIBE_URL,
+      });
+      break;
     case "password-reset":
       templateName = "Password Reset";
       emailTemplate = resetPasswordTemplate({

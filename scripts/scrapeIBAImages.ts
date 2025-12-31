@@ -1,11 +1,15 @@
 #!/usr/bin/env tsx
 
 /**
- * IBA Cocktail Image Scraper
+ * Cocktail Image Scraper (IBA + TheCocktailDB)
  * 
- * This script identifies cocktails with missing images in the Supabase database
- * and scrapes the IBA (International Bartenders Association) website to find
- * matching cocktail images.
+ * This script identifies cocktails with MISSING/EMPTY images in the Supabase database
+ * and scrapes multiple sources to find matching cocktail images:
+ *   1. IBA (International Bartenders Association) - iba-world.com
+ *   2. TheCocktailDB - thecocktaildb.com (free API)
+ * 
+ * IMPORTANT: Only updates cocktails where image_url is NULL or empty string.
+ * Will NEVER overwrite existing images.
  * 
  * STRICT MATCHING: Only matches cocktails that are genuinely the same drink.
  * Will NOT match variants like "Kiwi Margarita" to "Margarita".
@@ -15,9 +19,10 @@
  *   npx tsx scripts/scrapeIBAImages.ts --apply            # Apply updates to database
  *   npx tsx scripts/scrapeIBAImages.ts --dry-run --verbose # Show detailed matching info
  *   npx tsx scripts/scrapeIBAImages.ts --list-missing     # Just list cocktails missing images
- *   npx tsx scripts/scrapeIBAImages.ts --list-iba         # Just list IBA cocktails found
  *   npx tsx scripts/scrapeIBAImages.ts --exact-only       # Only use 100% exact matches
  *   npx tsx scripts/scrapeIBAImages.ts --min-score 0.98   # Set minimum match score (default 0.95)
+ *   npx tsx scripts/scrapeIBAImages.ts --iba-only         # Only use IBA source
+ *   npx tsx scripts/scrapeIBAImages.ts --cocktaildb-only  # Only use TheCocktailDB source
  * 
  * Environment variables (loaded from .env.local):
  *   NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL)
@@ -52,9 +57,16 @@ interface PlannedUpdate {
   cocktailName: string;
   oldImageUrl: string | null;
   newImageUrl: string;
-  ibaName: string;
+  sourceName: string;  // Name from the source (IBA or TheCocktailDB)
+  source: 'IBA' | 'TheCocktailDB';
   matchType: 'exact' | 'slug' | 'fuzzy';
   matchScore: number;
+}
+
+interface CocktailDBDrink {
+  strDrink: string;
+  strDrinkThumb: string | null;
+  idDrink: string;
 }
 
 // IBA cocktail categories
@@ -405,6 +417,125 @@ async function scrapeIBACocktails(verbose: boolean): Promise<IBACocktail[]> {
   return results;
 }
 
+// =========================
+// TheCocktailDB FUNCTIONS
+// =========================
+
+/**
+ * Search TheCocktailDB for a cocktail by name
+ * Returns the image URL if an exact match is found
+ */
+async function searchTheCocktailDB(
+  cocktailName: string,
+  verbose: boolean = false
+): Promise<{ name: string; imageUrl: string } | null> {
+  const url = `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${encodeURIComponent(cocktailName)}`;
+  
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; MixWise/1.0; +https://getmixwise.com)',
+      },
+    });
+    
+    if (!response.ok) {
+      if (verbose) console.warn(`  TheCocktailDB API error for "${cocktailName}": ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (!data.drinks || data.drinks.length === 0) {
+      return null;
+    }
+    
+    // Normalize for comparison
+    const searchNormalized = normalizeString(cocktailName);
+    const searchBase = getBaseName(cocktailName);
+    
+    // Look for exact match first
+    for (const drink of data.drinks as CocktailDBDrink[]) {
+      const drinkNormalized = normalizeString(drink.strDrink);
+      const drinkBase = getBaseName(drink.strDrink);
+      
+      // Exact match or base name match
+      if (drinkNormalized === searchNormalized || drinkBase === searchBase) {
+        if (drink.strDrinkThumb) {
+          return {
+            name: drink.strDrink,
+            imageUrl: drink.strDrinkThumb,
+          };
+        }
+      }
+    }
+    
+    // Check if it's a variant (should not match)
+    for (const drink of data.drinks as CocktailDBDrink[]) {
+      if (isVariantOf(cocktailName, drink.strDrink)) {
+        // This is a variant match - skip it
+        continue;
+      }
+      
+      // Check similarity score
+      const score = calculateSimilarity(cocktailName, drink.strDrink);
+      if (score >= 0.95 && drink.strDrinkThumb) {
+        return {
+          name: drink.strDrink,
+          imageUrl: drink.strDrinkThumb,
+        };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    if (verbose) console.warn(`  TheCocktailDB error for "${cocktailName}":`, error);
+    return null;
+  }
+}
+
+/**
+ * Search TheCocktailDB for multiple cocktails
+ */
+async function searchTheCocktailDBBatch(
+  cocktails: Cocktail[],
+  verbose: boolean = false
+): Promise<Map<string, { name: string; imageUrl: string }>> {
+  const results = new Map<string, { name: string; imageUrl: string }>();
+  
+  console.log(`\n🔍 Searching TheCocktailDB for ${cocktails.length} cocktails...`);
+  
+  let found = 0;
+  let processed = 0;
+  
+  for (const cocktail of cocktails) {
+    const result = await searchTheCocktailDB(cocktail.name, verbose);
+    
+    if (result) {
+      results.set(cocktail.id, result);
+      found++;
+      if (verbose) {
+        console.log(`  ✅ ${cocktail.name} -> ${result.name}`);
+      }
+    } else {
+      if (verbose) {
+        console.log(`  ❌ ${cocktail.name} - no match`);
+      }
+    }
+    
+    processed++;
+    if (processed % 20 === 0) {
+      console.log(`  Processed ${processed}/${cocktails.length}...`);
+    }
+    
+    // Rate limiting
+    await new Promise(resolve => setTimeout(resolve, 150));
+  }
+  
+  console.log(`✅ Found ${found} matches on TheCocktailDB`);
+  
+  return results;
+}
+
 // Find best matching IBA cocktail for a local cocktail
 // STRICT MATCHING: Only matches cocktails that are genuinely the same drink
 function findBestMatch(
@@ -475,9 +606,10 @@ async function main() {
       apply = false, 
       verbose = false,
       'list-missing': listMissing = false,
-      'list-iba': listIBA = false,
       'exact-only': exactOnly = false,
       'min-score': minScoreStr,
+      'iba-only': ibaOnly = false,
+      'cocktaildb-only': cocktaildbOnly = false,
     }
   } = parseArgs({
     options: {
@@ -485,9 +617,10 @@ async function main() {
       'apply': { type: 'boolean', default: false },
       'verbose': { type: 'boolean', default: false },
       'list-missing': { type: 'boolean', default: false },
-      'list-iba': { type: 'boolean', default: false },
       'exact-only': { type: 'boolean', default: false },
       'min-score': { type: 'string' }, // e.g., "0.98" for 98% match
+      'iba-only': { type: 'boolean', default: false },
+      'cocktaildb-only': { type: 'boolean', default: false },
     },
     args: process.argv.slice(2)
   });
@@ -495,14 +628,26 @@ async function main() {
   // Parse minimum score (default 0.95 = 95%, or 1.0 for exact-only)
   const minScore = exactOnly ? 1.0 : (minScoreStr ? parseFloat(minScoreStr) : 0.95);
   
-  console.log('🍸 IBA Cocktail Image Scraper');
-  console.log('============================');
+  // Determine which sources to use
+  const useIBA = !cocktaildbOnly;
+  const useCocktailDB = !ibaOnly;
+  
+  console.log('🍸 Cocktail Image Scraper (IBA + TheCocktailDB)');
+  console.log('==============================================');
   
   if (apply) {
     console.log('🚨 APPLY MODE: This will update the database!');
   } else {
     console.log('🔍 DRY RUN MODE: No changes will be made');
   }
+  
+  console.log('⚠️  ONLY updates cocktails with EMPTY/NULL images');
+  
+  // Show which sources are enabled
+  const sources = [];
+  if (useIBA) sources.push('IBA');
+  if (useCocktailDB) sources.push('TheCocktailDB');
+  console.log(`📚 Sources: ${sources.join(' + ')}`);
   
   if (exactOnly) {
     console.log('🎯 EXACT ONLY MODE: Only 100% exact matches will be used');
@@ -562,92 +707,123 @@ async function main() {
     return;
   }
   
-  // Scrape IBA website
-  const ibaCocktails = await scrapeIBACocktails(verbose);
-  
-  // If just listing IBA cocktails, print and exit
-  if (listIBA) {
-    console.log('\n📋 IBA COCKTAILS FOUND');
-    console.log('======================');
-    ibaCocktails.forEach((c, i) => {
-      const hasImage = c.imageUrl ? '✅' : '❌';
-      console.log(`${i + 1}. ${hasImage} ${c.name} (${c.slug})`);
-      if (verbose && c.imageUrl) {
-        console.log(`      ${c.imageUrl}`);
-      }
-    });
+  if (missingImageCocktails.length === 0) {
+    console.log('\n✅ All cocktails have images! Nothing to do.');
     return;
   }
   
-  // Find matches for cocktails missing images
-  console.log('\n🔗 Finding matches between local and IBA cocktails...');
+  // Track which cocktails still need images
+  let cocktailsStillNeedingImages = [...missingImageCocktails];
   const plannedUpdates: PlannedUpdate[] = [];
-  const noMatch: Cocktail[] = [];
   
-  for (const cocktail of missingImageCocktails) {
-    const bestMatch = findBestMatch(cocktail, ibaCocktails, minScore);
+  // =========================
+  // SOURCE 1: IBA Website
+  // =========================
+  if (useIBA) {
+    const ibaCocktails = await scrapeIBACocktails(verbose);
     
-    if (bestMatch && bestMatch.match.imageUrl) {
-      plannedUpdates.push({
-        cocktailId: cocktail.id,
-        cocktailSlug: cocktail.slug,
-        cocktailName: cocktail.name,
-        oldImageUrl: cocktail.image_url,
-        newImageUrl: bestMatch.match.imageUrl,
-        ibaName: bestMatch.match.name,
-        matchType: bestMatch.type,
-        matchScore: bestMatch.score,
-      });
+    console.log('\n🔗 Finding matches from IBA...');
+    
+    for (const cocktail of cocktailsStillNeedingImages) {
+      const bestMatch = findBestMatch(cocktail, ibaCocktails, minScore);
       
-      if (verbose) {
-        console.log(`  ✅ ${cocktail.name} → ${bestMatch.match.name} (${bestMatch.type}, ${Math.round(bestMatch.score * 100)}%)`);
-      }
-    } else {
-      noMatch.push(cocktail);
-      if (verbose) {
-        console.log(`  ❌ ${cocktail.name} - no IBA match found`);
+      if (bestMatch && bestMatch.match.imageUrl) {
+        plannedUpdates.push({
+          cocktailId: cocktail.id,
+          cocktailSlug: cocktail.slug,
+          cocktailName: cocktail.name,
+          oldImageUrl: cocktail.image_url,
+          newImageUrl: bestMatch.match.imageUrl,
+          sourceName: bestMatch.match.name,
+          source: 'IBA',
+          matchType: bestMatch.type,
+          matchScore: bestMatch.score,
+        });
+        
+        if (verbose) {
+          console.log(`  ✅ ${cocktail.name} → ${bestMatch.match.name} (IBA, ${bestMatch.type}, ${Math.round(bestMatch.score * 100)}%)`);
+        }
+      } else if (verbose) {
+        console.log(`  ❌ ${cocktail.name} - no IBA match`);
       }
     }
+    
+    // Remove cocktails that got IBA matches from the list
+    const ibaMatchedIds = new Set(plannedUpdates.map(u => u.cocktailId));
+    cocktailsStillNeedingImages = cocktailsStillNeedingImages.filter(c => !ibaMatchedIds.has(c.id));
+    
+    console.log(`  Found ${plannedUpdates.length} matches from IBA`);
   }
+  
+  // =========================
+  // SOURCE 2: TheCocktailDB
+  // =========================
+  if (useCocktailDB && cocktailsStillNeedingImages.length > 0) {
+    console.log(`\n🔗 Searching TheCocktailDB for ${cocktailsStillNeedingImages.length} remaining cocktails...`);
+    
+    const cocktailDBResults = await searchTheCocktailDBBatch(cocktailsStillNeedingImages, verbose);
+    
+    for (const cocktail of cocktailsStillNeedingImages) {
+      const result = cocktailDBResults.get(cocktail.id);
+      
+      if (result) {
+        plannedUpdates.push({
+          cocktailId: cocktail.id,
+          cocktailSlug: cocktail.slug,
+          cocktailName: cocktail.name,
+          oldImageUrl: cocktail.image_url,
+          newImageUrl: result.imageUrl,
+          sourceName: result.name,
+          source: 'TheCocktailDB',
+          matchType: 'exact',
+          matchScore: 1.0,
+        });
+      }
+    }
+    
+    console.log(`  Found ${cocktailDBResults.size} matches from TheCocktailDB`);
+  }
+  
+  // Calculate cocktails with no match from any source
+  const matchedIds = new Set(plannedUpdates.map(u => u.cocktailId));
+  const noMatch = missingImageCocktails.filter(c => !matchedIds.has(c.id));
   
   // Print summary
   console.log('\n📊 SUMMARY');
   console.log('==========');
   console.log(`Total cocktails in database: ${allCocktails.length}`);
   console.log(`Cocktails missing images: ${missingImageCocktails.length}`);
-  console.log(`Found IBA matches: ${plannedUpdates.length}`);
-  console.log(`No IBA match found: ${noMatch.length}`);
+  console.log(`Found matches: ${plannedUpdates.length}`);
+  console.log(`No match found: ${noMatch.length}`);
   
   if (plannedUpdates.length === 0) {
-    console.log('\n✅ No updates needed - no matching IBA images found');
+    console.log('\n✅ No updates needed - no matching images found from any source');
     return;
   }
   
-  // Show planned updates by match type
-  const byMatchType = {
-    exact: plannedUpdates.filter(u => u.matchType === 'exact'),
-    slug: plannedUpdates.filter(u => u.matchType === 'slug'),
-    fuzzy: plannedUpdates.filter(u => u.matchType === 'fuzzy'),
+  // Show planned updates by source
+  const bySource = {
+    IBA: plannedUpdates.filter(u => u.source === 'IBA'),
+    TheCocktailDB: plannedUpdates.filter(u => u.source === 'TheCocktailDB'),
   };
   
-  console.log(`\n  Exact matches: ${byMatchType.exact.length}`);
-  console.log(`  Slug matches: ${byMatchType.slug.length}`);
-  console.log(`  Fuzzy matches: ${byMatchType.fuzzy.length}`);
+  console.log(`\n  From IBA: ${bySource.IBA.length}`);
+  console.log(`  From TheCocktailDB: ${bySource.TheCocktailDB.length}`);
   
   // Show planned updates
   console.log('\n🔧 PLANNED UPDATES');
   console.log('==================');
   plannedUpdates.forEach((update, i) => {
     console.log(`\n${i + 1}. ${update.cocktailName}`);
-    console.log(`   Local: ${update.cocktailSlug}`);
-    console.log(`   IBA:   ${update.ibaName} (${update.matchType}, ${Math.round(update.matchScore * 100)}%)`);
-    console.log(`   Image: ${update.newImageUrl}`);
+    console.log(`   Local:  ${update.cocktailSlug}`);
+    console.log(`   Source: ${update.sourceName} (${update.source}, ${update.matchType}, ${Math.round(update.matchScore * 100)}%)`);
+    console.log(`   Image:  ${update.newImageUrl}`);
   });
   
   // Show cocktails without matches
-  if (noMatch.length > 0 && verbose) {
-    console.log('\n❌ NO IBA MATCH FOUND');
-    console.log('====================');
+  if (noMatch.length > 0) {
+    console.log('\n❌ NO MATCH FOUND (from any source)');
+    console.log('===================================');
     noMatch.forEach((c, i) => {
       console.log(`${i + 1}. ${c.name} (${c.slug})`);
     });
@@ -676,7 +852,7 @@ async function main() {
         console.error(`❌ Failed to update ${update.cocktailName}: ${error.message}`);
         errorCount++;
       } else {
-        console.log(`✅ Updated ${update.cocktailName}`);
+        console.log(`✅ Updated ${update.cocktailName} (${update.source})`);
         successCount++;
       }
     } catch (error) {

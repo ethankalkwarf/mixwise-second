@@ -32,6 +32,17 @@ const nextConfig = {
         hostname: 'uvmbmlahkwmlomfoeaha.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      // External cocktail image sources
+      {
+        protocol: 'https',
+        hostname: 'iba-world.com',
+        pathname: '/wp-content/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.thecocktaildb.com',
+        pathname: '/images/**',
+      },
     ],
     // Optimize image loading performance
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
