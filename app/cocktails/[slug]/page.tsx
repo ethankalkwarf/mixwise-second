@@ -246,17 +246,18 @@ function generateRecipeSchema(args: {
 export default async function CocktailDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const { daily } = await searchParams;
+  const isDailyCocktail = daily === 'true';
 
-    console.log('[COCKTAIL PAGE] Received slug:', slug);
+  console.log('[COCKTAIL PAGE] Received slug:', slug);
 
-    const cocktail = await getCocktailBySlug(slug);
+  const cocktail = await getCocktailBySlug(slug);
 
-    console.log('[COCKTAIL PAGE] Found cocktail:', cocktail ? `${cocktail.name} (id: ${cocktail.id})` : 'null');
+  console.log('[COCKTAIL PAGE] Found cocktail:', cocktail ? `${cocktail.name} (id: ${cocktail.id})` : 'null');
 
-    if (!cocktail) {
-      console.error('[COCKTAIL PAGE] No cocktail found for slug:', slug);
-      notFound();
-    }
+  if (!cocktail) {
+    console.error('[COCKTAIL PAGE] No cocktail found for slug:', slug);
+    notFound();
+  }
 
   const sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
 
@@ -376,6 +377,7 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
       </main>
     </>
   );
+}
 
 // Generate static paths for known cocktails
 export async function generateStaticParams() {
