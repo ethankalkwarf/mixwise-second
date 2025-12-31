@@ -125,9 +125,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch cocktails" }, { status: 500 });
     }
 
-    // 5. Pick a featured cocktail (random from popular ones)
-    const featuredIndex = Math.floor(Math.random() * Math.min(20, cocktails.length));
+    // 5. Pick a featured cocktail (rotates weekly based on week number)
+    // This ensures all users see the same featured cocktail each week
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const weekNumber = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+    const featuredIndex = weekNumber % cocktails.length;
     const featuredCocktail = cocktails[featuredIndex];
+    
+    console.log(`[Weekly Digest] Week ${weekNumber}, featuring: ${featuredCocktail?.name}`);
 
     // 6. Send emails to each user
     let sentCount = 0;
@@ -158,12 +164,7 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Skip users with 0 cocktails unless they have a featured cocktail
-        if (cocktailsUserCanMake.length === 0 && ingredientIds.length === 0) {
-          console.log(`[Weekly Digest] Skipping ${user.email} - no bar ingredients`);
-          continue;
-        }
-
+        // All users get the digest - users with no bar see a "Build Your Bar" CTA
         const displayName = user.display_name || user.email?.split("@")[0] || "Mixologist";
         const unsubscribeUrl = `${siteUrl}/api/email/unsubscribe?token=${user.id}&emailType=weekly_digest`;
 

@@ -787,11 +787,18 @@ export function weeklyDigestTemplate({
   `).join('');
 
   const featuredSection = featuredCocktail ? `
-    <div style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center;">
-      <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #8A9A5B;">Featured This Week</p>
-      <h3 style="margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 24px; color: #FFFFFF;">${featuredCocktail.name}</h3>
-      ${featuredCocktail.description ? `<p style="margin: 0 0 16px 0; font-size: 14px; color: #E6EBE4; line-height: 1.5;">${featuredCocktail.description}</p>` : ''}
-      <a href="https://www.getmixwise.com/cocktails/${featuredCocktail.slug}" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;">View Recipe →</a>
+    <div style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); border-radius: 16px; overflow: hidden; margin: 24px 0;">
+      ${featuredCocktail.imageUrl ? `
+      <div style="width: 100%; height: 200px; overflow: hidden;">
+        <img src="${featuredCocktail.imageUrl}" alt="${featuredCocktail.name}" style="width: 100%; height: 200px; object-fit: cover; display: block;" />
+      </div>
+      ` : ''}
+      <div style="padding: 24px; text-align: center;">
+        <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #8A9A5B;">✨ Featured This Week</p>
+        <h3 style="margin: 0 0 12px 0; font-family: 'DM Serif Display', Georgia, serif; font-size: 28px; color: #FFFFFF;">${featuredCocktail.name}</h3>
+        ${featuredCocktail.description ? `<p style="margin: 0 0 16px 0; font-size: 14px; color: #E6EBE4; line-height: 1.5;">${featuredCocktail.description}</p>` : ''}
+        <a href="https://www.getmixwise.com/cocktails/${featuredCocktail.slug}" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;">View Recipe →</a>
+      </div>
     </div>
   ` : '';
 
@@ -847,11 +854,12 @@ export function weeklyDigestTemplate({
             ` : ''}
           </div>
           ` : `
-          <div style="background-color: #F9F7F2; border-radius: 16px; padding: 24px; margin-bottom: 24px; text-align: center;">
-            <p style="margin: 0 0 12px 0; font-size: 32px;">🍸</p>
-            <p style="margin: 0 0 16px 0; font-size: 16px; color: #3A4D39; font-weight: 600;">Build Your Bar</p>
-            <p style="margin: 0 0 16px 0; font-size: 14px; color: #5F6F5E; line-height: 1.5;">Add ingredients to your bar to see personalized cocktail recommendations.</p>
-            <a href="https://www.getmixwise.com/mix" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;">Add Ingredients →</a>
+          <!-- Build Your Bar CTA for users with no ingredients -->
+          <div style="background: linear-gradient(135deg, #F9F7F2 0%, #E6EBE4 100%); border-radius: 16px; padding: 32px 24px; margin-bottom: 24px; text-align: center; border: 1px solid #D1DAD0;">
+            <p style="margin: 0 0 16px 0; font-size: 40px;">🍾</p>
+            <h3 style="margin: 0 0 12px 0; font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: #3A4D39;">Ready to discover what you can make?</h3>
+            <p style="margin: 0 0 20px 0; font-size: 15px; color: #5F6F5E; line-height: 1.6;">Tell us what's in your bar and we'll show you all the cocktails you can make right now — no shopping required!</p>
+            <a href="https://www.getmixwise.com/mix" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 25px; font-size: 15px; font-weight: 600;">Build My Bar →</a>
           </div>
           `}
           

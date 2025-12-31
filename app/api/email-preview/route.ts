@@ -29,6 +29,7 @@ const SAMPLE_FEATURED_COCKTAIL = {
   name: "Negroni",
   slug: "negroni",
   description: "A perfectly balanced bitter-sweet Italian aperitivo with gin, Campari, and sweet vermouth.",
+  imageUrl: "https://images.unsplash.com/photo-1551751299-1b51cab2694c?w=600&h=400&fit=crop",
 };
 // Empty bar version for preview
 const EMPTY_COCKTAILS: Array<{ name: string; slug: string }> = [];

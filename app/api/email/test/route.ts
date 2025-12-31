@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
             name: "Negroni",
             slug: "negroni",
             description: "A perfectly balanced bitter-sweet Italian aperitivo.",
+            imageUrl: "https://images.unsplash.com/photo-1551751299-1b51cab2694c?w=600&h=400&fit=crop",
           },
           barIngredientCount: 12,
         });
@@ -83,6 +84,7 @@ export async function POST(request: NextRequest) {
             name: "Negroni",
             slug: "negroni",
             description: "A perfectly balanced bitter-sweet Italian aperitivo.",
+            imageUrl: "https://images.unsplash.com/photo-1551751299-1b51cab2694c?w=600&h=400&fit=crop",
           },
           barIngredientCount: 0,
         });
