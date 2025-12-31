@@ -198,6 +198,28 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Signup API] User created successfully: ${createData.user.id}`);
 
+    // Ensure profile exists (trigger may fail due to RLS)
+    // Using the admin client which bypasses RLS
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .upsert({
+        id: createData.user.id,
+        email: trimmedEmail,
+        display_name: trimmedEmail.split('@')[0],
+        role: 'free',
+        preferences: {},
+      }, {
+        onConflict: 'id',
+        ignoreDuplicates: true,
+      });
+
+    if (profileError) {
+      console.error("[Signup API] Failed to create profile (non-fatal):", profileError);
+      // Continue anyway - profile might have been created by trigger
+    } else {
+      console.log(`[Signup API] Profile ensured for user: ${createData.user.id}`);
+    }
+
     // Generate email confirmation link
     const redirectTo = getAuthCallbackUrl();
 
