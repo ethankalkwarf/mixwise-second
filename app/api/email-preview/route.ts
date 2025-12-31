@@ -30,13 +30,16 @@ const SAMPLE_FEATURED_COCKTAIL = {
   slug: "negroni",
   description: "A perfectly balanced bitter-sweet Italian aperitivo with gin, Campari, and sweet vermouth.",
 };
+// Empty bar version for preview
+const EMPTY_COCKTAILS: Array<{ name: string; slug: string }> = [];
 
 // Preview page wrapper HTML
 function wrapInPreviewPage(templateName: string, emailHtml: string, subject: string): string {
   const templates = [
     { id: "confirmation", name: "Email Confirmation" },
     { id: "welcome", name: "Welcome Email" },
-    { id: "weekly-digest", name: "Weekly Digest" },
+    { id: "weekly-digest", name: "Weekly Digest (with bar)" },
+    { id: "weekly-digest-empty", name: "Weekly Digest (no bar)" },
     { id: "password-reset", name: "Password Reset" },
   ];
 
@@ -362,7 +365,7 @@ export async function GET(request: NextRequest) {
       });
       break;
     case "weekly-digest":
-      templateName = "Weekly Digest";
+      templateName = "Weekly Digest (with bar)";
       emailTemplate = weeklyDigestTemplate({
         displayName: SAMPLE_DISPLAY_NAME,
         userEmail: SAMPLE_EMAIL,
@@ -370,6 +373,17 @@ export async function GET(request: NextRequest) {
         cocktailsYouCanMake: SAMPLE_COCKTAILS,
         featuredCocktail: SAMPLE_FEATURED_COCKTAIL,
         barIngredientCount: 15,
+      });
+      break;
+    case "weekly-digest-empty":
+      templateName = "Weekly Digest (no bar)";
+      emailTemplate = weeklyDigestTemplate({
+        displayName: SAMPLE_DISPLAY_NAME,
+        userEmail: SAMPLE_EMAIL,
+        unsubscribeUrl: SAMPLE_UNSUBSCRIBE_URL,
+        cocktailsYouCanMake: EMPTY_COCKTAILS,
+        featuredCocktail: SAMPLE_FEATURED_COCKTAIL,
+        barIngredientCount: 0,
       });
       break;
     case "password-reset":
