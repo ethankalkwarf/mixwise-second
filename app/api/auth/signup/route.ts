@@ -245,7 +245,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         ok: true,
         emailSent: false,
-        message: "Account created but confirmation email could not be sent. Please try logging in.",
+        message: "Account created but confirmation link failed. Please try logging in.",
+        debug: process.env.NODE_ENV === "development" ? `Link error: ${linkError.message}` : undefined,
       });
     }
 
@@ -256,7 +257,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         ok: true,
         emailSent: false,
-        message: "Account created but confirmation email could not be sent. Please try logging in.",
+        message: "Account created but no confirmation URL. Please try logging in.",
       });
     }
 
@@ -277,11 +278,12 @@ export async function POST(request: NextRequest) {
       resend = createResendClient();
       console.log("[Signup API] Resend client created successfully");
     } catch (resendError) {
-      console.error("[Signup API] Failed to create Resend client:", resendError);
+      const resendErrorMsg = resendError instanceof Error ? resendError.message : String(resendError);
+      console.error("[Signup API] Failed to create Resend client:", resendErrorMsg);
       return NextResponse.json({
         ok: true,
         emailSent: false,
-        message: "Account created but confirmation email could not be sent. Please try logging in.",
+        message: "Account created but email service unavailable. Please try logging in.",
       });
     }
 
@@ -304,7 +306,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         ok: true,
         emailSent: false,
-        message: "Account created but confirmation email could not be sent. Please try logging in.",
+        message: `Account created but email failed: ${emailError.message}. Please try logging in.`,
       });
     }
 
