@@ -7,12 +7,17 @@
  * and scrapes the IBA (International Bartenders Association) website to find
  * matching cocktail images.
  * 
+ * STRICT MATCHING: Only matches cocktails that are genuinely the same drink.
+ * Will NOT match variants like "Kiwi Margarita" to "Margarita".
+ * 
  * Usage:
  *   npx tsx scripts/scrapeIBAImages.ts --dry-run          # Preview matches without changes
  *   npx tsx scripts/scrapeIBAImages.ts --apply            # Apply updates to database
  *   npx tsx scripts/scrapeIBAImages.ts --dry-run --verbose # Show detailed matching info
  *   npx tsx scripts/scrapeIBAImages.ts --list-missing     # Just list cocktails missing images
  *   npx tsx scripts/scrapeIBAImages.ts --list-iba         # Just list IBA cocktails found
+ *   npx tsx scripts/scrapeIBAImages.ts --exact-only       # Only use 100% exact matches
+ *   npx tsx scripts/scrapeIBAImages.ts --min-score 0.98   # Set minimum match score (default 0.95)
  * 
  * Environment variables (loaded from .env.local):
  *   NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL)
@@ -106,28 +111,89 @@ function toSlug(str: string): string {
     .replace(/-+/g, '-'); // Collapse multiple hyphens
 }
 
-// Calculate similarity score using Levenshtein-like comparison
+// Remove common suffixes/prefixes that indicate variants
+function getBaseName(str: string): string {
+  const normalized = normalizeString(str);
+  
+  // Remove version indicators
+  let base = normalized
+    .replace(/\s*\(.*?\)\s*/g, '') // Remove parentheticals like "(1934)"
+    .replace(/\s*#\d+\s*/g, '') // Remove "#1", "#2" etc
+    .replace(/\s*v\d+\s*/g, '') // Remove "v2" etc
+    .replace(/\s+variant\s*/gi, '')
+    .replace(/\s+version\s*/gi, '')
+    .trim();
+  
+  return base;
+}
+
+// Check if one name is a variant of another (stricter check)
+function isVariantOf(name1: string, name2: string): boolean {
+  const base1 = getBaseName(name1);
+  const base2 = getBaseName(name2);
+  
+  // If base names are identical, they're the same cocktail (not a variant)
+  if (base1 === base2) return false;
+  
+  // Check if one is a prefix/suffix variant of the other
+  // e.g., "Kiwi Margarita" contains "Margarita" but is NOT the same
+  const words1 = base1.split(' ');
+  const words2 = base2.split(' ');
+  
+  // If one has significantly more words, it's likely a variant
+  if (Math.abs(words1.length - words2.length) >= 1) {
+    // Check if the shorter one is fully contained in the longer one
+    const shorter = words1.length < words2.length ? words1 : words2;
+    const longer = words1.length < words2.length ? words2 : words1;
+    
+    const shorterStr = shorter.join(' ');
+    const longerStr = longer.join(' ');
+    
+    // "Margarita" in "Kiwi Margarita" = variant, don't match
+    if (longerStr.includes(shorterStr) && longerStr !== shorterStr) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+// Calculate similarity score - STRICT version
 function calculateSimilarity(str1: string, str2: string): number {
   const s1 = normalizeString(str1);
   const s2 = normalizeString(str2);
   
+  // Exact match
   if (s1 === s2) return 1.0;
   
-  // Check if one contains the other
-  if (s1.includes(s2) || s2.includes(s1)) {
-    return 0.85;
+  // Check base names (handles version differences like "Pisco Sour" vs "pisco-sour-v2")
+  const base1 = getBaseName(s1);
+  const base2 = getBaseName(s2);
+  
+  if (base1 === base2) return 0.98; // Very high score for base name match
+  
+  // STRICT: Do NOT match variants to base cocktails
+  // e.g., "Kiwi Margarita" should NOT match "Margarita"
+  if (isVariantOf(s1, s2)) {
+    return 0; // No match for variants
   }
   
-  // Simple word overlap score
+  // Check for very minor differences (typos, spacing)
   const words1 = s1.split(' ').filter(w => w.length > 1);
   const words2 = s2.split(' ').filter(w => w.length > 1);
   
-  if (words1.length === 0 || words2.length === 0) return 0;
+  // Must have same number of significant words for a good match
+  if (words1.length !== words2.length) {
+    return 0; // Different word counts = different cocktails
+  }
   
-  const commonWords = words1.filter(w => words2.includes(w));
-  const score = (2 * commonWords.length) / (words1.length + words2.length);
+  // All words must match for a valid score
+  const allWordsMatch = words1.every(w => words2.includes(w));
+  if (allWordsMatch && words1.length === words2.length) {
+    return 0.95;
+  }
   
-  return score;
+  return 0; // No partial matches allowed
 }
 
 // Fetch HTML from a URL
@@ -340,14 +406,17 @@ async function scrapeIBACocktails(verbose: boolean): Promise<IBACocktail[]> {
 }
 
 // Find best matching IBA cocktail for a local cocktail
+// STRICT MATCHING: Only matches cocktails that are genuinely the same drink
 function findBestMatch(
   cocktail: Cocktail, 
-  ibaCocktails: IBACocktail[]
+  ibaCocktails: IBACocktail[],
+  minScore: number = 0.95 // Default: require 95% match
 ): { match: IBACocktail; type: 'exact' | 'slug' | 'fuzzy'; score: number } | null {
   const cocktailSlug = toSlug(cocktail.slug);
   const cocktailName = normalizeString(cocktail.name);
+  const cocktailBaseName = getBaseName(cocktail.name);
   
-  // First try exact slug match
+  // 1. Try exact slug match
   const exactSlugMatch = ibaCocktails.find(iba => 
     toSlug(iba.slug) === cocktailSlug && iba.imageUrl
   );
@@ -355,7 +424,7 @@ function findBestMatch(
     return { match: exactSlugMatch, type: 'exact', score: 1.0 };
   }
   
-  // Try exact name match
+  // 2. Try exact name match
   const exactNameMatch = ibaCocktails.find(iba => 
     normalizeString(iba.name) === cocktailName && iba.imageUrl
   );
@@ -363,32 +432,37 @@ function findBestMatch(
     return { match: exactNameMatch, type: 'exact', score: 1.0 };
   }
   
-  // Try slug similarity
-  const slugMatches = ibaCocktails
-    .filter(iba => iba.imageUrl)
-    .map(iba => ({
-      iba,
-      score: calculateSimilarity(cocktail.slug, iba.slug),
-    }))
-    .filter(m => m.score > 0.8)
-    .sort((a, b) => b.score - a.score);
-  
-  if (slugMatches.length > 0) {
-    return { match: slugMatches[0].iba, type: 'slug', score: slugMatches[0].score };
+  // 3. Try base name match (handles "Pisco Sour" vs "pisco-sour-v2")
+  const baseNameMatch = ibaCocktails.find(iba => {
+    const ibaBaseName = getBaseName(iba.name);
+    return ibaBaseName === cocktailBaseName && iba.imageUrl;
+  });
+  if (baseNameMatch) {
+    return { match: baseNameMatch, type: 'exact', score: 0.98 };
   }
   
-  // Try fuzzy name matching
-  const nameMatches = ibaCocktails
+  // 4. Try high-confidence similarity match (STRICT)
+  // This will NOT match variants like "Kiwi Margarita" to "Margarita"
+  const similarityMatches = ibaCocktails
     .filter(iba => iba.imageUrl)
-    .map(iba => ({
-      iba,
-      score: calculateSimilarity(cocktail.name, iba.name),
-    }))
-    .filter(m => m.score > 0.7)
+    .map(iba => {
+      const slugScore = calculateSimilarity(cocktail.slug, iba.slug);
+      const nameScore = calculateSimilarity(cocktail.name, iba.name);
+      return {
+        iba,
+        score: Math.max(slugScore, nameScore),
+      };
+    })
+    .filter(m => m.score >= minScore) // Must meet minimum threshold
     .sort((a, b) => b.score - a.score);
   
-  if (nameMatches.length > 0) {
-    return { match: nameMatches[0].iba, type: 'fuzzy', score: nameMatches[0].score };
+  if (similarityMatches.length > 0) {
+    const best = similarityMatches[0];
+    return { 
+      match: best.iba, 
+      type: best.score >= 0.98 ? 'exact' : 'slug', 
+      score: best.score 
+    };
   }
   
   return null;
@@ -402,6 +476,8 @@ async function main() {
       verbose = false,
       'list-missing': listMissing = false,
       'list-iba': listIBA = false,
+      'exact-only': exactOnly = false,
+      'min-score': minScoreStr,
     }
   } = parseArgs({
     options: {
@@ -410,9 +486,14 @@ async function main() {
       'verbose': { type: 'boolean', default: false },
       'list-missing': { type: 'boolean', default: false },
       'list-iba': { type: 'boolean', default: false },
+      'exact-only': { type: 'boolean', default: false },
+      'min-score': { type: 'string' }, // e.g., "0.98" for 98% match
     },
     args: process.argv.slice(2)
   });
+  
+  // Parse minimum score (default 0.95 = 95%, or 1.0 for exact-only)
+  const minScore = exactOnly ? 1.0 : (minScoreStr ? parseFloat(minScoreStr) : 0.95);
   
   console.log('🍸 IBA Cocktail Image Scraper');
   console.log('============================');
@@ -421,6 +502,12 @@ async function main() {
     console.log('🚨 APPLY MODE: This will update the database!');
   } else {
     console.log('🔍 DRY RUN MODE: No changes will be made');
+  }
+  
+  if (exactOnly) {
+    console.log('🎯 EXACT ONLY MODE: Only 100% exact matches will be used');
+  } else {
+    console.log(`🎯 Minimum match score: ${Math.round(minScore * 100)}%`);
   }
   
   // Check environment variables
@@ -498,7 +585,7 @@ async function main() {
   const noMatch: Cocktail[] = [];
   
   for (const cocktail of missingImageCocktails) {
-    const bestMatch = findBestMatch(cocktail, ibaCocktails);
+    const bestMatch = findBestMatch(cocktail, ibaCocktails, minScore);
     
     if (bestMatch && bestMatch.match.imageUrl) {
       plannedUpdates.push({
