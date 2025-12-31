@@ -38,7 +38,7 @@ export function AuthDialog({
   onSuccess,
   onModeChange,
 }: AuthDialogProps) {
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, isAuthenticated } = useUser();
+  const { signInWithGoogle, signInWithEmail, resetPassword, isAuthenticated } = useUser();
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -104,41 +104,48 @@ export function AuthDialog({
         return;
       }
 
-      // Sign up with email and password
-      const result = await signUpWithEmail(email.trim(), password.trim());
+      // Use server-side signup API to create user and send confirmation email
+      // This bypasses Supabase's default email flow
+      try {
+        const response = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            password: password.trim(),
+          }),
+        });
 
-      if (result.error) {
-        setError(result.error);
-        toast.error(result.error);
-        setIsEmailLoading(false);
-      } else {
-        // Now send confirmation email via our API
-        try {
-          const response = await fetch("/api/auth/send-confirmation", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email: email.trim() }),
-          });
+        const data = await response.json();
 
-          const data = await response.json();
+        if (!response.ok) {
+          console.error("Signup failed:", data);
+          setError(data.error || "Failed to create account. Please try again.");
+          toast.error(data.error || "Failed to create account");
+          setIsEmailLoading(false);
+          return;
+        }
 
-          if (!response.ok || !data.ok) {
-            console.error("Failed to send confirmation email:", data);
-            setError("Account created but failed to send confirmation email. Please try logging in.");
-            setIsEmailLoading(false);
-            return;
-          }
-
+        if (data.ok) {
           setSignupSuccess(true);
           setIsEmailLoading(false);
-          toast.success("Check your email to confirm your account");
-        } catch (apiError) {
-          console.error("API call failed:", apiError);
-          setError("Account created but failed to send confirmation email. Please try logging in.");
+          if (data.emailSent) {
+            toast.success("Check your email to confirm your account");
+          } else {
+            toast.info(data.message || "Account created. Please try logging in.");
+          }
+        } else {
+          setError(data.error || "Failed to create account. Please try again.");
+          toast.error(data.error || "Failed to create account");
           setIsEmailLoading(false);
         }
+      } catch (apiError) {
+        console.error("Signup API call failed:", apiError);
+        setError("Failed to create account. Please try again.");
+        toast.error("Failed to create account");
+        setIsEmailLoading(false);
       }
     } else if (mode === "reset") {
       // Reset password

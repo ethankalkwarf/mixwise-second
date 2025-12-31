@@ -89,10 +89,12 @@ export async function POST(request: NextRequest) {
     // Generate signup confirmation link
     const redirectTo = getAuthCallbackUrl();
 
-    console.log(`[Send Confirmation] Generating signup link with redirect: ${redirectTo}`);
+    console.log(`[Send Confirmation] Generating confirmation link with redirect: ${redirectTo}`);
 
+    // Use magiclink type for existing users who need to confirm their email
+    // This works for users who already exist but haven't confirmed their email
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "signup",
+      type: "magiclink",
       email: trimmedEmail,
       options: {
         redirectTo,
