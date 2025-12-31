@@ -51,3 +51,14 @@ export function getAuthCallbackUrl(requestUrl?: URL): string {
 export function getPasswordResetUrl(requestUrl?: URL): string {
   return `${getCanonicalSiteUrl(requestUrl)}/reset-password`;
 }
+
+/**
+ * Alias for getCanonicalSiteUrl for backwards compatibility.
+ * Returns the base site URL.
+ *
+ * @param requestUrl - Optional URL object from request (for server-side usage)
+ * @returns The site URL
+ */
+export function getSiteUrl(requestUrl?: URL): string {
+  return getCanonicalSiteUrl(requestUrl);
+}

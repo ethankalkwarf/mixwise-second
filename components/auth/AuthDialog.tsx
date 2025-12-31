@@ -38,7 +38,7 @@ export function AuthDialog({
   onSuccess,
   onModeChange,
 }: AuthDialogProps) {
-  const { signInWithGoogle, signInWithEmail, resetPassword, isAuthenticated } = useUser();
+  const { signInWithGoogle, signInWithPassword, resetPassword, isAuthenticated } = useUser();
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -161,17 +161,23 @@ export function AuthDialog({
         toast.success("If an account with that email exists, we've sent you a password reset link");
       }
     } else {
-      // Sign in with email (magic link)
-      const result = await signInWithEmail(email.trim());
+      // Sign in with email and password
+      if (!password.trim()) {
+        setError("Password is required");
+        setIsEmailLoading(false);
+        return;
+      }
+
+      const result = await signInWithPassword(email.trim(), password.trim());
 
       if (result.error) {
         setError(result.error);
         toast.error(result.error);
         setIsEmailLoading(false);
       } else {
-        setEmailSent(true);
+        // Success - the useEffect will close the dialog when isAuthenticated becomes true
+        toast.success("Welcome back!");
         setIsEmailLoading(false);
-        toast.success("Check your email for the magic link");
       }
     }
   };
@@ -224,8 +230,8 @@ export function AuthDialog({
                   <XMarkIcon className="w-5 h-5" />
                 </button>
 
-                {emailSent || signupSuccess ? (
-                  // Email sent confirmation
+                {signupSuccess ? (
+                  // Signup success - email confirmation sent
                   <div className="text-center py-6">
                     <div className="mx-auto w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center mb-4">
                       <CheckCircleIcon className="w-8 h-8 text-olive" />
@@ -234,19 +240,38 @@ export function AuthDialog({
                       Check your email
                     </Dialog.Title>
                     <p className="text-sage mb-6">
-                      {signupSuccess
-                        ? `We sent a confirmation link to ${email}. Click the link to verify your account.`
-                        : `We sent a magic link to ${email}. Click the link to sign in.`
-                      }
+                      We sent a confirmation link to <strong>{email}</strong>. Click the link to verify your account, then come back to log in.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setSignupSuccess(false);
+                        onModeChange?.("login");
+                      }}
+                      className="text-sm text-terracotta hover:text-terracotta-dark font-medium"
+                    >
+                      Back to login
+                    </button>
+                  </div>
+                ) : emailSent ? (
+                  // Password reset email sent
+                  <div className="text-center py-6">
+                    <div className="mx-auto w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center mb-4">
+                      <CheckCircleIcon className="w-8 h-8 text-olive" />
+                    </div>
+                    <Dialog.Title className="text-xl font-display font-bold text-forest mb-2">
+                      Check your email
+                    </Dialog.Title>
+                    <p className="text-sage mb-6">
+                      If an account exists for <strong>{email}</strong>, we&apos;ve sent a password reset link.
                     </p>
                     <button
                       onClick={() => {
                         setEmailSent(false);
-                        setSignupSuccess(false);
+                        onModeChange?.("login");
                       }}
                       className="text-sm text-terracotta hover:text-terracotta-dark font-medium"
                     >
-                      Use a different email
+                      Back to login
                     </button>
                   </div>
                 ) : (
@@ -315,7 +340,7 @@ export function AuthDialog({
                         />
                       </div>
 
-                      {mode === "signup" && (
+                      {(mode === "signup" || mode === "login") && (
                         <>
                           <label className="label-botanical">Password</label>
                           <div className="relative mb-4">
@@ -323,31 +348,40 @@ export function AuthDialog({
                               type="password"
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
-                              placeholder="Create a password"
+                              placeholder={mode === "signup" ? "Create a password" : "Enter your password"}
                               className="input-botanical"
                               required
                               minLength={8}
                             />
                           </div>
 
-                          <label className="label-botanical">Confirm Password</label>
-                          <div className="relative mb-4">
-                            <input
-                              type="password"
-                              value={confirmPassword}
-                              onChange={(e) => setConfirmPassword(e.target.value)}
-                              placeholder="Confirm your password"
-                              className="input-botanical"
-                              required
-                              minLength={8}
-                            />
-                          </div>
+                          {mode === "signup" && (
+                            <>
+                              <label className="label-botanical">Confirm Password</label>
+                              <div className="relative mb-4">
+                                <input
+                                  type="password"
+                                  value={confirmPassword}
+                                  onChange={(e) => setConfirmPassword(e.target.value)}
+                                  placeholder="Confirm your password"
+                                  className="input-botanical"
+                                  required
+                                  minLength={8}
+                                />
+                              </div>
+                            </>
+                          )}
                         </>
                       )}
 
                       <button
                         type="submit"
-                        disabled={isEmailLoading || !email.trim() || (mode === "signup" && (!password.trim() || !confirmPassword.trim()))}
+                        disabled={
+                          isEmailLoading || 
+                          !email.trim() || 
+                          (mode === "signup" && (!password.trim() || !confirmPassword.trim())) ||
+                          (mode === "login" && !password.trim())
+                        }
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isEmailLoading ? (
@@ -355,7 +389,7 @@ export function AuthDialog({
                         ) : (
                           mode === "signup" ? "Create Account" :
                           mode === "reset" ? "Send Reset Link" :
-                          "Continue with email"
+                          "Log In"
                         )}
                       </button>
                     </form>

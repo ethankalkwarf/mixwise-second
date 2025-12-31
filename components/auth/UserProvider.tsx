@@ -29,6 +29,7 @@ interface UserContextType {
   error: Error | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<{ error?: string }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error?: string }>;
   signUpWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -304,7 +305,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return {};
   }, [supabase, getAuthRedirectUrl]);
 
-  // Sign in with email (magic link)
+  // Sign in with email (magic link) - kept for backwards compatibility
   const signInWithEmail = useCallback(async (email: string): Promise<{ error?: string }> => {
     const redirectUrl = getAuthRedirectUrl();
 
@@ -322,6 +323,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     return {};
   }, [supabase, getAuthRedirectUrl]);
+
+  // Sign in with email and password
+  const signInWithPassword = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      console.error("[UserProvider] Password sign-in error:", signInError);
+      
+      // Provide user-friendly error messages
+      if (signInError.message?.includes("Invalid login credentials")) {
+        return { error: "Invalid email or password. Please try again." };
+      }
+      if (signInError.message?.includes("Email not confirmed")) {
+        return { error: "Please check your email and click the confirmation link before logging in." };
+      }
+      
+      return { error: signInError.message };
+    }
+
+    return {};
+  }, [supabase]);
 
   // Reset password
   const resetPassword = useCallback(async (email: string): Promise<{ error?: string }> => {
@@ -374,6 +399,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     error,
     signInWithGoogle,
     signInWithEmail,
+    signInWithPassword,
     signUpWithEmail,
     resetPassword,
     signOut,

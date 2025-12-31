@@ -3,6 +3,13 @@
  *
  * Creates a new user using Supabase Admin API and sends custom confirmation email via Resend.
  * This replaces client-side signUp() to avoid Supabase's default email flow.
+ * 
+ * Flow:
+ * 1. Validate email and password
+ * 2. Check if user already exists
+ * 3. Generate signup confirmation link (this creates user + generates link)
+ * 4. Ensure profile exists
+ * 5. Send custom confirmation email via Resend
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -99,8 +106,10 @@ export async function POST(request: NextRequest) {
     console.log(`[Signup API] Processing signup for email: ${trimmedEmail}, IP: ${clientIP}`);
 
     // Validate environment variables early
-    if (!process.env.SUPABASE_URL) {
-      console.error("[Signup API] Missing SUPABASE_URL environment variable");
+    // Support both SUPABASE_URL and NEXT_PUBLIC_SUPABASE_URL for flexibility
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      console.error("[Signup API] Missing SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL environment variable");
       return NextResponse.json(
         { error: "Server configuration error. Please contact support." },
         { status: 500 }
@@ -115,12 +124,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.RESEND_API_KEY) {
-      console.error("[Signup API] Missing RESEND_API_KEY environment variable");
-      return NextResponse.json(
-        { error: "Server configuration error. Please contact support." },
-        { status: 500 }
-      );
+    // RESEND_API_KEY is optional - if not set, we'll create the user but skip email sending
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (!resendApiKey) {
+      console.warn("[Signup API] RESEND_API_KEY not set - emails will be skipped (dev mode)");
     }
 
     console.log("[Signup API] Environment variables validated, creating admin client...");
@@ -138,44 +145,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (listError) {
-      console.error("[Signup API] Error listing users:", listError);
-      // Continue anyway - we'll get a proper error from createUser if needed
-    } else {
-      const existingUser = existingUsers?.users?.find(u => u.email === trimmedEmail);
-      if (existingUser) {
-        console.log(`[Signup API] User already exists: ${trimmedEmail}`);
-        // Don't reveal that user exists - return generic message
-        return NextResponse.json(
-          { error: "Unable to create account. Please try again or reset your password." },
-          { status: 400 }
-        );
-      }
-    }
+    // Generate signup confirmation link
+    // This creates the user AND generates the confirmation link in one step
+    const redirectTo = getAuthCallbackUrl();
+    console.log(`[Signup API] Generating signup link with redirect: ${redirectTo}`);
 
-    // Create user via Admin API
-    // Using Admin API bypasses Supabase's default email sending
-    const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: "signup",
       email: trimmedEmail,
       password: password,
-      email_confirm: false, // User needs to confirm email
-      user_metadata: {
-        signup_source: 'web',
+      options: {
+        emailRedirectTo: redirectTo,
       },
     });
 
-    if (createError) {
-      console.error("[Signup API] Failed to create user:", {
-        message: createError.message,
-        status: createError.status,
-        name: createError.name,
+    if (linkError) {
+      console.error("[Signup API] Failed to generate signup link:", {
+        message: linkError.message,
+        status: linkError.status,
       });
 
       // Handle specific error cases
-      if (createError.message?.includes("already been registered")) {
+      if (linkError.message?.includes("already been registered") || 
+          linkError.message?.includes("already exists")) {
         return NextResponse.json(
           { error: "An account with this email already exists. Please log in or reset your password." },
           { status: 400 }
@@ -183,27 +175,38 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: createError.message || "Failed to create account. Please try again." },
+        { error: linkError.message || "Failed to create account. Please try again." },
         { status: 500 }
       );
     }
 
-    if (!createData?.user) {
-      console.error("[Signup API] No user data returned after creation");
+    if (!linkData?.user) {
+      console.error("[Signup API] No user data returned from generateLink");
       return NextResponse.json(
         { error: "Failed to create account. Please try again." },
         { status: 500 }
       );
     }
 
-    console.log(`[Signup API] User created successfully: ${createData.user.id}`);
+    console.log(`[Signup API] User created successfully: ${linkData.user.id}`);
 
-    // Ensure profile exists (trigger may fail due to RLS)
+    const confirmUrl = linkData.properties?.action_link;
+
+    if (!confirmUrl) {
+      console.error("[Signup API] No action_link in generated link data:", linkData);
+      return NextResponse.json({
+        ok: true,
+        emailSent: false,
+        message: "Account created but no confirmation URL. Please try logging in.",
+      });
+    }
+
+    // Ensure profile exists (the database trigger should create it, but let's be safe)
     // Using the admin client which bypasses RLS
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .upsert({
-        id: createData.user.id,
+        id: linkData.user.id,
         email: trimmedEmail,
         display_name: trimmedEmail.split('@')[0],
         role: 'free',
@@ -217,53 +220,25 @@ export async function POST(request: NextRequest) {
       console.error("[Signup API] Failed to create profile (non-fatal):", profileError);
       // Continue anyway - profile might have been created by trigger
     } else {
-      console.log(`[Signup API] Profile ensured for user: ${createData.user.id}`);
-    }
-
-    // Generate email confirmation link
-    const redirectTo = getAuthCallbackUrl();
-
-    console.log(`[Signup API] Generating confirmation link with redirect: ${redirectTo}`);
-
-    // Use magiclink type since user already exists
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email: trimmedEmail,
-      options: {
-        redirectTo,
-      },
-    });
-
-    if (linkError) {
-      console.error("[Signup API] Failed to generate confirmation link:", {
-        message: linkError.message,
-        status: linkError.status,
-      });
-      
-      // User was created but we couldn't generate link
-      // Still return success but note the email issue
-      return NextResponse.json({
-        ok: true,
-        emailSent: false,
-        message: "Account created but confirmation link failed. Please try logging in.",
-        debug: process.env.NODE_ENV === "development" ? `Link error: ${linkError.message}` : undefined,
-      });
-    }
-
-    const confirmUrl = linkData.properties?.action_link;
-
-    if (!confirmUrl) {
-      console.error("[Signup API] No action_link in generated link data:", linkData);
-      return NextResponse.json({
-        ok: true,
-        emailSent: false,
-        message: "Account created but no confirmation URL. Please try logging in.",
-      });
+      console.log(`[Signup API] Profile ensured for user: ${linkData.user.id}`);
     }
 
     // Debug logging (only in development)
     if (process.env.AUTH_EMAIL_DEBUG === "true" && process.env.NODE_ENV === "development") {
       console.log(`[Signup API] Generated confirmation URL: ${confirmUrl}`);
+    }
+
+    // Skip email sending if RESEND_API_KEY is not configured
+    if (!resendApiKey) {
+      console.log(`[Signup API] Skipping email - RESEND_API_KEY not configured`);
+      console.log(`[Signup API] In production, please set RESEND_API_KEY`);
+      // In dev mode without Resend, return success but note email wasn't sent
+      return NextResponse.json({
+        ok: true,
+        emailSent: false,
+        message: "Account created! In development mode, confirmation email was skipped. Please click the confirmation link manually or configure RESEND_API_KEY.",
+        ...(process.env.NODE_ENV === "development" && { confirmUrl }), // Include URL in dev for testing
+      });
     }
 
     // Create email template
@@ -297,7 +272,7 @@ export async function POST(request: NextRequest) {
       html: emailTemplate.html,
       text: emailTemplate.text,
       headers: {
-        "X-Entity-Ref-ID": createData.user.id, // Unique identifier for tracking
+        "X-Entity-Ref-ID": linkData.user.id, // Unique identifier for tracking
         "List-Unsubscribe": "<mailto:unsubscribe@getmixwise.com>", // Required for anti-spam
       },
       tags: [
@@ -339,7 +314,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Check for specific error types and return appropriate messages
-    if (errorMessage.includes("SUPABASE_URL")) {
+    if (errorMessage.includes("SUPABASE_URL") || errorMessage.includes("NEXT_PUBLIC_SUPABASE_URL")) {
       return NextResponse.json(
         { error: "Server configuration error: Missing Supabase URL" },
         { status: 500 }
