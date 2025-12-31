@@ -93,7 +93,7 @@ const baseStyles = `
     }
     
     .logo-dot {
-      color: #BC5A45;
+      color: #FFFFFF;
     }
     
     /* Content area */
@@ -337,7 +337,7 @@ export function confirmEmailTemplate({
       <tr>
         <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
           <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
-            mixwise<span class="logo-dot" style="color: #BC5A45;">.</span>
+            mixwise.
           </h1>
         </td>
       </tr>
@@ -470,7 +470,7 @@ export function resetPasswordTemplate({
       <tr>
         <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
           <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
-            mixwise<span class="logo-dot" style="color: #BC5A45;">.</span>
+            mixwise.
           </h1>
         </td>
       </tr>
