@@ -291,10 +291,19 @@ export async function POST(request: NextRequest) {
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,
+      replyTo: "hello@getmixwise.com", // Use a real reply-to for better deliverability
       to: trimmedEmail,
       subject: emailTemplate.subject,
       html: emailTemplate.html,
       text: emailTemplate.text,
+      headers: {
+        "X-Entity-Ref-ID": createData.user.id, // Unique identifier for tracking
+        "List-Unsubscribe": "<mailto:unsubscribe@getmixwise.com>", // Required for anti-spam
+      },
+      tags: [
+        { name: "category", value: "account_confirmation" },
+        { name: "environment", value: process.env.NODE_ENV || "production" },
+      ],
     });
 
     if (emailError) {
