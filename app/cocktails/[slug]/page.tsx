@@ -377,7 +377,6 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
       </main>
     </>
   );
-  }
 }
 
 // Generate static paths for known cocktails
