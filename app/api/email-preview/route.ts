@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { confirmEmailTemplate, resetPasswordTemplate, welcomeEmailTemplate } from "@/lib/email/templates";
+import { confirmEmailTemplate, resetPasswordTemplate, welcomeEmailTemplate, weeklyDigestTemplate } from "@/lib/email/templates";
 
 // Sample data for preview
 const SAMPLE_EMAIL = "user@example.com";
@@ -17,11 +17,26 @@ const SAMPLE_CONFIRM_URL = "https://www.getmixwise.com/auth/callback?token=sampl
 const SAMPLE_RESET_URL = "https://www.getmixwise.com/reset-password?token=sample-token-abc123xyz";
 const SAMPLE_UNSUBSCRIBE_URL = "https://www.getmixwise.com/unsubscribe?token=sample-token-abc123xyz";
 
+// Sample cocktails for weekly digest preview
+const SAMPLE_COCKTAILS = [
+  { name: "Margarita", slug: "margarita" },
+  { name: "Moscow Mule", slug: "moscow-mule" },
+  { name: "Whiskey Sour", slug: "whiskey-sour" },
+  { name: "Mojito", slug: "mojito" },
+  { name: "Daiquiri", slug: "daiquiri" },
+];
+const SAMPLE_FEATURED_COCKTAIL = {
+  name: "Negroni",
+  slug: "negroni",
+  description: "A perfectly balanced bitter-sweet Italian aperitivo with gin, Campari, and sweet vermouth.",
+};
+
 // Preview page wrapper HTML
 function wrapInPreviewPage(templateName: string, emailHtml: string, subject: string): string {
   const templates = [
     { id: "confirmation", name: "Email Confirmation" },
     { id: "welcome", name: "Welcome Email" },
+    { id: "weekly-digest", name: "Weekly Digest" },
     { id: "password-reset", name: "Password Reset" },
   ];
 
@@ -344,6 +359,17 @@ export async function GET(request: NextRequest) {
         displayName: SAMPLE_DISPLAY_NAME,
         userEmail: SAMPLE_EMAIL,
         unsubscribeUrl: SAMPLE_UNSUBSCRIBE_URL,
+      });
+      break;
+    case "weekly-digest":
+      templateName = "Weekly Digest";
+      emailTemplate = weeklyDigestTemplate({
+        displayName: SAMPLE_DISPLAY_NAME,
+        userEmail: SAMPLE_EMAIL,
+        unsubscribeUrl: SAMPLE_UNSUBSCRIBE_URL,
+        cocktailsYouCanMake: SAMPLE_COCKTAILS,
+        featuredCocktail: SAMPLE_FEATURED_COCKTAIL,
+        barIngredientCount: 15,
       });
       break;
     case "password-reset":

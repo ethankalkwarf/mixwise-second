@@ -744,3 +744,186 @@ Unsubscribe: ${unsubscribeUrl}
 
   return { subject, html, text };
 }
+
+/**
+ * Weekly digest email template
+ * Sent every Sunday with personalized cocktail recommendations
+ */
+export function weeklyDigestTemplate({
+  displayName,
+  userEmail,
+  unsubscribeUrl,
+  cocktailsYouCanMake,
+  featuredCocktail,
+  barIngredientCount,
+}: {
+  displayName: string;
+  userEmail: string;
+  unsubscribeUrl: string;
+  cocktailsYouCanMake: Array<{ name: string; slug: string; imageUrl?: string }>;
+  featuredCocktail?: { name: string; slug: string; description?: string; imageUrl?: string };
+  barIngredientCount: number;
+}): EmailTemplate {
+  const subject = `🍸 Your Weekly MixWise Digest – ${cocktailsYouCanMake.length} cocktails waiting for you`;
+
+  // Generate cocktail cards HTML
+  const cocktailCardsHtml = cocktailsYouCanMake.slice(0, 3).map(cocktail => `
+    <tr>
+      <td style="padding: 12px 16px; background-color: #F9F7F2; border-radius: 12px; margin-bottom: 8px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+          <tr>
+            <td style="vertical-align: middle;">
+              <a href="https://www.getmixwise.com/cocktails/${cocktail.slug}" style="color: #3A4D39; text-decoration: none; font-weight: 600; font-size: 16px;">${cocktail.name}</a>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: #5F6F5E;">You have all the ingredients!</p>
+            </td>
+            <td style="width: 80px; text-align: right;">
+              <a href="https://www.getmixwise.com/cocktails/${cocktail.slug}" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;">Make it</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr><td style="height: 8px;"></td></tr>
+  `).join('');
+
+  const featuredSection = featuredCocktail ? `
+    <div style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center;">
+      <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #8A9A5B;">Featured This Week</p>
+      <h3 style="margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 24px; color: #FFFFFF;">${featuredCocktail.name}</h3>
+      ${featuredCocktail.description ? `<p style="margin: 0 0 16px 0; font-size: 14px; color: #E6EBE4; line-height: 1.5;">${featuredCocktail.description}</p>` : ''}
+      <a href="https://www.getmixwise.com/cocktails/${featuredCocktail.slug}" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;">View Recipe →</a>
+    </div>
+  ` : '';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+  <title>Your Weekly MixWise Digest</title>
+  ${baseStyles}
+</head>
+<body>
+  <div class="email-wrapper">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
+      
+      <!-- Header -->
+      <tr>
+        <td class="email-header" style="background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
+          <h1 class="logo" style="font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+            mixwise.
+          </h1>
+        </td>
+      </tr>
+      
+      <!-- Content -->
+      <tr>
+        <td class="email-content" style="padding: 48px 40px;">
+          <h2 style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 8px 0; font-weight: 400;">
+            Happy Sunday, ${displayName}! 🌿
+          </h2>
+          
+          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 24px 0; line-height: 1.65;">
+            Here's your weekly cocktail inspiration based on your bar with <strong>${barIngredientCount} ingredients</strong>.
+          </p>
+          
+          ${cocktailsYouCanMake.length > 0 ? `
+          <!-- Cocktails You Can Make -->
+          <div style="margin-bottom: 32px;">
+            <h3 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E; margin: 0 0 16px 0;">
+              🍸 Ready to Make (${cocktailsYouCanMake.length} total)
+            </h3>
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              ${cocktailCardsHtml}
+            </table>
+            ${cocktailsYouCanMake.length > 3 ? `
+            <p style="text-align: center; margin: 16px 0 0 0;">
+              <a href="https://www.getmixwise.com/mix" style="color: #BC5A45; font-weight: 600; text-decoration: none;">See all ${cocktailsYouCanMake.length} cocktails →</a>
+            </p>
+            ` : ''}
+          </div>
+          ` : `
+          <div style="background-color: #F9F7F2; border-radius: 16px; padding: 24px; margin-bottom: 24px; text-align: center;">
+            <p style="margin: 0 0 12px 0; font-size: 32px;">🍸</p>
+            <p style="margin: 0 0 16px 0; font-size: 16px; color: #3A4D39; font-weight: 600;">Build Your Bar</p>
+            <p style="margin: 0 0 16px 0; font-size: 14px; color: #5F6F5E; line-height: 1.5;">Add ingredients to your bar to see personalized cocktail recommendations.</p>
+            <a href="https://www.getmixwise.com/mix" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;">Add Ingredients →</a>
+          </div>
+          `}
+          
+          ${featuredSection}
+          
+          <div class="divider" style="height: 1px; background: linear-gradient(90deg, transparent, #D1DAD0, transparent); margin: 32px 0;"></div>
+          
+          <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 0; line-height: 1.6; text-align: center;">
+            Cheers to a great week ahead! 🥂
+          </p>
+        </td>
+      </tr>
+      
+      <!-- Footer -->
+      <tr>
+        <td class="email-footer" style="background-color: #E6EBE4; padding: 32px 40px; text-align: center; border-top: 1px solid #D1DAD0;">
+          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">
+            This email was sent to <strong>${userEmail}</strong>
+          </p>
+          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0;">
+            © ${new Date().getFullYear()} MixWise · A smarter way to make cocktails at home
+          </p>
+          <div class="footer-links" style="margin: 16px 0 0 0;">
+            <a href="https://www.getmixwise.com" style="color: #3A4D39; text-decoration: none; font-size: 13px; margin: 0 8px;">Visit MixWise</a>
+            <span style="color: #D1DAD0;">|</span>
+            <a href="${unsubscribeUrl}" style="color: #5F6F5E; text-decoration: none; font-size: 13px; margin: 0 8px;">Unsubscribe</a>
+          </div>
+        </td>
+      </tr>
+      
+    </table>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const cocktailListText = cocktailsYouCanMake.slice(0, 5).map(c => 
+    `  • ${c.name}: https://www.getmixwise.com/cocktails/${c.slug}`
+  ).join('\n');
+
+  const text = `
+Your Weekly MixWise Digest 🍸
+
+Happy Sunday, ${displayName}!
+
+Here's your weekly cocktail inspiration based on your bar with ${barIngredientCount} ingredients.
+
+${cocktailsYouCanMake.length > 0 ? `
+READY TO MAKE (${cocktailsYouCanMake.length} total):
+${cocktailListText}
+
+See all cocktails: https://www.getmixwise.com/mix
+` : `
+BUILD YOUR BAR
+Add ingredients to your bar to see personalized cocktail recommendations.
+https://www.getmixwise.com/mix
+`}
+${featuredCocktail ? `
+FEATURED THIS WEEK: ${featuredCocktail.name}
+${featuredCocktail.description || ''}
+https://www.getmixwise.com/cocktails/${featuredCocktail.slug}
+` : ''}
+
+Cheers to a great week ahead! 🥂
+
+---
+This email was sent to ${userEmail}
+© ${new Date().getFullYear()} MixWise · A smarter way to make cocktails at home
+https://www.getmixwise.com
+
+Unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  return { subject, html, text };
+}
