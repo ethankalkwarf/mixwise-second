@@ -136,11 +136,14 @@ export function MixCabinet({
   const categoryIcons: Record<string, string> = {
     Spirit: "🥃",
     Liqueur: "🍸",
+    Amaro: "🍶",
+    "Fortified Wine": "🍷",
+    "Sparkling Wine": "🥂",
+    Wine: "🍷",
+    Beer: "🍺",
     Mixer: "🥤",
     Citrus: "🍋",
     Bitters: "💧",
-    Wine: "🍷",
-    Beer: "🍺",
     Syrup: "🍯",
     Garnish: "🍒",
   };
@@ -154,6 +157,11 @@ export function MixCabinet({
   const categories = [
     { key: "Spirit", label: "Spirits", icon: "🥃", color: "bg-terracotta/20 border-terracotta/30" },
     { key: "Liqueur", label: "Liqueurs", icon: "🍸", color: "bg-forest/20 border-forest/30" },
+    { key: "Amaro", label: "Amaro", icon: "🍶", color: "bg-amber/20 border-amber/30" },
+    { key: "Fortified Wine", label: "Fortified Wines", icon: "🍷", color: "bg-maroon/20 border-maroon/30" },
+    { key: "Sparkling Wine", label: "Sparkling Wines", icon: "🥂", color: "bg-gold/20 border-gold/30" },
+    { key: "Wine", label: "Wines", icon: "🍷", color: "bg-burgundy/20 border-burgundy/30" },
+    { key: "Beer", label: "Beers", icon: "🍺", color: "bg-amber/30 border-amber/40" },
     { key: "Mixer", label: "Mixers", icon: "🥤", color: "bg-olive/20 border-olive/30" },
     { key: "Citrus", label: "Citrus", icon: "🍋", color: "bg-terracotta/30 border-terracotta/40" },
     { key: "Bitters", label: "Bitters", icon: "💧", color: "bg-sage/30 border-sage/40" },

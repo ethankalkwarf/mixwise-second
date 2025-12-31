@@ -51,6 +51,9 @@ export function formatIngredientCategory(category: string): string {
   const map: Record<string, string> = {
     Spirit: "Spirits",
     Liqueur: "Liqueurs",
+    Amaro: "Amaro",
+    "Fortified Wine": "Fortified Wines",
+    "Sparkling Wine": "Sparkling Wines",
     Wine: "Wines",
     Beer: "Beers",
     Mixer: "Mixers",

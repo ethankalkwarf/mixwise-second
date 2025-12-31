@@ -80,11 +80,14 @@ export function IngredientTile({
   const categoryIcons: Record<string, string> = {
     Spirit: "🥃",
     Liqueur: "🍸",
+    Amaro: "🍶",
+    "Fortified Wine": "🍷",
+    "Sparkling Wine": "🥂",
+    Wine: "🍷",
+    Beer: "🍺",
     Mixer: "🥤",
     Citrus: "🍋",
     Bitters: "💧",
-    Wine: "🍷",
-    Beer: "🍺",
     Syrup: "🍯",
     Garnish: "🍒",
   };
