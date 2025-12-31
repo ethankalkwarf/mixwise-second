@@ -5,13 +5,10 @@
  * 
  * This script will:
  * 1. Move misclassified spirits (mezcal, cognac, etc.) from mixer to spirit
- * 2. Move wines (champagne, prosecco, port) from mixer to appropriate wine category
+ * 2. Move wines and beers to combined "Wine & Beer" category
  * 3. Move liqueurs (cointreau, kahlua, etc.) from mixer to liqueur
- * 4. Move fortified wines (vermouth, sherry) to fortified_wine
- * 5. Move sparkling wines (champagne, prosecco) to sparkling_wine
- * 6. Move bitter liqueurs (campari, aperol) to amaro
- * 7. Move syrups, citrus, garnishes to correct categories
- * 8. Move beers to beer category
+ * 4. Move bitter liqueurs (campari, aperol) to amaro
+ * 5. Move syrups, citrus, garnishes to correct categories
  * 
  * Run with --dry-run (default) to preview changes without making them
  * Run with --confirm to actually apply the changes
@@ -73,44 +70,41 @@ const CATEGORY_FIXES: Record<string, string> = {
   'averna': 'Amaro',
   
   // ============================================
-  // SPARKLING WINES
+  // WINE & BEER (combined category)
   // ============================================
-  'champagne': 'Sparkling Wine',
-  'prosecco': 'Sparkling Wine',
-  'cava': 'Sparkling Wine',
-  'sparkling wine': 'Sparkling Wine',
-  
-  // ============================================
-  // FORTIFIED WINES (aromatized/fortified)
-  // ============================================
-  'vermouth': 'Fortified Wine',
-  'dry vermouth': 'Fortified Wine',
-  'sweet vermouth': 'Fortified Wine',
-  'rosso vermouth': 'Fortified Wine',
-  'bianco vermouth': 'Fortified Wine',
-  'port': 'Fortified Wine',
-  'ruby port': 'Fortified Wine',
-  'tawny port': 'Fortified Wine',
-  'sherry': 'Fortified Wine',
-  'dry sherry': 'Fortified Wine',
-  'cream sherry': 'Fortified Wine',
-  'marsala': 'Fortified Wine',
-  'lillet': 'Fortified Wine',
-  'lillet blanc': 'Fortified Wine',
-  'lillet rouge': 'Fortified Wine',
-  'dubonnet rouge': 'Fortified Wine',
-  'dubonnet': 'Fortified Wine',
-  'cocchi americano': 'Fortified Wine',
-  
-  // ============================================
-  // STILL WINES
-  // ============================================
-  'red wine': 'Wine',
-  'white wine': 'Wine',
-  'rosé': 'Wine',
-  'rose': 'Wine',
-  'rosé wine': 'Wine',
-  'sake': 'Wine',
+  // Sparkling Wines
+  'champagne': 'Wine & Beer',
+  'prosecco': 'Wine & Beer',
+  'cava': 'Wine & Beer',
+  'sparkling wine': 'Wine & Beer',
+
+  // Fortified Wines
+  'vermouth': 'Wine & Beer',
+  'dry vermouth': 'Wine & Beer',
+  'sweet vermouth': 'Wine & Beer',
+  'rosso vermouth': 'Wine & Beer',
+  'bianco vermouth': 'Wine & Beer',
+  'port': 'Wine & Beer',
+  'ruby port': 'Wine & Beer',
+  'tawny port': 'Wine & Beer',
+  'sherry': 'Wine & Beer',
+  'dry sherry': 'Wine & Beer',
+  'cream sherry': 'Wine & Beer',
+  'marsala': 'Wine & Beer',
+  'lillet': 'Wine & Beer',
+  'lillet blanc': 'Wine & Beer',
+  'lillet rouge': 'Wine & Beer',
+  'dubonnet rouge': 'Wine & Beer',
+  'dubonnet': 'Wine & Beer',
+  'cocchi americano': 'Wine & Beer',
+
+  // Still Wines
+  'red wine': 'Wine & Beer',
+  'white wine': 'Wine & Beer',
+  'rosé': 'Wine & Beer',
+  'rose': 'Wine & Beer',
+  'rosé wine': 'Wine & Beer',
+  'sake': 'Wine & Beer',
   
   // ============================================
   // LIQUEURS (sweetened, flavored spirits)
@@ -182,16 +176,16 @@ const CATEGORY_FIXES: Record<string, string> = {
   'godiva liqueur': 'Liqueur',
   
   // ============================================
-  // BEER
+  // BEER (combined with Wine)
   // ============================================
-  'beer': 'Beer',
-  'lager': 'Beer',
-  'ale': 'Beer',
-  'stout': 'Beer',
-  'guinness stout': 'Beer',
-  'guinness': 'Beer',
-  'pilsner': 'Beer',
-  'ipa': 'Beer',
+  'beer': 'Wine & Beer',
+  'lager': 'Wine & Beer',
+  'ale': 'Wine & Beer',
+  'stout': 'Wine & Beer',
+  'guinness stout': 'Wine & Beer',
+  'guinness': 'Wine & Beer',
+  'pilsner': 'Wine & Beer',
+  'ipa': 'Wine & Beer',
   // Note: Root beer stays in mixer (non-alcoholic)
   
   // ============================================
@@ -351,10 +345,10 @@ const PATTERN_RULES: Array<{ pattern: RegExp; category: string; priority: number
   { pattern: /\bbitters\b/i, category: 'Bitters', priority: 5 },
   
   // Beers (but not root beer or ginger beer)
-  { pattern: /\bstout\b/i, category: 'Beer', priority: 5 },
-  { pattern: /\blager\b/i, category: 'Beer', priority: 5 },
-  { pattern: /\bale\b(?!.*ginger)/i, category: 'Beer', priority: 5 },
-  { pattern: /\bpilsner\b/i, category: 'Beer', priority: 5 },
+  { pattern: /\bstout\b/i, category: 'Wine & Beer', priority: 5 },
+  { pattern: /\blager\b/i, category: 'Wine & Beer', priority: 5 },
+  { pattern: /\bale\b(?!.*ginger)/i, category: 'Wine & Beer', priority: 5 },
+  { pattern: /\bpilsner\b/i, category: 'Wine & Beer', priority: 5 },
 ];
 
 interface SupabaseIngredient {
