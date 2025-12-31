@@ -175,7 +175,9 @@ interface CocktailCardProps {
 
 function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
   const { cocktail } = match;
-  const href = cocktail.slug ? `/cocktails/${encodeURIComponent(cocktail.slug)}` : "/cocktails";
+  // Use same slug format as browse page: slug or id as fallback
+  const slug = cocktail.slug || cocktail.id;
+  const href = slug ? `/cocktails/${encodeURIComponent(slug)}` : "/cocktails";
 
   return (
     <Link

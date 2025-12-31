@@ -361,39 +361,42 @@ export function RecipeContent({
             Drinks similar to {formatCocktailName(sanityCocktail.name)}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {similarRecipes.slice(0, 3).map((recipe) => (
-              <a
-                key={recipe.id}
-                href={`/cocktails/${recipe.slug}`}
-                className="group bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                <div className="aspect-video relative">
-                  {recipe.image_url ? (
-                    <OptimizedCocktailImage
-                      src={recipe.image_url}
-                      alt={recipe.name}
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      quality={75}
-                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground bg-gray-50">
-                      No image
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 group-hover:text-terracotta transition-colors">
-                    {formatCocktailName(recipe.name)}
-                  </h3>
-                  {recipe.short_description && (
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                      {recipe.short_description}
-                    </p>
-                  )}
-                </div>
-              </a>
-            ))}
+            {similarRecipes.slice(0, 3).map((recipe) => {
+              const slug = recipe.slug || recipe.id;
+              return (
+                <a
+                  key={recipe.id}
+                  href={`/cocktails/${slug}`}
+                  className="group bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+                >
+                  <div className="aspect-video relative">
+                    {recipe.image_url ? (
+                      <OptimizedCocktailImage
+                        src={recipe.image_url}
+                        alt={recipe.name}
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        quality={75}
+                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground bg-gray-50">
+                        No image
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-terracotta transition-colors">
+                      {formatCocktailName(recipe.name)}
+                    </h3>
+                    {recipe.short_description && (
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        {recipe.short_description}
+                      </p>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </section>
       )}

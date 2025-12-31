@@ -108,29 +108,32 @@ export async function BarProfile({
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {favoriteReady.map((c) => (
-                <Link
-                  key={c.id}
-                  href={c.slug ? `/cocktails/${encodeURIComponent(c.slug)}` : "/cocktails"}
-                  className="block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group"
-                >
-                  <div className="aspect-square relative mb-3 rounded-lg overflow-hidden bg-mist flex items-center justify-center">
-                    {c.imageUrl && c.imageUrl.startsWith("http") ? (
-                      <Image
-                        src={c.imageUrl}
-                        alt={c.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-200"
-                      />
-                    ) : (
-                      <div className="text-4xl flex items-center justify-center">🍸</div>
-                    )}
-                  </div>
-                  <h4 className="font-semibold text-forest text-sm line-clamp-2 mb-1">
-                    {formatCocktailName(c.name)}
-                  </h4>
-                </Link>
-              ))}
+              {favoriteReady.map((c) => {
+                const slug = c.slug || c.id;
+                return (
+                  <Link
+                    key={c.id}
+                    href={slug ? `/cocktails/${encodeURIComponent(slug)}` : "/cocktails"}
+                    className="block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group"
+                  >
+                    <div className="aspect-square relative mb-3 rounded-lg overflow-hidden bg-mist flex items-center justify-center">
+                      {c.imageUrl && c.imageUrl.startsWith("http") ? (
+                        <Image
+                          src={c.imageUrl}
+                          alt={c.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                      ) : (
+                        <div className="text-4xl flex items-center justify-center">🍸</div>
+                      )}
+                    </div>
+                    <h4 className="font-semibold text-forest text-sm line-clamp-2 mb-1">
+                      {formatCocktailName(c.name)}
+                    </h4>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </section>
