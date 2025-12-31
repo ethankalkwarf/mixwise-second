@@ -36,6 +36,12 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             <Link
+              href="/cocktail-of-the-day"
+              className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
+            >
+              Drink of the Day
+            </Link>
+            <Link
               href="/cocktails"
               className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
             >
@@ -174,6 +180,13 @@ export function Navbar() {
         >
           <div className="md:hidden border-t border-mist bg-cream py-4">
             <div className="space-y-1">
+              <Link
+                href="/cocktail-of-the-day"
+                className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Drink of the Day
+              </Link>
               <Link
                 href="/cocktails"
                 className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
