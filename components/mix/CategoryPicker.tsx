@@ -26,6 +26,20 @@ const CATEGORIES: CategoryInfo[] = [
     color: "bg-forest/20 border-forest/30",
   },
   {
+    key: "Amaro",
+    label: "Amaro",
+    icon: "🍶",
+    description: "Italian herbal liqueurs and digestives",
+    color: "bg-sage/20 border-sage/30",
+  },
+  {
+    key: "Wine & Beer",
+    label: "Wine & Beer",
+    icon: "🍷",
+    description: "Wines, beers, and sparkling beverages",
+    color: "bg-terracotta/20 border-terracotta/30",
+  },
+  {
     key: "Mixer",
     label: "Mixers",
     icon: "🥤",
