@@ -25,6 +25,23 @@ export interface EmailTemplate {
   text: string;
 }
 
+/**
+ * Generate hidden preheader text for email preview
+ * This text appears after the subject line in email clients
+ */
+function getPreheaderHtml(previewText: string): string {
+  // The whitespace characters prevent email clients from showing body content after the preview
+  const whitespace = '&nbsp;'.repeat(100) + '&zwnj;'.repeat(50);
+  
+  return `
+    <!--[if !mso]><!-->
+    <div style="display:none;font-size:1px;color:#F9F7F2;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+      ${previewText}${whitespace}
+    </div>
+    <!--<![endif]-->
+  `;
+}
+
 // Common CSS styles for all email templates
 const baseStyles = `
   <style>
@@ -307,6 +324,7 @@ export function confirmEmailTemplate({
   userEmail: string;
 }): EmailTemplate {
   const subject = "Welcome to MixWise – Confirm Your Email 🍸";
+  const previewText = "One click to unlock 500+ cocktail recipes you can make at home. Let's get mixing!";
 
   const html = `
 <!DOCTYPE html>
@@ -330,6 +348,7 @@ export function confirmEmailTemplate({
   ${baseStyles}
 </head>
 <body>
+  ${getPreheaderHtml(previewText)}
   <div class="email-wrapper">
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
       
@@ -440,6 +459,7 @@ export function resetPasswordTemplate({
   userEmail: string;
 }): EmailTemplate {
   const subject = "Reset Your MixWise Password";
+  const previewText = "Click here to securely reset your password and get back to mixing. Link expires in 1 hour.";
 
   const html = `
 <!DOCTYPE html>
@@ -463,6 +483,7 @@ export function resetPasswordTemplate({
   ${baseStyles}
 </head>
 <body>
+  ${getPreheaderHtml(previewText)}
   <div class="email-wrapper">
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
       
@@ -574,6 +595,7 @@ export function welcomeEmailTemplate({
   unsubscribeUrl: string;
 }): EmailTemplate {
   const subject = "Welcome to MixWise! 🍸 Let's make your first cocktail";
+  const previewText = `Hey ${displayName}! Your bar is ready. Add your ingredients and discover what cocktails you can make tonight.`;
 
   const html = `
 <!DOCTYPE html>
@@ -597,6 +619,7 @@ export function welcomeEmailTemplate({
   ${baseStyles}
 </head>
 <body>
+  ${getPreheaderHtml(previewText)}
   <div class="email-wrapper">
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
       
@@ -765,6 +788,13 @@ export function weeklyDigestTemplate({
   barIngredientCount: number;
 }): EmailTemplate {
   const subject = `🍸 Your Weekly MixWise Digest – ${cocktailsYouCanMake.length} cocktails waiting for you`;
+  
+  // Dynamic preview text based on content
+  const previewText = cocktailsYouCanMake.length > 0
+    ? `You can make ${cocktailsYouCanMake[0].name}${cocktailsYouCanMake.length > 1 ? `, ${cocktailsYouCanMake[1].name}` : ''} and more with what's in your bar!`
+    : featuredCocktail 
+      ? `This week's featured cocktail: ${featuredCocktail.name}. Plus tips to build your home bar.`
+      : "Discover new cocktails and build your home bar this week!";
 
   // Generate cocktail cards HTML
   const cocktailCardsHtml = cocktailsYouCanMake.slice(0, 3).map(cocktail => `
@@ -825,6 +855,7 @@ export function weeklyDigestTemplate({
   ${baseStyles}
 </head>
 <body>
+  ${getPreheaderHtml(previewText)}
   <div class="email-wrapper">
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
       
