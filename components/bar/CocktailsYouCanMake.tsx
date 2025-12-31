@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { getMixIngredients } from "@/lib/cocktails";
@@ -181,9 +182,9 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
   console.log('[COCKTAIL CARD] Cocktail:', cocktail.name, 'slug:', cocktail.slug, 'id:', cocktail.id, 'href:', href);
 
   return (
-    <a
+    <Link
       href={href}
-      className={`block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group cursor-pointer ${
+      className={`block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group ${
         isAlmostThere ? 'opacity-75' : ''
       }`}
     >
@@ -235,6 +236,6 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
           {match.missingIngredientNames.length > 2 && ` +${match.missingIngredientNames.length - 2} more`}
         </p>
       )}
-    </a>
+    </Link>
   );
 }

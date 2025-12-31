@@ -254,90 +254,56 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
 
     console.log('[COCKTAIL PAGE] Found cocktail:', cocktail ? `${cocktail.name} (id: ${cocktail.id})` : 'null');
 
-    console.log('[COCKTAIL PAGE] Found cocktail:', cocktail ? cocktail.name : 'null');
-
     if (!cocktail) {
+      console.error('[COCKTAIL PAGE] No cocktail found for slug:', slug);
       notFound();
     }
 
-  let sanityCocktail, allCocktails, ingredients, instructionSteps, tags, tagLine, imageUrl, recipeSchema, similarRecipes;
+  const sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
 
-  try {
-    sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
+  // Get all cocktails for daily cocktail comparison
+  const rawAllCocktails = await getCocktailsList();
+  // Only pass id and slug to DailyCocktailBanner for performance
+  const allCocktails = rawAllCocktails
+    .filter(c => c && c.id && c.slug)
+    .map(c => ({ id: c.id, slug: c.slug }));
 
-    // Get all cocktails for daily cocktail comparison
-    let rawAllCocktails = [];
-    try {
-      rawAllCocktails = await getCocktailsList();
-    } catch (error) {
-      console.error('[COCKTAIL PAGE] Error getting all cocktails:', error);
-    }
-    // Only pass id and slug to DailyCocktailBanner for performance
-    allCocktails = rawAllCocktails
-      .filter(c => c && c.id && c.slug)
-      .map(c => ({ id: c.id, slug: c.slug }));
+  // Normalize data from Supabase
+  const ingredients = normalizeIngredients(cocktail.ingredients as any);
+  const instructionSteps = normalizeInstructions(cocktail.instructions as any);
+  const tags = normalizeTags(cocktail.tags as any);
+  const tagLine = buildTagLine(tags);
 
-    // Normalize data from Supabase
-    ingredients = normalizeIngredients(cocktail.ingredients as any);
-    instructionSteps = normalizeInstructions(cocktail.instructions as any);
-    tags = normalizeTags(cocktail.tags as any);
-    tagLine = buildTagLine(tags);
+  // Use external image URL from Supabase
+  const imageUrl = sanityCocktail.externalImageUrl || null;
 
-    // Use external image URL from Supabase
-    imageUrl = sanityCocktail.externalImageUrl || null;
+  const recipeSchema = generateRecipeSchema({
+    name: sanityCocktail.name,
+    description: sanityCocktail.description,
+    imageUrl,
+    ingredients: ingredients.map((i) => i.text),
+    instructionSteps,
+    keywords: [...tags, ...asStringArray(sanityCocktail.bestFor)].filter(Boolean),
+  });
 
-    recipeSchema = generateRecipeSchema({
-      name: sanityCocktail.name,
-      description: sanityCocktail.description,
-      imageUrl,
-      ingredients: ingredients.map((i) => i.text),
-      instructionSteps,
-      keywords: [...tags, ...asStringArray(sanityCocktail.bestFor)].filter(Boolean),
-    });
+  // Get similar recipes for recommendations
+  const rawSimilarRecipes = await getSimilarRecipes(
+    cocktail.id,
+    cocktail.base_spirit,
+    cocktail.tags,
+    cocktail.categories_all
+  );
 
-    // Get similar recipes for recommendations
-    let rawSimilarRecipes = [];
-    try {
-      rawSimilarRecipes = await getSimilarRecipes(
-        cocktail.id,
-        cocktail.base_spirit,
-        cocktail.tags,
-        cocktail.categories_all
-      );
-    } catch (error) {
-      console.error('[COCKTAIL PAGE] Error getting similar recipes:', error);
-    }
-
-    // Sanitize similar recipes data for client components
-    similarRecipes = rawSimilarRecipes
-      .filter(recipe => recipe && recipe.id && recipe.name && recipe.slug)
-      .map(recipe => ({
-        id: recipe.id,
-        name: recipe.name,
-        slug: recipe.slug,
-        short_description: recipe.short_description || null,
-        image_url: recipe.image_url || null,
-      }));
-  } catch (error) {
-    console.error('[COCKTAIL PAGE] Error processing cocktail data:', error);
-    // Return a basic error state
-    sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
-    allCocktails = [];
-    ingredients = [];
-    instructionSteps = [];
-    tags = [];
-    tagLine = '';
-    imageUrl = null;
-    recipeSchema = generateRecipeSchema({
-      name: sanityCocktail.name,
-      description: sanityCocktail.description,
-      imageUrl: null,
-      ingredients: [],
-      instructionSteps: [],
-      keywords: [],
-    });
-    similarRecipes = [];
-  }
+  // Sanitize similar recipes data for client components
+  const similarRecipes = rawSimilarRecipes
+    .filter(recipe => recipe && recipe.id && recipe.name && recipe.slug)
+    .map(recipe => ({
+      id: recipe.id,
+      name: recipe.name,
+      slug: recipe.slug,
+      short_description: recipe.short_description || null,
+      image_url: recipe.image_url || null,
+    }));
 
   // Create a sanitized cocktail object for client components
   const sanitizedCocktail = {
@@ -411,40 +377,6 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
       </main>
     </>
   );
-  } catch (error) {
-    console.error('[COCKTAIL PAGE] Error rendering cocktail page:', error);
-    // Return a basic error page
-    return (
-      <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org/",
-              "@type": "Recipe",
-              name: "Cocktail Recipe",
-              description: "Cocktail recipe",
-            }),
-          }}
-        />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-serif font-bold text-forest mb-4">
-              Recipe Unavailable
-            </h1>
-            <p className="text-sage mb-8">
-              We're having trouble loading this recipe. Please try again later.
-            </p>
-            <a
-              href="/cocktails"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors font-medium"
-            >
-              ← Back to Cocktails
-            </a>
-          </div>
-        </main>
-      </>
-    );
   }
 }
 
