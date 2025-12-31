@@ -168,6 +168,42 @@ export async function POST(request: NextRequest) {
       // Handle specific error cases
       if (linkError.message?.includes("already been registered") || 
           linkError.message?.includes("already exists")) {
+        // Self-heal: user may exist in auth.users but be missing a profiles row (trigger not installed/failed or profile deleted).
+        // Attempt to find the user and ensure a profile exists.
+        try {
+          const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+            email: trimmedEmail,
+          });
+
+          if (listError) {
+            console.error("[Signup API] Failed to list users for existing-email case (non-fatal):", listError);
+          } else {
+            const existingUser = listData?.users?.[0];
+            if (existingUser?.id) {
+              const { error: existingProfileUpsertError } = await supabaseAdmin
+                .from("profiles")
+                .upsert(
+                  {
+                    id: existingUser.id,
+                    email: trimmedEmail,
+                    display_name: trimmedEmail.split("@")[0],
+                    role: "free",
+                    preferences: {},
+                  },
+                  { onConflict: "id" }
+                );
+
+              if (existingProfileUpsertError) {
+                console.error("[Signup API] Failed to upsert profile for existing user (non-fatal):", existingProfileUpsertError);
+              } else {
+                console.log(`[Signup API] Ensured profile exists for existing user: ${existingUser.id}`);
+              }
+            }
+          }
+        } catch (healError) {
+          console.error("[Signup API] Existing-user profile self-heal failed (non-fatal):", healError);
+        }
+
         return NextResponse.json(
           { error: "An account with this email already exists. Please log in or reset your password." },
           { status: 400 }
