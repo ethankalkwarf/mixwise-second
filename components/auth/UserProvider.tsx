@@ -108,14 +108,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (sessionContextLoading) {
       console.log("[UserProvider] Session context still loading...");
 
-      // Add a timeout to prevent infinite loading state
+      // Much more aggressive timeout - 3 seconds instead of 10
+      // The session context may be stuck after auth callback
       timeoutId = setTimeout(() => {
         if (mounted) {
-          console.warn("[UserProvider] Session context loading timeout - proceeding anyway");
+          console.warn("[UserProvider] Session context loading timeout (3s) - proceeding anyway");
           setIsLoading(false);
-          setError(new Error("Session context loading timeout"));
+          // Don't set error - just proceed
         }
-      }, 10000); // 10 second timeout
+      }, 3000); // 3 second timeout instead of 10
 
       return () => {
         if (timeoutId) clearTimeout(timeoutId);
@@ -140,19 +141,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (newSession?.user) {
         // Fetch profile for authenticated user
         console.log("[UserProvider] Fetching profile for user:", newSession.user.id);
-        const userProfile = await fetchProfile(newSession.user.id);
-        if (mounted) {
-          console.log("[UserProvider] Profile fetched:", !!userProfile);
-          setProfile(userProfile);
+        try {
+          const userProfile = await fetchProfile(newSession.user.id);
+          if (mounted) {
+            console.log("[UserProvider] Profile fetched:", !!userProfile);
+            setProfile(userProfile);
 
-          // Track new signups (users created in last minute)
-          if (userProfile) {
-            const createdAt = new Date(userProfile.created_at);
-            const now = new Date();
-            const isNewUser = (now.getTime() - createdAt.getTime()) < 60000;
-            if (isNewUser && !initialCheckDone.current) {
-              trackUserSignup(newSession.user.id, newSession.user.email);
+            // Track new signups (users created in last minute)
+            if (userProfile) {
+              const createdAt = new Date(userProfile.created_at);
+              const now = new Date();
+              const isNewUser = (now.getTime() - createdAt.getTime()) < 60000;
+              if (isNewUser && !initialCheckDone.current) {
+                trackUserSignup(newSession.user.id, newSession.user.email);
+              }
             }
+          }
+        } catch (err) {
+          // Profile fetch failed - but don't block on it
+          console.error("[UserProvider] Profile fetch failed:", err);
+          if (mounted) {
+            // Still set user as authenticated even if profile fetch fails
+            setProfile(null);
           }
         }
       } else {
@@ -223,6 +233,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             // Only process if we haven't done the initial check yet
             if (!initialCheckDone.current) {
               await updateAuthState(newSession);
+              if (mounted) {
+                setIsLoading(false);
+              }
             }
             break;
 
