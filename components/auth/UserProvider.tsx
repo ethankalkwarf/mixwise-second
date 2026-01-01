@@ -17,7 +17,26 @@ import { trackUserSignup } from "@/lib/analytics";
  * 2. Subscribes to onAuthStateChange for real-time auth updates
  * 3. Fetches profile data from the profiles table
  * 4. Provides loading, authenticated, and error states
+ * 5. Provides authReady promise that resolves when initial auth check is complete
+ *    This allows pages like /auth/callback to wait for auth to be ready before redirecting
  */
+
+// Helper to create a deferred promise (promise + resolve/reject exposed)
+interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason?: any) => void;
+}
+
+function createDeferred<T>(): Deferred<T> {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: any) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
 
 // Types for the user context
 interface UserContextType {
@@ -27,6 +46,7 @@ interface UserContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   error: Error | null;
+  authReady: Promise<void>;  // Resolves when initial auth check is complete
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<{ error?: string }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error?: string }>;
@@ -48,6 +68,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Deferred promise that resolves when initial auth check is complete
+  // This allows pages like /auth/callback to wait for auth to be ready before redirecting
+  const authReadyRef = useRef(createDeferred<void>());
   
   // Ref to track if we've done the initial auth check
   const initialCheckDone = useRef(false);
@@ -150,8 +174,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (mounted) {
         console.log("[UserProvider] Setting loading to false");
         setIsLoading(false);
-        initialCheckDone.current = true;
-        authCheckDone = true;
+        
+        // Mark initial check as done and resolve the authReady promise
+        // This signals to waiting code (like /auth/callback) that auth state is ready
+        if (!initialCheckDone.current) {
+          initialCheckDone.current = true;
+          authCheckDone = true;
+          authReadyRef.current.resolve();
+          console.log("[UserProvider] Auth initialization complete, authReady promise resolved");
+        }
       }
     };
 
@@ -253,6 +284,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         console.warn("[UserProvider] Auth initialization timeout (3s) - forcing completion anyway");
         setIsLoading(false);
         authCheckDone = true;
+        initialCheckDone.current = true;
+        // Also resolve authReady so waiting code (like /auth/callback) doesn't hang
+        authReadyRef.current.resolve();
+        console.log("[UserProvider] Auth timeout - authReady promise resolved");
       }
     }, 3000); // 3 second safety timeout
 
@@ -410,6 +445,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     isAuthenticated: !!user,
     error,
+    authReady: authReadyRef.current.promise,
     signInWithGoogle,
     signInWithEmail,
     signInWithPassword,

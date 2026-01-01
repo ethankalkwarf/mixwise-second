@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/components/auth/UserProvider";
 
 interface AuthError {
   code: string;
@@ -42,10 +43,35 @@ function scrubUrl() {
   window.history.replaceState({}, document.title, url.toString());
 }
 
+/**
+ * Wait for auth to be ready before redirecting.
+ * This prevents the race condition where /onboarding loads before UserProvider has processed the new session.
+ * 
+ * @param authReady Promise that resolves when UserProvider is ready
+ * @param timeoutMs Maximum time to wait before giving up (default 5 seconds)
+ */
+async function waitForAuthReady(authReady: Promise<void>, timeoutMs: number = 5000): Promise<void> {
+  try {
+    console.log("[AuthCallbackPage] Waiting for auth to be ready...");
+    await Promise.race([
+      authReady,
+      new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error("Auth ready timeout")), timeoutMs)
+      ),
+    ]);
+    console.log("[AuthCallbackPage] Auth is ready, proceeding with redirect");
+  } catch (err) {
+    // Don't block on auth ready - just log and continue
+    // This handles cases where authReady times out or rejects
+    console.warn("[AuthCallbackPage] Auth ready wait failed, continuing anyway:", err);
+  }
+}
+
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
+  const { authReady } = useUser();
 
   const [status, setStatus] = useState<"loading" | "error" | "expired">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -126,6 +152,8 @@ export default function AuthCallbackPage() {
           if (cancelled) return;
           console.warn("[AuthCallbackPage] Failsafe timer triggered (3s) - redirecting to onboarding anyway");
           scrubUrl();
+          // Wait for auth to be ready with a shorter timeout (1s) since we're already at 3s timeout
+          await waitForAuthReady(authReady, 1000);
           // At this point, just go to onboarding - Supabase will handle session validation
           router.replace(next === "/" ? "/onboarding" : next);
         }, 3000);
@@ -140,6 +168,7 @@ export default function AuthCallbackPage() {
           const user = data.user;
           if (user && !cancelled) {
             console.log("[AuthCallbackPage] Redirecting authenticated user to:", next === "/" ? "/onboarding" : next);
+            await waitForAuthReady(authReady);
             router.replace(next === "/" ? "/onboarding" : next);
             return;
           }
@@ -203,6 +232,12 @@ export default function AuthCallbackPage() {
           console.log("[AuthCallbackPage] Have valid tokens, redirecting directly to:", target);
           if (!cancelled) {
             console.log("[AuthCallbackPage] Navigating to:", target);
+            // Signal that email confirmation completed (for AuthDialog closure)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
+            }
+            // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
+            await waitForAuthReady(authReady);
             router.replace(target);
           }
           return;
@@ -216,6 +251,12 @@ export default function AuthCallbackPage() {
           // If the caller explicitly asked for onboarding, don't block on DB checks — go immediately.
           if (!cancelled && next === "/onboarding") {
             console.log("[AuthCallbackPage] Explicit onboarding request, redirecting immediately");
+            // Signal that email confirmation completed (for AuthDialog closure)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
+            }
+            // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
+            await waitForAuthReady(authReady);
             router.replace("/onboarding");
             return;
           }
@@ -273,6 +314,12 @@ export default function AuthCallbackPage() {
           if (!cancelled) {
             const target = needsOnboarding ? "/onboarding" : next;
             console.log("[AuthCallbackPage] Redirecting to:", target);
+            // Signal that email confirmation completed (for AuthDialog closure)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
+            }
+            // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
+            await waitForAuthReady(authReady);
             router.replace(target);
           }
           return;
@@ -294,6 +341,8 @@ export default function AuthCallbackPage() {
         if (sessionAfterError.session) {
           console.log("[AuthCallbackPage] Session recovered after error, proceeding");
           scrubUrl();
+          // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
+          await waitForAuthReady(authReady);
           router.replace(next === "/" ? "/onboarding" : next);
           return;
         }
