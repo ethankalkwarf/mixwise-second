@@ -29,41 +29,6 @@ export async function GET(request: Request) {
     timestamp: new Date().toISOString(),
   };
 
-  // Check inventories table
-  try {
-    const { data: inventories, error } = await supabase
-      .from("inventories")
-      .select("*")
-      .eq("user_id", userId);
-    
-    results.inventories = { data: inventories, error: error?.message };
-  } catch (e: any) {
-    results.inventories = { error: e.message };
-  }
-
-  // Check inventory_items table
-  try {
-    // First get inventory IDs
-    const { data: invs } = await supabase
-      .from("inventories")
-      .select("id")
-      .eq("user_id", userId);
-    
-    if (invs && invs.length > 0) {
-      const inventoryIds = invs.map(i => i.id);
-      const { data: items, error } = await supabase
-        .from("inventory_items")
-        .select("*")
-        .in("inventory_id", inventoryIds);
-      
-      results.inventory_items = { count: items?.length, data: items?.slice(0, 5), error: error?.message };
-    } else {
-      results.inventory_items = { count: 0, note: "No inventories found" };
-    }
-  } catch (e: any) {
-    results.inventory_items = { error: e.message };
-  }
-
   // Check bar_ingredients table
   try {
     const { data: barIngredients, error } = await supabase

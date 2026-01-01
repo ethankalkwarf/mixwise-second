@@ -7,7 +7,7 @@ import { createClient } from "@supabase/supabase-js";
  * GET /api/bar-ingredients
  * 
  * Returns the authenticated user's bar ingredients.
- * Uses service role to access legacy inventories table that may not have RLS policies.
+ * Uses service role to access bar_ingredients table.
  * This matches the server-side getUserBarIngredients behavior used by public bar pages.
  */
 export async function GET() {
@@ -42,40 +42,7 @@ export async function GET() {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // First, try the legacy inventories table (matches getUserBarIngredients)
-    try {
-      const { data: inventories, error: inventoriesError } = await supabase
-        .from("inventories")
-        .select("id")
-        .eq("user_id", user.id)
-        .limit(1);
-
-      if (!inventoriesError && inventories && inventories.length > 0) {
-        const inventoryId = inventories[0].id;
-        console.log("[API] Found legacy inventory:", inventoryId);
-
-        const { data: inventoryItems, error: itemsError } = await supabase
-          .from("inventory_items")
-          .select("id, ingredient_id, ingredient_name")
-          .eq("inventory_id", inventoryId);
-
-        if (!itemsError && inventoryItems && inventoryItems.length > 0) {
-          console.log("[API] Loaded from legacy inventory_items:", inventoryItems.length);
-          // Convert to bar_ingredients format
-          const ingredients = inventoryItems.map(item => ({
-            id: item.id,
-            user_id: user.id,
-            ingredient_id: item.ingredient_id,
-            ingredient_name: item.ingredient_name,
-          }));
-          return NextResponse.json({ ingredients, source: "inventory_items" });
-        }
-      }
-    } catch (legacyError) {
-      console.log("[API] Legacy inventories table not found or error:", legacyError);
-    }
-
-    // Fallback to bar_ingredients table
+    // Load from bar_ingredients table
     const { data: barIngredients, error: barError } = await supabase
       .from("bar_ingredients")
       .select("*")

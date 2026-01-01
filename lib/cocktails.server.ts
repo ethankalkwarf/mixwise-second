@@ -687,51 +687,7 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
     return null;
   };
 
-  // First try the old inventories table structure (if it exists)
-  try {
-    // Check if inventories table exists and has data for this user
-    const { data: inventories, error: inventoriesError } = await supabase
-      .from('inventories')
-      .select('id')
-      .eq('user_id', userId)
-      .limit(1);
-
-    if (!inventoriesError && inventories && inventories.length > 0) {
-      // Use old table structure
-      const inventoryId = inventories[0].id;
-      const { data: inventoryItems, error: itemsError } = await supabase
-        .from('inventory_items')
-        .select('id, ingredient_id, ingredient_name')
-        .eq('inventory_id', inventoryId);
-
-      if (!itemsError && inventoryItems) {
-        return inventoryItems
-          .map(item => {
-            const numericId = convertToNumericId(item.ingredient_id, item.ingredient_name);
-            if (!numericId) {
-              console.warn(`Could not convert ingredient ID "${item.ingredient_id}" to numeric ID`);
-              return null;
-            }
-
-            // Get the proper ingredient name from the ingredients table
-            const properName = idToNameMap.get(numericId) || item.ingredient_name || item.ingredient_id;
-
-            return {
-              id: item.id.toString(),
-              ingredient_id: numericId,
-              ingredient_name: properName,
-              ingredient_category: idToCategoryMap.get(numericId) ?? null,
-              inventory_id: inventoryId,
-            };
-          })
-          .filter((item): item is NonNullable<typeof item> => item !== null);
-      }
-    }
-  } catch (error) {
-    // inventories/inventory_items tables don't exist or are empty, continue to fallback
-  }
-
-  // Fallback to bar_ingredients table
+  // Load from bar_ingredients table
   const { data: barIngredients, error } = await supabase
     .from('bar_ingredients')
     .select('id, ingredient_id, ingredient_name')
