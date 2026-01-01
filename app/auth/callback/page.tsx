@@ -220,17 +220,23 @@ export default function AuthCallbackPage() {
           const target = next === "/" ? "/onboarding" : next;
           console.log("[AuthCallbackPage] Have valid tokens, redirecting directly to:", target);
           if (!cancelled) {
-            // Use router.replace first
-            router.replace(target);
+            // Small delay to allow UserProvider to detect the new session
+            // before we navigate to the protected page
+            setTimeout(() => {
+              if (!cancelled) {
+                console.log("[AuthCallbackPage] Session established, navigating to:", target);
+                router.replace(target);
+              }
+            }, 500);
             
-            // As a fallback, also do a hard navigation after a delay
+            // As a fallback, also do a hard navigation after a longer delay
             // This handles cases where the SPA navigation doesn't work
             setTimeout(() => {
               if (!cancelled) {
                 console.log("[AuthCallbackPage] Hard navigation fallback to:", target);
                 window.location.href = target;
               }
-            }, 2000);
+            }, 3000);
           }
           return;
         }
@@ -242,8 +248,14 @@ export default function AuthCallbackPage() {
           console.log("[AuthCallbackPage] User authenticated:", user.id);
           // If the caller explicitly asked for onboarding, don't block on DB checks — go immediately.
           if (!cancelled && next === "/onboarding") {
-            console.log("[AuthCallbackPage] Explicit onboarding request, redirecting");
-            router.replace("/onboarding");
+            console.log("[AuthCallbackPage] Explicit onboarding request, delaying redirect to allow auth context update");
+            // Delay to allow UserProvider to process the session
+            setTimeout(() => {
+              if (!cancelled) {
+                console.log("[AuthCallbackPage] Redirecting to onboarding");
+                router.replace("/onboarding");
+              }
+            }, 500);
             return;
           }
 
@@ -299,8 +311,14 @@ export default function AuthCallbackPage() {
 
           if (!cancelled) {
             const target = needsOnboarding ? "/onboarding" : next;
-            console.log("[AuthCallbackPage] Redirecting to:", target);
-            router.replace(target);
+            console.log("[AuthCallbackPage] Delaying redirect to allow auth context update, target:", target);
+            // Delay to allow UserProvider to process the session
+            setTimeout(() => {
+              if (!cancelled) {
+                console.log("[AuthCallbackPage] Redirecting to:", target);
+                router.replace(target);
+              }
+            }, 500);
           }
           return;
         }
