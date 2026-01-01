@@ -155,7 +155,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Initial session check
+    // Initial session check - non-blocking
     const initializeAuth = async () => {
       try {
         console.log("[UserProvider] Initializing auth - getting session...");
@@ -164,7 +164,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (sessionError) {
           console.error("[UserProvider] Initial session error:", sessionError);
           setError(sessionError);
-          setIsLoading(false);
+          if (mounted) {
+            setIsLoading(false);
+          }
           authCheckDone = true;
           return;
         }
@@ -175,18 +177,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           sessionExpiry: currentSession?.expires_at
         });
 
-        await updateAuthState(currentSession);
+        // If we got a session immediately, use it
+        if (currentSession?.user && mounted) {
+          console.log("[UserProvider] Session found from getSession");
+          await updateAuthState(currentSession);
+        }
+        // Otherwise, we'll wait for SIGNED_IN or INITIAL_SESSION from subscription
       } catch (err) {
         console.error("[UserProvider] Initialize auth error:", err);
         if (mounted) {
           setError(err instanceof Error ? err : new Error("Auth initialization failed"));
           setIsLoading(false);
-          authCheckDone = true;
         }
+        authCheckDone = true;
       }
     };
 
-    // Subscribe to auth state changes FIRST, before checking session
+    // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         console.log("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
@@ -195,11 +202,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         switch (event) {
           case "SIGNED_IN":
           case "TOKEN_REFRESHED":
+            console.log("[UserProvider] User signed in or token refreshed");
             await updateAuthState(newSession);
             break;
 
           case "SIGNED_OUT":
             if (mounted) {
+              console.log("[UserProvider] User signed out");
               setSession(null);
               setUser(null);
               setProfile(null);
@@ -210,9 +219,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             break;
 
           case "INITIAL_SESSION":
-            // This fires when the subscription detects an existing session
-            // Or when the session context is ready with the initial session
-            console.log("[UserProvider] INITIAL_SESSION event fired");
+            // This fires when the subscription is set up and detects a session
+            // Could be from cookies, localStorage, or the Supabase client state
+            console.log("[UserProvider] INITIAL_SESSION detected:", !!newSession?.user);
             if (!authCheckDone) {
               await updateAuthState(newSession);
             }
@@ -236,16 +245,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Set a timeout as a safety net - if no auth events fire within 15 seconds, force loading off
+    // Set a SHORT timeout as a safety net - if still loading after 3 seconds, force it off
+    // This handles edge cases where subscription doesn't fire for some reason
+    // In normal conditions, this should not be needed - should load in < 500ms
     timeoutId = setTimeout(() => {
       if (mounted && !authCheckDone) {
-        console.warn("[UserProvider] Auth initialization timeout (15s) - no events received, proceeding anyway");
+        console.warn("[UserProvider] Auth initialization timeout (3s) - forcing completion anyway");
         setIsLoading(false);
         authCheckDone = true;
       }
-    }, 15000);
+    }, 3000); // 3 second safety timeout
 
-    // Run initial auth check - this will also trigger the subscription
+    // Run initial auth check - this calls getSession() which triggers the subscription
     initializeAuth();
 
     // Cleanup
