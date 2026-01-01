@@ -324,7 +324,7 @@ export function confirmEmailTemplate({
   userEmail: string;
 }): EmailTemplate {
   const subject = "Welcome to MixWise – Confirm Your Email 🍸";
-  const previewText = "One click to unlock 500+ cocktail recipes you can make at home. Let's get mixing!";
+  const previewText = "One click to unlock hundreds of cocktail recipes you can make at home. Let's get mixing!";
 
   const html = `
 <!DOCTYPE html>
