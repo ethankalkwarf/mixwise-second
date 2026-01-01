@@ -298,9 +298,18 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
       console.log(`[SERVER] Cocktail ${i+1} (${cocktail.name}): ingredients =`, cocktail.ingredients);
     });
 
+    // Track excluded cocktails for diagnostics
+    const excludedCocktails: Array<{
+      id: string;
+      name: string;
+      reason: string;
+    }> = [];
+
     const result = cocktailData.map(cocktail => {
       // Process ingredients from JSON field
       let ingredients = [];
+      let processedSuccessfully = false;
+
       try {
         console.log(`[SERVER] Processing ${cocktail.name}, ingredients type:`, typeof cocktail.ingredients, 'isArray:', Array.isArray(cocktail.ingredients));
 
@@ -385,6 +394,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
           }).filter(ing => ing !== null); // Remove null entries
 
           console.log(`[SERVER] Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
+          processedSuccessfully = ingredients.length > 0;
         } else if (cocktail.ingredients) {
           // Try to handle as string or other format
           console.log(`[SERVER] Ingredients is not an array for ${cocktail.name}, trying fallback...`);
@@ -399,15 +409,31 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
                 notes: ing.notes || null
               }));
               console.log(`[SERVER] Fallback worked: Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
+              processedSuccessfully = ingredients.length > 0;
             }
           } catch (fallbackError) {
             console.error(`[SERVER] Fallback failed for ${cocktail.name}:`, fallbackError);
+            excludedCocktails.push({
+              id: cocktail.id,
+              name: cocktail.name,
+              reason: `Fallback parsing failed: ${fallbackError}`,
+            });
           }
         } else {
           console.log(`[SERVER] No ingredients field for ${cocktail.name}`);
+          excludedCocktails.push({
+            id: cocktail.id,
+            name: cocktail.name,
+            reason: 'No ingredients field in database',
+          });
         }
       } catch (error) {
         console.error(`Error processing ingredients for cocktail ${cocktail.name}:`, error);
+        excludedCocktails.push({
+          id: cocktail.id,
+          name: cocktail.name,
+          reason: `Processing error: ${error}`,
+        });
       }
 
       console.log(`[SERVER] Final: Cocktail ${cocktail.name}: found ${ingredients.length} ingredients`);
@@ -434,8 +460,35 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
       };
     });
 
-    console.log('[SERVER] Final result: first cocktail has ingredients:', result[0]?.ingredients?.length || 0);
-    return result;
+    console.log('[SERVER] Final result: first cocktail has ingredients:', result[0]?.ingredientsWithIds?.length || 0);
+
+    // Log diagnostic summary
+    const validCocktails = result.filter(c => c.ingredientsWithIds && c.ingredientsWithIds.length > 0);
+    const invalidCocktails = result.filter(c => !c.ingredientsWithIds || c.ingredientsWithIds.length === 0);
+
+    console.log(`[SERVER] DIAGNOSTIC SUMMARY:
+╔════════════════════════════════════════╗
+║       COCKTAIL DATA QUALITY REPORT      ║
+╠════════════════════════════════════════╣
+║ Total cocktails in database: ${cocktailData.length}
+║ Valid cocktails (with ingredients): ${validCocktails.length} (${((validCocktails.length / cocktailData.length) * 100).toFixed(1)}%)
+║ Excluded cocktails (no ingredients): ${invalidCocktails.length} (${((invalidCocktails.length / cocktailData.length) * 100).toFixed(1)}%)
+╚════════════════════════════════════════╝`);
+
+    if (excludedCocktails.length > 0) {
+      console.log(`[SERVER] ⚠️  EXCLUDED COCKTAILS (${excludedCocktails.length}):`);
+      excludedCocktails.slice(0, 20).forEach((c, i) => {
+        console.log(`[SERVER]   ${i + 1}. ${c.name} (${c.id}): ${c.reason}`);
+      });
+      if (excludedCocktails.length > 20) {
+        console.log(`[SERVER]   ... and ${excludedCocktails.length - 20} more`);
+      }
+    }
+
+    // Return only valid cocktails
+    const validResult = validCocktails;
+    console.log(`[SERVER] Returning ${validResult.length} valid cocktails to client`);
+    return validResult;
   } catch (error) {
     console.error('[SERVER] Error in getCocktailsWithIngredients:', error);
     return [];

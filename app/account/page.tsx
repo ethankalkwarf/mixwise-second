@@ -66,7 +66,8 @@ export default function AccountPage() {
   }, [preferences?.public_bar_enabled, user, profile?.username, profile?.public_slug]);
 
   // Get the shareable bar URL (username or public_slug)
-  const shareableBarUrl = profile?.username || profile?.public_slug;
+  // Using explicit null coalescence to ensure type safety
+  const shareableBarUrl: string | null = profile?.username || profile?.public_slug || null;
 
   // Debug logging for share button
   console.log("Share button state:", {
@@ -178,11 +179,13 @@ export default function AccountPage() {
 
   // Generate default username suggestion
   const generateDefaultUsername = useCallback(() => {
-    if (!profile?.display_name && !profile?.email) return '';
-    const base = (profile?.display_name || profile?.email?.split('@')[0] || '').toLowerCase();
+    // Defensive check for both profile and user
+    if (!profile?.display_name && !profile?.email && !user?.email) return '';
+    const displayName = profile?.display_name || profile?.email?.split('@')[0] || user?.email?.split('@')[0] || '';
+    if (!displayName) return '';
     // Remove special chars and replace spaces with underscores
-    return base.replace(/[^a-z0-9]/g, '').substring(0, 20);
-  }, [profile]);
+    return displayName.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 20);
+  }, [profile, user?.email]);
 
   // Check username uniqueness via API
   const checkUsernameUnique = useCallback(async (username: string): Promise<boolean> => {

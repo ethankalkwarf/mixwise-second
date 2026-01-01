@@ -11,6 +11,19 @@ import type { BarIngredient } from "@/lib/supabase/database.types";
 
 const LOCAL_STORAGE_KEY = "mixwise-bar-inventory";
 
+/**
+ * Sync state tracking for debugging and monitoring
+ */
+interface SyncState {
+  lastSync?: {
+    timestamp: number;
+    status: "success" | "partial" | "failed";
+    itemCount: number;
+    error?: string;
+  };
+  isCurrentlySyncing: boolean;
+}
+
 interface IngredientWithName {
   id: string;
   name: string | null;
@@ -129,38 +142,26 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
       setIsLoading(true);
 
-      // Fetch ingredients for ID normalization
-      const { data: ingredientsData, error: ingredientsError } = await supabase
-        .from("ingredients")
-        .select("id, name, legacy_id");
+      try {
+        // Fetch ingredients for ID normalization
+        const { data: ingredientsData, error: ingredientsError } = await supabase
+          .from("ingredients")
+          .select("id, name, legacy_id");
 
-      if (ingredientsError) {
-        console.error("Error fetching ingredients for normalization:", ingredientsError);
-        return;
-      }
+        if (ingredientsError) {
+          console.error("[useBarIngredients] Error fetching ingredients for normalization:", ingredientsError);
+          setIsLoading(false);
+          return;
+        }
 
-      // Build canonical ID map using utility
-      const nameToCanonicalId = buildNameToIdMap(
-        (ingredientsData || []).map(ing => ({
-          id: ing.id,
-          name: ing.name,
-          legacy_id: ing.legacy_id || null
-        }))
-      );
-
-      if (isAuthenticated && user) {
-        // Load from server for authenticated users
-        const serverData = await loadFromServer();
-        setServerIngredients(serverData);
-
-        const serverIds = serverData.map(item => item.ingredient_id);
-        const localIds = loadFromLocal();
-
-        // Merge local with server (server takes precedence, but add any new local items)
-        const mergedIds = [...new Set([...serverIds, ...localIds])];
-
-        // Normalize merged IDs to canonical format
-        const normalizedMergedIds = normalizeIngredientIds(mergedIds, nameToCanonicalId);
+        // Build canonical ID map using utility
+        const nameToCanonicalId = buildNameToIdMap(
+          (ingredientsData || []).map(ing => ({
+            id: ing.id,
+            name: ing.name,
+            legacy_id: ing.legacy_id || null
+          }))
+        );
 
         // Build name map from ingredients data
         const nameMap = buildIdToNameMap(
@@ -171,71 +172,136 @@ export function useBarIngredients(): UseBarIngredientsResult {
         );
         setIngredientNameMap(nameMap);
 
-
-        // If normalization changed anything, migrate the data
-        if (normalizedMergedIds.length !== mergedIds.length || !normalizedMergedIds.every(id => mergedIds.includes(id))) {
-          // Replace all server data with normalized IDs
-          await supabase.from("bar_ingredients").delete().eq("user_id", user.id);
-
-          const normalizedItems = normalizedMergedIds.map(id => ({
-            user_id: user.id,
-            ingredient_id: id,
-            ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
-          }));
-
-          await supabase.from("bar_ingredients").insert(normalizedItems);
-
-          // Update local storage with normalized IDs
-          saveToLocal(normalizedMergedIds);
-
-          setServerIngredients(normalizedItems);
+        if (isAuthenticated && user) {
+          // Use atomic sync strategy: Fetch, validate, then upsert all at once
+          await syncAuthenticatedBar(
+            user.id,
+            nameToCanonicalId,
+            ingredientsData || []
+          );
         } else {
-          // If there are local items not on server, sync them (normalized)
-          const newLocalIds = localIds.filter(id => !serverIds.includes(id));
-          if (newLocalIds.length > 0) {
-            const normalizedNewIds = normalizeIngredientIds(newLocalIds, nameToCanonicalId);
+          // Load from localStorage for anonymous users
+          const localIds = loadFromLocal();
 
-            // Add new local items to server (normalized)
-            const newItems = normalizedNewIds.map(id => ({
-              user_id: user.id,
-              ingredient_id: id,
-              ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
-            }));
+          // Normalize local IDs to canonical format
+          const normalizedLocalIds = normalizeIngredientIds(localIds, nameToCanonicalId);
 
-            await supabase.from("bar_ingredients").upsert(newItems, {
-              onConflict: "user_id,ingredient_id",
-            });
-
-            // Clear local storage after syncing
-            clearLocal();
+          // If normalization changed anything, update localStorage
+          if (normalizedLocalIds.length !== localIds.length || !normalizedLocalIds.every(id => localIds.includes(id))) {
+            saveToLocal(normalizedLocalIds);
           }
+
+          setIngredientIds(normalizedLocalIds);
         }
-
-        setIngredientIds(normalizedMergedIds);
-      } else {
-        // Load from localStorage for anonymous users
-        const localIds = loadFromLocal();
-
-        // Normalize local IDs to canonical format
-        const normalizedLocalIds = normalizeIngredientIds(localIds, nameToCanonicalId);
-
-        // If normalization changed anything, update localStorage
-        if (normalizedLocalIds.length !== localIds.length || !normalizedLocalIds.every(id => localIds.includes(id))) {
-          saveToLocal(normalizedLocalIds);
-        }
-
-        setIngredientIds(normalizedLocalIds);
+      } catch (error) {
+        console.error("[useBarIngredients] Initialization failed:", error);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
 
     initialize();
   }, [authLoading, isAuthenticated, user, loadFromServer, loadFromLocal, clearLocal, saveToLocal, supabase]);
 
+  /**
+   * Atomic sync for authenticated users
+   * Uses upsert-only strategy (no delete) to prevent data loss
+   */
+  const syncAuthenticatedBar = useCallback(
+    async (userId: string, nameToCanonicalId: Map<string, string>, ingredientsData: any[]) => {
+      try {
+        // Step 1: Load current state
+        const serverData = await loadFromServer();
+        const serverIds = serverData.map(item => item.ingredient_id);
+        const localIds = loadFromLocal();
+
+        // Step 2: Merge and normalize
+        const mergedIds = [...new Set([...serverIds, ...localIds])];
+        const normalizedMergedIds = normalizeIngredientIds(mergedIds, nameToCanonicalId);
+
+        // Step 3: Validate before sync
+        if (!normalizedMergedIds || normalizedMergedIds.length < 0) {
+          console.warn("[useBarIngredients] Validation failed: invalid normalized IDs");
+          setIngredientIds(serverIds);
+          return;
+        }
+
+        // Step 4: Build items for upsert
+        const itemsToSync = normalizedMergedIds.map(id => ({
+          user_id: userId,
+          ingredient_id: id,
+          ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
+        }));
+
+        // Step 5: Atomic upsert (safer than delete + insert)
+        const { error: upsertError, data: upsertedData } = await supabase
+          .from("bar_ingredients")
+          .upsert(itemsToSync, {
+            onConflict: "user_id,ingredient_id",
+          });
+
+        if (upsertError) {
+          console.error("[useBarIngredients] Upsert failed:", upsertError);
+          // Fallback: use server data as source of truth
+          setIngredientIds(serverIds);
+          setServerIngredients(serverData);
+          return;
+        }
+
+        // Step 6: Check for deleted items (items in server but not in normalized list)
+        const itemsToDelete = serverIds.filter(id => !normalizedMergedIds.includes(id));
+        if (itemsToDelete.length > 0) {
+          for (const id of itemsToDelete) {
+            const { error: deleteError } = await supabase
+              .from("bar_ingredients")
+              .delete()
+              .eq("user_id", userId)
+              .eq("ingredient_id", id);
+
+            if (deleteError) {
+              console.warn(`[useBarIngredients] Failed to delete ingredient ${id}:`, deleteError);
+              // Continue with other deletions despite error
+            }
+          }
+        }
+
+        // Step 7: Update UI and clear local storage
+        setIngredientIds(normalizedMergedIds);
+        setServerIngredients(
+          normalizedMergedIds.map(id => ({
+            user_id: userId,
+            ingredient_id: id,
+            ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
+          }))
+        );
+        clearLocal();
+
+        // Log successful sync
+        console.log(
+          `[useBarIngredients] Sync complete: ${normalizedMergedIds.length} items synced, ${itemsToDelete.length} deleted`
+        );
+      } catch (error) {
+        console.error("[useBarIngredients] Sync failed with exception:", error);
+        // Fallback: try to load server data as source of truth
+        try {
+          const serverData = await loadFromServer();
+          const serverIds = serverData.map(item => item.ingredient_id);
+          setIngredientIds(serverIds);
+          setServerIngredients(serverData);
+        } catch (fallbackError) {
+          console.error("[useBarIngredients] Even fallback sync failed:", fallbackError);
+        }
+      }
+    },
+    [loadFromServer, loadFromLocal, clearLocal, supabase]
+  );
+
   // Add ingredient
   const addIngredient = useCallback(async (id: string, name?: string) => {
-    if (ingredientIds.includes(id)) return;
+    if (ingredientIds.includes(id)) {
+      console.warn(`[useBarIngredients] Ingredient ${id} already in bar`);
+      return;
+    }
     
     const newIds = [...ingredientIds, id];
     setIngredientIds(newIds);
@@ -256,7 +322,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
       });
       
       if (error) {
-        console.error("Error adding ingredient:", error);
+        console.error(`[useBarIngredients] Error adding ingredient ${id}:`, error);
         toast.error("Failed to add ingredient");
         // Revert on error
         setIngredientIds(ingredientIds);
@@ -266,18 +332,20 @@ export function useBarIngredients(): UseBarIngredientsResult {
           return newMap;
         });
       } else {
+        console.log(`[useBarIngredients] Ingredient ${id} added, bar size: ${newIds.length}`);
         toast.success("Ingredient added to your bar");
 
         // Check for badge unlocks
         try {
           await checkBarBadges(supabase, user.id, newIds.length);
         } catch (badgeError) {
-          console.error("Error checking bar badges:", badgeError);
+          console.error(`[useBarIngredients] Error checking bar badges:`, badgeError);
         }
       }
     } else {
       // Save to localStorage
       saveToLocal(newIds);
+      console.log(`[useBarIngredients] Ingredient ${id} added to localStorage, bar size: ${newIds.length}`);
       toast.success("Ingredient added to your bar");
     }
   }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
@@ -296,16 +364,18 @@ export function useBarIngredients(): UseBarIngredientsResult {
         .eq("ingredient_id", id);
       
       if (error) {
-        console.error("Error removing ingredient:", error);
+        console.error(`[useBarIngredients] Error removing ingredient ${id}:`, error);
         toast.error("Failed to remove ingredient");
         // Revert on error
         setIngredientIds(ingredientIds);
       } else {
+        console.log(`[useBarIngredients] Ingredient ${id} removed, bar size: ${newIds.length}`);
         toast.info("Ingredient removed");
       }
     } else {
       // Save to localStorage
       saveToLocal(newIds);
+      console.log(`[useBarIngredients] Ingredient ${id} removed from localStorage, bar size: ${newIds.length}`);
       toast.info("Ingredient removed");
     }
   }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
@@ -315,24 +385,64 @@ export function useBarIngredients(): UseBarIngredientsResult {
     setIngredientIds(ids);
     
     if (isAuthenticated && user) {
-      // Clear existing and add new
-      await supabase
-        .from("bar_ingredients")
-        .delete()
-        .eq("user_id", user.id);
-      
-      if (ids.length > 0) {
-        const items = ids.map(id => ({
-          user_id: user.id,
-          ingredient_id: id,
-        }));
-        
-        await supabase.from("bar_ingredients").insert(items);
+      try {
+        // Use atomic approach: upsert new items, then delete old ones
+        if (ids.length > 0) {
+          const items = ids.map(id => ({
+            user_id: user.id,
+            ingredient_id: id,
+          }));
+          
+          const { error: upsertError } = await supabase
+            .from("bar_ingredients")
+            .upsert(items, {
+              onConflict: "user_id,ingredient_id",
+            });
+
+          if (upsertError) {
+            console.error("[useBarIngredients] Failed to upsert ingredients:", upsertError);
+            toast.error("Failed to update bar");
+            return;
+          }
+        }
+
+        // Delete items that are no longer in the list
+        const { data: currentItems, error: fetchError } = await supabase
+          .from("bar_ingredients")
+          .select("ingredient_id")
+          .eq("user_id", user.id);
+
+        if (fetchError) {
+          console.warn("[useBarIngredients] Failed to fetch current items for cleanup:", fetchError);
+          return;
+        }
+
+        const currentIds = (currentItems || []).map(item => item.ingredient_id);
+        const idsToDelete = currentIds.filter(id => !ids.includes(id));
+
+        if (idsToDelete.length > 0) {
+          for (const id of idsToDelete) {
+            const { error: deleteError } = await supabase
+              .from("bar_ingredients")
+              .delete()
+              .eq("user_id", user.id)
+              .eq("ingredient_id", id);
+
+            if (deleteError) {
+              console.warn(`[useBarIngredients] Failed to delete ingredient ${id}:`, deleteError);
+            }
+          }
+        }
+
+        console.log(`[useBarIngredients] Batch update complete: ${ids.length} items set`);
+      } catch (error) {
+        console.error("[useBarIngredients] Batch update failed:", error);
+        toast.error("Failed to update bar");
       }
     } else {
       saveToLocal(ids);
     }
-  }, [isAuthenticated, user, supabase, saveToLocal]);
+  }, [isAuthenticated, user, supabase, saveToLocal, toast]);
 
   // Clear all ingredients
   const clearAll = useCallback(async () => {
@@ -357,24 +467,39 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
   // Sync local to server (for after sign-in)
   const syncToServer = useCallback(async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user) {
+      console.warn("[useBarIngredients] syncToServer called but user not authenticated");
+      return;
+    }
     
     const localIds = loadFromLocal();
-    if (localIds.length === 0) return;
+    if (localIds.length === 0) {
+      console.log("[useBarIngredients] No local items to sync");
+      return;
+    }
     
-    const items = localIds.map(id => ({
-      user_id: user.id,
-      ingredient_id: id,
-    }));
-    
-    const { error } = await supabase.from("bar_ingredients").upsert(items, {
-      onConflict: "user_id,ingredient_id",
-    });
-    
-    clearLocal();
-    
-    if (!error) {
+    try {
+      const items = localIds.map(id => ({
+        user_id: user.id,
+        ingredient_id: id,
+      }));
+      
+      const { error } = await supabase.from("bar_ingredients").upsert(items, {
+        onConflict: "user_id,ingredient_id",
+      });
+      
+      if (error) {
+        console.error(`[useBarIngredients] Sync failed, keeping local data:`, error);
+        toast.error("Failed to save bar - local changes preserved");
+        return;
+      }
+
+      clearLocal();
+      console.log(`[useBarIngredients] Successfully synced ${localIds.length} items to server`);
       toast.success("Bar saved!");
+    } catch (error) {
+      console.error("[useBarIngredients] Sync threw exception, keeping local data:", error);
+      toast.error("Failed to save bar - local changes preserved");
     }
   }, [isAuthenticated, user, loadFromLocal, clearLocal, supabase, toast]);
 

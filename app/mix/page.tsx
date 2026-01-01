@@ -90,6 +90,17 @@ export default function MixPage() {
         console.log('[MIX-DEBUG] Filtering cocktails, total:', cocktails.length);
         console.log('[MIX-DEBUG] First cocktail sample:', JSON.stringify(cocktails[0], null, 2));
 
+        // Track excluded cocktails for diagnostics
+        const excludedByReason: {
+          nullIngredients: typeof cocktails;
+          emptyIngredients: typeof cocktails;
+          notArray: typeof cocktails;
+        } = {
+          nullIngredients: [],
+          emptyIngredients: [],
+          notArray: [],
+        };
+
         const validCocktails = cocktails.filter(cocktail => {
           const isValid = cocktail &&
                          cocktail.ingredients &&
@@ -97,6 +108,15 @@ export default function MixPage() {
                          cocktail.ingredients.length > 0;
 
           if (!isValid) {
+            // Categorize the reason for exclusion
+            if (!cocktail.ingredients) {
+              excludedByReason.nullIngredients.push(cocktail);
+            } else if (!Array.isArray(cocktail.ingredients)) {
+              excludedByReason.notArray.push(cocktail);
+            } else if (cocktail.ingredients.length === 0) {
+              excludedByReason.emptyIngredients.push(cocktail);
+            }
+
             console.log('[MIX-DEBUG] Invalid cocktail:', cocktail.name, {
               id: cocktail.id,
               hasIngredients: !!cocktail.ingredients,
@@ -116,11 +136,46 @@ export default function MixPage() {
           console.log('[MIX-DEBUG] First valid cocktail:', JSON.stringify(validCocktails[0], null, 2));
         }
 
-        // Development-only warning for excluded cocktails
+        // Development-only warning for excluded cocktails with detailed breakdown
         if (process.env.NODE_ENV === 'development') {
           const excludedCount = cocktails.length - validCocktails.length;
           if (excludedCount > 0) {
-            console.warn(`[MIX-DEBUG] Excluded ${excludedCount} cocktails with missing/empty ingredients (total: ${cocktails.length}, valid: ${validCocktails.length})`);
+            console.warn(`
+╔════════════════════════════════════════╗
+║    COCKTAIL DATA QUALITY REPORT        ║
+╠════════════════════════════════════════╣
+║ Total cocktails loaded: ${cocktails.length}
+║ Valid cocktails: ${validCocktails.length} (${((validCocktails.length / cocktails.length) * 100).toFixed(1)}%)
+║ EXCLUDED: ${excludedCount} (${((excludedCount / cocktails.length) * 100).toFixed(1)}%)
+╠════════════════════════════════════════╣
+║ Excluded cocktails breakdown:
+║   • Null/undefined ingredients: ${excludedByReason.nullIngredients.length}
+║   • Empty ingredient array: ${excludedByReason.emptyIngredients.length}
+║   • Not an array (invalid type): ${excludedByReason.notArray.length}
+╚════════════════════════════════════════╝
+            `);
+
+            // Show first 10 excluded cocktails
+            if (excludedByReason.nullIngredients.length > 0) {
+              console.log('[MIX-DEBUG] Null ingredients cocktails (first 5):');
+              excludedByReason.nullIngredients.slice(0, 5).forEach((c, i) => {
+                console.log(`  ${i + 1}. ${c.name} (${c.id})`);
+              });
+            }
+
+            if (excludedByReason.emptyIngredients.length > 0) {
+              console.log('[MIX-DEBUG] Empty ingredient array cocktails (first 5):');
+              excludedByReason.emptyIngredients.slice(0, 5).forEach((c, i) => {
+                console.log(`  ${i + 1}. ${c.name} (${c.id})`);
+              });
+            }
+
+            if (excludedByReason.notArray.length > 0) {
+              console.log('[MIX-DEBUG] Invalid type cocktails (first 5):');
+              excludedByReason.notArray.slice(0, 5).forEach((c, i) => {
+                console.log(`  ${i + 1}. ${c.name} (${c.id}) - type: ${typeof c.ingredients}`);
+              });
+            }
           }
         }
 

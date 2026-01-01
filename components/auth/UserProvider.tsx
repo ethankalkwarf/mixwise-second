@@ -109,13 +109,57 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase]);
 
+  // Ensure profile exists by creating one if fetch returns null
+  // This handles race conditions on slow networks where profile INSERT hasn't completed yet
+  const ensureProfileExists = useCallback(async (userId: string, userEmail: string): Promise<Profile | null> => {
+    try {
+      // First try to fetch
+      const profile = await fetchProfile(userId);
+      
+      if (profile) {
+        console.log("[UserProvider] Profile fetch successful");
+        return profile;
+      }
+      
+      // If fetch returns null, try to create it
+      // This handles the race condition where auth.users was created but profile INSERT hasn't completed
+      console.log("[UserProvider] Profile not found, attempting to create...");
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          email: userEmail,
+          display_name: userEmail.split("@")[0],
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        // If it's a duplicate key error (23505), profile exists but we couldn't fetch it - try again
+        if (error.code === "23505") {
+          console.log("[UserProvider] Profile already exists (duplicate error), retrying fetch...");
+          return await fetchProfile(userId);
+        }
+        console.error("[UserProvider] Failed to create profile:", error);
+        return null;
+      }
+      
+      console.log("[UserProvider] Successfully created new profile");
+      return data as Profile;
+    } catch (err) {
+      console.error("[UserProvider] Exception in ensureProfileExists:", err);
+      return null;
+    }
+  }, [supabase, fetchProfile]);
+
   // Refresh profile data (can be called after profile updates)
   const refreshProfile = useCallback(async () => {
     if (user) {
-      const newProfile = await fetchProfile(user.id);
+      const newProfile = await ensureProfileExists(user.id, user.email || "");
       setProfile(newProfile);
     }
-  }, [user, fetchProfile]);
+  }, [user, ensureProfileExists]);
 
   // Main auth state initialization and subscription
   useEffect(() => {
@@ -138,12 +182,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setUser(newSession?.user ?? null);
 
       if (newSession?.user) {
-        // Fetch profile for authenticated user
-        console.log("[UserProvider] Fetching profile for user:", newSession.user.id);
+        // Ensure profile exists (fetch or create if missing due to race condition)
+        console.log("[UserProvider] Ensuring profile exists for user:", newSession.user.id);
         try {
-          const userProfile = await fetchProfile(newSession.user.id);
+          const userProfile = await ensureProfileExists(newSession.user.id, newSession.user.email || "");
           if (mounted) {
-            console.log("[UserProvider] Profile fetched:", !!userProfile);
+            console.log("[UserProvider] Profile ensured:", !!userProfile);
             setProfile(userProfile);
 
             // Track new signups (users created in last minute)
@@ -157,10 +201,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             }
           }
         } catch (err) {
-          // Profile fetch failed - but don't block on it
-          console.error("[UserProvider] Profile fetch failed:", err);
+          // Profile ensure failed - but don't block on it
+          console.error("[UserProvider] Profile ensure failed:", err);
           if (mounted) {
-            // Still set user as authenticated even if profile fetch fails
+            // Still set user as authenticated even if profile ensure fails
             setProfile(null);
           }
         }
@@ -262,7 +306,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             // User data was updated, refresh profile
             if (newSession?.user && mounted) {
               setUser(newSession.user);
-              const userProfile = await fetchProfile(newSession.user.id);
+              const userProfile = await ensureProfileExists(newSession.user.id, newSession.user.email || "");
               if (mounted) {
                 setProfile(userProfile);
               }
@@ -300,7 +344,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [supabase, fetchProfile]);
+  }, [supabase, fetchProfile, ensureProfileExists]);
 
   // Get the correct redirect URL for auth
   const getAuthRedirectUrl = useCallback(() => {

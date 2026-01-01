@@ -73,6 +73,26 @@ export function AuthDialog({
     }
   }, [isAuthenticated, isOpen, onClose, onSuccess]);
 
+  // Close dialog when email confirmation completes
+  // This handles the signup flow where user clicks email link and is redirected
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEmailConfirmed = (event: Event) => {
+      const customEvent = event as CustomEvent<{ success: boolean }>;
+      if (customEvent.detail?.success) {
+        console.log("[AuthDialog] Email confirmation detected, closing dialog");
+        onSuccess?.();
+        onClose();
+      }
+    };
+
+    window.addEventListener('mixwise:emailConfirmed', handleEmailConfirmed);
+    return () => {
+      window.removeEventListener('mixwise:emailConfirmed', handleEmailConfirmed);
+    };
+  }, [isOpen, onClose, onSuccess]);
+
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError(null);

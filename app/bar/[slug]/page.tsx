@@ -45,6 +45,12 @@ function isUUID(str: string): boolean {
 
 // Helper function to process profile result and get ingredients
 async function processProfileResult(profile: any, isOwnerView: boolean, supabase: any) {
+  // Defensive null check - profile should never be null at this point, but handle gracefully if it is
+  if (!profile) {
+    console.warn('[BAR PAGE] processProfileResult called with null profile');
+    return { profile: null, preferences: null, ingredients: [], isOwnerView };
+  }
+  
   console.log('[BAR PAGE] Processing profile result for:', profile.id);
 
   try {
