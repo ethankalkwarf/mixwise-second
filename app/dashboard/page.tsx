@@ -259,12 +259,16 @@ export default function DashboardPage() {
   const isAuthLoading = authLoading;
   const isContentLoading = barLoading || favsLoading || recentLoading;
 
-  // Dynamic greeting based on time of day
+  // Dynamic greeting based on time of day - stable to prevent flickering
   const getDynamicGreeting = useMemo(() => {
     // With caching, profile should load instantly - use email fallback for edge cases only
     const fullName = profile?.display_name || user?.email?.split("@")[0] || "Bartender";
     const firstName = fullName.split(" ")[0]; // Only use first name
     const hour = new Date().getHours();
+
+    // Use consistent greeting based on name hash to prevent random changes
+    const nameHash = firstName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
+    const greetingIndex = nameHash % 3; // Consistent index based on name
 
     let greeting: string;
     if (hour < 12) {
@@ -274,7 +278,7 @@ export default function DashboardPage() {
         `Morning, ${firstName}. The bar is open, metaphorically.`,
         `Rise and shine, ${firstName}. Time to mix something great.`,
       ];
-      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+      greeting = greetings[greetingIndex];
     } else if (hour < 18) {
       // Afternoon
       const greetings = [
@@ -282,7 +286,7 @@ export default function DashboardPage() {
         `Hey ${firstName}, it's cocktail o'clock somewhere.`,
         `Afternoon, ${firstName}. Your bar awaits.`,
       ];
-      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+      greeting = greetings[greetingIndex];
     } else {
       // Evening
       const greetings = [
@@ -290,11 +294,11 @@ export default function DashboardPage() {
         `Evening, ${firstName}. Perfect time for a drink.`,
         `Welcome back, ${firstName}. What's on the menu tonight?`,
       ];
-      greeting = greetings[Math.floor(Math.random() * greetings.length)];
+      greeting = greetings[greetingIndex];
     }
 
     return greeting;
-  }, [user?.email]);
+  }, [profile?.display_name, user?.email]);
 
   const handleRemoveFromInventory = useCallback(async (id: string) => {
     await removeIngredient(id);
@@ -360,24 +364,33 @@ export default function DashboardPage() {
                 Track your bar, favorites, and progress
               </p>
             </div>
-          {ingredientIds.length > 0 && user?.id && preferences?.public_bar_enabled && (
-            <Link
-              href={`/bar/${profile?.username || profile?.public_slug || user.id}`}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
-            >
-              <ShareIcon className="w-4 h-4" />
-              Share My Bar
-            </Link>
-          )}
-
-          {ingredientIds.length > 0 && user?.id && !preferences?.public_bar_enabled && (
-            <Link
-              href="/account"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-olive hover:bg-olive-dark text-cream rounded-2xl transition-all text-sm font-medium shadow-soft"
-            >
-              <ShareIcon className="w-4 h-4" />
-              Enable Public Bar
-            </Link>
+          {/* Show share buttons when user has ingredients - handle loading gracefully */}
+          {ingredientIds.length > 0 && user?.id && (
+            preferences ? (
+              preferences.public_bar_enabled ? (
+                <Link
+                  href={`/bar/${profile?.username || profile?.public_slug || user.id}`}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
+                >
+                  <ShareIcon className="w-4 h-4" />
+                  Share My Bar
+                </Link>
+              ) : (
+                <Link
+                  href="/account"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-olive hover:bg-olive-dark text-cream rounded-2xl transition-all text-sm font-medium shadow-soft"
+                >
+                  <ShareIcon className="w-4 h-4" />
+                  Enable Public Bar
+                </Link>
+              )
+            ) : (
+              // Loading placeholder while preferences load
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-mist rounded-2xl text-sm font-medium animate-pulse">
+                <ShareIcon className="w-4 h-4" />
+                <span className="text-sage">Loading...</span>
+              </div>
+            )
           )}
         </div>
 
@@ -753,24 +766,33 @@ export default function DashboardPage() {
                   <span className="text-forest group-hover:text-terracotta transition-colors">Browse Cocktails</span>
                   <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
                 </Link>
-                {ingredientIds.length > 0 && preferences?.public_bar_enabled && (
-                  <Link
-                    href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
-                    className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
-                  >
-                    <span className="text-forest group-hover:text-terracotta transition-colors">Share My Bar</span>
-                    <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
-                  </Link>
-                )}
-
-                {ingredientIds.length > 0 && !preferences?.public_bar_enabled && (
-                  <Link
-                    href="/account"
-                    className="flex items-center justify-between p-3 bg-olive/20 hover:bg-olive/30 rounded-xl transition-colors group"
-                  >
-                    <span className="text-olive group-hover:text-olive-dark transition-colors">Enable Public Bar</span>
-                    <ArrowRightIcon className="w-4 h-4 text-olive group-hover:text-olive-dark transition-colors" />
-                  </Link>
+                {/* Show share buttons when user has ingredients - handle loading gracefully */}
+                {ingredientIds.length > 0 && (
+                  preferences ? (
+                    preferences.public_bar_enabled ? (
+                      <Link
+                        href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
+                        className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
+                      >
+                        <span className="text-forest group-hover:text-terracotta transition-colors">Share My Bar</span>
+                        <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/account"
+                        className="flex items-center justify-between p-3 bg-olive/20 hover:bg-olive/30 rounded-xl transition-colors group"
+                      >
+                        <span className="text-olive group-hover:text-olive-dark transition-colors">Enable Public Bar</span>
+                        <ArrowRightIcon className="w-4 h-4 text-olive group-hover:text-olive-dark transition-colors" />
+                      </Link>
+                    )
+                  ) : (
+                    // Loading placeholder while preferences load
+                    <div className="flex items-center justify-between p-3 bg-mist rounded-xl">
+                      <span className="text-sage">Loading share options...</span>
+                      <ArrowRightIcon className="w-4 h-4 text-sage" />
+                    </div>
+                  )
                 )}
                 <button
                   onClick={() => router.push("/onboarding")}
