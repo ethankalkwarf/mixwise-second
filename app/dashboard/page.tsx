@@ -255,15 +255,13 @@ export default function DashboardPage() {
     fetchBadges();
   }, [user, supabase]);
 
-  const isLoading = authLoading || barLoading || favsLoading || recentLoading;
+  // Separate loading states - don't block entire dashboard on bar/favorites loading
+  const isAuthLoading = authLoading;
+  const isContentLoading = barLoading || favsLoading || recentLoading;
 
   // Dynamic greeting based on time of day
   const getDynamicGreeting = useMemo(() => {
-    // Only show greeting if profile data is loaded to prevent showing email-based names
-    if (!profile && user) {
-      return "Welcome back! Loading your profile...";
-    }
-
+    // With caching, profile should load instantly - use email fallback for edge cases only
     const fullName = profile?.display_name || user?.email?.split("@")[0] || "Bartender";
     const firstName = fullName.split(" ")[0]; // Only use first name
     const hour = new Date().getHours();
@@ -302,7 +300,8 @@ export default function DashboardPage() {
     await removeIngredient(id);
   }, [removeIngredient]);
 
-  if (isLoading) {
+  // Only block on auth loading - show content immediately once authenticated
+  if (isAuthLoading) {
     return (
       <div className="py-12 bg-cream min-h-screen">
         <MainContainer>
@@ -561,7 +560,16 @@ export default function DashboardPage() {
                       Browse →
                     </Link>
                   </div>
-                  {favorites.length > 0 ? (
+                  {favsLoading ? (
+                    <div className="flex gap-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex-shrink-0 w-32">
+                          <div className="w-32 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
+                          <div className="h-4 bg-mist rounded animate-pulse" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : favorites.length > 0 ? (
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
                       {favorites.slice(0, 6).map((fav) => (
                         <Link
@@ -600,7 +608,16 @@ export default function DashboardPage() {
                       Recently Viewed
                     </h3>
                   </div>
-                  {recentlyViewed.length > 0 ? (
+                  {recentLoading ? (
+                    <div className="flex gap-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex-shrink-0 w-32">
+                          <div className="w-32 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
+                          <div className="h-4 bg-mist rounded animate-pulse" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : recentlyViewed.length > 0 ? (
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
                       {recentlyViewed.slice(0, 6).map((item) => (
                         <Link
@@ -648,7 +665,7 @@ export default function DashboardPage() {
                       My Bar
                     </h2>
                     <span className="text-sm text-sage">
-                      {ingredientIds.length} ingredient{ingredientIds.length !== 1 ? "s" : ""}
+                      {barLoading ? "Loading..." : `${ingredientIds.length} ingredient${ingredientIds.length !== 1 ? "s" : ""}`}
                     </span>
                   </div>
                 </div>
@@ -660,7 +677,16 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div className="p-6">
-                {ingredientIds.length === 0 ? (
+                {barLoading ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 bg-cream rounded-xl animate-pulse">
+                        <div className="w-8 h-8 bg-mist rounded-lg" />
+                        <div className="flex-1 h-4 bg-mist rounded" />
+                      </div>
+                    ))}
+                  </div>
+                ) : ingredientIds.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 bg-mist rounded-full flex items-center justify-center mx-auto mb-4">
                       <BeakerIcon className="w-8 h-8 text-sage" />
