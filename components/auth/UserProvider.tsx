@@ -78,7 +78,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Ref to prevent duplicate profile fetches
   const fetchingProfile = useRef<string | null>(null);
 
-  // Fetch user profile from database with timeout
+  // Fetch user profile from database with timeout and retry
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     // Prevent duplicate fetches for the same user
     if (fetchingProfile.current === userId) {
@@ -86,42 +86,70 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
     fetchingProfile.current = userId;
-    
+
     try {
-      // Create a timeout that will force the promise to resolve as null after 1 second
-      let timeoutId: NodeJS.Timeout | null = null;
-      const timeoutPromise = new Promise<Profile | null>((resolve) => {
-        timeoutId = setTimeout(() => {
-          console.warn("[UserProvider] fetchProfile timeout (1s) - returning null");
-          resolve(null);
-        }, 1000);
-      });
+      // Configurable timeout with reasonable defaults for production
+      const PROFILE_FETCH_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_PROFILE_FETCH_TIMEOUT || "3000"); // 3 seconds default
+      const MAX_RETRIES = 2;
 
-      const queryPromise = supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single()
-        .then(({ data, error: fetchError }) => {
-          if (timeoutId) clearTimeout(timeoutId);
-          
-          if (fetchError) {
-            // PGRST116 means no rows found - expected for new users
-            if (fetchError.code !== "PGRST116") {
-              console.error("[UserProvider] Profile fetch error:", fetchError);
-            }
-            return null;
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          // Create a timeout promise
+          let timeoutId: NodeJS.Timeout | null = null;
+          const timeoutPromise = new Promise<Profile | null>((resolve) => {
+            timeoutId = setTimeout(() => {
+              console.warn(`[UserProvider] fetchProfile timeout (${PROFILE_FETCH_TIMEOUT}ms) - attempt ${attempt}/${MAX_RETRIES}`);
+              resolve(null);
+            }, PROFILE_FETCH_TIMEOUT);
+          });
+
+          const queryPromise = supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", userId)
+            .single()
+            .then(({ data, error: fetchError }) => {
+              if (timeoutId) clearTimeout(timeoutId);
+
+              if (fetchError) {
+                // PGRST116 means no rows found - expected for new users
+                if (fetchError.code !== "PGRST116") {
+                  console.error(`[UserProvider] Profile fetch error (attempt ${attempt}):`, fetchError);
+                }
+                return null;
+              }
+              console.log(`[UserProvider] Profile fetch successful on attempt ${attempt}`);
+              return data as Profile;
+            })
+            .catch((err) => {
+              if (timeoutId) clearTimeout(timeoutId);
+              console.error(`[UserProvider] Profile fetch exception (attempt ${attempt}):`, err);
+              return null;
+            });
+
+          // Return whichever resolves first
+          const result = await Promise.race([queryPromise, timeoutPromise]);
+          if (result !== null) {
+            return result; // Success!
           }
-          return data as Profile;
-        })
-        .catch((err) => {
-          if (timeoutId) clearTimeout(timeoutId);
-          console.error("[UserProvider] Profile fetch exception:", err);
-          return null;
-        });
 
-      // Return whichever resolves first
-      return await Promise.race([queryPromise, timeoutPromise]);
+          // If we got null and this isn't the last attempt, wait before retry
+          if (attempt < MAX_RETRIES) {
+            console.log(`[UserProvider] Profile fetch attempt ${attempt} returned null, retrying...`);
+            await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay between retries
+          }
+
+        } catch (err) {
+          console.error(`[UserProvider] Unexpected error in fetchProfile attempt ${attempt}:`, err);
+          if (attempt === MAX_RETRIES) {
+            throw err;
+          }
+        }
+      }
+
+      console.warn("[UserProvider] All profile fetch attempts failed, returning null");
+      return null;
+
     } finally {
       fetchingProfile.current = null;
     }
@@ -131,25 +159,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // This handles race conditions on slow networks where profile INSERT hasn't completed yet
   const ensureProfileExists = useCallback(async (userId: string, userEmail: string): Promise<Profile | null> => {
     try {
-      // First try to fetch - has its own 1 second timeout
+      // First try to fetch - has its own timeout and retry logic
       const profile = await fetchProfile(userId);
-      
+
       if (profile) {
         console.log("[UserProvider] Profile fetch successful");
         return profile;
       }
-      
+
       // If fetch returns null, try to create it
       // This handles the race condition where auth.users was created but profile INSERT hasn't completed
       console.log("[UserProvider] Profile not found, attempting to create...");
-      
+
+      // Configurable timeout for profile creation
+      const PROFILE_CREATE_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_PROFILE_CREATE_TIMEOUT || "2000"); // 2 seconds default
+
       // Create timeout for the insert operation
       let timeoutId: NodeJS.Timeout | null = null;
-      const createTimeoutPromise = new Promise<null>((resolve) => {
+      const createTimeoutPromise = new Promise<{ data: null, error: { code: "TIMEOUT" } }>((resolve) => {
         timeoutId = setTimeout(() => {
-          console.warn("[UserProvider] Profile creation timeout (1s)");
-          resolve(null);
-        }, 1000);
+          console.warn(`[UserProvider] Profile creation timeout (${PROFILE_CREATE_TIMEOUT}ms)`);
+          resolve({ data: null, error: { code: "TIMEOUT" } });
+        }, PROFILE_CREATE_TIMEOUT);
       });
 
       const createPromise = supabase
@@ -172,13 +203,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       const { data, error } = await Promise.race([
         createPromise,
-        createTimeoutPromise.then(() => ({ data: null, error: { code: "TIMEOUT" } }))
+        createTimeoutPromise
       ]);
-      
+
       if (error) {
         // If it's a duplicate key error (23505), profile exists but we couldn't fetch it - try again
         if ((error as any)?.code === "23505") {
           console.log("[UserProvider] Profile already exists (duplicate error), retrying fetch...");
+          // Wait a bit before retrying to allow any ongoing insert to complete
+          await new Promise(resolve => setTimeout(resolve, 500));
           return await fetchProfile(userId);
         }
         // Don't log timeout as error, it's expected behavior
@@ -187,7 +220,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
         return null;
       }
-      
+
       console.log("[UserProvider] Successfully created new profile");
       return data as Profile;
     } catch (err) {
@@ -397,11 +430,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Set a SHORT timeout as a safety net - if still loading after 1.5 seconds, force it off
-    // Profile loading should NOT take more than 1 second in normal conditions
+    // Set a reasonable timeout as a safety net - if still loading after configured time, force it off
+    // This should account for network latency and database operations in production
+    const AUTH_INIT_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_AUTH_INIT_TIMEOUT || "5000"); // 5 seconds default
     timeoutId = setTimeout(() => {
       if (mounted && !authCheckDone) {
-        console.warn("[UserProvider] Auth initialization timeout (1.5s) - forcing completion anyway");
+        console.warn(`[UserProvider] Auth initialization timeout (${AUTH_INIT_TIMEOUT}ms) - forcing completion anyway`);
         setIsLoading(false);
         authCheckDone = true;
         initialCheckDone.current = true;
@@ -409,7 +443,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         authReadyRef.current.resolve();
         console.log("[UserProvider] Auth timeout - authReady promise resolved");
       }
-    }, 1500); // 1.5 second safety timeout
+    }, AUTH_INIT_TIMEOUT);
 
     // Run initial auth check - this calls getSession() which triggers the subscription
     initializeAuth();
