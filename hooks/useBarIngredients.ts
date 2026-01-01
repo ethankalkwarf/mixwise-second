@@ -86,7 +86,7 @@ interface UseBarIngredientsResult {
  * to ensure session cookies are properly synced after login.
  */
 export function useBarIngredients(): UseBarIngredientsResult {
-  const { user, isAuthenticated, isLoading: authLoading } = useUser();
+  const { user, isAuthenticated, isLoading: authLoading, authReady } = useUser();
   const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
@@ -169,6 +169,20 @@ export function useBarIngredients(): UseBarIngredientsResult {
       setIsLoading(true);
 
       try {
+        // Wait for auth to be fully ready before making any queries
+        // This ensures the Supabase client has the proper session token
+        if (authReady) {
+          try {
+            await Promise.race([
+              authReady,
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Auth ready timeout')), 5000))
+            ]);
+            console.log("[useBarIngredients] Auth ready, proceeding with queries");
+          } catch (e) {
+            console.warn("[useBarIngredients] Auth ready timeout, proceeding anyway");
+          }
+        }
+
         // Fetch ingredients for ID normalization
         let ingredientsData: any[] = [];
         const { data, error: ingredientsError } = await supabase
@@ -244,7 +258,8 @@ export function useBarIngredients(): UseBarIngredientsResult {
     };
 
     initialize();
-  }, [authLoading, isAuthenticated, user, loadFromServer, loadFromLocal, clearLocal, saveToLocal, supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, isAuthenticated, user, supabase]);
 
   /**
    * Atomic sync for authenticated users
