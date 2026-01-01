@@ -78,7 +78,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Ref to prevent duplicate profile fetches
   const fetchingProfile = useRef<string | null>(null);
 
-  // Fetch user profile from database with timeout and retry
+  // Cache key for profile data
+  const getProfileCacheKey = (userId: string) => `mixwise_profile_${userId}`;
+
+  // Fetch user profile from cache or database with fast timeout
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     // Prevent duplicate fetches for the same user
     if (fetchingProfile.current === userId) {
@@ -88,9 +91,29 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     fetchingProfile.current = userId;
 
     try {
-      // Configurable timeout with reasonable defaults for production
-      const PROFILE_FETCH_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_PROFILE_FETCH_TIMEOUT || "3000"); // 3 seconds default
-      const MAX_RETRIES = 2;
+      // First check localStorage cache (fast!)
+      try {
+        const cacheKey = getProfileCacheKey(userId);
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const cachedProfile = JSON.parse(cached);
+          // Verify cache is recent (within 24 hours) and for correct user
+          const cacheAge = Date.now() - cachedProfile._cachedAt;
+          if (cacheAge < 24 * 60 * 60 * 1000 && cachedProfile.id === userId) {
+            console.log("[UserProvider] Profile loaded from cache");
+            return cachedProfile;
+          } else {
+            // Cache is stale, remove it
+            localStorage.removeItem(cacheKey);
+          }
+        }
+      } catch (cacheErr) {
+        console.warn("[UserProvider] Cache read error:", cacheErr);
+      }
+
+      // Configurable timeout with aggressive defaults for better UX
+      const PROFILE_FETCH_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_PROFILE_FETCH_TIMEOUT || "1000"); // 1 second default
+      const MAX_RETRIES = 1; // Reduce retries for better performance
 
       for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
@@ -118,7 +141,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 }
                 return null;
               }
-              console.log(`[UserProvider] Profile fetch successful on attempt ${attempt}`);
+
+              // Cache successful result
+              try {
+                const cacheData = { ...data, _cachedAt: Date.now() };
+                localStorage.setItem(getProfileCacheKey(userId), JSON.stringify(cacheData));
+                console.log(`[UserProvider] Profile cached and fetched on attempt ${attempt}`);
+              } catch (cacheErr) {
+                console.warn("[UserProvider] Cache write error:", cacheErr);
+              }
+
               return data as Profile;
             })
             .catch((err) => {
@@ -133,10 +165,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             return result; // Success!
           }
 
-          // If we got null and this isn't the last attempt, wait before retry
+          // If we got null and this isn't the last attempt, quick retry
           if (attempt < MAX_RETRIES) {
             console.log(`[UserProvider] Profile fetch attempt ${attempt} returned null, retrying...`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay between retries
+            await new Promise(resolve => setTimeout(resolve, 200)); // Faster retry delay
           }
 
         } catch (err) {
@@ -159,7 +191,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // This handles race conditions on slow networks where profile INSERT hasn't completed yet
   const ensureProfileExists = useCallback(async (userId: string, userEmail: string): Promise<Profile | null> => {
     try {
-      // First try to fetch - has its own timeout and retry logic
+      // First try to fetch - has its own timeout and retry logic (now with caching!)
       const profile = await fetchProfile(userId);
 
       if (profile) {
@@ -171,8 +203,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // This handles the race condition where auth.users was created but profile INSERT hasn't completed
       console.log("[UserProvider] Profile not found, attempting to create...");
 
-      // Configurable timeout for profile creation
-      const PROFILE_CREATE_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_PROFILE_CREATE_TIMEOUT || "2000"); // 2 seconds default
+      // Aggressive timeout for profile creation to keep UX fast
+      const PROFILE_CREATE_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_PROFILE_CREATE_TIMEOUT || "1000"); // 1 second default
 
       // Create timeout for the insert operation
       let timeoutId: NodeJS.Timeout | null = null;
@@ -210,8 +242,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         // If it's a duplicate key error (23505), profile exists but we couldn't fetch it - try again
         if ((error as any)?.code === "23505") {
           console.log("[UserProvider] Profile already exists (duplicate error), retrying fetch...");
-          // Wait a bit before retrying to allow any ongoing insert to complete
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Quick retry delay
+          await new Promise(resolve => setTimeout(resolve, 200));
           return await fetchProfile(userId);
         }
         // Don't log timeout as error, it's expected behavior
@@ -221,13 +253,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
 
-      console.log("[UserProvider] Successfully created new profile");
+      // Cache the newly created profile
+      try {
+        const cacheData = { ...data, _cachedAt: Date.now() };
+        localStorage.setItem(getProfileCacheKey(userId), JSON.stringify(cacheData));
+        console.log("[UserProvider] Successfully created and cached new profile");
+      } catch (cacheErr) {
+        console.warn("[UserProvider] Cache write error for new profile:", cacheErr);
+      }
+
       return data as Profile;
     } catch (err) {
       console.error("[UserProvider] Exception in ensureProfileExists:", err);
       return null;
     }
-  }, [supabase, fetchProfile]);
+  }, [supabase, fetchProfile, getProfileCacheKey]);
 
   // Refresh profile data (can be called after profile updates)
   const refreshProfile = useCallback(async () => {
@@ -394,6 +434,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           case "SIGNED_OUT":
             if (mounted) {
               console.log("[UserProvider] User signed out");
+              // Clear profile cache on sign out
+              try {
+                if (user) {
+                  localStorage.removeItem(getProfileCacheKey(user.id));
+                }
+              } catch (err) {
+                console.warn("[UserProvider] Error clearing profile cache:", err);
+              }
               setSession(null);
               setUser(null);
               setProfile(null);
@@ -430,9 +478,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Set a reasonable timeout as a safety net - if still loading after configured time, force it off
-    // This should account for network latency and database operations in production
-    const AUTH_INIT_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_AUTH_INIT_TIMEOUT || "5000"); // 5 seconds default
+    // Set an aggressive timeout as a safety net - if still loading after configured time, force it off
+    // Keep this reasonably fast for good UX while allowing for network/database latency
+    const AUTH_INIT_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_AUTH_INIT_TIMEOUT || "2000"); // 2 seconds default
     timeoutId = setTimeout(() => {
       if (mounted && !authCheckDone) {
         console.warn(`[UserProvider] Auth initialization timeout (${AUTH_INIT_TIMEOUT}ms) - forcing completion anyway`);
