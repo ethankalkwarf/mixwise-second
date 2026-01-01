@@ -124,8 +124,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Create email template
+    // Prefer a MixWise-hosted verify URL so the email href doesn't contain a Supabase URL (helps Outlook trust)
     const baseUrl = getCanonicalSiteUrl(new URL(request.url));
-    const safeResetUrl = `${baseUrl}/auth/redirect?to=${encodeURIComponent(resetUrl)}`;
+    const parsedResetUrl = new URL(resetUrl);
+    const token = parsedResetUrl.searchParams.get("token") || "";
+    const type = parsedResetUrl.searchParams.get("type") || "";
+    const redirectToParam = parsedResetUrl.searchParams.get("redirect_to") || "";
+    const safeResetUrl =
+      token && type
+        ? `${baseUrl}/auth/verify?token=${encodeURIComponent(token)}&type=${encodeURIComponent(type)}${
+            redirectToParam ? `&redirect_to=${encodeURIComponent(redirectToParam)}` : ""
+          }`
+        : `${baseUrl}/auth/redirect?to=${encodeURIComponent(resetUrl)}`;
 
     const emailTemplate = resetPasswordTemplate({
       resetUrl: safeResetUrl,

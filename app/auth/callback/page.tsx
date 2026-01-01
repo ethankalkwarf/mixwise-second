@@ -45,6 +45,19 @@ export default function AuthCallbackPage() {
       const refreshToken = hashParams.get("refresh_token") || searchParams.get("refresh_token");
 
       try {
+        // If we already have a valid session cookie/session, just continue (avoids confusing "Sign-in failed")
+        const { data: existingSession } = await supabase.auth.getSession();
+        if (existingSession.session) {
+          scrubUrl();
+          const { data } = await supabase.auth.getUser();
+          const user = data.user;
+          if (user && !cancelled) {
+            const target = next.startsWith("/") ? next : "/";
+            router.replace(target === "/" ? "/onboarding" : target);
+            return;
+          }
+        }
+
         // Establish session (supports both PKCE code flow and implicit hash token flow)
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
@@ -124,6 +137,16 @@ export default function AuthCallbackPage() {
       } catch (err) {
         console.error("[AuthCallbackPage] error:", err);
         if (cancelled) return;
+
+        // If session exists anyway, proceed without showing an error screen
+        const { data: sessionAfterError } = await supabase.auth.getSession();
+        if (sessionAfterError.session) {
+          scrubUrl();
+          const fallbackNext = next.startsWith("/") ? next : "/";
+          router.replace(fallbackNext === "/" ? "/onboarding" : fallbackNext);
+          return;
+        }
+
         setStatus("error");
         setError("We couldn't finish signing you in. Please try again.");
       }

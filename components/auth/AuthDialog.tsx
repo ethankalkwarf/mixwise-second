@@ -60,6 +60,9 @@ export function AuthDialog({
   
   const displayTitle = title || defaultTitle;
 
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const showSignupDetails = mode === "signup" && isEmailValid;
+
   // Close dialog if user becomes authenticated
   React.useEffect(() => {
     if (isAuthenticated && isOpen) {
@@ -342,7 +345,20 @@ export function AuthDialog({
 
                     {/* Email auth */}
                     <form onSubmit={handleEmailAuth}>
-                      {mode === "signup" && (
+                      <label className="label-botanical">Email Address</label>
+                      <div className="relative mb-4">
+                        <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Enter your email"
+                          className="input-botanical pl-11"
+                          required
+                        />
+                      </div>
+
+                      {showSignupDetails && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="label-botanical">First Name</label>
@@ -373,20 +389,7 @@ export function AuthDialog({
                         </div>
                       )}
 
-                      <label className="label-botanical">Email Address</label>
-                      <div className="relative mb-4">
-                        <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Enter your email"
-                          className="input-botanical pl-11"
-                          required
-                        />
-                      </div>
-
-                      {(mode === "signup" || mode === "login") && (
+                      {(mode === "login" || showSignupDetails) && (
                         <>
                           <label className="label-botanical">Password</label>
                           <div className="relative mb-4">
@@ -401,7 +404,7 @@ export function AuthDialog({
                             />
                           </div>
 
-                          {mode === "signup" && (
+                          {mode === "signup" && showSignupDetails && (
                             <>
                               <label className="label-botanical">Confirm Password</label>
                               <div className="relative mb-4">
@@ -425,8 +428,7 @@ export function AuthDialog({
                         disabled={
                           isEmailLoading || 
                           !email.trim() || 
-                          (mode === "signup" && (!firstName.trim() || !lastName.trim())) ||
-                          (mode === "signup" && (!password.trim() || !confirmPassword.trim())) ||
+                          (mode === "signup" && (!isEmailValid || !firstName.trim() || !lastName.trim() || !password.trim() || !confirmPassword.trim())) ||
                           (mode === "login" && !password.trim())
                         }
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -127,8 +127,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Create email template
+    // Prefer a MixWise-hosted verify URL so the email href doesn't contain a Supabase URL (helps Outlook trust)
     const baseUrl = getCanonicalSiteUrl(new URL(request.url));
-    const safeConfirmUrl = `${baseUrl}/auth/redirect?to=${encodeURIComponent(confirmUrl)}`;
+    const parsedConfirmUrl = new URL(confirmUrl);
+    const token = parsedConfirmUrl.searchParams.get("token") || "";
+    const type = parsedConfirmUrl.searchParams.get("type") || "";
+    const redirectToParam = parsedConfirmUrl.searchParams.get("redirect_to") || "";
+    const safeConfirmUrl =
+      token && type
+        ? `${baseUrl}/auth/verify?token=${encodeURIComponent(token)}&type=${encodeURIComponent(type)}${
+            redirectToParam ? `&redirect_to=${encodeURIComponent(redirectToParam)}` : ""
+          }`
+        : `${baseUrl}/auth/redirect?to=${encodeURIComponent(confirmUrl)}`;
 
     const emailTemplate = confirmEmailTemplate({
       confirmUrl: safeConfirmUrl,
