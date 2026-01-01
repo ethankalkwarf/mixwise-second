@@ -149,25 +149,13 @@ export function AuthDialog({
         }
 
         if (data.ok) {
-          // Account created successfully
+          setSignupSuccess(true);
           setIsEmailLoading(false);
-          
           if (data.emailSent) {
-            toast.success("Account created! Redirecting to onboarding...");
+            toast.success("Account created! Check your email to confirm.");
           } else {
-            toast.info("Account created! Redirecting to onboarding...");
+            toast.info(data.message || "Account created. Please check your email.");
           }
-          
-          // Redirect to onboarding immediately (email confirmation optional)
-          // Close the dialog and navigate
-          onClose();
-          
-          // Small delay to allow dialog to close before navigation
-          setTimeout(() => {
-            router.push("/onboarding");
-          }, 300);
-          
-          return;
         } else {
           setError(data.error || "Failed to create account. Please try again.");
           toast.error(data.error || "Failed to create account");
@@ -268,11 +256,14 @@ export function AuthDialog({
                     <div className="mx-auto w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center mb-4">
                       <CheckCircleIcon className="w-8 h-8 text-olive" />
                     </div>
-                    <Dialog.Title className="text-xl font-display font-bold text-forest mb-2">
-                      Check your email
+                    <Dialog.Title className="text-xl font-display font-bold text-forest mb-4">
+                      Account created!
                     </Dialog.Title>
-                    <p className="text-sage mb-6">
-                      We sent a confirmation link to <strong>{email}</strong>. Click the link to verify your account, then come back to log in.
+                    <p className="text-sage mb-4">
+                      We sent a confirmation link to <strong>{email}</strong>.
+                    </p>
+                    <p className="text-sm text-sage mb-6 bg-mist/30 rounded-2xl p-4">
+                      Click the link in your email to verify your account. Once confirmed, you'll be automatically signed in and can start onboarding.
                     </p>
                     <button
                       onClick={() => {
@@ -281,7 +272,7 @@ export function AuthDialog({
                       }}
                       className="text-sm text-terracotta hover:text-terracotta-dark font-medium"
                     >
-                      Back to login
+                      Already confirmed? Log in
                     </button>
                   </div>
                 ) : emailSent ? (
