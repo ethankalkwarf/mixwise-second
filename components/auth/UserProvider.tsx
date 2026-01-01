@@ -78,32 +78,50 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Ref to prevent duplicate profile fetches
   const fetchingProfile = useRef<string | null>(null);
 
-  // Fetch user profile from database
+  // Fetch user profile from database with timeout
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     // Prevent duplicate fetches for the same user
     if (fetchingProfile.current === userId) {
+      console.log("[UserProvider] Profile fetch already in progress for this user, returning null");
       return null;
     }
     fetchingProfile.current = userId;
     
     try {
-      const { data, error: fetchError } = await supabase
+      // Create a timeout that will force the promise to resolve as null after 1 second
+      let timeoutId: NodeJS.Timeout | null = null;
+      const timeoutPromise = new Promise<Profile | null>((resolve) => {
+        timeoutId = setTimeout(() => {
+          console.warn("[UserProvider] fetchProfile timeout (1s) - returning null");
+          resolve(null);
+        }, 1000);
+      });
+
+      const queryPromise = supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
-      
-      if (fetchError) {
-        // PGRST116 means no rows found - expected for new users
-        if (fetchError.code !== "PGRST116") {
-          console.error("[UserProvider] Profile fetch error:", fetchError);
-        }
-        return null;
-      }
-      return data as Profile;
-    } catch (err) {
-      console.error("[UserProvider] Profile fetch exception:", err);
-      return null;
+        .single()
+        .then(({ data, error: fetchError }) => {
+          if (timeoutId) clearTimeout(timeoutId);
+          
+          if (fetchError) {
+            // PGRST116 means no rows found - expected for new users
+            if (fetchError.code !== "PGRST116") {
+              console.error("[UserProvider] Profile fetch error:", fetchError);
+            }
+            return null;
+          }
+          return data as Profile;
+        })
+        .catch((err) => {
+          if (timeoutId) clearTimeout(timeoutId);
+          console.error("[UserProvider] Profile fetch exception:", err);
+          return null;
+        });
+
+      // Return whichever resolves first
+      return await Promise.race([queryPromise, timeoutPromise]);
     } finally {
       fetchingProfile.current = null;
     }
@@ -113,29 +131,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // This handles race conditions on slow networks where profile INSERT hasn't completed yet
   const ensureProfileExists = useCallback(async (userId: string, userEmail: string): Promise<Profile | null> => {
     try {
-      // Set a timeout for profile operations - they should never take more than 2 seconds
-      const timeoutPromise = new Promise<null>((resolve) =>
-        setTimeout(() => {
-          console.warn("[UserProvider] Profile operation timeout - returning null");
-          resolve(null);
-        }, 2000)
-      );
-
-      // First try to fetch with timeout
-      const profile = await Promise.race([
-        fetchProfile(userId),
-        timeoutPromise
-      ]);
+      // First try to fetch - has its own 1 second timeout
+      const profile = await fetchProfile(userId);
       
       if (profile) {
         console.log("[UserProvider] Profile fetch successful");
         return profile;
       }
       
-      // If fetch returns null, try to create it with timeout
+      // If fetch returns null, try to create it
       // This handles the race condition where auth.users was created but profile INSERT hasn't completed
       console.log("[UserProvider] Profile not found, attempting to create...");
       
+      // Create timeout for the insert operation
+      let timeoutId: NodeJS.Timeout | null = null;
+      const createTimeoutPromise = new Promise<null>((resolve) => {
+        timeoutId = setTimeout(() => {
+          console.warn("[UserProvider] Profile creation timeout (1s)");
+          resolve(null);
+        }, 1000);
+      });
+
       const createPromise = supabase
         .from("profiles")
         .insert({
@@ -144,24 +160,31 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           display_name: userEmail.split("@")[0],
         })
         .select()
-        .single();
+        .single()
+        .then(({ data, error }) => {
+          if (timeoutId) clearTimeout(timeoutId);
+          return { data, error };
+        })
+        .catch((err) => {
+          if (timeoutId) clearTimeout(timeoutId);
+          return { data: null, error: err };
+        });
 
       const { data, error } = await Promise.race([
         createPromise,
-        timeoutPromise.then(() => ({ data: null, error: { code: "TIMEOUT", message: "Profile creation timeout" } }))
+        createTimeoutPromise.then(() => ({ data: null, error: { code: "TIMEOUT" } }))
       ]);
       
       if (error) {
         // If it's a duplicate key error (23505), profile exists but we couldn't fetch it - try again
-        if (error.code === "23505") {
+        if ((error as any)?.code === "23505") {
           console.log("[UserProvider] Profile already exists (duplicate error), retrying fetch...");
           return await fetchProfile(userId);
         }
-        if (error.code === "TIMEOUT") {
-          console.warn("[UserProvider] Profile creation timed out");
-          return null;
+        // Don't log timeout as error, it's expected behavior
+        if ((error as any)?.code !== "TIMEOUT") {
+          console.error("[UserProvider] Failed to create profile:", error);
         }
-        console.error("[UserProvider] Failed to create profile:", error);
         return null;
       }
       
