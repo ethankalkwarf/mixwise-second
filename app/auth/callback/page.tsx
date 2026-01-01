@@ -217,9 +217,20 @@ export default function AuthCallbackPage() {
         // If we have valid tokens, go straight to onboarding without checking user
         // This prevents hanging on getUser() calls
         if ((accessToken && refreshToken) || code) {
-          console.log("[AuthCallbackPage] Have valid tokens, redirecting directly to:", next === "/" ? "/onboarding" : next);
+          const target = next === "/" ? "/onboarding" : next;
+          console.log("[AuthCallbackPage] Have valid tokens, redirecting directly to:", target);
           if (!cancelled) {
-            router.replace(next === "/" ? "/onboarding" : next);
+            // Use router.replace first
+            router.replace(target);
+            
+            // As a fallback, also do a hard navigation after a delay
+            // This handles cases where the SPA navigation doesn't work
+            setTimeout(() => {
+              if (!cancelled) {
+                console.log("[AuthCallbackPage] Hard navigation fallback to:", target);
+                window.location.href = target;
+              }
+            }, 2000);
           }
           return;
         }
