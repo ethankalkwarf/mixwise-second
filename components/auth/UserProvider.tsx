@@ -354,12 +354,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Set a SHORT timeout as a safety net - if still loading after 3 seconds, force it off
-    // This handles edge cases where subscription doesn't fire for some reason
-    // In normal conditions, this should not be needed - should load in < 500ms
+    // Set a SHORT timeout as a safety net - if still loading after 1.5 seconds, force it off
+    // Profile loading should NOT take more than 1 second in normal conditions
     timeoutId = setTimeout(() => {
       if (mounted && !authCheckDone) {
-        console.warn("[UserProvider] Auth initialization timeout (3s) - forcing completion anyway");
+        console.warn("[UserProvider] Auth initialization timeout (1.5s) - forcing completion anyway");
         setIsLoading(false);
         authCheckDone = true;
         initialCheckDone.current = true;
@@ -367,7 +366,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         authReadyRef.current.resolve();
         console.log("[UserProvider] Auth timeout - authReady promise resolved");
       }
-    }, 3000); // 3 second safety timeout
+    }, 1500); // 1.5 second safety timeout
 
     // Run initial auth check - this calls getSession() which triggers the subscription
     initializeAuth();
