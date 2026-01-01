@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense } from "react";
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { UserProvider } from "@/components/auth/UserProvider";
@@ -36,22 +36,6 @@ function UserProviderWrapper({ children }: { children: React.ReactNode }) {
  * client-side session fetching via getSession() and onAuthStateChange.
  * This is more reliable and avoids server/client hydration mismatches.
  */
-// Create Supabase client at module level to ensure it reads cookies correctly
-let supabaseClient: any = null;
-
-function getSupabaseClient() {
-  if (!supabaseClient) {
-    try {
-      supabaseClient = createClientComponentClient();
-      console.log("[SupabaseProvider] Client created successfully");
-    } catch (error) {
-      console.error("[SupabaseProvider] Failed to create Supabase client:", error);
-      throw error;
-    }
-  }
-  return supabaseClient;
-}
-
 export function SupabaseProvider({
   children,
   initialSession: _initialSession  // Deprecated, kept for backwards compatibility
@@ -59,8 +43,18 @@ export function SupabaseProvider({
   children: React.ReactNode;
   initialSession: null;  // Always null - we don't use server-side sessions
 }) {
-  // Get the client (created at module level to read cookies on first load)
-  const supabase = getSupabaseClient();
+  // Create Supabase client - useState with initializer ensures singleton pattern
+  // The client reads cookies on creation, before React renders children
+  const [supabase] = useState(() => {
+    try {
+      const client = createClientComponentClient();
+      console.log("[SupabaseProvider] Supabase client created successfully");
+      return client;
+    } catch (error) {
+      console.error("[SupabaseProvider] Failed to create Supabase client:", error);
+      throw error;
+    }
+  });
 
   return (
     <SessionContextProvider supabaseClient={supabase} initialSession={null}>
