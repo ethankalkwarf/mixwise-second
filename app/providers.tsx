@@ -1,11 +1,31 @@
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { UserProvider } from "@/components/auth/UserProvider";
 import { AuthDialogProvider } from "@/components/auth/AuthDialogProvider";
 import { ToastProvider } from "@/components/ui/toast";
+
+/**
+ * CRITICAL: Create Supabase client at module level (outside React)
+ * This ensures ALL code in the app uses THE SAME client instance.
+ * 
+ * Why this matters:
+ * - When user logs in via OAuth, /auth/callback exchanges code and sets cookies on this client
+ * - When page redirects to /mix, React mounts fresh, but we use the SAME client instance
+ * - The client already has the session cookies and auth state set
+ * - No race conditions, no re-initialization issues
+ */
+let supabaseClient: any = null;
+
+function getSupabaseClient() {
+  if (!supabaseClient) {
+    supabaseClient = createClientComponentClient();
+    console.log("[SupabaseProvider] Module-level Supabase client created");
+  }
+  return supabaseClient;
+}
 
 /**
  * UserProviderWrapper
@@ -43,52 +63,11 @@ export function SupabaseProvider({
   children: React.ReactNode;
   initialSession: null;  // Always null - we don't use server-side sessions
 }) {
-  // Create Supabase client and fetch initial session
-  const [supabase, setSupabase] = useState<any>(null);
-  const [initialSession, setInitialSession] = useState<any>(null);
-
-  useEffect(() => {
-    async function initializeSupabase() {
-      try {
-        const client = createClientComponentClient();
-        console.log("[SupabaseProvider] Supabase client created successfully");
-        
-        // Try to get the current session from cookies
-        const { data: { session } } = await client.auth.getSession();
-        if (session) {
-          console.log("[SupabaseProvider] Found existing session from cookies:", session.user?.email);
-          setInitialSession(session);
-        } else {
-          console.log("[SupabaseProvider] No existing session found in cookies");
-        }
-        
-        setSupabase(client);
-      } catch (error) {
-        console.error("[SupabaseProvider] Failed to initialize Supabase:", error);
-        // Create client anyway even if session fetch failed
-        try {
-          const client = createClientComponentClient();
-          setSupabase(client);
-        } catch (clientError) {
-          console.error("[SupabaseProvider] Failed to create Supabase client:", clientError);
-          throw clientError;
-        }
-      }
-    }
-
-    initializeSupabase();
-  }, []);
-
-  if (!supabase) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta"></div>
-      </div>
-    );
-  }
+  // Get the singleton client that was created at module level
+  const supabase = getSupabaseClient();
 
   return (
-    <SessionContextProvider supabaseClient={supabase} initialSession={initialSession}>
+    <SessionContextProvider supabaseClient={supabase} initialSession={null}>
       <UserProviderWrapper>
         <AuthDialogProvider>
           <ToastProvider>
