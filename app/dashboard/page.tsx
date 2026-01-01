@@ -259,6 +259,11 @@ export default function DashboardPage() {
 
   // Dynamic greeting based on time of day
   const getDynamicGreeting = useMemo(() => {
+    // Only show greeting if profile data is loaded to prevent showing email-based names
+    if (!profile && user) {
+      return "Welcome back! Loading your profile...";
+    }
+
     const fullName = profile?.display_name || user?.email?.split("@")[0] || "Bartender";
     const firstName = fullName.split(" ")[0]; // Only use first name
     const hour = new Date().getHours();

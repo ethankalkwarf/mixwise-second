@@ -405,7 +405,8 @@ export default function AccountPage() {
     );
   }
 
-  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
+  // Only show display name if profile data is loaded, otherwise show loading state
+  const displayName = profile ? (profile.display_name || user?.email?.split("@")[0] || "User") : "Loading...";
   const avatarUrl = profile?.avatar_url;
   const userInitial = displayName.charAt(0).toUpperCase();
   const email = user?.email;
