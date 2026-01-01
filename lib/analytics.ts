@@ -1,12 +1,12 @@
 /**
- * Analytics and Email Platform Integration
+ * Analytics Stub Functions
  * 
- * This module provides stub functions for integrating with email platforms
- * and analytics services. These hooks are called at key moments in the
- * user journey.
+ * These functions serve as placeholders for future analytics integration.
+ * Currently they are no-ops that log to console for debugging.
  * 
- * TODO: Integrate with your email platform (e.g., ConvertKit, Mailchimp, Resend)
- * and analytics service (e.g., Mixpanel, Amplitude, PostHog).
+ * When implementing analytics, integrate with services like:
+ * - Email: ConvertKit, Mailchimp, Resend
+ * - Analytics: Mixpanel, Amplitude, PostHog
  */
 
 /**
@@ -17,22 +17,8 @@
  * @param email - The user's email address (optional)
  */
 export async function trackUserSignup(userId: string, email?: string | null): Promise<void> {
-  // TODO: Send to email platform to add to welcome sequence
-  // Example with ConvertKit:
-  // await fetch('https://api.convertkit.com/v3/forms/{form_id}/subscribe', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({
-  //     api_key: process.env.CONVERTKIT_API_KEY,
-  //     email: email,
-  //     tags: ['mixwise-signup'],
-  //   }),
-  // });
-
-  // TODO: Send to analytics
-  // Example with Mixpanel:
-  // mixpanel.track('User Signed Up', { userId, email });
-
+  // Placeholder for future analytics implementation
+  // This would send signup events to analytics service and email platform
   console.log("[Analytics] User signed up:", { userId, email: email || "N/A" });
 }
 
@@ -42,7 +28,7 @@ export async function trackUserSignup(userId: string, email?: string | null): Pr
  * @param userId - The Supabase user ID
  */
 export async function trackUserSignIn(userId: string): Promise<void> {
-  // TODO: Track sign-in event
+  // Placeholder for future analytics implementation
   console.log("[Analytics] User signed in:", userId);
 }
 
@@ -58,7 +44,7 @@ export async function trackIngredientAdded(
   ingredientId: string,
   ingredientName: string
 ): Promise<void> {
-  // TODO: Track ingredient added event
+  // Placeholder for future analytics implementation
   console.log("[Analytics] Ingredient added:", { userId, ingredientId, ingredientName });
 }
 
@@ -74,7 +60,7 @@ export async function trackCocktailFavorited(
   cocktailId: string,
   cocktailName: string
 ): Promise<void> {
-  // TODO: Track favorite event
+  // Placeholder for future analytics implementation
   console.log("[Analytics] Cocktail favorited:", { userId, cocktailId, cocktailName });
 }
 
@@ -90,7 +76,7 @@ export async function trackCocktailView(
   cocktailId: string,
   cocktailName: string
 ): Promise<void> {
-  // TODO: Track view event
+  // Placeholder for future analytics implementation
   console.log("[Analytics] Cocktail viewed:", { userId, cocktailId, cocktailName });
 }
 
@@ -106,7 +92,7 @@ export async function trackMixToolUsed(
   ingredientCount: number,
   matchCount: number
 ): Promise<void> {
-  // TODO: Track mix tool usage
+  // Placeholder for future analytics implementation
   console.log("[Analytics] Mix tool used:", { userId, ingredientCount, matchCount });
 }
 
@@ -120,18 +106,8 @@ export async function trackEmailSignup(
   email: string,
   source: string
 ): Promise<void> {
-  // TODO: Send to email platform
-  // Example with ConvertKit:
-  // await fetch('https://api.convertkit.com/v3/forms/{form_id}/subscribe', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({
-  //     api_key: process.env.CONVERTKIT_API_KEY,
-  //     email: email,
-  //     tags: [source],
-  //   }),
-  // });
-
+  // Placeholder for future analytics implementation
+  // This would send email signups to email platform service
   console.log("[Analytics] Email signup:", { email, source });
 }
 
