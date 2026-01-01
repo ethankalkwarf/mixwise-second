@@ -8,26 +8,6 @@ import { AuthDialogProvider } from "@/components/auth/AuthDialogProvider";
 import { ToastProvider } from "@/components/ui/toast";
 
 /**
- * CRITICAL: Create Supabase client at module level (outside React)
- * This ensures ALL code in the app uses THE SAME client instance.
- * 
- * Why this matters:
- * - When user logs in via OAuth, /auth/callback exchanges code and sets cookies on this client
- * - When page redirects to /mix, React mounts fresh, but we use the SAME client instance
- * - The client already has the session cookies and auth state set
- * - No race conditions, no re-initialization issues
- */
-let supabaseClient: any = null;
-
-function getSupabaseClient() {
-  if (!supabaseClient) {
-    supabaseClient = createClientComponentClient();
-    console.log("[SupabaseProvider] Module-level Supabase client created");
-  }
-  return supabaseClient;
-}
-
-/**
  * UserProviderWrapper
  * 
  * Wraps UserProvider in Suspense because it may use client-side hooks
@@ -51,10 +31,6 @@ function UserProviderWrapper({ children }: { children: React.ReactNode }) {
  * 2. UserProvider manages auth state using that client
  * 3. AuthDialogProvider handles login/signup modal state
  * 4. ToastProvider provides toast notifications
- * 
- * The initialSession parameter is deprecated - we now rely entirely on
- * client-side session fetching via getSession() and onAuthStateChange.
- * This is more reliable and avoids server/client hydration mismatches.
  */
 export function SupabaseProvider({
   children,
@@ -63,8 +39,9 @@ export function SupabaseProvider({
   children: React.ReactNode;
   initialSession: null;  // Always null - we don't use server-side sessions
 }) {
-  // Get the singleton client that was created at module level
-  const supabase = getSupabaseClient();
+  // Create Supabase client - this client will read session cookies from the browser
+  // The auth-helpers library automatically reads cookies on client creation
+  const supabase = createClientComponentClient();
 
   return (
     <SessionContextProvider supabaseClient={supabase} initialSession={null}>
