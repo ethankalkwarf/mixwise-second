@@ -1,36 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/components/auth/UserProvider";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, user } = useUser();
-  const [timeoutReached, setTimeoutReached] = useState(false);
+  const { isAuthenticated, isLoading } = useUser();
 
-  // Redirect to home if not authenticated (but allow timeout for slow auth)
+  // Redirect to home if auth has loaded and user is not authenticated
   useEffect(() => {
-    // First, set a long timeout to handle slow auth initialization
-    const timeoutTimer = setTimeout(() => {
-      console.log("[OnboardingPage] Auth context loading timeout - proceeding anyway");
-      setTimeoutReached(true);
-    }, 8000); // 8 second timeout
-
-    return () => clearTimeout(timeoutTimer);
-  }, []);
-
-  // If auth has loaded and user is authenticated, show onboarding
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated && !timeoutReached) {
-      console.log("[OnboardingPage] Not authenticated and auth check complete, redirecting to home");
+    if (!isLoading && !isAuthenticated) {
+      console.log("[OnboardingPage] Not authenticated, redirecting to home");
       router.push("/");
     }
-  }, [isLoading, isAuthenticated, router, timeoutReached]);
+  }, [isLoading, isAuthenticated, router]);
 
-  // Show loading while checking auth OR waiting for auth to settle
-  if (isLoading || (!isAuthenticated && !timeoutReached)) {
+  // Show loading while checking auth
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -41,19 +29,12 @@ export default function OnboardingPage() {
     );
   }
 
-  // If we have user data (authenticated) OR timeout has occurred, show onboarding
-  // The timeout allows onboarding to show even if auth context is slow
-  if (isAuthenticated || (timeoutReached && user)) {
+  // If authenticated, show onboarding
+  if (isAuthenticated) {
     return <OnboardingFlow />;
   }
 
-  // If timeout occurred but no user, user isn't actually authenticated - redirect
-  if (timeoutReached && !user) {
-    console.log("[OnboardingPage] Timeout occurred but no user found, redirecting to home");
-    router.push("/");
-    return null;
-  }
-
+  // Fallback (should not reach here due to redirect above)
   return null;
 }
 

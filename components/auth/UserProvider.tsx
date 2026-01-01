@@ -97,33 +97,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let timeoutId: NodeJS.Timeout | null = null;
+    let authCheckDone = false;
 
-    // Always clear any existing timeout when this effect runs
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
-    }
-
-    // If session context is still loading, set up a timeout
-    if (sessionContextLoading) {
-      console.log("[UserProvider] Session context still loading...");
-
-      // Much more aggressive timeout - 3 seconds instead of 10
-      // The session context may be stuck after auth callback
-      timeoutId = setTimeout(() => {
-        if (mounted) {
-          console.warn("[UserProvider] Session context loading timeout (3s) - proceeding anyway");
-          setIsLoading(false);
-          // Don't set error - just proceed
-        }
-      }, 3000); // 3 second timeout instead of 10
-
-      return () => {
-        if (timeoutId) clearTimeout(timeoutId);
-      };
-    }
-
-    // Session context is ready - proceed with auth initialization
     // Function to update auth state
     const updateAuthState = async (newSession: Session | null) => {
       if (!mounted) return;
@@ -176,6 +151,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         console.log("[UserProvider] Setting loading to false");
         setIsLoading(false);
         initialCheckDone.current = true;
+        authCheckDone = true;
       }
     };
 
@@ -189,6 +165,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           console.error("[UserProvider] Initial session error:", sessionError);
           setError(sessionError);
           setIsLoading(false);
+          authCheckDone = true;
           return;
         }
 
@@ -204,11 +181,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           setError(err instanceof Error ? err : new Error("Auth initialization failed"));
           setIsLoading(false);
+          authCheckDone = true;
         }
       }
     };
 
-    // Subscribe to auth state changes
+    // Subscribe to auth state changes FIRST, before checking session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         console.log("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
@@ -226,16 +204,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               setUser(null);
               setProfile(null);
               setIsLoading(false);
+              initialCheckDone.current = false;
+              authCheckDone = false;
             }
             break;
 
           case "INITIAL_SESSION":
-            // Only process if we haven't done the initial check yet
-            if (!initialCheckDone.current) {
+            // This fires when the subscription detects an existing session
+            // Or when the session context is ready with the initial session
+            console.log("[UserProvider] INITIAL_SESSION event fired");
+            if (!authCheckDone) {
               await updateAuthState(newSession);
-              if (mounted) {
-                setIsLoading(false);
-              }
             }
             break;
 
@@ -257,15 +236,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Run initial auth check
+    // Set a timeout as a safety net - if no auth events fire within 15 seconds, force loading off
+    timeoutId = setTimeout(() => {
+      if (mounted && !authCheckDone) {
+        console.warn("[UserProvider] Auth initialization timeout (15s) - no events received, proceeding anyway");
+        setIsLoading(false);
+        authCheckDone = true;
+      }
+    }, 15000);
+
+    // Run initial auth check - this will also trigger the subscription
     initializeAuth();
 
     // Cleanup
     return () => {
       mounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [supabase, sessionContextLoading, fetchProfile]);
+  }, [supabase, fetchProfile]);
 
   // Get the correct redirect URL for auth
   const getAuthRedirectUrl = useCallback(() => {

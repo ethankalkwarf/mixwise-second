@@ -161,41 +161,23 @@ export default function AuthCallbackPage() {
         } else if (accessToken && refreshToken) {
           console.log("[AuthCallbackPage] Setting session from tokens...");
           try {
-            // Directly set tokens in localStorage (more reliable than setSession)
-            const storedSession = {
-              access_token: accessToken,
-              refresh_token: refreshToken,
-              expires_at: new Date().getTime() + 3600 * 1000, // 1 hour
-            };
+            // Call setSession and wait for it properly
+            console.log("[AuthCallbackPage] Calling setSession...");
+            const { error: sessionError } = await withTimeout(
+              supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              }),
+              5000,
+              "setSession"
+            );
             
-            // Try setSession with aggressive timeout
-            const setSessionPromise = supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            
-            // Wrap with timeout - if it takes > 2 seconds, proceed anyway
-            let sessionSet = false;
-            const timeoutPromise = new Promise((resolve) => {
-              setTimeout(() => {
-                if (!sessionSet) {
-                  console.warn("[AuthCallbackPage] setSession taking too long, continuing anyway");
-                  resolve("timeout");
-                }
-              }, 2000);
-            });
-            
-            const result = await Promise.race([setSessionPromise, timeoutPromise]);
-            sessionSet = true;
-            
-            if (result !== "timeout") {
-              const { error: sessionError } = await setSessionPromise;
-              if (sessionError) {
-                console.error("[AuthCallbackPage] Session set failed:", sessionError);
-                // Don't throw - continue anyway since we have tokens
-              } else {
-                console.log("[AuthCallbackPage] Session set successfully");
-              }
+            if (sessionError) {
+              console.error("[AuthCallbackPage] setSession failed:", sessionError);
+              // Don't throw - continue anyway since we have tokens from URL
+              // The tokens will be in the hash and getSession may still work
+            } else {
+              console.log("[AuthCallbackPage] Session set successfully");
             }
           } catch (err) {
             console.error("[AuthCallbackPage] Session setup error (non-fatal):", err);
@@ -220,23 +202,8 @@ export default function AuthCallbackPage() {
           const target = next === "/" ? "/onboarding" : next;
           console.log("[AuthCallbackPage] Have valid tokens, redirecting directly to:", target);
           if (!cancelled) {
-            // Small delay to allow UserProvider to detect the new session
-            // before we navigate to the protected page
-            setTimeout(() => {
-              if (!cancelled) {
-                console.log("[AuthCallbackPage] Session established, navigating to:", target);
-                router.replace(target);
-              }
-            }, 500);
-            
-            // As a fallback, also do a hard navigation after a longer delay
-            // This handles cases where the SPA navigation doesn't work
-            setTimeout(() => {
-              if (!cancelled) {
-                console.log("[AuthCallbackPage] Hard navigation fallback to:", target);
-                window.location.href = target;
-              }
-            }, 3000);
+            console.log("[AuthCallbackPage] Navigating to:", target);
+            router.replace(target);
           }
           return;
         }
@@ -248,14 +215,8 @@ export default function AuthCallbackPage() {
           console.log("[AuthCallbackPage] User authenticated:", user.id);
           // If the caller explicitly asked for onboarding, don't block on DB checks — go immediately.
           if (!cancelled && next === "/onboarding") {
-            console.log("[AuthCallbackPage] Explicit onboarding request, delaying redirect to allow auth context update");
-            // Delay to allow UserProvider to process the session
-            setTimeout(() => {
-              if (!cancelled) {
-                console.log("[AuthCallbackPage] Redirecting to onboarding");
-                router.replace("/onboarding");
-              }
-            }, 500);
+            console.log("[AuthCallbackPage] Explicit onboarding request, redirecting immediately");
+            router.replace("/onboarding");
             return;
           }
 
@@ -311,14 +272,8 @@ export default function AuthCallbackPage() {
 
           if (!cancelled) {
             const target = needsOnboarding ? "/onboarding" : next;
-            console.log("[AuthCallbackPage] Delaying redirect to allow auth context update, target:", target);
-            // Delay to allow UserProvider to process the session
-            setTimeout(() => {
-              if (!cancelled) {
-                console.log("[AuthCallbackPage] Redirecting to:", target);
-                router.replace(target);
-              }
-            }, 500);
+            console.log("[AuthCallbackPage] Redirecting to:", target);
+            router.replace(target);
           }
           return;
         }

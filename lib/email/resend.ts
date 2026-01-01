@@ -25,4 +25,4 @@ export function createResendClient() {
  * Default sender email for MixWise emails
  */
 // Use verified domain email
-export const MIXWISE_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "MixWise <no-reply@getmixwise.com>";
+export const MIXWISE_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "MixWise <hello@getmixwise.com>";

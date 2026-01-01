@@ -368,7 +368,7 @@ function wrapInPreviewPage(templateName: string, emailHtml: string, subject: str
       <div class="preview-header">
         <h2>${templateName}</h2>
         <p>Subject: ${subject}</p>
-        <p class="from">From: <span>MixWise &lt;no-reply@getmixwise.com&gt;</span></p>
+        <p class="from">From: <span>MixWise &lt;hello@getmixwise.com&gt;</span></p>
       </div>
       
       <div class="preview-frame">
