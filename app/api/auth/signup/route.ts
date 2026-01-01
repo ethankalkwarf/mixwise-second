@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { confirmEmailTemplate } from "@/lib/email/templates";
-import { getAuthCallbackUrl } from "@/lib/site";
+import { getAuthCallbackUrl, getCanonicalSiteUrl } from "@/lib/site";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { email, password } = body;
+    const { email, password, firstName, lastName } = body;
 
     // Validate email
     if (!email || typeof email !== "string") {
@@ -104,6 +104,18 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[Signup API] Processing signup for email: ${trimmedEmail}, IP: ${clientIP}`);
+
+    // Validate name fields (required for email/password signup UX)
+    const trimmedFirstName = typeof firstName === "string" ? firstName.trim() : "";
+    const trimmedLastName = typeof lastName === "string" ? lastName.trim() : "";
+    if (!trimmedFirstName) {
+      return NextResponse.json({ error: "First name is required" }, { status: 400 });
+    }
+    if (!trimmedLastName) {
+      return NextResponse.json({ error: "Last name is required" }, { status: 400 });
+    }
+
+    const fullName = `${trimmedFirstName} ${trimmedLastName}`.trim();
 
     // Validate environment variables early
     // Support both SUPABASE_URL and NEXT_PUBLIC_SUPABASE_URL for flexibility
@@ -147,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     // Generate signup confirmation link
     // This creates the user AND generates the confirmation link in one step
-    const redirectTo = getAuthCallbackUrl();
+    const redirectTo = `${getAuthCallbackUrl()}?next=/onboarding`;
     console.log(`[Signup API] Generating signup link with redirect: ${redirectTo}`);
 
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
@@ -155,7 +167,7 @@ export async function POST(request: NextRequest) {
       email: trimmedEmail,
       password: password,
       options: {
-        emailRedirectTo: redirectTo,
+        redirectTo,
       },
     });
 
@@ -244,7 +256,7 @@ export async function POST(request: NextRequest) {
       .upsert({
         id: linkData.user.id,
         email: trimmedEmail,
-        display_name: trimmedEmail.split('@')[0],
+        display_name: fullName || trimmedEmail.split('@')[0],
         role: 'free',
         preferences: {},
       }, {
@@ -257,6 +269,27 @@ export async function POST(request: NextRequest) {
       // Continue anyway - profile might have been created by trigger
     } else {
       console.log(`[Signup API] Profile ensured for user: ${linkData.user.id}`);
+    }
+
+    // Store full name on the auth user as well (helps welcome email + future UX)
+    try {
+      // supabase-js supports updateUserById on the admin API
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const adminAny: any = supabaseAdmin.auth.admin as any;
+      if (typeof adminAny.updateUserById === "function") {
+        const { error: updateUserError } = await adminAny.updateUserById(linkData.user.id, {
+          user_metadata: {
+            full_name: fullName,
+            first_name: trimmedFirstName,
+            last_name: trimmedLastName,
+          },
+        });
+        if (updateUserError) {
+          console.error("[Signup API] Failed to update auth user metadata (non-fatal):", updateUserError);
+        }
+      }
+    } catch (metaError) {
+      console.error("[Signup API] Auth user metadata update failed (non-fatal):", metaError);
     }
 
     // Debug logging (only in development)
@@ -278,8 +311,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create email template
+    const baseUrl = getCanonicalSiteUrl(new URL(request.url));
+    const safeConfirmUrl = `${baseUrl}/auth/redirect?to=${encodeURIComponent(confirmUrl)}`;
+
     const emailTemplate = confirmEmailTemplate({
-      confirmUrl,
+      confirmUrl: safeConfirmUrl,
       userEmail: trimmedEmail,
     });
 

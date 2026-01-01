@@ -40,6 +40,8 @@ export function AuthDialog({
 }: AuthDialogProps) {
   const { signInWithGoogle, signInWithPassword, resetPassword, isAuthenticated } = useUser();
   const toast = useToast();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -85,6 +87,17 @@ export function AuthDialog({
     setError(null);
 
     if (mode === "signup") {
+      if (!firstName.trim()) {
+        setError("First name is required");
+        setIsEmailLoading(false);
+        return;
+      }
+      if (!lastName.trim()) {
+        setError("Last name is required");
+        setIsEmailLoading(false);
+        return;
+      }
+
       // Validate password for signup
       if (!password.trim()) {
         setError("Password is required");
@@ -113,6 +126,8 @@ export function AuthDialog({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
             email: email.trim(),
             password: password.trim(),
           }),
@@ -327,6 +342,37 @@ export function AuthDialog({
 
                     {/* Email auth */}
                     <form onSubmit={handleEmailAuth}>
+                      {mode === "signup" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <label className="label-botanical">First Name</label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                placeholder="First name"
+                                className="input-botanical"
+                                required
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="label-botanical">Last Name</label>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                placeholder="Last name"
+                                className="input-botanical"
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <label className="label-botanical">Email Address</label>
                       <div className="relative mb-4">
                         <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
@@ -379,6 +425,7 @@ export function AuthDialog({
                         disabled={
                           isEmailLoading || 
                           !email.trim() || 
+                          (mode === "signup" && (!firstName.trim() || !lastName.trim())) ||
                           (mode === "signup" && (!password.trim() || !confirmPassword.trim())) ||
                           (mode === "login" && !password.trim())
                         }

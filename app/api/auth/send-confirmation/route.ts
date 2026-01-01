@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { confirmEmailTemplate } from "@/lib/email/templates";
-import { getAuthCallbackUrl } from "@/lib/site";
+import { getAuthCallbackUrl, getCanonicalSiteUrl } from "@/lib/site";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = createAdminClient();
 
     // Generate signup confirmation link
-    const redirectTo = getAuthCallbackUrl();
+    const redirectTo = `${getAuthCallbackUrl()}?next=/onboarding`;
 
     console.log(`[Send Confirmation] Generating confirmation link with redirect: ${redirectTo}`);
 
@@ -127,8 +127,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create email template
+    const baseUrl = getCanonicalSiteUrl(new URL(request.url));
+    const safeConfirmUrl = `${baseUrl}/auth/redirect?to=${encodeURIComponent(confirmUrl)}`;
+
     const emailTemplate = confirmEmailTemplate({
-      confirmUrl,
+      confirmUrl: safeConfirmUrl,
       userEmail: trimmedEmail,
     });
 

@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { resetPasswordTemplate } from "@/lib/email/templates";
-import { getPasswordResetUrl } from "@/lib/site";
+import { getCanonicalSiteUrl, getPasswordResetUrl } from "@/lib/site";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -124,8 +124,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create email template
+    const baseUrl = getCanonicalSiteUrl(new URL(request.url));
+    const safeResetUrl = `${baseUrl}/auth/redirect?to=${encodeURIComponent(resetUrl)}`;
+
     const emailTemplate = resetPasswordTemplate({
-      resetUrl,
+      resetUrl: safeResetUrl,
       userEmail: trimmedEmail,
     });
 
