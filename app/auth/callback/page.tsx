@@ -32,12 +32,30 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     let cancelled = false;
+    let failSafeTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const sanitizeNext = (value: string | null) => {
+      const next = value || "/";
+      return next.startsWith("/") ? next : "/";
+    };
+
+    const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+      const timeoutPromise = new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+      });
+      try {
+        return await Promise.race([promise, timeoutPromise]);
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+      }
+    };
 
     const run = async () => {
       setStatus("loading");
       setError(null);
 
-      const next = searchParams.get("next") || "/";
+      const next = sanitizeNext(searchParams.get("next"));
       const code = searchParams.get("code");
 
       const hashParams = getHashParams();
@@ -45,50 +63,82 @@ export default function AuthCallbackPage() {
       const refreshToken = hashParams.get("refresh_token") || searchParams.get("refresh_token");
 
       try {
+        // Failsafe: if anything hangs, but a session exists, redirect anyway.
+        failSafeTimer = setTimeout(async () => {
+          if (cancelled) return;
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            scrubUrl();
+            router.replace(next === "/" ? "/onboarding" : next);
+          } else {
+            setStatus("error");
+            setError("We couldn't finish signing you in. Please try again.");
+          }
+        }, 12000);
+
         // If we already have a valid session cookie/session, just continue (avoids confusing "Sign-in failed")
-        const { data: existingSession } = await supabase.auth.getSession();
+        const { data: existingSession } = await withTimeout(supabase.auth.getSession(), 8000, "getSession");
         if (existingSession.session) {
           scrubUrl();
-          const { data } = await supabase.auth.getUser();
+          const { data } = await withTimeout(supabase.auth.getUser(), 8000, "getUser");
           const user = data.user;
           if (user && !cancelled) {
-            const target = next.startsWith("/") ? next : "/";
-            router.replace(target === "/" ? "/onboarding" : target);
+            router.replace(next === "/" ? "/onboarding" : next);
             return;
           }
         }
 
         // Establish session (supports both PKCE code flow and implicit hash token flow)
         if (code) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { error: exchangeError } = await withTimeout(
+            supabase.auth.exchangeCodeForSession(code),
+            10000,
+            "exchangeCodeForSession"
+          );
           if (exchangeError) throw exchangeError;
         } else if (accessToken && refreshToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+          const { error: sessionError } = await withTimeout(
+            supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            }),
+            10000,
+            "setSession"
+          );
           if (sessionError) throw sessionError;
         } else {
-          throw new Error("Missing auth callback parameters.");
+          // No params — try session again (some providers set cookies without hash/code visible)
+          const { data: fallbackSession } = await withTimeout(supabase.auth.getSession(), 8000, "getSession(fallback)");
+          if (!fallbackSession.session) throw new Error("Missing auth callback parameters.");
         }
 
         // Remove sensitive tokens from the URL
         scrubUrl();
 
-        const { data } = await supabase.auth.getUser();
+        const { data } = await withTimeout(supabase.auth.getUser(), 8000, "getUser(after session)");
         const user = data.user;
 
         if (user) {
+          // If the caller explicitly asked for onboarding, don't block on DB checks — go immediately.
+          if (!cancelled && next === "/onboarding") {
+            router.replace("/onboarding");
+            return;
+          }
+
           // Determine onboarding status (mirror server-side logic)
           let needsOnboarding = false;
           let isNewUser = false;
 
           try {
-            const { data: preferences, error: prefError } = await supabase
-              .from("user_preferences")
-              .select("onboarding_completed")
-              .eq("user_id", user.id)
-              .single();
+            const { data: preferences, error: prefError } = await withTimeout(
+              supabase
+                .from("user_preferences")
+                .select("onboarding_completed")
+                .eq("user_id", user.id)
+                .single(),
+              8000,
+              "user_preferences"
+            );
 
             if (prefError && prefError.code === "PGRST116") {
               needsOnboarding = true;
@@ -126,7 +176,7 @@ export default function AuthCallbackPage() {
           }
 
           if (!cancelled) {
-            const target = needsOnboarding ? "/onboarding" : (next.startsWith("/") ? next : "/");
+            const target = needsOnboarding ? "/onboarding" : next;
             router.replace(target);
           }
           return;
@@ -139,22 +189,24 @@ export default function AuthCallbackPage() {
         if (cancelled) return;
 
         // If session exists anyway, proceed without showing an error screen
-        const { data: sessionAfterError } = await supabase.auth.getSession();
+        const { data: sessionAfterError } = await withTimeout(supabase.auth.getSession(), 8000, "getSession(after error)");
         if (sessionAfterError.session) {
           scrubUrl();
-          const fallbackNext = next.startsWith("/") ? next : "/";
-          router.replace(fallbackNext === "/" ? "/onboarding" : fallbackNext);
+          router.replace(next === "/" ? "/onboarding" : next);
           return;
         }
 
         setStatus("error");
         setError("We couldn't finish signing you in. Please try again.");
+      } finally {
+        if (failSafeTimer) clearTimeout(failSafeTimer);
       }
     };
 
     run();
     return () => {
       cancelled = true;
+      if (failSafeTimer) clearTimeout(failSafeTimer);
     };
   }, [router, searchParams, supabase]);
 
