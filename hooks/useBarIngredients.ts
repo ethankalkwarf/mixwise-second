@@ -135,9 +135,9 @@ export function useBarIngredients(): UseBarIngredientsResult {
     }
   }, []);
 
-  // Load ingredients from server
-  // Checks BOTH legacy inventories/inventory_items tables AND bar_ingredients
-  // to match the server-side getUserBarIngredients behavior
+  // Load ingredients from server via API endpoint
+  // The API uses service role to access legacy inventories table that may not have RLS
+  // This matches the server-side getUserBarIngredients behavior used by public bar pages
   const loadFromServer = useCallback(async () => {
     if (!user) {
       console.log("[useBarIngredients] No user, cannot load from server");
@@ -145,52 +145,31 @@ export function useBarIngredients(): UseBarIngredientsResult {
     }
     
     try {
-      // First, try the legacy inventories table (matches server-side logic)
-      try {
-        const { data: inventories, error: inventoriesError } = await supabase
-          .from("inventories")
-          .select("id")
-          .eq("user_id", user.id)
-          .limit(1);
+      // Use API endpoint that has service role access to legacy tables
+      const response = await fetch("/api/bar-ingredients", {
+        method: "GET",
+        credentials: "include",
+      });
 
-        if (!inventoriesError && inventories && inventories.length > 0) {
-          const inventoryId = inventories[0].id;
-          console.log("[useBarIngredients] Found legacy inventory:", inventoryId);
-          
-          const { data: inventoryItems, error: itemsError } = await supabase
-            .from("inventory_items")
-            .select("id, ingredient_id, ingredient_name")
-            .eq("inventory_id", inventoryId);
-
-          if (!itemsError && inventoryItems && inventoryItems.length > 0) {
-            console.log("[useBarIngredients] Loaded from legacy inventory_items:", inventoryItems.length, "ingredients");
-            // Convert to bar_ingredients format
-            return inventoryItems.map(item => ({
-              id: item.id,
-              user_id: user.id,
-              ingredient_id: item.ingredient_id,
-              ingredient_name: item.ingredient_name,
-            }));
-          }
+      if (!response.ok) {
+        console.error("[useBarIngredients] API error:", response.status);
+        // Fallback to direct query
+        const { data, error } = await supabase
+          .from("bar_ingredients")
+          .select("*")
+          .eq("user_id", user.id);
+        
+        if (error) {
+          console.error("[useBarIngredients] Fallback error:", error);
+          return [];
         }
-      } catch (legacyError) {
-        // Legacy tables don't exist, continue to bar_ingredients
-        console.log("[useBarIngredients] Legacy inventories table not found, using bar_ingredients");
+        console.log("[useBarIngredients] Loaded from fallback bar_ingredients:", data?.length || 0);
+        return data || [];
       }
 
-      // Fallback to bar_ingredients table
-      const { data, error } = await supabase
-        .from("bar_ingredients")
-        .select("*")
-        .eq("user_id", user.id);
-      
-      if (error) {
-        console.error("[useBarIngredients] Error loading bar ingredients:", error);
-        return [];
-      }
-      
-      console.log("[useBarIngredients] Loaded from bar_ingredients:", data?.length || 0, "ingredients");
-      return data || [];
+      const result = await response.json();
+      console.log("[useBarIngredients] Loaded from API:", result.ingredients?.length || 0, "ingredients, source:", result.source);
+      return result.ingredients || [];
     } catch (err) {
       console.error("[useBarIngredients] Exception loading from server:", err);
       return [];

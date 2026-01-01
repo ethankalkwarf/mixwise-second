@@ -1,0 +1,96 @@
+import { NextResponse } from "next/server";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
+
+/**
+ * GET /api/bar-ingredients
+ * 
+ * Returns the authenticated user's bar ingredients.
+ * Uses service role to access legacy inventories table that may not have RLS policies.
+ * This matches the server-side getUserBarIngredients behavior used by public bar pages.
+ */
+export async function GET() {
+  try {
+    // Get the authenticated user
+    const supabaseAuth = createRouteHandlerClient({ cookies });
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Use service role client to bypass RLS (matches server-side behavior)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseServiceKey) {
+      // Fall back to auth client if no service role key
+      console.warn("[API] No service role key, using auth client");
+      const { data, error } = await supabaseAuth
+        .from("bar_ingredients")
+        .select("*")
+        .eq("user_id", user.id);
+      
+      if (error) {
+        console.error("[API] Error fetching bar_ingredients:", error);
+        return NextResponse.json({ ingredients: [], source: "bar_ingredients" });
+      }
+      
+      return NextResponse.json({ ingredients: data || [], source: "bar_ingredients" });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // First, try the legacy inventories table (matches getUserBarIngredients)
+    try {
+      const { data: inventories, error: inventoriesError } = await supabase
+        .from("inventories")
+        .select("id")
+        .eq("user_id", user.id)
+        .limit(1);
+
+      if (!inventoriesError && inventories && inventories.length > 0) {
+        const inventoryId = inventories[0].id;
+        console.log("[API] Found legacy inventory:", inventoryId);
+
+        const { data: inventoryItems, error: itemsError } = await supabase
+          .from("inventory_items")
+          .select("id, ingredient_id, ingredient_name")
+          .eq("inventory_id", inventoryId);
+
+        if (!itemsError && inventoryItems && inventoryItems.length > 0) {
+          console.log("[API] Loaded from legacy inventory_items:", inventoryItems.length);
+          // Convert to bar_ingredients format
+          const ingredients = inventoryItems.map(item => ({
+            id: item.id,
+            user_id: user.id,
+            ingredient_id: item.ingredient_id,
+            ingredient_name: item.ingredient_name,
+          }));
+          return NextResponse.json({ ingredients, source: "inventory_items" });
+        }
+      }
+    } catch (legacyError) {
+      console.log("[API] Legacy inventories table not found or error:", legacyError);
+    }
+
+    // Fallback to bar_ingredients table
+    const { data: barIngredients, error: barError } = await supabase
+      .from("bar_ingredients")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (barError) {
+      console.error("[API] Error fetching bar_ingredients:", barError);
+      return NextResponse.json({ ingredients: [], source: "bar_ingredients" });
+    }
+
+    console.log("[API] Loaded from bar_ingredients:", barIngredients?.length || 0);
+    return NextResponse.json({ ingredients: barIngredients || [], source: "bar_ingredients" });
+  } catch (error) {
+    console.error("[API] Unexpected error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
