@@ -113,19 +113,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // This handles race conditions on slow networks where profile INSERT hasn't completed yet
   const ensureProfileExists = useCallback(async (userId: string, userEmail: string): Promise<Profile | null> => {
     try {
-      // First try to fetch
-      const profile = await fetchProfile(userId);
+      // Set a timeout for profile operations - they should never take more than 2 seconds
+      const timeoutPromise = new Promise<null>((resolve) =>
+        setTimeout(() => {
+          console.warn("[UserProvider] Profile operation timeout - returning null");
+          resolve(null);
+        }, 2000)
+      );
+
+      // First try to fetch with timeout
+      const profile = await Promise.race([
+        fetchProfile(userId),
+        timeoutPromise
+      ]);
       
       if (profile) {
         console.log("[UserProvider] Profile fetch successful");
         return profile;
       }
       
-      // If fetch returns null, try to create it
+      // If fetch returns null, try to create it with timeout
       // This handles the race condition where auth.users was created but profile INSERT hasn't completed
       console.log("[UserProvider] Profile not found, attempting to create...");
       
-      const { data, error } = await supabase
+      const createPromise = supabase
         .from("profiles")
         .insert({
           id: userId,
@@ -134,12 +145,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         })
         .select()
         .single();
+
+      const { data, error } = await Promise.race([
+        createPromise,
+        timeoutPromise.then(() => ({ data: null, error: { code: "TIMEOUT", message: "Profile creation timeout" } }))
+      ]);
       
       if (error) {
         // If it's a duplicate key error (23505), profile exists but we couldn't fetch it - try again
         if (error.code === "23505") {
           console.log("[UserProvider] Profile already exists (duplicate error), retrying fetch...");
           return await fetchProfile(userId);
+        }
+        if (error.code === "TIMEOUT") {
+          console.warn("[UserProvider] Profile creation timed out");
+          return null;
         }
         console.error("[UserProvider] Failed to create profile:", error);
         return null;
