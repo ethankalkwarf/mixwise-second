@@ -32,19 +32,36 @@ interface IngredientWithName {
 /**
  * Normalize legacy ingredient IDs to canonical UUID format
  * 
- * Uses the new ingredientId utilities for type-safe normalization
+ * Uses the new ingredientId utilities for type-safe normalization.
+ * IMPORTANT: Preserves all IDs - returns original ID if normalization fails.
+ * This prevents data loss when IDs can't be mapped.
  */
 function normalizeIngredientIds(
   ids: string[],
   nameToCanonicalId: Map<string, string>
 ): string[] {
-  const normalized = normalizeToCanonicalMultiple(ids, nameToCanonicalId);
+  const result: string[] = [];
   
-  if (process.env.NODE_ENV === 'development' && normalized.length < ids.length) {
-    console.warn(`[bar] Dropped ${ids.length - normalized.length} unmigratable ingredient IDs`);
+  for (const id of ids) {
+    if (!id) continue;
+    
+    // Try to normalize using the utility
+    const normalized = normalizeToCanonicalMultiple([id], nameToCanonicalId);
+    
+    if (normalized.length > 0) {
+      result.push(normalized[0]);
+    } else {
+      // IMPORTANT: Keep the original ID if normalization fails
+      // This prevents data loss for valid IDs that just can't be mapped
+      result.push(id);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[bar] Keeping original ID (normalization failed): "${id}"`);
+      }
+    }
   }
   
-  return normalized;
+  // Remove duplicates
+  return [...new Set(result)];
 }
 
 interface UseBarIngredientsResult {
@@ -236,65 +253,60 @@ export function useBarIngredients(): UseBarIngredientsResult {
   const syncAuthenticatedBar = useCallback(
     async (userId: string, nameToCanonicalId: Map<string, string>, ingredientsData: any[]) => {
       try {
-        // Step 1: Load current state
+        // Step 1: Load current state from server (source of truth)
         const serverData = await loadFromServer();
         const serverIds = serverData.map(item => item.ingredient_id);
         const localIds = loadFromLocal();
 
-        // Step 2: Merge and normalize
+        console.log("[useBarIngredients] Sync starting:", {
+          serverIdsCount: serverIds.length,
+          localIdsCount: localIds.length,
+          serverIdsSample: serverIds.slice(0, 3),
+        });
+
+        // Step 2: Merge server and local IDs (server data takes priority)
+        // Keep ALL server IDs - don't drop any during normalization
         const mergedIds = [...new Set([...serverIds, ...localIds])];
-        const normalizedMergedIds = normalizeIngredientIds(mergedIds, nameToCanonicalId);
-
-        // Step 3: Validate before sync (remove validation that blocks empty bars)
-        if (!normalizedMergedIds) {
-          console.warn("[useBarIngredients] Validation failed: null normalized IDs");
-          setIngredientIds(serverIds);
-          return;
-        }
         
-        // Empty bar is valid - allow it
-        console.log("[useBarIngredients] Normalized merged IDs:", normalizedMergedIds.length, "items");
+        // Step 3: For display purposes, try to normalize, but keep originals as fallback
+        // This preserves all ingredient IDs even if normalization fails
+        const normalizedMergedIds = mergedIds.map(id => {
+          // Try normalization first
+          const normalized = normalizeIngredientIds([id], nameToCanonicalId);
+          // If normalization succeeds, use normalized ID; otherwise keep original
+          return normalized.length > 0 ? normalized[0] : id;
+        });
 
-        // Step 4: Build items for upsert
-        const itemsToSync = normalizedMergedIds.map(id => ({
-          user_id: userId,
-          ingredient_id: id,
-          ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
-        }));
+        console.log("[useBarIngredients] After merge:", {
+          mergedCount: mergedIds.length,
+          normalizedCount: normalizedMergedIds.length,
+        });
 
-        // Step 5: Atomic upsert (safer than delete + insert)
-        const { error: upsertError, data: upsertedData } = await supabase
-          .from("bar_ingredients")
-          .upsert(itemsToSync, {
-            onConflict: "user_id,ingredient_id",
-          });
+        // Step 4: Only upsert local IDs that aren't already on server
+        const newLocalIds = localIds.filter(id => !serverIds.includes(id));
+        
+        if (newLocalIds.length > 0) {
+          const itemsToSync = newLocalIds.map(id => ({
+            user_id: userId,
+            ingredient_id: id,
+            ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
+          }));
 
-        if (upsertError) {
-          console.error("[useBarIngredients] Upsert failed:", upsertError);
-          // Fallback: use server data as source of truth
-          setIngredientIds(serverIds);
-          setServerIngredients(serverData);
-          return;
-        }
+          const { error: upsertError } = await supabase
+            .from("bar_ingredients")
+            .upsert(itemsToSync, {
+              onConflict: "user_id,ingredient_id",
+            });
 
-        // Step 6: Check for deleted items (items in server but not in normalized list)
-        const itemsToDelete = serverIds.filter(id => !normalizedMergedIds.includes(id));
-        if (itemsToDelete.length > 0) {
-          for (const id of itemsToDelete) {
-            const { error: deleteError } = await supabase
-              .from("bar_ingredients")
-              .delete()
-              .eq("user_id", userId)
-              .eq("ingredient_id", id);
-
-            if (deleteError) {
-              console.warn(`[useBarIngredients] Failed to delete ingredient ${id}:`, deleteError);
-              // Continue with other deletions despite error
-            }
+          if (upsertError) {
+            console.error("[useBarIngredients] Upsert failed:", upsertError);
+          } else {
+            console.log(`[useBarIngredients] Synced ${newLocalIds.length} new local items to server`);
           }
         }
 
-        // Step 7: Update UI and clear local storage
+        // Step 5: Update UI with ALL ingredient IDs (server + local merged)
+        // CRITICAL: Do NOT delete items from server - preserve user's bar
         setIngredientIds(normalizedMergedIds);
         setServerIngredients(
           normalizedMergedIds.map(id => ({
@@ -303,18 +315,18 @@ export function useBarIngredients(): UseBarIngredientsResult {
             ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
           }))
         );
+        
+        // Clear local storage after successful merge
         clearLocal();
 
-        // Log successful sync
-        console.log(
-          `[useBarIngredients] Sync complete: ${normalizedMergedIds.length} items synced, ${itemsToDelete.length} deleted`
-        );
+        console.log(`[useBarIngredients] Sync complete: ${normalizedMergedIds.length} items in bar`);
       } catch (error) {
         console.error("[useBarIngredients] Sync failed with exception:", error);
         // Fallback: try to load server data as source of truth
         try {
           const serverData = await loadFromServer();
           const serverIds = serverData.map(item => item.ingredient_id);
+          console.log("[useBarIngredients] Fallback: loaded", serverIds.length, "ingredients from server");
           setIngredientIds(serverIds);
           setServerIngredients(serverData);
         } catch (fallbackError) {
