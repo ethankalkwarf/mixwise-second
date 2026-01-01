@@ -120,19 +120,28 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
   // Load ingredients from server
   const loadFromServer = useCallback(async () => {
-    if (!user) return [];
-    
-    const { data, error } = await supabase
-      .from("bar_ingredients")
-      .select("*")
-      .eq("user_id", user.id);
-    
-    if (error) {
-      console.error("Error loading bar ingredients:", error);
+    if (!user) {
+      console.log("[useBarIngredients] No user, cannot load from server");
       return [];
     }
     
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from("bar_ingredients")
+        .select("*")
+        .eq("user_id", user.id);
+      
+      if (error) {
+        console.error("[useBarIngredients] Error loading bar ingredients:", error);
+        return [];
+      }
+      
+      console.log("[useBarIngredients] Loaded from server:", data?.length || 0, "ingredients");
+      return data || [];
+    } catch (err) {
+      console.error("[useBarIngredients] Exception loading from server:", err);
+      return [];
+    }
   }, [user, supabase]);
 
   // Initialize ingredients based on auth state
@@ -219,12 +228,15 @@ export function useBarIngredients(): UseBarIngredientsResult {
         const mergedIds = [...new Set([...serverIds, ...localIds])];
         const normalizedMergedIds = normalizeIngredientIds(mergedIds, nameToCanonicalId);
 
-        // Step 3: Validate before sync
-        if (!normalizedMergedIds || normalizedMergedIds.length < 0) {
-          console.warn("[useBarIngredients] Validation failed: invalid normalized IDs");
+        // Step 3: Validate before sync (remove validation that blocks empty bars)
+        if (!normalizedMergedIds) {
+          console.warn("[useBarIngredients] Validation failed: null normalized IDs");
           setIngredientIds(serverIds);
           return;
         }
+        
+        // Empty bar is valid - allow it
+        console.log("[useBarIngredients] Normalized merged IDs:", normalizedMergedIds.length, "items");
 
         // Step 4: Build items for upsert
         const itemsToSync = normalizedMergedIds.map(id => ({
