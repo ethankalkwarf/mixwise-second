@@ -452,12 +452,16 @@ export function useBarIngredients(): UseBarIngredientsResult {
   }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
 
   // Set all ingredients at once
+  // SAFETY: This function only ADDS new ingredients, it does NOT delete existing ones
+  // Use removeIngredient() or clearAll() to remove items explicitly
   const setIngredientsHandler = useCallback(async (ids: string[]) => {
-    setIngredientIds(ids);
+    // Merge with existing IDs to prevent accidental data loss
+    const mergedIds = [...new Set([...ingredientIds, ...ids])];
+    setIngredientIds(mergedIds);
     
     if (isAuthenticated && user) {
       try {
-        // Use atomic approach: upsert new items, then delete old ones
+        // Only upsert - never delete
         if (ids.length > 0) {
           const items = ids.map(id => ({
             user_id: user.id,
@@ -477,43 +481,15 @@ export function useBarIngredients(): UseBarIngredientsResult {
           }
         }
 
-        // Delete items that are no longer in the list
-        const { data: currentItems, error: fetchError } = await supabase
-          .from("bar_ingredients")
-          .select("ingredient_id")
-          .eq("user_id", user.id);
-
-        if (fetchError) {
-          console.warn("[useBarIngredients] Failed to fetch current items for cleanup:", fetchError);
-          return;
-        }
-
-        const currentIds = (currentItems || []).map(item => item.ingredient_id);
-        const idsToDelete = currentIds.filter(id => !ids.includes(id));
-
-        if (idsToDelete.length > 0) {
-          for (const id of idsToDelete) {
-            const { error: deleteError } = await supabase
-              .from("bar_ingredients")
-              .delete()
-              .eq("user_id", user.id)
-              .eq("ingredient_id", id);
-
-            if (deleteError) {
-              console.warn(`[useBarIngredients] Failed to delete ingredient ${id}:`, deleteError);
-            }
-          }
-        }
-
-        console.log(`[useBarIngredients] Batch update complete: ${ids.length} items set`);
+        console.log(`[useBarIngredients] Batch add complete: ${ids.length} items added, total: ${mergedIds.length}`);
       } catch (error) {
         console.error("[useBarIngredients] Batch update failed:", error);
         toast.error("Failed to update bar");
       }
     } else {
-      saveToLocal(ids);
+      saveToLocal(mergedIds);
     }
-  }, [isAuthenticated, user, supabase, saveToLocal, toast]);
+  }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
 
   // Clear all ingredients
   const clearAll = useCallback(async () => {

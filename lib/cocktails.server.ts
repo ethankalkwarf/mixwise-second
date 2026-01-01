@@ -745,9 +745,24 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
   return (barIngredients || [])
     .map(item => {
       const numericId = convertToNumericId(item.ingredient_id, item.ingredient_name);
+      
+      // IMPORTANT: Don't drop items we can't convert - preserve them with a fallback ID
+      // This prevents data loss when IDs can't be mapped
       if (!numericId) {
-        console.warn(`Could not convert ingredient ID "${item.ingredient_id}" to numeric ID, skipping`);
-        return null;
+        console.warn(`Could not convert ingredient ID "${item.ingredient_id}" to numeric ID, using fallback`);
+        // Use a hash of the string ID as a fallback numeric ID
+        // This ensures the item is still displayed even if we can't map it
+        const fallbackId = Math.abs(item.ingredient_id.split('').reduce((a, b) => {
+          a = ((a << 5) - a) + b.charCodeAt(0);
+          return a & a;
+        }, 0)) || 999999;
+        
+        return {
+          id: item.id.toString(),
+          ingredient_id: fallbackId,
+          ingredient_name: item.ingredient_name || item.ingredient_id,
+          ingredient_category: null,
+        };
       }
 
       // Get the proper ingredient name from the ingredients table
@@ -760,8 +775,7 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
         ingredient_category: idToCategoryMap.get(numericId) ?? null,
         // No inventory_id for bar_ingredients
       };
-    })
-    .filter((item): item is NonNullable<typeof item> => item !== null);
+    });
 }
 
 /**
