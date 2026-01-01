@@ -153,17 +153,20 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
       try {
         // Fetch ingredients for ID normalization
-        const { data: ingredientsData, error: ingredientsError } = await supabase
+        let ingredientsData: any[] = [];
+        const { data, error: ingredientsError } = await supabase
           .from("ingredients")
           .select("id, name, legacy_id");
 
         if (ingredientsError) {
           console.error("[useBarIngredients] Error fetching ingredients for normalization:", ingredientsError);
-          setIsLoading(false);
-          return;
+          // IMPORTANT: Don't return - continue loading user's bar even if ingredients list fails
+          ingredientsData = [];
+        } else {
+          ingredientsData = data || [];
         }
 
-        // Build canonical ID map using utility
+        // Build canonical ID map using utility (will be empty map if ingredients fetch failed)
         const nameToCanonicalId = buildNameToIdMap(
           (ingredientsData || []).map(ing => ({
             id: ing.id,
@@ -204,6 +207,20 @@ export function useBarIngredients(): UseBarIngredientsResult {
         }
       } catch (error) {
         console.error("[useBarIngredients] Initialization failed:", error);
+        // Attempt fallback: try to load from server even if initialization failed
+        try {
+          if (isAuthenticated && user) {
+            const serverData = await loadFromServer();
+            if (serverData && serverData.length > 0) {
+              const serverIds = serverData.map(item => item.ingredient_id);
+              setIngredientIds(serverIds);
+              setServerIngredients(serverData);
+              console.log("[useBarIngredients] Loaded from server fallback:", serverIds.length, "ingredients");
+            }
+          }
+        } catch (fallbackError) {
+          console.error("[useBarIngredients] Fallback also failed:", fallbackError);
+        }
       } finally {
         setIsLoading(false);
       }
