@@ -256,6 +256,40 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (currentSession?.user && mounted) {
           console.log("[UserProvider] Session found from getSession");
           await updateAuthState(currentSession);
+        } else {
+          // If getSession() didn't return a session, try reading from localStorage
+          // which is where Supabase stores session data
+          try {
+            const storageKey = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')[0]}-auth-token`;
+            const storedSession = localStorage.getItem(storageKey);
+            if (storedSession) {
+              console.log("[UserProvider] Found stored session in localStorage, attempting to restore");
+              try {
+                const parsedSession = JSON.parse(storedSession);
+                if (Array.isArray(parsedSession) && parsedSession[0]) {
+                  // Supabase stores session as [accessToken, refreshToken, ...]
+                  const accessToken = parsedSession[0];
+                  const refreshToken = parsedSession[1];
+                  if (accessToken && refreshToken) {
+                    console.log("[UserProvider] Attempting to set session from localStorage");
+                    const { data: sessionFromStorage, error: setSessionError } = await supabase.auth.setSession({
+                      access_token: accessToken,
+                      refresh_token: refreshToken,
+                    });
+                    if (!setSessionError && sessionFromStorage.session) {
+                      console.log("[UserProvider] Successfully restored session from localStorage");
+                      await updateAuthState(sessionFromStorage.session);
+                      return;
+                    }
+                  }
+                }
+              } catch (parseErr) {
+                console.warn("[UserProvider] Failed to parse stored session:", parseErr);
+              }
+            }
+          } catch (err) {
+            console.warn("[UserProvider] Error accessing localStorage:", err);
+          }
         }
         // Otherwise, we'll wait for SIGNED_IN or INITIAL_SESSION from subscription
       } catch (err) {
