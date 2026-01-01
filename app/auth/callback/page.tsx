@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
@@ -67,7 +67,11 @@ async function waitForAuthReady(authReady: Promise<void>, timeoutMs: number = 50
   }
 }
 
-export default function AuthCallbackPage() {
+/**
+ * Inner component that uses useSearchParams().
+ * Must be a separate component to avoid "useSearchParams without Suspense" error.
+ */
+function AuthCallbackPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
@@ -460,4 +464,23 @@ export default function AuthCallbackPage() {
   );
 }
 
+/**
+ * Wrapper component that provides Suspense boundary for useSearchParams().
+ * This prevents the "useSearchParams without Suspense" build error.
+ */
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-cream via-mint/20 to-cream flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-card-hover p-8 text-center">
+          <div className="text-3xl font-display font-bold text-forest mb-4">mixwise.</div>
+          <h1 className="text-xl font-display font-bold text-forest mb-2">Signing you in…</h1>
+          <p className="text-sage">Just a moment while we confirm your account.</p>
+        </div>
+      </div>
+    }>
+      <AuthCallbackPageContent />
+    </Suspense>
+  );
+}
 

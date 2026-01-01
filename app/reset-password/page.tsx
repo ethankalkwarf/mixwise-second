@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/common/Button";
 
-export default function ResetPasswordPage() {
+/**
+ * Inner component that uses useSearchParams().
+ * Must be a separate component to avoid "useSearchParams without Suspense" error.
+ */
+function ResetPasswordPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useToast();
@@ -267,5 +271,25 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Wrapper component that provides Suspense boundary for useSearchParams().
+ * This prevents the "useSearchParams without Suspense" build error.
+ */
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-cream via-mint/20 to-cream flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-card-hover p-8 text-center">
+          <span className="text-3xl font-display font-bold text-forest">mixwise.</span>
+          <h1 className="text-xl font-display font-bold text-forest mt-4 mb-2">Reset Your Password</h1>
+          <p className="text-sage text-sm">Loading your secure reset session…</p>
+        </div>
+      </div>
+    }>
+      <ResetPasswordPageContent />
+    </Suspense>
   );
 }

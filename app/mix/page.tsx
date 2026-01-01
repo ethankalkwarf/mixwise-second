@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { MixResultsPanel } from "@/components/mix/MixResultsPanel";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
@@ -23,7 +23,11 @@ import { MainContainer } from "@/components/layout/MainContainer";
 // Show sign-up prompt after adding this many ingredients
 const PROMPT_THRESHOLD = 3;
 
-export default function MixPage() {
+/**
+ * Inner component that uses useSearchParams().
+ * Must be a separate component to avoid "useSearchParams without Suspense" error.
+ */
+function MixPageContent() {
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<MixCocktail[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -73,22 +77,7 @@ export default function MixPage() {
         try {
         const { ingredients, cocktails } = await getMixDataClient();
 
-        // Debug: Check cocktail structure
-        if (process.env.NODE_ENV === 'development' && cocktails.length > 0) {
-          console.log('[MIX-DEBUG] First cocktail structure:', {
-            id: cocktails[0].id,
-            name: cocktails[0].name,
-            hasIngredients: !!cocktails[0].ingredients,
-            ingredientsType: typeof cocktails[0].ingredients,
-            ingredientsIsArray: Array.isArray(cocktails[0].ingredients),
-            ingredientsLength: cocktails[0].ingredients?.length || 0,
-            sampleIngredient: cocktails[0].ingredients?.[0]
-          });
-        }
-
         // Guard: Filter out cocktails with missing or empty ingredients arrays
-        console.log('[MIX-DEBUG] Filtering cocktails, total:', cocktails.length);
-        console.log('[MIX-DEBUG] First cocktail sample:', JSON.stringify(cocktails[0], null, 2));
 
         // Track excluded cocktails for diagnostics
         const excludedByReason: {
@@ -116,25 +105,11 @@ export default function MixPage() {
             } else if (cocktail.ingredients.length === 0) {
               excludedByReason.emptyIngredients.push(cocktail);
             }
-
-            console.log('[MIX-DEBUG] Invalid cocktail:', cocktail.name, {
-              id: cocktail.id,
-              hasIngredients: !!cocktail.ingredients,
-              ingredientsType: typeof cocktail.ingredients,
-              ingredientsIsArray: Array.isArray(cocktail.ingredients),
-              ingredientsLength: cocktail.ingredients?.length || 0,
-              ingredients: cocktail.ingredients,
-              cocktailKeys: Object.keys(cocktail)
-            });
           }
 
           return isValid;
         });
 
-        console.log('[MIX-DEBUG] After filtering: valid cocktails:', validCocktails.length);
-        if (validCocktails.length > 0) {
-          console.log('[MIX-DEBUG] First valid cocktail:', JSON.stringify(validCocktails[0], null, 2));
-        }
 
         // Development-only warning for excluded cocktails with detailed breakdown
         if (process.env.NODE_ENV === 'development') {
@@ -155,31 +130,9 @@ export default function MixPage() {
 ╚════════════════════════════════════════╝
             `);
 
-            // Show first 10 excluded cocktails
-            if (excludedByReason.nullIngredients.length > 0) {
-              console.log('[MIX-DEBUG] Null ingredients cocktails (first 5):');
-              excludedByReason.nullIngredients.slice(0, 5).forEach((c, i) => {
-                console.log(`  ${i + 1}. ${c.name} (${c.id})`);
-              });
-            }
-
-            if (excludedByReason.emptyIngredients.length > 0) {
-              console.log('[MIX-DEBUG] Empty ingredient array cocktails (first 5):');
-              excludedByReason.emptyIngredients.slice(0, 5).forEach((c, i) => {
-                console.log(`  ${i + 1}. ${c.name} (${c.id})`);
-              });
-            }
-
-            if (excludedByReason.notArray.length > 0) {
-              console.log('[MIX-DEBUG] Invalid type cocktails (first 5):');
-              excludedByReason.notArray.slice(0, 5).forEach((c, i) => {
-                console.log(`  ${i + 1}. ${c.name} (${c.id}) - type: ${typeof c.ingredients}`);
-              });
-            }
           }
         }
 
-        console.log(`[MIX-DEBUG] Setting state: ${ingredients.length} ingredients, ${validCocktails.length} valid cocktails`);
         setAllIngredients(ingredients || []);
         setAllCocktails(validCocktails || []);
       } catch (error) {
@@ -322,104 +275,16 @@ export default function MixPage() {
   const matchCounts = useMemo(() => {
     // CRITICAL: Only run matching when ALL data is loaded and we have cocktails with ingredients
     if (dataLoading || !allCocktails || allCocktails.length === 0 || !allIngredients || allIngredients.length === 0 || !ingredientIds) {
-      console.log('[MIX-DEBUG] Skipping matching - data not ready:', {
-        dataLoading,
-        cocktailsLoaded: allCocktails?.length || 0,
-        ingredientsLoaded: allIngredients?.length || 0,
-        hasIngredientIds: !!ingredientIds
-      });
       return { canMake: 0, almostThere: 0 };
     }
 
     // Additional check: ensure at least one cocktail has ingredients
     const cocktailsWithIngredients = allCocktails.filter(c => c.ingredients && c.ingredients.length > 0);
     if (cocktailsWithIngredients.length === 0) {
-      console.log('[MIX-DEBUG] Skipping matching - no cocktails have ingredients data');
       return { canMake: 0, almostThere: 0 };
     }
 
     // stapleIds is now calculated at component level
-
-    // TEMPORARY DEBUG LOGGING - ALWAYS SHOW FOR TROUBLESHOOTING
-    console.log('[MIX-DEBUG] 🟢 RUNNING MATCHING LOGIC');
-    console.log('[MIX-DEBUG] ownedIngredientIds (first 10):', ingredientIds.slice(0, 10));
-    console.log('[MIX-DEBUG] stapleIds (first 10):', stapleIds.slice(0, 10));
-    console.log('[MIX-DEBUG] cocktailsLoaded:', allCocktails.length);
-    console.log('[MIX-DEBUG] cocktailsWithIngredients:', cocktailsWithIngredients.length);
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[MIX-DEBUG] ownedIngredientIds:', ingredientIds);
-      console.log('[MIX-DEBUG] stapleIds:', stapleIds);
-      console.log('[MIX-DEBUG] cocktailsWithIngredients count:', cocktailsWithIngredients.length);
-
-      if (allCocktails && allCocktails.length > 0) {
-        console.log('[MIX-DEBUG] first cocktail ingredients (first 3):', allCocktails[0]?.ingredients?.slice(0, 3) || []);
-        // Find Margarita specifically
-        const margarita = allCocktails.find(c => c.name.toLowerCase().includes('margarita'));
-        if (margarita) {
-          console.log('[MIX-DEBUG] Margarita found:', margarita.name, 'ID:', margarita.id);
-          console.log('[MIX-DEBUG] Margarita ingredients:', margarita.ingredients);
-          console.log('[MIX-DEBUG] Margarita ingredient IDs:', margarita.ingredients?.map(i => ({id: i.id, name: i.name, optional: i.isOptional})) || []);
-        } else {
-          console.log('[MIX-DEBUG] Margarita not found in cocktails');
-          console.log('[MIX-DEBUG] Available cocktail names (sample):', allCocktails.slice(0, 10).map(c => c.name));
-        }
-
-        // Check if Margarita's ingredients are in owned list
-        if (margarita) {
-          const margaritaRequired = margarita.ingredients.filter(i => !i.isOptional);
-          const margaritaRequiredIds = margaritaRequired.map(i => i.id);
-          const ownedSet = new Set(ingredientIds);
-          const missingFromMargarita = margaritaRequiredIds.filter(id => !ownedSet.has(id));
-          console.log('[MIX-DEBUG] Margarita required IDs:', margaritaRequiredIds);
-          console.log('[MIX-DEBUG] Currently owned IDs:', ingredientIds);
-          console.log('[MIX-DEBUG] Missing from Margarita:', missingFromMargarita);
-          console.log('[MIX-DEBUG] Margarita match status:', missingFromMargarita.length === 0 ? 'READY' : `MISSING ${missingFromMargarita.length}`);
-        }
-
-        // Debug ingredient ID mismatches
-        console.log('[MIX-DEBUG] Cocktail ingredient IDs sample (first cocktail):', allCocktails[0]?.ingredients?.slice(0, 3).map(i => ({id: i.id, name: i.name})) || []);
-        console.log('[MIX-DEBUG] All ingredients IDs sample:', allIngredients.slice(0, 10).map(i => ({id: i.id, name: i.name})) || []);
-        console.log('[MIX-DEBUG] ID type check - cocktail ID:', typeof allCocktails[0]?.ingredients?.[0]?.id, 'ingredients ID:', typeof allIngredients[0]?.id);
-
-        // Debug selected ingredients
-        if (ingredientIds.length > 0) {
-          console.log('[MIX-DEBUG] Selected ingredient IDs:', ingredientIds);
-          const selectedIngredientDetails = ingredientIds.map(id => {
-            const ing = allIngredients.find(i => i.id === id);
-            return {id, name: ing?.name || 'NOT FOUND', found: !!ing};
-          });
-          console.log('[MIX-DEBUG] Selected ingredient details:', selectedIngredientDetails);
-
-          // Check for Margarita ingredients specifically
-          const tequila = allIngredients.find(i => i.name?.toLowerCase().includes('tequila'));
-          const tripleSec = allIngredients.find(i => i.name?.toLowerCase().includes('triple sec') || i.name?.toLowerCase().includes('triple-sec'));
-          const limeJuice = allIngredients.find(i => i.name?.toLowerCase().includes('lime juice'));
-
-          console.log('[MIX-DEBUG] Margarita ingredient lookup:');
-          console.log('[MIX-DEBUG] - Tequila found:', tequila ? {id: tequila.id, name: tequila.name} : 'NOT FOUND');
-          console.log('[MIX-DEBUG] - Triple Sec found:', tripleSec ? {id: tripleSec.id, name: tripleSec.name} : 'NOT FOUND');
-          console.log('[MIX-DEBUG] - Lime Juice found:', limeJuice ? {id: limeJuice.id, name: limeJuice.name} : 'NOT FOUND');
-
-          const hasTequila = tequila && ingredientIds.includes(tequila.id);
-          const hasTripleSec = tripleSec && ingredientIds.includes(tripleSec.id);
-          const hasLimeJuice = limeJuice && ingredientIds.includes(limeJuice.id);
-
-          console.log('[MIX-DEBUG] Margarita ingredients owned:');
-          console.log('[MIX-DEBUG] - Has Tequila:', hasTequila);
-          console.log('[MIX-DEBUG] - Has Triple Sec:', hasTripleSec);
-          console.log('[MIX-DEBUG] - Has Lime Juice:', hasLimeJuice);
-          console.log('[MIX-DEBUG] - Margarita should be READY:', hasTequila && hasTripleSec && hasLimeJuice);
-
-          // Show what ingredients user actually has selected
-          console.log('[MIX-DEBUG] User selected ingredients:');
-          ingredientIds.forEach(id => {
-            const ing = allIngredients.find(i => i.id === id);
-            console.log(`[MIX-DEBUG] - ${id}: ${ing ? ing.name : 'NOT FOUND'}`);
-          });
-        }
-      }
-    }
 
     const result = getMixMatchGroups({
       cocktails: cocktailsWithIngredients,
@@ -431,14 +296,6 @@ export default function MixPage() {
       canMake: result.ready.length,
       almostThere: result.almostThere.length,
     };
-
-    console.log('[MIX WIZARD DEBUG] Final match counts:', {
-      canMake: matchCounts.canMake,
-      almostThere: matchCounts.almostThere,
-      totalCocktails: allCocktails.length,
-      ingredientIdsCount: ingredientIds.length,
-      stapleIds: stapleIds
-    });
 
     return matchCounts;
   }, [allCocktails, allIngredients, ingredientIds, dataLoading]);
@@ -701,5 +558,17 @@ export default function MixPage() {
       {/* Add padding for mobile navigation */}
       <div className="lg:hidden h-16" />
     </div>
+  );
+}
+
+/**
+ * Wrapper component that provides Suspense boundary for useSearchParams().
+ * This prevents the "useSearchParams without Suspense" build error.
+ */
+export default function MixPage() {
+  return (
+    <Suspense fallback={<MixSkeleton />}>
+      <MixPageContent />
+    </Suspense>
   );
 }

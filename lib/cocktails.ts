@@ -117,41 +117,27 @@ export async function getCocktailsListClient(filters: CocktailFilters = {}): Pro
  * Fetch ingredients for mix logic (client-side)
  */
 export async function getMixIngredients(): Promise<MixIngredient[]> {
-  console.log('[MIX-DEBUG] getMixIngredients called - VERSION 2.0');
   const supabase = getSupabaseClient();
-  console.log('[MIX-DEBUG] getSupabaseClient returned:', !!supabase);
 
   try {
     // Add timeout to prevent hanging queries
-    console.log('[MIX-DEBUG] Making ingredients query...');
-    console.log('[MIX-DEBUG] Creating ingredients query...');
     const queryPromise = supabase
       .from('ingredients')
       .select('id, name, category, image_url, is_staple')
       .then(result => {
-        console.log('[MIX-DEBUG] Ingredients query promise resolved:', { dataLength: result.data?.length, error: result.error });
         return result;
       });
-
-    // Temporarily remove timeout to allow full ingredients load
-    // const timeoutPromise = new Promise<never>((_, reject) => {
-    //   setTimeout(() => reject(new Error('Ingredients query timed out')), 30000);
-    // });
 
     // Set reasonable timeout for ingredients query
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Ingredients query timed out after 30 seconds')), 30000);
     });
 
-    console.log('[MIX-DEBUG] Starting Promise.race for ingredients query...');
     const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
-    console.log('[MIX-DEBUG] Promise.race completed for ingredients');
-    console.log('[MIX-DEBUG] Ingredients query completed, error:', error, 'data length:', data?.length);
 
     if (error) {
       console.error('Error fetching mix ingredients from Supabase:', error);
       // Fallback: return some basic ingredients for the wizard to work
-      console.log('[MIX-DEBUG] Using fallback ingredients due to error');
       return getFallbackIngredients();
     }
 
@@ -213,9 +199,7 @@ function getFallbackIngredients(): MixIngredient[] {
  */
 export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
   try {
-    console.log('[MIX-DEBUG] getMixCocktailsClient: calling getCocktailsWithIngredientsClient...');
     const cocktailsWithIngredients = await getCocktailsWithIngredientsClient();
-    console.log(`[MIX-DEBUG] getMixCocktailsClient: got ${cocktailsWithIngredients.length} cocktails with ingredients`);
 
     const result = cocktailsWithIngredients.map(cocktail => ({
       id: cocktail.id,
@@ -238,10 +222,9 @@ export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
       ingredients: cocktail.ingredientsWithIds
     }));
 
-    console.log(`[MIX-DEBUG] getMixCocktailsClient: returning ${result.length} cocktails`);
     return result;
   } catch (error) {
-    console.error('[MIX-DEBUG] getMixCocktailsClient failed:', error);
+    console.error('Error in getMixCocktailsClient:', error);
     throw error;
   }
 }
@@ -254,19 +237,13 @@ export async function getMixDataClient(): Promise<{
   cocktails: MixCocktail[];
 }> {
   try {
-    console.log('[MIX-DEBUG] Starting getMixDataClient...');
-
     const ingredientsPromise = getMixIngredients();
     const cocktailsPromise = getMixCocktailsClient();
-
-    console.log('[MIX-DEBUG] Created promises, waiting for Promise.all...');
 
     const [ingredients, cocktails] = await Promise.all([
       ingredientsPromise,
       cocktailsPromise
     ]);
-
-    console.log(`[MIX-DEBUG] getMixDataClient loaded ${ingredients.length} ingredients, ${cocktails.length} cocktails`);
 
     // Check for data loading failures
     if (!ingredients || ingredients.length === 0) {
@@ -278,7 +255,7 @@ export async function getMixDataClient(): Promise<{
 
     return { ingredients, cocktails };
   } catch (error) {
-    console.error('[MIX-DEBUG] getMixDataClient failed:', error);
+    console.error('Error in getMixDataClient:', error);
     throw error;
   }
 }
@@ -313,17 +290,15 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
 }>> {
   try {
     // Skip client-side entirely and go straight to server-side API
-    console.log('[MIX-DEBUG] Skipping client-side, going straight to server-side API');
     return await getCocktailsWithIngredientsServerSide();
   } catch (error) {
-    console.error('getCocktailsWithIngredientsClient failed:', error);
+    console.error('Error in getCocktailsWithIngredientsClient:', error);
     throw error;
   }
 }
 
 // Client-side implementation
 async function getCocktailsWithIngredientsClientSide() {
-  console.log('[MIX-DEBUG] Client-side cocktails query starting...');
   const supabase = createClient();
 
   // Query cocktails with ingredients
@@ -349,8 +324,6 @@ async function getCocktailsWithIngredientsClientSide() {
     `)
     .order('name');
 
-  console.log('[MIX-DEBUG] Client-side cocktails query completed, error:', cocktailError, 'data length:', cocktailData?.length);
-
   if (cocktailError) {
     throw cocktailError;
   }
@@ -361,7 +334,6 @@ async function getCocktailsWithIngredientsClientSide() {
     }
 
     if (!cocktailData || cocktailData.length === 0) {
-      console.log('[MIX-DEBUG] No cocktails found');
       return [];
     }
 
@@ -448,15 +420,10 @@ async function getCocktailsWithIngredientsClientSide() {
     });
 
     // Filter out cocktails with no valid ingredients
-    console.log('[MIX-DEBUG] Client-side: processed cocktails:', processedCocktails.length);
     const validCocktails = processedCocktails.filter(cocktail => {
       const hasIngredients = cocktail.ingredients && cocktail.ingredients.length > 0;
-      if (!hasIngredients) {
-        console.log('[MIX-DEBUG] Client-side: filtering out cocktail:', cocktail.name, 'ingredients:', cocktail.ingredients);
-      }
       return hasIngredients;
     });
-    console.log('[MIX-DEBUG] Client-side: valid cocktails after filtering:', validCocktails.length);
 
     return validCocktails;
 }
@@ -482,7 +449,6 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
   garnish: string | null;
   ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
-  console.log('[MIX-DEBUG] Using server-side API fallback');
 
   // Make a request to our own API route
   try {
@@ -498,11 +464,10 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
     }
 
     const data = await response.json();
-    console.log('[MIX-DEBUG] Server-side API returned:', data.length, 'cocktails');
 
     return data;
   } catch (error) {
-    console.error('[MIX-DEBUG] Server-side API fallback failed:', error);
+    console.error('Error in getCocktailsWithIngredientsServerSide:', error);
     throw error;
   }
 }

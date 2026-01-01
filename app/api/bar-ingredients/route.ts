@@ -10,6 +10,10 @@ import { createClient } from "@supabase/supabase-js";
  * Uses service role to access bar_ingredients table.
  * This matches the server-side getUserBarIngredients behavior used by public bar pages.
  */
+
+// Explicitly mark as dynamic since we use cookies() for auth
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     // Get the authenticated user
