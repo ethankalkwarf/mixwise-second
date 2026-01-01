@@ -136,6 +136,8 @@ export function useBarIngredients(): UseBarIngredientsResult {
   }, []);
 
   // Load ingredients from server
+  // Checks BOTH legacy inventories/inventory_items tables AND bar_ingredients
+  // to match the server-side getUserBarIngredients behavior
   const loadFromServer = useCallback(async () => {
     if (!user) {
       console.log("[useBarIngredients] No user, cannot load from server");
@@ -143,6 +145,40 @@ export function useBarIngredients(): UseBarIngredientsResult {
     }
     
     try {
+      // First, try the legacy inventories table (matches server-side logic)
+      try {
+        const { data: inventories, error: inventoriesError } = await supabase
+          .from("inventories")
+          .select("id")
+          .eq("user_id", user.id)
+          .limit(1);
+
+        if (!inventoriesError && inventories && inventories.length > 0) {
+          const inventoryId = inventories[0].id;
+          console.log("[useBarIngredients] Found legacy inventory:", inventoryId);
+          
+          const { data: inventoryItems, error: itemsError } = await supabase
+            .from("inventory_items")
+            .select("id, ingredient_id, ingredient_name")
+            .eq("inventory_id", inventoryId);
+
+          if (!itemsError && inventoryItems && inventoryItems.length > 0) {
+            console.log("[useBarIngredients] Loaded from legacy inventory_items:", inventoryItems.length, "ingredients");
+            // Convert to bar_ingredients format
+            return inventoryItems.map(item => ({
+              id: item.id,
+              user_id: user.id,
+              ingredient_id: item.ingredient_id,
+              ingredient_name: item.ingredient_name,
+            }));
+          }
+        }
+      } catch (legacyError) {
+        // Legacy tables don't exist, continue to bar_ingredients
+        console.log("[useBarIngredients] Legacy inventories table not found, using bar_ingredients");
+      }
+
+      // Fallback to bar_ingredients table
       const { data, error } = await supabase
         .from("bar_ingredients")
         .select("*")
@@ -153,7 +189,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
         return [];
       }
       
-      console.log("[useBarIngredients] Loaded from server:", data?.length || 0, "ingredients");
+      console.log("[useBarIngredients] Loaded from bar_ingredients:", data?.length || 0, "ingredients");
       return data || [];
     } catch (err) {
       console.error("[useBarIngredients] Exception loading from server:", err);
