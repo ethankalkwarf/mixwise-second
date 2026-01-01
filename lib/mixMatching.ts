@@ -1,6 +1,9 @@
 /**
  * Matching engine for the Mix tool
  * Determines which cocktails can be made based on owned ingredients
+ * 
+ * CRITICAL: All ingredient IDs MUST be in canonical UUID format (strings).
+ * This file assumes IDs are already normalized by useBarIngredients and getMixDataClient.
  */
 
 import type { MixCocktail, MixMatchResult, MixMatchGroups } from "./mixTypes";
@@ -20,12 +23,33 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     maxMissing = 2
   } = params;
 
+  // Create sets for O(1) lookup
+  // NOTE: All IDs in both sets MUST be in canonical UUID format for comparison to work
   const owned = new Set<string>(ownedIngredientIds);
   const staples = new Set<string>(stapleIngredientIds);
 
   const ready: MixMatchResult[] = [];
   const almostThere: MixMatchResult[] = [];
   const far: MixMatchResult[] = [];
+
+  // Validation: Check for ID format consistency
+  if (process.env.NODE_ENV === 'development') {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const ownedSamples = ownedIngredientIds.slice(0, 3);
+    const cocktailSamples = cocktails
+      .flatMap(c => c.ingredients.map(i => i.id))
+      .slice(0, 3);
+    
+    const allSamples = [...ownedSamples, ...cocktailSamples];
+    const nonUuidCount = allSamples.filter(id => !uuidRegex.test(id)).length;
+    
+    if (nonUuidCount > 0) {
+      console.warn('[MIX-MATCH-WARN] Found non-UUID ingredient IDs:', {
+        nonUuidCount,
+        examples: allSamples.filter(id => !uuidRegex.test(id))
+      });
+    }
+  }
 
   // Always debug Margarita (not just in development)
   console.log('[MIX-MATCH-DEBUG] Input:', {

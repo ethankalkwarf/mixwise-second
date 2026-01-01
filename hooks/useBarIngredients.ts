@@ -6,6 +6,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
 import { checkBarBadges } from "@/lib/badgeEngine";
+import { buildNameToIdMap, buildIdToNameMap, normalizeToCanonicalMultiple } from "@/lib/ingredientId";
 import type { BarIngredient } from "@/lib/supabase/database.types";
 
 const LOCAL_STORAGE_KEY = "mixwise-bar-inventory";
@@ -16,57 +17,21 @@ interface IngredientWithName {
 }
 
 /**
- * Normalize legacy ingredient IDs to canonical ingredients.id values
+ * Normalize legacy ingredient IDs to canonical UUID format
+ * 
+ * Uses the new ingredientId utilities for type-safe normalization
  */
 function normalizeIngredientIds(
   ids: string[],
-  nameToCanonicalId: Map<string, string>,
-  ingredientNameMap?: Map<string, string | null>
+  nameToCanonicalId: Map<string, string>
 ): string[] {
-  const normalized: string[] = [];
-
-  for (const id of ids) {
-    // If it's already numeric, keep as-is
-    if (/^\d+$/.test(id)) {
-      normalized.push(id);
-      continue;
-    }
-
-    // If it starts with ingredient-, strip prefix
-    if (id.startsWith('ingredient-')) {
-      const remainder = id.substring('ingredient-'.length);
-      if (/^\d+$/.test(remainder)) {
-        normalized.push(remainder);
-        continue;
-      }
-    }
-
-    // Try lookup by exact name
-    const canonicalId = nameToCanonicalId.get(id.toLowerCase());
-    if (canonicalId) {
-      normalized.push(canonicalId);
-      continue;
-    }
-
-    // If we have a name map and this ID has a name, try looking up by name
-    if (ingredientNameMap) {
-      const name = ingredientNameMap.get(id);
-      if (name) {
-        const canonicalIdFromName = nameToCanonicalId.get(name.toLowerCase());
-        if (canonicalIdFromName) {
-          normalized.push(canonicalIdFromName);
-          continue;
-        }
-      }
-    }
-
-    // If still not found, drop it but log in dev mode
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`[bar] Dropping unmigratable ingredient ID: "${id}"`);
-    }
+  const normalized = normalizeToCanonicalMultiple(ids, nameToCanonicalId);
+  
+  if (process.env.NODE_ENV === 'development' && normalized.length < ids.length) {
+    console.warn(`[bar] Dropped ${ids.length - normalized.length} unmigratable ingredient IDs`);
   }
-
-  return [...new Set(normalized)]; // Remove duplicates
+  
+  return normalized;
 }
 
 interface UseBarIngredientsResult {
@@ -167,29 +132,26 @@ export function useBarIngredients(): UseBarIngredientsResult {
       // Fetch ingredients for ID normalization
       const { data: ingredientsData, error: ingredientsError } = await supabase
         .from("ingredients")
-        .select("id, name");
+        .select("id, name, legacy_id");
 
       if (ingredientsError) {
         console.error("Error fetching ingredients for normalization:", ingredientsError);
         return;
       }
 
-      const nameToCanonicalId = new Map<string, string>();
-      (ingredientsData || []).forEach(ingredient => {
-        nameToCanonicalId.set(ingredient.name.toLowerCase(), String(ingredient.id));
-      });
+      // Build canonical ID map using utility
+      const nameToCanonicalId = buildNameToIdMap(
+        (ingredientsData || []).map(ing => ({
+          id: ing.id,
+          name: ing.name,
+          legacy_id: ing.legacy_id || null
+        }))
+      );
 
       if (isAuthenticated && user) {
         // Load from server for authenticated users
         const serverData = await loadFromServer();
         setServerIngredients(serverData);
-
-        // Build name map from server data
-        const nameMap = new Map<string, string | null>();
-        serverData.forEach(item => {
-          nameMap.set(item.ingredient_id, item.ingredient_name);
-        });
-        setIngredientNameMap(nameMap);
 
         const serverIds = serverData.map(item => item.ingredient_id);
         const localIds = loadFromLocal();
@@ -197,8 +159,17 @@ export function useBarIngredients(): UseBarIngredientsResult {
         // Merge local with server (server takes precedence, but add any new local items)
         const mergedIds = [...new Set([...serverIds, ...localIds])];
 
-              // Normalize merged IDs to canonical format
-        const normalizedMergedIds = normalizeIngredientIds(mergedIds, nameToCanonicalId, nameMap);
+        // Normalize merged IDs to canonical format
+        const normalizedMergedIds = normalizeIngredientIds(mergedIds, nameToCanonicalId);
+
+        // Build name map from ingredients data
+        const nameMap = buildIdToNameMap(
+          (ingredientsData || []).map(ing => ({
+            id: ing.id,
+            name: ing.name
+          }))
+        );
+        setIngredientNameMap(nameMap);
 
 
         // If normalization changed anything, migrate the data
