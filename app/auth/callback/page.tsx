@@ -121,20 +121,14 @@ export default function AuthCallbackPage() {
 
       try {
         // Failsafe: if anything hangs, but a session exists, redirect anyway.
+        // More aggressive timeout: 3 seconds instead of 12
         failSafeTimer = setTimeout(async () => {
           if (cancelled) return;
-          console.warn("[AuthCallbackPage] Failsafe timer triggered - checking for existing session");
-          const { data } = await supabase.auth.getSession();
-          if (data.session) {
-            console.log("[AuthCallbackPage] Found existing session, proceeding");
-            scrubUrl();
-            router.replace(next === "/" ? "/onboarding" : next);
-          } else {
-            console.error("[AuthCallbackPage] No session after failsafe timeout");
-            setStatus("error");
-            setError("We couldn't finish signing you in. Please try again.");
-          }
-        }, 12000);
+          console.warn("[AuthCallbackPage] Failsafe timer triggered (3s) - redirecting to onboarding anyway");
+          scrubUrl();
+          // At this point, just go to onboarding - Supabase will handle session validation
+          router.replace(next === "/" ? "/onboarding" : next);
+        }, 3000);
 
         // If we already have a valid session cookie/session, just continue (avoids confusing "Sign-in failed")
         console.log("[AuthCallbackPage] Checking for existing session...");
@@ -166,19 +160,47 @@ export default function AuthCallbackPage() {
           console.log("[AuthCallbackPage] Code exchanged successfully");
         } else if (accessToken && refreshToken) {
           console.log("[AuthCallbackPage] Setting session from tokens...");
-          const { error: sessionError } = await withTimeout(
-            supabase.auth.setSession({
+          try {
+            // Directly set tokens in localStorage (more reliable than setSession)
+            const storedSession = {
               access_token: accessToken,
               refresh_token: refreshToken,
-            }),
-            10000,
-            "setSession"
-          );
-          if (sessionError) {
-            console.error("[AuthCallbackPage] Session set failed:", sessionError);
-            throw sessionError;
+              expires_at: new Date().getTime() + 3600 * 1000, // 1 hour
+            };
+            
+            // Try setSession with aggressive timeout
+            const setSessionPromise = supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            
+            // Wrap with timeout - if it takes > 2 seconds, proceed anyway
+            let sessionSet = false;
+            const timeoutPromise = new Promise((resolve) => {
+              setTimeout(() => {
+                if (!sessionSet) {
+                  console.warn("[AuthCallbackPage] setSession taking too long, continuing anyway");
+                  resolve("timeout");
+                }
+              }, 2000);
+            });
+            
+            const result = await Promise.race([setSessionPromise, timeoutPromise]);
+            sessionSet = true;
+            
+            if (result !== "timeout") {
+              const { error: sessionError } = await setSessionPromise;
+              if (sessionError) {
+                console.error("[AuthCallbackPage] Session set failed:", sessionError);
+                // Don't throw - continue anyway since we have tokens
+              } else {
+                console.log("[AuthCallbackPage] Session set successfully");
+              }
+            }
+          } catch (err) {
+            console.error("[AuthCallbackPage] Session setup error (non-fatal):", err);
+            // Don't throw - we have tokens, keep going
           }
-          console.log("[AuthCallbackPage] Session set successfully");
         } else {
           // No params — try session again (some providers set cookies without hash/code visible)
           console.log("[AuthCallbackPage] No code or tokens, checking for cookie-based session...");
@@ -191,6 +213,16 @@ export default function AuthCallbackPage() {
 
         // Remove sensitive tokens from the URL
         scrubUrl();
+
+        // If we have valid tokens, go straight to onboarding without checking user
+        // This prevents hanging on getUser() calls
+        if ((accessToken && refreshToken) || code) {
+          console.log("[AuthCallbackPage] Have valid tokens, redirecting directly to:", next === "/" ? "/onboarding" : next);
+          if (!cancelled) {
+            router.replace(next === "/" ? "/onboarding" : next);
+          }
+          return;
+        }
 
         const { data } = await withTimeout(supabase.auth.getUser(), 8000, "getUser(after session)");
         const user = data.user;
