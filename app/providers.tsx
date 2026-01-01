@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { UserProvider } from "@/components/auth/UserProvider";
@@ -43,21 +43,52 @@ export function SupabaseProvider({
   children: React.ReactNode;
   initialSession: null;  // Always null - we don't use server-side sessions
 }) {
-  // Create Supabase client - useState with initializer ensures singleton pattern
-  // The client reads cookies on creation, before React renders children
-  const [supabase] = useState(() => {
-    try {
-      const client = createClientComponentClient();
-      console.log("[SupabaseProvider] Supabase client created successfully");
-      return client;
-    } catch (error) {
-      console.error("[SupabaseProvider] Failed to create Supabase client:", error);
-      throw error;
+  // Create Supabase client and fetch initial session
+  const [supabase, setSupabase] = useState<any>(null);
+  const [initialSession, setInitialSession] = useState<any>(null);
+
+  useEffect(() => {
+    async function initializeSupabase() {
+      try {
+        const client = createClientComponentClient();
+        console.log("[SupabaseProvider] Supabase client created successfully");
+        
+        // Try to get the current session from cookies
+        const { data: { session } } = await client.auth.getSession();
+        if (session) {
+          console.log("[SupabaseProvider] Found existing session from cookies:", session.user?.email);
+          setInitialSession(session);
+        } else {
+          console.log("[SupabaseProvider] No existing session found in cookies");
+        }
+        
+        setSupabase(client);
+      } catch (error) {
+        console.error("[SupabaseProvider] Failed to initialize Supabase:", error);
+        // Create client anyway even if session fetch failed
+        try {
+          const client = createClientComponentClient();
+          setSupabase(client);
+        } catch (clientError) {
+          console.error("[SupabaseProvider] Failed to create Supabase client:", clientError);
+          throw clientError;
+        }
+      }
     }
-  });
+
+    initializeSupabase();
+  }, []);
+
+  if (!supabase) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cream">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-terracotta"></div>
+      </div>
+    );
+  }
 
   return (
-    <SessionContextProvider supabaseClient={supabase} initialSession={null}>
+    <SessionContextProvider supabaseClient={supabase} initialSession={initialSession}>
       <UserProviderWrapper>
         <AuthDialogProvider>
           <ToastProvider>
