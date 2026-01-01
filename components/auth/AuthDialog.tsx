@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, Fragment } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon, EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useUser } from "./UserProvider";
@@ -38,6 +39,7 @@ export function AuthDialog({
   onSuccess,
   onModeChange,
 }: AuthDialogProps) {
+  const router = useRouter();
   const { signInWithGoogle, signInWithPassword, resetPassword, isAuthenticated } = useUser();
   const toast = useToast();
   const [firstName, setFirstName] = useState("");
@@ -147,13 +149,25 @@ export function AuthDialog({
         }
 
         if (data.ok) {
-          setSignupSuccess(true);
+          // Account created successfully
           setIsEmailLoading(false);
+          
           if (data.emailSent) {
-            toast.success("Check your email to confirm your account");
+            toast.success("Account created! Redirecting to onboarding...");
           } else {
-            toast.info(data.message || "Account created. Please try logging in.");
+            toast.info("Account created! Redirecting to onboarding...");
           }
+          
+          // Redirect to onboarding immediately (email confirmation optional)
+          // Close the dialog and navigate
+          onClose();
+          
+          // Small delay to allow dialog to close before navigation
+          setTimeout(() => {
+            router.push("/onboarding");
+          }, 300);
+          
+          return;
         } else {
           setError(data.error || "Failed to create account. Please try again.");
           toast.error(data.error || "Failed to create account");
