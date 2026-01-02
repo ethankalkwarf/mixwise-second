@@ -259,20 +259,20 @@ export default function DashboardPage() {
   const isAuthLoading = authLoading;
   const isContentLoading = barLoading || favsLoading || recentLoading;
 
-  // Dynamic greeting based on time of day - stable to prevent flickering
+  // Stable greeting - prevent flickering by using consistent name once set
   const getDynamicGreeting = useMemo(() => {
-    // With caching, profile should load instantly - use email fallback for edge cases only
-    const fullName = profile?.display_name || user?.email?.split("@")[0] || "Bartender";
-    const firstName = fullName.split(" ")[0]; // Only use first name
+    // Once we have a name, stick with it to prevent flickering
+    // Only fallback to email if profile hasn't loaded yet
+    const stableName = profile?.display_name || (user?.email ? user.email.split("@")[0] : "Bartender");
+    const firstName = stableName.split(" ")[0];
     const hour = new Date().getHours();
 
-    // Use consistent greeting based on name hash to prevent random changes
+    // Use consistent greeting based on name hash
     const nameHash = firstName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
-    const greetingIndex = nameHash % 3; // Consistent index based on name
+    const greetingIndex = nameHash % 3;
 
     let greeting: string;
     if (hour < 12) {
-      // Morning
       const greetings = [
         `Good morning, ${firstName}. Ready to start shaking things up?`,
         `Morning, ${firstName}. The bar is open, metaphorically.`,
@@ -280,7 +280,6 @@ export default function DashboardPage() {
       ];
       greeting = greetings[greetingIndex];
     } else if (hour < 18) {
-      // Afternoon
       const greetings = [
         `Good afternoon, ${firstName}. Feeling inspired?`,
         `Hey ${firstName}, it's cocktail o'clock somewhere.`,
@@ -288,7 +287,6 @@ export default function DashboardPage() {
       ];
       greeting = greetings[greetingIndex];
     } else {
-      // Evening
       const greetings = [
         `Good evening, ${firstName}. Let's make something smooth.`,
         `Evening, ${firstName}. Perfect time for a drink.`,
@@ -409,11 +407,9 @@ export default function DashboardPage() {
                     <h2 className="text-xl font-display font-bold text-forest">
                       What You Can Make
                     </h2>
-                    {recommendations.length > 0 && (
-                      <span className="text-sm text-sage">
-                        {recommendations.length} cocktail{recommendations.length !== 1 ? "s" : ""} ready
-                      </span>
-                    )}
+                    <span className="text-sm text-sage block min-h-[1.25rem]">
+                      {loadingRecs ? "Loading..." : recommendations.length > 0 ? `${recommendations.length} cocktail${recommendations.length !== 1 ? "s" : ""} ready` : ""}
+                    </span>
                   </div>
                 </div>
                 <Link
@@ -486,8 +482,37 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* Almost There */}
-            {!loadingRecs && almostThereCocktails.length > 0 && (
+            {/* Almost There - Reserve space to prevent layout shift */}
+            {loadingRecs ? (
+              <div className="card overflow-hidden opacity-0">
+                <div className="flex items-center justify-between p-6 border-b border-mist">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-terracotta/20 rounded-xl flex items-center justify-center">
+                      <BeakerIcon className="w-5 h-5 text-terracotta" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-display font-bold text-forest">
+                        Almost There
+                      </h2>
+                      <span className="text-sm text-sage block min-h-[1.25rem]">Loading...</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="flex items-center gap-4 p-3 bg-cream rounded-2xl animate-pulse">
+                        <div className="w-14 h-14 bg-mist rounded-xl" />
+                        <div className="flex-1">
+                          <div className="h-4 bg-mist rounded mb-1" />
+                          <div className="h-3 bg-mist rounded w-3/4" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : almostThereCocktails.length > 0 ? (
               <section className="card overflow-hidden">
                 <div className="flex items-center justify-between p-6 border-b border-mist">
                   <div className="flex items-center gap-3">
@@ -498,7 +523,7 @@ export default function DashboardPage() {
                       <h2 className="text-xl font-display font-bold text-forest">
                         Almost There
                       </h2>
-                      <span className="text-sm text-sage">
+                      <span className="text-sm text-sage block min-h-[1.25rem]">
                         {almostThereCocktails.length} cocktail{almostThereCocktails.length !== 1 ? "s" : ""} close to ready
                       </span>
                     </div>
@@ -544,7 +569,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </section>
-            )}
+            ) : null}
 
             {/* Recent Activity - Favorites + Recently Viewed */}
             <section className="card overflow-hidden">
@@ -573,44 +598,46 @@ export default function DashboardPage() {
                       Browse →
                     </Link>
                   </div>
-                  {favsLoading ? (
-                    <div className="flex gap-4">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="flex-shrink-0 w-32">
-                          <div className="w-32 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
-                          <div className="h-4 bg-mist rounded animate-pulse" />
-                        </div>
-                      ))}
-                    </div>
-                  ) : favorites.length > 0 ? (
-                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-                      {favorites.slice(0, 6).map((fav) => (
-                        <Link
-                          key={fav.id}
-                          href={`/cocktails/${fav.cocktail_slug}`}
-                          className="flex-shrink-0 w-32 group"
-                        >
-                          <Image
-                            src={fav.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
-                            alt={fav.cocktail_name || "Cocktail"}
-                            width={128}
-                            height={96}
-                            className="w-32 h-24 rounded-2xl object-cover mb-2"
-                            onError={(e) => {
-                              e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
-                            }}
-                          />
-                          <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
-                            {fav.cocktail_name}
-                          </p>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sage text-sm">
-                      Save cocktails to favorites to see them here.
-                    </p>
-                  )}
+                  <div className="min-h-[7rem] flex items-center">
+                    {favsLoading ? (
+                      <div className="flex gap-4">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div key={i} className="flex-shrink-0 w-32">
+                            <div className="w-32 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
+                            <div className="h-4 bg-mist rounded animate-pulse" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : favorites.length > 0 ? (
+                      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+                        {favorites.slice(0, 6).map((fav) => (
+                          <Link
+                            key={fav.id}
+                            href={`/cocktails/${fav.cocktail_slug}`}
+                            className="flex-shrink-0 w-32 group"
+                          >
+                            <Image
+                              src={fav.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDEyOCA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg=="}
+                              alt={fav.cocktail_name || "Cocktail"}
+                              width={128}
+                              height={96}
+                              className="w-32 h-24 rounded-2xl object-cover mb-2"
+                              onError={(e) => {
+                                e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
+                              }}
+                            />
+                            <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
+                              {fav.cocktail_name}
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sage text-sm">
+                        Save cocktails to favorites to see them here.
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Recently Viewed */}
@@ -677,7 +704,7 @@ export default function DashboardPage() {
                     <h2 className="text-xl font-display font-bold text-forest">
                       My Bar
                     </h2>
-                    <span className="text-sm text-sage">
+                    <span className="text-sm text-sage block min-h-[1.25rem]">
                       {barLoading ? "Loading..." : `${ingredientIds.length} ingredient${ingredientIds.length !== 1 ? "s" : ""}`}
                     </span>
                   </div>
