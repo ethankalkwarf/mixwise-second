@@ -55,25 +55,6 @@ export default function DashboardPage() {
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const { preferences, isLoading: preferencesLoading, needsOnboarding } = useUserPreferences();
 
-  // DEBUG: Track what causes re-renders
-  const renderCount = useRef(0);
-  useEffect(() => {
-    renderCount.current += 1;
-    console.log(`🔄 Dashboard Render #${renderCount.current}:`, {
-      authLoading,
-      isAuthenticated,
-      hasUser: !!user,
-      hasProfile: !!profile,
-      profileName: profile?.display_name,
-      barLoading,
-      ingredientCount: ingredientIds.length,
-      preferencesLoading,
-      hasPreferences: !!preferences,
-      loadingRecs,
-      recCount: recommendations.length
-    });
-  });
-
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendedCocktail[]>([]);
@@ -87,6 +68,52 @@ export default function DashboardPage() {
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const DASHBOARD_READY_LIMIT = 10;
+
+  // DEBUG: Track what causes re-renders (only log when key values change)
+  const renderCount = useRef(0);
+  const prevValues = useRef<{
+    authLoading: boolean;
+    isAuthenticated: boolean;
+    hasUser: boolean;
+    hasProfile: boolean;
+    barLoading: boolean;
+    ingredientCount: number;
+    preferencesLoading: boolean;
+    loadingRecs: boolean;
+  } | null>(null);
+  
+  useEffect(() => {
+    const currentValues = {
+      authLoading,
+      isAuthenticated,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      barLoading,
+      ingredientCount: ingredientIds.length,
+      preferencesLoading,
+      loadingRecs,
+    };
+    
+    // Only log if values actually changed
+    if (!prevValues.current || 
+        prevValues.current.authLoading !== currentValues.authLoading ||
+        prevValues.current.isAuthenticated !== currentValues.isAuthenticated ||
+        prevValues.current.hasUser !== currentValues.hasUser ||
+        prevValues.current.hasProfile !== currentValues.hasProfile ||
+        prevValues.current.barLoading !== currentValues.barLoading ||
+        prevValues.current.ingredientCount !== currentValues.ingredientCount ||
+        prevValues.current.preferencesLoading !== currentValues.preferencesLoading ||
+        prevValues.current.loadingRecs !== currentValues.loadingRecs) {
+      renderCount.current += 1;
+      console.log(`🔄 Dashboard Render #${renderCount.current}:`, {
+        ...currentValues,
+        profileName: profile?.display_name,
+        hasPreferences: !!preferences,
+        recCount: recommendations.length
+      });
+      prevValues.current = currentValues;
+    }
+  }, [authLoading, isAuthenticated, user, profile, barLoading, ingredientIds.length, preferencesLoading, loadingRecs, preferences, recommendations.length]);
 
   // Redirect to onboarding if needed
   useEffect(() => {
@@ -188,58 +215,10 @@ export default function DashboardPage() {
     }
 
     fetchRecommendations();
-  }, [isAuthenticated, ingredientIds, allCocktails, allIngredients, preferences]);
+  }, [isAuthenticated, ingredientIds, allCocktails, allIngredients]);
 
-  // Fetch ingredients for display
-  useEffect(() => {
-    async function fetchIngredients() {
-      try {
-        console.log("Fetching ingredients from Supabase...");
-        const { data, error } = await supabase
-          .from('ingredients')
-          .select('id, name, category, image_url, is_staple')
-          .order('name');
-
-        if (error) {
-          console.error("Error fetching ingredients from Supabase:", error);
-          // Fallback to some basic ingredients
-          setAllIngredients(getFallbackIngredients());
-          return;
-        }
-
-        if (!data || data.length === 0) {
-          console.warn("No ingredients found, using fallback");
-          setAllIngredients(getFallbackIngredients());
-          return;
-        }
-
-        // Map to expected format (same as getMixIngredients)
-        const mappedIngredients = (data || []).map(ingredient => {
-          const id = String(ingredient.id);
-
-          if (!id || id === 'undefined' || id === 'null') {
-            console.warn('Invalid ingredient ID:', ingredient);
-            return null;
-          }
-
-          return {
-            id,
-            name: ingredient.name,
-            category: ingredient.category || 'Garnish',
-            imageUrl: ingredient.image_url || null,
-            isStaple: ingredient.is_staple || false,
-          };
-        }).filter(Boolean) as MixIngredient[];
-
-        setAllIngredients(mappedIngredients);
-      } catch (error) {
-        console.error("Error fetching ingredients:", error);
-        setAllIngredients(getFallbackIngredients());
-      }
-    }
-
-    fetchIngredients();
-  }, [supabase]);
+  // Note: Ingredients are already fetched by getMixDataClient() above
+  // No need for duplicate fetch - this was causing race conditions and flickering
 
   // Fallback ingredients
   function getFallbackIngredients() {
