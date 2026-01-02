@@ -67,6 +67,7 @@ export default function DashboardPage() {
   }>>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
+  const [dataLoadError, setDataLoadError] = useState<string | null>(null);
   const DASHBOARD_READY_LIMIT = 10;
 
   // DEBUG: Track what causes re-renders (only log when key values change)
@@ -140,12 +141,17 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
+        setDataLoadError(null);
         // Fetch ingredients and cocktails data (same as mix wizard)
         const { ingredients, cocktails } = await getMixDataClient();
         setAllIngredients(ingredients || []);
         setAllCocktails(cocktails || []);
       } catch (error) {
         console.error("Error fetching mix data:", error);
+        const errorMessage = error instanceof Error ? error.message : "Failed to load data";
+        setDataLoadError(errorMessage);
+        // Still clear loading state so UI shows error instead of hanging
+        setLoadingRecs(false);
       }
     }
 
@@ -453,7 +459,19 @@ export default function DashboardPage() {
                 </Link>
               </div>
               <div className="p-6">
-                {loadingRecs ? (
+                {dataLoadError ? (
+                  <div className="text-center py-8">
+                    <p className="text-terracotta mb-4">
+                      {dataLoadError}
+                    </p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="inline-flex items-center gap-2 text-forest hover:text-terracotta font-medium"
+                    >
+                      Refresh Page
+                    </button>
+                  </div>
+                ) : loadingRecs ? (
                   <div className="grid sm:grid-cols-2 gap-4">
                     {[1, 2, 3, 4].map((i) => (
                       <div key={i} className="h-24 bg-mist rounded-2xl animate-pulse" />

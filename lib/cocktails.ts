@@ -231,29 +231,44 @@ export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
 
 /**
  * Fetch both ingredients and cocktails for mix logic (client-side)
+ * Includes timeout protection to prevent infinite hangs
  */
 export async function getMixDataClient(): Promise<{
   ingredients: MixIngredient[];
   cocktails: MixCocktail[];
 }> {
+  const MIX_DATA_TIMEOUT = 20000; // 20 seconds overall timeout
+
+  // Create a timeout promise
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error('Mix data loading timed out after 20 seconds. Please refresh the page.'));
+    }, MIX_DATA_TIMEOUT);
+  });
+
   try {
-    const ingredientsPromise = getMixIngredients();
-    const cocktailsPromise = getMixCocktailsClient();
+    const dataPromise = (async () => {
+      const ingredientsPromise = getMixIngredients();
+      const cocktailsPromise = getMixCocktailsClient();
 
-    const [ingredients, cocktails] = await Promise.all([
-      ingredientsPromise,
-      cocktailsPromise
-    ]);
+      const [ingredients, cocktails] = await Promise.all([
+        ingredientsPromise,
+        cocktailsPromise
+      ]);
 
-    // Check for data loading failures
-    if (!ingredients || ingredients.length === 0) {
-      throw new Error(`Failed to load ingredients (got ${ingredients?.length || 0})`);
-    }
-    if (!cocktails || cocktails.length === 0) {
-      throw new Error(`Failed to load cocktails (got ${cocktails?.length || 0})`);
-    }
+      // Check for data loading failures
+      if (!ingredients || ingredients.length === 0) {
+        throw new Error(`Failed to load ingredients (got ${ingredients?.length || 0})`);
+      }
+      if (!cocktails || cocktails.length === 0) {
+        throw new Error(`Failed to load cocktails (got ${cocktails?.length || 0})`);
+      }
 
-    return { ingredients, cocktails };
+      return { ingredients, cocktails };
+    })();
+
+    // Race between data fetch and timeout
+    return await Promise.race([dataPromise, timeoutPromise]);
   } catch (error) {
     console.error('Error in getMixDataClient:', error);
     throw error;
@@ -325,13 +340,9 @@ async function getCocktailsWithIngredientsClientSide() {
     .order('name');
 
   if (cocktailError) {
+    console.error('Error fetching cocktails:', cocktailError);
     throw cocktailError;
   }
-
-    if (cocktailError) {
-      console.error('Error fetching cocktails:', cocktailError);
-      throw cocktailError;
-    }
 
     if (!cocktailData || cocktailData.length === 0) {
       return [];
@@ -428,7 +439,7 @@ async function getCocktailsWithIngredientsClientSide() {
     return validCocktails;
 }
 
-// Server-side fallback implementation
+// Server-side fallback implementation with timeout
 async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
   id: string;
   name: string;
@@ -450,14 +461,21 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
   ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
 
-  // Make a request to our own API route
+  // Make a request to our own API route with timeout
+  const COCKTAILS_FETCH_TIMEOUT = 15000; // 15 seconds
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), COCKTAILS_FETCH_TIMEOUT);
+
   try {
     const response = await fetch('/api/cocktails/with-ingredients', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`API request failed: ${response.status} ${response.statusText}`);
@@ -467,6 +485,11 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
 
     return data;
   } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('Cocktails API request timed out after', COCKTAILS_FETCH_TIMEOUT, 'ms');
+      throw new Error('Cocktails data request timed out. Please try again.');
+    }
     console.error('Error in getCocktailsWithIngredientsServerSide:', error);
     throw error;
   }
