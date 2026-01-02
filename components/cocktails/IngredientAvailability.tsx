@@ -6,8 +6,10 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/solid";
+import { ShoppingBagIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
+import { useShoppingList } from "@/hooks/useShoppingList";
 
 interface IngredientRef {
   id: string;
@@ -23,12 +25,16 @@ interface IngredientAvailabilityProps {
    * matched, a stable fallback string is fine (it will be treated as "missing").
    */
   ingredients: IngredientRef[];
+  quantity?: number;
 }
 
-export function IngredientAvailability({ ingredients }: IngredientAvailabilityProps) {
+export function IngredientAvailability({ ingredients, quantity = 1 }: IngredientAvailabilityProps) {
   const { isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, ingredients: barIngredients, isLoading: barLoading } = useBarIngredients();
+  const { addItems, isLoading: shoppingListLoading } = useShoppingList();
   const [mounted, setMounted] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [didAdd, setDidAdd] = useState(false);
 
   // Prevent hydration mismatch by only rendering after mount
   useEffect(() => {
@@ -96,7 +102,7 @@ export function IngredientAvailability({ ingredients }: IngredientAvailabilityPr
       percentage,
       missingIngredients,
     };
-  }, [ingredients, ingredientIds]);
+  }, [ingredients, ingredientIds, barIngredients]);
 
   // Prevent hydration mismatch - don't render until mounted
   if (!mounted) {
@@ -189,11 +195,52 @@ export function IngredientAvailability({ ingredients }: IngredientAvailabilityPr
             ))}
           </div>
 
+          {/* Add to shopping list button */}
+          <button
+            onClick={async () => {
+              setIsAdding(true);
+              setDidAdd(false);
+              try {
+                const scaledIngredients = missingIngredients.map(ing => ({
+                  id: ing.id,
+                  name: ing.name,
+                  category: ing.category,
+                }));
+                await addItems(scaledIngredients);
+                setDidAdd(true);
+                setTimeout(() => setDidAdd(false), 2000);
+              } catch (error) {
+                console.error("Error adding to shopping list:", error);
+              } finally {
+                setIsAdding(false);
+              }
+            }}
+            disabled={shoppingListLoading || isAdding}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terracotta hover:bg-terracotta-dark text-cream text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+          >
+            {isAdding ? (
+              <>
+                <div className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full animate-spin" />
+                Adding...
+              </>
+            ) : didAdd ? (
+              <>
+                <CheckIcon className="w-4 h-4" />
+                Added to shopping list
+              </>
+            ) : (
+              <>
+                <ShoppingBagIcon className="w-4 h-4" />
+                Add missing ingredients to shopping list
+              </>
+            )}
+          </button>
+
           {/* Link to shopping list */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center justify-center">
             <Link
               href="/shopping-list"
-              className="text-sm font-medium text-sage hover:text-forest transition-colors"
+              className="text-sm font-medium text-sage hover:text-terracotta transition-colors"
             >
               View shopping list →
             </Link>
@@ -203,13 +250,13 @@ export function IngredientAvailability({ ingredients }: IngredientAvailabilityPr
 
       {/* Ready message */}
       {percentage === 100 && (
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-olive font-medium">
-            You have everything you need to make this cocktail.
+        <div className="border-t border-mist pt-4">
+          <p className="text-sm text-olive font-medium mb-3 text-center">
+            ✓ You have everything you need to make this cocktail!
           </p>
           <Link
             href="/shopping-list"
-            className="text-sm font-medium text-sage hover:text-forest transition-colors"
+            className="block text-center text-sm font-medium text-sage hover:text-terracotta transition-colors"
           >
             View shopping list →
           </Link>

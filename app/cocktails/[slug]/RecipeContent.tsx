@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { QuantitySelector } from "@/components/cocktails/QuantitySelector";
 import { IngredientAvailability } from "@/components/cocktails/IngredientAvailability";
-import { ShoppingListButton } from "@/components/cocktails/ShoppingListButton";
 import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
 import Image from "next/image";
 import { OptimizedCocktailImage } from "@/components/cocktails/OptimizedCocktailImage";
@@ -305,16 +304,11 @@ export function RecipeContent({
               <div className="mt-6 pt-6 border-t border-gray-100">
                 {!authLoading && isAuthenticated ? (
                   <>
-                    {/* Logged in: Show bar progress and shopping list button */}
-                <div className="mb-4">
-                  <IngredientAvailability ingredients={shoppingListIngredients} />
-                </div>
-                    <div className="mt-3">
-                <ShoppingListButton
-                  ingredients={shoppingListIngredients}
-                  quantity={quantity}
-                />
-                    </div>
+                    {/* Logged in: Show bar progress with integrated shopping list button */}
+                    <IngredientAvailability 
+                      ingredients={shoppingListIngredients} 
+                      quantity={quantity}
+                    />
                   </>
                 ) : !authLoading && !isAuthenticated ? (
                   <>
