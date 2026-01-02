@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { name, email, subject, message } = body;
+    const { name, email, message } = body;
 
     // Validate required fields
     if (!name || typeof name !== "string" || !name.trim()) {
@@ -100,7 +100,6 @@ export async function POST(request: NextRequest) {
 
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = name.trim();
-    const trimmedSubject = subject?.trim() || "Contact Form Submission";
     const trimmedMessage = message.trim();
 
     if (!isValidEmail(trimmedEmail)) {
@@ -124,7 +123,7 @@ export async function POST(request: NextRequest) {
     const resend = createResendClient();
 
     // Format email content
-    const emailSubject = `Contact Form: ${trimmedSubject}`;
+    const emailSubject = `Contact Form Submission from ${trimmedName}`;
     
     const emailHtml = `
       <!DOCTYPE html>
@@ -202,11 +201,6 @@ export async function POST(request: NextRequest) {
             </div>
             
             <div class="field">
-              <div class="field-label">Subject</div>
-              <div class="field-value">${escapeHtml(trimmedSubject)}</div>
-            </div>
-            
-            <div class="field">
               <div class="field-label">Message</div>
               <div class="message-content">${escapeHtml(trimmedMessage).replace(/\n/g, "<br>")}</div>
             </div>
@@ -224,7 +218,6 @@ export async function POST(request: NextRequest) {
 New Contact Form Submission
 
 From: ${trimmedName} <${trimmedEmail}>
-Subject: ${trimmedSubject}
 
 Message:
 ${trimmedMessage}

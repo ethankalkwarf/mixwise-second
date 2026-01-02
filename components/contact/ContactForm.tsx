@@ -8,7 +8,6 @@ export function ContactForm() {
   const toast = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,7 +37,6 @@ export function ContactForm() {
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
-          subject: subject.trim() || undefined,
           message: message.trim(),
         }),
       });
@@ -53,7 +51,6 @@ export function ContactForm() {
       toast.success(data.message || "Your message has been sent successfully!");
       setName("");
       setEmail("");
-      setSubject("");
       setMessage("");
     } catch (error) {
       console.error("Contact form error:", error);
@@ -107,21 +104,6 @@ export function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="contact-subject" className="label-botanical">
-          Subject <span className="text-sage font-normal">(optional)</span>
-        </label>
-        <input
-          id="contact-subject"
-          type="text"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="What's this about?"
-          className="input-botanical"
-          disabled={isSubmitting}
-        />
-      </div>
-
-      <div>
         <label htmlFor="contact-message" className="label-botanical">
           Message
         </label>
@@ -135,9 +117,6 @@ export function ContactForm() {
           disabled={isSubmitting}
           maxLength={5000}
         />
-        <p className="text-xs text-sage mt-1">
-          {message.length} / 5000 characters
-        </p>
       </div>
 
       <Button
