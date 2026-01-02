@@ -69,9 +69,6 @@ export default function DashboardPage() {
   const [loadingRecs, setLoadingRecs] = useState(true);
   const DASHBOARD_READY_LIMIT = 10;
 
-  // Prevent flickering by ensuring dashboard is fully ready before showing content
-  const [dashboardReady, setDashboardReady] = useState(false);
-
   // Redirect to onboarding if needed
   useEffect(() => {
     if (!authLoading && isAuthenticated && needsOnboarding) {
@@ -262,19 +259,6 @@ export default function DashboardPage() {
   const isAuthLoading = authLoading;
   const isContentLoading = barLoading || favsLoading || recentLoading;
 
-  // Set dashboard as ready once critical data is loaded to prevent flickering
-  useEffect(() => {
-    if (!isAuthLoading && isAuthenticated && !loadingRecs && !barLoading) {
-      // Small delay to ensure all async operations have settled
-      const timer = setTimeout(() => {
-        setDashboardReady(true);
-      }, 100);
-      return () => clearTimeout(timer);
-    } else {
-      setDashboardReady(false);
-    }
-  }, [isAuthLoading, isAuthenticated, loadingRecs, barLoading]);
-
   // Truly stable greeting - persists across component re-mounts to prevent flickering
   const getDynamicGreeting = useMemo(() => {
     // Use localStorage to persist greeting across component re-mounts
@@ -347,8 +331,8 @@ export default function DashboardPage() {
     await removeIngredient(id);
   }, [removeIngredient]);
 
-  // Show loading until dashboard is fully ready to prevent flickering
-  if (isAuthLoading || !dashboardReady) {
+  // Only show loading skeleton during initial auth check
+  if (isAuthLoading) {
     return (
       <div className="py-12 bg-cream min-h-screen">
         <MainContainer>
