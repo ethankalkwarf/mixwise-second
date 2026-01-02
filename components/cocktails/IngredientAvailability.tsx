@@ -27,7 +27,7 @@ interface IngredientAvailabilityProps {
 
 export function IngredientAvailability({ ingredients }: IngredientAvailabilityProps) {
   const { isAuthenticated, isLoading: authLoading } = useUser();
-  const { ingredientIds, isLoading: barLoading } = useBarIngredients();
+  const { ingredientIds, ingredients: barIngredients, isLoading: barLoading } = useBarIngredients();
   const [mounted, setMounted] = useState(false);
 
   // Prevent hydration mismatch by only rendering after mount
@@ -45,9 +45,24 @@ export function IngredientAvailability({ ingredients }: IngredientAvailabilityPr
       ingredientIds.map(id => String(id).toLowerCase().trim())
     );
 
+    // Also create a set of normalized ingredient names from bar for name-based matching
+    // This helps when cocktail ingredients use name-based IDs instead of UUIDs
+    const normalizedBarNames = new Set(
+      barIngredients.map(ing => String(ing.name || '').toLowerCase().trim()).filter(Boolean)
+    );
+
     const availableIngredients = requiredIngredients.filter((i) => {
       const normalizedId = String(i.id).toLowerCase().trim();
-      const isAvailable = normalizedBarIds.has(normalizedId);
+      const normalizedName = String(i.name).toLowerCase().trim();
+      
+      // Try ID match first (for canonical UUIDs)
+      const isAvailableById = normalizedBarIds.has(normalizedId);
+      
+      // If ID match fails, try name match (for fallback name-based IDs)
+      const isAvailableByName = normalizedBarNames.has(normalizedName);
+      
+      const isAvailable = isAvailableById || isAvailableByName;
+      
       if (process.env.NODE_ENV === 'development' && !isAvailable) {
         console.log(`[IngredientAvailability] Missing: "${i.name}" (ID: ${i.id}) not in bar. Bar IDs:`, Array.from(normalizedBarIds).slice(0, 5));
       }
@@ -55,7 +70,11 @@ export function IngredientAvailability({ ingredients }: IngredientAvailabilityPr
     });
 
     const missingIngredients = requiredIngredients.filter(
-      (i) => !normalizedBarIds.has(String(i.id).toLowerCase().trim())
+      (i) => {
+        const normalizedId = String(i.id).toLowerCase().trim();
+        const normalizedName = String(i.name).toLowerCase().trim();
+        return !normalizedBarIds.has(normalizedId) && !normalizedBarNames.has(normalizedName);
+      }
     );
 
     const percentage =

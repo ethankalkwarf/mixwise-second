@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
+import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
 import type { ShoppingListItem } from "@/lib/supabase/database.types";
 
@@ -46,6 +47,7 @@ interface UseShoppingListResult {
 export function useShoppingList(): UseShoppingListResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
   const { supabaseClient: supabase } = useSessionContext();
+  const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
   const [items, setItems] = useState<ShoppingListItem[] | LocalShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,6 +55,29 @@ export function useShoppingList(): UseShoppingListResult {
   // Track the last fetched user ID to prevent duplicate fetches
   const lastFetchedUserId = useRef<string | null>(null);
   const isFetching = useRef(false);
+  const hasPromptedSignup = useRef(false);
+
+  const promptSignupToSave = useCallback(() => {
+    if (hasPromptedSignup.current) return;
+    hasPromptedSignup.current = true;
+
+    // Remember where the user was, so after OAuth callback we can send them back.
+    // This is especially important for Google OAuth which always returns to /auth/callback.
+    try {
+      if (typeof window !== "undefined") {
+        const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        sessionStorage.setItem("mixwise-auth-return-to", returnTo);
+      }
+    } catch {
+      // ignore storage failures
+    }
+
+    openAuthDialog({
+      mode: "signup",
+      title: "Save your shopping list",
+      subtitle: "Create a free account to sync your shopping list across devices and never lose it.",
+    });
+  }, [openAuthDialog]);
 
   // Load from localStorage
   const loadFromLocal = useCallback((): LocalShoppingItem[] => {
@@ -125,13 +150,27 @@ export function useShoppingList(): UseShoppingListResult {
             );
             
             if (newItems.length > 0) {
-              const toInsert = newItems.map(item => ({
-                user_id: user.id,
-                ingredient_id: item.ingredient_id,
-                ingredient_name: item.ingredient_name,
-                ingredient_category: item.ingredient_category,
-                is_checked: item.is_checked,
-              }));
+              const toInsert = newItems.map(item => {
+                const insertItem: {
+                  user_id: string;
+                  ingredient_id: string;
+                  ingredient_name: string;
+                  ingredient_category?: string;
+                  is_checked: boolean;
+                } = {
+                  user_id: user.id,
+                  ingredient_id: item.ingredient_id,
+                  ingredient_name: item.ingredient_name,
+                  is_checked: item.is_checked,
+                };
+                
+                // Only include category if it's provided
+                if (item.ingredient_category) {
+                  insertItem.ingredient_category = item.ingredient_category;
+                }
+                
+                return insertItem;
+              });
               
               await supabase.from("shopping_list").insert(toInsert);
               localStorage.removeItem(LOCAL_STORAGE_KEY);
@@ -165,15 +204,53 @@ export function useShoppingList(): UseShoppingListResult {
     }
     
     if (isAuthenticated && user) {
-      const { error } = await supabase.from("shopping_list").insert({
+      const insertData: {
+        user_id: string;
+        ingredient_id: string;
+        ingredient_name: string;
+        ingredient_category?: string;
+      } = {
         user_id: user.id,
         ingredient_id: ingredient.id,
         ingredient_name: ingredient.name,
-        ingredient_category: ingredient.category,
-      });
+      };
+      
+      // Only include category if it's provided
+      if (ingredient.category) {
+        insertData.ingredient_category = ingredient.category;
+      }
+      
+      const { error } = await supabase.from("shopping_list").insert(insertData);
       
       if (error) {
-        toast.error("Failed to add to shopping list");
+        console.error("Error adding to shopping list:", error);
+        console.error("Insert data was:", insertData);
+        
+        // Handle duplicate entry (unique constraint violation)
+        if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+          toast.info(`${ingredient.name} is already in your shopping list`);
+          // Refresh the list to ensure it's in sync
+          const serverData = await loadFromServer(user.id);
+          setItems(serverData);
+        } else if (error.message?.includes('ingredient_category') || error.message?.includes('schema cache')) {
+          // If category column doesn't exist, try without it
+          console.warn("Category column issue detected, retrying without category");
+          const retryData = {
+            user_id: user.id,
+            ingredient_id: ingredient.id,
+            ingredient_name: ingredient.name,
+          };
+          const { error: retryError } = await supabase.from("shopping_list").insert(retryData);
+          if (retryError) {
+            toast.error(`Failed to add to shopping list: ${retryError.message || "Unknown error"}`);
+            return;
+          }
+          const serverData = await loadFromServer(user.id);
+          setItems(serverData);
+          toast.success(`Added ${ingredient.name} to shopping list`);
+        } else {
+          toast.error(`Failed to add to shopping list: ${error.message || "Unknown error"}`);
+        }
         return;
       }
       
@@ -192,8 +269,9 @@ export function useShoppingList(): UseShoppingListResult {
       setItems(updated);
       saveToLocal(updated);
       toast.success(`Added ${ingredient.name} to shopping list`);
+      promptSignupToSave();
     }
-  }, [items, isAuthenticated, user, supabase, loadFromServer, saveToLocal, toast]);
+  }, [items, isAuthenticated, user, supabase, loadFromServer, saveToLocal, toast, promptSignupToSave]);
 
   // Add multiple items
   const addItems = useCallback(async (ingredients: { id: string; name: string; category?: string }[]) => {
@@ -207,22 +285,72 @@ export function useShoppingList(): UseShoppingListResult {
     }
     
     if (isAuthenticated && user) {
-      const toInsert = newIngredients.map(ing => ({
-        user_id: user.id,
-        ingredient_id: ing.id,
-        ingredient_name: ing.name,
-        ingredient_category: ing.category,
-      }));
+      const toInsert = newIngredients.map(ing => {
+        const item: {
+          user_id: string;
+          ingredient_id: string;
+          ingredient_name: string;
+          ingredient_category?: string;
+        } = {
+          user_id: user.id,
+          ingredient_id: ing.id,
+          ingredient_name: ing.name,
+        };
+        
+        // Only include category if it's provided
+        if (ing.category) {
+          item.ingredient_category = ing.category;
+        }
+        
+        return item;
+      });
       
       const { error } = await supabase.from("shopping_list").insert(toInsert);
       
       if (error) {
-        toast.error("Failed to add items to shopping list");
+        console.error("Error adding items to shopping list:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
+        console.error("Error details:", error.details);
+        console.error("Insert data sample:", toInsert.slice(0, 2));
+        console.error("User ID:", user.id);
+        
+        // Handle duplicate entries (unique constraint violation)
+        if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+          toast.info("Some items are already in your shopping list");
+          // Refresh the list to ensure it's in sync
+          const serverData = await loadFromServer(user.id);
+          setItems(serverData);
+        } else if (error.code === '42501' || error.message?.includes('permission') || error.message?.includes('policy')) {
+          // RLS policy violation
+          console.error("RLS policy violation - user may not have permission to insert");
+          toast.error("Permission denied. Please try logging out and back in.");
+        } else if (error.message?.includes('ingredient_category') || error.message?.includes('schema cache')) {
+          // If category column doesn't exist, try without it
+          console.warn("Category column issue detected, retrying without category");
+          const retryData = toInsert.map(item => ({
+            user_id: item.user_id,
+            ingredient_id: item.ingredient_id,
+            ingredient_name: item.ingredient_name,
+          }));
+          const { error: retryError } = await supabase.from("shopping_list").insert(retryData);
+          if (retryError) {
+            console.error("Retry also failed:", retryError);
+            toast.error(`Failed to add items to shopping list: ${retryError.message || "Unknown error"}`);
+            return;
+          }
+          const serverData = await loadFromServer(user.id);
+          setItems(serverData);
+          toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
+        } else {
+          toast.error(`Failed to add items to shopping list: ${error.message || "Unknown error"}`);
+        }
         return;
       }
       
       const serverData = await loadFromServer(user.id);
       setItems(serverData);
+      toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
     } else {
       const newItems: LocalShoppingItem[] = newIngredients.map(ing => ({
         ingredient_id: ing.id,
@@ -237,7 +365,10 @@ export function useShoppingList(): UseShoppingListResult {
     }
     
     toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
-  }, [items, isAuthenticated, user, supabase, loadFromServer, saveToLocal, toast]);
+    if (!isAuthenticated) {
+      promptSignupToSave();
+    }
+  }, [items, isAuthenticated, user, supabase, loadFromServer, saveToLocal, toast, promptSignupToSave]);
 
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {

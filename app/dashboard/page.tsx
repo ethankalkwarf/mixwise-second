@@ -11,6 +11,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { useShoppingList } from "@/hooks/useShoppingList";
 import { getCocktailsWithIngredientsClient, getMixDataClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { createClient } from "@/lib/supabase/client";
@@ -29,6 +30,7 @@ import {
   ArrowRightIcon,
   PlusCircleIcon,
   XMarkIcon,
+  ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
 
 interface RecommendedCocktail {
@@ -54,6 +56,7 @@ export default function DashboardPage() {
   const { favorites, isLoading: favsLoading } = useFavorites();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const { preferences, isLoading: preferencesLoading, needsOnboarding } = useUserPreferences();
+  const { addItems, isLoading: shoppingLoading } = useShoppingList();
 
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<any[]>([]);
@@ -64,6 +67,7 @@ export default function DashboardPage() {
     slug: { current: string };
     externalImageUrl?: string;
     missingIngredientNames: string[];
+    missingIngredientIds: string[];
   }>>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
@@ -177,6 +181,7 @@ export default function DashboardPage() {
           slug: { current: match.cocktail.slug },
           externalImageUrl: match.cocktail.imageUrl || undefined,
           missingIngredientNames: match.missingIngredientNames || [],
+          missingIngredientIds: match.missingRequiredIngredientIds || [],
         }));
 
         setRecommendations(formattedCocktails);
@@ -376,6 +381,24 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* Quick Actions */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <Link
+            href="/shopping-list"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-cream rounded-2xl transition-all text-sm font-medium shadow-soft"
+          >
+            <ShoppingBagIcon className="w-4 h-4" />
+            Shopping List
+          </Link>
+          <Link
+            href="/mix"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
+          >
+            <BeakerIcon className="w-4 h-4" />
+            Mix Wizard
+          </Link>
+        </div>
+
         {/* Bento Grid Layout */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column - Primary Content */}
@@ -524,44 +547,103 @@ export default function DashboardPage() {
                       </span>
                     </div>
                   </div>
-                  <Link
-                    href="/mix"
-                    className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium"
-                  >
-                    Add ingredients →
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={async () => {
+                        // Collect all missing ingredients from all almost-there cocktails
+                        const allMissingIngredients: Array<{ id: string; name: string; category?: string }> = [];
+                        const ingredientMap = new Map<string, { id: string; name: string; category?: string }>();
+                        
+                        almostThereCocktails.forEach(cocktail => {
+                          cocktail.missingIngredientIds.forEach(ingId => {
+                            if (!ingredientMap.has(ingId)) {
+                              const ingredient = allIngredients.find(ing => ing.id === ingId);
+                              if (ingredient) {
+                                ingredientMap.set(ingId, {
+                                  id: ingredient.id,
+                                  name: ingredient.name,
+                                  category: ingredient.category,
+                                });
+                              }
+                            }
+                          });
+                        });
+                        
+                        const uniqueIngredients = Array.from(ingredientMap.values());
+                        if (uniqueIngredients.length > 0) {
+                          await addItems(uniqueIngredients);
+                        }
+                      }}
+                      disabled={shoppingLoading}
+                      className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium disabled:opacity-50"
+                    >
+                      Add all missing →
+                    </button>
+                    <Link
+                      href="/mix"
+                      className="text-sm text-sage hover:text-forest transition-colors font-medium"
+                    >
+                      Build bar →
+                    </Link>
+                  </div>
                 </div>
                 <div className="p-6">
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {almostThereCocktails.slice(0, 6).map((cocktail) => (
-                      <Link
-                        key={cocktail._id}
-                        href={`/cocktails/${cocktail.slug?.current}`}
-                        className="flex items-center gap-4 p-3 bg-cream hover:bg-mist rounded-2xl transition-all group"
-                      >
-                        <Image
-                          src={cocktail.externalImageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
-                          alt={cocktail.name}
-                          width={56}
-                          height={56}
-                          className="w-14 h-14 rounded-xl object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
-                            {formatCocktailName(cocktail.name)}
-                          </p>
-                          {cocktail.missingIngredientNames.length > 0 && (
-                            <p className="text-sm text-sage truncate">
-                              Missing: {cocktail.missingIngredientNames.slice(0, 2).join(", ")}
-                              {cocktail.missingIngredientNames.length > 2 ? "…" : ""}
-                            </p>
+                    {almostThereCocktails.slice(0, 6).map((cocktail) => {
+                      const missingIngredients = cocktail.missingIngredientIds
+                        .map(id => {
+                          const ing = allIngredients.find(i => i.id === id);
+                          return ing ? { id: ing.id, name: ing.name, category: ing.category } : null;
+                        })
+                        .filter(Boolean) as Array<{ id: string; name: string; category?: string }>;
+                      
+                      return (
+                        <div
+                          key={cocktail._id}
+                          className="flex items-center gap-4 p-3 bg-cream hover:bg-mist rounded-2xl transition-all group"
+                        >
+                          <Link
+                            href={`/cocktails/${cocktail.slug?.current}`}
+                            className="flex items-center gap-4 flex-1 min-w-0"
+                          >
+                            <Image
+                              src={cocktail.externalImageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
+                              alt={cocktail.name}
+                              width={56}
+                              height={56}
+                              className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
+                              onError={(e) => {
+                                e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
+                                {formatCocktailName(cocktail.name)}
+                              </p>
+                              {cocktail.missingIngredientNames.length > 0 && (
+                                <p className="text-sm text-sage truncate">
+                                  Missing: {cocktail.missingIngredientNames.slice(0, 2).join(", ")}
+                                  {cocktail.missingIngredientNames.length > 2 ? "…" : ""}
+                                </p>
+                              )}
+                            </div>
+                          </Link>
+                          {missingIngredients.length > 0 && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await addItems(missingIngredients);
+                              }}
+                              disabled={shoppingLoading}
+                              className="flex-shrink-0 px-3 py-1.5 text-xs font-medium bg-olive/10 hover:bg-olive/20 text-olive rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                              title="Add missing ingredients to shopping list"
+                            >
+                              Add to list
+                            </button>
                           )}
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </section>
