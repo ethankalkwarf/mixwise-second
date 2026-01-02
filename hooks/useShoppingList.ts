@@ -49,6 +49,14 @@ export function useShoppingList(): UseShoppingListResult {
   const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
+  
+  // Helper to get Supabase URL and anon key for REST API calls
+  const getSupabaseConfig = useCallback(() => {
+    return {
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    };
+  }, []);
   const [items, setItems] = useState<ShoppingListItem[] | LocalShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -220,22 +228,71 @@ export function useShoppingList(): UseShoppingListResult {
         insertData.ingredient_category = ingredient.category;
       }
       
+      // Try to refresh schema cache by doing a SELECT first
+      // This helps Supabase refresh its schema cache
+      try {
+        await supabase.from("shopping_list").select("ingredient_name").limit(1);
+      } catch (e) {
+        // Ignore select errors, just trying to refresh cache
+      }
+      
       // Try inserting with all fields first
       let { error } = await supabase.from("shopping_list").insert(insertData);
       
-      // If schema cache error, try without category
+      // If schema cache error, try using REST API directly to bypass cache
       if (error && (error.message?.includes('ingredient_name') || error.message?.includes('schema cache') || error.message?.includes('column'))) {
-        console.warn("Schema cache issue detected, retrying with minimal fields");
-        const minimalData = {
-          user_id: user.id,
-          ingredient_id: ingredient.id,
-          ingredient_name: ingredient.name,
-        };
-        const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
-        if (retryError) {
-          error = retryError;
-        } else {
-          error = null;
+        console.warn("Schema cache issue detected, trying REST API workaround");
+        try {
+          // Use fetch to call Supabase REST API directly, bypassing typed client
+          const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/shopping_list`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
+              'Prefer': 'return=representation',
+            },
+            body: JSON.stringify({
+              user_id: user.id,
+              ingredient_id: ingredient.id,
+              ingredient_name: ingredient.name,
+              ...(ingredient.category ? { ingredient_category: ingredient.category } : {}),
+            }),
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("REST API error:", errorData);
+            // Fall back to minimal data
+            const minimalData = {
+              user_id: user.id,
+              ingredient_id: ingredient.id,
+              ingredient_name: ingredient.name,
+            };
+            const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
+            if (retryError) {
+              error = retryError;
+            } else {
+              error = null;
+            }
+          } else {
+            // Success via REST API
+            error = null;
+          }
+        } catch (restError) {
+          console.error("REST API workaround failed:", restError);
+          // Fall back to minimal data
+          const minimalData = {
+            user_id: user.id,
+            ingredient_id: ingredient.id,
+            ingredient_name: ingredient.name,
+          };
+          const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
+          if (retryError) {
+            error = retryError;
+          } else {
+            error = null;
+          }
         }
       }
       
@@ -327,19 +384,63 @@ export function useShoppingList(): UseShoppingListResult {
       // Try inserting with all fields first
       let { error } = await supabase.from("shopping_list").insert(toInsert);
       
-      // If schema cache error, try without category
+      // If schema cache error, use REST API directly to bypass typed client cache
       if (error && (error.message?.includes('ingredient_name') || error.message?.includes('schema cache') || error.message?.includes('column'))) {
-        console.warn("Schema cache issue detected, retrying with minimal fields");
-        const minimalData = toInsert.map(item => ({
-          user_id: item.user_id,
-          ingredient_id: item.ingredient_id,
-          ingredient_name: item.ingredient_name,
-        }));
-        const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
-        if (retryError) {
-          error = retryError;
-        } else {
-          error = null;
+        console.warn("Schema cache issue detected, using REST API workaround");
+        try {
+          const config = getSupabaseConfig();
+          const session = await supabase.auth.getSession();
+          const accessToken = session.data.session?.access_token;
+          
+          if (!config.url || !config.anonKey) {
+            throw new Error("Missing Supabase configuration");
+          }
+          
+          // Use REST API directly to bypass schema cache
+          const response = await fetch(`${config.url}/rest/v1/shopping_list`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': config.anonKey,
+              'Authorization': `Bearer ${accessToken || config.anonKey}`,
+              'Prefer': 'return=representation',
+            },
+            body: JSON.stringify(toInsert),
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: response.statusText }));
+            console.error("REST API error:", errorData);
+            // If REST API also fails, try minimal data
+            const minimalData = toInsert.map(item => ({
+              user_id: item.user_id,
+              ingredient_id: item.ingredient_id,
+              ingredient_name: item.ingredient_name,
+            }));
+            const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
+            if (retryError) {
+              error = retryError;
+            } else {
+              error = null;
+            }
+          } else {
+            // Success via REST API - clear the error
+            error = null;
+          }
+        } catch (restError) {
+          console.error("REST API workaround failed:", restError);
+          // Fall back to minimal data
+          const minimalData = toInsert.map(item => ({
+            user_id: item.user_id,
+            ingredient_id: item.ingredient_id,
+            ingredient_name: item.ingredient_name,
+          }));
+          const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
+          if (retryError) {
+            error = retryError;
+          } else {
+            error = null;
+          }
         }
       }
       
