@@ -294,3 +294,9 @@ The dialog doesn't close after email signup because the authentication happens o
 
 **Recommended**: Use the custom event approach (Approach 3) as it's more explicit and cleaner than sessionStorage.
 
+
+
+
+
+
+

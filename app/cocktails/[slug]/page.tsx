@@ -13,6 +13,7 @@ import { getSimilarRecipes } from "@/lib/similarRecipes";
 import { ShoppingListButton } from "@/components/cocktails/ShoppingListButton";
 import { RecipeContent } from "./RecipeContent";
 import { DailyCocktailBanner } from "@/components/cocktails/DailyCocktailBanner";
+import { matchIngredientTextToIds } from "@/lib/ingredientMatching";
 
 // --- helpers for data normalization ---
 
@@ -274,6 +275,10 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
   const tags = normalizeTags(cocktail.tags as any);
   const tagLine = buildTagLine(tags);
 
+  // Match ingredients to database IDs for shopping list
+  const ingredientTexts = ingredients.map(ing => ing.text);
+  const matchedIngredients = await matchIngredientTextToIds(ingredientTexts);
+
   // Use external image URL from Supabase
   const imageUrl = sanityCocktail.externalImageUrl || null;
 
@@ -369,6 +374,7 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
           cocktail={sanitizedCocktail}
           sanityCocktail={sanityCocktail}
           ingredients={ingredients}
+          matchedIngredients={matchedIngredients}
           instructionSteps={instructionSteps}
           tagLine={tagLine}
           imageUrl={imageUrl}

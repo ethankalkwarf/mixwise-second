@@ -146,3 +146,9 @@ export function FlavorRadarChart({ flavor }: { flavor: FlavorProps }) {
 }
 
 
+
+
+
+
+
+

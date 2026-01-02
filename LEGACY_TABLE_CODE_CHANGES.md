@@ -423,3 +423,9 @@ GET /dashboard
 All should work without any "inventories" table not found errors in logs.
 
 
+
+
+
+
+
+

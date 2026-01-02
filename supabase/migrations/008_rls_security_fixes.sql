@@ -49,3 +49,9 @@ DROP POLICY IF EXISTS "Users can view all badges for public profiles" ON public.
 -- SELECT * FROM user_badges WHERE user_id != auth.uid() LIMIT 1;
 
 
+
+
+
+
+
+

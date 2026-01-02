@@ -429,3 +429,9 @@ If you encounter issues:
 4. Verify RLS policies allow profile inserts
 5. Check user_id matches auth.uid() for inserts
 
+
+
+
+
+
+

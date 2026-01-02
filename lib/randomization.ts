@@ -19,13 +19,10 @@ export function getCocktailsRandomizationSeed(): string {
     if (!seed) {
       // Generate a new UUID v4 as seed
       seed = generateUUID();
-      // Set cookie with session scope (expires when browser closes)
-      cookieStore.set(COCKTAILS_SEED_COOKIE, seed, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        // No maxAge or expires means session cookie
-      });
+      // NOTE (Next.js 14+): cookies can only be modified in a Server Action or Route Handler.
+      // We intentionally do NOT set cookies here to avoid runtime errors in Server Components.
+      // If we want true session-stable ordering later, we can set this cookie in middleware
+      // or an API route and read it here.
     }
 
     return seed;

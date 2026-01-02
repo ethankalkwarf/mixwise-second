@@ -173,7 +173,15 @@ export function useBarIngredients(): UseBarIngredientsResult {
       }
 
       const result = await response.json();
-      console.log("[useBarIngredients] Loaded from API:", result.ingredients?.length || 0, "ingredients, source:", result.source);
+      console.log("[useBarIngredients] Loaded from API:", {
+        count: result.ingredients?.length || 0,
+        source: result.source,
+        error: result.error,
+        sample: result.ingredients?.slice(0, 3).map((item: any) => ({
+          ingredient_id: item.ingredient_id,
+          ingredient_name: item.ingredient_name,
+        })),
+      });
       return result.ingredients || [];
     } catch (err) {
       console.error("[useBarIngredients] Exception loading from server:", err);
@@ -246,13 +254,17 @@ export function useBarIngredients(): UseBarIngredientsResult {
         setIngredientNameMap(nameMap);
 
         if (isAuthenticated && user) {
+          console.log("[useBarIngredients] User authenticated, syncing bar for user:", user.id);
           // Use atomic sync strategy: Fetch, validate, then upsert all at once
           await syncAuthenticatedBar(
             user.id,
             nameToCanonicalId,
             ingredientsData || []
           );
+          // Verify state was set after sync
+          console.log("[useBarIngredients] After sync, checking state...");
         } else {
+          console.log("[useBarIngredients] User not authenticated, loading from localStorage");
           // Load from localStorage for anonymous users
           const localIds = loadFromLocal();
 
@@ -264,12 +276,14 @@ export function useBarIngredients(): UseBarIngredientsResult {
             saveToLocal(normalizedLocalIds);
           }
 
+          console.log("[useBarIngredients] Setting local ingredient IDs:", normalizedLocalIds.length);
           setIngredientIds(normalizedLocalIds);
         }
         
         // Mark as initialized for this user
         hasInitialized.current = true;
         lastUserId.current = currentUserId;
+        console.log("[useBarIngredients] Initialization complete for user:", currentUserId);
       } catch (error) {
         console.error("[useBarIngredients] Initialization failed:", error);
         // Attempt fallback: try to load from server even if initialization failed
@@ -280,6 +294,18 @@ export function useBarIngredients(): UseBarIngredientsResult {
               const serverIds = serverData.map(item => item.ingredient_id);
               setIngredientIds(serverIds);
               setServerIngredients(serverData);
+              
+              // Update name map from server data
+              setIngredientNameMap(prev => {
+                const updated = new Map(prev);
+                serverData.forEach(item => {
+                  if (item.ingredient_name) {
+                    updated.set(item.ingredient_id, item.ingredient_name);
+                  }
+                });
+                return updated;
+              });
+              
               console.log("[useBarIngredients] Loaded from server fallback:", serverIds.length, "ingredients");
               hasInitialized.current = true;
               lastUserId.current = currentUserId;
@@ -310,14 +336,26 @@ export function useBarIngredients(): UseBarIngredientsResult {
         const localIds = loadFromLocal();
 
         console.log("[useBarIngredients] Sync starting:", {
+          userId,
+          serverDataCount: serverData.length,
           serverIdsCount: serverIds.length,
           localIdsCount: localIds.length,
-          serverIdsSample: serverIds.slice(0, 3),
+          serverIdsSample: serverIds.slice(0, 5),
+          serverDataSample: serverData.slice(0, 3).map(item => ({ 
+            ingredient_id: item.ingredient_id, 
+            ingredient_name: item.ingredient_name 
+          })),
         });
 
         // Step 2: Merge server and local IDs (server data takes priority)
         // Keep ALL server IDs - don't drop any during normalization
         const mergedIds = [...new Set([...serverIds, ...localIds])];
+        
+        console.log("[useBarIngredients] Before normalization:", {
+          mergedIdsCount: mergedIds.length,
+          mergedIdsSample: mergedIds.slice(0, 5),
+          nameToCanonicalIdSize: nameToCanonicalId.size,
+        });
         
         // Step 3: For display purposes, try to normalize, but keep originals as fallback
         // This preserves all ingredient IDs even if normalization fails
@@ -325,12 +363,24 @@ export function useBarIngredients(): UseBarIngredientsResult {
           // Try normalization first
           const normalized = normalizeIngredientIds([id], nameToCanonicalId);
           // If normalization succeeds, use normalized ID; otherwise keep original
-          return normalized.length > 0 ? normalized[0] : id;
+          const result = normalized.length > 0 ? normalized[0] : id;
+          if (id !== result && process.env.NODE_ENV === 'development') {
+            console.log(`[useBarIngredients] Normalized ID: ${id} → ${result}`);
+          }
+          return result;
         });
+        
+        // CRITICAL: If normalization removed any IDs, keep the originals
+        // This prevents data loss if normalization fails
+        const finalIds = normalizedMergedIds.length === mergedIds.length 
+          ? normalizedMergedIds 
+          : mergedIds; // Fallback to originals if normalization lost any
 
         console.log("[useBarIngredients] After merge:", {
           mergedCount: mergedIds.length,
           normalizedCount: normalizedMergedIds.length,
+          finalCount: finalIds.length,
+          finalIdsSample: finalIds.slice(0, 5),
         });
 
         // Step 4: Only upsert local IDs that aren't already on server
@@ -358,19 +408,56 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
         // Step 5: Update UI with ALL ingredient IDs (server + local merged)
         // CRITICAL: Do NOT delete items from server - preserve user's bar
-        setIngredientIds(normalizedMergedIds);
-        setServerIngredients(
-          normalizedMergedIds.map(id => ({
+        console.log("[useBarIngredients] Setting ingredient IDs:", {
+          count: finalIds.length,
+          ids: finalIds.slice(0, 10),
+          serverDataRaw: serverData.slice(0, 3),
+        });
+        
+        // CRITICAL: Always set the state, even if empty array
+        // Use functional update to ensure state is set correctly
+        setIngredientIds(() => finalIds);
+        
+        // Build server ingredients with names and update name map
+        const serverIngredientsWithNames = finalIds.map(id => {
+          // Try to find name from ingredients data first
+          const ingredientFromData = ingredientsData?.find(ing => String(ing.id) === id);
+          // Fallback to server data if available
+          const serverItem = serverData.find(item => item.ingredient_id === id);
+          const name = ingredientFromData?.name || serverItem?.ingredient_name || null;
+          
+          return {
             user_id: userId,
             ingredient_id: id,
-            ingredient_name: ingredientsData?.find(ing => String(ing.id) === id)?.name || null,
-          }))
-        );
+            ingredient_name: name,
+          };
+        });
+        
+        setServerIngredients(serverIngredientsWithNames);
+        
+        // Update name map with all ingredient names
+        const updatedNameMap = new Map(ingredientNameMap);
+        serverIngredientsWithNames.forEach(item => {
+          if (item.ingredient_name) {
+            updatedNameMap.set(item.ingredient_id, item.ingredient_name);
+          }
+        });
+        setIngredientNameMap(updatedNameMap);
         
         // Clear local storage after successful merge
         clearLocal();
 
-        console.log(`[useBarIngredients] Sync complete: ${normalizedMergedIds.length} items in bar`);
+        console.log(`[useBarIngredients] ✅ Sync complete: ${finalIds.length} items in bar`);
+        
+        // Double-check state was set (for debugging)
+        setTimeout(() => {
+          console.log("[useBarIngredients] State verification - ingredientIds should be:", finalIds.length);
+        }, 100);
+        
+        // Double-check state was set (for debugging)
+        setTimeout(() => {
+          console.log("[useBarIngredients] State verification - ingredientIds should be:", finalIds.length);
+        }, 100);
       } catch (error) {
         console.error("[useBarIngredients] Sync failed with exception:", error);
         // Fallback: try to load server data as source of truth
@@ -380,6 +467,17 @@ export function useBarIngredients(): UseBarIngredientsResult {
           console.log("[useBarIngredients] Fallback: loaded", serverIds.length, "ingredients from server");
           setIngredientIds(serverIds);
           setServerIngredients(serverData);
+          
+          // Update name map from server data
+          setIngredientNameMap(prev => {
+            const updated = new Map(prev);
+            serverData.forEach(item => {
+              if (item.ingredient_name) {
+                updated.set(item.ingredient_id, item.ingredient_name);
+              }
+            });
+            return updated;
+          });
         } catch (fallbackError) {
           console.error("[useBarIngredients] Even fallback sync failed:", fallbackError);
         }

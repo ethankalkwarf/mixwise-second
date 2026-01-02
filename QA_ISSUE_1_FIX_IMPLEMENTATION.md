@@ -431,3 +431,9 @@ After deployment, verify:
 
 This fix addresses the root cause of the auth dialog not closing after email signup. The solution is minimal, elegant, and requires no server-side changes. It's safe to deploy immediately and should significantly improve the signup UX.
 
+
+
+
+
+
+

@@ -478,3 +478,9 @@ The solution is **explicit synchronization** via a promise that resolves only wh
 
 This removes the fragility of timing-based workarounds and provides a robust, testable, and performant authentication flow.
 
+
+
+
+
+
+

@@ -309,10 +309,12 @@ export function RecipeContent({
                     <div className="mb-4">
                       <IngredientAvailability ingredients={shoppingListIngredients} />
                     </div>
-                    <ShoppingListButton
-                      ingredients={shoppingListIngredients}
-                      quantity={quantity}
-                    />
+                    <div className="mt-3">
+                      <ShoppingListButton
+                        ingredients={shoppingListIngredients}
+                        quantity={quantity}
+                      />
+                    </div>
                   </>
                 ) : !authLoading && !isAuthenticated ? (
                   <>

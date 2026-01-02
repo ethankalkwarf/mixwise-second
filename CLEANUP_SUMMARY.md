@@ -98,3 +98,9 @@ DROP TABLE IF EXISTS public.inventories CASCADE;
 7. Drop database tables
 
 
+
+
+
+
+
+

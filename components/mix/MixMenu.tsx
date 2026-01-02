@@ -5,8 +5,9 @@ import { MixResultsPanel } from "./MixResultsPanel";
 import { YourBarPanel } from "./YourBarPanel";
 import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
 import { getMixMatchGroups } from "@/lib/mixMatching";
-import { ArrowPathIcon, LightBulbIcon, SparklesIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, LightBulbIcon, SparklesIcon, PlusIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { useShoppingList } from "@/hooks/useShoppingList";
 
 type Props = {
   inventoryIds: string[];
@@ -33,6 +34,7 @@ export function MixMenu({
   onClearAll,
 }: Props) {
   const [showAllRecipes, setShowAllRecipes] = useState(false);
+  const { addItem, isLoading: shoppingLoading } = useShoppingList();
 
   // Get "Almost There" suggestions - cocktails missing only one ingredient
   const almostThereCocktails = useMemo(() => {
@@ -238,12 +240,29 @@ export function MixMenu({
                         <div className="text-sm text-sage mb-3">
                           Missing: <span className="font-medium text-terracotta">{missingIngredient?.name}</span>
                         </div>
-                        <button
-                          onClick={() => onAddToInventory(missingIngredient!.id)}
-                          className="w-full bg-terracotta/10 text-terracotta border border-terracotta/20 rounded-xl py-2 px-4 text-sm font-medium hover:bg-terracotta hover:text-cream transition-all"
-                        >
-                          Add {missingIngredient?.name} & Unlock
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => onAddToInventory(missingIngredient!.id)}
+                            className="flex-1 bg-terracotta/10 text-terracotta border border-terracotta/20 rounded-xl py-2 px-4 text-sm font-medium hover:bg-terracotta hover:text-cream transition-all"
+                          >
+                            Add {missingIngredient?.name} & Unlock
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addItem({
+                                id: missingIngredient!.id,
+                                name: missingIngredient!.name,
+                                category: missingIngredient!.category,
+                              });
+                            }}
+                            disabled={shoppingLoading}
+                            className="flex-shrink-0 px-3 py-2 bg-olive/10 hover:bg-olive/20 text-olive border border-olive/20 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Add to shopping list"
+                          >
+                            <ShoppingBagIcon className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                       {cocktail.imageUrl && (
                         <div className="flex-shrink-0 w-16 h-16 bg-mist rounded-lg overflow-hidden">

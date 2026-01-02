@@ -220,10 +220,29 @@ export function useShoppingList(): UseShoppingListResult {
         insertData.ingredient_category = ingredient.category;
       }
       
-      const { error } = await supabase.from("shopping_list").insert(insertData);
+      // Try inserting with all fields first
+      let { error } = await supabase.from("shopping_list").insert(insertData);
+      
+      // If schema cache error, try without category
+      if (error && (error.message?.includes('ingredient_name') || error.message?.includes('schema cache') || error.message?.includes('column'))) {
+        console.warn("Schema cache issue detected, retrying with minimal fields");
+        const minimalData = {
+          user_id: user.id,
+          ingredient_id: ingredient.id,
+          ingredient_name: ingredient.name,
+        };
+        const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
+        if (retryError) {
+          error = retryError;
+        } else {
+          error = null;
+        }
+      }
       
       if (error) {
         console.error("Error adding to shopping list:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
         console.error("Insert data was:", insertData);
         
         // Handle duplicate entry (unique constraint violation)
@@ -305,7 +324,24 @@ export function useShoppingList(): UseShoppingListResult {
         return item;
       });
       
-      const { error } = await supabase.from("shopping_list").insert(toInsert);
+      // Try inserting with all fields first
+      let { error } = await supabase.from("shopping_list").insert(toInsert);
+      
+      // If schema cache error, try without category
+      if (error && (error.message?.includes('ingredient_name') || error.message?.includes('schema cache') || error.message?.includes('column'))) {
+        console.warn("Schema cache issue detected, retrying with minimal fields");
+        const minimalData = toInsert.map(item => ({
+          user_id: item.user_id,
+          ingredient_id: item.ingredient_id,
+          ingredient_name: item.ingredient_name,
+        }));
+        const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
+        if (retryError) {
+          error = retryError;
+        } else {
+          error = null;
+        }
+      }
       
       if (error) {
         console.error("Error adding items to shopping list:", error);

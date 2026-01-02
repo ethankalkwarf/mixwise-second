@@ -66,7 +66,7 @@ export function ShoppingListButton({ ingredients, quantity }: ShoppingListButton
     <button
       onClick={handleAddToShoppingList}
       disabled={isLoading || isAdding}
-      className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-terracotta hover:bg-terracotta-dark text-cream text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isAdding ? (
         <>

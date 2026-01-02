@@ -235,3 +235,9 @@ If issues arise after dropping tables:
 - No foreign key constraints from other active tables to these legacy tables
 
 
+
+
+
+
+
+

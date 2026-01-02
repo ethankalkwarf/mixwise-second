@@ -63,8 +63,17 @@ export function IngredientAvailability({ ingredients }: IngredientAvailabilityPr
       
       const isAvailable = isAvailableById || isAvailableByName;
       
-      if (process.env.NODE_ENV === 'development' && !isAvailable) {
-        console.log(`[IngredientAvailability] Missing: "${i.name}" (ID: ${i.id}) not in bar. Bar IDs:`, Array.from(normalizedBarIds).slice(0, 5));
+      if (process.env.NODE_ENV === 'development') {
+        if (!isAvailable) {
+          console.log(`[IngredientAvailability] Missing: "${i.name}" (ID: ${i.id})`, {
+            idMatch: isAvailableById,
+            nameMatch: isAvailableByName,
+            barIds: Array.from(normalizedBarIds).slice(0, 5),
+            barNames: Array.from(normalizedBarNames).slice(0, 5),
+            barIngredientsCount: barIngredients.length,
+            barIngredientsWithNames: barIngredients.filter(ing => ing.name).length,
+          });
+        }
       }
       return isAvailable;
     });
