@@ -228,71 +228,80 @@ export function useShoppingList(): UseShoppingListResult {
         insertData.ingredient_category = ingredient.category;
       }
       
-      // Try to refresh schema cache by doing a SELECT first
-      // This helps Supabase refresh its schema cache
-      try {
-        await supabase.from("shopping_list").select("ingredient_name").limit(1);
-      } catch (e) {
-        // Ignore select errors, just trying to refresh cache
-      }
-      
-      // Try inserting with all fields first
+      // Try inserting with typed client first
       let { error } = await supabase.from("shopping_list").insert(insertData);
       
-      // If schema cache error, try using REST API directly to bypass cache
-      if (error && (error.message?.includes('ingredient_name') || error.message?.includes('schema cache') || error.message?.includes('column'))) {
-        console.warn("Schema cache issue detected, trying REST API workaround");
+      // If any error occurs (especially schema cache errors), use REST API directly
+      if (error) {
+        const isSchemaError = error.message?.includes('ingredient_name') || 
+                             error.message?.includes('schema cache') || 
+                             error.message?.includes('column') ||
+                             error.message?.includes('Could not find');
+        
+        if (isSchemaError) {
+          console.warn("Schema cache issue detected, using REST API workaround");
+        }
+        
+        // Always try REST API on any error to bypass schema cache issues
         try {
-          // Use fetch to call Supabase REST API directly, bypassing typed client
-          const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/shopping_list`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
-              'Prefer': 'return=representation',
-            },
-            body: JSON.stringify({
-              user_id: user.id,
-              ingredient_id: ingredient.id,
-              ingredient_name: ingredient.name,
-              ...(ingredient.category ? { ingredient_category: ingredient.category } : {}),
-            }),
-          });
+          const config = getSupabaseConfig();
+          const session = await supabase.auth.getSession();
+          const accessToken = session.data.session?.access_token;
           
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("REST API error:", errorData);
-            // Fall back to minimal data
-            const minimalData = {
-              user_id: user.id,
-              ingredient_id: ingredient.id,
-              ingredient_name: ingredient.name,
-            };
-            const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
-            if (retryError) {
-              error = retryError;
-            } else {
-              error = null;
-            }
-          } else {
-            // Success via REST API
-            error = null;
+          if (!config.url || !config.anonKey) {
+            throw new Error("Missing Supabase configuration");
           }
-        } catch (restError) {
-          console.error("REST API workaround failed:", restError);
-          // Fall back to minimal data
-          const minimalData = {
+          
+          // Use REST API directly to bypass schema cache
+          const restPayload = {
             user_id: user.id,
             ingredient_id: ingredient.id,
             ingredient_name: ingredient.name,
+            ...(ingredient.category ? { ingredient_category: ingredient.category } : {}),
           };
-          const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
-          if (retryError) {
-            error = retryError;
+          
+          const response = await fetch(`${config.url}/rest/v1/shopping_list`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': config.anonKey,
+              'Authorization': `Bearer ${accessToken || config.anonKey}`,
+              'Prefer': 'return=representation',
+            },
+            body: JSON.stringify(restPayload),
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            let errorData;
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              errorData = { message: errorText || response.statusText };
+            }
+            console.error("REST API error:", {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorData,
+            });
+            
+            // If REST API also fails with schema error, the column might actually not exist
+            // In that case, we can't proceed
+            if (response.status === 400 && (errorText.includes('ingredient_name') || errorText.includes('column'))) {
+              toast.error("Database schema issue. Please contact support.");
+              return;
+            }
+            
+            // For other errors, keep the original error
+            error = { ...error, message: errorData.message || error.message };
           } else {
+            // Success via REST API - clear the error
             error = null;
           }
+        } catch (restError: any) {
+          console.error("REST API workaround failed:", restError);
+          // Keep the original error if REST API also fails
+          error = error || { message: restError.message || "Unknown error" };
         }
       }
       
@@ -300,6 +309,7 @@ export function useShoppingList(): UseShoppingListResult {
         console.error("Error adding to shopping list:", error);
         console.error("Error code:", error.code);
         console.error("Error message:", error.message);
+        console.error("Error details:", error);
         console.error("Insert data was:", insertData);
         
         // Handle duplicate entry (unique constraint violation)
@@ -308,23 +318,9 @@ export function useShoppingList(): UseShoppingListResult {
           // Refresh the list to ensure it's in sync
           const serverData = await loadFromServer(user.id);
           setItems(serverData);
-        } else if (error.message?.includes('ingredient_category') || error.message?.includes('schema cache')) {
-          // If category column doesn't exist, try without it
-          console.warn("Category column issue detected, retrying without category");
-          const retryData = {
-            user_id: user.id,
-            ingredient_id: ingredient.id,
-            ingredient_name: ingredient.name,
-          };
-          const { error: retryError } = await supabase.from("shopping_list").insert(retryData);
-          if (retryError) {
-            toast.error(`Failed to add to shopping list: ${retryError.message || "Unknown error"}`);
-            return;
-          }
-          const serverData = await loadFromServer(user.id);
-          setItems(serverData);
-          toast.success(`Added ${ingredient.name} to shopping list`);
         } else {
+          // All other errors should have been handled by REST API fallback
+          // If we still have an error here, it means REST API also failed
           toast.error(`Failed to add to shopping list: ${error.message || "Unknown error"}`);
         }
         return;
@@ -381,12 +377,21 @@ export function useShoppingList(): UseShoppingListResult {
         return item;
       });
       
-      // Try inserting with all fields first
+      // Try inserting with typed client first
       let { error } = await supabase.from("shopping_list").insert(toInsert);
       
-      // If schema cache error, use REST API directly to bypass typed client cache
-      if (error && (error.message?.includes('ingredient_name') || error.message?.includes('schema cache') || error.message?.includes('column'))) {
-        console.warn("Schema cache issue detected, using REST API workaround");
+      // If any error occurs (especially schema cache errors), use REST API directly
+      if (error) {
+        const isSchemaError = error.message?.includes('ingredient_name') || 
+                             error.message?.includes('schema cache') || 
+                             error.message?.includes('column') ||
+                             error.message?.includes('Could not find');
+        
+        if (isSchemaError) {
+          console.warn("Schema cache issue detected, using REST API workaround");
+        }
+        
+        // Always try REST API on any error to bypass schema cache issues
         try {
           const config = getSupabaseConfig();
           const session = await supabase.auth.getSession();
@@ -409,38 +414,35 @@ export function useShoppingList(): UseShoppingListResult {
           });
           
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: response.statusText }));
-            console.error("REST API error:", errorData);
-            // If REST API also fails, try minimal data
-            const minimalData = toInsert.map(item => ({
-              user_id: item.user_id,
-              ingredient_id: item.ingredient_id,
-              ingredient_name: item.ingredient_name,
-            }));
-            const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
-            if (retryError) {
-              error = retryError;
-            } else {
-              error = null;
+            const errorText = await response.text();
+            let errorData;
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              errorData = { message: errorText || response.statusText };
             }
+            console.error("REST API error:", {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorData,
+            });
+            
+            // If REST API also fails with schema error, the column might actually not exist
+            if (response.status === 400 && (errorText.includes('ingredient_name') || errorText.includes('column'))) {
+              toast.error("Database schema issue. Please contact support.");
+              return;
+            }
+            
+            // For other errors, keep the original error
+            error = { ...error, message: errorData.message || error.message };
           } else {
             // Success via REST API - clear the error
             error = null;
           }
-        } catch (restError) {
+        } catch (restError: any) {
           console.error("REST API workaround failed:", restError);
-          // Fall back to minimal data
-          const minimalData = toInsert.map(item => ({
-            user_id: item.user_id,
-            ingredient_id: item.ingredient_id,
-            ingredient_name: item.ingredient_name,
-          }));
-          const { error: retryError } = await supabase.from("shopping_list").insert(minimalData);
-          if (retryError) {
-            error = retryError;
-          } else {
-            error = null;
-          }
+          // Keep the original error if REST API also fails
+          error = error || { message: restError.message || "Unknown error" };
         }
       }
       
