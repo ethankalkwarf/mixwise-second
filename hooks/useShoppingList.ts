@@ -464,24 +464,9 @@ export function useShoppingList(): UseShoppingListResult {
           // RLS policy violation
           console.error("RLS policy violation - user may not have permission to insert");
           toast.error("Permission denied. Please try logging out and back in.");
-        } else if (error.message?.includes('ingredient_category') || error.message?.includes('schema cache')) {
-          // If category column doesn't exist, try without it
-          console.warn("Category column issue detected, retrying without category");
-          const retryData = toInsert.map(item => ({
-            user_id: item.user_id,
-            ingredient_id: item.ingredient_id,
-            ingredient_name: item.ingredient_name,
-          }));
-          const { error: retryError } = await supabase.from("shopping_list").insert(retryData);
-          if (retryError) {
-            console.error("Retry also failed:", retryError);
-            toast.error(`Failed to add items to shopping list: ${retryError.message || "Unknown error"}`);
-            return;
-          }
-          const serverData = await loadFromServer(user.id);
-          setItems(serverData);
-          toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
         } else {
+          // All other errors should have been handled by REST API fallback
+          // If we still have an error here, it means REST API also failed
           toast.error(`Failed to add items to shopping list: ${error.message || "Unknown error"}`);
         }
         return;
