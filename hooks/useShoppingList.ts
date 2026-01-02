@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
@@ -40,6 +40,8 @@ interface UseShoppingListResult {
  * 
  * IMPORTANT: Uses the shared Supabase client from SessionContext
  * to ensure session cookies are properly synced after login.
+ * 
+ * CRITICAL FIX: Uses refs to prevent duplicate fetches on auth state updates
  */
 export function useShoppingList(): UseShoppingListResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
@@ -47,6 +49,10 @@ export function useShoppingList(): UseShoppingListResult {
   const toast = useToast();
   const [items, setItems] = useState<ShoppingListItem[] | LocalShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Track the last fetched user ID to prevent duplicate fetches
+  const lastFetchedUserId = useRef<string | null>(null);
+  const isFetching = useRef(false);
 
   // Load from localStorage
   const loadFromLocal = useCallback((): LocalShoppingItem[] => {
@@ -71,13 +77,11 @@ export function useShoppingList(): UseShoppingListResult {
   }, []);
 
   // Load from server
-  const loadFromServer = useCallback(async () => {
-    if (!user) return [];
-    
+  const loadFromServer = useCallback(async (userId: string) => {
     const { data, error } = await supabase
       .from("shopping_list")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("added_at", { ascending: false });
     
     if (error) {
@@ -86,52 +90,71 @@ export function useShoppingList(): UseShoppingListResult {
     }
     
     return data || [];
-  }, [user, supabase]);
+  }, [supabase]);
 
-  // Initialize shopping list
+  // Initialize shopping list - only fetch when user ID changes
   useEffect(() => {
     const initialize = async () => {
       if (authLoading) return;
       
-      setIsLoading(true);
+      // Determine current user ID (null if not authenticated)
+      const currentUserId = isAuthenticated && user ? user.id : null;
       
-      if (isAuthenticated && user) {
-        const serverData = await loadFromServer();
-        setItems(serverData);
-        
-        // Sync any local items to server
-        const localItems = loadFromLocal();
-        if (localItems.length > 0) {
-          const newItems = localItems.filter(
-            local => !serverData.some(s => s.ingredient_id === local.ingredient_id)
-          );
-          
-          if (newItems.length > 0) {
-            const toInsert = newItems.map(item => ({
-              user_id: user.id,
-              ingredient_id: item.ingredient_id,
-              ingredient_name: item.ingredient_name,
-              ingredient_category: item.ingredient_category,
-              is_checked: item.is_checked,
-            }));
-            
-            await supabase.from("shopping_list").insert(toInsert);
-            localStorage.removeItem(LOCAL_STORAGE_KEY);
-            
-            // Reload from server
-            const updatedData = await loadFromServer();
-            setItems(updatedData);
-          }
-        }
-      } else {
-        setItems(loadFromLocal());
+      // Skip if we've already initialized for this user
+      if (lastFetchedUserId.current === currentUserId && !isFetching.current) {
+        setIsLoading(false);
+        return;
       }
       
-      setIsLoading(false);
+      // Prevent duplicate fetches
+      if (isFetching.current) return;
+      isFetching.current = true;
+      
+      setIsLoading(true);
+      
+      try {
+        if (isAuthenticated && user) {
+          const serverData = await loadFromServer(user.id);
+          setItems(serverData);
+          
+          // Sync any local items to server
+          const localItems = loadFromLocal();
+          if (localItems.length > 0) {
+            const newItems = localItems.filter(
+              local => !serverData.some(s => s.ingredient_id === local.ingredient_id)
+            );
+            
+            if (newItems.length > 0) {
+              const toInsert = newItems.map(item => ({
+                user_id: user.id,
+                ingredient_id: item.ingredient_id,
+                ingredient_name: item.ingredient_name,
+                ingredient_category: item.ingredient_category,
+                is_checked: item.is_checked,
+              }));
+              
+              await supabase.from("shopping_list").insert(toInsert);
+              localStorage.removeItem(LOCAL_STORAGE_KEY);
+              
+              // Reload from server
+              const updatedData = await loadFromServer(user.id);
+              setItems(updatedData);
+            }
+          }
+          
+          lastFetchedUserId.current = user.id;
+        } else {
+          setItems(loadFromLocal());
+          lastFetchedUserId.current = null;
+        }
+      } finally {
+        setIsLoading(false);
+        isFetching.current = false;
+      }
     };
     
     initialize();
-  }, [authLoading, isAuthenticated, user, loadFromServer, loadFromLocal, supabase]);
+  }, [authLoading, isAuthenticated, user?.id, loadFromServer, loadFromLocal, supabase]);
 
   // Add single item
   const addItem = useCallback(async (ingredient: { id: string; name: string; category?: string }) => {
@@ -154,7 +177,7 @@ export function useShoppingList(): UseShoppingListResult {
         return;
       }
       
-      const serverData = await loadFromServer();
+      const serverData = await loadFromServer(user.id);
       setItems(serverData);
       toast.success(`Added ${ingredient.name} to shopping list`);
     } else {
@@ -198,7 +221,7 @@ export function useShoppingList(): UseShoppingListResult {
         return;
       }
       
-      const serverData = await loadFromServer();
+      const serverData = await loadFromServer(user.id);
       setItems(serverData);
     } else {
       const newItems: LocalShoppingItem[] = newIngredients.map(ing => ({
@@ -225,7 +248,7 @@ export function useShoppingList(): UseShoppingListResult {
         .eq("user_id", user.id)
         .eq("ingredient_id", ingredientId);
       
-      const serverData = await loadFromServer();
+      const serverData = await loadFromServer(user.id);
       setItems(serverData);
     } else {
       const updated = (items as LocalShoppingItem[]).filter(
@@ -248,7 +271,7 @@ export function useShoppingList(): UseShoppingListResult {
         .eq("user_id", user.id)
         .eq("ingredient_id", ingredientId);
       
-      const serverData = await loadFromServer();
+      const serverData = await loadFromServer(user.id);
       setItems(serverData);
     } else {
       const updated = (items as LocalShoppingItem[]).map(i =>
@@ -270,7 +293,7 @@ export function useShoppingList(): UseShoppingListResult {
         .eq("user_id", user.id)
         .eq("is_checked", true);
       
-      const serverData = await loadFromServer();
+      const serverData = await loadFromServer(user.id);
       setItems(serverData);
     } else {
       const updated = (items as LocalShoppingItem[]).filter(i => !i.is_checked);
