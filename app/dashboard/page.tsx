@@ -113,7 +113,7 @@ export default function DashboardPage() {
       });
       prevValues.current = currentValues;
     }
-  }, [authLoading, isAuthenticated, user, profile, barLoading, ingredientIds.length, preferencesLoading, loadingRecs, preferences, recommendations.length]);
+  }, [authLoading, isAuthenticated, user?.id, profile?.id, barLoading, ingredientIds.length, preferencesLoading, loadingRecs, preferences?.public_bar_enabled, recommendations.length]);
 
   // Redirect to onboarding if needed
   useEffect(() => {
