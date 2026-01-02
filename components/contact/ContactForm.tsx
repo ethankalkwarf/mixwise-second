@@ -1,15 +1,39 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/common/Button";
 import { useToast } from "@/components/ui/toast";
+import { useUser } from "@/components/auth/UserProvider";
 
 export function ContactForm() {
   const toast = useToast();
+  const { user, profile, isAuthenticated, isLoading } = useUser();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const hasPopulatedRef = useRef(false);
+
+  // Pre-populate email and name when user is authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user && !hasPopulatedRef.current) {
+      // Pre-populate email from user account
+      if (user.email) {
+        setEmail(user.email);
+      }
+      
+      // Pre-populate name from profile or email
+      const displayName = profile?.display_name || user.email?.split("@")[0] || "";
+      if (displayName) {
+        setName(displayName);
+      }
+      
+      hasPopulatedRef.current = true;
+    } else if (!isAuthenticated && hasPopulatedRef.current) {
+      // Reset flag when user logs out
+      hasPopulatedRef.current = false;
+    }
+  }, [isLoading, isAuthenticated, user, profile]);
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const isFormValid = 
