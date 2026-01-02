@@ -4,34 +4,27 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
-import { sanityClient } from "@/lib/sanityClient";
-
-interface CocktailWithIngredients {
-  _id: string;
-  ingredients?: Array<{
-    ingredient?: { _id: string } | null;
-  }>;
-}
+import { getMixCocktailsClient, getMixIngredients } from "@/lib/cocktails";
+import { getMixMatchGroups } from "@/lib/mixMatching";
+import type { MixCocktail, MixIngredient } from "@/lib/mixTypes";
 
 export function CocktailsReadyBadge() {
   const { isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, isLoading: barLoading } = useBarIngredients();
-  const [cocktails, setCocktails] = useState<CocktailWithIngredients[]>([]);
+  const [cocktails, setCocktails] = useState<MixCocktail[]>([]);
+  const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [cocktailsLoading, setCocktailsLoading] = useState(true);
 
-  // Fetch all cocktails with their ingredients
+  // Fetch all cocktails and ingredients (same as dashboard)
   useEffect(() => {
-    const fetchCocktails = async () => {
+    const fetchData = async () => {
       try {
-        const data = await sanityClient.fetch<CocktailWithIngredients[]>(`
-          *[_type == "cocktail"] {
-            _id,
-            "ingredients": ingredients[] {
-              "ingredient": ingredient-> { _id }
-            }
-          }
-        `);
-        setCocktails(data);
+        const [cocktailsData, ingredientsData] = await Promise.all([
+          getMixCocktailsClient(),
+          getMixIngredients(),
+        ]);
+        setCocktails(cocktailsData);
+        setAllIngredients(ingredientsData);
       } catch (error) {
         console.error("Error fetching cocktails for badge:", error);
       } finally {
@@ -39,33 +32,42 @@ export function CocktailsReadyBadge() {
       }
     };
 
-    fetchCocktails();
+    fetchData();
   }, []);
 
-  // Calculate how many cocktails user can make
+  // Calculate staple IDs (same logic as dashboard)
+  const stapleIds = useMemo(() => {
+    if (allIngredients.length === 0) {
+      return ["ice", "water"]; // Default while loading
+    }
+    const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
+    const manualStaples = ['ice', 'water'];
+    return [...new Set([...dbStaples, ...manualStaples])];
+  }, [allIngredients]);
+
+  // Calculate how many cocktails user can make (using same logic as dashboard)
   const readyCount = useMemo(() => {
     if (ingredientIds.length === 0 || cocktails.length === 0) {
       return 0;
     }
 
-    const ingredientSet = new Set(ingredientIds);
-    let count = 0;
+    // Filter out cocktails with no ingredients
+    const validCocktails = cocktails.filter(cocktail => 
+      cocktail && 
+      cocktail.ingredients && 
+      Array.isArray(cocktail.ingredients) && 
+      cocktail.ingredients.length > 0
+    );
 
-    cocktails.forEach((cocktail) => {
-      const requiredIngredients = cocktail.ingredients?.filter(i => i.ingredient) || [];
-      if (requiredIngredients.length === 0) return;
-
-      const hasAll = requiredIngredients.every(i => 
-        i.ingredient && ingredientSet.has(i.ingredient._id)
-      );
-
-      if (hasAll) {
-        count++;
-      }
+    // Use the same matching logic as dashboard
+    const { ready } = getMixMatchGroups({
+      cocktails: validCocktails,
+      ownedIngredientIds: ingredientIds,
+      stapleIngredientIds: stapleIds,
     });
 
-    return count;
-  }, [cocktails, ingredientIds]);
+    return ready.length;
+  }, [cocktails, ingredientIds, stapleIds]);
 
   // Don't show if not authenticated or still loading or no bar
   if (authLoading || barLoading || cocktailsLoading) {
@@ -98,21 +100,19 @@ export function CocktailsReadyBadge() {
 export function CocktailsReadyBadgeCompact() {
   const { isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, isLoading: barLoading } = useBarIngredients();
-  const [cocktails, setCocktails] = useState<CocktailWithIngredients[]>([]);
+  const [cocktails, setCocktails] = useState<MixCocktail[]>([]);
+  const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [cocktailsLoading, setCocktailsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCocktails = async () => {
+    const fetchData = async () => {
       try {
-        const data = await sanityClient.fetch<CocktailWithIngredients[]>(`
-          *[_type == "cocktail"] {
-            _id,
-            "ingredients": ingredients[] {
-              "ingredient": ingredient-> { _id }
-            }
-          }
-        `);
-        setCocktails(data);
+        const [cocktailsData, ingredientsData] = await Promise.all([
+          getMixCocktailsClient(),
+          getMixIngredients(),
+        ]);
+        setCocktails(cocktailsData);
+        setAllIngredients(ingredientsData);
       } catch (error) {
         console.error("Error fetching cocktails for badge:", error);
       } finally {
@@ -120,32 +120,41 @@ export function CocktailsReadyBadgeCompact() {
       }
     };
 
-    fetchCocktails();
+    fetchData();
   }, []);
+
+  // Calculate staple IDs (same logic as dashboard)
+  const stapleIds = useMemo(() => {
+    if (allIngredients.length === 0) {
+      return ["ice", "water"]; // Default while loading
+    }
+    const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
+    const manualStaples = ['ice', 'water'];
+    return [...new Set([...dbStaples, ...manualStaples])];
+  }, [allIngredients]);
 
   const readyCount = useMemo(() => {
     if (ingredientIds.length === 0 || cocktails.length === 0) {
       return 0;
     }
 
-    const ingredientSet = new Set(ingredientIds);
-    let count = 0;
+    // Filter out cocktails with no ingredients
+    const validCocktails = cocktails.filter(cocktail => 
+      cocktail && 
+      cocktail.ingredients && 
+      Array.isArray(cocktail.ingredients) && 
+      cocktail.ingredients.length > 0
+    );
 
-    cocktails.forEach((cocktail) => {
-      const requiredIngredients = cocktail.ingredients?.filter(i => i.ingredient) || [];
-      if (requiredIngredients.length === 0) return;
-
-      const hasAll = requiredIngredients.every(i => 
-        i.ingredient && ingredientSet.has(i.ingredient._id)
-      );
-
-      if (hasAll) {
-        count++;
-      }
+    // Use the same matching logic as dashboard
+    const { ready } = getMixMatchGroups({
+      cocktails: validCocktails,
+      ownedIngredientIds: ingredientIds,
+      stapleIngredientIds: stapleIds,
     });
 
-    return count;
-  }, [cocktails, ingredientIds]);
+    return ready.length;
+  }, [cocktails, ingredientIds, stapleIds]);
 
   if (authLoading || barLoading || cocktailsLoading || !isAuthenticated || ingredientIds.length === 0 || readyCount === 0) {
     return null;
