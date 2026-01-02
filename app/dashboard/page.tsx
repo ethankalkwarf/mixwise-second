@@ -55,6 +55,25 @@ export default function DashboardPage() {
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const { preferences, isLoading: preferencesLoading, needsOnboarding } = useUserPreferences();
 
+  // DEBUG: Track what causes re-renders
+  const renderCount = useRef(0);
+  useEffect(() => {
+    renderCount.current += 1;
+    console.log(`🔄 Dashboard Render #${renderCount.current}:`, {
+      authLoading,
+      isAuthenticated,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      profileName: profile?.display_name,
+      barLoading,
+      ingredientCount: ingredientIds.length,
+      preferencesLoading,
+      hasPreferences: !!preferences,
+      loadingRecs,
+      recCount: recommendations.length
+    });
+  });
+
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<RecommendedCocktail[]>([]);
