@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSessionContext } from "@supabase/auth-helpers-react";
@@ -68,6 +68,9 @@ export default function DashboardPage() {
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const DASHBOARD_READY_LIMIT = 10;
+
+  // Prevent flickering by ensuring dashboard is fully ready before showing content
+  const [dashboardReady, setDashboardReady] = useState(false);
 
   // Redirect to onboarding if needed
   useEffect(() => {
@@ -259,11 +262,46 @@ export default function DashboardPage() {
   const isAuthLoading = authLoading;
   const isContentLoading = barLoading || favsLoading || recentLoading;
 
-  // Stable greeting - prevent flickering by using consistent name once set
+  // Set dashboard as ready once critical data is loaded to prevent flickering
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated && !loadingRecs && !barLoading) {
+      // Small delay to ensure all async operations have settled
+      const timer = setTimeout(() => {
+        setDashboardReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      setDashboardReady(false);
+    }
+  }, [isAuthLoading, isAuthenticated, loadingRecs, barLoading]);
+
+  // Truly stable greeting - persists across component re-mounts to prevent flickering
   const getDynamicGreeting = useMemo(() => {
-    // Once we have a name, stick with it to prevent flickering
-    // Only fallback to email if profile hasn't loaded yet
-    const stableName = profile?.display_name || (user?.email ? user.email.split("@")[0] : "Bartender");
+    // Use localStorage to persist greeting across component re-mounts
+    const greetingKey = 'mixwise-dashboard-greeting';
+    let storedGreeting = null;
+
+    try {
+      storedGreeting = localStorage.getItem(greetingKey);
+    } catch (e) {
+      // localStorage not available
+    }
+
+    // If we have a stored greeting, use it
+    if (storedGreeting) {
+      return storedGreeting;
+    }
+
+    // Otherwise, generate and store a new greeting
+    let stableName = "Bartender";
+
+    // Try to get the user's name
+    if (profile?.display_name) {
+      stableName = profile.display_name;
+    } else if (user?.email) {
+      stableName = user.email.split("@")[0];
+    }
+
     const firstName = stableName.split(" ")[0];
     const hour = new Date().getHours();
 
@@ -295,15 +333,22 @@ export default function DashboardPage() {
       greeting = greetings[greetingIndex];
     }
 
+    // Store the greeting to prevent future flickering
+    try {
+      localStorage.setItem(greetingKey, greeting);
+    } catch (e) {
+      // localStorage not available
+    }
+
     return greeting;
-  }, [profile?.display_name, user?.email]);
+  }, []); // No dependencies - greeting is cached and never changes
 
   const handleRemoveFromInventory = useCallback(async (id: string) => {
     await removeIngredient(id);
   }, [removeIngredient]);
 
-  // Only block on auth loading - show content immediately once authenticated
-  if (isAuthLoading) {
+  // Show loading until dashboard is fully ready to prevent flickering
+  if (isAuthLoading || !dashboardReady) {
     return (
       <div className="py-12 bg-cream min-h-screen">
         <MainContainer>
