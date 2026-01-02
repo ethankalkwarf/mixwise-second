@@ -259,83 +259,84 @@ export default function DashboardPage() {
   const isAuthLoading = authLoading;
   const isContentLoading = barLoading || favsLoading || recentLoading;
 
-  // Use ref to store greeting so it NEVER changes after first render
-  const greetingRef = useRef<string | null>(null);
+  // Stable greeting that never causes re-render
+  const [greeting, setGreeting] = useState<string>("Welcome back");
+  const greetingInitialized = useRef(false);
 
-  // Generate greeting only once on mount
-  if (!greetingRef.current && typeof window !== 'undefined') {
+  // Initialize greeting only once
+  useEffect(() => {
+    if (greetingInitialized.current) return;
+    
     const greetingKey = 'mixwise-dashboard-greeting';
-    let storedGreeting: string | null = null;
-
+    
     try {
-      storedGreeting = localStorage.getItem(greetingKey);
+      const storedGreeting = localStorage.getItem(greetingKey);
+      if (storedGreeting) {
+        setGreeting(storedGreeting);
+        greetingInitialized.current = true;
+        return;
+      }
     } catch (e) {
       // localStorage not available
     }
 
-    if (storedGreeting) {
-      greetingRef.current = storedGreeting;
-    } else {
-      // Generate new greeting - use best available name
-      let stableName = "Bartender";
-      if (profile?.display_name) {
-        stableName = profile.display_name;
-      } else if (user?.email) {
-        stableName = user.email.split("@")[0];
-      }
+    // Wait for profile or user to be available
+    if (!profile && !user) return;
 
-      const firstName = stableName.split(" ")[0];
-      const hour = new Date().getHours();
-      const nameHash = firstName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
-      const greetingIndex = nameHash % 3;
-
-      let greeting: string;
-      if (hour < 12) {
-        const greetings = [
-          `Good morning, ${firstName}. Ready to start shaking things up?`,
-          `Morning, ${firstName}. The bar is open, metaphorically.`,
-          `Rise and shine, ${firstName}. Time to mix something great.`,
-        ];
-        greeting = greetings[greetingIndex];
-      } else if (hour < 18) {
-        const greetings = [
-          `Good afternoon, ${firstName}. Feeling inspired?`,
-          `Hey ${firstName}, it's cocktail o'clock somewhere.`,
-          `Afternoon, ${firstName}. Your bar awaits.`,
-        ];
-        greeting = greetings[greetingIndex];
-      } else {
-        const greetings = [
-          `Good evening, ${firstName}. Let's make something smooth.`,
-          `Evening, ${firstName}. Perfect time for a drink.`,
-          `Welcome back, ${firstName}. What's on the menu tonight?`,
-        ];
-        greeting = greetings[greetingIndex];
-      }
-
-      greetingRef.current = greeting;
-      
-      // Store for next time
-      try {
-        localStorage.setItem(greetingKey, greeting);
-      } catch (e) {
-        // localStorage not available
-      }
+    // Generate greeting once we have user data
+    let stableName = "Bartender";
+    if (profile?.display_name) {
+      stableName = profile.display_name;
+    } else if (user?.email) {
+      stableName = user.email.split("@")[0];
     }
-  }
 
-  const getDynamicGreeting = greetingRef.current || "Welcome back. Let's make something smooth.";
+    const firstName = stableName.split(" ")[0];
+    const hour = new Date().getHours();
+    const nameHash = firstName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
+    const greetingIndex = nameHash % 3;
+
+    let newGreeting: string;
+    if (hour < 12) {
+      const greetings = [
+        `Good morning, ${firstName}. Ready to start shaking things up?`,
+        `Morning, ${firstName}. The bar is open, metaphorically.`,
+        `Rise and shine, ${firstName}. Time to mix something great.`,
+      ];
+      newGreeting = greetings[greetingIndex];
+    } else if (hour < 18) {
+      const greetings = [
+        `Good afternoon, ${firstName}. Feeling inspired?`,
+        `Hey ${firstName}, it's cocktail o'clock somewhere.`,
+        `Afternoon, ${firstName}. Your bar awaits.`,
+      ];
+      newGreeting = greetings[greetingIndex];
+    } else {
+      const greetings = [
+        `Good evening, ${firstName}. Let's make something smooth.`,
+        `Evening, ${firstName}. Perfect time for a drink.`,
+        `Welcome back, ${firstName}. What's on the menu tonight?`,
+      ];
+      newGreeting = greetings[greetingIndex];
+    }
+
+    setGreeting(newGreeting);
+    greetingInitialized.current = true;
+    
+    // Cache for next time
+    try {
+      localStorage.setItem(greetingKey, newGreeting);
+    } catch (e) {
+      // localStorage not available
+    }
+  }, [profile, user]); // Only run when profile or user changes
 
   const handleRemoveFromInventory = useCallback(async (id: string) => {
     await removeIngredient(id);
   }, [removeIngredient]);
 
-  // Wait for user AND profile to both be loaded (or confirmed null) to prevent flickering
-  // This prevents rendering twice: once with user but no profile, then again with both
-  const isProfileReady = !authLoading && (!isAuthenticated || profile !== null);
-  
-  // Only show loading skeleton during initial auth check or profile fetch
-  if (isAuthLoading || !isProfileReady) {
+  // Only show loading skeleton during initial auth check
+  if (isAuthLoading) {
     return (
       <div className="py-12 bg-cream min-h-screen">
         <MainContainer>
@@ -384,11 +385,14 @@ export default function DashboardPage() {
     return (
       <div className="py-8 sm:py-12 bg-cream min-h-screen">
         <MainContainer>
-          {/* Dynamic Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          {/* Dynamic Header - Key is critical to prevent re-render flickering */}
+          <div 
+            key="dashboard-header"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
+          >
             <div>
               <h1 className="text-3xl font-display font-bold text-forest">
-                {getDynamicGreeting || "Welcome back"}
+                {greeting}
               </h1>
               <p className="text-sage mt-1">
                 Track your bar, favorites, and progress
