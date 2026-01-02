@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingBagIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useShoppingList } from "@/hooks/useShoppingList";
+import { useUser } from "@/components/auth/UserProvider";
 
 interface ShoppingListButtonProps {
   ingredients: Array<{
@@ -14,11 +15,20 @@ interface ShoppingListButtonProps {
 }
 
 export function ShoppingListButton({ ingredients, quantity }: ShoppingListButtonProps) {
+  const { isAuthenticated, isLoading: authLoading } = useUser();
   const { addItems, isLoading } = useShoppingList();
   const [isAdding, setIsAdding] = useState(false);
+  const [didAdd, setDidAdd] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddToShoppingList = async () => {
     setIsAdding(true);
+    setDidAdd(false);
     try {
       // Scale ingredients by quantity (quantity scaling not implemented yet)
       const scaledIngredients = ingredients.map(ing => ({
@@ -28,10 +38,12 @@ export function ShoppingListButton({ ingredients, quantity }: ShoppingListButton
       }));
 
       await addItems(scaledIngredients);
+      setDidAdd(true);
+      setTimeout(() => setDidAdd(false), 2000);
     } catch (error) {
       console.error("Error adding to shopping list:", error);
       // Show error toast if not already handled by the hook
-      if (!error.message?.includes("already in")) {
+      if (!(error as any)?.message?.includes("already in")) {
         // The hook should handle toasts, but add fallback
         console.error("Failed to add items to shopping list");
       }
@@ -40,21 +52,36 @@ export function ShoppingListButton({ ingredients, quantity }: ShoppingListButton
     }
   };
 
+  // Prevent hydration mismatch - don't render until mounted
+  if (!mounted) {
+    return null;
+  }
+
+  // Only show for logged-in users
+  if (authLoading || !isAuthenticated) {
+    return null;
+  }
+
   return (
     <button
       onClick={handleAddToShoppingList}
       disabled={isLoading || isAdding}
-      className="flex items-center gap-2 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isAdding ? (
         <>
-          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full animate-spin" />
           Adding...
+        </>
+      ) : didAdd ? (
+        <>
+          <CheckIcon className="w-4 h-4" />
+          Added
         </>
       ) : (
         <>
           <ShoppingBagIcon className="w-4 h-4" />
-          Add to Shopping List
+          Add ingredients to shopping list
         </>
       )}
     </button>

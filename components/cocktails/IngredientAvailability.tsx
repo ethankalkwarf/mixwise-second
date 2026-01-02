@@ -1,116 +1,129 @@
 "use client";
 
-import { useMemo } from "react";
-import { CheckCircleIcon, XCircleIcon, ShoppingBagIcon } from "@heroicons/react/24/solid";
+import { useMemo, useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/solid";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
-import { useShoppingList } from "@/hooks/useShoppingList";
 import { useUser } from "@/components/auth/UserProvider";
 
-interface Ingredient {
-  _key?: string;
-  amount?: string;
+interface IngredientRef {
+  id: string;
+  name: string;
+  category?: string;
   isOptional?: boolean;
-  ingredient?: {
-    _id: string;
-    name: string;
-    type?: string;
-  } | null;
 }
 
 interface IngredientAvailabilityProps {
-  ingredients: Ingredient[];
+  /**
+   * IMPORTANT: `id` should be the same identifier used by the bar inventory
+   * (canonical ingredient UUIDs where possible). If an ingredient can't be
+   * matched, a stable fallback string is fine (it will be treated as "missing").
+   */
+  ingredients: IngredientRef[];
 }
 
 export function IngredientAvailability({ ingredients }: IngredientAvailabilityProps) {
+  const { isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, isLoading: barLoading } = useBarIngredients();
-  const { addItems, isLoading: shoppingLoading } = useShoppingList();
-  const { isAuthenticated } = useUser();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Calculate availability
-  const { available, missing, total, percentage } = useMemo(() => {
-    const validIngredients = ingredients.filter(i => i.ingredient && !i.isOptional);
-    const total = validIngredients.length;
-    
-    const available = validIngredients.filter(i => 
-      i.ingredient && ingredientIds.includes(i.ingredient._id)
+  const { available, missing, total, percentage, missingIngredients } = useMemo(() => {
+    const requiredIngredients = ingredients.filter((i) => !i.isOptional);
+    const total = requiredIngredients.length;
+
+    // Normalize IDs for comparison (handle string vs UUID, case-insensitive)
+    const normalizedBarIds = new Set(
+      ingredientIds.map(id => String(id).toLowerCase().trim())
     );
-    
-    const missing = validIngredients.filter(i => 
-      i.ingredient && !ingredientIds.includes(i.ingredient._id)
+
+    const availableIngredients = requiredIngredients.filter((i) => {
+      const normalizedId = String(i.id).toLowerCase().trim();
+      const isAvailable = normalizedBarIds.has(normalizedId);
+      if (process.env.NODE_ENV === 'development' && !isAvailable) {
+        console.log(`[IngredientAvailability] Missing: "${i.name}" (ID: ${i.id}) not in bar. Bar IDs:`, Array.from(normalizedBarIds).slice(0, 5));
+      }
+      return isAvailable;
+    });
+
+    const missingIngredients = requiredIngredients.filter(
+      (i) => !normalizedBarIds.has(String(i.id).toLowerCase().trim())
     );
-    
-    const percentage = total > 0 ? Math.round((available.length / total) * 100) : 0;
+
+    const percentage =
+      total > 0 ? Math.round((availableIngredients.length / total) * 100) : 0;
 
     return {
-      available: available.length,
-      missing: missing.length,
-      missingIngredients: missing,
+      available: availableIngredients.length,
+      missing: missingIngredients.length,
       total,
       percentage,
+      missingIngredients,
     };
   }, [ingredients, ingredientIds]);
 
-  // Don't show if user has no bar ingredients
-  if (!barLoading && ingredientIds.length === 0 && !isAuthenticated) {
+  // Prevent hydration mismatch - don't render until mounted
+  if (!mounted) {
+    return null;
+  }
+
+  // Only show for logged-in users
+  if (authLoading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
     return null;
   }
 
   if (barLoading) {
     return (
-      <div className="bg-slate-800/50 rounded-xl p-4 animate-pulse">
-        <div className="h-5 bg-slate-700 rounded w-48 mb-3" />
+      <div className="rounded-xl border border-mist bg-cream p-4 animate-pulse">
+        <div className="h-5 bg-mist rounded w-48 mb-3" />
         <div className="flex gap-4">
-          <div className="h-4 bg-slate-700 rounded w-24" />
-          <div className="h-4 bg-slate-700 rounded w-24" />
+          <div className="h-4 bg-mist rounded w-24" />
+          <div className="h-4 bg-mist rounded w-24" />
         </div>
       </div>
     );
   }
 
-  if (ingredientIds.length === 0) {
-    return (
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-        <p className="text-sm text-slate-400">
-          Add ingredients to your bar to see what you can make!
-        </p>
-      </div>
-    );
-  }
-
-  const handleAddMissingToShoppingList = () => {
-    const missingIngredients = ingredients
-      .filter(i => i.ingredient && !i.isOptional && !ingredientIds.includes(i.ingredient._id))
-      .map(i => ({
-        id: i.ingredient!._id,
-        name: i.ingredient!.name,
-        category: i.ingredient!.type,
-      }));
-    
-    addItems(missingIngredients);
-  };
-
   const progressColor = percentage === 100 
-    ? "bg-lime-500" 
+    ? "bg-olive" 
     : percentage >= 50 
-      ? "bg-amber-500" 
-      : "bg-red-500";
+      ? "bg-terracotta" 
+      : "bg-stone";
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-5">
+    <div className="rounded-xl border border-mist bg-cream p-5">
       {/* Progress header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-slate-200">
-          Your Bar Status
+        <h3 className="text-base font-semibold text-forest">
+          Your bar status
         </h3>
-        <span className={`text-sm font-bold ${
-          percentage === 100 ? "text-lime-400" : percentage >= 50 ? "text-amber-400" : "text-red-400"
-        }`}>
+        <span
+          className={`text-sm font-bold ${
+            percentage === 100
+              ? "text-olive"
+              : percentage >= 50
+                ? "text-terracotta"
+                : "text-sage"
+          }`}
+        >
           {percentage}% ready
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 bg-slate-700 rounded-full overflow-hidden mb-4">
+      <div className="h-2 bg-mist rounded-full overflow-hidden mb-4">
         <div 
           className={`h-full ${progressColor} transition-all duration-500`}
           style={{ width: `${percentage}%` }}
@@ -120,14 +133,14 @@ export function IngredientAvailability({ ingredients }: IngredientAvailabilityPr
       {/* Stats */}
       <div className="flex items-center gap-6 mb-4">
         <div className="flex items-center gap-2">
-          <CheckCircleIcon className="w-5 h-5 text-lime-400" />
-          <span className="text-sm text-slate-300">
+          <CheckCircleIcon className="w-5 h-5 text-olive" />
+          <span className="text-sm text-sage">
             <span className="font-medium">{available}</span> you have
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <XCircleIcon className="w-5 h-5 text-slate-500" />
-          <span className="text-sm text-slate-400">
+          <XCircleIcon className="w-5 h-5 text-stone" />
+          <span className="text-sm text-sage">
             <span className="font-medium">{missing}</span> missing
           </span>
         </div>
@@ -135,38 +148,44 @@ export function IngredientAvailability({ ingredients }: IngredientAvailabilityPr
 
       {/* Missing ingredients breakdown */}
       {missing > 0 && (
-        <div className="border-t border-slate-700 pt-4">
-          <p className="text-sm text-slate-400 mb-3">Missing ingredients:</p>
+        <div className="border-t border-mist pt-4">
+          <p className="text-sm text-sage mb-3">Missing ingredients:</p>
           <div className="flex flex-wrap gap-2 mb-4">
-            {ingredients
-              .filter(i => i.ingredient && !i.isOptional && !ingredientIds.includes(i.ingredient._id))
-              .map((item) => (
-                <span
-                  key={item._key || item.ingredient?._id}
-                  className="text-sm bg-slate-700/50 text-slate-300 px-3 py-1 rounded-full"
-                >
-                  {item.ingredient?.name}
-                </span>
-              ))}
+            {missingIngredients.map((item) => (
+              <span
+                key={item.id}
+                className="text-sm bg-mist/60 text-forest px-3 py-1 rounded-full"
+              >
+                {item.name}
+              </span>
+            ))}
           </div>
 
-          {/* Add to shopping list button */}
-          <button
-            onClick={handleAddMissingToShoppingList}
-            disabled={shoppingLoading}
-            className="flex items-center gap-2 text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors disabled:opacity-50"
-          >
-            <ShoppingBagIcon className="w-4 h-4" />
-            Add {missing} missing to shopping list
-          </button>
+          {/* Link to shopping list */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link
+              href="/shopping-list"
+              className="text-sm font-medium text-sage hover:text-forest transition-colors"
+            >
+              View shopping list →
+            </Link>
+          </div>
         </div>
       )}
 
       {/* Ready message */}
       {percentage === 100 && (
-        <p className="text-sm text-lime-400 font-medium">
-          🎉 You have everything you need to make this cocktail!
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-olive font-medium">
+            You have everything you need to make this cocktail.
+          </p>
+          <Link
+            href="/shopping-list"
+            className="text-sm font-medium text-sage hover:text-forest transition-colors"
+          >
+            View shopping list →
+          </Link>
+        </div>
       )}
     </div>
   );

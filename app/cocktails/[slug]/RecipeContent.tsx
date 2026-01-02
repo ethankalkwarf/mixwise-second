@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QuantitySelector } from "@/components/cocktails/QuantitySelector";
+import { IngredientAvailability } from "@/components/cocktails/IngredientAvailability";
 import { ShoppingListButton } from "@/components/cocktails/ShoppingListButton";
 import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
 import Image from "next/image";
@@ -13,13 +14,18 @@ import {
   BeakerIcon,
   SparklesIcon,
   CpuChipIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
+import type { MatchedIngredient } from "@/lib/ingredientMatching";
+import { useUser } from "@/components/auth/UserProvider";
+import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 
 interface RecipeContentProps {
   cocktail: any;
   sanityCocktail: any;
   ingredients: Array<{ text: string }>;
+  matchedIngredients?: MatchedIngredient[];
   instructionSteps: string[];
   tagLine: string;
   imageUrl: string | null;
@@ -61,38 +67,53 @@ export function RecipeContent({
   cocktail,
   sanityCocktail,
   ingredients,
+  matchedIngredients,
   instructionSteps,
   tagLine,
   imageUrl,
   similarRecipes,
 }: RecipeContentProps) {
   const [quantity, setQuantity] = useState(1);
+  const { isAuthenticated, isLoading: authLoading } = useUser();
+  const { openAuthDialog } = useAuthDialog();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const scaledIngredients = ingredients.map(ing => ({
     ...ing,
     text: quantity === 1 ? ing.text : scaleIngredient(ing.text, quantity),
   }));
 
-  // Extract ingredients for shopping list with better parsing
-  const shoppingListIngredients = ingredients.map((ing, index) => {
-    // Better ingredient name extraction
-    const text = ing.text.trim();
+  // Use matched ingredients if available, otherwise fall back to parsing
+  const shoppingListIngredients = matchedIngredients && matchedIngredients.length === ingredients.length
+    ? matchedIngredients.map((matched, index) => ({
+        id: matched.id,
+        name: matched.name,
+        category: matched.category || 'cocktail',
+      }))
+    : ingredients.map((ing, index) => {
+        // Fallback: Better ingredient name extraction
+        const text = ing.text.trim();
 
-    // Remove common quantity patterns at the start
-    const cleanedName = text
-      .replace(/^\d+(\/\d+|\.\d+)?\s*(oz|cup|cups|tbsp|tsp|ml|cl|dash|dashes|drop|drops|slice|slices|piece|pieces|sprig|sprigs|leaf|leaves|wheel|wheels|twist|twists|rim|rims|part|parts)\s+/i, '')
-      .replace(/^\d+(\/\d+|\.\d+)?\s+/, '') // Remove remaining numbers at start
-      .trim();
+        // Remove common quantity patterns at the start
+        const cleanedName = text
+          .replace(/^\d+(\/\d+|\.\d+)?\s*(oz|cup|cups|tbsp|tsp|ml|cl|dash|dashes|drop|drops|slice|slices|piece|pieces|sprig|sprigs|leaf|leaves|wheel|wheels|twist|twists|rim|rims|part|parts)\s+/i, '')
+          .replace(/^\d+(\/\d+|\.\d+)?\s+/, '') // Remove remaining numbers at start
+          .trim();
 
-    // Use cleaned name as ID (lowercased and sanitized)
-    const ingredientId = cleanedName.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+        // Use cleaned name as ID (lowercased and sanitized)
+        const ingredientId = cleanedName.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
 
-    return {
-      id: ingredientId || `ingredient-${index}`, // Fallback if cleaning results in empty string
-      name: cleanedName || text, // Fallback to original if cleaning fails
-      category: 'cocktail',
-    };
-  });
+        return {
+          id: ingredientId || `ingredient-${index}`, // Fallback if cleaning results in empty string
+          name: cleanedName || text, // Fallback to original if cleaning fails
+          category: 'cocktail',
+        };
+      });
 
   return (
     <>
@@ -280,12 +301,35 @@ export function RecipeContent({
               </ul>
             )}
 
-            {ingredients.length > 0 && (
+            {ingredients.length > 0 && mounted && (
               <div className="mt-6 pt-6 border-t border-gray-100">
-                <ShoppingListButton
-                  ingredients={shoppingListIngredients}
-                  quantity={quantity}
-                />
+                {!authLoading && isAuthenticated ? (
+                  <>
+                    {/* Logged in: Show bar progress and shopping list button */}
+                    <div className="mb-4">
+                      <IngredientAvailability ingredients={shoppingListIngredients} />
+                    </div>
+                    <ShoppingListButton
+                      ingredients={shoppingListIngredients}
+                      quantity={quantity}
+                    />
+                  </>
+                ) : !authLoading && !isAuthenticated ? (
+                  <>
+                    {/* Anonymous: Show simple "Add to shopping list" button that prompts login */}
+                    <button
+                      onClick={() => openAuthDialog({ 
+                        mode: "signup",
+                        title: "Create an account to save your shopping list",
+                        subtitle: "Sign up to add ingredients to your shopping list and track your bar inventory."
+                      })}
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-semibold rounded-xl transition-colors"
+                    >
+                      <ShoppingBagIcon className="w-4 h-4" />
+                      Add to shopping list
+                    </button>
+                  </>
+                ) : null}
               </div>
             )}
           </div>

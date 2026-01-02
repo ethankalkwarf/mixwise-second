@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
@@ -82,8 +82,19 @@ function AuthCallbackPageContent() {
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [expiredEmail, setExpiredEmail] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
+  
+  // Prevent duplicate processing
+  const hasProcessed = useRef(false);
+  const processingRef = useRef(false);
 
   useEffect(() => {
+    // Prevent duplicate runs
+    if (hasProcessed.current || processingRef.current) {
+      console.log("[AuthCallbackPage] Already processing or processed, skipping duplicate run");
+      return;
+    }
+    
+    processingRef.current = true;
     let cancelled = false;
     let failSafeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -109,7 +120,21 @@ function AuthCallbackPageContent() {
       setError(null);
       setErrorCode(null);
 
-      const next = sanitizeNext(searchParams.get("next"));
+      // Prefer explicit `next` query param, but fall back to a client-stored return URL.
+      // This enables flows like: user tries "add to shopping list" while logged out → logs in with Google → returns to the recipe page.
+      let storedReturnTo: string | null = null;
+      try {
+        if (typeof window !== "undefined") {
+          storedReturnTo = sessionStorage.getItem("mixwise-auth-return-to");
+          if (storedReturnTo) {
+            sessionStorage.removeItem("mixwise-auth-return-to");
+          }
+        }
+      } catch {
+        // ignore storage failures
+      }
+
+      const next = sanitizeNext(searchParams.get("next") ?? storedReturnTo);
       const code = searchParams.get("code");
 
       const hashParams = getHashParams();
@@ -355,6 +380,8 @@ function AuthCallbackPageContent() {
         setError("We couldn't finish signing you in. Please try again.");
       } finally {
         if (failSafeTimer) clearTimeout(failSafeTimer);
+        processingRef.current = false;
+        hasProcessed.current = true;
       }
     };
 
@@ -362,8 +389,9 @@ function AuthCallbackPageContent() {
     return () => {
       cancelled = true;
       if (failSafeTimer) clearTimeout(failSafeTimer);
+      processingRef.current = false;
     };
-  }, [router, searchParams, supabase]);
+  }, [router, searchParams, supabase, authReady]);
 
   const handleResendEmail = async (emailToResend?: string) => {
     const emailToUse = emailToResend || expiredEmail;
