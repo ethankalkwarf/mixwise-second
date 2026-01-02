@@ -53,7 +53,7 @@ export default function DashboardPage() {
   const { ingredientIds, isLoading: barLoading, removeIngredient } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
-  const { preferences, needsOnboarding } = useUserPreferences();
+  const { preferences, isLoading: preferencesLoading, needsOnboarding } = useUserPreferences();
 
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<any[]>([]);
@@ -259,11 +259,13 @@ export default function DashboardPage() {
   const isAuthLoading = authLoading;
   const isContentLoading = barLoading || favsLoading || recentLoading;
 
-  // Truly stable greeting - persists across component re-mounts to prevent flickering
-  const getDynamicGreeting = useMemo(() => {
-    // Use localStorage to persist greeting across component re-mounts
+  // Use ref to store greeting so it NEVER changes after first render
+  const greetingRef = useRef<string | null>(null);
+
+  // Generate greeting only once on mount
+  if (!greetingRef.current && typeof window !== 'undefined') {
     const greetingKey = 'mixwise-dashboard-greeting';
-    let storedGreeting = null;
+    let storedGreeting: string | null = null;
 
     try {
       storedGreeting = localStorage.getItem(greetingKey);
@@ -271,68 +273,69 @@ export default function DashboardPage() {
       // localStorage not available
     }
 
-    // If we have a stored greeting, use it
     if (storedGreeting) {
-      return storedGreeting;
-    }
-
-    // Otherwise, generate and store a new greeting
-    let stableName = "Bartender";
-
-    // Try to get the user's name
-    if (profile?.display_name) {
-      stableName = profile.display_name;
-    } else if (user?.email) {
-      stableName = user.email.split("@")[0];
-    }
-
-    const firstName = stableName.split(" ")[0];
-    const hour = new Date().getHours();
-
-    // Use consistent greeting based on name hash
-    const nameHash = firstName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
-    const greetingIndex = nameHash % 3;
-
-    let greeting: string;
-    if (hour < 12) {
-      const greetings = [
-        `Good morning, ${firstName}. Ready to start shaking things up?`,
-        `Morning, ${firstName}. The bar is open, metaphorically.`,
-        `Rise and shine, ${firstName}. Time to mix something great.`,
-      ];
-      greeting = greetings[greetingIndex];
-    } else if (hour < 18) {
-      const greetings = [
-        `Good afternoon, ${firstName}. Feeling inspired?`,
-        `Hey ${firstName}, it's cocktail o'clock somewhere.`,
-        `Afternoon, ${firstName}. Your bar awaits.`,
-      ];
-      greeting = greetings[greetingIndex];
+      greetingRef.current = storedGreeting;
     } else {
-      const greetings = [
-        `Good evening, ${firstName}. Let's make something smooth.`,
-        `Evening, ${firstName}. Perfect time for a drink.`,
-        `Welcome back, ${firstName}. What's on the menu tonight?`,
-      ];
-      greeting = greetings[greetingIndex];
-    }
+      // Generate new greeting - use best available name
+      let stableName = "Bartender";
+      if (profile?.display_name) {
+        stableName = profile.display_name;
+      } else if (user?.email) {
+        stableName = user.email.split("@")[0];
+      }
 
-    // Store the greeting to prevent future flickering
-    try {
-      localStorage.setItem(greetingKey, greeting);
-    } catch (e) {
-      // localStorage not available
-    }
+      const firstName = stableName.split(" ")[0];
+      const hour = new Date().getHours();
+      const nameHash = firstName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
+      const greetingIndex = nameHash % 3;
 
-    return greeting;
-  }, []); // No dependencies - greeting is cached and never changes
+      let greeting: string;
+      if (hour < 12) {
+        const greetings = [
+          `Good morning, ${firstName}. Ready to start shaking things up?`,
+          `Morning, ${firstName}. The bar is open, metaphorically.`,
+          `Rise and shine, ${firstName}. Time to mix something great.`,
+        ];
+        greeting = greetings[greetingIndex];
+      } else if (hour < 18) {
+        const greetings = [
+          `Good afternoon, ${firstName}. Feeling inspired?`,
+          `Hey ${firstName}, it's cocktail o'clock somewhere.`,
+          `Afternoon, ${firstName}. Your bar awaits.`,
+        ];
+        greeting = greetings[greetingIndex];
+      } else {
+        const greetings = [
+          `Good evening, ${firstName}. Let's make something smooth.`,
+          `Evening, ${firstName}. Perfect time for a drink.`,
+          `Welcome back, ${firstName}. What's on the menu tonight?`,
+        ];
+        greeting = greetings[greetingIndex];
+      }
+
+      greetingRef.current = greeting;
+      
+      // Store for next time
+      try {
+        localStorage.setItem(greetingKey, greeting);
+      } catch (e) {
+        // localStorage not available
+      }
+    }
+  }
+
+  const getDynamicGreeting = greetingRef.current || "Welcome back. Let's make something smooth.";
 
   const handleRemoveFromInventory = useCallback(async (id: string) => {
     await removeIngredient(id);
   }, [removeIngredient]);
 
-  // Only show loading skeleton during initial auth check
-  if (isAuthLoading) {
+  // Wait for user AND profile to both be loaded (or confirmed null) to prevent flickering
+  // This prevents rendering twice: once with user but no profile, then again with both
+  const isProfileReady = !authLoading && (!isAuthenticated || profile !== null);
+  
+  // Only show loading skeleton during initial auth check or profile fetch
+  if (isAuthLoading || !isProfileReady) {
     return (
       <div className="py-12 bg-cream min-h-screen">
         <MainContainer>
@@ -391,10 +394,15 @@ export default function DashboardPage() {
                 Track your bar, favorites, and progress
               </p>
             </div>
-          {/* Show share buttons when user has ingredients - handle loading gracefully */}
+          {/* Share buttons - show placeholder to prevent layout shift */}
           {ingredientIds.length > 0 && user?.id && (
-            preferences ? (
-              preferences.public_bar_enabled ? (
+            <div className="min-w-[160px]">
+              {preferencesLoading ? (
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-mist rounded-2xl text-sm font-medium">
+                  <ShareIcon className="w-4 h-4 text-sage" />
+                  <span className="text-sage">Loading...</span>
+                </div>
+              ) : preferences?.public_bar_enabled ? (
                 <Link
                   href={`/bar/${profile?.username || profile?.public_slug || user.id}`}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
@@ -410,14 +418,8 @@ export default function DashboardPage() {
                   <ShareIcon className="w-4 h-4" />
                   Enable Public Bar
                 </Link>
-              )
-            ) : (
-              // Loading placeholder while preferences load
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-mist rounded-2xl text-sm font-medium animate-pulse">
-                <ShareIcon className="w-4 h-4" />
-                <span className="text-sage">Loading...</span>
-              </div>
-            )
+              )}
+            </div>
           )}
         </div>
 
