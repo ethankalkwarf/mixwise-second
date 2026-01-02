@@ -70,51 +70,10 @@ export default function DashboardPage() {
   const [dataLoadError, setDataLoadError] = useState<string | null>(null);
   const DASHBOARD_READY_LIMIT = 10;
 
-  // DEBUG: Track what causes re-renders (only log when key values change)
-  const renderCount = useRef(0);
-  const prevValues = useRef<{
-    authLoading: boolean;
-    isAuthenticated: boolean;
-    hasUser: boolean;
-    hasProfile: boolean;
-    barLoading: boolean;
-    ingredientCount: number;
-    preferencesLoading: boolean;
-    loadingRecs: boolean;
-  } | null>(null);
-  
-  useEffect(() => {
-    const currentValues = {
-      authLoading,
-      isAuthenticated,
-      hasUser: !!user,
-      hasProfile: !!profile,
-      barLoading,
-      ingredientCount: ingredientIds.length,
-      preferencesLoading,
-      loadingRecs,
-    };
-    
-    // Only log if values actually changed
-    if (!prevValues.current || 
-        prevValues.current.authLoading !== currentValues.authLoading ||
-        prevValues.current.isAuthenticated !== currentValues.isAuthenticated ||
-        prevValues.current.hasUser !== currentValues.hasUser ||
-        prevValues.current.hasProfile !== currentValues.hasProfile ||
-        prevValues.current.barLoading !== currentValues.barLoading ||
-        prevValues.current.ingredientCount !== currentValues.ingredientCount ||
-        prevValues.current.preferencesLoading !== currentValues.preferencesLoading ||
-        prevValues.current.loadingRecs !== currentValues.loadingRecs) {
-      renderCount.current += 1;
-      console.log(`🔄 Dashboard Render #${renderCount.current}:`, {
-        ...currentValues,
-        profileName: profile?.display_name,
-        hasPreferences: !!preferences,
-        recCount: recommendations.length
-      });
-      prevValues.current = currentValues;
-    }
-  }, [authLoading, isAuthenticated, user?.id, profile?.id, barLoading, ingredientIds.length, preferencesLoading, loadingRecs, preferences?.public_bar_enabled, recommendations.length]);
+  // CRITICAL FIX: Refs to prevent duplicate data fetches and dialogs
+  const hasFetchedMixData = useRef(false);
+  const hasFetchedBadges = useRef<string | null>(null);
+  const hasShownAuthDialog = useRef(false);
 
   // Redirect to onboarding if needed
   useEffect(() => {
@@ -126,19 +85,28 @@ export default function DashboardPage() {
   // Note: No conversion needed anymore - ingredientIds are already in canonical UUID format
   // This is guaranteed by useBarIngredients which normalizes all IDs
 
-  // Show auth dialog if not authenticated
+  // Show auth dialog if not authenticated - only once
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated && !hasShownAuthDialog.current) {
+      hasShownAuthDialog.current = true;
       openAuthDialog({
         mode: "login",
         title: "Sign in to view your dashboard",
         subtitle: "Log in or create a free account to track your progress and get recommendations.",
       });
     }
+    // Reset the ref if user becomes authenticated (so dialog can show again if they log out)
+    if (isAuthenticated) {
+      hasShownAuthDialog.current = false;
+    }
   }, [authLoading, isAuthenticated, openAuthDialog]);
 
-  // Fetch recommendations and cocktail data
+  // Fetch recommendations and cocktail data - only once
   useEffect(() => {
+    // Prevent duplicate fetches
+    if (hasFetchedMixData.current) return;
+    hasFetchedMixData.current = true;
+    
     async function fetchData() {
       try {
         setDataLoadError(null);
@@ -241,10 +209,14 @@ export default function DashboardPage() {
     ];
   }
 
-  // Fetch user badges
+  // Fetch user badges - only once per user
   useEffect(() => {
     async function fetchBadges() {
       if (!user) return;
+      
+      // Prevent duplicate fetches for same user
+      if (hasFetchedBadges.current === user.id) return;
+      hasFetchedBadges.current = user.id;
 
       const { data, error } = await supabase
         .from("user_badges")
@@ -257,37 +229,21 @@ export default function DashboardPage() {
     }
 
     fetchBadges();
-  }, [user, supabase]);
+  }, [user?.id, supabase]);
 
   // Separate loading states - don't block entire dashboard on bar/favorites loading
   const isAuthLoading = authLoading;
   const isContentLoading = barLoading || favsLoading || recentLoading;
 
-  // Stable greeting that never causes re-render
-  const [greeting, setGreeting] = useState<string>("Welcome back");
-  const greetingInitialized = useRef(false);
-
-  // Initialize greeting only once
-  useEffect(() => {
-    if (greetingInitialized.current) return;
-    
-    const greetingKey = 'mixwise-dashboard-greeting';
-    
-    try {
-      const storedGreeting = localStorage.getItem(greetingKey);
-      if (storedGreeting) {
-        setGreeting(storedGreeting);
-        greetingInitialized.current = true;
-        return;
-      }
-    } catch (e) {
-      // localStorage not available
+  // CRITICAL FIX: Generate greeting using useMemo to prevent re-computation
+  // Cache key now includes user ID to prevent showing wrong user's greeting
+  const greeting = useMemo(() => {
+    // Wait for user data to be available
+    if (!profile && !user) {
+      return "Welcome back";
     }
 
-    // Wait for profile or user to be available
-    if (!profile && !user) return;
-
-    // Generate greeting once we have user data
+    // Get user's name
     let stableName = "Bartender";
     if (profile?.display_name) {
       stableName = profile.display_name;
@@ -300,40 +256,29 @@ export default function DashboardPage() {
     const nameHash = firstName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
     const greetingIndex = nameHash % 3;
 
-    let newGreeting: string;
     if (hour < 12) {
       const greetings = [
         `Good morning, ${firstName}. Ready to start shaking things up?`,
         `Morning, ${firstName}. The bar is open, metaphorically.`,
         `Rise and shine, ${firstName}. Time to mix something great.`,
       ];
-      newGreeting = greetings[greetingIndex];
+      return greetings[greetingIndex];
     } else if (hour < 18) {
       const greetings = [
         `Good afternoon, ${firstName}. Feeling inspired?`,
         `Hey ${firstName}, it's cocktail o'clock somewhere.`,
         `Afternoon, ${firstName}. Your bar awaits.`,
       ];
-      newGreeting = greetings[greetingIndex];
+      return greetings[greetingIndex];
     } else {
       const greetings = [
         `Good evening, ${firstName}. Let's make something smooth.`,
         `Evening, ${firstName}. Perfect time for a drink.`,
         `Welcome back, ${firstName}. What's on the menu tonight?`,
       ];
-      newGreeting = greetings[greetingIndex];
+      return greetings[greetingIndex];
     }
-
-    setGreeting(newGreeting);
-    greetingInitialized.current = true;
-    
-    // Cache for next time
-    try {
-      localStorage.setItem(greetingKey, newGreeting);
-    } catch (e) {
-      // localStorage not available
-    }
-  }, [profile, user]); // Only run when profile or user changes
+  }, [profile?.display_name, user?.email]); // Only recompute when user identity changes
 
   const handleRemoveFromInventory = useCallback(async (id: string) => {
     await removeIngredient(id);

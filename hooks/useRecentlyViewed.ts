@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { trackCocktailView } from "@/lib/analytics";
@@ -27,50 +27,64 @@ interface UseRecentlyViewedResult {
  * 
  * IMPORTANT: Uses the shared Supabase client from SessionContext
  * to ensure session cookies are properly synced after login.
+ * 
+ * CRITICAL FIX: Uses refs to prevent duplicate fetches on auth state updates
  */
 export function useRecentlyViewed(): UseRecentlyViewedResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
   const { supabaseClient: supabase } = useSessionContext();
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewed[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Track the last fetched user ID to prevent duplicate fetches
+  const lastFetchedUserId = useRef<string | null>(null);
+  const isFetching = useRef(false);
 
   // Load recently viewed from server
-  const loadRecentlyViewed = useCallback(async () => {
-    if (!user) return;
+  const loadRecentlyViewed = useCallback(async (userId: string) => {
+    // Prevent duplicate fetches
+    if (isFetching.current || lastFetchedUserId.current === userId) {
+      return;
+    }
+    
+    isFetching.current = true;
     
     const { data, error } = await supabase
       .from("recently_viewed_cocktails")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("viewed_at", { ascending: false })
       .limit(MAX_RECENT_ITEMS);
     
     if (error) {
       console.error("Error loading recently viewed:", error);
+    } else {
+      setRecentlyViewed(data || []);
+      lastFetchedUserId.current = userId;
+    }
+    
+    isFetching.current = false;
+  }, [supabase]);
+
+  // Initialize recently viewed - only fetch when user ID changes
+  useEffect(() => {
+    if (authLoading) return;
+    
+    if (!isAuthenticated || !user) {
+      setRecentlyViewed([]);
+      setIsLoading(false);
+      lastFetchedUserId.current = null;
       return;
     }
     
-    setRecentlyViewed(data || []);
-  }, [user, supabase]);
-
-  // Initialize recently viewed
-  useEffect(() => {
-    const initialize = async () => {
-      if (authLoading) return;
-      
+    // Only fetch if user ID changed
+    if (lastFetchedUserId.current !== user.id) {
       setIsLoading(true);
-      
-      if (isAuthenticated && user) {
-        await loadRecentlyViewed();
-      } else {
-        setRecentlyViewed([]);
-      }
-      
+      loadRecentlyViewed(user.id).finally(() => setIsLoading(false));
+    } else {
       setIsLoading(false);
-    };
-    
-    initialize();
-  }, [authLoading, isAuthenticated, user, loadRecentlyViewed]);
+    }
+  }, [authLoading, isAuthenticated, user?.id, loadRecentlyViewed]);
 
   // Record a view
   const recordView = useCallback(async (cocktail: {
@@ -134,6 +148,7 @@ export function useRecentlyViewed(): UseRecentlyViewedResult {
     if (!isAuthenticated || !user) return;
     
     setRecentlyViewed([]);
+    lastFetchedUserId.current = null; // Allow re-fetch after clear
     
     const { error } = await supabase
       .from("recently_viewed_cocktails")
@@ -142,7 +157,7 @@ export function useRecentlyViewed(): UseRecentlyViewedResult {
     
     if (error) {
       console.error("Error clearing history:", error);
-      await loadRecentlyViewed();
+      loadRecentlyViewed(user.id);
     }
   }, [isAuthenticated, user, supabase, loadRecentlyViewed]);
 

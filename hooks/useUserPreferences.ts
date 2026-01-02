@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { UserPreferences } from "@/lib/supabase/database.types";
@@ -10,6 +10,8 @@ import { UserPreferences } from "@/lib/supabase/database.types";
  * 
  * IMPORTANT: Uses the shared Supabase client from SessionContext
  * to ensure session cookies are properly synced after login.
+ * 
+ * CRITICAL FIX: Uses refs to prevent re-fetch loops when auth state updates
  */
 export function useUserPreferences() {
   const { user, isAuthenticated } = useUser();
@@ -17,20 +19,24 @@ export function useUserPreferences() {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track the last fetched user ID to prevent duplicate fetches
+  const lastFetchedUserId = useRef<string | null>(null);
+  const isFetching = useRef(false);
 
-  const fetchPreferences = useCallback(async () => {
-    if (!user) {
-      setPreferences(null);
-      setError(null);
-      setIsLoading(false);
+  const fetchPreferences = useCallback(async (userId: string) => {
+    // Prevent duplicate fetches for the same user
+    if (isFetching.current || lastFetchedUserId.current === userId) {
       return;
     }
+    
+    isFetching.current = true;
 
     try {
       const { data, error } = await supabase
         .from("user_preferences")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
 
       if (error && error.code !== "PGRST116") {
@@ -40,6 +46,7 @@ export function useUserPreferences() {
       } else {
         setError(null);
         setPreferences(data || null);
+        lastFetchedUserId.current = userId;
       }
     } catch (err) {
       console.error("Error fetching preferences:", err);
@@ -47,12 +54,28 @@ export function useUserPreferences() {
       setPreferences(null);
     } finally {
       setIsLoading(false);
+      isFetching.current = false;
     }
-  }, [user, supabase]);
+  }, [supabase]);
 
+  // Only fetch when user ID changes, not on every user object change
   useEffect(() => {
-    fetchPreferences();
-  }, [fetchPreferences]);
+    if (!user) {
+      setPreferences(null);
+      setError(null);
+      setIsLoading(false);
+      lastFetchedUserId.current = null;
+      return;
+    }
+    
+    // Only fetch if user ID changed
+    if (lastFetchedUserId.current !== user.id) {
+      fetchPreferences(user.id);
+    } else {
+      // User ID same, just ensure loading is false
+      setIsLoading(false);
+    }
+  }, [user?.id, fetchPreferences]);
 
   const updatePreferences = useCallback(
     async (updates: Partial<UserPreferences>) => {
@@ -98,8 +121,12 @@ export function useUserPreferences() {
           }
         }
 
-        await fetchPreferences();
-        return { success: true };
+      // Refresh by clearing the last fetched user ID and re-fetching
+      if (user) {
+        lastFetchedUserId.current = null;
+        await fetchPreferences(user.id);
+      }
+      return { success: true };
       } catch (err) {
         console.error("Error updating preferences:", err);
         return { error: "Failed to update preferences" };
@@ -122,7 +149,13 @@ export function useUserPreferences() {
     error,
     needsOnboarding,
     updatePreferences,
-    refreshPreferences: fetchPreferences,
+    refreshPreferences: useCallback(() => {
+      if (user) {
+        lastFetchedUserId.current = null;
+        return fetchPreferences(user.id);
+      }
+      return Promise.resolve();
+    }, [user, fetchPreferences]),
   };
 }
 

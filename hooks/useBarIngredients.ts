@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
@@ -95,11 +95,16 @@ export function useBarIngredients(): UseBarIngredientsResult {
   const [isLoading, setIsLoading] = useState(true);
   const [serverIngredients, setServerIngredients] = useState<BarIngredient[]>([]);
   
-  // Computed ingredients with names
-  const ingredients: IngredientWithName[] = ingredientIds.map(id => ({
-    id,
-    name: ingredientNameMap.get(id) ?? null,
-  }));
+  // Track if we've already initialized to prevent duplicate fetches
+  const hasInitialized = useRef(false);
+  const lastUserId = useRef<string | null>(null);
+  
+  // CRITICAL FIX: Memoize computed ingredients to prevent new array on every render
+  const ingredients: IngredientWithName[] = useMemo(() => 
+    ingredientIds.map(id => ({
+      id,
+      name: ingredientNameMap.get(id) ?? null,
+    })), [ingredientIds, ingredientNameMap]);
 
   // Load ingredients from localStorage
   const loadFromLocal = useCallback(() => {
@@ -177,9 +182,19 @@ export function useBarIngredients(): UseBarIngredientsResult {
   }, [user, supabase]);
 
   // Initialize ingredients based on auth state
+  // CRITICAL FIX: Use refs to prevent duplicate initialization when auth state oscillates
   useEffect(() => {
     const initialize = async () => {
       if (authLoading) return;
+      
+      // Determine current user ID (null if not authenticated)
+      const currentUserId = isAuthenticated && user ? user.id : null;
+      
+      // Skip if we've already initialized for this user (or null for anonymous)
+      if (hasInitialized.current && lastUserId.current === currentUserId) {
+        setIsLoading(false);
+        return;
+      }
 
       setIsLoading(true);
 
@@ -251,6 +266,10 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
           setIngredientIds(normalizedLocalIds);
         }
+        
+        // Mark as initialized for this user
+        hasInitialized.current = true;
+        lastUserId.current = currentUserId;
       } catch (error) {
         console.error("[useBarIngredients] Initialization failed:", error);
         // Attempt fallback: try to load from server even if initialization failed
@@ -262,6 +281,8 @@ export function useBarIngredients(): UseBarIngredientsResult {
               setIngredientIds(serverIds);
               setServerIngredients(serverData);
               console.log("[useBarIngredients] Loaded from server fallback:", serverIds.length, "ingredients");
+              hasInitialized.current = true;
+              lastUserId.current = currentUserId;
             }
           }
         } catch (fallbackError) {
@@ -274,7 +295,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
     initialize();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, isAuthenticated, user, supabase]);
+  }, [authLoading, isAuthenticated, user?.id, supabase]);
 
   /**
    * Atomic sync for authenticated users

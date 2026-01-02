@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
@@ -39,46 +39,59 @@ export function useFavorites(): UseFavoritesResult {
   const toast = useToast();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Track the last fetched user ID to prevent duplicate fetches
+  const lastFetchedUserId = useRef<string | null>(null);
+  const isFetching = useRef(false);
 
-  // Build set of favorite IDs for quick lookup
-  const favoriteIds = new Set(favorites.map(f => f.cocktail_id));
+  // CRITICAL FIX: Memoize the Set to prevent new object reference on every render
+  // This was causing cascading re-renders throughout the app
+  const favoriteIds = useMemo(() => new Set(favorites.map(f => f.cocktail_id)), [favorites]);
 
   // Load favorites from server
-  const loadFavorites = useCallback(async () => {
-    if (!user) return;
+  const loadFavorites = useCallback(async (userId: string) => {
+    // Prevent duplicate fetches
+    if (isFetching.current) {
+      return;
+    }
+    
+    isFetching.current = true;
     
     const { data, error } = await supabase
       .from("favorites")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
     
     if (error) {
       console.error("Error loading favorites:", error);
+    } else {
+      setFavorites(data || []);
+      lastFetchedUserId.current = userId;
+    }
+    
+    isFetching.current = false;
+  }, [supabase]);
+
+  // Initialize favorites - only fetch when user ID changes
+  useEffect(() => {
+    if (authLoading) return;
+    
+    if (!isAuthenticated || !user) {
+      setFavorites([]);
+      setIsLoading(false);
+      lastFetchedUserId.current = null;
       return;
     }
     
-    setFavorites(data || []);
-  }, [user, supabase]);
-
-  // Initialize favorites
-  useEffect(() => {
-    const initialize = async () => {
-      if (authLoading) return;
-      
+    // Only fetch if user ID changed
+    if (lastFetchedUserId.current !== user.id) {
       setIsLoading(true);
-      
-      if (isAuthenticated && user) {
-        await loadFavorites();
-      } else {
-        setFavorites([]);
-      }
-      
+      loadFavorites(user.id).finally(() => setIsLoading(false));
+    } else {
       setIsLoading(false);
-    };
-    
-    initialize();
-  }, [authLoading, isAuthenticated, user, loadFavorites]);
+    }
+  }, [authLoading, isAuthenticated, user?.id, loadFavorites]);
 
   // Check if a cocktail is favorited
   const isFavorite = useCallback((cocktailId: string) => {
@@ -118,7 +131,10 @@ export function useFavorites(): UseFavoritesResult {
         console.error("Error removing favorite:", error);
         toast.error("Failed to remove from favorites");
         // Reload to get accurate state
-        await loadFavorites();
+        if (user) {
+          lastFetchedUserId.current = null;
+          await loadFavorites(user.id);
+        }
       } else {
         toast.info("Removed from favorites");
       }
@@ -152,7 +168,10 @@ export function useFavorites(): UseFavoritesResult {
         console.error("Error adding favorite:", error);
         toast.error("Failed to add to favorites");
         // Reload to get accurate state
-        await loadFavorites();
+        if (user) {
+          lastFetchedUserId.current = null;
+          await loadFavorites(user.id);
+        }
       } else if (data) {
         // Update with real data from server
         setFavorites(prev => [data, ...prev.filter(f => f.cocktail_id !== cocktail.id)]);
@@ -184,7 +203,10 @@ export function useFavorites(): UseFavoritesResult {
     if (error) {
       console.error("Error removing favorite:", error);
       toast.error("Failed to remove from favorites");
-      await loadFavorites();
+      if (user) {
+        lastFetchedUserId.current = null;
+        loadFavorites(user.id);
+      }
     } else {
       toast.info("Removed from favorites");
     }
