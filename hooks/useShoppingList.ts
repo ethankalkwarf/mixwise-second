@@ -302,23 +302,31 @@ export function useShoppingList(): UseShoppingListResult {
 
   // Add multiple items
   const addItems = useCallback(async (ingredients: { id: string; name: string; category?: string }[]) => {
+    console.log("[ShoppingList] addItems called with:", ingredients.length, "ingredients");
+    console.log("[ShoppingList] Input ingredients:", JSON.stringify(ingredients.map(i => ({ id: i.id, name: i.name }))));
+    
     // Filter out ice and already-added items
     const newIngredients = ingredients.filter(
       ing => !isIce(ing.name) && !items.some(i => i.ingredient_id === ing.id)
     );
     
+    console.log("[ShoppingList] After filtering (ice + duplicates):", newIngredients.length, "ingredients");
+    
     if (newIngredients.length === 0) {
+      console.log("[ShoppingList] No new ingredients to add, showing toast");
       toast.info("All items are already in your shopping list");
       return;
     }
     
     if (isAuthenticated && user) {
+      console.log("[ShoppingList] User authenticated, posting to server");
       try {
         const toInsert = newIngredients.map(ing => ({
           ingredient_id: ing.id,
           ingredient_name: ing.name,
           ingredient_category: ing.category || null,
         }));
+        console.log("[ShoppingList] Posting items:", JSON.stringify(toInsert));
 
         const response = await fetch("/api/shopping-list", {
           method: "POST",
@@ -327,14 +335,17 @@ export function useShoppingList(): UseShoppingListResult {
           body: JSON.stringify(toInsert),
         });
 
+        const responseData = await response.json();
+        console.log("[ShoppingList] POST response:", response.status, responseData);
+
         if (!response.ok) {
-          const error = await response.json();
-          console.error("[ShoppingList] Error adding items:", error);
-          toast.error(`Failed to add items: ${error.error || "Unknown error"}`);
+          console.error("[ShoppingList] Error adding items:", responseData);
+          toast.error(`Failed to add items: ${responseData.error || "Unknown error"}`);
           return;
         }
 
         const serverData = await loadFromServer(user.id);
+        console.log("[ShoppingList] After add, server has:", serverData.length, "items");
         setItems(serverData);
         toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
       } catch (error: any) {
