@@ -115,10 +115,18 @@ export default function ShoppingListPage() {
             <div className="w-20 h-20 mx-auto mb-6 bg-olive/10 rounded-full flex items-center justify-center border-2 border-olive/20">
               <ShoppingBagIcon className="w-10 h-10 text-olive" />
             </div>
-            <h2 className="text-2xl font-display font-bold text-forest mb-3">No items yet</h2>
-            <p className="text-sage mb-8 max-w-md mx-auto leading-relaxed">
+            <h2 className="text-2xl font-display font-bold text-forest mb-3">Your shopping list is empty</h2>
+            <p className="text-sage mb-6 max-w-md mx-auto leading-relaxed">
               When you find cocktails you want to make, add the missing ingredients to your shopping list.
             </p>
+            <div className="bg-mist/30 rounded-xl p-4 mb-8 max-w-md mx-auto">
+              <p className="text-sm text-forest font-medium mb-2">💡 How to add items:</p>
+              <ol className="text-sm text-sage text-left space-y-2 list-decimal list-inside">
+                <li>Browse cocktail recipes</li>
+                <li>Click "Add missing ingredients to shopping list" on any cocktail page</li>
+                <li>Your items will appear here automatically</li>
+              </ol>
+            </div>
             <Link
               href="/cocktails"
               className="inline-flex items-center gap-2 px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-semibold rounded-2xl transition-all shadow-terracotta hover:shadow-terracotta/50"

@@ -14,19 +14,23 @@ export function ShoppingListBadge() {
   return (
     <Link
       href="/shopping-list"
-      className="relative p-2 rounded-xl text-sage hover:text-forest hover:bg-mist/50 transition-colors"
+      className="relative flex items-center gap-2 px-3 py-2 rounded-xl text-sage hover:text-forest hover:bg-mist/50 transition-colors group"
       title="Shopping list"
       aria-label={`Shopping list${itemCount > 0 ? ` with ${itemCount} item${itemCount !== 1 ? "s" : ""}` : ""}`}
     >
-      <ShoppingBagIcon className="w-5 h-5" />
-      <span
-        className={`absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold rounded-full ${
-          itemCount > 0
-            ? "bg-terracotta text-cream"
-            : "bg-mist text-sage border border-stone/20"
-        }`}
-      >
-        {itemCount > 99 ? "99+" : itemCount}
+      <div className="relative">
+        <ShoppingBagIcon className="w-5 h-5" />
+        {itemCount > 0 && (
+          <span
+            className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold rounded-full bg-terracotta text-cream"
+          >
+            {itemCount > 99 ? "99+" : itemCount}
+          </span>
+        )}
+      </div>
+      {/* Show text label on larger screens for better discoverability */}
+      <span className="hidden lg:inline text-sm font-medium">
+        {itemCount > 0 ? `Shopping List (${itemCount})` : "Shopping List"}
       </span>
     </Link>
   );

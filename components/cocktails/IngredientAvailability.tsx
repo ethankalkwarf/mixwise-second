@@ -246,13 +246,15 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
             )}
           </button>
 
-          {/* Link to shopping list */}
-          <div className="flex items-center justify-center">
+          {/* Link to shopping list - more prominent after adding */}
+          <div className="flex items-center justify-center mt-2">
             <Link
               href="/shopping-list"
-              className="text-sm font-medium text-sage hover:text-terracotta transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-terracotta hover:text-terracotta-dark transition-colors group"
             >
-              View shopping list →
+              <ShoppingBagIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              View your shopping list
+              <span className="group-hover:translate-x-0.5 transition-transform">→</span>
             </Link>
           </div>
         </div>
