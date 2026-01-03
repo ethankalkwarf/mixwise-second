@@ -169,8 +169,10 @@ export default function ShoppingListPage() {
                       }`}
                     >
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           console.log("[Page] Toggle clicked:", item.ingredient_id);
+                          alert(`Toggling: ${item.ingredient_name} (${item.ingredient_id})`);
                           toggleItem(item.ingredient_id);
                         }}
                         className="flex items-center gap-4 flex-1 text-left group"
@@ -195,8 +197,10 @@ export default function ShoppingListPage() {
                         </span>
                       </button>
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           console.log("[Page] Remove clicked:", item.ingredient_id);
+                          alert(`Removing: ${item.ingredient_name} (${item.ingredient_id})`);
                           removeItem(item.ingredient_id);
                         }}
                         className="p-2 text-sage hover:text-terracotta hover:bg-terracotta/10 rounded-lg transition-all"
