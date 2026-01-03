@@ -133,6 +133,7 @@ npm run backfill:images:dry -- --limit 10
 
 ## Documentation
 
+- [Debugging Guide](./docs/debugging-guide.md) - **Start here for debugging** - Common patterns, pitfalls, and quick fixes
 - [Authentication & Profiles](./docs/auth-and-profiles.md) - Auth setup and user management
 - [Post-Login Fixes](./POST_LOGIN_FIXES.md) - Session handling documentation
 - [QA Auth Fixes](./QA_AUTH_FIXES.md) - Auth testing checklist
