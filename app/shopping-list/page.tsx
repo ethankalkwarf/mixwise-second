@@ -28,10 +28,6 @@ export default function ShoppingListPage() {
   } = useShoppingList();
   const toast = useToast();
   const [copied, setCopied] = useState(false);
-  const [testClicks, setTestClicks] = useState(0);
-  
-  // Debug: log on every render
-  console.log("[ShoppingListPage] Rendered with", items.length, "items, version: 2026-01-03-v2");
 
   const handleCopy = async () => {
     try {
@@ -50,22 +46,6 @@ export default function ShoppingListPage() {
   return (
     <div className="py-10 min-h-screen bg-botanical-gradient">
       <MainContainer>
-        {/* Debug test button - REMOVE AFTER TESTING */}
-        <div className="mb-4 p-4 bg-yellow-100 rounded-lg">
-          <p className="text-sm mb-2">Debug Info:</p>
-          <ul className="text-xs mb-2">
-            <li>isLoading: {String(isLoading)}</li>
-            <li>itemCount: {itemCount}</li>
-            <li>items.length: {items.length}</li>
-            <li>groupedItems.size: {groupedItems.size}</li>
-            <li>Categories: {Array.from(groupedItems.keys()).join(", ") || "none"}</li>
-          </ul>
-          <div className="mt-2 p-2 bg-white rounded text-xs overflow-auto max-h-40">
-            <strong>Raw items:</strong>
-            <pre>{JSON.stringify(items, null, 2)}</pre>
-          </div>
-        </div>
-
         {/* Header */}
         <div className="mb-8">
           <Link
@@ -170,12 +150,7 @@ export default function ShoppingListPage() {
                       }`}
                     >
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log("[Page] Toggle clicked:", item.ingredient_id);
-                          alert(`Toggling: ${item.ingredient_name} (${item.ingredient_id})`);
-                          toggleItem(item.ingredient_id);
-                        }}
+                        onClick={() => toggleItem(item.ingredient_id)}
                         className="flex items-center gap-4 flex-1 text-left group"
                       >
                         <span
@@ -198,22 +173,7 @@ export default function ShoppingListPage() {
                         </span>
                       </button>
                       <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const id = item.ingredient_id;
-                          alert("Deleting item: " + id + " (" + item.ingredient_name + ")");
-                          
-                          // Call API directly to see response
-                          const res = await fetch(`/api/shopping-list?ingredient_id=${encodeURIComponent(id)}`, {
-                            method: "DELETE",
-                            credentials: "include",
-                          });
-                          const result = await res.json();
-                          alert("API Response: " + JSON.stringify(result));
-                          
-                          // Refresh the page to see if item was deleted
-                          window.location.reload();
-                        }}
+                        onClick={() => removeItem(item.ingredient_id)}
                         className="p-2 text-sage hover:text-terracotta hover:bg-terracotta/10 rounded-lg transition-all"
                         aria-label={`Remove ${item.ingredient_name}`}
                       >
@@ -239,8 +199,3 @@ export default function ShoppingListPage() {
     </div>
   );
 }
-
-
-
-
-

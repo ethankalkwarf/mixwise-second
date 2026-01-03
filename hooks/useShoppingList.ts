@@ -4,13 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
 
-/**
- * Shopping List Hook - Simplified version
- * 
- * For authenticated users: Always uses server API
- * For anonymous users: Uses localStorage
- */
-
 const LOCAL_STORAGE_KEY = "mixwise-shopping-list";
 
 interface ShoppingItem {
@@ -23,7 +16,6 @@ interface ShoppingItem {
   added_at?: string;
 }
 
-// Helper to check if ingredient is ice
 const isIce = (name: string) => {
   const n = name.toLowerCase().trim();
   return n === 'ice' || n === 'ice cubes' || n === 'crushed ice' || n === 'ice cube';
@@ -39,15 +31,12 @@ export function useShoppingList() {
   // Fetch items from server
   const fetchFromServer = useCallback(async (): Promise<ShoppingItem[]> => {
     try {
-      console.log("[ShoppingList] Fetching from server...");
       const response = await fetch("/api/shopping-list", {
         method: "GET",
         credentials: "include",
         cache: "no-store",
       });
-      console.log("[ShoppingList] Fetch response status:", response.status);
       const data = await response.json();
-      console.log("[ShoppingList] Fetched data:", data);
       return data.items || [];
     } catch (err) {
       console.error("[ShoppingList] Fetch error:", err);
@@ -63,11 +52,9 @@ export function useShoppingList() {
       setIsLoading(true);
       
       if (isAuthenticated && user) {
-        console.log("[ShoppingList] Loading for authenticated user");
         const serverItems = await fetchFromServer();
         setItems(serverItems);
       } else {
-        console.log("[ShoppingList] Loading from localStorage");
         try {
           const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
           setItems(stored ? JSON.parse(stored) : []);
@@ -95,7 +82,6 @@ export function useShoppingList() {
 
     if (isAuthenticated && user) {
       try {
-        console.log("[ShoppingList] Adding item:", ingredient);
         const response = await fetch("/api/shopping-list", {
           method: "POST",
           credentials: "include",
@@ -107,14 +93,13 @@ export function useShoppingList() {
           }),
         });
         
-        const result = await response.json();
-        console.log("[ShoppingList] Add response:", result);
-        
         if (response.ok) {
-          const serverItems = await fetchFromServer();
-          setItems(serverItems);
+          // Fetch fresh data and update state
+          const freshItems = await fetchFromServer();
+          setItems(freshItems);
           toast.success(`Added ${ingredient.name} to shopping list`);
         } else {
+          const result = await response.json();
           toast.error(`Failed to add: ${result.error}`);
         }
       } catch (err: any) {
@@ -149,7 +134,6 @@ export function useShoppingList() {
 
     if (isAuthenticated && user) {
       try {
-        console.log("[ShoppingList] Adding items:", filtered);
         const response = await fetch("/api/shopping-list", {
           method: "POST",
           credentials: "include",
@@ -161,14 +145,12 @@ export function useShoppingList() {
           }))),
         });
         
-        const result = await response.json();
-        console.log("[ShoppingList] Add items response:", result);
-        
         if (response.ok) {
-          const serverItems = await fetchFromServer();
-          setItems(serverItems);
+          const freshItems = await fetchFromServer();
+          setItems(freshItems);
           toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`);
         } else {
+          const result = await response.json();
           toast.error(`Failed to add: ${result.error}`);
         }
       } catch (err: any) {
@@ -193,32 +175,20 @@ export function useShoppingList() {
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {
     const id = String(ingredientId);
-    console.log("[ShoppingList] ===== REMOVE START =====");
-    console.log("[ShoppingList] Removing item:", id);
-    console.log("[ShoppingList] isAuthenticated:", isAuthenticated);
-    console.log("[ShoppingList] user:", user?.id);
     
     if (isAuthenticated && user) {
       try {
-        const url = `/api/shopping-list?ingredient_id=${encodeURIComponent(id)}`;
-        console.log("[ShoppingList] DELETE URL:", url);
-        
-        const response = await fetch(url, {
+        const response = await fetch(`/api/shopping-list?ingredient_id=${encodeURIComponent(id)}`, {
           method: "DELETE",
           credentials: "include",
           cache: "no-store",
         });
         
-        console.log("[ShoppingList] DELETE response status:", response.status);
-        const result = await response.json();
-        console.log("[ShoppingList] DELETE response body:", result);
-        
-        // Always refresh from server
-        console.log("[ShoppingList] Refreshing items from server...");
-        const serverItems = await fetchFromServer();
-        console.log("[ShoppingList] After refresh, items:", serverItems.length);
-        setItems(serverItems);
-        console.log("[ShoppingList] ===== REMOVE END =====");
+        if (response.ok) {
+          // Fetch fresh data and update state
+          const freshItems = await fetchFromServer();
+          setItems(freshItems);
+        }
       } catch (err) {
         console.error("[ShoppingList] Remove error:", err);
       }
@@ -232,16 +202,8 @@ export function useShoppingList() {
   // Toggle item checked
   const toggleItem = useCallback(async (ingredientId: string) => {
     const id = String(ingredientId);
-    console.log("[ShoppingList] ===== TOGGLE START =====");
-    console.log("[ShoppingList] Toggling item:", id);
-    
     const item = items.find(i => String(i.ingredient_id) === id);
-    if (!item) {
-      console.log("[ShoppingList] Item not found in state");
-      return;
-    }
-    
-    console.log("[ShoppingList] Current is_checked:", item.is_checked, "-> new:", !item.is_checked);
+    if (!item) return;
     
     if (isAuthenticated && user) {
       try {
@@ -253,13 +215,11 @@ export function useShoppingList() {
           body: JSON.stringify({ ingredient_id: id, is_checked: !item.is_checked }),
         });
         
-        console.log("[ShoppingList] PATCH response status:", response.status);
-        const result = await response.json();
-        console.log("[ShoppingList] PATCH response body:", result);
-        
-        const serverItems = await fetchFromServer();
-        setItems(serverItems);
-        console.log("[ShoppingList] ===== TOGGLE END =====");
+        if (response.ok) {
+          // Fetch fresh data and update state
+          const freshItems = await fetchFromServer();
+          setItems(freshItems);
+        }
       } catch (err) {
         console.error("[ShoppingList] Toggle error:", err);
       }
@@ -276,12 +236,15 @@ export function useShoppingList() {
   const clearChecked = useCallback(async () => {
     if (isAuthenticated && user) {
       try {
-        await fetch("/api/shopping-list?clear_checked=true", {
+        const response = await fetch("/api/shopping-list?clear_checked=true", {
           method: "DELETE",
           credentials: "include",
+          cache: "no-store",
         });
-        const serverItems = await fetchFromServer();
-        setItems(serverItems);
+        if (response.ok) {
+          const freshItems = await fetchFromServer();
+          setItems(freshItems);
+        }
       } catch (err) {
         console.error("[ShoppingList] Clear checked error:", err);
       }
@@ -297,11 +260,14 @@ export function useShoppingList() {
   const clearAll = useCallback(async () => {
     if (isAuthenticated && user) {
       try {
-        await fetch("/api/shopping-list?clear_all=true", {
+        const response = await fetch("/api/shopping-list?clear_all=true", {
           method: "DELETE",
           credentials: "include",
+          cache: "no-store",
         });
-        setItems([]);
+        if (response.ok) {
+          setItems([]);
+        }
       } catch (err) {
         console.error("[ShoppingList] Clear all error:", err);
       }

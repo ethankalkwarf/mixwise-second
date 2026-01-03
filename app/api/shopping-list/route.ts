@@ -3,30 +3,19 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
-/**
- * Shopping List API - Direct table operations with service role
- */
-
 export const dynamic = 'force-dynamic';
 
 async function getAuthenticatedUser() {
   const supabaseAuth = createRouteHandlerClient({ cookies });
   const { data: { user }, error } = await supabaseAuth.auth.getUser();
-  if (error || !user) {
-    return null;
-  }
+  if (error || !user) return null;
   return user;
 }
 
 function getServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!supabaseServiceKey) {
-    console.error("[ShoppingList API] No service role key");
-    return null;
-  }
-  
+  if (!supabaseServiceKey) return null;
   return createClient(supabaseUrl, supabaseServiceKey);
 }
 
@@ -43,8 +32,6 @@ export async function GET() {
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
 
-    console.log("[ShoppingList API] GET for user:", user.id);
-
     const { data, error } = await supabase
       .from("shopping_list")
       .select("*")
@@ -52,14 +39,11 @@ export async function GET() {
       .order("added_at", { ascending: false });
 
     if (error) {
-      console.error("[ShoppingList API] GET error:", error);
       return NextResponse.json({ items: [], error: error.message });
     }
 
-    console.log("[ShoppingList API] GET returned:", data?.length || 0, "items");
     return NextResponse.json({ items: data || [] });
   } catch (error: any) {
-    console.error("[ShoppingList API] GET exception:", error);
     return NextResponse.json({ items: [], error: error.message });
   }
 }
@@ -79,10 +63,8 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const items = Array.isArray(body) ? body : [body];
-    
-    console.log("[ShoppingList API] POST - adding", items.length, "items for user:", user.id);
 
-    // Deduplicate items by ingredient_id to avoid "cannot affect row a second time" error
+    // Deduplicate items by ingredient_id
     const uniqueItems = new Map();
     for (const item of items) {
       const id = String(item.ingredient_id);
@@ -98,24 +80,18 @@ export async function POST(request: Request) {
     }
     
     const toInsert = Array.from(uniqueItems.values());
-    console.log("[ShoppingList API] POST - inserting", toInsert.length, "unique items");
 
     const { data, error } = await supabase
       .from("shopping_list")
-      .upsert(toInsert, {
-        onConflict: "user_id,ingredient_id",
-      })
+      .upsert(toInsert, { onConflict: "user_id,ingredient_id" })
       .select();
 
     if (error) {
-      console.error("[ShoppingList API] POST error:", error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    console.log("[ShoppingList API] POST success, inserted:", data?.length || 0, "items");
     return NextResponse.json({ success: true, items: data || [] });
   } catch (error: any) {
-    console.error("[ShoppingList API] POST exception:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -140,8 +116,6 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "ingredient_id required" }, { status: 400 });
     }
 
-    console.log("[ShoppingList API] PATCH - toggling:", ingredient_id, "to:", is_checked);
-
     const { data, error } = await supabase
       .from("shopping_list")
       .update({ is_checked })
@@ -150,14 +124,11 @@ export async function PATCH(request: Request) {
       .select();
 
     if (error) {
-      console.error("[ShoppingList API] PATCH error:", error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    console.log("[ShoppingList API] PATCH success, updated:", data?.length || 0, "rows");
     return NextResponse.json({ success: true, items: data || [] });
   } catch (error: any) {
-    console.error("[ShoppingList API] PATCH exception:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -180,8 +151,6 @@ export async function DELETE(request: Request) {
     const clearChecked = searchParams.get("clear_checked") === "true";
     const clearAll = searchParams.get("clear_all") === "true";
 
-    console.log("[ShoppingList API] DELETE - params:", { ingredientId, clearChecked, clearAll, userId: user.id });
-
     let error = null;
 
     if (clearAll) {
@@ -198,56 +167,22 @@ export async function DELETE(request: Request) {
         .eq("is_checked", true);
       error = result.error;
     } else if (ingredientId) {
-      // First, check if the item exists
-      const { data: existingItems } = await supabase
-        .from("shopping_list")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("ingredient_id", String(ingredientId));
-      
-      console.log("[ShoppingList API] DELETE - looking for item:", {
-        userId: user.id,
-        ingredientId: String(ingredientId),
-        found: existingItems?.length || 0,
-        items: existingItems
-      });
-      
       const result = await supabase
         .from("shopping_list")
         .delete()
         .eq("user_id", user.id)
         .eq("ingredient_id", String(ingredientId));
-      
-      console.log("[ShoppingList API] DELETE result:", result);
       error = result.error;
-      
-      if (!error) {
-        // Verify deletion
-        const { data: afterDelete } = await supabase
-          .from("shopping_list")
-          .select("*")
-          .eq("user_id", user.id);
-        console.log("[ShoppingList API] After delete, user has:", afterDelete?.length, "items");
-        
-        return NextResponse.json({ 
-          success: true, 
-          deletedIngredientId: ingredientId,
-          itemsRemaining: afterDelete?.length 
-        });
-      }
     } else {
       return NextResponse.json({ error: "ingredient_id, clear_checked, or clear_all required" }, { status: 400 });
     }
 
     if (error) {
-      console.error("[ShoppingList API] DELETE error:", error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    console.log("[ShoppingList API] DELETE success");
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("[ShoppingList API] DELETE exception:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
