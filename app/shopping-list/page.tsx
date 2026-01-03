@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { useToast } from "@/components/ui/toast";
+import { formatIngredientCategory } from "@/lib/formatters";
 import {
   CheckIcon,
   TrashIcon,
@@ -146,7 +147,7 @@ export default function ShoppingListPage() {
               >
                 <div className="px-6 py-4 bg-gradient-to-r from-olive/10 to-terracotta/5 border-b border-mist">
                   <h2 className="font-display font-bold text-forest capitalize text-lg">
-                    {category.replace(/-/g, " ")}
+                    {formatIngredientCategory(category.replace(/-/g, " "))}
                   </h2>
                 </div>
                 <ul className="divide-y divide-mist/50">

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
+import { formatIngredientCategory } from "@/lib/formatters";
 
 const LOCAL_STORAGE_KEY = "mixwise-shopping-list";
 
@@ -320,7 +321,8 @@ export function useShoppingList() {
     const grouped = getItemsByCategory();
     let text = "MixWise Shopping List\n\n";
     grouped.forEach((categoryItems, category) => {
-      text += `${category}:\n`;
+      const pluralizedCategory = formatIngredientCategory(category);
+      text += `${pluralizedCategory}:\n`;
       categoryItems.forEach(item => {
         const check = item.is_checked ? "✓" : "○";
         text += `  ${check} ${item.ingredient_name}\n`;
