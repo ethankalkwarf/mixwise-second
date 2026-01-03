@@ -28,6 +28,10 @@ export default function ShoppingListPage() {
   } = useShoppingList();
   const toast = useToast();
   const [copied, setCopied] = useState(false);
+  const [testClicks, setTestClicks] = useState(0);
+  
+  // Debug: log on every render
+  console.log("[ShoppingListPage] Rendered with", items.length, "items, version: 2026-01-03-v2");
 
   const handleCopy = async () => {
     try {
@@ -46,6 +50,21 @@ export default function ShoppingListPage() {
   return (
     <div className="py-10 min-h-screen bg-botanical-gradient">
       <MainContainer>
+        {/* Debug test button - REMOVE AFTER TESTING */}
+        <div className="mb-4 p-4 bg-yellow-100 rounded-lg">
+          <p className="text-sm mb-2">Debug: Test clicks work (clicks: {testClicks})</p>
+          <button 
+            onClick={() => {
+              console.log("[TEST] Button clicked!");
+              setTestClicks(c => c + 1);
+              alert("Click worked! Check console for logs.");
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Test Click
+          </button>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <Link
