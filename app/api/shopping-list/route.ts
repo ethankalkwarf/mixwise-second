@@ -268,6 +268,22 @@ export async function DELETE(request: Request) {
       });
       console.log("[ShoppingList API] Delete result:", result);
       error = result.error;
+      
+      // Check if anything was actually deleted
+      if (!error && result.data === 0) {
+        console.log("[ShoppingList API] WARNING: Delete returned 0 rows - item not found");
+        return NextResponse.json({ 
+          success: false, 
+          error: "Item not found in database",
+          deletedCount: 0,
+          searchedFor: { userId: user.id, ingredientId }
+        });
+      }
+      
+      if (!error) {
+        console.log("[ShoppingList API] Deleted", result.data, "row(s)");
+        return NextResponse.json({ success: true, deletedCount: result.data });
+      }
     } else {
       return NextResponse.json({ error: "ingredient_id, clear_checked, or clear_all required" }, { status: 400 });
     }

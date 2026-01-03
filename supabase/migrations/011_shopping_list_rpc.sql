@@ -69,15 +69,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to delete a shopping list item
+-- Function to delete a shopping list item (returns number of deleted rows)
 CREATE OR REPLACE FUNCTION public.delete_shopping_item(
   p_user_id UUID,
   p_ingredient_id TEXT
 )
-RETURNS VOID AS $$
+RETURNS INTEGER AS $$
+DECLARE
+  deleted_count INTEGER;
 BEGIN
   DELETE FROM public.shopping_list
   WHERE user_id = p_user_id AND ingredient_id = p_ingredient_id;
+  
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  RETURN deleted_count;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

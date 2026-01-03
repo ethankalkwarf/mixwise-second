@@ -208,6 +208,8 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
           {/* Add to shopping list button */}
           <button
             onClick={async () => {
+              console.log("[IngredientAvailability] Add-missing button clicked");
+              console.log("[IngredientAvailability] Missing ingredients:", JSON.stringify(missingIngredients.map(i => ({ id: i.id, name: i.name }))));
               setIsAdding(true);
               setDidAdd(false);
               try {
@@ -216,11 +218,13 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
                   name: ing.name,
                   category: ing.category,
                 }));
+                console.log("[IngredientAvailability] Calling addItems with:", scaledIngredients.length, "items");
                 await addItems(scaledIngredients);
+                console.log("[IngredientAvailability] addItems completed");
                 setDidAdd(true);
                 setTimeout(() => setDidAdd(false), 2000);
               } catch (error) {
-                console.error("Error adding to shopping list:", error);
+                console.error("[IngredientAvailability] Error adding to shopping list:", error);
               } finally {
                 setIsAdding(false);
               }
