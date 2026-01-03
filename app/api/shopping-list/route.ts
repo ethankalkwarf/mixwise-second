@@ -4,10 +4,15 @@ import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Shopping List API - Uses service role to bypass schema cache issues
+ * Shopping List API - Uses RPC functions to bypass PostgREST schema cache issues
+ * 
+ * The PostgREST schema cache is stale and doesn't recognize ingredient_name/ingredient_category.
+ * Using supabase.rpc() with SQL functions bypasses this completely.
+ * 
+ * IMPORTANT: Run the migration 011_shopping_list_rpc.sql in your Supabase SQL editor first!
  * 
  * GET /api/shopping-list - Get user's shopping list
- * POST /api/shopping-list - Add item(s) to shopping list
+ * POST /api/shopping-list - Add item(s) to shopping list  
  * PATCH /api/shopping-list - Update item (toggle checked status)
  * DELETE /api/shopping-list - Remove item(s) from shopping list
  */
@@ -37,7 +42,7 @@ function getServiceClient() {
   return createClient(supabaseUrl, supabaseServiceKey);
 }
 
-// GET - Fetch shopping list
+// GET - Fetch shopping list using RPC
 export async function GET() {
   try {
     const user = await getAuthenticatedUser();
@@ -50,14 +55,24 @@ export async function GET() {
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
 
-    const { data, error } = await supabase
-      .from("shopping_list")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("added_at", { ascending: false });
+    // Use RPC function to bypass schema cache
+    const { data, error } = await supabase.rpc('get_shopping_list', {
+      p_user_id: user.id
+    });
 
     if (error) {
-      console.error("[ShoppingList API] Error fetching:", error);
+      console.error("[ShoppingList API] RPC get_shopping_list failed:", error.message);
+      
+      // Return empty list if function doesn't exist yet
+      if (error.message.includes('function') || error.message.includes('does not exist')) {
+        console.log("[ShoppingList API] RPC function not found - run migration 011_shopping_list_rpc.sql");
+        return NextResponse.json({ 
+          items: [], 
+          error: "Shopping list functions not installed. Please contact support.",
+          requiresMigration: true 
+        });
+      }
+      
       return NextResponse.json({ items: [], error: error.message });
     }
 
@@ -68,7 +83,7 @@ export async function GET() {
   }
 }
 
-// POST - Add item(s) to shopping list
+// POST - Add item(s) to shopping list using RPC
 export async function POST(request: Request) {
   try {
     const user = await getAuthenticatedUser();
@@ -82,50 +97,49 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    
-    // Handle single item or array of items
     const items = Array.isArray(body) ? body : [body];
     
-    const toInsert = items.map(item => ({
-      user_id: user.id,
-      ingredient_id: item.ingredient_id,
-      ingredient_name: item.ingredient_name,
-      ingredient_category: item.ingredient_category || null,
-      is_checked: item.is_checked || false,
-    }));
-
-    // Use upsert to handle duplicates gracefully
-    const { data, error } = await supabase
-      .from("shopping_list")
-      .upsert(toInsert, {
-        onConflict: "user_id,ingredient_id",
-        ignoreDuplicates: true,
-      })
-      .select();
-
-    if (error) {
-      console.error("[ShoppingList API] Error inserting:", error);
+    const results = [];
+    let lastError = null;
+    
+    for (const item of items) {
+      // Use RPC function to bypass schema cache
+      const { data, error } = await supabase.rpc('upsert_shopping_item', {
+        p_user_id: user.id,
+        p_ingredient_id: item.ingredient_id,
+        p_ingredient_name: item.ingredient_name || 'Unknown Ingredient',
+        p_ingredient_category: item.ingredient_category || null,
+        p_is_checked: item.is_checked || false
+      });
       
-      // Check for duplicate error and handle gracefully
-      if (error.code === '23505' || error.message?.includes('duplicate')) {
-        return NextResponse.json({ 
-          success: true, 
-          message: "Item already in list",
-          items: data || [] 
-        });
+      if (error) {
+        console.error("[ShoppingList API] RPC upsert_shopping_item failed:", error.message);
+        lastError = error;
+        
+        // If it's a function not found error, break early
+        if (error.message.includes('function') || error.message.includes('does not exist')) {
+          return NextResponse.json({ 
+            error: "Shopping list functions not installed. Please contact support.",
+            requiresMigration: true 
+          }, { status: 500 });
+        }
+      } else if (data && data.length > 0) {
+        results.push(data[0]);
       }
-      
-      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, items: data || [] });
+    if (lastError && results.length === 0) {
+      return NextResponse.json({ error: lastError.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, items: results });
   } catch (error: any) {
     console.error("[ShoppingList API] Unexpected error:", error);
     return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
   }
 }
 
-// PATCH - Update item (e.g., toggle checked status)
+// PATCH - Update item (toggle checked status) using RPC
 export async function PATCH(request: Request) {
   try {
     const user = await getAuthenticatedUser();
@@ -139,32 +153,39 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { ingredient_id, is_checked } = body;
+    const { ingredient_id } = body;
 
     if (!ingredient_id) {
       return NextResponse.json({ error: "ingredient_id required" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from("shopping_list")
-      .update({ is_checked })
-      .eq("user_id", user.id)
-      .eq("ingredient_id", ingredient_id)
-      .select();
+    // Use RPC function to toggle
+    const { data, error } = await supabase.rpc('toggle_shopping_item_checked', {
+      p_user_id: user.id,
+      p_ingredient_id: ingredient_id
+    });
 
     if (error) {
-      console.error("[ShoppingList API] Error updating:", error);
+      console.error("[ShoppingList API] RPC toggle failed:", error);
+      
+      if (error.message.includes('function') || error.message.includes('does not exist')) {
+        return NextResponse.json({ 
+          error: "Shopping list functions not installed. Please contact support.",
+          requiresMigration: true 
+        }, { status: 500 });
+      }
+      
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, items: data || [] });
+    return NextResponse.json({ success: true, is_checked: data });
   } catch (error: any) {
     console.error("[ShoppingList API] Unexpected error:", error);
     return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
   }
 }
 
-// DELETE - Remove item(s) from shopping list
+// DELETE - Remove item(s) from shopping list using RPC
 export async function DELETE(request: Request) {
   try {
     const user = await getAuthenticatedUser();
@@ -182,25 +203,38 @@ export async function DELETE(request: Request) {
     const clearChecked = searchParams.get("clear_checked") === "true";
     const clearAll = searchParams.get("clear_all") === "true";
 
-    let query = supabase
-      .from("shopping_list")
-      .delete()
-      .eq("user_id", user.id);
+    let error = null;
 
     if (clearAll) {
-      // Delete all items for user
+      const result = await supabase.rpc('clear_all_shopping_items', {
+        p_user_id: user.id
+      });
+      error = result.error;
     } else if (clearChecked) {
-      query = query.eq("is_checked", true);
+      const result = await supabase.rpc('clear_checked_shopping_items', {
+        p_user_id: user.id
+      });
+      error = result.error;
     } else if (ingredientId) {
-      query = query.eq("ingredient_id", ingredientId);
+      const result = await supabase.rpc('delete_shopping_item', {
+        p_user_id: user.id,
+        p_ingredient_id: ingredientId
+      });
+      error = result.error;
     } else {
       return NextResponse.json({ error: "ingredient_id, clear_checked, or clear_all required" }, { status: 400 });
     }
 
-    const { error } = await query;
-
     if (error) {
-      console.error("[ShoppingList API] Error deleting:", error);
+      console.error("[ShoppingList API] RPC delete failed:", error);
+      
+      if (error.message.includes('function') || error.message.includes('does not exist')) {
+        return NextResponse.json({ 
+          error: "Shopping list functions not installed. Please contact support.",
+          requiresMigration: true 
+        }, { status: 500 });
+      }
+      
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
@@ -210,4 +244,3 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
   }
 }
-
