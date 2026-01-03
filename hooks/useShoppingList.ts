@@ -111,18 +111,44 @@ export function useShoppingList(): UseShoppingListResult {
 
   // Load from server
   const loadFromServer = useCallback(async (userId: string) => {
-    const { data, error } = await supabase
-      .from("shopping_list")
-      .select("*")
-      .eq("user_id", userId)
-      .order("added_at", { ascending: false });
-    
-    if (error) {
-      console.error("Error loading shopping list:", error);
+    try {
+      // Try with ordering first
+      let { data, error } = await supabase
+        .from("shopping_list")
+        .select("*")
+        .eq("user_id", userId)
+        .order("added_at", { ascending: false });
+      
+      // If that fails, try without ordering as fallback
+      if (error) {
+        console.warn("[ShoppingList] Error loading with order, trying without:", error);
+        const fallbackResult = await supabase
+          .from("shopping_list")
+          .select("*")
+          .eq("user_id", userId);
+        
+        if (fallbackResult.error) {
+          console.error("[ShoppingList] Error loading shopping list:", fallbackResult.error);
+          return [];
+        }
+        
+        // Sort manually if we got data without ordering
+        data = fallbackResult.data || [];
+        // Sort by added_at descending manually
+        if (data && data.length > 0) {
+          data.sort((a, b) => {
+            const dateA = new Date(a.added_at || 0).getTime();
+            const dateB = new Date(b.added_at || 0).getTime();
+            return dateB - dateA;
+          });
+        }
+      }
+      
+      return data || [];
+    } catch (err) {
+      console.error("[ShoppingList] Exception loading from server:", err);
       return [];
     }
-    
-    return data || [];
   }, [supabase]);
 
   // Initialize shopping list - only fetch when user ID changes

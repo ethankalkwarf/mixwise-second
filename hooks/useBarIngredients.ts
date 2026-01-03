@@ -222,17 +222,40 @@ export function useBarIngredients(): UseBarIngredientsResult {
         }
 
         // Fetch ingredients for ID normalization
+        // Try progressively simpler queries to handle schema variations
         let ingredientsData: any[] = [];
-        const { data, error: ingredientsError } = await supabase
-          .from("ingredients")
-          .select("id, name, legacy_id");
-
+        let ingredientsError: any = null;
+        
+        // Attempt 1: Try with legacy_id (preferred)
+        {
+          const res = await supabase
+            .from("ingredients")
+            .select("id, name, legacy_id");
+          if (!res.error) {
+            ingredientsData = res.data || [];
+          } else {
+            ingredientsError = res.error;
+          }
+        }
+        
+        // Attempt 2: Try without legacy_id if first attempt failed
+        if (ingredientsError && ingredientsData.length === 0) {
+          const res = await supabase
+            .from("ingredients")
+            .select("id, name");
+          if (!res.error) {
+            ingredientsData = (res.data || []).map((ing: any) => ({
+              ...ing,
+              legacy_id: null
+            }));
+            ingredientsError = null;
+          }
+        }
+        
         if (ingredientsError) {
           console.error("[useBarIngredients] Error fetching ingredients for normalization:", ingredientsError);
           // IMPORTANT: Don't return - continue loading user's bar even if ingredients list fails
           ingredientsData = [];
-        } else {
-          ingredientsData = data || [];
         }
 
         // Build canonical ID map using utility (will be empty map if ingredients fetch failed)
@@ -502,17 +525,39 @@ export function useBarIngredients(): UseBarIngredientsResult {
     }
     
     if (isAuthenticated && user) {
-      // Save to server
-      const { error } = await supabase.from("bar_ingredients").upsert({
-        user_id: user.id,
-        ingredient_id: id,
-        ingredient_name: name,
-      }, {
-        onConflict: "user_id,ingredient_id",
-      });
-      
-      if (error) {
-        console.error(`[useBarIngredients] Error adding ingredient ${id}:`, error);
+      try {
+        // Save to server
+        const { error } = await supabase.from("bar_ingredients").upsert({
+          user_id: user.id,
+          ingredient_id: id,
+          ingredient_name: name,
+        }, {
+          onConflict: "user_id,ingredient_id",
+        });
+        
+        if (error) {
+          console.error(`[useBarIngredients] Error adding ingredient ${id}:`, error);
+          toast.error("Failed to add ingredient");
+          // Revert on error
+          setIngredientIds(ingredientIds);
+          setIngredientNameMap(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(id);
+            return newMap;
+          });
+        } else {
+          console.log(`[useBarIngredients] Ingredient ${id} added, bar size: ${newIds.length}`);
+          toast.success("Ingredient added to your bar");
+
+          // Check for badge unlocks
+          try {
+            await checkBarBadges(supabase, user.id, newIds.length);
+          } catch (badgeError) {
+            console.error(`[useBarIngredients] Error checking bar badges:`, badgeError);
+          }
+        }
+      } catch (err) {
+        console.error(`[useBarIngredients] Exception adding ingredient ${id}:`, err);
         toast.error("Failed to add ingredient");
         // Revert on error
         setIngredientIds(ingredientIds);
@@ -521,16 +566,6 @@ export function useBarIngredients(): UseBarIngredientsResult {
           newMap.delete(id);
           return newMap;
         });
-      } else {
-        console.log(`[useBarIngredients] Ingredient ${id} added, bar size: ${newIds.length}`);
-        toast.success("Ingredient added to your bar");
-
-        // Check for badge unlocks
-        try {
-          await checkBarBadges(supabase, user.id, newIds.length);
-        } catch (badgeError) {
-          console.error(`[useBarIngredients] Error checking bar badges:`, badgeError);
-        }
       }
     } else {
       // Save to localStorage
