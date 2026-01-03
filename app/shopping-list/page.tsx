@@ -150,7 +150,10 @@ export default function ShoppingListPage() {
                       }`}
                     >
                       <button
-                        onClick={() => toggleItem(item.ingredient_id)}
+                        onClick={() => {
+                          console.log("[Page] Toggle clicked:", item.ingredient_id);
+                          toggleItem(item.ingredient_id);
+                        }}
                         className="flex items-center gap-4 flex-1 text-left group"
                       >
                         <span
@@ -173,7 +176,10 @@ export default function ShoppingListPage() {
                         </span>
                       </button>
                       <button
-                        onClick={() => removeItem(item.ingredient_id)}
+                        onClick={() => {
+                          console.log("[Page] Remove clicked:", item.ingredient_id);
+                          removeItem(item.ingredient_id);
+                        }}
                         className="p-2 text-sage hover:text-terracotta hover:bg-terracotta/10 rounded-lg transition-all"
                         aria-label={`Remove ${item.ingredient_name}`}
                       >
