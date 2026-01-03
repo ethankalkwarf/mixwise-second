@@ -81,17 +81,24 @@ export async function POST(request: Request) {
     const items = Array.isArray(body) ? body : [body];
     
     console.log("[ShoppingList API] POST - adding", items.length, "items for user:", user.id);
-    console.log("[ShoppingList API] POST - items:", JSON.stringify(items));
 
-    const toInsert = items.map(item => ({
-      user_id: user.id,
-      ingredient_id: String(item.ingredient_id),
-      ingredient_name: item.ingredient_name || 'Unknown',
-      ingredient_category: item.ingredient_category || null,
-      is_checked: item.is_checked || false,
-    }));
-
-    console.log("[ShoppingList API] POST - inserting:", JSON.stringify(toInsert));
+    // Deduplicate items by ingredient_id to avoid "cannot affect row a second time" error
+    const uniqueItems = new Map();
+    for (const item of items) {
+      const id = String(item.ingredient_id);
+      if (!uniqueItems.has(id)) {
+        uniqueItems.set(id, {
+          user_id: user.id,
+          ingredient_id: id,
+          ingredient_name: item.ingredient_name || 'Unknown',
+          ingredient_category: item.ingredient_category || null,
+          is_checked: item.is_checked || false,
+        });
+      }
+    }
+    
+    const toInsert = Array.from(uniqueItems.values());
+    console.log("[ShoppingList API] POST - inserting", toInsert.length, "unique items");
 
     const { data, error } = await supabase
       .from("shopping_list")
