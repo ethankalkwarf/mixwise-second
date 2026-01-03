@@ -56,19 +56,22 @@ export async function GET() {
     }
 
     // Use RPC function to bypass schema cache
+    console.log("[ShoppingList API] Calling get_shopping_list for user:", user.id);
+    
     const { data, error } = await supabase.rpc('get_shopping_list', {
       p_user_id: user.id
     });
 
     if (error) {
-      console.error("[ShoppingList API] RPC get_shopping_list failed:", error.message);
+      console.error("[ShoppingList API] RPC get_shopping_list failed:", error);
+      console.error("[ShoppingList API] Full error:", JSON.stringify(error, null, 2));
       
       // Return empty list if function doesn't exist yet
-      if (error.message.includes('function') || error.message.includes('does not exist')) {
+      if (error.message?.includes('function') && error.message?.includes('does not exist')) {
         console.log("[ShoppingList API] RPC function not found - run migration 011_shopping_list_rpc.sql");
         return NextResponse.json({ 
           items: [], 
-          error: "Shopping list functions not installed. Please contact support.",
+          error: `Shopping list functions not installed. Actual error: ${error.message}`,
           requiresMigration: true 
         });
       }
@@ -104,6 +107,14 @@ export async function POST(request: Request) {
     
     for (const item of items) {
       // Use RPC function to bypass schema cache
+      console.log("[ShoppingList API] Calling upsert_shopping_item with:", {
+        p_user_id: user.id,
+        p_ingredient_id: item.ingredient_id,
+        p_ingredient_name: item.ingredient_name || 'Unknown Ingredient',
+        p_ingredient_category: item.ingredient_category || null,
+        p_is_checked: item.is_checked || false
+      });
+      
       const { data, error } = await supabase.rpc('upsert_shopping_item', {
         p_user_id: user.id,
         p_ingredient_id: item.ingredient_id,
@@ -113,18 +124,22 @@ export async function POST(request: Request) {
       });
       
       if (error) {
-        console.error("[ShoppingList API] RPC upsert_shopping_item failed:", error.message);
+        console.error("[ShoppingList API] RPC upsert_shopping_item failed:", error);
+        console.error("[ShoppingList API] Full error details:", JSON.stringify(error, null, 2));
         lastError = error;
         
         // If it's a function not found error, break early
-        if (error.message.includes('function') || error.message.includes('does not exist')) {
+        if (error.message?.includes('function') && error.message?.includes('does not exist')) {
           return NextResponse.json({ 
-            error: "Shopping list functions not installed. Please contact support.",
+            error: `Shopping list functions not installed. Actual error: ${error.message}`,
             requiresMigration: true 
           }, { status: 500 });
         }
       } else if (data && data.length > 0) {
         results.push(data[0]);
+      } else if (data) {
+        // Handle case where data is returned but not as array
+        results.push(data);
       }
     }
 
