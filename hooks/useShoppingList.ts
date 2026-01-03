@@ -43,7 +43,6 @@ export function useShoppingList() {
         },
       });
       const data = await response.json();
-      console.log("[ShoppingList] Fetched:", data.items?.length || 0, "items");
       return data.items || [];
     } catch (err) {
       console.error("[ShoppingList] Fetch error:", err);
