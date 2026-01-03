@@ -255,6 +255,7 @@ export function useShoppingList(): UseShoppingListResult {
     
     if (isAuthenticated && user) {
       try {
+        console.log("[ShoppingList] Adding item:", { id: ingredient.id, name: ingredient.name, category: ingredient.category });
         const response = await fetch("/api/shopping-list", {
           method: "POST",
           credentials: "include",
@@ -266,14 +267,17 @@ export function useShoppingList(): UseShoppingListResult {
           }),
         });
 
+        const responseData = await response.json();
+        console.log("[ShoppingList] Add response:", response.status, responseData);
+
         if (!response.ok) {
-          const error = await response.json();
-          console.error("[ShoppingList] Error adding item:", error);
-          toast.error(`Failed to add to shopping list: ${error.error || "Unknown error"}`);
+          console.error("[ShoppingList] Error adding item:", responseData);
+          toast.error(`Failed to add to shopping list: ${responseData.error || "Unknown error"}`);
           return;
         }
 
         const serverData = await loadFromServer(user.id);
+        console.log("[ShoppingList] After add, server has:", serverData.length, "items");
         setItems(serverData);
         toast.success(`Added ${ingredient.name} to shopping list`);
       } catch (error: any) {
