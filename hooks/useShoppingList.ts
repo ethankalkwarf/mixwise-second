@@ -200,8 +200,22 @@ export function useShoppingList(): UseShoppingListResult {
     initialize();
   }, [authLoading, isAuthenticated, user?.id, loadFromServer, loadFromLocal]);
 
+  // Helper to check if ingredient is ice (everyone has ice!)
+  const isIce = (name: string) => {
+    const normalized = name.toLowerCase().trim();
+    return normalized === 'ice' || 
+           normalized === 'ice cubes' || 
+           normalized === 'crushed ice' ||
+           normalized === 'ice cube';
+  };
+
   // Add single item
   const addItem = useCallback(async (ingredient: { id: string; name: string; category?: string }) => {
+    // Skip ice - everyone has ice!
+    if (isIce(ingredient.name)) {
+      return;
+    }
+    
     const existing = items.find(i => i.ingredient_id === ingredient.id);
     if (existing) {
       toast.info(`${ingredient.name} is already in your shopping list`);
@@ -253,8 +267,9 @@ export function useShoppingList(): UseShoppingListResult {
 
   // Add multiple items
   const addItems = useCallback(async (ingredients: { id: string; name: string; category?: string }[]) => {
+    // Filter out ice and already-added items
     const newIngredients = ingredients.filter(
-      ing => !items.some(i => i.ingredient_id === ing.id)
+      ing => !isIce(ing.name) && !items.some(i => i.ingredient_id === ing.id)
     );
     
     if (newIngredients.length === 0) {
