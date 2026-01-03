@@ -5,7 +5,17 @@ import { useSessionContext } from "@supabase/auth-helpers-react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
-import type { ShoppingListItem } from "@/lib/supabase/database.types";
+// Don't import ShoppingListItem from database.types to avoid schema cache validation
+// Define our own type that matches the actual REST API response
+interface ShoppingListItem {
+  id: number;
+  user_id: string;
+  ingredient_id: string;
+  ingredient_name: string;
+  ingredient_category: string | null;
+  is_checked: boolean;
+  added_at: string;
+}
 
 const LOCAL_STORAGE_KEY = "mixwise-shopping-list";
 
