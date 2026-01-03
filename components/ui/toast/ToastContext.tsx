@@ -8,11 +8,15 @@ interface ToastItem {
   type: ToastType;
   message: string;
   duration: number;
+  action?: {
+    label: string;
+    href: string;
+  };
 }
 
 interface ToastContextValue {
-  toast: (message: string, type?: ToastType, duration?: number) => void;
-  success: (message: string, duration?: number) => void;
+  toast: (message: string, type?: ToastType, duration?: number, action?: { label: string; href: string }) => void;
+  success: (message: string, duration?: number, action?: { label: string; href: string }) => void;
   error: (message: string, duration?: number) => void;
   info: (message: string, duration?: number) => void;
   warning: (message: string, duration?: number) => void;
@@ -28,22 +32,22 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const addToast = useCallback((message: string, type: ToastType = "info", duration = 4000) => {
+  const addToast = useCallback((message: string, type: ToastType = "info", duration = 4000, action?: { label: string; href: string }) => {
     const id = `toast-${Date.now()}-${idCounter.current++}`;
-    setToasts((prev) => [...prev, { id, type, message, duration }]);
+    setToasts((prev) => [...prev, { id, type, message, duration, action }]);
     return id;
   }, []);
 
   const toast = useCallback(
-    (message: string, type: ToastType = "info", duration = 4000) => {
-      addToast(message, type, duration);
+    (message: string, type: ToastType = "info", duration = 4000, action?: { label: string; href: string }) => {
+      addToast(message, type, duration, action);
     },
     [addToast]
   );
 
   const success = useCallback(
-    (message: string, duration = 4000) => {
-      addToast(message, "success", duration);
+    (message: string, duration = 4000, action?: { label: string; href: string }) => {
+      addToast(message, "success", duration, action);
     },
     [addToast]
   );
@@ -80,6 +84,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             type={t.type}
             message={t.message}
             duration={t.duration}
+            action={t.action}
             onClose={removeToast}
           />
         ))}

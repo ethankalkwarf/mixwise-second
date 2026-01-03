@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
@@ -16,6 +17,10 @@ interface ToastProps {
   type: ToastType;
   message: string;
   duration: number;
+  action?: {
+    label: string;
+    href: string;
+  };
   onClose: (id: string) => void;
 }
 
@@ -49,7 +54,7 @@ const styles: Record<ToastType, { bg: string; icon: string; border: string }> = 
   },
 };
 
-export function Toast({ id, type, message, duration, onClose }: ToastProps) {
+export function Toast({ id, type, message, duration, action, onClose }: ToastProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
@@ -100,7 +105,18 @@ export function Toast({ id, type, message, duration, onClose }: ToastProps) {
       `}
     >
       <Icon className={`w-5 h-5 ${style.icon} flex-shrink-0 mt-0.5`} />
-      <p className="text-sm text-slate-200 flex-1 leading-relaxed">{message}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-slate-200 leading-relaxed">{message}</p>
+        {action && (
+          <Link
+            href={action.href}
+            onClick={handleClose}
+            className="mt-2 inline-block text-xs font-semibold text-slate-300 hover:text-white underline transition-colors"
+          >
+            {action.label} →
+          </Link>
+        )}
+      </div>
       <button
         onClick={handleClose}
         className="text-slate-400 hover:text-slate-200 transition-colors flex-shrink-0 p-0.5 -m-0.5"

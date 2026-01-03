@@ -246,8 +246,8 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
             )}
           </button>
 
-          {/* Link to shopping list - more prominent after adding */}
-          <div className="flex items-center justify-center mt-2">
+          {/* Link to shopping list - always visible for discoverability */}
+          <div className="flex items-center justify-center mt-3 pt-3 border-t border-mist/30">
             <Link
               href="/shopping-list"
               className="inline-flex items-center gap-2 text-sm font-semibold text-terracotta hover:text-terracotta-dark transition-colors group"

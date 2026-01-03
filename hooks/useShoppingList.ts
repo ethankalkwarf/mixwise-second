@@ -111,7 +111,10 @@ export function useShoppingList() {
         if (response.ok) {
           // Update state optimistically (like clearAll does)
           setItems(prev => [newItem, ...prev]);
-          toast.success(`Added ${ingredient.name} to shopping list`);
+          toast.success(`Added ${ingredient.name} to shopping list`, 5000, {
+            label: "View shopping list",
+            href: "/shopping-list"
+          });
         } else {
           const result = await response.json();
           toast.error(`Failed to add: ${result.error}`);
@@ -124,7 +127,10 @@ export function useShoppingList() {
       const updated = [newItem, ...items];
       setItems(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-      toast.success(`Added ${ingredient.name} to shopping list`);
+      toast.success(`Added ${ingredient.name} to shopping list`, 5000, {
+        label: "View shopping list",
+        href: "/shopping-list"
+      });
     }
   }, [items, isAuthenticated, user, toast]);
 
@@ -164,7 +170,10 @@ export function useShoppingList() {
         if (response.ok) {
           // Update state optimistically (like clearAll does)
           setItems(prev => [...newItems, ...prev]);
-          toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`);
+          toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`, 5000, {
+            label: "View shopping list",
+            href: "/shopping-list"
+          });
         } else {
           const result = await response.json();
           toast.error(`Failed to add: ${result.error}`);
@@ -177,7 +186,10 @@ export function useShoppingList() {
       const updated = [...newItems, ...items];
       setItems(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-      toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`);
+      toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`, 5000, {
+        label: "View shopping list",
+        href: "/shopping-list"
+      });
     }
   }, [items, isAuthenticated, user, toast]);
 
