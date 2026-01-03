@@ -222,34 +222,62 @@ export function useBarIngredients(): UseBarIngredientsResult {
         }
 
         // Fetch ingredients for ID normalization
-        // Try progressively simpler queries to handle schema variations
+        // Use REST API to bypass schema cache issues
         let ingredientsData: any[] = [];
         let ingredientsError: any = null;
         
-        // Attempt 1: Try with legacy_id (preferred)
-        {
-          const res = await supabase
-            .from("ingredients")
-            .select("id, name, legacy_id");
-          if (!res.error) {
-            ingredientsData = res.data || [];
+        try {
+          const config = {
+            url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+            anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+          };
+          
+          if (config.url && config.anonKey) {
+            // Try with legacy_id first
+            const url = new URL(`${config.url}/rest/v1/ingredients`);
+            url.searchParams.set('select', 'id,name,legacy_id');
+            
+            const response = await fetch(url.toString(), {
+              method: 'GET',
+              headers: {
+                'apikey': config.anonKey,
+                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || config.anonKey}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (response.ok) {
+              ingredientsData = await response.json() || [];
+            } else {
+              // Fallback: try without legacy_id
+              const fallbackUrl = new URL(`${config.url}/rest/v1/ingredients`);
+              fallbackUrl.searchParams.set('select', 'id,name');
+              
+              const fallbackResponse = await fetch(fallbackUrl.toString(), {
+                method: 'GET',
+                headers: {
+                  'apikey': config.anonKey,
+                  'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || config.anonKey}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+              
+              if (fallbackResponse.ok) {
+                const data = await fallbackResponse.json() || [];
+                ingredientsData = data.map((ing: any) => ({
+                  ...ing,
+                  legacy_id: null
+                }));
+              } else {
+                const errorText = await fallbackResponse.text();
+                ingredientsError = new Error(`Ingredients fetch failed: ${errorText}`);
+              }
+            }
           } else {
-            ingredientsError = res.error;
+            ingredientsError = new Error("Missing Supabase configuration");
           }
-        }
-        
-        // Attempt 2: Try without legacy_id if first attempt failed
-        if (ingredientsError && ingredientsData.length === 0) {
-          const res = await supabase
-            .from("ingredients")
-            .select("id, name");
-          if (!res.error) {
-            ingredientsData = (res.data || []).map((ing: any) => ({
-              ...ing,
-              legacy_id: null
-            }));
-            ingredientsError = null;
-          }
+        } catch (err: any) {
+          ingredientsError = err;
         }
         
         if (ingredientsError) {
@@ -536,8 +564,16 @@ export function useBarIngredients(): UseBarIngredientsResult {
         });
         
         if (error) {
-          console.error(`[useBarIngredients] Error adding ingredient ${id}:`, error);
-          toast.error("Failed to add ingredient");
+          console.error(`[useBarIngredients] Error adding ingredient ${id}:`, {
+            error,
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            user_id: user.id,
+            ingredient_id: id,
+          });
+          toast.error(`Failed to add ingredient: ${error.message || 'Unknown error'}`);
           // Revert on error
           setIngredientIds(ingredientIds);
           setIngredientNameMap(prev => {

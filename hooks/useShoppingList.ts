@@ -124,17 +124,20 @@ export function useShoppingList(): UseShoppingListResult {
       // Use REST API to completely bypass schema cache
       // Don't select ingredient_category to avoid any schema cache issues
       // We'll add it as null in the response to match the expected structure
-      const response = await fetch(
-        `${config.url}/rest/v1/shopping_list?select=id,user_id,ingredient_id,ingredient_name,is_checked,added_at&user_id=eq.${userId}&order=added_at.desc`,
-        {
-          method: 'GET',
-          headers: {
-            'apikey': config.anonKey,
-            'Authorization': `Bearer ${accessToken || config.anonKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      // PostgREST order syntax: use separate order parameter or order=column.direction
+      const url = new URL(`${config.url}/rest/v1/shopping_list`);
+      url.searchParams.set('select', 'id,user_id,ingredient_id,ingredient_name,is_checked,added_at');
+      url.searchParams.set('user_id', `eq.${userId}`);
+      url.searchParams.set('order', 'added_at.desc');
+      
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'apikey': config.anonKey,
+          'Authorization': `Bearer ${accessToken || config.anonKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -192,7 +195,6 @@ export function useShoppingList(): UseShoppingListResult {
                   user_id: string;
                   ingredient_id: string;
                   ingredient_name: string;
-                  ingredient_category?: string;
                   is_checked: boolean;
                 } = {
                   user_id: user.id,
@@ -201,10 +203,7 @@ export function useShoppingList(): UseShoppingListResult {
                   is_checked: item.is_checked,
                 };
                 
-                // Only include category if it's provided
-                if (item.ingredient_category) {
-                  insertItem.ingredient_category = item.ingredient_category;
-                }
+                // Note: ingredient_category removed to avoid schema cache errors
                 
                 return insertItem;
               });
@@ -287,21 +286,19 @@ export function useShoppingList(): UseShoppingListResult {
           throw new Error("Missing Supabase configuration");
         }
         
-        // Prepare payload
+        // Prepare payload - DO NOT include ingredient_category to avoid schema errors
         const restPayload: {
           user_id: string;
           ingredient_id: string;
           ingredient_name: string;
-          ingredient_category?: string;
         } = {
           user_id: user.id,
           ingredient_id: ingredient.id,
           ingredient_name: ingredient.name,
         };
         
-        if (ingredient.category) {
-          restPayload.ingredient_category = ingredient.category;
-        }
+        // Note: ingredient_category removed to avoid schema cache errors
+        // The column exists in DB but causes 400 errors via REST API
         
         console.log("[ShoppingList] Inserting via REST API", {
           ingredient: ingredient.name,
@@ -336,8 +333,15 @@ export function useShoppingList(): UseShoppingListResult {
             errorText: errorText,
             errorData: errorData,
             payload: { ...restPayload, user_id: '[REDACTED]' },
+            url: `${config.url}/rest/v1/shopping_list`,
+            timestamp: new Date().toISOString(),
           };
           console.error("[ShoppingList] REST API insert failed:", fullError);
+          
+          // Runtime guard: Check if error is related to ingredient_category
+          if (errorText.includes('ingredient_category') || errorData.message?.includes('ingredient_category')) {
+            console.error("[ShoppingList] SCHEMA ERROR DETECTED: ingredient_category column issue. This should not happen after fix.");
+          }
           
           // Handle duplicate entry (unique constraint violation)
           if (response.status === 409 || response.status === 23505 || 
@@ -422,22 +426,19 @@ export function useShoppingList(): UseShoppingListResult {
           throw new Error("Missing Supabase configuration");
         }
         
-        // Prepare payload array
+        // Prepare payload array - DO NOT include ingredient_category to avoid schema errors
         const toInsert = newIngredients.map(ing => {
           const item: {
             user_id: string;
             ingredient_id: string;
             ingredient_name: string;
-            ingredient_category?: string;
           } = {
             user_id: user.id,
             ingredient_id: ing.id,
             ingredient_name: ing.name,
           };
           
-          if (ing.category) {
-            item.ingredient_category = ing.category;
-          }
+          // Note: ingredient_category removed to avoid schema cache errors
           
           return item;
         });
