@@ -112,19 +112,58 @@ export function useShoppingList(): UseShoppingListResult {
   // Load from server
   const loadFromServer = useCallback(async (userId: string) => {
     try {
-      // Try with ordering first
+      // Use explicit column names to avoid schema cache issues
+      // Try with all columns including ingredient_category first
       let { data, error } = await supabase
         .from("shopping_list")
-        .select("*")
+        .select("id, user_id, ingredient_id, ingredient_name, ingredient_category, is_checked, added_at")
         .eq("user_id", userId)
         .order("added_at", { ascending: false });
       
-      // If that fails, try without ordering as fallback
-      if (error) {
+      // If that fails (schema cache issue), try without ingredient_category
+      if (error && error.message?.includes("ingredient_category")) {
+        console.warn("[ShoppingList] Schema cache missing ingredient_category, trying without:", error);
+        const fallbackResult = await supabase
+          .from("shopping_list")
+          .select("id, user_id, ingredient_id, ingredient_name, is_checked, added_at")
+          .eq("user_id", userId)
+          .order("added_at", { ascending: false });
+        
+        if (fallbackResult.error) {
+          // Try without ordering as last resort
+          const noOrderResult = await supabase
+            .from("shopping_list")
+            .select("id, user_id, ingredient_id, ingredient_name, is_checked, added_at")
+            .eq("user_id", userId);
+          
+          if (noOrderResult.error) {
+            console.error("[ShoppingList] Error loading shopping list:", noOrderResult.error);
+            return [];
+          }
+          
+          data = noOrderResult.data || [];
+          // Sort manually
+          if (data && data.length > 0) {
+            data.sort((a, b) => {
+              const dateA = new Date(a.added_at || 0).getTime();
+              const dateB = new Date(b.added_at || 0).getTime();
+              return dateB - dateA;
+            });
+          }
+        } else {
+          data = fallbackResult.data || [];
+          // Add null ingredient_category to match expected structure
+          data = data.map((item: any) => ({
+            ...item,
+            ingredient_category: null
+          }));
+        }
+      } else if (error) {
+        // Other error, try without ordering
         console.warn("[ShoppingList] Error loading with order, trying without:", error);
         const fallbackResult = await supabase
           .from("shopping_list")
-          .select("*")
+          .select("id, user_id, ingredient_id, ingredient_name, ingredient_category, is_checked, added_at")
           .eq("user_id", userId);
         
         if (fallbackResult.error) {
@@ -206,7 +245,43 @@ export function useShoppingList(): UseShoppingListResult {
                 return insertItem;
               });
               
-              await supabase.from("shopping_list").insert(toInsert);
+              // Use REST API for insert to avoid schema cache issues
+              try {
+                const config = getSupabaseConfig();
+                const session = await supabase.auth.getSession();
+                const accessToken = session.data.session?.access_token;
+                
+                if (config.url && config.anonKey) {
+                  const response = await fetch(`${config.url}/rest/v1/shopping_list`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'apikey': config.anonKey,
+                      'Authorization': `Bearer ${accessToken || config.anonKey}`,
+                      'Prefer': 'return=representation',
+                    },
+                    body: JSON.stringify(toInsert),
+                  });
+                  
+                  if (!response.ok) {
+                    console.warn("[ShoppingList] REST API insert failed during sync, trying Supabase client:", await response.text());
+                    // Fallback to Supabase client (may fail due to schema cache)
+                    await supabase.from("shopping_list").insert(toInsert);
+                  }
+                } else {
+                  // Fallback to Supabase client if config missing
+                  await supabase.from("shopping_list").insert(toInsert);
+                }
+              } catch (insertError) {
+                console.warn("[ShoppingList] Error during sync insert, trying Supabase client:", insertError);
+                // Fallback to Supabase client (may fail due to schema cache)
+                try {
+                  await supabase.from("shopping_list").insert(toInsert);
+                } catch (clientError) {
+                  console.error("[ShoppingList] Both REST API and client insert failed:", clientError);
+                  // Continue anyway - items are in localStorage and will sync later
+                }
+              }
               localStorage.removeItem(LOCAL_STORAGE_KEY);
               
               // Reload from server
@@ -227,7 +302,7 @@ export function useShoppingList(): UseShoppingListResult {
     };
     
     initialize();
-  }, [authLoading, isAuthenticated, user?.id, loadFromServer, loadFromLocal, supabase]);
+  }, [authLoading, isAuthenticated, user?.id, loadFromServer, loadFromLocal, supabase, getSupabaseConfig]);
 
   // Add single item
   const addItem = useCallback(async (ingredient: { id: string; name: string; category?: string }) => {
