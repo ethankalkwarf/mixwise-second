@@ -555,11 +555,31 @@ export function useShoppingList(): UseShoppingListResult {
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {
     if (isAuthenticated && user) {
-      await supabase
-        .from("shopping_list")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("ingredient_id", ingredientId);
+      try {
+        const config = getSupabaseConfig();
+        const session = await supabase.auth.getSession();
+        const accessToken = session.data.session?.access_token;
+        
+        if (config.url && config.anonKey) {
+          const response = await fetch(
+            `${config.url}/rest/v1/shopping_list?user_id=eq.${user.id}&ingredient_id=eq.${ingredientId}`,
+            {
+              method: 'DELETE',
+              headers: {
+                'apikey': config.anonKey,
+                'Authorization': `Bearer ${accessToken || config.anonKey}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          
+          if (!response.ok) {
+            console.error("[ShoppingList] Error deleting item:", await response.text());
+          }
+        }
+      } catch (err) {
+        console.error("[ShoppingList] Error deleting item:", err);
+      }
       
       const serverData = await loadFromServer(user.id);
       setItems(serverData);
@@ -570,7 +590,7 @@ export function useShoppingList(): UseShoppingListResult {
       setItems(updated);
       saveToLocal(updated);
     }
-  }, [isAuthenticated, user, supabase, loadFromServer, items, saveToLocal]);
+  }, [isAuthenticated, user, supabase, loadFromServer, items, saveToLocal, getSupabaseConfig]);
 
   // Toggle item checked status
   const toggleItem = useCallback(async (ingredientId: string) => {
@@ -578,11 +598,33 @@ export function useShoppingList(): UseShoppingListResult {
       const item = items.find(i => i.ingredient_id === ingredientId);
       if (!item) return;
       
-      await supabase
-        .from("shopping_list")
-        .update({ is_checked: !item.is_checked })
-        .eq("user_id", user.id)
-        .eq("ingredient_id", ingredientId);
+      try {
+        const config = getSupabaseConfig();
+        const session = await supabase.auth.getSession();
+        const accessToken = session.data.session?.access_token;
+        
+        if (config.url && config.anonKey) {
+          const response = await fetch(
+            `${config.url}/rest/v1/shopping_list?user_id=eq.${user.id}&ingredient_id=eq.${ingredientId}`,
+            {
+              method: 'PATCH',
+              headers: {
+                'apikey': config.anonKey,
+                'Authorization': `Bearer ${accessToken || config.anonKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation',
+              },
+              body: JSON.stringify({ is_checked: !item.is_checked }),
+            }
+          );
+          
+          if (!response.ok) {
+            console.error("[ShoppingList] Error toggling item:", await response.text());
+          }
+        }
+      } catch (err) {
+        console.error("[ShoppingList] Error toggling item:", err);
+      }
       
       const serverData = await loadFromServer(user.id);
       setItems(serverData);
@@ -595,16 +637,36 @@ export function useShoppingList(): UseShoppingListResult {
       setItems(updated);
       saveToLocal(updated);
     }
-  }, [isAuthenticated, user, supabase, loadFromServer, items, saveToLocal]);
+  }, [isAuthenticated, user, supabase, loadFromServer, items, saveToLocal, getSupabaseConfig]);
 
   // Clear checked items
   const clearChecked = useCallback(async () => {
     if (isAuthenticated && user) {
-      await supabase
-        .from("shopping_list")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("is_checked", true);
+      try {
+        const config = getSupabaseConfig();
+        const session = await supabase.auth.getSession();
+        const accessToken = session.data.session?.access_token;
+        
+        if (config.url && config.anonKey) {
+          const response = await fetch(
+            `${config.url}/rest/v1/shopping_list?user_id=eq.${user.id}&is_checked=eq.true`,
+            {
+              method: 'DELETE',
+              headers: {
+                'apikey': config.anonKey,
+                'Authorization': `Bearer ${accessToken || config.anonKey}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          
+          if (!response.ok) {
+            console.error("[ShoppingList] Error clearing checked items:", await response.text());
+          }
+        }
+      } catch (err) {
+        console.error("[ShoppingList] Error clearing checked items:", err);
+      }
       
       const serverData = await loadFromServer(user.id);
       setItems(serverData);
@@ -615,15 +677,36 @@ export function useShoppingList(): UseShoppingListResult {
     }
     
     toast.info("Cleared completed items");
-  }, [isAuthenticated, user, supabase, loadFromServer, items, saveToLocal, toast]);
+  }, [isAuthenticated, user, supabase, loadFromServer, items, saveToLocal, toast, getSupabaseConfig]);
 
   // Clear all items
   const clearAll = useCallback(async () => {
     if (isAuthenticated && user) {
-      await supabase
-        .from("shopping_list")
-        .delete()
-        .eq("user_id", user.id);
+      try {
+        const config = getSupabaseConfig();
+        const session = await supabase.auth.getSession();
+        const accessToken = session.data.session?.access_token;
+        
+        if (config.url && config.anonKey) {
+          const response = await fetch(
+            `${config.url}/rest/v1/shopping_list?user_id=eq.${user.id}`,
+            {
+              method: 'DELETE',
+              headers: {
+                'apikey': config.anonKey,
+                'Authorization': `Bearer ${accessToken || config.anonKey}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          
+          if (!response.ok) {
+            console.error("[ShoppingList] Error clearing all items:", await response.text());
+          }
+        }
+      } catch (err) {
+        console.error("[ShoppingList] Error clearing all items:", err);
+      }
       
       setItems([]);
     } else {
@@ -632,7 +715,7 @@ export function useShoppingList(): UseShoppingListResult {
     }
     
     toast.info("Shopping list cleared");
-  }, [isAuthenticated, user, supabase, toast]);
+  }, [isAuthenticated, user, supabase, toast, getSupabaseConfig]);
 
   // Check if ingredient is in list
   const isInList = useCallback((ingredientId: string) => {
