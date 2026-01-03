@@ -52,16 +52,23 @@ export default function ShoppingListPage() {
       <MainContainer>
         {/* Debug test button - REMOVE AFTER TESTING */}
         <div className="mb-4 p-4 bg-yellow-100 rounded-lg">
-          <p className="text-sm mb-2">Debug: Test clicks work (clicks: {testClicks})</p>
+          <p className="text-sm mb-2">Debug Info:</p>
+          <ul className="text-xs mb-2">
+            <li>isLoading: {String(isLoading)}</li>
+            <li>itemCount: {itemCount}</li>
+            <li>items.length: {items.length}</li>
+            <li>First item: {items[0] ? JSON.stringify(items[0]) : 'none'}</li>
+          </ul>
           <button 
-            onClick={() => {
-              console.log("[TEST] Button clicked!");
-              setTestClicks(c => c + 1);
-              alert("Click worked! Check console for logs.");
+            onClick={async () => {
+              alert("Fetching directly from API...");
+              const res = await fetch("/api/shopping-list", { credentials: "include" });
+              const data = await res.json();
+              alert("API returned: " + JSON.stringify(data).substring(0, 500));
             }}
             className="px-4 py-2 bg-blue-500 text-white rounded"
           >
-            Test Click
+            Test API Fetch
           </button>
         </div>
 
