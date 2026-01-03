@@ -57,19 +57,13 @@ export default function ShoppingListPage() {
             <li>isLoading: {String(isLoading)}</li>
             <li>itemCount: {itemCount}</li>
             <li>items.length: {items.length}</li>
-            <li>First item: {items[0] ? JSON.stringify(items[0]) : 'none'}</li>
+            <li>groupedItems.size: {groupedItems.size}</li>
+            <li>Categories: {Array.from(groupedItems.keys()).join(", ") || "none"}</li>
           </ul>
-          <button 
-            onClick={async () => {
-              alert("Fetching directly from API...");
-              const res = await fetch("/api/shopping-list", { credentials: "include" });
-              const data = await res.json();
-              alert("API returned: " + JSON.stringify(data).substring(0, 500));
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-          >
-            Test API Fetch
-          </button>
+          <div className="mt-2 p-2 bg-white rounded text-xs overflow-auto max-h-40">
+            <strong>Raw items:</strong>
+            <pre>{JSON.stringify(items, null, 2)}</pre>
+          </div>
         </div>
 
         {/* Header */}
