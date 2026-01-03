@@ -175,22 +175,31 @@ export async function DELETE(request: Request) {
 
     console.log("[ShoppingList API] DELETE - params:", { ingredientId, clearChecked, clearAll, userId: user.id });
 
-    let query = supabase
-      .from("shopping_list")
-      .delete()
-      .eq("user_id", user.id);
+    let error = null;
 
     if (clearAll) {
-      // Delete all - no additional filter
+      const result = await supabase
+        .from("shopping_list")
+        .delete()
+        .eq("user_id", user.id);
+      error = result.error;
     } else if (clearChecked) {
-      query = query.eq("is_checked", true);
+      const result = await supabase
+        .from("shopping_list")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("is_checked", true);
+      error = result.error;
     } else if (ingredientId) {
-      query = query.eq("ingredient_id", String(ingredientId));
+      const result = await supabase
+        .from("shopping_list")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("ingredient_id", String(ingredientId));
+      error = result.error;
     } else {
       return NextResponse.json({ error: "ingredient_id, clear_checked, or clear_all required" }, { status: 400 });
     }
-
-    const { error, count } = await query.select();
 
     if (error) {
       console.error("[ShoppingList API] DELETE error:", error);
