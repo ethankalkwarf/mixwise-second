@@ -324,8 +324,8 @@ export function useShoppingList(): UseShoppingListResult {
 
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {
-    console.log("[ShoppingList] Removing item:", ingredientId);
-    console.log("[ShoppingList] Current items before delete:", items.map(i => ({ id: i.ingredient_id, name: i.ingredient_name })));
+    console.log("[ShoppingList] Removing item with ingredient_id:", ingredientId, "type:", typeof ingredientId);
+    console.log("[ShoppingList] Current items before delete:", JSON.stringify(items.map(i => ({ ingredient_id: i.ingredient_id, name: i.ingredient_name }))));
     
     if (isAuthenticated && user) {
       try {
