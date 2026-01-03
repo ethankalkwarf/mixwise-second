@@ -122,8 +122,10 @@ export function useShoppingList(): UseShoppingListResult {
       }
       
       // Use REST API to completely bypass schema cache
+      // Don't select ingredient_category to avoid any schema cache issues
+      // We'll add it as null in the response to match the expected structure
       const response = await fetch(
-        `${config.url}/rest/v1/shopping_list?select=id,user_id,ingredient_id,ingredient_name,ingredient_category,is_checked,added_at&user_id=eq.${userId}&order=added_at.desc`,
+        `${config.url}/rest/v1/shopping_list?select=id,user_id,ingredient_id,ingredient_name,is_checked,added_at&user_id=eq.${userId}&order=added_at.desc`,
         {
           method: 'GET',
           headers: {
@@ -135,35 +137,17 @@ export function useShoppingList(): UseShoppingListResult {
       );
       
       if (!response.ok) {
-        // Try without ingredient_category if that fails
-        const fallbackResponse = await fetch(
-          `${config.url}/rest/v1/shopping_list?select=id,user_id,ingredient_id,ingredient_name,is_checked,added_at&user_id=eq.${userId}&order=added_at.desc`,
-          {
-            method: 'GET',
-            headers: {
-              'apikey': config.anonKey,
-              'Authorization': `Bearer ${accessToken || config.anonKey}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        
-        if (!fallbackResponse.ok) {
-          const errorText = await fallbackResponse.text();
-          console.error("[ShoppingList] Error loading shopping list via REST API:", errorText);
-          return [];
-        }
-        
-        const fallbackData = await fallbackResponse.json();
-        // Add null ingredient_category to match expected structure
-        return (fallbackData || []).map((item: any) => ({
-          ...item,
-          ingredient_category: null
-        }));
+        const errorText = await response.text();
+        console.error("[ShoppingList] Error loading shopping list via REST API:", errorText);
+        return [];
       }
       
       const data = await response.json();
-      return data || [];
+      // Add null ingredient_category to match expected structure
+      return (data || []).map((item: any) => ({
+        ...item,
+        ingredient_category: null
+      }));
     } catch (err) {
       console.error("[ShoppingList] Exception loading from server:", err);
       return [];
