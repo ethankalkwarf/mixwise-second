@@ -199,14 +199,14 @@ export default function ShoppingListPage() {
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
-                          console.log("[Page] Remove clicked:", item.ingredient_id);
-                          console.log("[Page] removeItem function:", typeof removeItem);
+                          alert("Step 1: Clicked " + item.ingredient_id);
+                          alert("Step 2: removeItem type = " + typeof removeItem);
                           try {
+                            alert("Step 3: Calling removeItem...");
                             await removeItem(item.ingredient_id);
-                            console.log("[Page] removeItem completed");
-                          } catch (err) {
-                            console.error("[Page] removeItem error:", err);
-                            alert("Error: " + err);
+                            alert("Step 4: removeItem completed!");
+                          } catch (err: any) {
+                            alert("ERROR: " + err.message);
                           }
                         }}
                         className="p-2 text-sage hover:text-terracotta hover:bg-terracotta/10 rounded-lg transition-all"
