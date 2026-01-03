@@ -324,21 +324,28 @@ export function useShoppingList(): UseShoppingListResult {
 
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {
+    console.log("[ShoppingList] Removing item:", ingredientId);
+    
     if (isAuthenticated && user) {
       try {
-        const response = await fetch(`/api/shopping-list?ingredient_id=${ingredientId}`, {
+        const response = await fetch(`/api/shopping-list?ingredient_id=${encodeURIComponent(ingredientId)}`, {
           method: "DELETE",
           credentials: "include",
         });
 
         if (!response.ok) {
-          console.error("[ShoppingList] Error removing item:", await response.json());
+          const errorData = await response.json();
+          console.error("[ShoppingList] Error removing item:", errorData);
+          toast.error(`Failed to remove item: ${errorData.error || "Unknown error"}`);
+          return;
         }
 
+        console.log("[ShoppingList] Item removed successfully, refreshing list");
         const serverData = await loadFromServer(user.id);
         setItems(serverData);
       } catch (err) {
         console.error("[ShoppingList] Exception removing item:", err);
+        toast.error("Failed to remove item");
       }
     } else {
       const updated = (items as LocalShoppingItem[]).filter(
@@ -347,7 +354,7 @@ export function useShoppingList(): UseShoppingListResult {
       setItems(updated);
       saveToLocal(updated);
     }
-  }, [isAuthenticated, user, loadFromServer, items, saveToLocal]);
+  }, [isAuthenticated, user, loadFromServer, items, saveToLocal, toast]);
 
   // Toggle item checked status
   const toggleItem = useCallback(async (ingredientId: string) => {

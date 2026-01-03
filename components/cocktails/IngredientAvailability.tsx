@@ -41,9 +41,19 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
     setMounted(true);
   }, []);
 
+  // Helper to check if ingredient is ice (everyone has ice!)
+  const isIce = (name: string) => {
+    const normalized = name.toLowerCase().trim();
+    return normalized === 'ice' || 
+           normalized === 'ice cubes' || 
+           normalized === 'crushed ice' ||
+           normalized === 'ice cube';
+  };
+
   // Calculate availability
   const { available, missing, total, percentage, missingIngredients } = useMemo(() => {
-    const requiredIngredients = ingredients.filter((i) => !i.isOptional);
+    // Filter out ice from required ingredients - everyone has ice!
+    const requiredIngredients = ingredients.filter((i) => !i.isOptional && !isIce(i.name));
     const total = requiredIngredients.length;
 
     // Normalize IDs for comparison (handle string vs UUID, case-insensitive)
