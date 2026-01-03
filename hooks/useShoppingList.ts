@@ -39,12 +39,15 @@ export function useShoppingList() {
   // Fetch items from server
   const fetchFromServer = useCallback(async (): Promise<ShoppingItem[]> => {
     try {
+      console.log("[ShoppingList] Fetching from server...");
       const response = await fetch("/api/shopping-list", {
         method: "GET",
         credentials: "include",
+        cache: "no-store",
       });
+      console.log("[ShoppingList] Fetch response status:", response.status);
       const data = await response.json();
-      console.log("[ShoppingList] Fetched from server:", data);
+      console.log("[ShoppingList] Fetched data:", data);
       return data.items || [];
     } catch (err) {
       console.error("[ShoppingList] Fetch error:", err);
@@ -190,21 +193,32 @@ export function useShoppingList() {
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {
     const id = String(ingredientId);
+    console.log("[ShoppingList] ===== REMOVE START =====");
     console.log("[ShoppingList] Removing item:", id);
+    console.log("[ShoppingList] isAuthenticated:", isAuthenticated);
+    console.log("[ShoppingList] user:", user?.id);
     
     if (isAuthenticated && user) {
       try {
-        const response = await fetch(`/api/shopping-list?ingredient_id=${encodeURIComponent(id)}`, {
+        const url = `/api/shopping-list?ingredient_id=${encodeURIComponent(id)}`;
+        console.log("[ShoppingList] DELETE URL:", url);
+        
+        const response = await fetch(url, {
           method: "DELETE",
           credentials: "include",
+          cache: "no-store",
         });
         
+        console.log("[ShoppingList] DELETE response status:", response.status);
         const result = await response.json();
-        console.log("[ShoppingList] Remove response:", result);
+        console.log("[ShoppingList] DELETE response body:", result);
         
         // Always refresh from server
+        console.log("[ShoppingList] Refreshing items from server...");
         const serverItems = await fetchFromServer();
+        console.log("[ShoppingList] After refresh, items:", serverItems.length);
         setItems(serverItems);
+        console.log("[ShoppingList] ===== REMOVE END =====");
       } catch (err) {
         console.error("[ShoppingList] Remove error:", err);
       }
@@ -218,20 +232,34 @@ export function useShoppingList() {
   // Toggle item checked
   const toggleItem = useCallback(async (ingredientId: string) => {
     const id = String(ingredientId);
+    console.log("[ShoppingList] ===== TOGGLE START =====");
+    console.log("[ShoppingList] Toggling item:", id);
+    
     const item = items.find(i => String(i.ingredient_id) === id);
-    if (!item) return;
+    if (!item) {
+      console.log("[ShoppingList] Item not found in state");
+      return;
+    }
+    
+    console.log("[ShoppingList] Current is_checked:", item.is_checked, "-> new:", !item.is_checked);
     
     if (isAuthenticated && user) {
       try {
-        await fetch("/api/shopping-list", {
+        const response = await fetch("/api/shopping-list", {
           method: "PATCH",
           credentials: "include",
+          cache: "no-store",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ingredient_id: id, is_checked: !item.is_checked }),
         });
         
+        console.log("[ShoppingList] PATCH response status:", response.status);
+        const result = await response.json();
+        console.log("[ShoppingList] PATCH response body:", result);
+        
         const serverItems = await fetchFromServer();
         setItems(serverItems);
+        console.log("[ShoppingList] ===== TOGGLE END =====");
       } catch (err) {
         console.error("[ShoppingList] Toggle error:", err);
       }
