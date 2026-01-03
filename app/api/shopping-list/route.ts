@@ -79,7 +79,18 @@ export async function GET() {
       return NextResponse.json({ items: [], error: error.message });
     }
 
-    return NextResponse.json({ items: data || [] });
+    // Map out_ prefixed columns back to regular names
+    const items = (data || []).map((row: any) => ({
+      id: row.out_id,
+      user_id: row.out_user_id,
+      ingredient_id: row.out_ingredient_id,
+      ingredient_name: row.out_ingredient_name,
+      ingredient_category: row.out_ingredient_category,
+      is_checked: row.out_is_checked,
+      added_at: row.out_added_at,
+    }));
+    
+    return NextResponse.json({ items });
   } catch (error: any) {
     console.error("[ShoppingList API] Unexpected error:", error);
     return NextResponse.json({ items: [], error: error.message || "Unknown error" });
@@ -136,10 +147,29 @@ export async function POST(request: Request) {
           }, { status: 500 });
         }
       } else if (data && data.length > 0) {
-        results.push(data[0]);
+        // Map out_ prefixed columns back to regular names
+        const mapped = {
+          id: data[0].out_id,
+          user_id: data[0].out_user_id,
+          ingredient_id: data[0].out_ingredient_id,
+          ingredient_name: data[0].out_ingredient_name,
+          ingredient_category: data[0].out_ingredient_category,
+          is_checked: data[0].out_is_checked,
+          added_at: data[0].out_added_at,
+        };
+        results.push(mapped);
       } else if (data) {
         // Handle case where data is returned but not as array
-        results.push(data);
+        const mapped = {
+          id: data.out_id,
+          user_id: data.out_user_id,
+          ingredient_id: data.out_ingredient_id,
+          ingredient_name: data.out_ingredient_name,
+          ingredient_category: data.out_ingredient_category,
+          is_checked: data.out_is_checked,
+          added_at: data.out_added_at,
+        };
+        results.push(mapped);
       }
     }
 
