@@ -241,6 +241,8 @@ export function useShoppingList(): UseShoppingListResult {
         
         console.log("[ShoppingList] Inserting via REST API", {
           ingredient: ingredient.name,
+          url: `${config.url}/rest/v1/shopping_list`,
+          payload: { ...restPayload, user_id: '[REDACTED]' },
         });
         
         const response = await fetch(`${config.url}/rest/v1/shopping_list`, {
@@ -263,11 +265,15 @@ export function useShoppingList(): UseShoppingListResult {
             errorData = { message: errorText || response.statusText };
           }
           
-          console.error("[ShoppingList] REST API insert failed:", {
+          // Log full error details for debugging
+          const fullError = {
             status: response.status,
             statusText: response.statusText,
-            error: errorData,
-          });
+            errorText: errorText,
+            errorData: errorData,
+            payload: { ...restPayload, user_id: '[REDACTED]' },
+          };
+          console.error("[ShoppingList] REST API insert failed:", fullError);
           
           // Handle duplicate entry (unique constraint violation)
           if (response.status === 409 || response.status === 23505 || 
@@ -279,21 +285,28 @@ export function useShoppingList(): UseShoppingListResult {
             return;
           }
           
-          // Handle schema errors
-          if (response.status === 400 && (errorText.includes('ingredient_name') || errorText.includes('column'))) {
-            console.error("[ShoppingList] Database schema issue confirmed");
-            toast.error("Database schema issue. Please contact support.");
-            return;
-          }
-          
           // Handle permission errors
           if (response.status === 401 || response.status === 403) {
             toast.error("Permission denied. Please try logging out and back in.");
             return;
           }
           
-          // Generic error
-          toast.error(`Failed to add to shopping list: ${errorData.message || response.statusText}`);
+          // For all other errors, show the actual error message
+          // This helps us debug what's really happening
+          const errorMessage = errorData.message || errorData.details || errorText || response.statusText;
+          console.error("[ShoppingList] Full error details:", {
+            status: response.status,
+            errorMessage: errorMessage,
+            errorText: errorText.substring(0, 500), // First 500 chars
+            errorData: errorData,
+          });
+          
+          // Show user-friendly error with actual message
+          if (errorMessage.includes('ingredient_name') || errorMessage.includes('column') || errorMessage.includes('schema')) {
+            toast.error(`Database error: ${errorMessage}. Please check the console for details.`);
+          } else {
+            toast.error(`Failed to add to shopping list: ${errorMessage}`);
+          }
           return;
         }
         
@@ -389,11 +402,15 @@ export function useShoppingList(): UseShoppingListResult {
             errorData = { message: errorText || response.statusText };
           }
           
-          console.error("[ShoppingList] REST API insert failed (bulk):", {
+          // Log full error details for debugging
+          const fullError = {
             status: response.status,
             statusText: response.statusText,
-            error: errorData,
-          });
+            errorText: errorText,
+            errorData: errorData,
+            itemCount: toInsert.length,
+          };
+          console.error("[ShoppingList] REST API insert failed (bulk):", fullError);
           
           // Handle duplicate entries (unique constraint violation)
           if (response.status === 409 || response.status === 23505 || 
@@ -405,21 +422,28 @@ export function useShoppingList(): UseShoppingListResult {
             return;
           }
           
-          // Handle schema errors
-          if (response.status === 400 && (errorText.includes('ingredient_name') || errorText.includes('column'))) {
-            console.error("[ShoppingList] Database schema issue confirmed (bulk)");
-            toast.error("Database schema issue. Please contact support.");
-            return;
-          }
-          
           // Handle permission errors
           if (response.status === 401 || response.status === 403) {
             toast.error("Permission denied. Please try logging out and back in.");
             return;
           }
           
-          // Generic error
-          toast.error(`Failed to add items to shopping list: ${errorData.message || response.statusText}`);
+          // For all other errors, show the actual error message
+          // This helps us debug what's really happening
+          const errorMessage = errorData.message || errorData.details || errorText || response.statusText;
+          console.error("[ShoppingList] Full error details (bulk):", {
+            status: response.status,
+            errorMessage: errorMessage,
+            errorText: errorText.substring(0, 500), // First 500 chars
+            errorData: errorData,
+          });
+          
+          // Show user-friendly error with actual message
+          if (errorMessage.includes('ingredient_name') || errorMessage.includes('column') || errorMessage.includes('schema')) {
+            toast.error(`Database error: ${errorMessage}. Please check the console for details.`);
+          } else {
+            toast.error(`Failed to add items to shopping list: ${errorMessage}`);
+          }
           return;
         }
         
