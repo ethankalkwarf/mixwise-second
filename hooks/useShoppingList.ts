@@ -28,15 +28,22 @@ export function useShoppingList() {
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch items from server
+  // Fetch items from server with cache busting
   const fetchFromServer = useCallback(async (): Promise<ShoppingItem[]> => {
     try {
-      const response = await fetch("/api/shopping-list", {
+      // Add timestamp to bust any caching
+      const url = `/api/shopping-list?_t=${Date.now()}`;
+      const response = await fetch(url, {
         method: "GET",
         credentials: "include",
         cache: "no-store",
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
       });
       const data = await response.json();
+      console.log("[ShoppingList] Fetched:", data.items?.length || 0, "items");
       return data.items || [];
     } catch (err) {
       console.error("[ShoppingList] Fetch error:", err);
@@ -80,6 +87,15 @@ export function useShoppingList() {
       return;
     }
 
+    // Create new item for optimistic update
+    const newItem: ShoppingItem = {
+      ingredient_id: ingredientId,
+      ingredient_name: ingredient.name,
+      ingredient_category: ingredient.category || null,
+      is_checked: false,
+      added_at: new Date().toISOString(),
+    };
+
     if (isAuthenticated && user) {
       try {
         const response = await fetch("/api/shopping-list", {
@@ -94,9 +110,8 @@ export function useShoppingList() {
         });
         
         if (response.ok) {
-          // Fetch fresh data and update state
-          const freshItems = await fetchFromServer();
-          setItems(freshItems);
+          // Update state optimistically (like clearAll does)
+          setItems(prev => [newItem, ...prev]);
           toast.success(`Added ${ingredient.name} to shopping list`);
         } else {
           const result = await response.json();
@@ -107,19 +122,12 @@ export function useShoppingList() {
         toast.error("Failed to add item");
       }
     } else {
-      const newItem: ShoppingItem = {
-        ingredient_id: ingredientId,
-        ingredient_name: ingredient.name,
-        ingredient_category: ingredient.category,
-        is_checked: false,
-        added_at: new Date().toISOString(),
-      };
       const updated = [newItem, ...items];
       setItems(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
       toast.success(`Added ${ingredient.name} to shopping list`);
     }
-  }, [items, isAuthenticated, user, fetchFromServer, toast]);
+  }, [items, isAuthenticated, user, toast]);
 
   // Add multiple items
   const addItems = useCallback(async (ingredients: { id: string; name: string; category?: string }[]) => {
@@ -131,6 +139,15 @@ export function useShoppingList() {
       toast.info("All items are already in your shopping list");
       return;
     }
+
+    // Create new items for optimistic update
+    const newItems: ShoppingItem[] = filtered.map(ing => ({
+      ingredient_id: String(ing.id),
+      ingredient_name: ing.name,
+      ingredient_category: ing.category || null,
+      is_checked: false,
+      added_at: new Date().toISOString(),
+    }));
 
     if (isAuthenticated && user) {
       try {
@@ -146,8 +163,8 @@ export function useShoppingList() {
         });
         
         if (response.ok) {
-          const freshItems = await fetchFromServer();
-          setItems(freshItems);
+          // Update state optimistically (like clearAll does)
+          setItems(prev => [...newItems, ...prev]);
           toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`);
         } else {
           const result = await response.json();
@@ -158,19 +175,12 @@ export function useShoppingList() {
         toast.error("Failed to add items");
       }
     } else {
-      const newItems: ShoppingItem[] = filtered.map(ing => ({
-        ingredient_id: String(ing.id),
-        ingredient_name: ing.name,
-        ingredient_category: ing.category,
-        is_checked: false,
-        added_at: new Date().toISOString(),
-      }));
       const updated = [...newItems, ...items];
       setItems(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
       toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`);
     }
-  }, [items, isAuthenticated, user, fetchFromServer, toast]);
+  }, [items, isAuthenticated, user, toast]);
 
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {
@@ -185,9 +195,8 @@ export function useShoppingList() {
         });
         
         if (response.ok) {
-          // Fetch fresh data and update state
-          const freshItems = await fetchFromServer();
-          setItems(freshItems);
+          // Update state optimistically (like clearAll does)
+          setItems(prev => prev.filter(i => String(i.ingredient_id) !== id));
         }
       } catch (err) {
         console.error("[ShoppingList] Remove error:", err);
@@ -197,7 +206,7 @@ export function useShoppingList() {
       setItems(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
     }
-  }, [items, isAuthenticated, user, fetchFromServer]);
+  }, [items, isAuthenticated, user]);
 
   // Toggle item checked
   const toggleItem = useCallback(async (ingredientId: string) => {
@@ -216,9 +225,10 @@ export function useShoppingList() {
         });
         
         if (response.ok) {
-          // Fetch fresh data and update state
-          const freshItems = await fetchFromServer();
-          setItems(freshItems);
+          // Update state optimistically (like clearAll does)
+          setItems(prev => prev.map(i => 
+            String(i.ingredient_id) === id ? { ...i, is_checked: !i.is_checked } : i
+          ));
         }
       } catch (err) {
         console.error("[ShoppingList] Toggle error:", err);
@@ -230,7 +240,7 @@ export function useShoppingList() {
       setItems(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
     }
-  }, [items, isAuthenticated, user, fetchFromServer]);
+  }, [items, isAuthenticated, user]);
 
   // Clear checked items
   const clearChecked = useCallback(async () => {
@@ -242,8 +252,8 @@ export function useShoppingList() {
           cache: "no-store",
         });
         if (response.ok) {
-          const freshItems = await fetchFromServer();
-          setItems(freshItems);
+          // Update state optimistically (like clearAll does)
+          setItems(prev => prev.filter(i => !i.is_checked));
         }
       } catch (err) {
         console.error("[ShoppingList] Clear checked error:", err);
@@ -254,7 +264,7 @@ export function useShoppingList() {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
     }
     toast.info("Cleared completed items");
-  }, [items, isAuthenticated, user, fetchFromServer, toast]);
+  }, [items, isAuthenticated, user, toast]);
 
   // Clear all items
   const clearAll = useCallback(async () => {
