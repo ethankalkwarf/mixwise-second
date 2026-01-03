@@ -261,10 +261,12 @@ export async function DELETE(request: Request) {
       });
       error = result.error;
     } else if (ingredientId) {
+      console.log("[ShoppingList API] Deleting item:", { userId: user.id, ingredientId });
       const result = await supabase.rpc('delete_shopping_item', {
         p_user_id: user.id,
         p_ingredient_id: ingredientId
       });
+      console.log("[ShoppingList API] Delete result:", result);
       error = result.error;
     } else {
       return NextResponse.json({ error: "ingredient_id, clear_checked, or clear_all required" }, { status: 400 });

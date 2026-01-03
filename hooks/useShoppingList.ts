@@ -325,6 +325,7 @@ export function useShoppingList(): UseShoppingListResult {
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {
     console.log("[ShoppingList] Removing item:", ingredientId);
+    console.log("[ShoppingList] Current items before delete:", items.map(i => ({ id: i.ingredient_id, name: i.ingredient_name })));
     
     if (isAuthenticated && user) {
       try {
@@ -333,15 +334,18 @@ export function useShoppingList(): UseShoppingListResult {
           credentials: "include",
         });
 
+        const responseData = await response.json();
+        console.log("[ShoppingList] Delete response:", responseData);
+
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error("[ShoppingList] Error removing item:", errorData);
-          toast.error(`Failed to remove item: ${errorData.error || "Unknown error"}`);
+          console.error("[ShoppingList] Error removing item:", responseData);
+          toast.error(`Failed to remove item: ${responseData.error || "Unknown error"}`);
           return;
         }
 
         console.log("[ShoppingList] Item removed successfully, refreshing list");
         const serverData = await loadFromServer(user.id);
+        console.log("[ShoppingList] Server data after refresh:", serverData.map((i: any) => ({ id: i.ingredient_id, name: i.ingredient_name })));
         setItems(serverData);
       } catch (err) {
         console.error("[ShoppingList] Exception removing item:", err);
