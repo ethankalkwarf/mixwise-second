@@ -200,15 +200,19 @@ export default function ShoppingListPage() {
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
-                          alert("Step 1: Clicked " + item.ingredient_id);
-                          alert("Step 2: removeItem type = " + typeof removeItem);
-                          try {
-                            alert("Step 3: Calling removeItem...");
-                            await removeItem(item.ingredient_id);
-                            alert("Step 4: removeItem completed!");
-                          } catch (err: any) {
-                            alert("ERROR: " + err.message);
-                          }
+                          const id = item.ingredient_id;
+                          alert("Deleting item: " + id + " (" + item.ingredient_name + ")");
+                          
+                          // Call API directly to see response
+                          const res = await fetch(`/api/shopping-list?ingredient_id=${encodeURIComponent(id)}`, {
+                            method: "DELETE",
+                            credentials: "include",
+                          });
+                          const result = await res.json();
+                          alert("API Response: " + JSON.stringify(result));
+                          
+                          // Refresh the page to see if item was deleted
+                          window.location.reload();
                         }}
                         className="p-2 text-sage hover:text-terracotta hover:bg-terracotta/10 rounded-lg transition-all"
                         aria-label={`Remove ${item.ingredient_name}`}
