@@ -1,515 +1,302 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/components/auth/UserProvider";
-import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
+
+/**
+ * Shopping List Hook - Simplified version
+ * 
+ * For authenticated users: Always uses server API
+ * For anonymous users: Uses localStorage
+ */
 
 const LOCAL_STORAGE_KEY = "mixwise-shopping-list";
 
-// Define our own types - don't import from database.types to avoid schema cache issues
-interface ShoppingListItem {
-  id: number;
-  user_id: string;
+interface ShoppingItem {
+  id?: number;
+  user_id?: string;
   ingredient_id: string;
   ingredient_name: string;
-  ingredient_category: string | null;
+  ingredient_category?: string | null;
   is_checked: boolean;
-  added_at: string;
+  added_at?: string;
 }
 
-interface LocalShoppingItem {
-  ingredient_id: string;
-  ingredient_name: string;
-  ingredient_category?: string;
-  is_checked: boolean;
-  added_at: string;
-}
+// Helper to check if ingredient is ice
+const isIce = (name: string) => {
+  const n = name.toLowerCase().trim();
+  return n === 'ice' || n === 'ice cubes' || n === 'crushed ice' || n === 'ice cube';
+};
 
-interface UseShoppingListResult {
-  items: ShoppingListItem[] | LocalShoppingItem[];
-  isLoading: boolean;
-  itemCount: number;
-  uncheckedCount: number;
-  addItem: (ingredient: { id: string; name: string; category?: string }) => Promise<void>;
-  addItems: (ingredients: { id: string; name: string; category?: string }[]) => Promise<void>;
-  removeItem: (ingredientId: string) => Promise<void>;
-  toggleItem: (ingredientId: string) => Promise<void>;
-  clearChecked: () => Promise<void>;
-  clearAll: () => Promise<void>;
-  isInList: (ingredientId: string) => boolean;
-  getItemsByCategory: () => Map<string, (ShoppingListItem | LocalShoppingItem)[]>;
-  copyAsText: () => string;
-}
-
-/**
- * Hook to manage shopping list
- * 
- * For anonymous users: stores in localStorage
- * For authenticated users: syncs with Supabase via API route
- * 
- * CRITICAL: Uses /api/shopping-list route with service role key
- * to bypass ALL schema cache issues
- */
-export function useShoppingList(): UseShoppingListResult {
+export function useShoppingList() {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
-  const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
   
-  const [items, setItems] = useState<ShoppingListItem[] | LocalShoppingItem[]>([]);
+  const [items, setItems] = useState<ShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Track the last fetched user ID to prevent duplicate fetches
-  const lastFetchedUserId = useRef<string | null>(null);
-  const isFetching = useRef(false);
-  const hasPromptedSignup = useRef(false);
 
-  const promptSignupToSave = useCallback(() => {
-    if (hasPromptedSignup.current) return;
-    hasPromptedSignup.current = true;
-
-    try {
-      if (typeof window !== "undefined") {
-        const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-        sessionStorage.setItem("mixwise-auth-return-to", returnTo);
-      }
-    } catch {
-      // ignore storage failures
-    }
-
-    openAuthDialog({
-      mode: "signup",
-      title: "Save your shopping list",
-      subtitle: "Create a free account to sync your shopping list across devices and never lose it.",
-    });
-  }, [openAuthDialog]);
-
-  // Load from localStorage
-  const loadFromLocal = useCallback((): LocalShoppingItem[] => {
-    try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (e) {
-      console.error("Error loading shopping list from localStorage:", e);
-    }
-    return [];
-  }, []);
-
-  // Save to localStorage
-  const saveToLocal = useCallback((items: LocalShoppingItem[]) => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
-    } catch (e) {
-      console.error("Error saving shopping list to localStorage:", e);
-    }
-  }, []);
-
-  // Load from server via API route (bypasses schema cache)
-  const loadFromServer = useCallback(async (userId: string): Promise<ShoppingListItem[]> => {
+  // Fetch items from server
+  const fetchFromServer = useCallback(async (): Promise<ShoppingItem[]> => {
     try {
       const response = await fetch("/api/shopping-list", {
         method: "GET",
         credentials: "include",
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error("[ShoppingList] Error loading from server:", error);
-        return [];
-      }
-
       const data = await response.json();
+      console.log("[ShoppingList] Fetched from server:", data);
       return data.items || [];
     } catch (err) {
-      console.error("[ShoppingList] Exception loading from server:", err);
+      console.error("[ShoppingList] Fetch error:", err);
       return [];
     }
   }, []);
 
-  // Initialize shopping list - only fetch when user ID changes
+  // Load items on mount and auth change
   useEffect(() => {
-    const initialize = async () => {
-      if (authLoading) return;
-      
-      const currentUserId = isAuthenticated && user ? user.id : null;
-      
-      // Skip if we've already initialized for this user
-      if (lastFetchedUserId.current === currentUserId && !isFetching.current) {
-        setIsLoading(false);
-        return;
-      }
-      
-      // Prevent duplicate fetches
-      if (isFetching.current) return;
-      isFetching.current = true;
-      
+    if (authLoading) return;
+
+    const load = async () => {
       setIsLoading(true);
       
-      try {
-        if (isAuthenticated && user) {
-          console.log("[ShoppingList] User authenticated, loading from server...");
-          const serverData = await loadFromServer(user.id);
-          console.log("[ShoppingList] Server returned:", serverData.length, "items");
-          
-          // Sync any local items to server
-          const localItems = loadFromLocal();
-          console.log("[ShoppingList] Local storage has:", localItems.length, "items");
-          
-          if (localItems.length > 0) {
-            const newItems = localItems.filter(
-              local => !serverData.some(s => s.ingredient_id === local.ingredient_id)
-            );
-            console.log("[ShoppingList] Items to sync:", newItems.length);
-            
-            if (newItems.length > 0) {
-              const toInsert = newItems.map(item => ({
-                ingredient_id: item.ingredient_id,
-                ingredient_name: item.ingredient_name || 'Unknown',
-                ingredient_category: item.ingredient_category || null,
-                is_checked: item.is_checked,
-              }));
-              console.log("[ShoppingList] Syncing to server:", JSON.stringify(toInsert));
-              
-              try {
-                const response = await fetch("/api/shopping-list", {
-                  method: "POST",
-                  credentials: "include",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(toInsert),
-                });
-                
-                const syncResult = await response.json();
-                console.log("[ShoppingList] Sync response:", response.ok, syncResult);
-                
-                if (response.ok) {
-                  console.log("[ShoppingList] Sync successful, clearing localStorage");
-                  localStorage.removeItem(LOCAL_STORAGE_KEY);
-                  const updatedData = await loadFromServer(user.id);
-                  console.log("[ShoppingList] After sync, server has:", updatedData.length, "items");
-                  setItems(updatedData);
-                } else {
-                  console.error("[ShoppingList] Sync failed, keeping localStorage items visible");
-                  // Keep localStorage items visible if sync fails
-                  setItems([...serverData, ...localItems.map(item => ({
-                    ...item,
-                    id: 0, // Placeholder
-                    user_id: user.id,
-                    added_at: item.added_at || new Date().toISOString(),
-                  }))]);
-                }
-              } catch (syncError) {
-                console.error("[ShoppingList] Error syncing local items:", syncError);
-                // Keep localStorage items visible on error
-                setItems([...serverData, ...localItems.map(item => ({
-                  ...item,
-                  id: 0,
-                  user_id: user.id,
-                  added_at: item.added_at || new Date().toISOString(),
-                }))]);
-              }
-            } else {
-              setItems(serverData);
-            }
-          } else {
-            setItems(serverData);
-          }
-          
-          lastFetchedUserId.current = user.id;
-        } else {
-          console.log("[ShoppingList] Not authenticated, loading from localStorage");
-          setItems(loadFromLocal());
-          lastFetchedUserId.current = null;
+      if (isAuthenticated && user) {
+        console.log("[ShoppingList] Loading for authenticated user");
+        const serverItems = await fetchFromServer();
+        setItems(serverItems);
+      } else {
+        console.log("[ShoppingList] Loading from localStorage");
+        try {
+          const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+          setItems(stored ? JSON.parse(stored) : []);
+        } catch {
+          setItems([]);
         }
-      } finally {
-        setIsLoading(false);
-        isFetching.current = false;
       }
+      
+      setIsLoading(false);
     };
-    
-    initialize();
-  }, [authLoading, isAuthenticated, user?.id, loadFromServer, loadFromLocal]);
 
-  // Helper to check if ingredient is ice (everyone has ice!)
-  const isIce = (name: string) => {
-    const normalized = name.toLowerCase().trim();
-    return normalized === 'ice' || 
-           normalized === 'ice cubes' || 
-           normalized === 'crushed ice' ||
-           normalized === 'ice cube';
-  };
+    load();
+  }, [authLoading, isAuthenticated, user?.id, fetchFromServer]);
 
   // Add single item
   const addItem = useCallback(async (ingredient: { id: string; name: string; category?: string }) => {
-    // Skip ice - everyone has ice!
-    if (isIce(ingredient.name)) {
-      return;
-    }
+    if (isIce(ingredient.name)) return;
     
-    const existing = items.find(i => i.ingredient_id === ingredient.id);
-    if (existing) {
+    const ingredientId = String(ingredient.id);
+    
+    if (items.some(i => String(i.ingredient_id) === ingredientId)) {
       toast.info(`${ingredient.name} is already in your shopping list`);
       return;
     }
-    
+
     if (isAuthenticated && user) {
       try {
-        console.log("[ShoppingList] Adding item:", { id: ingredient.id, name: ingredient.name, category: ingredient.category });
+        console.log("[ShoppingList] Adding item:", ingredient);
         const response = await fetch("/api/shopping-list", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ingredient_id: ingredient.id,
+            ingredient_id: ingredientId,
             ingredient_name: ingredient.name,
             ingredient_category: ingredient.category || null,
           }),
         });
-
-        const responseData = await response.json();
-        console.log("[ShoppingList] Add response:", response.status, responseData);
-
-        if (!response.ok) {
-          console.error("[ShoppingList] Error adding item:", responseData);
-          toast.error(`Failed to add to shopping list: ${responseData.error || "Unknown error"}`);
-          return;
+        
+        const result = await response.json();
+        console.log("[ShoppingList] Add response:", result);
+        
+        if (response.ok) {
+          const serverItems = await fetchFromServer();
+          setItems(serverItems);
+          toast.success(`Added ${ingredient.name} to shopping list`);
+        } else {
+          toast.error(`Failed to add: ${result.error}`);
         }
-
-        const serverData = await loadFromServer(user.id);
-        console.log("[ShoppingList] After add, server has:", serverData.length, "items");
-        setItems(serverData);
-        toast.success(`Added ${ingredient.name} to shopping list`);
-      } catch (error: any) {
-        console.error("[ShoppingList] Exception adding item:", error);
-        toast.error(`Failed to add to shopping list: ${error.message || "Unknown error"}`);
+      } catch (err: any) {
+        console.error("[ShoppingList] Add error:", err);
+        toast.error("Failed to add item");
       }
     } else {
-      const newItem: LocalShoppingItem = {
-        ingredient_id: ingredient.id,
+      const newItem: ShoppingItem = {
+        ingredient_id: ingredientId,
         ingredient_name: ingredient.name,
         ingredient_category: ingredient.category,
         is_checked: false,
         added_at: new Date().toISOString(),
       };
-      const updated = [newItem, ...(items as LocalShoppingItem[])];
+      const updated = [newItem, ...items];
       setItems(updated);
-      saveToLocal(updated);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
       toast.success(`Added ${ingredient.name} to shopping list`);
-      promptSignupToSave();
     }
-  }, [items, isAuthenticated, user, loadFromServer, saveToLocal, toast, promptSignupToSave]);
+  }, [items, isAuthenticated, user, fetchFromServer, toast]);
 
   // Add multiple items
   const addItems = useCallback(async (ingredients: { id: string; name: string; category?: string }[]) => {
-    console.log("[ShoppingList] addItems called with:", ingredients.length, "ingredients");
-    console.log("[ShoppingList] Input ingredients:", JSON.stringify(ingredients.map(i => ({ id: i.id, name: i.name }))));
-    
-    // Filter out ice and already-added items
-    const newIngredients = ingredients.filter(
-      ing => !isIce(ing.name) && !items.some(i => i.ingredient_id === ing.id)
+    const filtered = ingredients.filter(ing => 
+      !isIce(ing.name) && !items.some(i => String(i.ingredient_id) === String(ing.id))
     );
     
-    console.log("[ShoppingList] After filtering (ice + duplicates):", newIngredients.length, "ingredients");
-    
-    if (newIngredients.length === 0) {
-      console.log("[ShoppingList] No new ingredients to add, showing toast");
+    if (filtered.length === 0) {
       toast.info("All items are already in your shopping list");
       return;
     }
-    
-    if (isAuthenticated && user) {
-      console.log("[ShoppingList] User authenticated, posting to server");
-      try {
-        const toInsert = newIngredients.map(ing => ({
-          ingredient_id: ing.id,
-          ingredient_name: ing.name,
-          ingredient_category: ing.category || null,
-        }));
-        console.log("[ShoppingList] Posting items:", JSON.stringify(toInsert));
 
+    if (isAuthenticated && user) {
+      try {
+        console.log("[ShoppingList] Adding items:", filtered);
         const response = await fetch("/api/shopping-list", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(toInsert),
+          body: JSON.stringify(filtered.map(ing => ({
+            ingredient_id: String(ing.id),
+            ingredient_name: ing.name,
+            ingredient_category: ing.category || null,
+          }))),
         });
-
-        const responseData = await response.json();
-        console.log("[ShoppingList] POST response:", response.status, responseData);
-
-        if (!response.ok) {
-          console.error("[ShoppingList] Error adding items:", responseData);
-          toast.error(`Failed to add items: ${responseData.error || "Unknown error"}`);
-          return;
+        
+        const result = await response.json();
+        console.log("[ShoppingList] Add items response:", result);
+        
+        if (response.ok) {
+          const serverItems = await fetchFromServer();
+          setItems(serverItems);
+          toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`);
+        } else {
+          toast.error(`Failed to add: ${result.error}`);
         }
-
-        const serverData = await loadFromServer(user.id);
-        console.log("[ShoppingList] After add, server has:", serverData.length, "items");
-        setItems(serverData);
-        toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
-      } catch (error: any) {
-        console.error("[ShoppingList] Exception adding items:", error);
-        toast.error(`Failed to add items: ${error.message || "Unknown error"}`);
+      } catch (err: any) {
+        console.error("[ShoppingList] Add items error:", err);
+        toast.error("Failed to add items");
       }
     } else {
-      const newItems: LocalShoppingItem[] = newIngredients.map(ing => ({
-        ingredient_id: ing.id,
+      const newItems: ShoppingItem[] = filtered.map(ing => ({
+        ingredient_id: String(ing.id),
         ingredient_name: ing.name,
         ingredient_category: ing.category,
         is_checked: false,
         added_at: new Date().toISOString(),
       }));
-      const updated = [...newItems, ...(items as LocalShoppingItem[])];
+      const updated = [...newItems, ...items];
       setItems(updated);
-      saveToLocal(updated);
-      toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
-      promptSignupToSave();
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+      toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`);
     }
-  }, [items, isAuthenticated, user, loadFromServer, saveToLocal, toast, promptSignupToSave]);
+  }, [items, isAuthenticated, user, fetchFromServer, toast]);
 
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {
-    console.log("[ShoppingList] Removing item with ingredient_id:", ingredientId, "type:", typeof ingredientId);
-    console.log("[ShoppingList] Current items before delete:", JSON.stringify(items.map(i => ({ ingredient_id: i.ingredient_id, name: i.ingredient_name }))));
+    const id = String(ingredientId);
+    console.log("[ShoppingList] Removing item:", id);
     
     if (isAuthenticated && user) {
       try {
-        const response = await fetch(`/api/shopping-list?ingredient_id=${encodeURIComponent(ingredientId)}`, {
+        const response = await fetch(`/api/shopping-list?ingredient_id=${encodeURIComponent(id)}`, {
           method: "DELETE",
           credentials: "include",
         });
-
-        const responseData = await response.json();
-        console.log("[ShoppingList] Delete response:", responseData);
-
-        if (!response.ok) {
-          console.error("[ShoppingList] Error removing item:", responseData);
-          toast.error(`Failed to remove item: ${responseData.error || "Unknown error"}`);
-          return;
-        }
-
-        console.log("[ShoppingList] Item removed successfully, refreshing list");
-        const serverData = await loadFromServer(user.id);
-        console.log("[ShoppingList] Server data after refresh:", serverData.map((i: any) => ({ id: i.ingredient_id, name: i.ingredient_name })));
-        setItems(serverData);
+        
+        const result = await response.json();
+        console.log("[ShoppingList] Remove response:", result);
+        
+        // Always refresh from server
+        const serverItems = await fetchFromServer();
+        setItems(serverItems);
       } catch (err) {
-        console.error("[ShoppingList] Exception removing item:", err);
-        toast.error("Failed to remove item");
+        console.error("[ShoppingList] Remove error:", err);
       }
     } else {
-      const updated = (items as LocalShoppingItem[]).filter(
-        i => i.ingredient_id !== ingredientId
-      );
+      const updated = items.filter(i => String(i.ingredient_id) !== id);
       setItems(updated);
-      saveToLocal(updated);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
     }
-  }, [isAuthenticated, user, loadFromServer, items, saveToLocal, toast]);
+  }, [items, isAuthenticated, user, fetchFromServer]);
 
-  // Toggle item checked status
+  // Toggle item checked
   const toggleItem = useCallback(async (ingredientId: string) => {
+    const id = String(ingredientId);
+    const item = items.find(i => String(i.ingredient_id) === id);
+    if (!item) return;
+    
     if (isAuthenticated && user) {
-      const item = items.find(i => i.ingredient_id === ingredientId);
-      if (!item) return;
-      
       try {
-        const response = await fetch("/api/shopping-list", {
+        await fetch("/api/shopping-list", {
           method: "PATCH",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ingredient_id: ingredientId,
-            is_checked: !item.is_checked,
-          }),
+          body: JSON.stringify({ ingredient_id: id, is_checked: !item.is_checked }),
         });
-
-        if (!response.ok) {
-          console.error("[ShoppingList] Error toggling item:", await response.json());
-        }
-
-        const serverData = await loadFromServer(user.id);
-        setItems(serverData);
+        
+        const serverItems = await fetchFromServer();
+        setItems(serverItems);
       } catch (err) {
-        console.error("[ShoppingList] Exception toggling item:", err);
+        console.error("[ShoppingList] Toggle error:", err);
       }
     } else {
-      const updated = (items as LocalShoppingItem[]).map(i =>
-        i.ingredient_id === ingredientId
-          ? { ...i, is_checked: !i.is_checked }
-          : i
+      const updated = items.map(i => 
+        String(i.ingredient_id) === id ? { ...i, is_checked: !i.is_checked } : i
       );
       setItems(updated);
-      saveToLocal(updated);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
     }
-  }, [isAuthenticated, user, loadFromServer, items, saveToLocal]);
+  }, [items, isAuthenticated, user, fetchFromServer]);
 
   // Clear checked items
   const clearChecked = useCallback(async () => {
     if (isAuthenticated && user) {
       try {
-        const response = await fetch("/api/shopping-list?clear_checked=true", {
+        await fetch("/api/shopping-list?clear_checked=true", {
           method: "DELETE",
           credentials: "include",
         });
-
-        if (!response.ok) {
-          console.error("[ShoppingList] Error clearing checked:", await response.json());
-        }
-
-        const serverData = await loadFromServer(user.id);
-        setItems(serverData);
+        const serverItems = await fetchFromServer();
+        setItems(serverItems);
       } catch (err) {
-        console.error("[ShoppingList] Exception clearing checked:", err);
+        console.error("[ShoppingList] Clear checked error:", err);
       }
     } else {
-      const updated = (items as LocalShoppingItem[]).filter(i => !i.is_checked);
+      const updated = items.filter(i => !i.is_checked);
       setItems(updated);
-      saveToLocal(updated);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
     }
-    
     toast.info("Cleared completed items");
-  }, [isAuthenticated, user, loadFromServer, items, saveToLocal, toast]);
+  }, [items, isAuthenticated, user, fetchFromServer, toast]);
 
   // Clear all items
   const clearAll = useCallback(async () => {
     if (isAuthenticated && user) {
       try {
-        const response = await fetch("/api/shopping-list?clear_all=true", {
+        await fetch("/api/shopping-list?clear_all=true", {
           method: "DELETE",
           credentials: "include",
         });
-
-        if (!response.ok) {
-          console.error("[ShoppingList] Error clearing all:", await response.json());
-        }
-
         setItems([]);
       } catch (err) {
-        console.error("[ShoppingList] Exception clearing all:", err);
+        console.error("[ShoppingList] Clear all error:", err);
       }
     } else {
       setItems([]);
       localStorage.removeItem(LOCAL_STORAGE_KEY);
     }
-    
     toast.info("Shopping list cleared");
   }, [isAuthenticated, user, toast]);
 
-  // Check if ingredient is in list
+  // Check if item is in list
   const isInList = useCallback((ingredientId: string) => {
-    return items.some(i => i.ingredient_id === ingredientId);
+    return items.some(i => String(i.ingredient_id) === String(ingredientId));
   }, [items]);
 
   // Group items by category
   const getItemsByCategory = useCallback(() => {
-    const grouped = new Map<string, (ShoppingListItem | LocalShoppingItem)[]>();
-    
+    const grouped = new Map<string, ShoppingItem[]>();
     items.forEach(item => {
       const category = item.ingredient_category || "Other";
       const existing = grouped.get(category) || [];
       grouped.set(category, [...existing, item]);
     });
-    
     return grouped;
   }, [items]);
 
@@ -517,7 +304,6 @@ export function useShoppingList(): UseShoppingListResult {
   const copyAsText = useCallback(() => {
     const grouped = getItemsByCategory();
     let text = "MixWise Shopping List\n\n";
-    
     grouped.forEach((categoryItems, category) => {
       text += `${category}:\n`;
       categoryItems.forEach(item => {
@@ -526,18 +312,14 @@ export function useShoppingList(): UseShoppingListResult {
       });
       text += "\n";
     });
-    
     return text.trim();
   }, [getItemsByCategory]);
-
-  const itemCount = items.length;
-  const uncheckedCount = items.filter(i => !i.is_checked).length;
 
   return {
     items,
     isLoading,
-    itemCount,
-    uncheckedCount,
+    itemCount: items.length,
+    uncheckedCount: items.filter(i => !i.is_checked).length,
     addItem,
     addItems,
     removeItem,
