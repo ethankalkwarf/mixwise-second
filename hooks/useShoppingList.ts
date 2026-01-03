@@ -212,123 +212,100 @@ export function useShoppingList(): UseShoppingListResult {
     }
     
     if (isAuthenticated && user) {
-      const insertData: {
-        user_id: string;
-        ingredient_id: string;
-        ingredient_name: string;
-        ingredient_category?: string;
-      } = {
-        user_id: user.id,
-        ingredient_id: ingredient.id,
-        ingredient_name: ingredient.name,
-      };
-      
-      // Only include category if it's provided
-      if (ingredient.category) {
-        insertData.ingredient_category = ingredient.category;
-      }
-      
-      // Try inserting with typed client first
-      let { error } = await supabase.from("shopping_list").insert(insertData);
-      
-      // If any error occurs (especially schema cache errors), use REST API directly
-      if (error) {
-        const isSchemaError = error.message?.includes('ingredient_name') || 
-                             error.message?.includes('schema cache') || 
-                             error.message?.includes('column') ||
-                             error.message?.includes('Could not find');
+      // Use REST API directly to bypass schema cache issues
+      // The typed client has persistent schema cache problems, so we skip it for inserts
+      try {
+        const config = getSupabaseConfig();
+        const session = await supabase.auth.getSession();
+        const accessToken = session.data.session?.access_token;
         
-        if (isSchemaError) {
-          console.warn("Schema cache issue detected, using REST API workaround");
+        if (!config.url || !config.anonKey) {
+          throw new Error("Missing Supabase configuration");
         }
         
-        // Always try REST API on any error to bypass schema cache issues
-        try {
-          const config = getSupabaseConfig();
-          const session = await supabase.auth.getSession();
-          const accessToken = session.data.session?.access_token;
-          
-          if (!config.url || !config.anonKey) {
-            throw new Error("Missing Supabase configuration");
+        // Prepare payload
+        const restPayload: {
+          user_id: string;
+          ingredient_id: string;
+          ingredient_name: string;
+          ingredient_category?: string;
+        } = {
+          user_id: user.id,
+          ingredient_id: ingredient.id,
+          ingredient_name: ingredient.name,
+        };
+        
+        if (ingredient.category) {
+          restPayload.ingredient_category = ingredient.category;
+        }
+        
+        console.log("[ShoppingList] Inserting via REST API", {
+          ingredient: ingredient.name,
+        });
+        
+        const response = await fetch(`${config.url}/rest/v1/shopping_list`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': config.anonKey,
+            'Authorization': `Bearer ${accessToken || config.anonKey}`,
+            'Prefer': 'return=representation',
+          },
+          body: JSON.stringify(restPayload),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch {
+            errorData = { message: errorText || response.statusText };
           }
           
-          // Use REST API directly to bypass schema cache
-          const restPayload = {
-            user_id: user.id,
-            ingredient_id: ingredient.id,
-            ingredient_name: ingredient.name,
-            ...(ingredient.category ? { ingredient_category: ingredient.category } : {}),
-          };
-          
-          const response = await fetch(`${config.url}/rest/v1/shopping_list`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': config.anonKey,
-              'Authorization': `Bearer ${accessToken || config.anonKey}`,
-              'Prefer': 'return=representation',
-            },
-            body: JSON.stringify(restPayload),
+          console.error("[ShoppingList] REST API insert failed:", {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
           });
           
-          if (!response.ok) {
-            const errorText = await response.text();
-            let errorData;
-            try {
-              errorData = JSON.parse(errorText);
-            } catch {
-              errorData = { message: errorText || response.statusText };
-            }
-            console.error("REST API error:", {
-              status: response.status,
-              statusText: response.statusText,
-              error: errorData,
-            });
-            
-            // If REST API also fails with schema error, the column might actually not exist
-            // In that case, we can't proceed
-            if (response.status === 400 && (errorText.includes('ingredient_name') || errorText.includes('column'))) {
-              toast.error("Database schema issue. Please contact support.");
-              return;
-            }
-            
-            // For other errors, keep the original error
-            error = { ...error, message: errorData.message || error.message };
-          } else {
-            // Success via REST API - clear the error
-            error = null;
+          // Handle duplicate entry (unique constraint violation)
+          if (response.status === 409 || response.status === 23505 || 
+              errorText.includes('duplicate') || errorText.includes('unique') ||
+              errorData.message?.includes('duplicate') || errorData.message?.includes('unique')) {
+            toast.info(`${ingredient.name} is already in your shopping list`);
+            const serverData = await loadFromServer(user.id);
+            setItems(serverData);
+            return;
           }
-        } catch (restError: any) {
-          console.error("REST API workaround failed:", restError);
-          // Keep the original error if REST API also fails
-          error = error || { message: restError.message || "Unknown error" };
+          
+          // Handle schema errors
+          if (response.status === 400 && (errorText.includes('ingredient_name') || errorText.includes('column'))) {
+            console.error("[ShoppingList] Database schema issue confirmed");
+            toast.error("Database schema issue. Please contact support.");
+            return;
+          }
+          
+          // Handle permission errors
+          if (response.status === 401 || response.status === 403) {
+            toast.error("Permission denied. Please try logging out and back in.");
+            return;
+          }
+          
+          // Generic error
+          toast.error(`Failed to add to shopping list: ${errorData.message || response.statusText}`);
+          return;
         }
-      }
-      
-      if (error) {
-        console.error("Error adding to shopping list:", error);
-        console.error("Error code:", error.code);
-        console.error("Error message:", error.message);
-        console.error("Error details:", error);
-        console.error("Insert data was:", insertData);
         
-        // Handle duplicate entry (unique constraint violation)
-        if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
-          toast.info(`${ingredient.name} is already in your shopping list`);
-          // Refresh the list to ensure it's in sync
-          const serverData = await loadFromServer(user.id);
-          setItems(serverData);
-        } else {
-          // All other errors should have been handled by REST API fallback
-          // If we still have an error here, it means REST API also failed
-          toast.error(`Failed to add to shopping list: ${error.message || "Unknown error"}`);
-        }
-        return;
+        // Success
+        console.log("[ShoppingList] REST API insert successful");
+        const serverData = await loadFromServer(user.id);
+        setItems(serverData);
+        toast.success(`Added ${ingredient.name} to shopping list`);
+      } catch (error: any) {
+        console.error("[ShoppingList] REST API insert failed:", error);
+        toast.error(`Failed to add to shopping list: ${error.message || "Unknown error"}`);
       }
-      
-      const serverData = await loadFromServer(user.id);
-      setItems(serverData);
-      toast.success(`Added ${ingredient.name} to shopping list`);
     } else {
       const newItem: LocalShoppingItem = {
         ingredient_id: ingredient.id,
@@ -343,7 +320,7 @@ export function useShoppingList(): UseShoppingListResult {
       toast.success(`Added ${ingredient.name} to shopping list`);
       promptSignupToSave();
     }
-  }, [items, isAuthenticated, user, supabase, loadFromServer, saveToLocal, toast, promptSignupToSave]);
+  }, [items, isAuthenticated, user, supabase, loadFromServer, saveToLocal, toast, promptSignupToSave, getSupabaseConfig]);
 
   // Add multiple items
   const addItems = useCallback(async (ingredients: { id: string; name: string; category?: string }[]) => {
@@ -357,124 +334,104 @@ export function useShoppingList(): UseShoppingListResult {
     }
     
     if (isAuthenticated && user) {
-      const toInsert = newIngredients.map(ing => {
-        const item: {
-          user_id: string;
-          ingredient_id: string;
-          ingredient_name: string;
-          ingredient_category?: string;
-        } = {
-          user_id: user.id,
-          ingredient_id: ing.id,
-          ingredient_name: ing.name,
-        };
+      // Use REST API directly to bypass schema cache issues
+      // The typed client has persistent schema cache problems, so we skip it for inserts
+      try {
+        const config = getSupabaseConfig();
+        const session = await supabase.auth.getSession();
+        const accessToken = session.data.session?.access_token;
         
-        // Only include category if it's provided
-        if (ing.category) {
-          item.ingredient_category = ing.category;
+        if (!config.url || !config.anonKey) {
+          throw new Error("Missing Supabase configuration");
         }
         
-        return item;
-      });
-      
-      // Try inserting with typed client first
-      let { error } = await supabase.from("shopping_list").insert(toInsert);
-      
-      // If any error occurs (especially schema cache errors), use REST API directly
-      if (error) {
-        const isSchemaError = error.message?.includes('ingredient_name') || 
-                             error.message?.includes('schema cache') || 
-                             error.message?.includes('column') ||
-                             error.message?.includes('Could not find');
-        
-        if (isSchemaError) {
-          console.warn("Schema cache issue detected, using REST API workaround");
-        }
-        
-        // Always try REST API on any error to bypass schema cache issues
-        try {
-          const config = getSupabaseConfig();
-          const session = await supabase.auth.getSession();
-          const accessToken = session.data.session?.access_token;
+        // Prepare payload array
+        const toInsert = newIngredients.map(ing => {
+          const item: {
+            user_id: string;
+            ingredient_id: string;
+            ingredient_name: string;
+            ingredient_category?: string;
+          } = {
+            user_id: user.id,
+            ingredient_id: ing.id,
+            ingredient_name: ing.name,
+          };
           
-          if (!config.url || !config.anonKey) {
-            throw new Error("Missing Supabase configuration");
+          if (ing.category) {
+            item.ingredient_category = ing.category;
           }
           
-          // Use REST API directly to bypass schema cache
-          const response = await fetch(`${config.url}/rest/v1/shopping_list`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': config.anonKey,
-              'Authorization': `Bearer ${accessToken || config.anonKey}`,
-              'Prefer': 'return=representation',
-            },
-            body: JSON.stringify(toInsert),
+          return item;
+        });
+        
+        console.log("[ShoppingList] Inserting via REST API (bulk)", {
+          itemCount: toInsert.length,
+        });
+        
+        const response = await fetch(`${config.url}/rest/v1/shopping_list`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': config.anonKey,
+            'Authorization': `Bearer ${accessToken || config.anonKey}`,
+            'Prefer': 'return=representation',
+          },
+          body: JSON.stringify(toInsert),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch {
+            errorData = { message: errorText || response.statusText };
+          }
+          
+          console.error("[ShoppingList] REST API insert failed (bulk):", {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
           });
           
-          if (!response.ok) {
-            const errorText = await response.text();
-            let errorData;
-            try {
-              errorData = JSON.parse(errorText);
-            } catch {
-              errorData = { message: errorText || response.statusText };
-            }
-            console.error("REST API error:", {
-              status: response.status,
-              statusText: response.statusText,
-              error: errorData,
-            });
-            
-            // If REST API also fails with schema error, the column might actually not exist
-            if (response.status === 400 && (errorText.includes('ingredient_name') || errorText.includes('column'))) {
-              toast.error("Database schema issue. Please contact support.");
-              return;
-            }
-            
-            // For other errors, keep the original error
-            error = { ...error, message: errorData.message || error.message };
-          } else {
-            // Success via REST API - clear the error
-            error = null;
+          // Handle duplicate entries (unique constraint violation)
+          if (response.status === 409 || response.status === 23505 || 
+              errorText.includes('duplicate') || errorText.includes('unique') ||
+              errorData.message?.includes('duplicate') || errorData.message?.includes('unique')) {
+            toast.info("Some items are already in your shopping list");
+            const serverData = await loadFromServer(user.id);
+            setItems(serverData);
+            return;
           }
-        } catch (restError: any) {
-          console.error("REST API workaround failed:", restError);
-          // Keep the original error if REST API also fails
-          error = error || { message: restError.message || "Unknown error" };
+          
+          // Handle schema errors
+          if (response.status === 400 && (errorText.includes('ingredient_name') || errorText.includes('column'))) {
+            console.error("[ShoppingList] Database schema issue confirmed (bulk)");
+            toast.error("Database schema issue. Please contact support.");
+            return;
+          }
+          
+          // Handle permission errors
+          if (response.status === 401 || response.status === 403) {
+            toast.error("Permission denied. Please try logging out and back in.");
+            return;
+          }
+          
+          // Generic error
+          toast.error(`Failed to add items to shopping list: ${errorData.message || response.statusText}`);
+          return;
         }
-      }
-      
-      if (error) {
-        console.error("Error adding items to shopping list:", error);
-        console.error("Error code:", error.code);
-        console.error("Error message:", error.message);
-        console.error("Error details:", error.details);
-        console.error("Insert data sample:", toInsert.slice(0, 2));
-        console.error("User ID:", user.id);
         
-        // Handle duplicate entries (unique constraint violation)
-        if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
-          toast.info("Some items are already in your shopping list");
-          // Refresh the list to ensure it's in sync
-          const serverData = await loadFromServer(user.id);
-          setItems(serverData);
-        } else if (error.code === '42501' || error.message?.includes('permission') || error.message?.includes('policy')) {
-          // RLS policy violation
-          console.error("RLS policy violation - user may not have permission to insert");
-          toast.error("Permission denied. Please try logging out and back in.");
-        } else {
-          // All other errors should have been handled by REST API fallback
-          // If we still have an error here, it means REST API also failed
-          toast.error(`Failed to add items to shopping list: ${error.message || "Unknown error"}`);
-        }
-        return;
+        // Success
+        console.log("[ShoppingList] REST API insert successful (bulk)");
+        const serverData = await loadFromServer(user.id);
+        setItems(serverData);
+        toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
+      } catch (error: any) {
+        console.error("[ShoppingList] REST API insert failed (bulk):", error);
+        toast.error(`Failed to add items to shopping list: ${error.message || "Unknown error"}`);
       }
-      
-      const serverData = await loadFromServer(user.id);
-      setItems(serverData);
-      toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
     } else {
       const newItems: LocalShoppingItem[] = newIngredients.map(ing => ({
         ingredient_id: ing.id,
@@ -486,13 +443,10 @@ export function useShoppingList(): UseShoppingListResult {
       const updated = [...newItems, ...(items as LocalShoppingItem[])];
       setItems(updated);
       saveToLocal(updated);
-    }
-    
-    toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
-    if (!isAuthenticated) {
+      toast.success(`Added ${newIngredients.length} item${newIngredients.length > 1 ? 's' : ''} to shopping list`);
       promptSignupToSave();
     }
-  }, [items, isAuthenticated, user, supabase, loadFromServer, saveToLocal, toast, promptSignupToSave]);
+  }, [items, isAuthenticated, user, supabase, loadFromServer, saveToLocal, toast, promptSignupToSave, getSupabaseConfig]);
 
   // Remove item
   const removeItem = useCallback(async (ingredientId: string) => {
