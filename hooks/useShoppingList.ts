@@ -149,23 +149,28 @@ export function useShoppingList(): UseShoppingListResult {
       
       try {
         if (isAuthenticated && user) {
+          console.log("[ShoppingList] User authenticated, loading from server...");
           const serverData = await loadFromServer(user.id);
-          setItems(serverData);
+          console.log("[ShoppingList] Server returned:", serverData.length, "items");
           
           // Sync any local items to server
           const localItems = loadFromLocal();
+          console.log("[ShoppingList] Local storage has:", localItems.length, "items");
+          
           if (localItems.length > 0) {
             const newItems = localItems.filter(
               local => !serverData.some(s => s.ingredient_id === local.ingredient_id)
             );
+            console.log("[ShoppingList] Items to sync:", newItems.length);
             
             if (newItems.length > 0) {
               const toInsert = newItems.map(item => ({
                 ingredient_id: item.ingredient_id,
-                ingredient_name: item.ingredient_name,
+                ingredient_name: item.ingredient_name || 'Unknown',
                 ingredient_category: item.ingredient_category || null,
                 is_checked: item.is_checked,
               }));
+              console.log("[ShoppingList] Syncing to server:", JSON.stringify(toInsert));
               
               try {
                 const response = await fetch("/api/shopping-list", {
@@ -175,19 +180,45 @@ export function useShoppingList(): UseShoppingListResult {
                   body: JSON.stringify(toInsert),
                 });
                 
+                const syncResult = await response.json();
+                console.log("[ShoppingList] Sync response:", response.ok, syncResult);
+                
                 if (response.ok) {
+                  console.log("[ShoppingList] Sync successful, clearing localStorage");
                   localStorage.removeItem(LOCAL_STORAGE_KEY);
                   const updatedData = await loadFromServer(user.id);
+                  console.log("[ShoppingList] After sync, server has:", updatedData.length, "items");
                   setItems(updatedData);
+                } else {
+                  console.error("[ShoppingList] Sync failed, keeping localStorage items visible");
+                  // Keep localStorage items visible if sync fails
+                  setItems([...serverData, ...localItems.map(item => ({
+                    ...item,
+                    id: 0, // Placeholder
+                    user_id: user.id,
+                    added_at: item.added_at || new Date().toISOString(),
+                  }))]);
                 }
               } catch (syncError) {
                 console.error("[ShoppingList] Error syncing local items:", syncError);
+                // Keep localStorage items visible on error
+                setItems([...serverData, ...localItems.map(item => ({
+                  ...item,
+                  id: 0,
+                  user_id: user.id,
+                  added_at: item.added_at || new Date().toISOString(),
+                }))]);
               }
+            } else {
+              setItems(serverData);
             }
+          } else {
+            setItems(serverData);
           }
           
           lastFetchedUserId.current = user.id;
         } else {
+          console.log("[ShoppingList] Not authenticated, loading from localStorage");
           setItems(loadFromLocal());
           lastFetchedUserId.current = null;
         }
