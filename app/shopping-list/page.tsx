@@ -197,11 +197,17 @@ export default function ShoppingListPage() {
                         </span>
                       </button>
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
                           console.log("[Page] Remove clicked:", item.ingredient_id);
-                          alert(`Removing: ${item.ingredient_name} (${item.ingredient_id})`);
-                          removeItem(item.ingredient_id);
+                          console.log("[Page] removeItem function:", typeof removeItem);
+                          try {
+                            await removeItem(item.ingredient_id);
+                            console.log("[Page] removeItem completed");
+                          } catch (err) {
+                            console.error("[Page] removeItem error:", err);
+                            alert("Error: " + err);
+                          }
                         }}
                         className="p-2 text-sage hover:text-terracotta hover:bg-terracotta/10 rounded-lg transition-all"
                         aria-label={`Remove ${item.ingredient_name}`}
