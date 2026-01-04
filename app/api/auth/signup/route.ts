@@ -250,6 +250,46 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // CRITICAL: Verify user exists in auth.users before attempting profile creation
+    // This prevents foreign key constraint violations (23503)
+    let userVerified = false;
+    let userVerificationAttempts = 0;
+    const maxUserVerificationAttempts = 5;
+    
+    while (!userVerified && userVerificationAttempts < maxUserVerificationAttempts) {
+      userVerificationAttempts++;
+      
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: userData, error: userError } = await (supabaseAdmin.auth.admin as any).getUserById(linkData.user.id);
+        
+        if (userData?.user && !userError) {
+          userVerified = true;
+          console.log(`[Signup API] User verified in auth.users: ${linkData.user.id} (attempt ${userVerificationAttempts})`);
+          break;
+        }
+        
+        if (userError) {
+          console.warn(`[Signup API] User verification failed (attempt ${userVerificationAttempts}):`, {
+            code: userError.message,
+            userId: linkData.user.id,
+          });
+        }
+      } catch (verifyError) {
+        console.warn(`[Signup API] User verification exception (attempt ${userVerificationAttempts}):`, verifyError);
+      }
+      
+      if (!userVerified && userVerificationAttempts < maxUserVerificationAttempts) {
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 200 * userVerificationAttempts));
+      }
+    }
+    
+    if (!userVerified) {
+      console.error("[Signup API] User verification failed after all attempts. User may not be committed to auth.users yet.");
+      // Continue anyway - the trigger should handle it, but log the issue
+    }
+
     // Ensure profile exists (the database trigger should create it, but let's be safe)
     // Using the admin client which bypasses RLS
     // Wait a moment for the trigger to complete (trigger fires asynchronously)
@@ -302,6 +342,45 @@ export async function POST(request: NextRequest) {
           console.log(`[Signup API] Profile created by trigger or another process (attempt ${profileAttempts})`);
           profileExists = true;
           break;
+        }
+        
+        // Check if it's a foreign key constraint violation (user doesn't exist in auth.users yet)
+        if (insertError.code === '23503' || insertError.message?.includes('foreign key constraint') || insertError.message?.includes('violates foreign key constraint')) {
+          console.warn(`[Signup API] Foreign key constraint violation (attempt ${profileAttempts}) - user may not be committed yet:`, {
+            userId: linkData.user.id,
+            error: insertError.message,
+          });
+          
+          // Wait longer and verify user exists before retrying
+          await new Promise(resolve => setTimeout(resolve, 500 * profileAttempts));
+          
+          // Verify user exists before retrying
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: userCheck } = await (supabaseAdmin.auth.admin as any).getUserById(linkData.user.id);
+            if (!userCheck?.user) {
+              console.error(`[Signup API] User still not found in auth.users after foreign key error (attempt ${profileAttempts})`);
+              if (profileAttempts >= maxProfileAttempts) {
+                return NextResponse.json(
+                  { error: "Database error saving new user. Please contact support." },
+                  { status: 500 }
+                );
+              }
+              continue; // Skip to next attempt
+            }
+          } catch (userCheckError) {
+            console.error(`[Signup API] Failed to verify user after foreign key error (attempt ${profileAttempts}):`, userCheckError);
+            if (profileAttempts >= maxProfileAttempts) {
+              return NextResponse.json(
+                { error: "Database error saving new user. Please contact support." },
+                { status: 500 }
+              );
+            }
+            continue; // Skip to next attempt
+          }
+          
+          // User exists, continue with retry
+          continue;
         }
         
         // If INSERT fails, try UPSERT as fallback
