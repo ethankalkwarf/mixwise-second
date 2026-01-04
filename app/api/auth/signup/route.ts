@@ -252,9 +252,12 @@ export async function POST(request: NextRequest) {
 
     // Ensure profile exists (the database trigger should create it, but let's be safe)
     // Using the admin client which bypasses RLS
+    // Wait a moment for the trigger to complete (trigger fires asynchronously)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     let profileExists = false;
     let profileAttempts = 0;
-    const maxProfileAttempts = 3;
+    const maxProfileAttempts = 5; // Increased attempts
     
     while (!profileExists && profileAttempts < maxProfileAttempts) {
       profileAttempts++;
@@ -268,68 +271,127 @@ export async function POST(request: NextRequest) {
       
       if (existingProfile && !fetchError) {
         profileExists = true;
-        console.log(`[Signup API] Profile already exists for user: ${linkData.user.id}`);
+        console.log(`[Signup API] Profile already exists for user: ${linkData.user.id} (found on attempt ${profileAttempts})`);
         break;
       }
       
-      // If profile doesn't exist, try to create it
+      // Log fetch errors for debugging
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "not found" which is expected
+        console.warn(`[Signup API] Profile fetch error (attempt ${profileAttempts}):`, {
+          code: fetchError.code,
+          message: fetchError.message,
+        });
+      }
+      
+      // If profile doesn't exist, try to create it using INSERT first (more reliable than upsert)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: profileError } = await (supabaseAdmin.from('profiles') as any)
-        .upsert({
+      const { data: insertData, error: insertError } = await (supabaseAdmin.from('profiles') as any)
+        .insert({
           id: linkData.user.id,
           email: trimmedEmail,
           display_name: fullName || trimmedEmail.split('@')[0],
           role: 'free' as const,
           preferences: {},
-        }, {
-          onConflict: 'id',
-        });
+        })
+        .select()
+        .single();
 
-      if (profileError) {
+      if (insertError) {
         // Check if it's a duplicate key error (profile was created between check and insert)
-        if (profileError.code === '23505' || profileError.message?.includes('duplicate')) {
-          console.log(`[Signup API] Profile created by another process (attempt ${profileAttempts})`);
+        if (insertError.code === '23505' || insertError.message?.includes('duplicate') || insertError.message?.includes('already exists')) {
+          console.log(`[Signup API] Profile created by trigger or another process (attempt ${profileAttempts})`);
           profileExists = true;
           break;
         }
         
-        console.error(`[Signup API] Failed to create profile (attempt ${profileAttempts}):`, {
-          code: profileError.code,
-          message: profileError.message,
-          details: profileError.details,
+        // If INSERT fails, try UPSERT as fallback
+        console.warn(`[Signup API] Profile insert failed (attempt ${profileAttempts}), trying upsert:`, {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
         });
         
-        // If this is the last attempt, we need to fail the signup
-        if (profileAttempts >= maxProfileAttempts) {
-          console.error("[Signup API] All profile creation attempts failed. User account created but profile missing.");
-          return NextResponse.json(
-            { error: "Database error saving new user. Please contact support." },
-            { status: 500 }
-          );
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: upsertError } = await (supabaseAdmin.from('profiles') as any)
+          .upsert({
+            id: linkData.user.id,
+            email: trimmedEmail,
+            display_name: fullName || trimmedEmail.split('@')[0],
+            role: 'free' as const,
+            preferences: {},
+          }, {
+            onConflict: 'id',
+          });
         
-        // Wait a bit before retrying (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, 100 * profileAttempts));
-      } else {
+        if (upsertError) {
+          // Check if it's a duplicate key error
+          if (upsertError.code === '23505' || upsertError.message?.includes('duplicate') || upsertError.message?.includes('already exists')) {
+            console.log(`[Signup API] Profile exists (upsert detected duplicate on attempt ${profileAttempts})`);
+            profileExists = true;
+            break;
+          }
+          
+          console.error(`[Signup API] Both insert and upsert failed (attempt ${profileAttempts}):`, {
+            insertError: {
+              code: insertError.code,
+              message: insertError.message,
+            },
+            upsertError: {
+              code: upsertError.code,
+              message: upsertError.message,
+              details: upsertError.details,
+            },
+          });
+          
+          // If this is the last attempt, we need to fail the signup
+          if (profileAttempts >= maxProfileAttempts) {
+            console.error("[Signup API] All profile creation attempts failed. User account created but profile missing.", {
+              userId: linkData.user.id,
+              email: trimmedEmail,
+              insertError: insertError.message,
+              upsertError: upsertError.message,
+            });
+            return NextResponse.json(
+              { error: "Database error saving new user. Please contact support." },
+              { status: 500 }
+            );
+          }
+          
+          // Wait longer before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 200 * profileAttempts));
+        } else {
+          profileExists = true;
+          console.log(`[Signup API] Profile created successfully via upsert for user: ${linkData.user.id}`);
+        }
+      } else if (insertData) {
         profileExists = true;
-        console.log(`[Signup API] Profile created successfully for user: ${linkData.user.id}`);
+        console.log(`[Signup API] Profile created successfully via insert for user: ${linkData.user.id}`);
       }
     }
     
     // Final verification - ensure profile actually exists before proceeding
     if (!profileExists) {
-      const { data: finalCheck } = await supabaseAdmin
+      // Give it one more moment and check again
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const { data: finalCheck, error: finalError } = await supabaseAdmin
         .from('profiles')
         .select('id')
         .eq('id', linkData.user.id)
         .single();
       
       if (!finalCheck) {
-        console.error("[Signup API] Profile verification failed - profile does not exist after all attempts");
+        console.error("[Signup API] Profile verification failed - profile does not exist after all attempts", {
+          userId: linkData.user.id,
+          email: trimmedEmail,
+          finalError: finalError?.message,
+        });
         return NextResponse.json(
           { error: "Database error saving new user. Please contact support." },
           { status: 500 }
         );
+      } else {
+        console.log(`[Signup API] Profile found on final check for user: ${linkData.user.id}`);
+        profileExists = true;
       }
     }
 
