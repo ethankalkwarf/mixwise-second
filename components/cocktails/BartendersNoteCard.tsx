@@ -14,7 +14,7 @@ export function BartendersNoteCard({ note, sources }: BartendersNoteCardProps) {
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-3">
           <ChatBubbleLeftRightIcon className="w-5 h-5 text-amber-600" />
-          <h3 className="text-xs font-bold uppercase tracking-widest text-amber-800">Bartender&apos;s Note</h3>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-amber-800">Did you know?</h3>
         </div>
 
         <p className="font-display italic text-lg md:text-xl text-amber-900 leading-relaxed mb-4">

@@ -352,7 +352,7 @@ export function RecipeContent({
             </div>
           )}
 
-          {/* Bartender's Note */}
+          {/* Did you know? */}
           {sanityCocktail.funFact && (
             <BartendersNoteCard
               note={sanityCocktail.funFact}
@@ -360,10 +360,10 @@ export function RecipeContent({
             />
           )}
 
-          {/* Additional Notes */}
+          {/* Bartender's Note */}
           {cocktail.notes && (
             <div className="bg-white p-6 rounded-2xl shadow-soft border border-gray-100">
-              <h3 className="font-serif font-bold text-lg text-gray-900 mb-4">Additional Notes</h3>
+              <h3 className="font-serif font-bold text-lg text-gray-900 mb-4">Bartender&apos;s Note</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{cocktail.notes}</p>
             </div>
           )}
