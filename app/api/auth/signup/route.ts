@@ -175,6 +175,9 @@ export async function POST(request: NextRequest) {
       console.error("[Signup API] Failed to generate signup link:", {
         message: linkError.message,
         status: linkError.status,
+        name: linkError.name,
+        code: (linkError as any).code,
+        error: JSON.stringify(linkError, Object.getOwnPropertyNames(linkError)),
       });
 
       // Handle specific error cases
@@ -427,17 +430,21 @@ export async function POST(request: NextRequest) {
             const errorDetails = {
               userId: linkData.user.id,
               email: trimmedEmail,
+              profileAttempts,
+              userVerified,
               insertError: {
                 code: insertError.code,
                 message: insertError.message,
                 details: insertError.details,
                 hint: insertError.hint,
+                fullError: JSON.stringify(insertError, Object.getOwnPropertyNames(insertError)),
               },
               upsertError: upsertError ? {
                 code: upsertError.code,
                 message: upsertError.message,
                 details: upsertError.details,
                 hint: upsertError.hint,
+                fullError: JSON.stringify(upsertError, Object.getOwnPropertyNames(upsertError)),
               } : null,
             };
             console.error("[Signup API] All profile creation attempts failed. User account created but profile missing.", errorDetails);
@@ -496,10 +503,28 @@ export async function POST(request: NextRequest) {
         console.error("[Signup API] Profile verification failed - profile does not exist after all attempts", {
           userId: linkData.user.id,
           email: trimmedEmail,
-          finalError: finalError?.message,
+          finalError: finalError ? {
+            code: finalError.code,
+            message: finalError.message,
+            details: finalError.details,
+            hint: finalError.hint,
+          } : null,
+          profileAttempts,
+          userVerified,
         });
         return NextResponse.json(
-          { error: "Database error saving new user. Please contact support." },
+          { 
+            error: "Database error saving new user. Please contact support.",
+            // Include debug info in development
+            ...(process.env.NODE_ENV === 'development' && {
+              debug: {
+                userId: linkData.user.id,
+                profileAttempts,
+                userVerified,
+                finalErrorCode: finalError?.code,
+              }
+            })
+          },
           { status: 500 }
         );
       } else {
