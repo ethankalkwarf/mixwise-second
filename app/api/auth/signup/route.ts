@@ -183,7 +183,8 @@ export async function POST(request: NextRequest) {
         // Self-heal: user may exist in auth.users but be missing a profiles row (trigger not installed/failed or profile deleted).
         // Attempt to find the user and ensure a profile exists.
         try {
-          const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: listData, error: listError } = await (supabaseAdmin.auth.admin as any).listUsers({
             email: trimmedEmail,
           });
 
@@ -192,14 +193,14 @@ export async function POST(request: NextRequest) {
           } else {
             const existingUser = listData?.users?.[0];
             if (existingUser?.id) {
-              const { error: existingProfileUpsertError } = await supabaseAdmin
-                .from("profiles")
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const { error: existingProfileUpsertError } = await (supabaseAdmin.from("profiles") as any)
                 .upsert(
                   {
                     id: existingUser.id,
                     email: trimmedEmail,
                     display_name: trimmedEmail.split("@")[0],
-                    role: "free",
+                    role: "free" as const,
                     preferences: {},
                   },
                   { onConflict: "id" }
@@ -251,24 +252,85 @@ export async function POST(request: NextRequest) {
 
     // Ensure profile exists (the database trigger should create it, but let's be safe)
     // Using the admin client which bypasses RLS
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .upsert({
-        id: linkData.user.id,
-        email: trimmedEmail,
-        display_name: fullName || trimmedEmail.split('@')[0],
-        role: 'free',
-        preferences: {},
-      }, {
-        onConflict: 'id',
-        ignoreDuplicates: true,
-      });
+    let profileExists = false;
+    let profileAttempts = 0;
+    const maxProfileAttempts = 3;
+    
+    while (!profileExists && profileAttempts < maxProfileAttempts) {
+      profileAttempts++;
+      
+      // First, check if profile already exists (trigger might have created it)
+      const { data: existingProfile, error: fetchError } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('id', linkData.user.id)
+        .single();
+      
+      if (existingProfile && !fetchError) {
+        profileExists = true;
+        console.log(`[Signup API] Profile already exists for user: ${linkData.user.id}`);
+        break;
+      }
+      
+      // If profile doesn't exist, try to create it
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: profileError } = await (supabaseAdmin.from('profiles') as any)
+        .upsert({
+          id: linkData.user.id,
+          email: trimmedEmail,
+          display_name: fullName || trimmedEmail.split('@')[0],
+          role: 'free' as const,
+          preferences: {},
+        }, {
+          onConflict: 'id',
+        });
 
-    if (profileError) {
-      console.error("[Signup API] Failed to create profile (non-fatal):", profileError);
-      // Continue anyway - profile might have been created by trigger
-    } else {
-      console.log(`[Signup API] Profile ensured for user: ${linkData.user.id}`);
+      if (profileError) {
+        // Check if it's a duplicate key error (profile was created between check and insert)
+        if (profileError.code === '23505' || profileError.message?.includes('duplicate')) {
+          console.log(`[Signup API] Profile created by another process (attempt ${profileAttempts})`);
+          profileExists = true;
+          break;
+        }
+        
+        console.error(`[Signup API] Failed to create profile (attempt ${profileAttempts}):`, {
+          code: profileError.code,
+          message: profileError.message,
+          details: profileError.details,
+        });
+        
+        // If this is the last attempt, we need to fail the signup
+        if (profileAttempts >= maxProfileAttempts) {
+          console.error("[Signup API] All profile creation attempts failed. User account created but profile missing.");
+          return NextResponse.json(
+            { error: "Database error saving new user. Please contact support." },
+            { status: 500 }
+          );
+        }
+        
+        // Wait a bit before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 100 * profileAttempts));
+      } else {
+        profileExists = true;
+        console.log(`[Signup API] Profile created successfully for user: ${linkData.user.id}`);
+      }
+    }
+    
+    // Final verification - ensure profile actually exists before proceeding
+    if (!profileExists) {
+      const { data: finalCheck } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('id', linkData.user.id)
+        .single();
+      
+      if (!finalCheck) {
+        console.error("[Signup API] Profile verification failed - profile does not exist after all attempts");
+        return NextResponse.json(
+          { error: "Database error saving new user. Please contact support." },
+          { status: 500 }
+        );
+      }
     }
 
     // Store full name on the auth user as well (helps welcome email + future UX)
@@ -377,6 +439,28 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[Signup API] Confirmation email sent successfully. Resend ID: ${emailData?.id}`);
+
+    // Send notification email to hello@getmixwise.com (non-blocking)
+    try {
+      // Call the notification API route
+      const notificationUrl = new URL("/api/auth/send-signup-notification", request.url);
+      await fetch(notificationUrl.toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: linkData.user.id,
+          userEmail: trimmedEmail,
+          displayName: fullName,
+          signupMethod: "Email/Password",
+        }),
+      }).catch((err) => {
+          // Don't fail the signup if notification email fails
+          console.error("[Signup API] Failed to send notification email (non-fatal):", err);
+        });
+    } catch (notificationError) {
+      // Don't fail the signup if notification email fails
+      console.error("[Signup API] Failed to send notification email (non-fatal):", notificationError);
+    }
 
     return NextResponse.json({
       ok: true,
