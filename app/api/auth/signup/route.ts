@@ -345,14 +345,48 @@ export async function POST(request: NextRequest) {
           
           // If this is the last attempt, we need to fail the signup
           if (profileAttempts >= maxProfileAttempts) {
-            console.error("[Signup API] All profile creation attempts failed. User account created but profile missing.", {
+            const errorDetails = {
               userId: linkData.user.id,
               email: trimmedEmail,
-              insertError: insertError.message,
-              upsertError: upsertError.message,
-            });
+              insertError: {
+                code: insertError.code,
+                message: insertError.message,
+                details: insertError.details,
+                hint: insertError.hint,
+              },
+              upsertError: upsertError ? {
+                code: upsertError.code,
+                message: upsertError.message,
+                details: upsertError.details,
+                hint: upsertError.hint,
+              } : null,
+            };
+            console.error("[Signup API] All profile creation attempts failed. User account created but profile missing.", errorDetails);
+            
+            // Try one more time with a direct query to see if profile exists
+            const { data: lastChanceCheck } = await supabaseAdmin
+              .from('profiles')
+              .select('id, email, role')
+              .eq('id', linkData.user.id)
+              .single();
+            
+            if (lastChanceCheck) {
+              console.log("[Signup API] Profile found on last chance check - continuing");
+              profileExists = true;
+              break;
+            }
+            
             return NextResponse.json(
-              { error: "Database error saving new user. Please contact support." },
+              { 
+                error: "Database error saving new user. Please contact support.",
+                // Include error code for debugging (only in development)
+                ...(process.env.NODE_ENV === 'development' && { 
+                  debug: {
+                    insertErrorCode: insertError.code,
+                    upsertErrorCode: upsertError?.code,
+                  }
+                })
+              },
               { status: 500 }
             );
           }
