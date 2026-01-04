@@ -197,9 +197,52 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     }
   };
   
-  const handleSkip = () => {
-    toast.info("Skipping setup for now. You can update preferences later.");
-    router.replace("/dashboard");
+  const handleSkip = async () => {
+    if (!user) {
+      toast.error("Please sign in to skip onboarding");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const supabase = getSupabaseClient();
+      
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        toast.error("Session expired. Please log in again.");
+        router.push("/");
+        return;
+      }
+
+      // Mark onboarding as complete even when skipping
+      const preferencesData = {
+        user_id: user.id,
+        onboarding_completed: true,
+        onboarding_completed_at: new Date().toISOString(),
+      };
+      
+      const { error: upsertError } = await supabase
+        .from("user_preferences")
+        .upsert(preferencesData, {
+          onConflict: "user_id",
+        });
+
+      if (upsertError && upsertError.code !== "42P01") {
+        // Ignore table doesn't exist error, but log others
+        console.error("Failed to save skip preference:", upsertError);
+      }
+
+      toast.info("Skipping setup for now. You can update preferences later.");
+      router.replace("/dashboard");
+    } catch (err: unknown) {
+      console.error("Skip onboarding error:", err);
+      // Continue to dashboard even if save fails
+      router.replace("/dashboard");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const canProceed = () => {
