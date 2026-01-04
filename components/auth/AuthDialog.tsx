@@ -20,6 +20,15 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
+// Apple icon component
+function AppleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" fill="#000000"/>
+    </svg>
+  );
+}
+
 interface AuthDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -40,7 +49,7 @@ export function AuthDialog({
   onModeChange,
 }: AuthDialogProps) {
   const router = useRouter();
-  const { signInWithGoogle, signInWithPassword, resetPassword, isAuthenticated } = useUser();
+  const { signInWithGoogle, signInWithApple, signInWithPassword, resetPassword, isAuthenticated } = useUser();
   const toast = useToast();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -49,6 +58,7 @@ export function AuthDialog({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +111,17 @@ export function AuthDialog({
     } catch (err) {
       setError("Failed to sign in with Google. Please try again.");
       setIsGoogleLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setIsAppleLoading(true);
+    setError(null);
+    try {
+      await signInWithApple();
+    } catch (err) {
+      setError("Failed to sign in with Apple. Please try again.");
+      setIsAppleLoading(false);
     }
   };
 
@@ -344,19 +365,34 @@ export function AuthDialog({
                       </div>
                     )}
 
-                    {/* Google sign in */}
-                    <button
-                      onClick={handleGoogleSignIn}
-                      disabled={isGoogleLoading}
-                      className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-mist/50 text-forest font-medium rounded-2xl border border-mist transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
-                    >
-                      {isGoogleLoading ? (
-                        <div className="spinner" />
-                      ) : (
-                        <GoogleIcon className="w-5 h-5" />
-                      )}
-                      Continue with Google
-                    </button>
+                    {/* OAuth sign in buttons */}
+                    <div className="space-y-3 mb-4">
+                      <button
+                        onClick={handleGoogleSignIn}
+                        disabled={isGoogleLoading || isAppleLoading}
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-mist/50 text-forest font-medium rounded-2xl border border-mist transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isGoogleLoading ? (
+                          <div className="spinner" />
+                        ) : (
+                          <GoogleIcon className="w-5 h-5" />
+                        )}
+                        Continue with Google
+                      </button>
+                      
+                      <button
+                        onClick={handleAppleSignIn}
+                        disabled={isAppleLoading || isGoogleLoading}
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-black hover:bg-gray-900 text-white font-medium rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isAppleLoading ? (
+                          <div className="spinner border-white/30 border-t-white" />
+                        ) : (
+                          <AppleIcon className="w-5 h-5" />
+                        )}
+                        Continue with Apple
+                      </button>
+                    </div>
 
                     {/* Divider */}
                     <div className="relative my-6">

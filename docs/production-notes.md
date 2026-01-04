@@ -79,8 +79,9 @@ In Supabase Dashboard → Authentication → URL Configuration:
 - `https://getmixwise.com/auth/callback` (production)
 - `http://localhost:3000/auth/callback` (development)
 
-In Supabase Dashboard → Authentication → Providers → Google:
-- Ensure redirect URL is `https://getmixwise.com/auth/callback`
+In Supabase Dashboard → Authentication → Providers:
+- **Google**: Ensure redirect URL is `https://getmixwise.com/auth/callback`
+- **Apple**: Ensure redirect URL is `https://getmixwise.com/auth/callback` (if enabled)
 
 ## Vercel Domain Configuration
 

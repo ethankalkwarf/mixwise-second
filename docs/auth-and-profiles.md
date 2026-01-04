@@ -6,6 +6,7 @@ This document explains how authentication and user profiles work in MixWise.
 
 MixWise uses **Supabase Auth** for authentication, supporting:
 - **Google OAuth** - One-click sign in with Google
+- **Apple Sign In** - Sign in with Apple ID
 - **Email Magic Links** - Passwordless email authentication
 
 No GitHub login is configured or supported.
@@ -15,8 +16,8 @@ No GitHub login is configured or supported.
 ### Authentication Flow
 
 1. User clicks "Sign in" in the header or is prompted during an action
-2. `AuthDialog` opens with Google and email options
-3. For Google: OAuth flow redirects to Google, then back to `/auth/callback`
+2. `AuthDialog` opens with Google, Apple, and email options
+3. For Google/Apple: OAuth flow redirects to provider, then back to `/auth/callback`
 4. For Email: Magic link is sent; clicking it redirects to `/auth/callback`
 5. The callback exchanges the code for a session
 6. `UserProvider` detects the session change and loads the profile
@@ -107,6 +108,28 @@ In your Supabase dashboard:
 2. Enable Google provider
 3. Add your Google OAuth credentials (from Google Cloud Console)
 4. Add redirect URL: `https://getmixwise.com/auth/callback`
+
+#### Apple Sign In
+1. Go to **Authentication** → **Providers** → **Apple**
+2. Enable Apple provider
+3. Configure Apple Sign In credentials:
+   - **Service ID**: Your Apple Service ID (created in Apple Developer Portal)
+   - **Team ID**: Your Apple Developer Team ID
+   - **Key ID**: The Key ID for your Apple private key
+   - **Private Key**: Upload or paste your Apple private key (.p8 file content)
+   - **Redirect URL**: `https://getmixwise.com/auth/callback`
+4. **Important**: You must have an active Apple Developer Program membership ($99/year) to use Sign in with Apple
+
+**Apple Developer Setup**:
+- Register your app in Apple Developer Portal
+- Create a Service ID with "Sign in with Apple" enabled
+- Generate a private key for Sign in with Apple
+- Add your domain and redirect URLs in the Service ID configuration:
+  - **Domain**: `getmixwise.com`
+  - **Return URLs**: 
+    - `https://getmixwise.com/auth/callback` (production)
+    - `http://localhost:3000/auth/callback` (for local development)
+- See [Apple's Sign in with Apple documentation](https://developer.apple.com/sign-in-with-apple/) for detailed setup
 
 #### Email (Magic Link)
 1. Go to **Authentication** → **Providers** → **Email**
@@ -258,10 +281,10 @@ Use this checklist to verify auth is working correctly after any changes:
 - [ ] CocktailsReadyBadge does NOT show (requires auth + bar)
 - [ ] ShoppingListBadge shows count from localStorage
 
-### Sign-In Flow (Google)
+### Sign-In Flow (OAuth - Google/Apple)
 1. [ ] Click "Sign in" button - auth dialog opens
-2. [ ] Click "Continue with Google" - redirects to Google
-3. [ ] Complete Google login - redirects back to `/auth/callback`
+2. [ ] Click "Continue with Google" or "Continue with Apple" - redirects to provider
+3. [ ] Complete OAuth login - redirects back to `/auth/callback`
 4. [ ] Callback exchanges code for session
 5. [ ] Redirects to homepage (or original page if `redirect` param)
 6. [ ] Header updates to show user avatar/name dropdown
@@ -320,9 +343,11 @@ Use this checklist to verify auth is working correctly after any changes:
 - Ensure `UserProvider` fetches profile after session is set
 
 ### OAuth Errors
-- Verify Google OAuth credentials
-- Check callback URL configuration
-- Ensure HTTPS in production
+- Verify Google/Apple OAuth credentials in Supabase dashboard
+- Check callback URL configuration (must match exactly)
+- Ensure HTTPS in production (required for OAuth)
+- For Apple: Verify Service ID, Team ID, Key ID, and Private Key are correct
+- For Apple: Ensure your Apple Developer account is active
 
 ### Session Not Persisting on Refresh
 - Check that middleware runs on all routes (see `middleware.ts` config)

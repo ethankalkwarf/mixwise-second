@@ -48,6 +48,7 @@ interface UserContextType {
   error: Error | null;
   authReady: Promise<void>;  // Resolves when initial auth check is complete
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<{ error?: string }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error?: string }>;
   signUpWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
@@ -535,6 +536,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase, getAuthRedirectUrl]);
 
+  // Sign in with Apple OAuth
+  const signInWithApple = useCallback(async () => {
+    const redirectUrl = getAuthRedirectUrl();
+    console.log("[UserProvider] Starting Apple OAuth, redirect:", redirectUrl);
+    
+    const { error: signInError } = await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo: redirectUrl,
+      },
+    });
+    
+    if (signInError) {
+      console.error("[UserProvider] Apple sign-in error:", signInError);
+      setError(signInError);
+      throw signInError;
+    }
+  }, [supabase, getAuthRedirectUrl]);
+
   // Sign up with email and password
   const signUpWithEmail = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {
     const redirectUrl = getAuthRedirectUrl();
@@ -649,6 +669,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     error,
     authReady: authReadyRef.current.promise,
     signInWithGoogle,
+    signInWithApple,
     signInWithEmail,
     signInWithPassword,
     signUpWithEmail,
