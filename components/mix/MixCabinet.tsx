@@ -270,6 +270,16 @@ export function MixCabinet({
               <p className="text-sage">
                 {filteredIngredients.length} ingredients available
               </p>
+              {selectedCategory === "Amaro" && (
+                <p className="text-sm text-sage mt-1">
+                  Italian herbal liqueurs with complex bitter-sweet flavors
+                </p>
+              )}
+              {selectedCategory === "Wine & Beer" && (
+                <p className="text-sm text-sage mt-1">
+                  Wines, beers, and other fermented beverages for mixing
+                </p>
+              )}
             </div>
             {selectedCategory && (
               <button
