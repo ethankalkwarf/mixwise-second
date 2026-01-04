@@ -73,24 +73,23 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- but should have proper display names from their auth.users metadata
 
 UPDATE public.profiles p
-SET display_name = COALESCE(
-  -- Try to get name from auth.users metadata
-  (SELECT COALESCE(
-    au.raw_user_meta_data->>'full_name',
+SET display_name = (
+  SELECT COALESCE(
+    (au.raw_user_meta_data->>'full_name')::TEXT,
     CASE 
-      WHEN au.raw_user_meta_data->>'first_name' IS NOT NULL AND au.raw_user_meta_data->>'last_name' IS NOT NULL
-      THEN au.raw_user_meta_data->>'first_name' || ' ' || au.raw_user_meta_data->>'last_name'
-      ELSE au.raw_user_meta_data->>'first_name'
+      WHEN (au.raw_user_meta_data->>'first_name')::TEXT IS NOT NULL 
+           AND (au.raw_user_meta_data->>'last_name')::TEXT IS NOT NULL
+      THEN ((au.raw_user_meta_data->>'first_name')::TEXT || ' ' || (au.raw_user_meta_data->>'last_name')::TEXT)
+      ELSE (au.raw_user_meta_data->>'first_name')::TEXT
     END,
-    au.raw_user_meta_data->>'name'
+    (au.raw_user_meta_data->>'name')::TEXT,
+    CASE 
+      WHEN p.email LIKE '%@privaterelay.appleid.com' THEN 'Apple User'
+      ELSE p.display_name
+    END
   )
   FROM auth.users au
-  WHERE au.id = p.id),
-  -- Fallback to generic name for Apple relay emails
-  CASE 
-    WHEN p.email LIKE '%@privaterelay.appleid.com' THEN 'Apple User'
-    ELSE p.display_name
-  END
+  WHERE au.id = p.id
 ),
 updated_at = NOW()
 WHERE 
