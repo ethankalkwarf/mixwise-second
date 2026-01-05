@@ -167,26 +167,46 @@ export default function AccountPage() {
       return;
     }
 
+    if (!supabase) {
+      console.error("Supabase client not available");
+      toast.error("Database connection error. Please refresh the page.");
+      return;
+    }
+
     setDisplayNameSaving(true);
     const trimmedName = displayNameInput.trim();
 
     try {
-      const { error } = await supabase
+      console.log("Updating display name:", { userId: user.id, displayName: trimmedName });
+      
+      const { data, error } = await supabase
         .from("profiles")
         .update({ display_name: trimmedName || null })
-        .eq("id", user.id);
+        .eq("id", user.id)
+        .select()
+        .single();
 
       if (error) {
         console.error("Error updating display name:", error);
-        toast.error(error.message || "Failed to update display name");
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        const errorMessage = error.message || error.details || error.hint || "Failed to update display name. Please check your permissions.";
+        toast.error(errorMessage);
       } else {
+        console.log("Display name updated successfully:", data);
         toast.success("Display name updated");
         // Refresh profile data to update the UI immediately
         await refreshProfile();
       }
-    } catch (err) {
-      console.error("Error updating display name:", err);
-      toast.error("Failed to update display name");
+    } catch (err: any) {
+      console.error("Exception updating display name:", err);
+      console.error("Exception details:", JSON.stringify(err, null, 2));
+      
+      // Handle network errors specifically
+      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        toast.error(err?.message || "Failed to update display name. Please try again.");
+      }
     } finally {
       setDisplayNameSaving(false);
     }
