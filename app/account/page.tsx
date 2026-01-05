@@ -43,7 +43,7 @@ interface BadgeDisplayData extends BadgeDefinition {
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, profile, isLoading, isAuthenticated, signOut } = useUser();
+  const { user, profile, isLoading, isAuthenticated, signOut, refreshProfile } = useUser();
   const { supabaseClient: supabase } = useSessionContext();
   const { openAuthDialog } = useAuthDialog();
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
@@ -82,6 +82,10 @@ export default function AccountPage() {
   const [usernameInput, setUsernameInput] = useState('');
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  
+  // Display name state
+  const [displayNameInput, setDisplayNameInput] = useState('');
+  const [displayNameSaving, setDisplayNameSaving] = useState(false);
   
   // Email preferences state
   const [emailPrefs, setEmailPrefs] = useState({
@@ -124,6 +128,13 @@ export default function AccountPage() {
     fetchBadges();
   }, [user]);
 
+  // Initialize display name input when profile loads
+  useEffect(() => {
+    if (profile?.display_name !== undefined) {
+      setDisplayNameInput(profile.display_name || '');
+    }
+  }, [profile?.display_name]);
+
   // Fetch email preferences
   useEffect(() => {
     async function fetchEmailPrefs() {
@@ -148,6 +159,38 @@ export default function AccountPage() {
 
     fetchEmailPrefs();
   }, [user]);
+
+  // Update display name
+  const handleUpdateDisplayName = useCallback(async () => {
+    if (!user) {
+      toast.error("You must be signed in to update your display name");
+      return;
+    }
+
+    setDisplayNameSaving(true);
+    const trimmedName = displayNameInput.trim();
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ display_name: trimmedName || null })
+        .eq("id", user.id);
+
+      if (error) {
+        console.error("Error updating display name:", error);
+        toast.error(error.message || "Failed to update display name");
+      } else {
+        toast.success("Display name updated");
+        // Refresh profile data to update the UI immediately
+        await refreshProfile();
+      }
+    } catch (err) {
+      console.error("Error updating display name:", err);
+      toast.error("Failed to update display name");
+    } finally {
+      setDisplayNameSaving(false);
+    }
+  }, [user, displayNameInput, supabase, toast, refreshProfile]);
 
   // Update email preference
   const updateEmailPref = async (key: keyof typeof emailPrefs, value: boolean) => {
@@ -247,7 +290,11 @@ export default function AccountPage() {
     const result = await updatePreferences({ public_bar_enabled: enabled });
     if (result.error) {
       console.error("Failed to update privacy setting:", result.error);
-      toast.error("Failed to update privacy setting");
+      // More specific error message
+      const errorMsg = typeof result.error === 'string' 
+        ? result.error 
+        : "Failed to update privacy setting. Please try again.";
+      toast.error(errorMsg);
     } else {
       console.log("Successfully updated privacy setting");
       toast.success(enabled ? "Your bar is now public!" : "Your bar is now private");
@@ -459,14 +506,20 @@ export default function AccountPage() {
                     <input
                       id="displayName"
                       type="text"
-                      defaultValue={profile?.display_name || ""}
+                      value={displayNameInput}
+                      onChange={(e) => setDisplayNameInput(e.target.value)}
                       className="input-botanical"
                       placeholder="Enter your display name"
+                      disabled={displayNameSaving}
                     />
                   </div>
                   <div className="flex items-end">
-                    <button className="btn-primary w-full">
-                      Save Changes
+                    <button 
+                      onClick={handleUpdateDisplayName}
+                      disabled={displayNameSaving}
+                      className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {displayNameSaving ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
                 </div>

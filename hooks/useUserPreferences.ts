@@ -96,29 +96,39 @@ export function useUserPreferences() {
         if (existing) {
           // Update existing row
           console.log("Updating existing preferences row");
-          const { error } = await supabase
+          const { error, data } = await supabase
             .from("user_preferences")
             .update(updates)
-            .eq("user_id", user.id);
+            .eq("user_id", user.id)
+            .select();
 
           if (error) {
             console.error("Update error:", error);
-            throw error;
+            console.error("Update error details:", JSON.stringify(error, null, 2));
+            // Return more detailed error information
+            const errorMessage = error.message || error.details || error.hint || "Failed to update preferences. Please check your permissions.";
+            return { error: errorMessage };
           }
+          console.log("Update successful, returned data:", data);
         } else {
           // Insert new row
           console.log("Inserting new preferences row");
-          const { error } = await supabase
+          const { error, data } = await supabase
             .from("user_preferences")
             .insert({
               user_id: user.id,
               ...updates,
-            });
+            })
+            .select();
 
           if (error) {
             console.error("Insert error:", error);
-            throw error;
+            console.error("Insert error details:", JSON.stringify(error, null, 2));
+            // Return more detailed error information
+            const errorMessage = error.message || error.details || error.hint || "Failed to create preferences. Please check your permissions.";
+            return { error: errorMessage };
           }
+          console.log("Insert successful, returned data:", data);
         }
 
       // Refresh by clearing the last fetched user ID and re-fetching
@@ -127,9 +137,11 @@ export function useUserPreferences() {
         await fetchPreferences(user.id);
       }
       return { success: true };
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error updating preferences:", err);
-        return { error: "Failed to update preferences" };
+        // Return more specific error message if available
+        const errorMessage = err?.message || err?.code || "Failed to update preferences. Please try again.";
+        return { error: errorMessage };
       }
     },
     [user, supabase, fetchPreferences]
