@@ -184,19 +184,38 @@ export default function AccountPage() {
           .single();
 
         if (!error && data) {
-          console.log("✅ Direct update succeeded:", data);
-          updateSucceeded = true;
-          // Update local state immediately with the returned data
-          const newDisplayName = data?.display_name || '';
-          setDisplayNameInput(newDisplayName);
-          toast.success("Display name updated");
-          // Try to refresh profile in background (don't wait or show errors)
-          refreshProfile().catch(err => {
-            console.warn("Profile refresh failed (non-critical, update succeeded):", err);
-            // Silently fail - update succeeded, UI is already updated
-          });
-          setDisplayNameSaving(false);
-          return;
+          // Verify the update actually worked by checking the returned data
+          const returnedDisplayName = data?.display_name || null;
+          const expectedDisplayName = trimmedName || null;
+          
+          // Check if the returned value matches what we sent
+          const displayNameMatches = (
+            (returnedDisplayName === expectedDisplayName) ||
+            (returnedDisplayName === null && expectedDisplayName === '')
+          );
+          
+          if (displayNameMatches) {
+            console.log("✅ Direct update succeeded and verified:", data);
+            updateSucceeded = true;
+            // Update local state immediately with the returned data
+            setDisplayNameInput(returnedDisplayName || '');
+            toast.success("Display name updated");
+            // Try to refresh profile in background (don't wait or show errors)
+            refreshProfile().catch(err => {
+              console.warn("Profile refresh failed (non-critical, update succeeded):", err);
+              // Silently fail - update succeeded, UI is already updated
+            });
+            setDisplayNameSaving(false);
+            return;
+          } else {
+            console.error("❌ Update returned but value doesn't match:", {
+              expected: expectedDisplayName,
+              returned: returnedDisplayName
+            });
+            toast.error("Update may have failed. Please refresh and try again.");
+            setDisplayNameSaving(false);
+            return;
+          }
         }
 
         // If we get a network error, try API route as fallback
@@ -245,19 +264,39 @@ export default function AccountPage() {
       }
 
       const data = await response.json();
-      console.log("✅ API route update succeeded:", data);
-      updateSucceeded = true;
-      // Update local state immediately with the returned data
-      const newDisplayName = data?.display_name || '';
-      setDisplayNameInput(newDisplayName);
-      toast.success("Display name updated");
-      // Try to refresh profile, but don't block on it or show errors
-      refreshProfile().catch(err => {
-        console.warn("Profile refresh failed (non-critical):", err);
-        // Don't show error - the update succeeded, UI is already updated
-      });
-      setDisplayNameSaving(false);
-      return;
+      
+      // Verify the update actually worked
+      const returnedDisplayName = data?.display_name || null;
+      const expectedDisplayName = trimmedName || null;
+      
+      const displayNameMatches = (
+        (returnedDisplayName === expectedDisplayName) ||
+        (returnedDisplayName === null && expectedDisplayName === '')
+      );
+      
+      if (displayNameMatches && data?.success) {
+        console.log("✅ API route update succeeded and verified:", data);
+        updateSucceeded = true;
+        // Update local state immediately with the returned data
+        setDisplayNameInput(returnedDisplayName || '');
+        toast.success("Display name updated");
+        // Try to refresh profile, but don't block on it or show errors
+        refreshProfile().catch(err => {
+          console.warn("Profile refresh failed (non-critical):", err);
+          // Don't show error - the update succeeded, UI is already updated
+        });
+        setDisplayNameSaving(false);
+        return;
+      } else {
+        console.error("❌ API route returned but update may have failed:", {
+          expected: expectedDisplayName,
+          returned: returnedDisplayName,
+          success: data?.success
+        });
+        toast.error("Update may have failed. Please refresh and try again.");
+        setDisplayNameSaving(false);
+        return;
+      }
     } catch (err: any) {
       console.error("❌ API route exception:", err);
       console.error("Error type:", err?.constructor?.name);

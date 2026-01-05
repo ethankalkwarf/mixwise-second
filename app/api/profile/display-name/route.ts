@@ -50,10 +50,14 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update display name (can be null to clear it)
-    const { error: updateError } = await supabase
+    const newDisplayName = display_name === '' ? null : display_name?.trim() || null;
+    
+    const { data: updatedData, error: updateError } = await supabase
       .from('profiles')
-      .update({ display_name: display_name === '' ? null : display_name?.trim() || null })
-      .eq('id', user.id);
+      .update({ display_name: newDisplayName })
+      .eq('id', user.id)
+      .select('display_name')
+      .single();
 
     if (updateError) {
       console.error('Error updating display name:', updateError);
@@ -63,9 +67,35 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Verify the update actually worked
+    if (!updatedData) {
+      console.error('Update returned no data');
+      return NextResponse.json(
+        { error: "Update may have failed - no data returned" },
+        { status: 500 }
+      );
+    }
+
+    const actualDisplayName = updatedData.display_name || null;
+    if (actualDisplayName !== newDisplayName) {
+      console.error('Update value mismatch:', {
+        expected: newDisplayName,
+        actual: actualDisplayName
+      });
+      return NextResponse.json(
+        { error: "Update value mismatch - update may have failed" },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ Display name update verified:', { 
+      userId: user.id, 
+      display_name: actualDisplayName 
+    });
+
     return NextResponse.json({ 
       success: true, 
-      display_name: display_name === '' ? null : display_name?.trim() || null 
+      display_name: actualDisplayName
     });
 
   } catch (error) {
