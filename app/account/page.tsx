@@ -250,16 +250,25 @@ export default function AccountPage() {
       const newDisplayName = data?.display_name || '';
       setDisplayNameInput(newDisplayName);
       toast.success("Display name updated");
-      // Try to refresh profile, but don't block on it
-      try {
-        await refreshProfile();
-      } catch (refreshErr) {
-        console.warn("Profile refresh failed (non-critical):", refreshErr);
+      // Try to refresh profile, but don't block on it or show errors
+      refreshProfile().catch(err => {
+        console.warn("Profile refresh failed (non-critical):", err);
         // Don't show error - the update succeeded, UI is already updated
-      }
+      });
+      setDisplayNameSaving(false);
+      return;
     } catch (err: any) {
       console.error("API route exception:", err);
-      toast.error("Network error. Please refresh the page and try again.");
+      // Only show error if we haven't already succeeded via direct client
+      // Check if the update actually succeeded by verifying the error type
+      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
+        // This might be a network error during the request itself
+        // But the update might have still succeeded - check the database state
+        console.warn("Network error during API call, but update may have succeeded");
+        toast.error("Network error occurred. Please refresh the page to see if your change was saved.");
+      } else {
+        toast.error(err?.message || "Failed to update display name. Please try again.");
+      }
     } finally {
       setDisplayNameSaving(false);
     }
