@@ -181,7 +181,19 @@ export default function AccountPage() {
         body: JSON.stringify({ display_name: trimmedName || '' }),
       });
 
-      const data = await response.json();
+      if (!response.ok && response.status === 404) {
+        toast.error("API endpoint not found. The update may not be deployed yet.");
+        return;
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error("Failed to parse response:", jsonError);
+        toast.error("Invalid response from server. Please try again.");
+        return;
+      }
 
       if (!response.ok) {
         console.error("Error updating display name:", data);
