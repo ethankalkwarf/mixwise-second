@@ -160,86 +160,88 @@ export default function AccountPage() {
     fetchEmailPrefs();
   }, [user]);
 
-  // Update display name using direct Supabase client
+  // Update display name - try direct client first, fallback to API route
   const handleUpdateDisplayName = useCallback(async () => {
     if (!user) {
       toast.error("You must be signed in to update your display name");
       return;
     }
 
-    if (!supabase) {
-      console.error("Supabase client not available");
-      toast.error("Database connection error. Please refresh the page.");
-      return;
-    }
-
     setDisplayNameSaving(true);
     const trimmedName = displayNameInput.trim();
 
-    try {
-      console.log("Updating display name:", { userId: user.id, displayName: trimmedName });
-      
-      // First verify we can access the profiles table (health check)
-      const { data: healthCheck, error: healthError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", user.id)
-        .limit(1)
-        .single();
+    // Try direct Supabase client first (faster, works when bot protection isn't active)
+    if (supabase) {
+      try {
+        console.log("Attempting direct Supabase update:", { userId: user.id, displayName: trimmedName });
+        
+        const { data, error } = await supabase
+          .from("profiles")
+          .update({ display_name: trimmedName || null })
+          .eq("id", user.id)
+          .select()
+          .single();
 
-      if (healthError && healthError.code !== 'PGRST116') {
-        console.error("Health check failed:", healthError);
-        toast.error(`Database connection issue: ${healthError.message || 'Unable to access profile'}`);
+        if (!error) {
+          console.log("Direct update succeeded:", data);
+          toast.success("Display name updated");
+          await refreshProfile();
+          setDisplayNameSaving(false);
+          return;
+        }
+
+        // If we get a network error, try API route as fallback
+        if (error.message?.includes("Failed to fetch") || error.code === 'PGRST301') {
+          console.log("Direct update failed with network error, trying API route fallback");
+          // Fall through to API route attempt
+        } else {
+          // Other errors (permissions, etc.) - show error and stop
+          console.error("Direct update error:", error);
+          toast.error(error.message || "Failed to update display name");
+          setDisplayNameSaving(false);
+          return;
+        }
+      } catch (err: any) {
+        // Network errors - try API route fallback
+        if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
+          console.log("Direct update exception, trying API route fallback:", err);
+          // Fall through to API route attempt
+        } else {
+          console.error("Direct update exception:", err);
+          toast.error("Failed to update display name. Please try again.");
+          setDisplayNameSaving(false);
+          return;
+        }
+      }
+    }
+
+    // Fallback: Use API route (more reliable when bot protection is active)
+    try {
+      console.log("Using API route fallback for display name update");
+      
+      const response = await fetch('/api/profile/display-name', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ display_name: trimmedName || '' }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error("API route error:", errorData);
+        toast.error(errorData.error || "Failed to update display name");
+        setDisplayNameSaving(false);
         return;
       }
 
-      console.log("Health check passed, proceeding with update");
-      
-      // Update display name (RLS policy is fixed with WITH CHECK clause)
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ display_name: trimmedName || null })
-        .eq("id", user.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Error updating display name:", error);
-        console.error("Error code:", error.code);
-        console.error("Error message:", error.message);
-        console.error("Error details:", JSON.stringify(error, null, 2));
-        
-        // More specific error messages
-        if (error.code === 'PGRST301' || error.message?.includes('permission denied') || error.message?.includes('new row violates row-level security')) {
-          toast.error("Permission denied. The RLS policy may not be correctly configured.");
-        } else if (error.code === 'PGRST116') {
-          toast.error("Profile not found. Please refresh the page.");
-        } else if (error.message) {
-          toast.error(error.message);
-        } else {
-          toast.error(`Failed to update display name (code: ${error.code || 'unknown'})`);
-        }
-      } else {
-        console.log("Display name updated successfully:", data);
-        toast.success("Display name updated");
-        // Refresh profile data to update the UI immediately
-        await refreshProfile();
-      }
+      const data = await response.json();
+      console.log("API route update succeeded:", data);
+      toast.success("Display name updated");
+      await refreshProfile();
     } catch (err: any) {
-      console.error("Exception updating display name:", err);
-      console.error("Exception type:", err?.constructor?.name);
-      console.error("Exception message:", err?.message);
-      console.error("Exception stack:", err?.stack);
-      console.error("Exception details:", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
-      
-      // Handle network errors specifically
-      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError" || err?.message?.includes("NetworkError")) {
-        toast.error("Network error. Please check your internet connection and try again. If the problem persists, refresh the page.");
-      } else if (err?.message) {
-        toast.error(err.message);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
+      console.error("API route exception:", err);
+      toast.error("Network error. Please refresh the page and try again.");
     } finally {
       setDisplayNameSaving(false);
     }
