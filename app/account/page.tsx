@@ -184,11 +184,17 @@ export default function AccountPage() {
 
         if (!error) {
           console.log("Direct update succeeded:", data);
-          // Update local state immediately
-          setDisplayNameInput(data.display_name || '');
+          // Update local state immediately with the returned data
+          const newDisplayName = data?.display_name || '';
+          setDisplayNameInput(newDisplayName);
           toast.success("Display name updated");
-          // Refresh profile in background (don't wait for it)
-          refreshProfile().catch(err => console.error("Profile refresh failed:", err));
+          // Try to refresh profile, but don't block on it
+          try {
+            await refreshProfile();
+          } catch (refreshErr) {
+            console.warn("Profile refresh failed (non-critical):", refreshErr);
+            // Don't show error - the update succeeded, UI is already updated
+          }
           setDisplayNameSaving(false);
           return;
         }
@@ -240,11 +246,17 @@ export default function AccountPage() {
 
       const data = await response.json();
       console.log("API route update succeeded:", data);
-      // Update local state immediately
-      setDisplayNameInput(data.display_name || '');
+      // Update local state immediately with the returned data
+      const newDisplayName = data?.display_name || '';
+      setDisplayNameInput(newDisplayName);
       toast.success("Display name updated");
-      // Refresh profile in background (don't wait for it)
-      refreshProfile().catch(err => console.error("Profile refresh failed:", err));
+      // Try to refresh profile, but don't block on it
+      try {
+        await refreshProfile();
+      } catch (refreshErr) {
+        console.warn("Profile refresh failed (non-critical):", refreshErr);
+        // Don't show error - the update succeeded, UI is already updated
+      }
     } catch (err: any) {
       console.error("API route exception:", err);
       toast.error("Network error. Please refresh the page and try again.");
