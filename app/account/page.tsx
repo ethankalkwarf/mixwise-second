@@ -160,7 +160,7 @@ export default function AccountPage() {
     fetchEmailPrefs();
   }, [user]);
 
-  // Update display name - try API route first, fallback to direct client
+  // Update display name using direct Supabase client
   const handleUpdateDisplayName = useCallback(async () => {
     if (!user) {
       toast.error("You must be signed in to update your display name");
@@ -179,7 +179,23 @@ export default function AccountPage() {
     try {
       console.log("Updating display name:", { userId: user.id, displayName: trimmedName });
       
-      // Try direct Supabase client update (now that RLS policy is fixed)
+      // First verify we can access the profiles table (health check)
+      const { data: healthCheck, error: healthError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .limit(1)
+        .single();
+
+      if (healthError && healthError.code !== 'PGRST116') {
+        console.error("Health check failed:", healthError);
+        toast.error(`Database connection issue: ${healthError.message || 'Unable to access profile'}`);
+        return;
+      }
+
+      console.log("Health check passed, proceeding with update");
+      
+      // Update display name (RLS policy is fixed with WITH CHECK clause)
       const { data, error } = await supabase
         .from("profiles")
         .update({ display_name: trimmedName || null })
@@ -189,15 +205,19 @@ export default function AccountPage() {
 
       if (error) {
         console.error("Error updating display name:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
         console.error("Error details:", JSON.stringify(error, null, 2));
         
         // More specific error messages
-        if (error.code === 'PGRST301' || error.message?.includes('permission denied')) {
-          toast.error("Permission denied. Please check your account permissions.");
+        if (error.code === 'PGRST301' || error.message?.includes('permission denied') || error.message?.includes('new row violates row-level security')) {
+          toast.error("Permission denied. The RLS policy may not be correctly configured.");
+        } else if (error.code === 'PGRST116') {
+          toast.error("Profile not found. Please refresh the page.");
         } else if (error.message) {
           toast.error(error.message);
         } else {
-          toast.error("Failed to update display name. Please try again.");
+          toast.error(`Failed to update display name (code: ${error.code || 'unknown'})`);
         }
       } else {
         console.log("Display name updated successfully:", data);
@@ -207,13 +227,18 @@ export default function AccountPage() {
       }
     } catch (err: any) {
       console.error("Exception updating display name:", err);
-      console.error("Exception details:", JSON.stringify(err, null, 2));
+      console.error("Exception type:", err?.constructor?.name);
+      console.error("Exception message:", err?.message);
+      console.error("Exception stack:", err?.stack);
+      console.error("Exception details:", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
       
       // Handle network errors specifically
-      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
-        toast.error("Network error. Please check your connection and try again.");
+      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError" || err?.message?.includes("NetworkError")) {
+        toast.error("Network error. Please check your internet connection and try again. If the problem persists, refresh the page.");
+      } else if (err?.message) {
+        toast.error(err.message);
       } else {
-        toast.error(err?.message || "Failed to update display name. Please try again.");
+        toast.error("An unexpected error occurred. Please try again.");
       }
     } finally {
       setDisplayNameSaving(false);
