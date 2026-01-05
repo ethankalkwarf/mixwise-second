@@ -169,6 +169,7 @@ export default function AccountPage() {
 
     setDisplayNameSaving(true);
     const trimmedName = displayNameInput.trim();
+    let updateSucceeded = false;
 
     // Try direct Supabase client first (faster, works when bot protection isn't active)
     if (supabase) {
@@ -182,8 +183,9 @@ export default function AccountPage() {
           .select()
           .single();
 
-        if (!error) {
-          console.log("Direct update succeeded:", data);
+        if (!error && data) {
+          console.log("✅ Direct update succeeded:", data);
+          updateSucceeded = true;
           // Update local state immediately with the returned data
           const newDisplayName = data?.display_name || '';
           setDisplayNameInput(newDisplayName);
@@ -243,7 +245,8 @@ export default function AccountPage() {
       }
 
       const data = await response.json();
-      console.log("API route update succeeded:", data);
+      console.log("✅ API route update succeeded:", data);
+      updateSucceeded = true;
       // Update local state immediately with the returned data
       const newDisplayName = data?.display_name || '';
       setDisplayNameInput(newDisplayName);
@@ -256,17 +259,22 @@ export default function AccountPage() {
       setDisplayNameSaving(false);
       return;
     } catch (err: any) {
-      console.error("API route exception:", err);
+      console.error("❌ API route exception:", err);
       console.error("Error type:", err?.constructor?.name);
       console.error("Error message:", err?.message);
+      console.error("Update succeeded flag:", updateSucceeded);
       
-      // Network errors might mean the request never reached the server
-      // But if we got here, the direct client update also failed
-      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
-        // Both direct client and API route failed - this is a real network issue
-        toast.error("Network error. Please check your connection and try again. If the problem persists, refresh the page.");
+      // Only show error if update didn't succeed
+      if (!updateSucceeded) {
+        if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
+          // Both direct client and API route failed - this is a real network issue
+          toast.error("Network error. Please check your connection and try again. If the problem persists, refresh the page.");
+        } else {
+          toast.error(err?.message || "Failed to update display name. Please try again.");
+        }
       } else {
-        toast.error(err?.message || "Failed to update display name. Please try again.");
+        // Update succeeded but something else failed - don't show error
+        console.log("Update succeeded, ignoring error from catch block");
       }
     } finally {
       setDisplayNameSaving(false);
