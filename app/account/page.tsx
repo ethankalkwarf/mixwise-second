@@ -160,16 +160,10 @@ export default function AccountPage() {
     fetchEmailPrefs();
   }, [user]);
 
-  // Update display name
+  // Update display name via API route
   const handleUpdateDisplayName = useCallback(async () => {
     if (!user) {
       toast.error("You must be signed in to update your display name");
-      return;
-    }
-
-    if (!supabase) {
-      console.error("Supabase client not available");
-      toast.error("Database connection error. Please refresh the page.");
       return;
     }
 
@@ -177,20 +171,21 @@ export default function AccountPage() {
     const trimmedName = displayNameInput.trim();
 
     try {
-      console.log("Updating display name:", { userId: user.id, displayName: trimmedName });
+      console.log("Updating display name via API:", { userId: user.id, displayName: trimmedName });
       
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ display_name: trimmedName || null })
-        .eq("id", user.id)
-        .select()
-        .single();
+      const response = await fetch('/api/profile/display-name', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ display_name: trimmedName || '' }),
+      });
 
-      if (error) {
-        console.error("Error updating display name:", error);
-        console.error("Error details:", JSON.stringify(error, null, 2));
-        const errorMessage = error.message || error.details || error.hint || "Failed to update display name. Please check your permissions.";
-        toast.error(errorMessage);
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Error updating display name:", data);
+        toast.error(data.error || "Failed to update display name");
       } else {
         console.log("Display name updated successfully:", data);
         toast.success("Display name updated");
@@ -199,7 +194,6 @@ export default function AccountPage() {
       }
     } catch (err: any) {
       console.error("Exception updating display name:", err);
-      console.error("Exception details:", JSON.stringify(err, null, 2));
       
       // Handle network errors specifically
       if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
@@ -210,7 +204,7 @@ export default function AccountPage() {
     } finally {
       setDisplayNameSaving(false);
     }
-  }, [user, displayNameInput, supabase, toast, refreshProfile]);
+  }, [user, displayNameInput, toast, refreshProfile]);
 
   // Update email preference
   const updateEmailPref = async (key: keyof typeof emailPrefs, value: boolean) => {
