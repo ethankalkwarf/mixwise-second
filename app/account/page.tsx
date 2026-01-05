@@ -173,6 +173,16 @@ export default function AccountPage() {
     try {
       console.log("Updating display name via API:", { userId: user.id, displayName: trimmedName });
       
+      // First, test if the endpoint is accessible
+      try {
+        const testResponse = await fetch('/api/profile/display-name', {
+          method: 'GET',
+        });
+        console.log("API endpoint test:", { status: testResponse.status, ok: testResponse.ok });
+      } catch (testError) {
+        console.error("API endpoint test failed:", testError);
+      }
+      
       const response = await fetch('/api/profile/display-name', {
         method: 'PUT',
         headers: {
@@ -181,9 +191,22 @@ export default function AccountPage() {
         body: JSON.stringify({ display_name: trimmedName || '' }),
       });
 
-      if (!response.ok && response.status === 404) {
-        toast.error("API endpoint not found. The update may not be deployed yet.");
-        return;
+      console.log("API response:", { 
+        status: response.status, 
+        statusText: response.statusText,
+        ok: response.ok,
+        url: response.url 
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          toast.error("API endpoint not found. The update may not be deployed yet. Please refresh the page.");
+          return;
+        }
+        if (response.status === 401) {
+          toast.error("You must be signed in to update your display name.");
+          return;
+        }
       }
 
       let data;
@@ -191,6 +214,8 @@ export default function AccountPage() {
         data = await response.json();
       } catch (jsonError) {
         console.error("Failed to parse response:", jsonError);
+        const text = await response.text();
+        console.error("Response text:", text);
         toast.error("Invalid response from server. Please try again.");
         return;
       }

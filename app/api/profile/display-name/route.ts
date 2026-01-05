@@ -77,3 +77,12 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+// GET endpoint for testing/debugging
+export async function GET(request: NextRequest) {
+  return NextResponse.json({ 
+    message: "Display name API is working",
+    endpoint: "/api/profile/display-name",
+    methods: ["GET", "PUT"]
+  });
+}
+
