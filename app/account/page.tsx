@@ -160,10 +160,16 @@ export default function AccountPage() {
     fetchEmailPrefs();
   }, [user]);
 
-  // Update display name via API route
+  // Update display name - try API route first, fallback to direct client
   const handleUpdateDisplayName = useCallback(async () => {
     if (!user) {
       toast.error("You must be signed in to update your display name");
+      return;
+    }
+
+    if (!supabase) {
+      console.error("Supabase client not available");
+      toast.error("Database connection error. Please refresh the page.");
       return;
     }
 
@@ -171,58 +177,28 @@ export default function AccountPage() {
     const trimmedName = displayNameInput.trim();
 
     try {
-      console.log("Updating display name via API:", { userId: user.id, displayName: trimmedName });
+      console.log("Updating display name:", { userId: user.id, displayName: trimmedName });
       
-      // First, test if the endpoint is accessible
-      try {
-        const testResponse = await fetch('/api/profile/display-name', {
-          method: 'GET',
-        });
-        console.log("API endpoint test:", { status: testResponse.status, ok: testResponse.ok });
-      } catch (testError) {
-        console.error("API endpoint test failed:", testError);
-      }
-      
-      const response = await fetch('/api/profile/display-name', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ display_name: trimmedName || '' }),
-      });
+      // Try direct Supabase client update (now that RLS policy is fixed)
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({ display_name: trimmedName || null })
+        .eq("id", user.id)
+        .select()
+        .single();
 
-      console.log("API response:", { 
-        status: response.status, 
-        statusText: response.statusText,
-        ok: response.ok,
-        url: response.url 
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          toast.error("API endpoint not found. The update may not be deployed yet. Please refresh the page.");
-          return;
+      if (error) {
+        console.error("Error updating display name:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        
+        // More specific error messages
+        if (error.code === 'PGRST301' || error.message?.includes('permission denied')) {
+          toast.error("Permission denied. Please check your account permissions.");
+        } else if (error.message) {
+          toast.error(error.message);
+        } else {
+          toast.error("Failed to update display name. Please try again.");
         }
-        if (response.status === 401) {
-          toast.error("You must be signed in to update your display name.");
-          return;
-        }
-      }
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        console.error("Failed to parse response:", jsonError);
-        const text = await response.text();
-        console.error("Response text:", text);
-        toast.error("Invalid response from server. Please try again.");
-        return;
-      }
-
-      if (!response.ok) {
-        console.error("Error updating display name:", data);
-        toast.error(data.error || "Failed to update display name");
       } else {
         console.log("Display name updated successfully:", data);
         toast.success("Display name updated");
@@ -231,6 +207,7 @@ export default function AccountPage() {
       }
     } catch (err: any) {
       console.error("Exception updating display name:", err);
+      console.error("Exception details:", JSON.stringify(err, null, 2));
       
       // Handle network errors specifically
       if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
@@ -241,7 +218,7 @@ export default function AccountPage() {
     } finally {
       setDisplayNameSaving(false);
     }
-  }, [user, displayNameInput, toast, refreshProfile]);
+  }, [user, displayNameInput, supabase, toast, refreshProfile]);
 
   // Update email preference
   const updateEmailPref = async (key: keyof typeof emailPrefs, value: boolean) => {
