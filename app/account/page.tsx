@@ -184,8 +184,11 @@ export default function AccountPage() {
 
         if (!error) {
           console.log("Direct update succeeded:", data);
+          // Update local state immediately
+          setDisplayNameInput(data.display_name || '');
           toast.success("Display name updated");
-          await refreshProfile();
+          // Refresh profile in background (don't wait for it)
+          refreshProfile().catch(err => console.error("Profile refresh failed:", err));
           setDisplayNameSaving(false);
           return;
         }
@@ -237,8 +240,11 @@ export default function AccountPage() {
 
       const data = await response.json();
       console.log("API route update succeeded:", data);
+      // Update local state immediately
+      setDisplayNameInput(data.display_name || '');
       toast.success("Display name updated");
-      await refreshProfile();
+      // Refresh profile in background (don't wait for it)
+      refreshProfile().catch(err => console.error("Profile refresh failed:", err));
     } catch (err: any) {
       console.error("API route exception:", err);
       toast.error("Network error. Please refresh the page and try again.");
