@@ -257,13 +257,14 @@ export default function AccountPage() {
       return;
     } catch (err: any) {
       console.error("API route exception:", err);
-      // Only show error if we haven't already succeeded via direct client
-      // Check if the update actually succeeded by verifying the error type
+      console.error("Error type:", err?.constructor?.name);
+      console.error("Error message:", err?.message);
+      
+      // Network errors might mean the request never reached the server
+      // But if we got here, the direct client update also failed
       if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
-        // This might be a network error during the request itself
-        // But the update might have still succeeded - check the database state
-        console.warn("Network error during API call, but update may have succeeded");
-        toast.error("Network error occurred. Please refresh the page to see if your change was saved.");
+        // Both direct client and API route failed - this is a real network issue
+        toast.error("Network error. Please check your connection and try again. If the problem persists, refresh the page.");
       } else {
         toast.error(err?.message || "Failed to update display name. Please try again.");
       }
