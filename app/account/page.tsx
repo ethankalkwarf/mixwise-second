@@ -188,13 +188,11 @@ export default function AccountPage() {
           const newDisplayName = data?.display_name || '';
           setDisplayNameInput(newDisplayName);
           toast.success("Display name updated");
-          // Try to refresh profile, but don't block on it
-          try {
-            await refreshProfile();
-          } catch (refreshErr) {
-            console.warn("Profile refresh failed (non-critical):", refreshErr);
-            // Don't show error - the update succeeded, UI is already updated
-          }
+          // Try to refresh profile in background (don't wait or show errors)
+          refreshProfile().catch(err => {
+            console.warn("Profile refresh failed (non-critical, update succeeded):", err);
+            // Silently fail - update succeeded, UI is already updated
+          });
           setDisplayNameSaving(false);
           return;
         }
