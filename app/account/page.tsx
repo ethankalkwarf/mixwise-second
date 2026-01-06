@@ -372,6 +372,7 @@ export default function AccountPage() {
 
   // Update username via API
   const updateUsername = useCallback(async (newUsername: string): Promise<{ success: boolean; error?: string }> => {
+    console.log('🔵 [CLIENT] updateUsername called with:', newUsername);
     try {
       const response = await fetch('/api/username', {
         method: 'POST',
@@ -381,15 +382,19 @@ export default function AccountPage() {
         body: JSON.stringify({ username: newUsername.trim() }),
       });
 
+      console.log('🔵 [CLIENT] API response status:', response.status, response.statusText);
+
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ [CLIENT] API error response:', errorData);
         return { success: false, error: errorData.error || 'Failed to update username' };
       }
 
       const data = await response.json();
+      console.log('✅ [CLIENT] API success response:', data);
       return { success: true };
     } catch (err) {
-      console.error('Error updating username:', err);
+      console.error('❌ [CLIENT] Error updating username:', err);
       return { success: false, error: 'Failed to update username' };
     }
   }, []);
@@ -717,53 +722,72 @@ export default function AccountPage() {
                                 return;
                               }
                               
-                              console.log('Setting username from display name:', {
+                              console.log('🔵 [CLIENT] Setting username from display name:', {
                                 suggestedUsername,
                                 currentUsername: profile?.username,
                                 currentPublicSlug: profile?.public_slug,
-                                userId: user?.id
+                                userId: user?.id,
+                                profileData: profile
                               });
+                              
+                              // First, check if user already has this username (case-insensitive)
+                              if (profile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
+                                console.log('✅ [CLIENT] User already has this username, refreshing profile');
+                                toast.success('You already have this username!');
+                                await refreshProfile();
+                                return;
+                              }
                               
                               // Skip the availability check and just try to set it directly
                               // The API will handle uniqueness checking and return appropriate errors
                               setIsCheckingUsername(true);
                               try {
+                                console.log('🔵 [CLIENT] Calling updateUsername API...');
                                 // Try to set the username directly - API will check uniqueness
                                 const result = await updateUsername(suggestedUsername);
                                 
+                                console.log('🔵 [CLIENT] API response:', result);
+                                
                                 if (result.success) {
-                                  console.log('✅ Username set successfully:', suggestedUsername);
+                                  console.log('✅ [CLIENT] Username set successfully:', suggestedUsername);
                                   toast.success('Username set! Your bar URL has been updated.');
                                   // Refresh profile to get updated username
                                   await refreshProfile();
                                 } else {
-                                  console.error('❌ Failed to set username:', result.error);
+                                  console.error('❌ [CLIENT] Failed to set username:', result.error);
                                   
                                   // If it says "already taken", check if it's actually the user's own username
                                   if (result.error?.includes('taken') || result.error?.includes('already')) {
+                                    console.log('🔵 [CLIENT] Username appears taken, checking if user already has it...');
                                     // Try to fetch current profile to see if user already has it
                                     try {
-                                      const { data: currentProfile } = await supabase
+                                      const { data: currentProfile, error: fetchError } = await supabase
                                         .from('profiles')
                                         .select('username')
                                         .eq('id', user?.id)
                                         .single();
                                       
-                                      console.log('Current profile username:', currentProfile?.username);
+                                      console.log('🔵 [CLIENT] Fetched current profile:', {
+                                        username: currentProfile?.username,
+                                        fetchError,
+                                        suggestedUsername,
+                                        match: currentProfile?.username?.toLowerCase() === suggestedUsername.toLowerCase()
+                                      });
                                       
                                       if (currentProfile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
                                         // User already has this username - just refresh
-                                        console.log('User already has this username, refreshing profile');
+                                        console.log('✅ [CLIENT] User already has this username, refreshing profile');
                                         toast.success('You already have this username!');
                                         await refreshProfile();
                                         setIsCheckingUsername(false);
                                         return;
                                       }
                                     } catch (fetchErr) {
-                                      console.error('Error fetching current profile:', fetchErr);
+                                      console.error('❌ [CLIENT] Error fetching current profile:', fetchErr);
                                     }
                                     
                                     // It's actually taken by someone else
+                                    console.error('❌ [CLIENT] Username is taken by another user');
                                     toast.error('This username is already taken. Please choose a different one.');
                                     setUsernameInput(suggestedUsername);
                                     setShowUsernameInput(true);
@@ -772,7 +796,7 @@ export default function AccountPage() {
                                   }
                                 }
                               } catch (err) {
-                                console.error('Error setting username:', err);
+                                console.error('❌ [CLIENT] Error setting username:', err);
                                 toast.error('An error occurred. Please try again.');
                               } finally {
                                 setIsCheckingUsername(false);
