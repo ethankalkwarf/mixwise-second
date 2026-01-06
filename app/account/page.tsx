@@ -717,26 +717,51 @@ export default function AccountPage() {
                                 return;
                               }
                               
-                              // Check if available
-                              setIsCheckingUsername(true);
-                              const isAvailable = await checkUsernameUnique(suggestedUsername);
-                              if (!isAvailable) {
-                                setIsCheckingUsername(false);
-                                toast.error('Suggested username is taken. Please set a custom username.');
-                                setUsernameInput(suggestedUsername);
-                                setShowUsernameInput(true);
-                                return;
-                              }
+                              console.log('Setting username from display name:', {
+                                suggestedUsername,
+                                currentUsername: profile?.username,
+                                currentPublicSlug: profile?.public_slug
+                              });
                               
-                              // Set the username
-                              const result = await updateUsername(suggestedUsername);
-                              if (result.success) {
-                                toast.success('Username set! Your bar URL has been updated.');
-                                refreshProfile();
-                              } else {
-                                toast.error(result.error || 'Failed to set username');
+                              // Check if available (this excludes current user)
+                              setIsCheckingUsername(true);
+                              try {
+                                const isAvailable = await checkUsernameUnique(suggestedUsername);
+                                console.log('Username availability check:', { suggestedUsername, isAvailable });
+                                
+                                if (!isAvailable) {
+                                  // If not available, check if it's because the user already has it
+                                  // (profile might not have refreshed yet)
+                                  if (profile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
+                                    console.log('User already has this username, skipping update');
+                                    toast.success('You already have this username!');
+                                    refreshProfile(); // Refresh to sync state
+                                    setIsCheckingUsername(false);
+                                    return;
+                                  }
+                                  
+                                  setIsCheckingUsername(false);
+                                  toast.error('Suggested username is taken. Please set a custom username.');
+                                  setUsernameInput(suggestedUsername);
+                                  setShowUsernameInput(true);
+                                  return;
+                                }
+                                
+                                // Set the username
+                                const result = await updateUsername(suggestedUsername);
+                                if (result.success) {
+                                  toast.success('Username set! Your bar URL has been updated.');
+                                  refreshProfile();
+                                } else {
+                                  console.error('Failed to set username:', result.error);
+                                  toast.error(result.error || 'Failed to set username');
+                                }
+                              } catch (err) {
+                                console.error('Error setting username:', err);
+                                toast.error('An error occurred. Please try again.');
+                              } finally {
+                                setIsCheckingUsername(false);
                               }
-                              setIsCheckingUsername(false);
                             }}
                             disabled={isCheckingUsername}
                             className="text-sm px-3 py-1.5 bg-olive/20 hover:bg-olive/30 text-forest rounded-lg transition-colors font-medium disabled:opacity-50"

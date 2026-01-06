@@ -40,27 +40,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check uniqueness (excluding current user)
-    const { data: existing, error: checkError } = await supabase
+    // Check uniqueness (excluding current user) - case-insensitive
+    // First check if current user already has this username (case-insensitive)
+    const { data: currentProfile, error: currentError } = await supabase
       .from('profiles')
-      .select('id')
-      .eq('username', trimmedUsername)
-      .neq('id', user.id)
-      .limit(1);
+      .select('id, username')
+      .eq('id', user.id)
+      .single();
 
-    if (checkError) {
-      console.error('Error checking username uniqueness:', checkError);
-      return NextResponse.json(
-        { error: "Failed to validate username" },
-        { status: 500 }
-      );
+    if (currentError) {
+      console.error('Error fetching current profile:', currentError);
     }
 
-    if (existing && existing.length > 0) {
-      return NextResponse.json(
-        { error: "Username is already taken" },
-        { status: 409 }
+    // If user already has this username (case-insensitive), allow the update
+    if (currentProfile?.username?.toLowerCase() === trimmedUsername.toLowerCase()) {
+      console.log('User already has this username, allowing update');
+      // Continue to update (which will just set it to the same value, but that's fine)
+    } else {
+      // Check if any other user has this username (case-insensitive)
+      const { data: allProfiles, error: checkError } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .neq('id', user.id)
+        .not('username', 'is', null);
+
+      if (checkError) {
+        console.error('Error checking username uniqueness:', checkError);
+        return NextResponse.json(
+          { error: "Failed to validate username" },
+          { status: 500 }
+        );
+      }
+
+      // Check case-insensitively
+      const trimmedLower = trimmedUsername.toLowerCase();
+      const isTaken = allProfiles?.some(
+        profile => profile.username?.toLowerCase() === trimmedLower
       );
+
+      if (isTaken) {
+        console.log('Username is taken (case-insensitive):', trimmedUsername);
+        return NextResponse.json(
+          { error: "Username is already taken" },
+          { status: 409 }
+        );
+      }
     }
 
     // Update username
@@ -112,12 +136,35 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if username is available (excluding current user)
-    const { data, error } = await supabase
+    // Use case-insensitive comparison to avoid false positives
+    const trimmedUsername = username.trim();
+    
+    // First, check if the current user already has this username (case-insensitive)
+    const { data: currentUserProfile, error: currentUserError } = await supabase
       .from('profiles')
-      .select('id')
-      .eq('username', username)
+      .select('id, username')
+      .eq('id', user.id)
+      .single();
+
+    if (currentUserError) {
+      console.error('Error fetching current user profile:', currentUserError);
+    }
+
+    if (currentUserProfile?.username && currentUserProfile.username.toLowerCase() === trimmedUsername.toLowerCase()) {
+      // User already has this username (maybe different case) - it's available to them
+      console.log('User already has this username:', currentUserProfile.username);
+      return NextResponse.json({
+        available: true
+      });
+    }
+
+    // Check if any other user has this username (case-insensitive using RPC or raw query)
+    // Since Supabase doesn't support ILIKE directly, we'll fetch and check in JS
+    const { data: allProfiles, error } = await supabase
+      .from('profiles')
+      .select('id, username')
       .neq('id', user.id)
-      .limit(1);
+      .not('username', 'is', null);
 
     if (error) {
       console.error('Error checking username availability:', error);
@@ -127,8 +174,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check case-insensitively in JavaScript
+    const trimmedLower = trimmedUsername.toLowerCase();
+    const isTaken = allProfiles?.some(
+      profile => profile.username?.toLowerCase() === trimmedLower
+    );
+
+    console.log('Username availability check:', {
+      username: trimmedUsername,
+      isTaken,
+      currentUserHasIt: currentUserProfile?.username?.toLowerCase() === trimmedLower
+    });
+
     return NextResponse.json({
-      available: !data || data.length === 0
+      available: !isTaken
     });
 
   } catch (error) {
