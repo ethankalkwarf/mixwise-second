@@ -720,41 +720,56 @@ export default function AccountPage() {
                               console.log('Setting username from display name:', {
                                 suggestedUsername,
                                 currentUsername: profile?.username,
-                                currentPublicSlug: profile?.public_slug
+                                currentPublicSlug: profile?.public_slug,
+                                userId: user?.id
                               });
                               
-                              // Check if available (this excludes current user)
+                              // Skip the availability check and just try to set it directly
+                              // The API will handle uniqueness checking and return appropriate errors
                               setIsCheckingUsername(true);
                               try {
-                                const isAvailable = await checkUsernameUnique(suggestedUsername);
-                                console.log('Username availability check:', { suggestedUsername, isAvailable });
-                                
-                                if (!isAvailable) {
-                                  // If not available, check if it's because the user already has it
-                                  // (profile might not have refreshed yet)
-                                  if (profile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
-                                    console.log('User already has this username, skipping update');
-                                    toast.success('You already have this username!');
-                                    refreshProfile(); // Refresh to sync state
-                                    setIsCheckingUsername(false);
-                                    return;
-                                  }
-                                  
-                                  setIsCheckingUsername(false);
-                                  toast.error('Suggested username is taken. Please set a custom username.');
-                                  setUsernameInput(suggestedUsername);
-                                  setShowUsernameInput(true);
-                                  return;
-                                }
-                                
-                                // Set the username
+                                // Try to set the username directly - API will check uniqueness
                                 const result = await updateUsername(suggestedUsername);
+                                
                                 if (result.success) {
+                                  console.log('✅ Username set successfully:', suggestedUsername);
                                   toast.success('Username set! Your bar URL has been updated.');
-                                  refreshProfile();
+                                  // Refresh profile to get updated username
+                                  await refreshProfile();
                                 } else {
-                                  console.error('Failed to set username:', result.error);
-                                  toast.error(result.error || 'Failed to set username');
+                                  console.error('❌ Failed to set username:', result.error);
+                                  
+                                  // If it says "already taken", check if it's actually the user's own username
+                                  if (result.error?.includes('taken') || result.error?.includes('already')) {
+                                    // Try to fetch current profile to see if user already has it
+                                    try {
+                                      const { data: currentProfile } = await supabase
+                                        .from('profiles')
+                                        .select('username')
+                                        .eq('id', user?.id)
+                                        .single();
+                                      
+                                      console.log('Current profile username:', currentProfile?.username);
+                                      
+                                      if (currentProfile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
+                                        // User already has this username - just refresh
+                                        console.log('User already has this username, refreshing profile');
+                                        toast.success('You already have this username!');
+                                        await refreshProfile();
+                                        setIsCheckingUsername(false);
+                                        return;
+                                      }
+                                    } catch (fetchErr) {
+                                      console.error('Error fetching current profile:', fetchErr);
+                                    }
+                                    
+                                    // It's actually taken by someone else
+                                    toast.error('This username is already taken. Please choose a different one.');
+                                    setUsernameInput(suggestedUsername);
+                                    setShowUsernameInput(true);
+                                  } else {
+                                    toast.error(result.error || 'Failed to set username');
+                                  }
                                 }
                               } catch (err) {
                                 console.error('Error setting username:', err);
