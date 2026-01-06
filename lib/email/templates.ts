@@ -976,3 +976,115 @@ Unsubscribe: ${unsubscribeUrl}
 
   return { subject, html, text };
 }
+
+/**
+ * Wedding Cocktail Recommendations Email Template
+ * Sent when users complete the wedding cocktail finder quiz
+ */
+export function weddingRecommendationsTemplate({
+  recommendations,
+}: {
+  recommendations: Array<{
+    name: string;
+    slug: string;
+    base_spirit: string | null;
+  }>;
+}): EmailTemplate {
+  const subject = `Your ${recommendations.length} Wedding Cocktail Recommendations`;
+
+  // Build recommendations list HTML
+  const recommendationsList = recommendations
+    .map((rec, index) => {
+      const spirit = rec.base_spirit ? ` • ${rec.base_spirit}` : "";
+      return `
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #E6EBE4;">
+            <strong style="color: #3A4D39; font-size: 18px;">${index + 1}. ${rec.name}</strong>
+            ${spirit ? `<span style="color: #5F6F5E; font-size: 14px;">${spirit}</span>` : ""}
+            <br>
+            <a href="https://getmixwise.com/cocktails/${rec.slug}" style="color: #BC5A45; text-decoration: none; font-size: 14px;">View Recipe →</a>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        ${baseStyles}
+      </head>
+      <body>
+        ${getPreheaderHtml(`Your ${recommendations.length} personalized wedding cocktail recommendations`)}
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #F9F7F2; padding: 20px;">
+          <tr>
+            <td align="center">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="background-color: #FFFFFF; border-radius: 12px; overflow: hidden; border: 1px solid #E6EBE4;">
+                <!-- Header -->
+                <tr>
+                  <td style="background-color: #FFFFFF; padding: 40px 40px 24px 40px; border-bottom: 2px solid #BC5A45;">
+                    <h1 style="margin: 0; font-family: 'DM Serif Display', Georgia, serif; font-size: 28px; color: #3A4D39; line-height: 1.3;">
+                      Your Wedding Cocktail Recommendations
+                    </h1>
+                  </td>
+                </tr>
+                
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 32px 40px;">
+                    <p style="margin: 0 0 24px 0; font-size: 16px; color: #2C3628; line-height: 1.6;">
+                      Thank you for using our wedding cocktail finder! Here are your <strong>${recommendations.length}</strong> personalized cocktail recommendations based on your preferences.
+                    </p>
+
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 24px 0;">
+                      ${recommendationsList}
+                    </table>
+
+                    <div style="text-align: center; margin: 32px 0;">
+                      <a href="https://getmixwise.com/wedding-menu" style="display: inline-block; background-color: #BC5A45; color: #F9F7F2; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                        View All Recommendations
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                
+                <!-- Footer -->
+                <tr>
+                  <td style="background-color: #E6EBE4; padding: 24px 40px; text-align: center; border-top: 1px solid #D1DAD0;">
+                    <p style="margin: 0 0 12px 0; font-size: 13px; color: #5F6F5E;">
+                      This email was sent from MixWise. You can view and save your recommendations anytime by visiting your account.
+                    </p>
+                    <p style="margin: 0; font-size: 13px; color: #5F6F5E;">
+                      Questions? Reply to this email or visit <a href="https://getmixwise.com/contact" style="color: #BC5A45; text-decoration: none;">getmixwise.com/contact</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `.trim();
+
+  const text = `
+Your Wedding Cocktail Recommendations
+
+Thank you for using our wedding cocktail finder! Here are your ${recommendations.length} personalized cocktail recommendations:
+
+${recommendations.map((rec, index) => 
+  `${index + 1}. ${rec.name}${rec.base_spirit ? ` • ${rec.base_spirit}` : ""}\n   View: https://getmixwise.com/cocktails/${rec.slug}`
+).join("\n\n")}
+
+View all recommendations: https://getmixwise.com/wedding-menu
+
+---
+This email was sent from MixWise.
+Questions? Visit https://getmixwise.com/contact
+  `.trim();
+
+  return { subject, html, text };
+}

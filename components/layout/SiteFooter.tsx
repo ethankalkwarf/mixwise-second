@@ -6,7 +6,7 @@ const FOOTER_LINKS = {
   explore: [
     { label: "Browse Cocktail Recipes", href: "/cocktails" },
     { label: "Open Mixology Wizard", href: "/mix" },
-    { label: "Dashboard", href: "/dashboard" },
+    { label: "Wedding Cocktail Finder", href: "/wedding-menu" },
   ],
   learn: [
     { label: "About", href: "/about" },

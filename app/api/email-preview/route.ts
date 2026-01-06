@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { confirmEmailTemplate, resetPasswordTemplate, welcomeEmailTemplate, weeklyDigestTemplate } from "@/lib/email/templates";
+import { confirmEmailTemplate, resetPasswordTemplate, welcomeEmailTemplate, weeklyDigestTemplate, weddingRecommendationsTemplate } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Sample data for preview
@@ -84,6 +84,7 @@ function wrapInPreviewPage(templateName: string, emailHtml: string, subject: str
     { id: "weekly-digest", name: "Weekly Digest (with bar)" },
     { id: "weekly-digest-empty", name: "Weekly Digest (no bar)" },
     { id: "password-reset", name: "Password Reset" },
+    { id: "wedding-recommendations", name: "Wedding Recommendations" },
   ];
 
   return `
@@ -441,6 +442,18 @@ export async function GET(request: NextRequest) {
       emailTemplate = resetPasswordTemplate({
         resetUrl: SAMPLE_RESET_URL,
         userEmail: SAMPLE_EMAIL,
+      });
+      break;
+    case "wedding-recommendations":
+      templateName = "Wedding Recommendations";
+      emailTemplate = weddingRecommendationsTemplate({
+        recommendations: [
+          { name: "Old Fashioned", slug: "old-fashioned", base_spirit: "Whiskey" },
+          { name: "Moscow Mule", slug: "moscow-mule", base_spirit: "Vodka" },
+          { name: "Mojito", slug: "mojito", base_spirit: "Rum" },
+          { name: "Negroni", slug: "negroni", base_spirit: "Gin" },
+          { name: "Margarita", slug: "margarita", base_spirit: "Tequila" },
+        ],
       });
       break;
     case "confirmation":
