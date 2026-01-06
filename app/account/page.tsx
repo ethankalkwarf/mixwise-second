@@ -683,12 +683,12 @@ export default function AccountPage() {
                 <div className="p-4 bg-olive/10 border border-olive/20 rounded-xl">
                   <div className="flex items-start gap-3">
                     <GlobeAltIcon className="w-5 h-5 text-olive mt-0.5" />
-                    <div>
+                    <div className="flex-1">
                       <h4 className="font-semibold text-forest mb-1">Your bar is now public!</h4>
                       <p className="text-sm text-sage mb-3">
                         Share your bar profile with friends using this link:
                       </p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mb-3">
                         <code className="flex-1 px-3 py-2 bg-cream text-forest text-sm rounded-lg border border-mist font-mono">
                           {typeof window !== 'undefined' ? `${window.location.origin}/bar/${shareableBarUrl}` : `/bar/${shareableBarUrl}`}
                         </code>
@@ -703,6 +703,48 @@ export default function AccountPage() {
                           Copy
                         </button>
                       </div>
+                      {/* Show suggestion if using public_slug but have display name */}
+                      {!profile?.username && profile?.public_slug && profile?.display_name && (
+                        <div className="mt-3 pt-3 border-t border-olive/20">
+                          <p className="text-sm text-sage mb-2">
+                            💡 <strong>Tip:</strong> Set a username from your display name to get a cleaner URL like <code className="text-xs bg-cream px-1.5 py-0.5 rounded">/bar/{generateDefaultUsername() || 'username'}</code>
+                          </p>
+                          <button
+                            onClick={async () => {
+                              const suggestedUsername = generateDefaultUsername();
+                              if (!suggestedUsername) {
+                                toast.error('Unable to generate username from display name');
+                                return;
+                              }
+                              
+                              // Check if available
+                              setIsCheckingUsername(true);
+                              const isAvailable = await checkUsernameUnique(suggestedUsername);
+                              if (!isAvailable) {
+                                setIsCheckingUsername(false);
+                                toast.error('Suggested username is taken. Please set a custom username.');
+                                setUsernameInput(suggestedUsername);
+                                setShowUsernameInput(true);
+                                return;
+                              }
+                              
+                              // Set the username
+                              const result = await updateUsername(suggestedUsername);
+                              if (result.success) {
+                                toast.success('Username set! Your bar URL has been updated.');
+                                refreshProfile();
+                              } else {
+                                toast.error(result.error || 'Failed to set username');
+                              }
+                              setIsCheckingUsername(false);
+                            }}
+                            disabled={isCheckingUsername}
+                            className="text-sm px-3 py-1.5 bg-olive/20 hover:bg-olive/30 text-forest rounded-lg transition-colors font-medium disabled:opacity-50"
+                          >
+                            {isCheckingUsername ? 'Setting...' : `Set username: ${generateDefaultUsername() || 'username'}`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
