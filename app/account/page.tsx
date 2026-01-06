@@ -187,11 +187,22 @@ export default function AccountPage() {
           // Update succeeded - use the returned data
           console.log("✅ Direct update succeeded:", data);
           updateSucceeded = true;
+          
+          // CRITICAL: Clear localStorage cache to force fresh fetch
+          try {
+            const cacheKey = `mixwise_profile_${user.id}`;
+            localStorage.removeItem(cacheKey);
+            console.log("Cleared profile cache after update");
+          } catch (cacheErr) {
+            console.warn("Failed to clear cache:", cacheErr);
+          }
+          
           // Update local state immediately with the returned data
           const returnedDisplayName = data?.display_name || '';
           setDisplayNameInput(returnedDisplayName);
           toast.success("Display name updated");
-          // Try to refresh profile in background (don't wait or show errors)
+          
+          // Force a fresh profile fetch (bypass cache)
           refreshProfile().catch(err => {
             console.warn("Profile refresh failed (non-critical, update succeeded):", err);
             // Silently fail - update succeeded, UI is already updated
@@ -251,11 +262,22 @@ export default function AccountPage() {
       if (data?.success || data?.display_name !== undefined) {
         console.log("✅ API route update succeeded:", data);
         updateSucceeded = true;
+        
+        // CRITICAL: Clear localStorage cache to force fresh fetch
+        try {
+          const cacheKey = `mixwise_profile_${user.id}`;
+          localStorage.removeItem(cacheKey);
+          console.log("Cleared profile cache after API update");
+        } catch (cacheErr) {
+          console.warn("Failed to clear cache:", cacheErr);
+        }
+        
         // Update local state immediately with the returned data
         const returnedDisplayName = data?.display_name || '';
         setDisplayNameInput(returnedDisplayName);
         toast.success("Display name updated");
-        // Try to refresh profile, but don't block on it or show errors
+        
+        // Force a fresh profile fetch (bypass cache)
         refreshProfile().catch(err => {
           console.warn("Profile refresh failed (non-critical):", err);
           // Don't show error - the update succeeded, UI is already updated

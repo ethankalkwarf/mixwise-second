@@ -271,12 +271,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, fetchProfile, getProfileCacheKey]);
 
   // Refresh profile data (can be called after profile updates)
+  // IMPORTANT: Clears cache to ensure fresh data after updates
   const refreshProfile = useCallback(async () => {
     if (user) {
+      // Clear cache to force fresh fetch
+      try {
+        const cacheKey = getProfileCacheKey(user.id);
+        localStorage.removeItem(cacheKey);
+        console.log("[UserProvider] Cleared profile cache before refresh");
+      } catch (cacheErr) {
+        console.warn("[UserProvider] Failed to clear cache:", cacheErr);
+      }
+      
       const newProfile = await ensureProfileExists(user.id, user.email || "");
       setProfile(newProfile);
     }
-  }, [user, ensureProfileExists]);
+  }, [user, ensureProfileExists, getProfileCacheKey]);
 
   // Main auth state initialization and subscription
   useEffect(() => {
