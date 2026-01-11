@@ -135,7 +135,7 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
                   />
                 )}
                 {/* Floating badge */}
-                <div className="absolute -bottom-4 -right-4 bg-white text-charcoal rounded-full px-5 py-3 text-sm font-medium shadow-card border border-mist z-10">
+                <div className="absolute bottom-4 right-4 bg-white text-charcoal rounded-full px-5 py-3 text-sm font-medium shadow-card border border-mist z-10">
                   ✨ 300+ Cocktail Recipes
                 </div>
               </div>
