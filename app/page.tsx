@@ -52,6 +52,12 @@ export default async function HomePage() {
     ? [...popularCocktails].sort(() => Math.random() - 0.5).slice(0, 5)
     : [...allCocktails].sort(() => Math.random() - 0.5).slice(0, 5);
 
+  // Get random cocktails with images for hero rotation (5 cocktails, changes on every refresh)
+  const heroRotationCocktails = [...allCocktails]
+    .filter(c => c.externalImageUrl || c.image)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 5);
+
   const heroTitle = settings?.heroTitle || "Discover Your Next Favorite Cocktail";
   const heroSubtitle =
     settings?.heroSubtitle ||
@@ -66,7 +72,7 @@ export default async function HomePage() {
       />
 
       {/* Hero Section */}
-      <Hero title={heroTitle} subtitle={heroSubtitle} featuredCocktails={featuredCocktails} />
+      <Hero title={heroTitle} subtitle={heroSubtitle} featuredCocktails={heroRotationCocktails} />
 
       {/* Personalized Sections for Logged-in Users - Only render if user is authenticated */}
       <PersonalizedSections

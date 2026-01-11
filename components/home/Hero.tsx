@@ -33,17 +33,15 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
     <section className="bg-cream pt-8 pb-12 sm:pt-10 sm:pb-16 lg:pt-12 lg:pb-20 xl:pt-16 xl:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Green hero container */}
-        <div className="relative bg-mist border border-mist rounded-3xl p-4 sm:p-6 lg:p-9 lg:max-h-[80vh] shadow-soft overflow-hidden">
+        <div className="relative bg-mist border border-mist rounded-3xl p-4 sm:p-6 lg:p-9 shadow-soft overflow-hidden">
           
-          <div className="relative flex flex-col xl:flex-row gap-8 xl:gap-16 items-center">
+          <div className="relative flex flex-col xl:flex-row gap-6 xl:gap-12 items-center">
             {/* Content */}
             <div className="flex-1 text-center xl:text-left max-w-2xl xl:max-w-none">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-semibold text-forest leading-tight mb-6 tracking-tight">
-                Find Your<br className="hidden xl:block" />
-                <span className="xl:hidden"> </span>
-                <span className="italic text-olive">Next Favorite</span> Cocktail
+              <h1 className="text-5xl sm:text-6xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-semibold text-forest leading-tight mb-5 tracking-tight">
+                Find Your <span className="italic text-olive">Next<br />Favorite</span> Cocktail
               </h1>
-              <p className="text-base sm:text-lg xl:text-xl text-sage leading-relaxed mb-8 max-w-xl mx-auto xl:mx-0">
+              <p className="text-base sm:text-lg xl:text-xl text-sage leading-relaxed mb-7 max-w-xl mx-auto xl:mx-0">
                 {subtitle}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center xl:justify-start">
@@ -63,7 +61,7 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
             </div>
 
             {/* Image */}
-            <div className="flex-shrink-0 w-full max-w-sm xl:max-w-lg 2xl:max-w-xl">
+            <div className="flex-shrink-0 w-full max-w-[268px] xl:max-w-[358px] 2xl:max-w-[403px]">
               <div className="relative aspect-[3/4] rounded-3xl overflow-hidden bg-mist shadow-card">
                 {hasRotatingImages ? (
                   <>
