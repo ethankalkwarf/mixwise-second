@@ -1,14 +1,34 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/sanityImage";
+import type { SanityCocktail } from "@/lib/sanityTypes";
 
 interface HeroProps {
   title: string;
   subtitle: string;
+  featuredCocktails?: SanityCocktail[];
 }
 
-export function Hero({ title, subtitle }: HeroProps) {
+export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Rotate images every 3 seconds if we have featured cocktails
+  useEffect(() => {
+    if (featuredCocktails.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % featuredCocktails.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [featuredCocktails.length]);
+
+  // Default image if no featured cocktails
+  const defaultImageUrl = "https://usgsomofsav4obpi.public.blob.vercel-storage.com/Gemini_Generated_Image_mqk0vymqk0vymqk0.png";
+  const hasRotatingImages = featuredCocktails.length > 0;
+
   return (
     <section className="bg-cream pt-8 pb-16 sm:pt-12 sm:pb-20 lg:pt-16 lg:pb-24 xl:pt-20 xl:pb-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -44,18 +64,79 @@ export function Hero({ title, subtitle }: HeroProps) {
 
             {/* Image */}
             <div className="flex-shrink-0 w-full max-w-sm xl:max-w-lg 2xl:max-w-xl">
-              <div className="relative">
-                <Image
-                  src="https://usgsomofsav4obpi.public.blob.vercel-storage.com/Gemini_Generated_Image_mqk0vymqk0vymqk0.png"
-                  alt="Cocktail preparation with fresh ingredients"
-                  width={600}
-                  height={480}
-                  className="rounded-3xl shadow-card w-full h-auto object-cover"
-                  priority
-                />
+              <div className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-mist shadow-card">
+                {hasRotatingImages ? (
+                  <>
+                    {featuredCocktails.map((cocktail, index) => {
+                      const isActive = index === currentImageIndex;
+                      const imageUrl = getImageUrl(cocktail.image, {
+                        width: 600,
+                        height: 750,
+                        quality: 90,
+                        auto: 'format'
+                      }) || cocktail.externalImageUrl;
+
+                      return (
+                        <div
+                          key={cocktail._id}
+                          className={`absolute inset-0 transition-opacity duration-1000 ${
+                            isActive ? "opacity-100" : "opacity-0"
+                          }`}
+                        >
+                          {imageUrl ? (
+                            <>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={imageUrl}
+                                alt={cocktail.name}
+                                className="absolute inset-0 w-full h-full object-cover"
+                                loading={index === 0 ? "eager" : "lazy"}
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const parent = e.currentTarget.parentElement;
+                                  if (parent) {
+                                    const fallback = parent.querySelector('.image-fallback');
+                                    if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                                  }
+                                }}
+                              />
+                              <div className="image-fallback hidden absolute inset-0 w-full h-full items-center justify-center text-sage text-5xl bg-mist">
+                                🍸
+                              </div>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                              <div className="absolute bottom-0 left-0 right-0 p-6">
+                                <h3 className="text-white font-display font-bold text-xl md:text-2xl mb-1 drop-shadow-lg">
+                                  {cocktail.name}
+                                </h3>
+                                {cocktail.primarySpirit && (
+                                  <p className="text-white/90 text-xs uppercase tracking-widest font-semibold">
+                                    {cocktail.primarySpirit}
+                                  </p>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="absolute inset-0 w-full h-full flex items-center justify-center text-sage text-5xl">
+                              🍸
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <Image
+                    src={defaultImageUrl}
+                    alt="Cocktail preparation with fresh ingredients"
+                    width={600}
+                    height={750}
+                    className="w-full h-full object-cover"
+                    priority
+                  />
+                )}
                 {/* Floating badge */}
-                <div className="absolute -bottom-4 -right-4 bg-white text-charcoal rounded-full px-5 py-3 text-sm font-medium shadow-card border border-mist">
-                  ✨ 190+ Cocktail Recipes
+                <div className="absolute -bottom-4 -right-4 bg-white text-charcoal rounded-full px-5 py-3 text-sm font-medium shadow-card border border-mist z-10">
+                  ✨ 300+ Cocktail Recipes
                 </div>
               </div>
             </div>

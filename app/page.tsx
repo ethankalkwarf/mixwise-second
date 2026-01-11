@@ -66,7 +66,7 @@ export default async function HomePage() {
       />
 
       {/* Hero Section */}
-      <Hero title={heroTitle} subtitle={heroSubtitle} />
+      <Hero title={heroTitle} subtitle={heroSubtitle} featuredCocktails={featuredCocktails} />
 
       {/* Personalized Sections for Logged-in Users - Only render if user is authenticated */}
       <PersonalizedSections
