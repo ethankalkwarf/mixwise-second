@@ -30,7 +30,7 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
   const hasRotatingImages = featuredCocktails.length > 0;
 
   return (
-    <section className="bg-cream pt-8 pb-16 sm:pt-12 sm:pb-20 lg:pt-16 lg:pb-24 xl:pt-20 xl:pb-32">
+    <section className="bg-cream pt-8 pb-12 sm:pt-10 sm:pb-16 lg:pt-12 lg:pb-20 xl:pt-16 xl:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Green hero container */}
         <div className="relative bg-mist border border-mist rounded-3xl p-6 sm:p-10 lg:p-14 shadow-soft overflow-hidden">
@@ -38,7 +38,7 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
           <div className="relative flex flex-col xl:flex-row gap-8 xl:gap-16 items-center">
             {/* Content */}
             <div className="flex-1 text-center xl:text-left max-w-2xl xl:max-w-none">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-semibold text-forest leading-tight mb-6 tracking-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-semibold text-forest leading-tight mb-6 tracking-tight">
                 Find Your<br className="hidden xl:block" />
                 <span className="xl:hidden"> </span>
                 <span className="italic text-olive">Next Favorite</span> Cocktail
@@ -64,14 +64,14 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
 
             {/* Image */}
             <div className="flex-shrink-0 w-full max-w-sm xl:max-w-lg 2xl:max-w-xl">
-              <div className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-mist shadow-card">
+              <div className="relative aspect-[3/4] rounded-3xl overflow-hidden bg-mist shadow-card">
                 {hasRotatingImages ? (
                   <>
                     {featuredCocktails.map((cocktail, index) => {
                       const isActive = index === currentImageIndex;
                       const imageUrl = getImageUrl(cocktail.image, {
                         width: 600,
-                        height: 750,
+                        height: 800,
                         quality: 90,
                         auto: 'format'
                       }) || cocktail.externalImageUrl;
@@ -129,7 +129,7 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
                     src={defaultImageUrl}
                     alt="Cocktail preparation with fresh ingredients"
                     width={600}
-                    height={750}
+                    height={800}
                     className="w-full h-full object-cover"
                     priority
                   />
