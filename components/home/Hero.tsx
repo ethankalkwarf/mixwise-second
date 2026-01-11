@@ -33,7 +33,7 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
     <section className="bg-cream pt-8 pb-12 sm:pt-10 sm:pb-16 lg:pt-12 lg:pb-20 xl:pt-16 xl:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Green hero container */}
-        <div className="relative bg-mist border border-mist rounded-3xl p-5 sm:p-8 lg:p-11 shadow-soft overflow-hidden">
+        <div className="relative bg-mist border border-mist rounded-3xl p-4 sm:p-6 lg:p-9 shadow-soft overflow-hidden">
           
           <div className="relative flex flex-col xl:flex-row gap-8 xl:gap-16 items-center">
             {/* Content */}
