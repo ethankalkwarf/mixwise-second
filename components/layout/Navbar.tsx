@@ -369,5 +369,6 @@ export function Navbar() {
         </Transition>
       </nav>
     </header>
+    </>
   );
 }
