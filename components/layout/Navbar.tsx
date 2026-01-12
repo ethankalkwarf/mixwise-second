@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, Transition } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon, UserCircleIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon, UserCircleIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { CocktailSearch } from "@/components/search/CocktailSearch";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const { user, profile, isAuthenticated, isLoading, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
 
@@ -24,39 +27,127 @@ export function Navbar() {
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || null;
   const userInitial = displayName.charAt(0).toUpperCase();
 
+  // Close search when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!desktopSearchOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (searchContainerRef.current && !searchContainerRef.current.contains(target)) {
+        setDesktopSearchOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDesktopSearchOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [desktopSearchOpen]);
+
+  // Keyboard shortcut: Cmd/Ctrl+K to open search
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        setDesktopSearchOpen(true);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   return (
-    <header className="border-b border-mist bg-cream/95 backdrop-blur-md sticky top-0 z-50">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6" aria-label="Main navigation">
-        <div className="h-16 sm:h-18 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center">
-            <BrandLogo size="md" variant="dark" />
+    <>
+      {/* Search Modal Overlay */}
+      {desktopSearchOpen && (
+        <Transition
+          show={desktopSearchOpen}
+          as={Fragment}
+          enter="transition ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="transition ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-forest/20 backdrop-blur-sm z-[100] flex items-start justify-center pt-32">
+            <div
+              ref={searchContainerRef}
+              className="w-full max-w-2xl mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CocktailSearch
+                variant="desktop"
+                onClose={() => setDesktopSearchOpen(false)}
+              />
+            </div>
           </div>
+        </Transition>
+      )}
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link
-              href="/cocktail-of-the-day"
-              className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
-            >
-              Drink of the Day
-            </Link>
-            <Link
-              href="/cocktails"
-              className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
-            >
-              Browse Cocktail Recipes
-            </Link>
-            <Link
-              href="/mix"
-              className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
-            >
-              Open Mixology Wizard
-            </Link>
-          </div>
+      <header className="border-b border-mist bg-cream/95 backdrop-blur-md sticky top-0 z-50 relative">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 relative" aria-label="Main navigation">
+          <div className="h-16 sm:h-18 flex items-center justify-between relative">
+            {/* Logo */}
+            <div className="flex items-center">
+              <BrandLogo size="md" variant="dark" />
+            </div>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-3">
+            {/* Desktop Navigation - Centered */}
+            <div className="hidden md:flex items-center space-x-6 absolute left-1/2 -translate-x-1/2">
+              <Link
+                href="/cocktail-of-the-day"
+                className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
+              >
+                Drink of the Day
+              </Link>
+              <Link
+                href="/cocktails"
+                className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
+              >
+                Browse Cocktail Recipes
+              </Link>
+              <Link
+                href="/mix"
+                className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
+              >
+                Open Mixology Wizard
+              </Link>
+            </div>
+
+            {/* Desktop Search Icon - Right side */}
+            <div className="hidden md:flex items-center space-x-3">
+              <button
+                onClick={() => setDesktopSearchOpen(!desktopSearchOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-sage hover:text-forest border border-mist rounded-lg hover:bg-mist/50 transition-colors"
+                aria-label="Search cocktails (Cmd+K or Ctrl+K)"
+                aria-expanded={desktopSearchOpen}
+              >
+                <MagnifyingGlassIcon className="w-4 h-4" />
+                <span className="hidden lg:inline">Search</span>
+                <kbd className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-sage bg-mist/50 border border-mist/50 rounded">
+                  <span className="text-[10px]">
+                    {typeof window !== "undefined" && /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)
+                      ? "⌘"
+                      : "Ctrl"}
+                  </span>
+                  <span>K</span>
+                </kbd>
+              </button>
+
+              {/* Desktop Actions */}
+              <div className="flex items-center space-x-3">
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-mist animate-pulse" />
             ) : isAuthenticated ? (
@@ -150,7 +241,8 @@ export function Navbar() {
                 </button>
               </>
             )}
-          </div>
+              </div>
+            </div>
 
           {/* Mobile Menu Button */}
           <button
