@@ -112,17 +112,31 @@ export function Navbar() {
               >
                 Drink of the Day
               </Link>
+              <div className="relative group">
+                <Link
+                  href="/mix"
+                  className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
+                >
+                  What Can I Make?
+                </Link>
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+                                opacity-0 group-hover:opacity-100
+                                bg-forest text-cream text-xs font-medium
+                                px-3 py-2 rounded-lg shadow-lg
+                                pointer-events-none
+                                transition-opacity duration-200 z-50
+                                w-48 text-center">
+                  Find cocktails by ingredients in your bar
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1
+                                  border-4 border-transparent border-t-forest"></div>
+                </div>
+              </div>
               <Link
                 href="/cocktails"
                 className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
               >
-                Browse Cocktail Recipes
-              </Link>
-              <Link
-                href="/mix"
-                className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
-              >
-                Open Mixology Wizard
+                All Recipes
               </Link>
             </div>
 
@@ -130,7 +144,7 @@ export function Navbar() {
             <div className="hidden md:flex items-center space-x-3">
               <button
                 onClick={() => setDesktopSearchOpen(!desktopSearchOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-sage hover:text-forest border border-mist rounded-lg hover:bg-mist/50 transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-sage hover:text-forest border border-mist rounded-lg hover:bg-mist/50 active:scale-95 transition-all duration-200 hover:shadow-sm"
                 aria-label="Search cocktails (Cmd+K or Ctrl+K)"
                 aria-expanded={desktopSearchOpen}
               >
@@ -235,7 +249,7 @@ export function Navbar() {
                 </button>
                 <button
                   onClick={() => openAuthDialog({ mode: "signup" })}
-                  className="inline-flex items-center rounded-full px-5 py-2 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark transition-colors shadow-sm"
+                  className="inline-flex items-center rounded-full px-5 py-2 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   Sign Up Free
                 </button>
@@ -280,18 +294,19 @@ export function Navbar() {
                 Drink of the Day
               </Link>
               <Link
+                href="/mix"
+                className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+                title="Find cocktails by ingredients in your bar"
+              >
+                What Can I Make?
+              </Link>
+              <Link
                 href="/cocktails"
                 className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Browse Cocktail Recipes
-              </Link>
-              <Link
-                href="/mix"
-                className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Open Mixology Wizard
+                All Recipes
               </Link>
 
               <div className="border-t border-mist mt-4 pt-4">
