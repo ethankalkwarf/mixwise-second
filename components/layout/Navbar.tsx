@@ -119,8 +119,8 @@ export function Navbar() {
                 >
                   What Can I Make?
                 </Link>
-                {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+                {/* Tooltip - appears below */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2
                                 opacity-0 group-hover:opacity-100
                                 bg-forest text-cream text-xs font-medium
                                 px-3 py-2 rounded-lg shadow-lg
@@ -128,8 +128,8 @@ export function Navbar() {
                                 transition-opacity duration-200 z-50
                                 w-48 text-center">
                   Find cocktails by ingredients in your bar
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1
-                                  border-4 border-transparent border-t-forest"></div>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-0
+                                  border-4 border-transparent border-b-forest"></div>
                 </div>
               </div>
               <Link
