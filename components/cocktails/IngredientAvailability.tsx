@@ -140,11 +140,33 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
     );
   }
 
-  const progressColor = percentage === 100 
-    ? "bg-olive" 
-    : percentage >= 50 
-      ? "bg-terracotta" 
-      : "bg-stone";
+  // If user has everything, show just a compact "READY" badge
+  // Check both percentage and missing count to be safe
+  if (total > 0 && percentage === 100 && missing === 0 && available === total) {
+    return (
+      <div className="rounded-xl border border-olive/20 bg-olive/10 p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-olive rounded-full flex items-center justify-center">
+              <CheckCircleIcon className="w-6 h-6 text-cream" />
+            </div>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-forest">
+              You have all ingredients!
+            </p>
+            <p className="text-xs text-sage mt-0.5">
+              Ready to make this cocktail
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const progressColor = percentage >= 50 
+    ? "bg-terracotta" 
+    : "bg-stone";
 
   return (
     <div className="rounded-xl border border-mist bg-cream p-5">
@@ -155,11 +177,9 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
         </h3>
         <span
           className={`text-sm font-bold ${
-            percentage === 100
-              ? "text-olive"
-              : percentage >= 50
-                ? "text-terracotta"
-                : "text-sage"
+            percentage >= 50
+              ? "text-terracotta"
+              : "text-sage"
           }`}
         >
           {percentage}% ready
@@ -257,21 +277,6 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
               <span className="group-hover:translate-x-0.5 transition-transform">→</span>
             </Link>
           </div>
-        </div>
-      )}
-
-      {/* Ready message */}
-      {percentage === 100 && (
-        <div className="border-t border-mist pt-4">
-          <p className="text-sm text-olive font-medium mb-3 text-center">
-            ✓ You have everything you need to make this cocktail!
-          </p>
-          <Link
-            href="/shopping-list"
-            className="block text-center text-sm font-medium text-sage hover:text-terracotta transition-colors"
-          >
-            View shopping list →
-          </Link>
         </div>
       )}
     </div>
