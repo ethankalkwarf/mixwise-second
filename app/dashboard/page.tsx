@@ -16,6 +16,7 @@ import { getCocktailsWithIngredientsClient, getMixDataClient } from "@/lib/cockt
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { createClient } from "@/lib/supabase/client";
 import { formatCocktailName } from "@/lib/formatters";
+import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import Image from "next/image";
 import type { MixIngredient } from "@/lib/mixTypes";
 import type { BadgeDefinition } from "@/lib/badges";
@@ -72,6 +73,8 @@ export default function DashboardPage() {
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const [dataLoadError, setDataLoadError] = useState<string | null>(null);
+  const [favoriteImageUrls, setFavoriteImageUrls] = useState<Map<string, string | null>>(new Map());
+  const [recentImageUrls, setRecentImageUrls] = useState<Map<string, string | null>>(new Map());
   const DASHBOARD_READY_LIMIT = 10;
 
   // CRITICAL FIX: Refs to prevent duplicate data fetches and dialogs
@@ -79,12 +82,8 @@ export default function DashboardPage() {
   const hasFetchedBadges = useRef<string | null>(null);
   const hasShownAuthDialog = useRef(false);
 
-  // Redirect to onboarding if needed
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && needsOnboarding) {
-      router.push("/onboarding");
-    }
-  }, [authLoading, isAuthenticated, needsOnboarding, router]);
+  // Onboarding is disabled - new users go directly to mix wizard
+  // This redirect is no longer needed since onboarding is marked as completed automatically
 
   // Note: No conversion needed anymore - ingredientIds are already in canonical UUID format
   // This is guaranteed by useBarIngredients which normalizes all IDs
@@ -195,6 +194,50 @@ export default function DashboardPage() {
 
     fetchRecommendations();
   }, [isAuthenticated, ingredientIds, allCocktails, allIngredients]);
+
+  // Fetch image URLs from Sanity for favorites
+  useEffect(() => {
+    async function fetchFavoriteImages() {
+      if (favorites.length === 0) {
+        setFavoriteImageUrls(new Map());
+        return;
+      }
+
+      try {
+        const cocktailIds = favorites.map(fav => fav.cocktail_id);
+        const imageUrls = await getCocktailImageUrls(cocktailIds);
+        setFavoriteImageUrls(imageUrls);
+      } catch (error) {
+        console.error("Error fetching favorite images:", error);
+      }
+    }
+
+    if (!favsLoading && favorites.length > 0) {
+      fetchFavoriteImages();
+    }
+  }, [favorites, favsLoading]);
+
+  // Fetch image URLs from Sanity for recently viewed
+  useEffect(() => {
+    async function fetchRecentImages() {
+      if (recentlyViewed.length === 0) {
+        setRecentImageUrls(new Map());
+        return;
+      }
+
+      try {
+        const cocktailIds = recentlyViewed.map(item => item.cocktail_id);
+        const imageUrls = await getCocktailImageUrls(cocktailIds);
+        setRecentImageUrls(imageUrls);
+      } catch (error) {
+        console.error("Error fetching recent images:", error);
+      }
+    }
+
+    if (!recentLoading && recentlyViewed.length > 0) {
+      fetchRecentImages();
+    }
+  }, [recentlyViewed, recentLoading]);
 
   // Note: Ingredients are already fetched by getMixDataClient() above
   // No need for duplicate fetch - this was causing race conditions and flickering
@@ -688,27 +731,38 @@ export default function DashboardPage() {
                       </div>
                     ) : favorites.length > 0 ? (
                       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-                        {favorites.slice(0, 6).map((fav) => (
-                          <Link
-                            key={fav.id}
-                            href={`/cocktails/${fav.cocktail_slug}`}
-                            className="flex-shrink-0 w-32 group"
-                          >
-                            <Image
-                              src={fav.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDEyOCA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg=="}
-                              alt={fav.cocktail_name || "Cocktail"}
-                              width={128}
-                              height={96}
-                              className="w-32 h-24 rounded-2xl object-cover mb-2"
-                              onError={(e) => {
-                                e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
-                              }}
-                            />
-                            <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
-                              {fav.cocktail_name}
-                            </p>
-                          </Link>
-                        ))}
+                        {favorites.slice(0, 6).map((fav) => {
+                          // Try to get image URL from Supabase cocktails table first, fallback to stored URL, then placeholder
+                          // Handle both null and empty string cases
+                          const supabaseImageUrl = favoriteImageUrls.get(fav.cocktail_id);
+                          const storedImageUrl = fav.cocktail_image_url;
+                          const imageUrl = 
+                            (supabaseImageUrl && supabaseImageUrl.trim() && supabaseImageUrl.trim().length > 0 ? supabaseImageUrl.trim() : null) ||
+                            (storedImageUrl && storedImageUrl.trim() && storedImageUrl.trim().length > 0 ? storedImageUrl.trim() : null) ||
+                            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDEyOCA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
+                          
+                          return (
+                            <Link
+                              key={fav.id}
+                              href={`/cocktails/${fav.cocktail_slug}`}
+                              className="flex-shrink-0 w-32 group"
+                            >
+                              <Image
+                                src={imageUrl}
+                                alt={fav.cocktail_name || "Cocktail"}
+                                width={128}
+                                height={96}
+                                className="w-32 h-24 rounded-2xl object-cover mb-2"
+                                onError={(e) => {
+                                  e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
+                                }}
+                              />
+                              <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
+                                {formatCocktailName(fav.cocktail_name || "Cocktail")}
+                              </p>
+                            </Link>
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="text-sage text-sm">
@@ -737,27 +791,38 @@ export default function DashboardPage() {
                     </div>
                   ) : recentlyViewed.length > 0 ? (
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-                      {recentlyViewed.slice(0, 6).map((item) => (
-                        <Link
-                          key={item.id}
-                          href={`/cocktails/${item.cocktail_slug}`}
-                          className="flex-shrink-0 w-32 group"
-                        >
-                          <Image
-                            src={item.cocktail_image_url || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
-                            alt={item.cocktail_name || "Cocktail"}
-                            width={128}
-                            height={96}
-                            className="w-32 h-24 rounded-2xl object-cover mb-2"
-                            onError={(e) => {
-                              e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
-                            }}
-                          />
-                          <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
-                            {item.cocktail_name}
-                          </p>
-                        </Link>
-                      ))}
+                      {recentlyViewed.slice(0, 6).map((item) => {
+                        // Try to get image URL from Supabase cocktails table first, fallback to stored URL, then placeholder
+                        // Handle both null and empty string cases
+                        const supabaseImageUrl = recentImageUrls.get(item.cocktail_id);
+                        const storedImageUrl = item.cocktail_image_url;
+                        const imageUrl = 
+                          (supabaseImageUrl && supabaseImageUrl.trim() && supabaseImageUrl.trim().length > 0 ? supabaseImageUrl.trim() : null) ||
+                          (storedImageUrl && storedImageUrl.trim() && storedImageUrl.trim().length > 0 ? storedImageUrl.trim() : null) ||
+                          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
+                        
+                        return (
+                          <Link
+                            key={item.id}
+                            href={`/cocktails/${item.cocktail_slug}`}
+                            className="flex-shrink-0 w-32 group"
+                          >
+                            <Image
+                              src={imageUrl}
+                              alt={item.cocktail_name || "Cocktail"}
+                              width={128}
+                              height={96}
+                              className="w-32 h-24 rounded-2xl object-cover mb-2"
+                              onError={(e) => {
+                                e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
+                              }}
+                            />
+                            <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
+                              {formatCocktailName(item.cocktail_name || "Cocktail")}
+                            </p>
+                          </Link>
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="text-sage text-sm">
@@ -899,13 +964,7 @@ export default function DashboardPage() {
                     </div>
                   )
                 )}
-                <button
-                  onClick={() => router.push("/onboarding")}
-                  className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group w-full text-left"
-                >
-                  <span className="text-forest group-hover:text-terracotta transition-colors">Update Preferences</span>
-                  <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
-                </button>
+                {/* Preferences onboarding is disabled - users manage preferences via the mix wizard */}
               </div>
             </section>
           </div>

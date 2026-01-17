@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { SectionHeader } from "@/components/common/SectionHeader";
+import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import { getImageUrl } from "@/lib/sanityImage";
+import { formatCocktailName } from "@/lib/formatters";
 import { PlusCircleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
-import type { SanityCocktail, SanityImage } from "@/lib/sanityTypes";
 
 interface MixCocktail {
   _id: string;
@@ -33,6 +34,8 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
   const { ingredientIds, isLoading: barLoading, addIngredient } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
+  const [favoriteImageUrls, setFavoriteImageUrls] = useState<Map<string, string | null>>(new Map());
+  const [recentImageUrls, setRecentImageUrls] = useState<Map<string, string | null>>(new Map());
 
   // Only show loading state AFTER auth is confirmed
   const dataLoading = barLoading || favsLoading || recentLoading;
@@ -73,6 +76,50 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       oneAway: oneAway.slice(0, 4),
     };
   }, [allCocktails, ingredientIds]);
+
+  // Fetch image URLs from Sanity for favorites
+  useEffect(() => {
+    async function fetchFavoriteImages() {
+      if (favorites.length === 0) {
+        setFavoriteImageUrls(new Map());
+        return;
+      }
+
+      try {
+        const cocktailIds = favorites.map(fav => fav.cocktail_id);
+        const imageUrls = await getCocktailImageUrls(cocktailIds);
+        setFavoriteImageUrls(imageUrls);
+      } catch (error) {
+        console.error("Error fetching favorite images:", error);
+      }
+    }
+
+    if (!favsLoading && favorites.length > 0) {
+      fetchFavoriteImages();
+    }
+  }, [favorites, favsLoading]);
+
+  // Fetch image URLs from Sanity for recently viewed
+  useEffect(() => {
+    async function fetchRecentImages() {
+      if (recentlyViewed.length === 0) {
+        setRecentImageUrls(new Map());
+        return;
+      }
+
+      try {
+        const cocktailIds = recentlyViewed.map(item => item.cocktail_id);
+        const imageUrls = await getCocktailImageUrls(cocktailIds);
+        setRecentImageUrls(imageUrls);
+      } catch (error) {
+        console.error("Error fetching recent images:", error);
+      }
+    }
+
+    if (!recentLoading && recentlyViewed.length > 0) {
+      fetchRecentImages();
+    }
+  }, [recentlyViewed, recentLoading]);
 
   // IMPORTANT: Don't show anything if auth is still loading or user is not authenticated
   // This prevents skeleton states from showing for anonymous users
@@ -153,18 +200,30 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
             </Link>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" role="list">
-            {favorites.slice(0, 8).map((fav) => (
-              <SmallCocktailCard
-                key={fav.cocktail_id}
-                cocktail={{
-                  _id: fav.cocktail_id,
-                  name: fav.cocktail_name || "Cocktail",
-                  slug: { current: fav.cocktail_slug || "" },
-                  externalImageUrl: fav.cocktail_image_url || undefined,
-                }}
-                badge={undefined}
-              />
-            ))}
+            {favorites.slice(0, 8).map((fav) => {
+              // Try to get image URL from Supabase cocktails table first, fallback to stored URL
+              // Handle both null and empty string cases
+              const supabaseImageUrl = favoriteImageUrls.get(fav.cocktail_id);
+              const storedImageUrl = fav.cocktail_image_url;
+              // Prioritize Supabase URL, then stored URL, ensuring non-empty strings
+              const imageUrl = 
+                (supabaseImageUrl && supabaseImageUrl.trim() && supabaseImageUrl.trim().length > 0 ? supabaseImageUrl.trim() : null) ||
+                (storedImageUrl && storedImageUrl.trim() && storedImageUrl.trim().length > 0 ? storedImageUrl.trim() : null) ||
+                undefined;
+              
+              return (
+                <SmallCocktailCard
+                  key={fav.cocktail_id}
+                  cocktail={{
+                    _id: fav.cocktail_id,
+                    name: fav.cocktail_name || "Cocktail",
+                    slug: { current: fav.cocktail_slug || "" },
+                    externalImageUrl: imageUrl,
+                  }}
+                  badge={undefined}
+                />
+              );
+            })}
           </div>
         </section>
       )}
@@ -174,18 +233,26 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
         <section aria-labelledby="recent-title">
           <SectionHeader title="Continue Exploring" id="recent-title" />
           <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin" role="list">
-            {recentlyViewed.slice(0, 8).map((item) => (
-              <SmallCocktailCard
-                key={item.cocktail_id}
-                cocktail={{
-                  _id: item.cocktail_id,
-                  name: item.cocktail_name || "Cocktail",
-                  slug: { current: item.cocktail_slug || "" },
-                  externalImageUrl: item.cocktail_image_url || undefined,
-                }}
-                compact
-              />
-            ))}
+            {recentlyViewed.slice(0, 8).map((item) => {
+              // Try to get image URL from Supabase cocktails table first, fallback to stored URL
+              // Handle both null and empty string cases
+              const supabaseImageUrl = recentImageUrls.get(item.cocktail_id);
+              const storedImageUrl = item.cocktail_image_url;
+              const imageUrl = (supabaseImageUrl && supabaseImageUrl.trim()) || (storedImageUrl && storedImageUrl.trim()) || undefined;
+              
+              return (
+                <SmallCocktailCard
+                  key={item.cocktail_id}
+                  cocktail={{
+                    _id: item.cocktail_id,
+                    name: item.cocktail_name || "Cocktail",
+                    slug: { current: item.cocktail_slug || "" },
+                    externalImageUrl: imageUrl,
+                  }}
+                  compact
+                />
+              );
+            })}
           </div>
         </section>
       )}
@@ -210,7 +277,9 @@ interface SmallCocktailCardProps {
 }
 
 function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }: SmallCocktailCardProps) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 }) || cocktail.externalImageUrl;
+  // Prioritize externalImageUrl (from Supabase) over Sanity image for favorites/recent
+  const sanityImageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 });
+  const imageUrl = cocktail.externalImageUrl || sanityImageUrl || null;
 
   return (
     <Link
@@ -243,7 +312,7 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }
       </div>
       <div className={`${compact ? "p-3" : "p-4"} flex-1`}>
         <h3 className={`font-display font-bold ${compact ? "text-sm" : "text-base"} text-forest group-hover:text-terracotta transition-colors line-clamp-2`}>
-          {cocktail.name}
+          {formatCocktailName(cocktail.name)}
         </h3>
       </div>
     </Link>
@@ -257,7 +326,9 @@ interface OneAwayCardProps {
 }
 
 function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCardProps) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 }) || cocktail.externalImageUrl;
+  // Prioritize externalImageUrl (from Supabase) over Sanity image
+  const sanityImageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 });
+  const imageUrl = cocktail.externalImageUrl || sanityImageUrl || null;
 
   return (
     <div className="flex gap-4 p-4 rounded-2xl border border-mist bg-white hover:shadow-soft transition-all">
