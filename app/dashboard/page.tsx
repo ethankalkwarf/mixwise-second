@@ -760,6 +760,7 @@ export default function DashboardPage() {
                               <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
                                 {formatCocktailName(fav.cocktail_name || "Cocktail")}
                               </p>
+                              {/* Cache-busting comment: v2 */}
                             </Link>
                           );
                         })}
