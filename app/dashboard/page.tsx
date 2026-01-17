@@ -943,6 +943,7 @@ export default function DashboardPage() {
                     preferences.public_bar_enabled ? (
                       <Link
                         href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
+                        prefetch={false}
                         className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
                       >
                         <span className="text-forest group-hover:text-terracotta transition-colors">Share My Bar</span>

@@ -11,6 +11,7 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   Squares2X2Icon,
+  ShareIcon,
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
@@ -300,6 +301,9 @@ function UserMenu({
   userInitial: string;
   onSignOut: () => void;
 }) {
+  const { user, profile } = useUser();
+  const barSlug = profile?.username || profile?.public_slug || user?.id;
+  
   return (
     <Menu as="div" className="relative">
       <Menu.Button className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-mist/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta">
@@ -349,6 +353,22 @@ function UserMenu({
                 </Link>
               )}
             </Menu.Item>
+            {barSlug && (
+              <Menu.Item>
+                {({ active }) => (
+                  <Link
+                    href={`/bar/${barSlug}`}
+                    prefetch={false}
+                    className={`flex items-center gap-2 px-4 py-2.5 text-sm ${
+                      active ? "bg-mist/50 text-terracotta" : "text-forest"
+                    }`}
+                  >
+                    <ShareIcon className="w-4 h-4" />
+                    Share My Bar
+                  </Link>
+                )}
+              </Menu.Item>
+            )}
             <Menu.Item>
               {({ active }) => (
                 <Link
