@@ -42,6 +42,7 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
   const avatarUrl = profile?.avatar_url || null;
   const userInitial = displayName.charAt(0).toUpperCase();
+  const barSlug = profile?.username || profile?.public_slug || user?.id || null;
 
   return (
     <header className="border-b border-mist bg-cream/95 backdrop-blur-md sticky top-0 z-50">
@@ -109,6 +110,7 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
                   avatarUrl={avatarUrl}
                   userInitial={userInitial}
                   onSignOut={handleSignOut}
+                  barSlug={barSlug}
                 />
               ) : (
                 <>
@@ -294,16 +296,15 @@ function UserMenu({
   displayName,
   avatarUrl,
   userInitial,
-  onSignOut
+  onSignOut,
+  barSlug
 }: {
   displayName: string;
   avatarUrl: string | null;
   userInitial: string;
   onSignOut: () => void;
+  barSlug: string | null;
 }) {
-  const { user, profile } = useUser();
-  const barSlug = profile?.username || profile?.public_slug || user?.id;
-  
   return (
     <Menu as="div" className="relative">
       <Menu.Button className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-mist/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta">

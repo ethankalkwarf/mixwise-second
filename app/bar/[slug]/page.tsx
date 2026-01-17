@@ -7,7 +7,6 @@ import { createServerClient } from "@/lib/supabase/server";
 import { getUserBarIngredients } from "@/lib/cocktails.server";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
-import { BarProfileRefresh } from "@/components/bar/BarProfileClient";
 import { SITE_CONFIG } from "@/lib/seo";
 import type { Database } from "@/lib/supabase/database.types";
 import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, ShareIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
@@ -312,14 +311,12 @@ export default async function BarPage({ params }: Props) {
             </div>
 
             {/* Bar Content */}
-            <BarProfileRefresh>
-              <BarProfile
-                ingredientIds={cocktailIngredientIds}
-                ingredients={ingredients}
-                isOwner={true}
-                showAllRecipesLink={true}
-              />
-            </BarProfileRefresh>
+            <BarProfile
+              ingredientIds={cocktailIngredientIds}
+              ingredients={ingredients}
+              isOwner={true}
+              showAllRecipesLink={true}
+            />
           </div>
         </MainContainer>
       </div>
@@ -422,17 +419,15 @@ export default async function BarPage({ params }: Props) {
           </div>
 
           {/* Bar Content */}
-          <BarProfileRefresh>
-            <BarProfile
-              ingredientIds={cocktailIngredientIds}
-              ingredients={ingredients}
-              isOwner={false}
-              showAlmostThere={false}
-              isPublicView={true}
-              userFirstName={firstName}
-              userId={profile.id}
-            />
-          </BarProfileRefresh>
+          <BarProfile
+            ingredientIds={cocktailIngredientIds}
+            ingredients={ingredients}
+            isOwner={false}
+            showAlmostThere={false}
+            isPublicView={true}
+            userFirstName={firstName}
+            userId={profile.id}
+          />
 
           {/* CTA to Join MixWise */}
           <div className="card p-8 text-center bg-gradient-to-r from-terracotta/10 to-olive/10 border-terracotta/20">
