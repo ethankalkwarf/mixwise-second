@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 
@@ -14,7 +14,6 @@ import { useBarIngredients } from "@/hooks/useBarIngredients";
  */
 export function BarProfileRefresh({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
   const { favorites } = useFavorites();
   const { ingredientIds } = useBarIngredients();
   const previousFavoritesRef = useRef<string>("");
@@ -22,9 +21,15 @@ export function BarProfileRefresh({ children }: { children: React.ReactNode }) {
   const hasMountedRef = useRef(false);
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastRefreshTimeRef = useRef(0);
+  const [isBarPage, setIsBarPage] = useState(false);
   
   // Check if we're on a bar page (only activate refresh logic there)
-  const isBarPage = pathname.startsWith('/bar/');
+  // Use useEffect to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsBarPage(window.location.pathname.startsWith('/bar/'));
+    }
+  }, []);
   
   // Helper to trigger page refresh
   const triggerRefresh = (reason: string) => {
