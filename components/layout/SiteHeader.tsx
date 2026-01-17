@@ -338,6 +338,7 @@ function UserMenu({
           <div className="px-4 py-3 border-b border-mist">
             <p className="text-sm font-medium text-forest truncate">{displayName}</p>
             <p className="text-xs text-sage">Free account</p>
+            <p className="text-xs text-red-500 font-bold mt-1">DEPLOY-TEST-2026-01-17</p>
           </div>
 
           <div className="py-1">
