@@ -11,6 +11,10 @@ import { SITE_CONFIG } from "@/lib/seo";
 import type { Database } from "@/lib/supabase/database.types";
 import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, ShareIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 
+// Force dynamic rendering to ensure fresh data on every request
+// This ensures ingredients and favorites are always up-to-date
+export const dynamic = 'force-dynamic';
+
 // Create a Supabase client with anon key for public reads
 function createPublicClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
