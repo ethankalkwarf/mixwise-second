@@ -71,6 +71,14 @@ export async function BarProfile({
       getUserFavorites(userId),
     ]);
 
+    console.log('[BAR PROFILE] Favorites debug:', {
+      totalFavorites: favorites.length,
+      favoriteIds: favorites.map(f => f.cocktail_id),
+      favoriteSlugs: favorites.map(f => f.cocktail_slug),
+      totalCocktails: validCocktails.length,
+      ingredientIdsCount: ingredientIds.length,
+    });
+
     const favoriteIdSet = new Set(favorites.map((f) => f.cocktail_id).filter(Boolean));
     const favoriteSlugSet = new Set(favorites.map((f) => f.cocktail_slug).filter(Boolean) as string[]);
 
@@ -80,7 +88,14 @@ export async function BarProfile({
       stapleIngredientIds: stapleIds,
     });
 
-    favoriteReady = ready
+    console.log('[BAR PROFILE] Matching debug:', {
+      readyCount: ready.length,
+      readyCocktailIds: ready.map(m => m.cocktail.id).slice(0, 10),
+      readyCocktailSlugs: ready.map(m => m.cocktail.slug).slice(0, 10),
+    });
+
+    // First, try to find favorites in the ready (makeable) cocktails
+    const makeableFavorites = ready
       .map((m) => m.cocktail)
       .filter((c) => favoriteSlugSet.has(c.slug) || favoriteIdSet.has(c.id))
       .map((c) => ({
@@ -89,6 +104,46 @@ export async function BarProfile({
         slug: c.slug,
         imageUrl: c.imageUrl || null,
       }));
+
+    // If we have favorites that aren't makeable, also show them from the full cocktail list
+    // This ensures all favorites are visible, not just makeable ones
+    const unmatchableFavorites = favorites
+      .filter((f) => {
+        const isInMakeable = makeableFavorites.some(mf => 
+          mf.id === f.cocktail_id || mf.slug === f.cocktail_slug
+        );
+        return !isInMakeable;
+      })
+      .map((f) => {
+        // Try to find the cocktail in the full list
+        const cocktail = validCocktails.find(
+          (c) => c.id === f.cocktail_id || c.slug === f.cocktail_slug
+        );
+        if (cocktail) {
+          return {
+            id: cocktail.id,
+            name: cocktail.name || f.cocktail_name || 'Unknown',
+            slug: cocktail.slug || f.cocktail_slug || '',
+            imageUrl: cocktail.imageUrl || f.cocktail_image_url || null,
+          };
+        }
+        // If cocktail not found in list, use favorite data directly
+        return {
+          id: f.cocktail_id,
+          name: f.cocktail_name || 'Unknown',
+          slug: f.cocktail_slug || '',
+          imageUrl: f.cocktail_image_url || null,
+        };
+      })
+      .filter((f) => f.id && f.name !== 'Unknown'); // Filter out invalid entries
+
+    favoriteReady = [...makeableFavorites, ...unmatchableFavorites];
+
+    console.log('[BAR PROFILE] Final favorites:', {
+      makeableCount: makeableFavorites.length,
+      unmatchableCount: unmatchableFavorites.length,
+      totalFavoriteReady: favoriteReady.length,
+    });
   }
 
   return (

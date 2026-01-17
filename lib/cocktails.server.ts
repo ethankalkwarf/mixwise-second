@@ -592,7 +592,7 @@ export async function getTodaysDailyCocktailSlug(): Promise<string | null> {
  */
 export async function getUserBarIngredients(userId: string): Promise<Array<{
   id: string;
-  ingredient_id: number;
+  ingredient_id: string; // Changed from number to string (UUID)
   ingredient_name: string | null;
   ingredient_category?: string | null;
   inventory_id?: string;
@@ -609,33 +609,33 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
     return [];
   }
 
-  // Create mapping from lowercased name to ID
-  const nameToIdMap = new Map<string, number>();
-  // Create mapping from numeric ID to ingredient name for lookup
-  const idToNameMap = new Map<number, string>();
-  const idToCategoryMap = new Map<number, string | null>();
+  // Create mapping from lowercased name to UUID ID
+  const nameToIdMap = new Map<string, string>();
+  // Create mapping from UUID ID to ingredient name for lookup
+  const idToNameMap = new Map<string, string>();
+  const idToCategoryMap = new Map<string, string | null>();
   (allIngredients || []).forEach(ing => {
     if (ing.name) {
-      nameToIdMap.set(ing.name.toLowerCase(), ing.id);
-      idToNameMap.set(ing.id, ing.name);
-      idToCategoryMap.set(ing.id, (ing as any).category ?? null);
+      const uuidId = String(ing.id); // ingredients.id is UUID, convert to string
+      nameToIdMap.set(ing.name.toLowerCase(), uuidId);
+      idToNameMap.set(uuidId, ing.name);
+      idToCategoryMap.set(uuidId, (ing as any).category ?? null);
     }
   });
 
-  // Helper function to convert string ID to numeric ID
-  const convertToNumericId = (stringId: string, name?: string | null): number | null => {
-    // First try to parse as integer
-    let parsed = parseInt(stringId, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      return parsed;
+  // Helper function to convert any ID format to UUID string
+  const convertToUuidId = (stringId: string, name?: string | null): string | null => {
+    // If it's already a valid UUID, return it
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(stringId)) {
+      return stringId;
     }
 
-    // Handle ingredient- prefixed IDs
+    // Handle ingredient- prefixed IDs (could be UUID or numeric)
     if (stringId.startsWith('ingredient-')) {
       const idPart = stringId.substring('ingredient-'.length);
-      parsed = parseInt(idPart, 10);
-      if (!isNaN(parsed) && parsed > 0) {
-        return parsed;
+      if (uuidRegex.test(idPart)) {
+        return idPart;
       }
     }
 
@@ -700,35 +700,29 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
 
   return (barIngredients || [])
     .map(item => {
-      const numericId = convertToNumericId(item.ingredient_id, item.ingredient_name);
+      const uuidId = convertToUuidId(item.ingredient_id, item.ingredient_name);
       
-      // IMPORTANT: Don't drop items we can't convert - preserve them with a fallback ID
+      // IMPORTANT: Don't drop items we can't convert - preserve them with original ID
       // This prevents data loss when IDs can't be mapped
-      if (!numericId) {
-        console.warn(`Could not convert ingredient ID "${item.ingredient_id}" to numeric ID, using fallback`);
-        // Use a hash of the string ID as a fallback numeric ID
-        // This ensures the item is still displayed even if we can't map it
-        const fallbackId = Math.abs(item.ingredient_id.split('').reduce((a, b) => {
-          a = ((a << 5) - a) + b.charCodeAt(0);
-          return a & a;
-        }, 0)) || 999999;
-        
+      if (!uuidId) {
+        console.warn(`[getUserBarIngredients] Could not convert ingredient ID "${item.ingredient_id}" to UUID, using original ID`);
+        // Use the original ID as-is (might be a UUID already or a name)
         return {
           id: item.id.toString(),
-          ingredient_id: fallbackId,
+          ingredient_id: item.ingredient_id, // Keep as string
           ingredient_name: item.ingredient_name || item.ingredient_id,
           ingredient_category: null,
         };
       }
 
       // Get the proper ingredient name from the ingredients table
-      const properName = idToNameMap.get(numericId) || item.ingredient_name || item.ingredient_id;
+      const properName = idToNameMap.get(uuidId) || item.ingredient_name || item.ingredient_id;
 
       return {
         id: item.id.toString(),
-        ingredient_id: numericId,
+        ingredient_id: uuidId, // Now returns UUID string
         ingredient_name: properName,
-        ingredient_category: idToCategoryMap.get(numericId) ?? null,
+        ingredient_category: idToCategoryMap.get(uuidId) ?? null,
         // No inventory_id for bar_ingredients
       };
     });
@@ -799,9 +793,9 @@ export async function getUserFavorites(userId: string): Promise<Array<{
 /**
  * Get user's bar ingredient IDs only (for quick checks)
  * First tries inventories/inventory_items tables, then falls back to bar_ingredients
- * Returns numeric IDs that match ingredients.id
+ * Returns UUID strings that match ingredients.id
  */
-export async function getUserBarIngredientIds(userId: string): Promise<number[]> {
+export async function getUserBarIngredientIds(userId: string): Promise<string[]> {
   const ingredients = await getUserBarIngredients(userId);
   return ingredients.map(item => item.ingredient_id);
 }

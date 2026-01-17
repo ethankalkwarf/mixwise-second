@@ -32,7 +32,7 @@ interface PublicProfile {
 }
 
 interface BarIngredient {
-  ingredient_id: string;
+  ingredient_id: string; // UUID string from ingredients table
   ingredient_name: string | null;
   ingredient_category?: string | null;
 }
@@ -256,7 +256,7 @@ export default async function BarPage({ params }: Props) {
   const firstName = displayName.split(' ')[0] || displayName; // Get first name for personalized heading
   const isPublic = preferences?.public_bar_enabled === true;
 
-  // Use normalized ingredient IDs for matching (canonical numeric strings)
+  // Use ingredient IDs directly (they're already UUID strings from getUserBarIngredients)
   const cocktailIngredientIds = ingredients.map(ing => ing.ingredient_id);
 
   // For owner view, show owner interface
