@@ -366,6 +366,7 @@ function UserMenu({
                   >
                     <ShareIcon className="w-4 h-4" />
                     Share My Bar
+                    {/* DEPLOYMENT-TEST-v2 */}
                   </Link>
                 )}
               </Menu.Item>
