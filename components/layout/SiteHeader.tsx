@@ -110,7 +110,9 @@ export function SiteHeader({ navItems }: SiteHeaderProps) {
                   avatarUrl={avatarUrl}
                   userInitial={userInitial}
                   onSignOut={handleSignOut}
-                  barSlug={barSlug}
+                  barSlug={barSlug || user?.id || null}
+                  isAuthenticated={isAuthenticated}
+                  userId={user?.id || null}
                 />
               ) : (
                 <>
@@ -297,13 +299,17 @@ function UserMenu({
   avatarUrl,
   userInitial,
   onSignOut,
-  barSlug
+  barSlug,
+  isAuthenticated,
+  userId
 }: {
   displayName: string;
   avatarUrl: string | null;
   userInitial: string;
   onSignOut: () => void;
   barSlug: string | null;
+  isAuthenticated: boolean;
+  userId: string | null;
 }) {
   return (
     <Menu as="div" className="relative">
@@ -354,11 +360,11 @@ function UserMenu({
                 </Link>
               )}
             </Menu.Item>
-            {isAuthenticated && user?.id && (
+            {isAuthenticated && userId && (
               <Menu.Item>
                 {({ active }) => (
                   <Link
-                    href={`/bar/${barSlug || user.id}`}
+                    href={`/bar/${barSlug || userId}`}
                     prefetch={false}
                     className={`flex items-center gap-2 px-4 py-2.5 text-sm ${
                       active ? "bg-mist/50 text-terracotta" : "text-forest"
