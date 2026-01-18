@@ -87,32 +87,79 @@ export function RecipeContent({
     text: quantity === 1 ? ing.text : scaleIngredient(ing.text, quantity),
   }));
 
-  // Use matched ingredients if available, otherwise fall back to parsing
-  const shoppingListIngredients = matchedIngredients && matchedIngredients.length === ingredients.length
-    ? matchedIngredients.map((matched, index) => ({
-        id: matched.id,
-        name: matched.name,
-        category: matched.category || 'cocktail',
-      }))
-    : ingredients.map((ing, index) => {
-        // Fallback: Better ingredient name extraction
-        const text = ing.text.trim();
+  // Helper function to extract ingredient name from text (matches ingredientMatching.ts logic)
+  const extractIngredientNameFromText = (fullText: string): string => {
+    return fullText
+      .trim()
+      .replace(/^\d+(\/\d+)?\.?\s*(oz|cup|cups|tbsp|tsp|dash|dashes|drop|drops|ml|cl|shot|jigger|part|parts|slice|slices|wheel|wheels|twist|twists|peel|peels|wedge|wedges|sprig|sprigs|leaf|leaves|piece|pieces)\s+/i, '')
+      .replace(/^\d+\s+/, '')
+      .trim();
+  };
 
-        // Remove common quantity patterns at the start
-        const cleanedName = text
-          .replace(/^\d+(\/\d+|\.\d+)?\s*(oz|cup|cups|tbsp|tsp|ml|cl|dash|dashes|drop|drops|slice|slices|piece|pieces|sprig|sprigs|leaf|leaves|wheel|wheels|twist|twists|rim|rims|part|parts)\s+/i, '')
-          .replace(/^\d+(\/\d+|\.\d+)?\s+/, '') // Remove remaining numbers at start
-          .trim();
-
-        // Use cleaned name as ID (lowercased and sanitized)
+  // Use matched ingredients if available, but VALIDATE that they correspond to actual ingredients
+  // This prevents non-recipe ingredients from appearing in the shopping list
+  let shoppingListIngredients: Array<{ id: string; name: string; category?: string }>;
+  
+  if (matchedIngredients && matchedIngredients.length === ingredients.length) {
+    // Validate that matchedIngredients correspond to actual ingredients
+    const validatedIngredients: Array<{ id: string; name: string; category?: string }> = [];
+    
+    for (let i = 0; i < ingredients.length && i < matchedIngredients.length; i++) {
+      const originalText = ingredients[i].text.trim();
+      const matched = matchedIngredients[i];
+      
+      // Extract the ingredient name from the original text
+      const extractedName = extractIngredientNameFromText(originalText);
+      const extractedNameLower = extractedName.toLowerCase();
+      const matchedNameLower = (matched.name || '').toLowerCase();
+      
+      // Verify that the matched ingredient name is related to the original ingredient text
+      // This prevents incorrect matches from fuzzy matching
+      const isMatchValid = 
+        extractedNameLower === matchedNameLower ||
+        extractedNameLower.includes(matchedNameLower) ||
+        matchedNameLower.includes(extractedNameLower) ||
+        extractedName.startsWith(matched.name?.split(' ')[0] || '') ||
+        matched.name?.toLowerCase().startsWith(extractedName.split(' ')[0].toLowerCase() || '');
+      
+      if (isMatchValid) {
+        validatedIngredients.push({
+          id: matched.id,
+          name: matched.name,
+          category: matched.category || 'cocktail',
+        });
+      } else {
+        // Fallback to parsing the original ingredient text if match is invalid
+        const cleanedName = extractedName || originalText.replace(/^\d+(\/\d+|\.\d+)?\s*(oz|cup|cups|tbsp|tsp|ml|cl|dash|dashes|drop|drops|slice|slices|piece|pieces|sprig|sprigs|leaf|leaves|wheel|wheels|twist|twists|rim|rims|part|parts)\s+/i, '').replace(/^\d+(\/\d+|\.\d+)?\s+/, '').trim();
         const ingredientId = cleanedName.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
-
-        return {
-          id: ingredientId || `ingredient-${index}`, // Fallback if cleaning results in empty string
-          name: cleanedName || text, // Fallback to original if cleaning fails
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[RecipeContent] Invalid ingredient match: "${extractedName}" was matched to "${matched.name}". Using fallback.`);
+        }
+        
+        validatedIngredients.push({
+          id: ingredientId || `ingredient-${i}`,
+          name: cleanedName || originalText,
           category: 'cocktail',
-        };
-      });
+        });
+      }
+    }
+    
+    shoppingListIngredients = validatedIngredients;
+  } else {
+    // Fallback: Better ingredient name extraction
+    shoppingListIngredients = ingredients.map((ing, index) => {
+      const text = ing.text.trim();
+      const cleanedName = extractIngredientNameFromText(text);
+      const ingredientId = cleanedName.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+
+      return {
+        id: ingredientId || `ingredient-${index}`,
+        name: cleanedName || text,
+        category: 'cocktail',
+      };
+    });
+  }
 
   return (
     <>

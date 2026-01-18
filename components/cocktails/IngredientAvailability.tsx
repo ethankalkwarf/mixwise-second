@@ -52,9 +52,26 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
 
   // Calculate availability
   const { available, missing, total, percentage, missingIngredients } = useMemo(() => {
+    // Defensive check: Filter out invalid ingredients (empty names, null/undefined)
+    // This prevents non-recipe ingredients from appearing in the shopping list
+    const validIngredients = ingredients.filter((i) => {
+      if (!i || !i.name || !i.name.trim()) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[IngredientAvailability] Filtered out invalid ingredient:', i);
+        }
+        return false;
+      }
+      return true;
+    });
+
     // Filter out ice from required ingredients - everyone has ice!
-    const requiredIngredients = ingredients.filter((i) => !i.isOptional && !isIce(i.name));
+    const requiredIngredients = validIngredients.filter((i) => !i.isOptional && !isIce(i.name));
     const total = requiredIngredients.length;
+
+    // Log warning if we filtered out ingredients (may indicate data integrity issues)
+    if (process.env.NODE_ENV === 'development' && validIngredients.length !== ingredients.length) {
+      console.warn(`[IngredientAvailability] Filtered out ${ingredients.length - validIngredients.length} invalid ingredient(s) out of ${ingredients.length} total`);
+    }
 
     // Normalize IDs for comparison (handle string vs UUID, case-insensitive)
     const normalizedBarIds = new Set(
