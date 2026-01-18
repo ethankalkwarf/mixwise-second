@@ -1,7 +1,8 @@
 import { sanityClient } from "@/lib/sanityClient";
-import { getImageUrl } from "@/lib/sanityImage";
+import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import Link from "next/link";
+import Image from "next/image";
 import type { SanityImage } from "@/lib/sanityTypes";
 
 interface Collection {
@@ -62,12 +63,15 @@ function CollectionCard({ collection }: { collection: Collection }) {
       <div className="relative h-36 w-full overflow-hidden bg-mist">
         {imageUrl ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={imageUrl}
               alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
-              loading="lazy"
+              fill
+              sizes="288px"
+              className="object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
+              quality={80}
+              placeholder="blur"
+              blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent" />
           </>

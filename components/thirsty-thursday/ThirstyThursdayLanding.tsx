@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { EnvelopeIcon, CheckCircleIcon, SparklesIcon, CalendarDaysIcon, GiftIcon, FireIcon, StarIcon } from "@heroicons/react/24/solid";
 import { useToast } from "@/components/ui/toast";
+import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 
 interface BackgroundCocktail {
   id: string;
@@ -157,12 +159,16 @@ export function ThirstyThursdayLanding({ backgroundCocktails = [] }: ThirstyThur
                     isActive ? "opacity-100 z-10" : "opacity-0 z-0"
                   }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={cocktail.image_url}
                     alt={cocktail.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading={index === 0 ? "eager" : "lazy"}
+                    fill
+                    sizes="100vw"
+                    className="object-cover"
+                    priority={index === 0}
+                    quality={85}
+                    placeholder="blur"
+                    blurDataURL={COCKTAIL_BLUR_DATA_URL}
                     style={{
                       filter: 'brightness(0.5) saturate(1.1)',
                     }}

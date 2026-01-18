@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
 import type { SanityCocktail } from "@/lib/sanityTypes";
-import { getImageUrl } from "@/lib/sanityImage";
+import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { formatCocktailName } from "@/lib/formatters";
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
@@ -590,16 +591,15 @@ function CocktailCard({
       <div className="relative h-56 w-full overflow-hidden bg-mist">
         {imageUrl ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={imageUrl}
               alt={cocktail.name}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 mix-blend-multiply"
-              onLoad={(e) => {
-                e.currentTarget.style.opacity = '1';
-              }}
-              style={{ opacity: 0, transition: 'opacity 0.3s ease-in' }}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-700 group-hover:scale-110 mix-blend-multiply"
+              quality={80}
+              placeholder="blur"
+              blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-300" />
           </>

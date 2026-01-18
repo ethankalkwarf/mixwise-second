@@ -2,13 +2,14 @@
 
 import { useMemo, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { getCocktailImageUrls } from "@/lib/cocktails.client";
-import { getImageUrl } from "@/lib/sanityImage";
+import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { formatCocktailName } from "@/lib/formatters";
 import { PlusCircleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 
@@ -290,12 +291,15 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }
       <div className={`relative ${compact ? "h-28" : "h-36"} w-full overflow-hidden bg-mist`}>
         {imageUrl ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={imageUrl}
               alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
-              loading="lazy"
+              fill
+              sizes={compact ? "192px" : "(max-width: 768px) 50vw, 25vw"}
+              className="object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
+              quality={80}
+              placeholder="blur"
+              blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
           </>
@@ -334,15 +338,18 @@ function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCa
     <div className="flex gap-4 p-4 rounded-2xl border border-mist bg-white hover:shadow-soft transition-all">
       <Link
         href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-        className="flex-shrink-0 w-24 h-20 rounded-xl overflow-hidden bg-mist"
+        className="flex-shrink-0 w-24 h-20 rounded-xl overflow-hidden bg-mist relative"
       >
         {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={imageUrl}
             alt=""
-            className="h-full w-full object-cover mix-blend-multiply"
-            loading="lazy"
+            fill
+            sizes="96px"
+            className="object-cover mix-blend-multiply"
+            quality={75}
+            placeholder="blur"
+            blurDataURL={COCKTAIL_BLUR_DATA_URL}
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-sage text-2xl" aria-hidden="true">

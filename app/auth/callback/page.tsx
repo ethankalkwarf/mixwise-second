@@ -487,8 +487,26 @@ function AuthCallbackPageContent() {
             }).catch(() => {
               // ignore
             });
+          }
 
-            // Send notification email to hello@getmixwise.com for new OAuth signups
+          // Send notification email for new OAuth signups
+          // Check if user was created recently (within last 5 minutes) to detect new signups
+          // This is more reliable than checking user_preferences which might already exist from triggers
+          const userCreatedAt = user.created_at ? new Date(user.created_at).getTime() : 0;
+          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+          const isRecentlyCreated = userCreatedAt > fiveMinutesAgo;
+          
+          // Also check if this is an OAuth signup (not email/password)
+          // Email/password signups send notification from the signup route, not here
+          const isOAuthSignup = user.identities && user.identities.length > 0 && 
+            (user.identities[0].provider === "google" || user.identities[0].provider === "apple");
+
+          if (isRecentlyCreated && isOAuthSignup && user.email) {
+            const displayName =
+              user.user_metadata?.full_name ||
+              user.user_metadata?.name ||
+              user.email.split("@")[0];
+
             // Determine signup method from user identities or email domain
             let signupMethod = "Email/Password"; // default
             if (user.identities && user.identities.length > 0) {
@@ -511,6 +529,8 @@ function AuthCallbackPageContent() {
               ? `${window.location.origin}/api/auth/send-signup-notification`
               : "/api/auth/send-signup-notification";
             
+            console.log(`[AuthCallbackPage] Sending signup notification for new OAuth user: ${user.email} (${signupMethod}), created: ${new Date(userCreatedAt).toISOString()}`);
+            
             fetch(notificationUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -520,10 +540,26 @@ function AuthCallbackPageContent() {
                 displayName,
                 signupMethod,
               }),
-            }).catch((err) => {
-              // Don't fail the auth flow if notification email fails
-              console.error("[AuthCallbackPage] Failed to send notification email (non-fatal):", err);
-            });
+            })
+              .then(async (response) => {
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error(`[AuthCallbackPage] Notification API returned error ${response.status}:`, errorText);
+                } else {
+                  const result = await response.json();
+                  if (result.skipped) {
+                    console.warn("[AuthCallbackPage] Notification email skipped:", result);
+                  } else {
+                    console.log("[AuthCallbackPage] Notification email sent successfully:", result);
+                  }
+                }
+              })
+              .catch((err) => {
+                // Don't fail the auth flow if notification email fails
+                console.error("[AuthCallbackPage] Failed to send notification email (non-fatal):", err);
+              });
+          } else if (isRecentlyCreated && !isOAuthSignup) {
+            console.log(`[AuthCallbackPage] User created recently but not OAuth signup (likely email/password), skipping notification (should be sent from signup route)`);
           }
 
           if (!cancelled) {

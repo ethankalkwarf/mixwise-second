@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { WeddingQuestionnaire } from "./WeddingQuestionnaire";
 import { WeddingRecommendations } from "./WeddingRecommendations";
@@ -9,6 +10,7 @@ import type { CocktailListItem } from "@/lib/cocktailTypes";
 import type { Cocktail } from "@/lib/cocktailTypes";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useUser } from "@/components/auth/UserProvider";
+import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 
 export type QuestionnaireStep = "intro" | "questions" | "email-gate" | "results";
 
@@ -323,24 +325,16 @@ export function WeddingCocktailFinder() {
                             >
                               {cocktail.image_url ? (
                                 <>
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
+                                  <Image
                                     src={cocktail.image_url}
                                     alt={cocktail.name}
-                                    className="absolute inset-0 w-full h-full object-cover"
-                                    loading="lazy"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                      const parent = e.currentTarget.parentElement;
-                                      if (parent) {
-                                        const fallback = parent.querySelector('.image-fallback');
-                                        if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                                      }
-                                    }}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                    className="object-cover"
+                                    quality={85}
+                                    placeholder="blur"
+                                    blurDataURL={COCKTAIL_BLUR_DATA_URL}
                                   />
-                                  <div className="image-fallback hidden absolute inset-0 w-full h-full items-center justify-center text-sage text-5xl bg-mist">
-                                    🍸
-                                  </div>
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                                   <div className="absolute bottom-0 left-0 right-0 p-6">
                                     <h3 className="text-white font-display font-bold text-xl md:text-2xl mb-1 drop-shadow-lg">

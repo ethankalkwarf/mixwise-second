@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
-import { getImageUrl } from "@/lib/sanityImage";
+import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import type { SanityImage } from "@/lib/sanityTypes";
 
@@ -205,12 +206,15 @@ function IngredientCard({ ingredient, isInBar, onAddToBar, onRemoveFromBar }: In
       <Link href={`/ingredients/${ingredient.slug.current}`} className="block">
         <div className="relative h-32 w-full overflow-hidden bg-slate-800">
           {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={imageUrl}
               alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              quality={75}
+              placeholder="blur"
+              blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
           ) : (
             <div className="h-full w-full flex items-center justify-center text-slate-700 text-4xl" aria-hidden="true">

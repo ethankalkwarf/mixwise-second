@@ -56,9 +56,15 @@ export async function sendSignupNotification(
     // Check if Resend is configured
     const resendApiKey = process.env.RESEND_API_KEY;
     if (!resendApiKey) {
-      console.warn("[Signup Notification] RESEND_API_KEY not set - skipping notification email");
+      console.warn("[Signup Notification] RESEND_API_KEY not set - skipping notification email", {
+        userId,
+        userEmail: trimmedEmail,
+      });
       return { success: false, skipped: true };
     }
+
+    // Log that we're attempting to send
+    console.log(`[Signup Notification] Attempting to send notification for new user: ${trimmedEmail} (${signupMethod})`);
 
     // Create Resend client
     let resend;
@@ -176,8 +182,14 @@ User account created at ${new Date().toLocaleString()}
 This is an automated notification from MixWise.
     `.trim();
 
+    // Verify MIXWISE_FROM_EMAIL is set
+    if (!MIXWISE_FROM_EMAIL) {
+      console.error("[Signup Notification] MIXWISE_FROM_EMAIL is not configured");
+      return { success: false, error: "From email not configured" };
+    }
+
     // Send email via Resend
-    console.log(`[Signup Notification] Sending notification email to: ${NOTIFICATION_EMAIL}`);
+    console.log(`[Signup Notification] Sending notification email to: ${NOTIFICATION_EMAIL} from: ${MIXWISE_FROM_EMAIL}`);
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,

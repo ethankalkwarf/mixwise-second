@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { MixIngredient } from "@/lib/mixTypes";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { PlusIcon } from "@heroicons/react/24/outline";
@@ -127,13 +128,15 @@ export function IngredientTile({
         </div>
 
         {/* Image placeholder or actual image */}
-        <div className="aspect-square bg-mist rounded-xl mb-4 flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="aspect-square bg-mist rounded-xl mb-4 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
           {ingredient.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={ingredient.imageUrl}
               alt=""
-              className="w-full h-full object-cover"
+              fill
+              sizes="120px"
+              className="object-cover"
+              quality={75}
             />
           ) : (
             <div className="w-8 h-8 bg-sage/20 rounded-lg flex items-center justify-center">

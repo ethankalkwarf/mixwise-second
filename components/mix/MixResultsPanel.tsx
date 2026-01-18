@@ -6,6 +6,7 @@ import type { MixIngredient, MixCocktail, MixMatchResult } from "@/lib/mixTypes"
 import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
 import Image from "next/image";
+import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 
 type Props = {
   inventoryIds: string[];
@@ -362,14 +363,17 @@ function CocktailCard({
       <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-mist">
         {cocktail.imageUrl ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={cocktail.imageUrl}
               alt=""
-              className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply ${
+              fill
+              sizes="(max-width: 640px) 50vw, 33vw"
+              className={`object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply ${
                 isReady ? "opacity-90 group-hover:opacity-100" : "opacity-60 grayscale-[0.5]"
               }`}
-              loading="lazy"
+              quality={80}
+              placeholder="blur"
+              blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
           </>

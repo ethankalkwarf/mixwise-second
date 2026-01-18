@@ -648,10 +648,20 @@ export async function POST(request: NextRequest) {
       userEmail: trimmedEmail,
       displayName: fullName,
       signupMethod: "Email/Password",
-    }).catch((err) => {
-      // Don't fail the signup if notification email fails
-      console.error("[Signup API] Failed to send notification email (non-fatal):", err);
-    });
+    })
+      .then((result) => {
+        if (result.skipped) {
+          console.warn("[Signup API] Notification email skipped (RESEND_API_KEY not configured or other issue)");
+        } else if (!result.success) {
+          console.error("[Signup API] Notification email failed:", result.error);
+        } else {
+          console.log("[Signup API] Notification email sent successfully");
+        }
+      })
+      .catch((err) => {
+        // Don't fail the signup if notification email fails
+        console.error("[Signup API] Failed to send notification email (non-fatal):", err);
+      });
 
     return NextResponse.json({
       ok: true,

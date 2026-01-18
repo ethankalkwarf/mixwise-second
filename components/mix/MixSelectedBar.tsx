@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { MixIngredient } from "@/lib/mixTypes";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 
@@ -40,11 +41,12 @@ export function MixSelectedBar({ selectedIngredients, onRemove, onClearAll }: Pr
             role="listitem"
           >
             {ingredient.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img 
+              <Image 
                 src={ingredient.imageUrl} 
                 alt=""
-                className="w-5 h-5 object-contain"
+                width={20}
+                height={20}
+                className="object-contain"
                 aria-hidden="true"
               />
             ) : (

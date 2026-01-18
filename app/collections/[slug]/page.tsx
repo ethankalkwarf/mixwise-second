@@ -1,9 +1,10 @@
 import { sanityClient } from "@/lib/sanityClient";
-import { getImageUrl } from "@/lib/sanityImage";
+import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { WebPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { SanityImage } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
@@ -111,11 +112,16 @@ export default async function CollectionDetailPage({ params }: PageProps) {
           <div className="mb-10">
             {imageUrl && (
               <div className="relative h-64 md:h-80 rounded-2xl overflow-hidden mb-6 bg-slate-800">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={imageUrl}
                   alt=""
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="100vw"
+                  className="object-cover"
+                  quality={85}
+                  placeholder="blur"
+                  blurDataURL={COCKTAIL_BLUR_DATA_URL}
+                  priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">
@@ -174,12 +180,15 @@ function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
       <div className="relative h-44 w-full overflow-hidden bg-slate-800">
         {imageUrl ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={imageUrl}
               alt=""
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              quality={80}
+              placeholder="blur"
+              blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
           </>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getImageUrl } from "@/lib/sanityImage";
+import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
 interface HeroProps {
@@ -83,24 +83,17 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
                         >
                           {imageUrl ? (
                             <>
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
+                              <Image
                                 src={imageUrl}
                                 alt={cocktail.name}
-                                className="absolute inset-0 w-full h-full object-cover"
-                                loading={index === 0 ? "eager" : "lazy"}
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                  const parent = e.currentTarget.parentElement;
-                                  if (parent) {
-                                    const fallback = parent.querySelector('.image-fallback');
-                                    if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                                  }
-                                }}
+                                fill
+                                sizes="(max-width: 1280px) 268px, 358px"
+                                className="object-cover"
+                                priority={index === 0}
+                                quality={90}
+                                placeholder="blur"
+                                blurDataURL={COCKTAIL_BLUR_DATA_URL}
                               />
-                              <div className="image-fallback hidden absolute inset-0 w-full h-full items-center justify-center text-sage text-5xl bg-mist">
-                                🍸
-                              </div>
                               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                               <div className="absolute bottom-0 left-0 right-0 p-6">
                                 <h3 className="text-white font-display font-bold text-xl md:text-2xl mb-1 drop-shadow-lg">

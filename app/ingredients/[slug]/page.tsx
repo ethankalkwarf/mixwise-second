@@ -1,10 +1,11 @@
 import { sanityClient } from "@/lib/sanityClient";
-import { getImageUrl } from "@/lib/sanityImage";
+import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { WebPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 import { IngredientActions } from "@/components/ingredients/IngredientActions";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { SanityImage } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
@@ -139,11 +140,16 @@ export default async function IngredientDetailPage({ params }: PageProps) {
                 {/* Image */}
                 <div className="relative rounded-2xl overflow-hidden bg-slate-800 aspect-square">
                   {imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={ingredient.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                      className="object-cover"
+                      quality={85}
+                      placeholder="blur"
+                      blurDataURL={COCKTAIL_BLUR_DATA_URL}
+                      priority
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-700 text-8xl" aria-hidden="true">
@@ -291,14 +297,17 @@ function CocktailCard({ cocktail }: { cocktail: Cocktail }) {
       href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
       className="group flex gap-4 p-3 rounded-xl border border-slate-800 bg-slate-900/50 hover:border-slate-700 transition-colors"
     >
-      <div className="flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden bg-slate-800">
+      <div className="flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden bg-slate-800 relative">
         {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={imageUrl}
             alt=""
-            className="w-full h-full object-cover"
-            loading="lazy"
+            fill
+            sizes="80px"
+            className="object-cover"
+            quality={75}
+            placeholder="blur"
+            blurDataURL={COCKTAIL_BLUR_DATA_URL}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-700 text-2xl" aria-hidden="true">
