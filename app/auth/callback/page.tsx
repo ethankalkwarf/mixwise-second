@@ -5,6 +5,44 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 
+// Rate limiting for auth requests to prevent 429 errors
+class AuthRateLimiter {
+  private static instance: AuthRateLimiter;
+  private requests: Map<string, { count: number; resetTime: number }> = new Map();
+  private readonly WINDOW_MS = 60000; // 1 minute
+  private readonly MAX_REQUESTS = 10; // 10 requests per minute
+
+  static getInstance(): AuthRateLimiter {
+    if (!AuthRateLimiter.instance) {
+      AuthRateLimiter.instance = new AuthRateLimiter();
+    }
+    return AuthRateLimiter.instance;
+  }
+
+  isRateLimited(key: string = 'default'): boolean {
+    const now = Date.now();
+    const limit = this.requests.get(key);
+
+    if (!limit || now > limit.resetTime) {
+      this.requests.set(key, { count: 1, resetTime: now + this.WINDOW_MS });
+      return false;
+    }
+
+    if (limit.count >= this.MAX_REQUESTS) {
+      return true;
+    }
+
+    limit.count++;
+    return false;
+  }
+
+  getRemainingTime(key: string = 'default'): number {
+    const limit = this.requests.get(key);
+    if (!limit) return 0;
+    return Math.max(0, limit.resetTime - Date.now());
+  }
+}
+
 interface AuthError {
   code: string;
   description: string;
@@ -115,10 +153,60 @@ function AuthCallbackPageContent() {
       }
     };
 
+    // Exponential backoff retry helper for auth operations
+    const withRetry = async <T,>(
+      operation: () => Promise<T>,
+      maxRetries: number = 2,
+      baseDelay: number = 1000,
+      label: string = "operation"
+    ): Promise<T> => {
+      let lastError: Error;
+
+      for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+        try {
+          return await operation();
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+          console.warn(`[AuthCallbackPage] ${label} failed (attempt ${attempt}/${maxRetries + 1}):`, lastError.message);
+
+          // Don't retry on certain errors
+          if (lastError.message.includes('PKCE code verifier') ||
+              lastError.message.includes('invalid') ||
+              lastError.message.includes('expired')) {
+            throw lastError;
+          }
+
+          // Check rate limiting
+          if (lastError.message.includes('429') || lastError.message.includes('Too Many Requests')) {
+            console.warn(`[AuthCallbackPage] Rate limited during ${label}, waiting before retry`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds on rate limit
+          }
+
+          if (attempt <= maxRetries) {
+            const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+            console.log(`[AuthCallbackPage] Retrying ${label} in ${delay}ms (attempt ${attempt + 1})`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+
+      throw lastError!;
+    };
+
     const run = async () => {
       setStatus("loading");
       setError(null);
       setErrorCode(null);
+
+      // Check rate limiting before making any auth requests
+      const rateLimiter = AuthRateLimiter.getInstance();
+      if (rateLimiter.isRateLimited('auth_callback')) {
+        const remainingTime = Math.ceil(rateLimiter.getRemainingTime('auth_callback') / 1000);
+        console.warn(`[AuthCallbackPage] Rate limited, ${remainingTime} seconds remaining`);
+        setStatus("error");
+        setError(`Too many authentication attempts. Please wait ${remainingTime} seconds and try again.`);
+        return;
+      }
 
       // Prefer explicit `next` query param, but fall back to a client-stored return URL.
       // This enables flows like: user tries "add to shopping list" while logged out → logs in with Google → returns to the recipe page.
@@ -189,11 +277,17 @@ function AuthCallbackPageContent() {
 
         // If we already have a valid session cookie/session, just continue (avoids confusing "Sign-in failed")
         console.log("[AuthCallbackPage] Checking for existing session...");
-        const { data: existingSession } = await withTimeout(supabase.auth.getSession(), 8000, "getSession");
+        const { data: existingSession } = await withRetry(
+          () => withTimeout(supabase.auth.getSession(), 8000, "getSession"),
+          2, 500, "check existing session"
+        );
         if (existingSession.session) {
           console.log("[AuthCallbackPage] Found existing session, user already authenticated");
           scrubUrl();
-          const { data } = await withTimeout(supabase.auth.getUser(), 8000, "getUser");
+          const { data } = await withRetry(
+            () => withTimeout(supabase.auth.getUser(), 8000, "getUser"),
+            2, 500, "get authenticated user"
+          );
           const user = data.user;
           if (user && !cancelled) {
             console.log("[AuthCallbackPage] Redirecting authenticated user to:", next === "/" ? "/mix" : next);
@@ -206,16 +300,31 @@ function AuthCallbackPageContent() {
         // Establish session (supports both PKCE code flow and implicit hash token flow)
         if (code) {
           console.log("[AuthCallbackPage] Exchanging code for session...");
-          const { error: exchangeError } = await withTimeout(
-            supabase.auth.exchangeCodeForSession(code),
-            10000,
-            "exchangeCodeForSession"
-          );
-          if (exchangeError) {
-            console.error("[AuthCallbackPage] Code exchange failed:", exchangeError);
-            throw exchangeError;
+          try {
+            const { error: exchangeError } = await withRetry(
+              () => withTimeout(supabase.auth.exchangeCodeForSession(code), 10000, "exchangeCodeForSession"),
+              2, 1000, "code exchange"
+            );
+            if (exchangeError) {
+              console.error("[AuthCallbackPage] Code exchange failed:", exchangeError);
+
+              // Handle specific PKCE code verifier errors
+              if (exchangeError.message?.includes('PKCE code verifier not found') ||
+                  exchangeError.message?.includes('code verifier')) {
+                console.warn("[AuthCallbackPage] PKCE code verifier missing - likely cross-browser/device auth");
+                setStatus("error");
+                setError("Authentication session expired. Please try logging in again from the same browser.");
+                setErrorCode("pkce_verifier_missing");
+                return;
+              }
+
+              throw exchangeError;
+            }
+            console.log("[AuthCallbackPage] Code exchanged successfully");
+          } catch (err) {
+            // Re-throw after specific handling above
+            throw err;
           }
-          console.log("[AuthCallbackPage] Code exchanged successfully");
         } else if (accessToken && refreshToken) {
           console.log("[AuthCallbackPage] Setting session from tokens...");
           try {
@@ -443,15 +552,30 @@ function AuthCallbackPageContent() {
         });
         if (cancelled) return;
 
-        // If session exists anyway, proceed without showing an error screen
-        const { data: sessionAfterError } = await withTimeout(supabase.auth.getSession(), 8000, "getSession(after error)");
-        if (sessionAfterError.session) {
-          console.log("[AuthCallbackPage] Session recovered after error, proceeding");
-          scrubUrl();
-          // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
-          await waitForAuthReady(authReady);
-          router.replace(next === "/" ? "/mix" : next);
+        // Check for specific error types
+        if (errMsg.includes('429') || errMsg.includes('Too Many Requests')) {
+          setStatus("error");
+          setError("Too many authentication attempts. Please wait a few minutes and try again.");
+          setErrorCode("rate_limited");
           return;
+        }
+
+        // If session exists anyway, proceed without showing an error screen
+        try {
+          const { data: sessionAfterError } = await withRetry(
+            () => withTimeout(supabase.auth.getSession(), 8000, "getSession(after error)"),
+            1, 500, "recovery session check"
+          );
+          if (sessionAfterError.session) {
+            console.log("[AuthCallbackPage] Session recovered after error, proceeding");
+            scrubUrl();
+            // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
+            await waitForAuthReady(authReady);
+            router.replace(next === "/" ? "/mix" : next);
+            return;
+          }
+        } catch (recoveryErr) {
+          console.warn("[AuthCallbackPage] Session recovery failed:", recoveryErr);
         }
 
         setStatus("error");
@@ -543,25 +667,55 @@ function AuthCallbackPageContent() {
           </>
         ) : (
           <>
-            <h1 className="text-xl font-display font-bold text-forest mb-2">Sign-in failed</h1>
+            <h1 className="text-xl font-display font-bold text-forest mb-2">
+              {errorCode === "rate_limited" ? "Too Many Attempts" :
+               errorCode === "pkce_verifier_missing" ? "Session Expired" :
+               "Sign-in failed"}
+            </h1>
             <p className="text-sage mb-2">{error}</p>
-            {errorCode && <p className="text-xs text-gray-500 mb-6">Error code: {errorCode}</p>}
+            {errorCode && errorCode !== "rate_limited" && errorCode !== "pkce_verifier_missing" && (
+              <p className="text-xs text-gray-500 mb-6">Error code: {errorCode}</p>
+            )}
             <div className="space-y-3">
-              <button
-                onClick={() => router.replace("/")}
-                className="w-full px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all"
-              >
-                Back to Home
-              </button>
-              <button
-                onClick={() => {
-                  setStatus("expired");
-                  setExpiredEmail(null);
-                }}
-                className="w-full px-4 py-3 bg-sage/10 hover:bg-sage/20 text-forest font-bold rounded-2xl transition-all"
-              >
-                Resend Confirmation Email
-              </button>
+              {errorCode === "rate_limited" ? (
+                <>
+                  <button
+                    onClick={() => router.replace("/")}
+                    className="w-full px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all"
+                  >
+                    Back to Home
+                  </button>
+                  <p className="text-xs text-sage text-center">Please wait a few minutes before trying again</p>
+                </>
+              ) : errorCode === "pkce_verifier_missing" ? (
+                <>
+                  <button
+                    onClick={() => router.replace("/")}
+                    className="w-full px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all"
+                  >
+                    Try Logging In Again
+                  </button>
+                  <p className="text-xs text-sage text-center">Make sure to complete login in the same browser</p>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.replace("/")}
+                    className="w-full px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all"
+                  >
+                    Back to Home
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStatus("expired");
+                      setExpiredEmail(null);
+                    }}
+                    className="w-full px-4 py-3 bg-sage/10 hover:bg-sage/20 text-forest font-bold rounded-2xl transition-all"
+                  >
+                    Resend Confirmation Email
+                  </button>
+                </>
+              )}
             </div>
           </>
         )}

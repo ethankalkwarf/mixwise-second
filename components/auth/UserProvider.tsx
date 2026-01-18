@@ -489,9 +489,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Set an aggressive timeout as a safety net - if still loading after configured time, force it off
-    // Keep this reasonably fast for good UX while allowing for network/database latency
-    const AUTH_INIT_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_AUTH_INIT_TIMEOUT || "2000"); // 2 seconds default
+    // Set a more generous timeout to handle slow networks and rate limiting
+    // This prevents premature timeouts that cause auth state issues
+    const AUTH_INIT_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_AUTH_INIT_TIMEOUT || "5000"); // 5 seconds default
     timeoutId = setTimeout(() => {
       if (mounted && !authCheckDone) {
         console.warn(`[UserProvider] Auth initialization timeout (${AUTH_INIT_TIMEOUT}ms) - forcing completion anyway`);
