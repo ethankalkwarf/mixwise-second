@@ -333,8 +333,7 @@ export function MixCabinet({
 
           {/* Show categories when not searching */}
           {!searchQuery && (
-
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map((category) => {
               const count = allIngredients.filter(i =>
                 (i.category || "Garnish") === category.key && !stapleIds.includes(i.id)
@@ -371,7 +370,7 @@ export function MixCabinet({
                 </button>
               );
             })}
-          </div>
+            </div>
           )}
         </section>
       ) : (
@@ -420,15 +419,17 @@ export function MixCabinet({
               </button>
             )}
           </div>
-              {selectedCategory === "Amaro" && (
-                <p className="text-sm text-sage mt-1">
-                  Italian herbal liqueurs with complex bitter-sweet flavors
-                </p>
-              )}
-              {selectedCategory === "Wine & Beer" && (
-                <p className="text-sm text-sage mt-1">
-                  Wines, beers, and other fermented beverages for mixing
-                </p>
+
+          {selectedCategory === "Amaro" && (
+            <p className="text-sm text-sage mt-1 mb-6">
+              Italian herbal liqueurs with complex bitter-sweet flavors
+            </p>
+          )}
+          {selectedCategory === "Wine & Beer" && (
+            <p className="text-sm text-sage mt-1 mb-6">
+              Wines, beers, and other fermented beverages for mixing
+            </p>
+          )}
 
           {/* Ingredient Grid */}
           {filteredIngredients.length > 0 ? (
