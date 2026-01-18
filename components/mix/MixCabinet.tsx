@@ -398,6 +398,17 @@ export function MixCabinet({
             )}
           </div>
 
+          {selectedCategory === "Amaro" && (
+            <p className="text-sm text-sage mt-1 mb-4">
+              Italian herbal liqueurs with complex bitter-sweet flavors
+            </p>
+          )}
+          {selectedCategory === "Wine & Beer" && (
+            <p className="text-sm text-sage mt-1 mb-4">
+              Wines, beers, and other fermented beverages for mixing
+            </p>
+          )}
+
           {/* Search Input - Only show when viewing a category */}
           <div className="relative mb-6">
             <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage pointer-events-none" />
@@ -419,17 +430,6 @@ export function MixCabinet({
               </button>
             )}
           </div>
-
-          {selectedCategory === "Amaro" && (
-            <p className="text-sm text-sage mt-1 mb-6">
-              Italian herbal liqueurs with complex bitter-sweet flavors
-            </p>
-          )}
-          {selectedCategory === "Wine & Beer" && (
-            <p className="text-sm text-sage mt-1 mb-6">
-              Wines, beers, and other fermented beverages for mixing
-            </p>
-          )}
 
           {/* Ingredient Grid */}
           {filteredIngredients.length > 0 ? (
