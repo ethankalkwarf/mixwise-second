@@ -359,6 +359,8 @@ export function MixCabinet({
                   <p className="text-sm text-sage leading-tight mb-2">
                     {category.key === "Spirit" && "Base spirits for your cocktails"}
                     {category.key === "Liqueur" && "Sweet and flavored spirits"}
+                    {category.key === "Amaro" && "Italian herbal liqueurs"}
+                    {category.key === "Wine & Beer" && "Wines and beers"}
                     {category.key === "Mixer" && "Non-alcoholic mixers"}
                     {category.key === "Citrus" && "Fresh citrus juices"}
                     {category.key === "Bitters" && "Aromatic bitters and tinctures"}
@@ -397,17 +399,6 @@ export function MixCabinet({
               </button>
             )}
           </div>
-
-          {selectedCategory === "Amaro" && (
-            <p className="text-sm text-sage mt-1 mb-4">
-              Italian herbal liqueurs with complex bitter-sweet flavors
-            </p>
-          )}
-          {selectedCategory === "Wine & Beer" && (
-            <p className="text-sm text-sage mt-1 mb-4">
-              Wines, beers, and other fermented beverages for mixing
-            </p>
-          )}
 
           {/* Search Input - Only show when viewing a category */}
           <div className="relative mb-6">
