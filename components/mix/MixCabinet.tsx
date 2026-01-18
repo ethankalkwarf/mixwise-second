@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { MixIngredient } from "@/lib/mixTypes";
-import { PlusIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, SparklesIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { formatIngredientCategory } from "@/lib/formatters";
@@ -31,6 +31,15 @@ const POPULAR_INGREDIENTS = [
   "Dry Vermouth", "Sweet Vermouth", "Triple Sec" // Specialized ingredients
 ];
 
+// Normalize string for accent-insensitive comparison
+function normalizeForSearch(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD') // Normalize Form Decomposed - separates base characters from diacritics
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (accents)
+    .trim();
+}
+
 export function MixCabinet({
   allIngredients,
   ingredientIds,
@@ -43,6 +52,7 @@ export function MixCabinet({
   onStepChange,
 }: Props) {
   const [addedIngredient, setAddedIngredient] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filter ingredients for display
   const filteredIngredients = useMemo(() => {
@@ -55,8 +65,17 @@ export function MixCabinet({
       filtered = filtered.filter((i) => (i.category || "Garnish") === selectedCategory);
     }
 
+    // Apply search filter (accent-insensitive)
+    if (searchQuery.trim()) {
+      const normalizedQuery = normalizeForSearch(searchQuery);
+      filtered = filtered.filter((i) => {
+        const normalizedName = normalizeForSearch(i.name || '');
+        return normalizedName.includes(normalizedQuery);
+      });
+    }
+
     return filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  }, [allIngredients, selectedCategory, stapleIds]);
+  }, [allIngredients, selectedCategory, stapleIds, searchQuery]);
 
   // Get popular ingredients that aren't already added
   const popularAvailable = useMemo(() => {
@@ -212,13 +231,108 @@ export function MixCabinet({
         </section>
       )}
 
+      {/* Global Search - Show when no category is selected */}
+      {!selectedCategory && (
+        <section className="mb-6">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search all ingredients..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-mist focus:border-terracotta focus:outline-none text-forest placeholder-sage bg-white shadow-sm"
+              aria-label="Search all ingredients"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-sage hover:text-forest transition-colors"
+                aria-label="Clear search"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <div className="mt-4 text-sm text-sage">
+              {filteredIngredients.length > 0 ? (
+                <span>Found {filteredIngredients.length} ingredient{filteredIngredients.length !== 1 ? 's' : ''}</span>
+              ) : (
+                <span>No ingredients found matching "{searchQuery}"</span>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Categories or Ingredient Grid */}
       {!selectedCategory ? (
         <section>
-          <div className="mb-6">
-            <h2 className="text-xl font-display font-bold text-forest mb-2">Browse by Category</h2>
-            <p className="text-sage">Choose a category to explore ingredients within that type</p>
-          </div>
+          {!searchQuery && (
+            <div className="mb-6">
+              <h2 className="text-xl font-display font-bold text-forest mb-2">Browse by Category</h2>
+              <p className="text-sage">Choose a category to explore ingredients within that type</p>
+            </div>
+          )}
+
+          {/* Show search results when searching */}
+          {searchQuery && filteredIngredients.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-xl font-display font-bold text-forest mb-2">Search Results</h2>
+            </div>
+          )}
+
+          {/* Show ingredients when searching */}
+          {searchQuery && filteredIngredients.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
+              {filteredIngredients.map((ingredient) => {
+                const isSelected = ingredientIds.includes(ingredient.id);
+                const isJustAdded = addedIngredient === ingredient.id;
+
+                return (
+                  <button
+                    key={ingredient.id}
+                    onClick={() => isSelected
+                      ? onRemoveIngredient(ingredient.id)
+                      : handleAddWithFeedback(ingredient.id)
+                    }
+                    className={`relative p-4 rounded-2xl border-2 transition-all hover:scale-105 group overflow-hidden cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-olive/10 border-olive shadow-lg'
+                        : isJustAdded
+                        ? 'bg-olive text-cream border-olive animate-pulse'
+                        : 'bg-white border-mist hover:border-olive hover:shadow-md'
+                    }`}
+                  >
+                    {isJustAdded && (
+                      <div className="absolute inset-0 bg-olive/20 rounded-2xl animate-ping" />
+                    )}
+
+                    <div className="relative z-10 text-center">
+                      <div className="text-3xl mb-2">
+                        {categoryIcons[ingredient.category || "Garnish"] || "📦"}
+                      </div>
+                      <div className={`font-medium text-sm leading-tight ${
+                        isSelected || isJustAdded ? 'text-charcoal' : 'text-forest'
+                      }`}>
+                        {ingredient.name}
+                      </div>
+                      {isSelected && (
+                        <CheckCircleIcon className="w-5 h-5 text-olive mx-auto mt-2" />
+                      )}
+                      {!isSelected && (
+                        <PlusIcon className="w-5 h-5 text-sage mx-auto mt-2 group-hover:text-olive transition-colors" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Show categories when not searching */}
+          {!searchQuery && (
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map((category) => {
@@ -258,6 +372,7 @@ export function MixCabinet({
               );
             })}
           </div>
+          )}
         </section>
       ) : (
         <section>
@@ -270,6 +385,41 @@ export function MixCabinet({
               <p className="text-sage">
                 {filteredIngredients.length} ingredients available
               </p>
+            </div>
+            {selectedCategory && (
+              <button
+                onClick={() => {
+                  onSelectCategory(null);
+                  setSearchQuery("");
+                }}
+                className="px-6 py-3 bg-white border-2 border-terracotta/30 rounded-xl text-terracotta hover:bg-terracotta hover:text-cream font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+              >
+                ← Back to All Categories
+              </button>
+            )}
+          </div>
+
+          {/* Search Input - Only show when viewing a category */}
+          <div className="relative mb-6">
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage pointer-events-none" />
+            <input
+              type="text"
+              placeholder={`Search ${formatIngredientCategory(selectedCategory || '').toLowerCase()}...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-10 py-3 rounded-xl border-2 border-mist focus:border-terracotta focus:outline-none text-forest placeholder-sage bg-white"
+              aria-label={`Search ${formatIngredientCategory(selectedCategory || '')}`}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-sage hover:text-forest transition-colors"
+                aria-label="Clear search"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            )}
+          </div>
               {selectedCategory === "Amaro" && (
                 <p className="text-sm text-sage mt-1">
                   Italian herbal liqueurs with complex bitter-sweet flavors
@@ -279,19 +429,6 @@ export function MixCabinet({
                 <p className="text-sm text-sage mt-1">
                   Wines, beers, and other fermented beverages for mixing
                 </p>
-              )}
-            </div>
-            {selectedCategory && (
-              <button
-                onClick={() => {
-                  onSelectCategory(null);
-                }}
-                className="px-6 py-3 bg-white border-2 border-terracotta/30 rounded-xl text-terracotta hover:bg-terracotta hover:text-cream font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-              >
-                ← Back to All Categories
-              </button>
-            )}
-          </div>
 
           {/* Ingredient Grid */}
           {filteredIngredients.length > 0 ? (
