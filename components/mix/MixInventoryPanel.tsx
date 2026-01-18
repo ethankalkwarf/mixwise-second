@@ -34,6 +34,16 @@ function normalizeIngredientName(name: string): string {
     .join(" ");
 }
 
+// Normalize string for accent-insensitive comparison
+// This handles variations like "Blue Curacao" vs "Blue Curaçao"
+function normalizeForSearch(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD') // Normalize Form Decomposed - separates base characters from diacritics
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (accents)
+    .trim();
+}
+
 // Get first letter for grouping
 function getFirstLetter(name: string): string {
   const normalized = name.trim().toUpperCase();
@@ -97,10 +107,13 @@ export function MixInventoryPanel({ ingredients, selectedIds, onChange, stapleId
     const stapleSet = new Set(safeStapleIds);
     filtered = filtered.filter((i) => !stapleSet.has(i.id));
 
-    // Apply search filter
+    // Apply search filter (accent-insensitive)
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter((i) => i.name.toLowerCase().includes(q));
+      const normalizedQuery = normalizeForSearch(searchQuery);
+      filtered = filtered.filter((i) => {
+        const normalizedName = normalizeForSearch(i.name);
+        return normalizedName.includes(normalizedQuery);
+      });
     }
 
     // Apply category filter
