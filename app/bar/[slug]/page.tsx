@@ -7,6 +7,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { getUserBarIngredients } from "@/lib/cocktails.server";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
+import { SignupPrompt } from "@/components/auth/SignupPrompt";
 import { SITE_CONFIG } from "@/lib/seo";
 import type { Database } from "@/lib/supabase/database.types";
 import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, ShareIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
@@ -428,6 +429,9 @@ export default async function BarPage({ params }: Props) {
             userFirstName={firstName}
             userId={profile.id}
           />
+
+          {/* Signup Prompt for non-authenticated users */}
+          <SignupPrompt enabled={true} delay={3000} />
 
           {/* CTA to Join MixWise */}
           <div className="card p-8 text-center bg-gradient-to-r from-terracotta/10 to-olive/10 border-terracotta/20">

@@ -267,7 +267,7 @@ async function verifyWithSql(): Promise<void> {
 
   // Query to check UUID format distribution
   const { data: distribution, error: distributionError } = await supabase
-    .rpc('check_ingredient_id_formats') as Promise<any>;
+    .rpc('check_ingredient_id_formats');
 
   if (distributionError) {
     console.log('Note: Could not run SQL verification (function may not exist)');

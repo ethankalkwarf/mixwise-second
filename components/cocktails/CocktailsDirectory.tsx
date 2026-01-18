@@ -310,19 +310,20 @@ export function CocktailsDirectory({ cocktails }: Props) {
       <div className="mb-8 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 group">
             <input
               type="text"
               placeholder="Search: cocktails, ingredients, 'popular', 'tiki', 'holiday'..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-botanical pl-10 pr-10"
+              className="input-botanical pl-10 pr-10 transition-all duration-300 focus:scale-[1.02] focus:shadow-lg focus:shadow-terracotta/20"
             />
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage transition-colors duration-200 group-focus-within:text-terracotta" />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-sage hover:text-forest"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-sage hover:text-forest active:scale-90 transition-all duration-200 rounded-full p-1 hover:bg-mist/50"
+                aria-label="Clear search"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
@@ -333,7 +334,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="bg-cream border border-mist rounded-xl px-4 py-3 text-sm text-forest focus:outline-none focus:border-terracotta cursor-pointer"
+            className="bg-cream border border-mist rounded-xl px-4 py-3 text-sm text-forest focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20 focus:scale-[1.02] cursor-pointer transition-all duration-200"
           >
             <option value="default">Default</option>
             <option value="name-asc">A → Z</option>
@@ -344,16 +345,16 @@ export function CocktailsDirectory({ cocktails }: Props) {
           {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 active:scale-95 ${
               showFilters || activeFilterCount > 0
-                ? "bg-terracotta/10 border-terracotta/50 text-terracotta"
-                : "bg-white border-mist text-sage hover:border-stone"
+                ? "bg-terracotta/10 border-terracotta/50 text-terracotta shadow-sm"
+                : "bg-white border-mist text-sage hover:border-stone hover:shadow-sm"
             }`}
           >
-            <FunnelIcon className="w-4 h-4" />
+            <FunnelIcon className={`w-4 h-4 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`} />
             Filters
             {activeFilterCount > 0 && (
-              <span className="bg-terracotta text-cream text-xs font-bold px-1.5 py-0.5 rounded-full">
+              <span className="bg-terracotta text-cream text-xs font-bold px-1.5 py-0.5 rounded-full animate-pulse">
                 {activeFilterCount}
               </span>
             )}
@@ -369,13 +370,13 @@ export function CocktailsDirectory({ cocktails }: Props) {
               <button
                 key={filter.query}
                 onClick={() => setSearchQuery(isActive ? "" : filter.query)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95 ${
                   isActive
-                    ? "bg-terracotta/20 border-terracotta/50 text-terracotta"
-                    : "bg-white border-mist text-sage hover:border-stone hover:text-forest"
+                    ? "bg-terracotta/20 border-terracotta/50 text-terracotta shadow-sm scale-105"
+                    : "bg-white border-mist text-sage hover:border-stone hover:text-forest hover:scale-105 hover:shadow-sm"
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className={`w-3.5 h-3.5 transition-transform duration-200 ${isActive ? "scale-110" : ""}`} />
                 {filter.label}
               </button>
             );
@@ -397,13 +398,13 @@ export function CocktailsDirectory({ cocktails }: Props) {
                     setSearchQuery("");
                   }
                 }}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95 ${
                   isActive
-                    ? config.color
-                    : "bg-white border-mist text-sage hover:border-stone"
+                    ? `${config.color} shadow-sm scale-105`
+                    : "bg-white border-mist text-sage hover:border-stone hover:scale-105 hover:shadow-sm"
                 }`}
               >
-                <span>{config.emoji}</span>
+                <span className={`transition-transform duration-200 ${isActive ? "scale-110" : ""}`}>{config.emoji}</span>
                 {config.label}
               </button>
             );
@@ -412,13 +413,13 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
         {/* Filter Panel */}
         {showFilters && (
-          <div className="bg-white border border-mist rounded-2xl p-4 space-y-4 shadow-soft">
+          <div className="bg-white border border-mist rounded-2xl p-4 space-y-4 shadow-soft animate-fade-in">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-forest">Filter by:</h3>
               {activeFilterCount > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="text-xs text-terracotta hover:text-terracotta-dark"
+                  className="text-xs text-terracotta hover:text-terracotta-dark active:scale-95 transition-all duration-200 font-medium px-2 py-1 rounded-lg hover:bg-terracotta/10"
                 >
                   Clear all
                 </button>
@@ -432,7 +433,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
                 <select
                   value={filterSpirit || ""}
                   onChange={(e) => setFilterSpirit(e.target.value || null)}
-                  className="w-full bg-cream border border-mist rounded-xl px-3 py-2 text-sm text-forest focus:outline-none focus:border-terracotta"
+                  className="w-full bg-cream border border-mist rounded-xl px-3 py-2 text-sm text-forest focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20 focus:scale-[1.02] transition-all duration-200 cursor-pointer"
                 >
                   <option value="">All Spirits</option>
                   {BASE_SPIRITS.map((spirit) => (
@@ -449,7 +450,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
                 <select
                   value={filterGlass || ""}
                   onChange={(e) => setFilterGlass(e.target.value || null)}
-                  className="w-full bg-cream border border-mist rounded-xl px-3 py-2 text-sm text-forest focus:outline-none focus:border-terracotta"
+                  className="w-full bg-cream border border-mist rounded-xl px-3 py-2 text-sm text-forest focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20 focus:scale-[1.02] transition-all duration-200 cursor-pointer"
                 >
                   <option value="">All Glasses</option>
                   {filterOptions.glasses.map((glass) => (
@@ -466,7 +467,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
                 <select
                   value={filterCategory || ""}
                   onChange={(e) => setFilterCategory(e.target.value || null)}
-                  className="w-full bg-cream border border-mist rounded-xl px-3 py-2 text-sm text-forest focus:outline-none focus:border-terracotta"
+                  className="w-full bg-cream border border-mist rounded-xl px-3 py-2 text-sm text-forest focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20 focus:scale-[1.02] transition-all duration-200 cursor-pointer"
                 >
                   <option value="">All Categories</option>
                   {filterOptions.categories.map((cat) => {
@@ -496,7 +497,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
               setSearchQuery("");
               clearFilters();
             }}
-            className="text-xs text-sage hover:text-terracotta"
+            className="text-xs text-sage hover:text-terracotta active:scale-95 transition-all duration-200 font-medium px-2 py-1 rounded-lg hover:bg-mist/50"
           >
             Reset all
           </button>
@@ -505,12 +506,12 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
       {/* Empty State */}
       {filteredCocktails.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-mist rounded-3xl bg-white">
-          <div className="text-6xl mb-6 opacity-70">🔍</div>
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-mist rounded-3xl bg-white animate-fade-in">
+          <div className="text-6xl mb-6 opacity-70 animate-float">🔍</div>
           <h2 className="text-xl font-display font-bold text-forest mb-3">
             No cocktails found
           </h2>
-          <p className="text-sage max-w-md text-sm">
+          <p className="text-sage max-w-md text-sm mb-6">
             Try adjusting your search terms or filters. You can search by name, ingredient, category like &quot;tiki&quot; or &quot;holiday&quot;, or keywords like &quot;popular&quot;.
           </p>
           <button
@@ -518,7 +519,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
               setSearchQuery("");
               clearFilters();
             }}
-            className="mt-6 px-4 py-2 bg-terracotta/10 text-terracotta border border-terracotta/30 rounded-xl text-sm font-medium hover:bg-terracotta hover:text-cream transition-all"
+            className="px-6 py-3 bg-terracotta/10 text-terracotta border border-terracotta/30 rounded-xl text-sm font-medium hover:bg-terracotta hover:text-cream hover:scale-105 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md"
           >
             Clear Filters
           </button>
@@ -529,11 +530,12 @@ export function CocktailsDirectory({ cocktails }: Props) {
       {visibleCocktails.length > 0 && (
         <>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleCocktails.map((cocktail) => (
+            {visibleCocktails.map((cocktail, index) => (
               <CocktailCard 
                 key={cocktail._id} 
                 cocktail={cocktail} 
                 onClick={handleCocktailClick}
+                index={index}
               />
             ))}
           </div>
@@ -542,11 +544,11 @@ export function CocktailsDirectory({ cocktails }: Props) {
           {hasMore && (
             <div 
               ref={loadMoreRef}
-              className="flex justify-center py-8"
+              className="flex justify-center py-8 animate-fade-in"
             >
-              <div className="flex items-center gap-2 text-sage">
+              <div className="flex items-center gap-3 text-sage">
                 <div className="spinner" />
-                <span className="text-sm">Loading more...</span>
+                <span className="text-sm font-medium">Loading more cocktails...</span>
               </div>
             </div>
           )}
@@ -558,10 +560,12 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
 function CocktailCard({ 
   cocktail, 
-  onClick 
+  onClick,
+  index = 0
 }: { 
   cocktail: SanityCocktail;
   onClick: (slug: string) => void;
+  index?: number;
 }) {
   const imageUrl = getImageUrl(cocktail.image, { width: 600, height: 400 }) || cocktail.externalImageUrl;
   const ingredientCount = cocktail.ingredients?.length || 0;
@@ -576,7 +580,11 @@ function CocktailCard({
     <a
       href={`/cocktails/${slug}`}
       onClick={handleClick}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-500 hover:-translate-y-2 hover:shadow-card-hover cursor-pointer animate-fade-in"
+      style={{
+        animationDelay: `${index * 50}ms`,
+        animationFillMode: 'both'
+      }}
     >
       {/* Image */}
       <div className="relative h-56 w-full overflow-hidden bg-mist">
@@ -587,9 +595,13 @@ function CocktailCard({
               src={imageUrl}
               alt={cocktail.name}
               loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 mix-blend-multiply"
+              onLoad={(e) => {
+                e.currentTarget.style.opacity = '1';
+              }}
+              style={{ opacity: 0, transition: 'opacity 0.3s ease-in' }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-300" />
           </>
         ) : (
           <div className="h-full w-full flex items-center justify-center text-sage text-5xl">
@@ -619,7 +631,7 @@ function CocktailCard({
 
       {/* Content */}
       <div className="p-5 flex-1 flex flex-col relative z-10 -mt-12">
-        <div className="backdrop-blur-md rounded-2xl p-4 border border-mist/50 shadow-soft flex-1 flex flex-col bg-white/90">
+        <div className="backdrop-blur-md rounded-2xl p-4 border border-mist/50 shadow-soft flex-1 flex flex-col bg-white/90 group-hover:bg-white/95 transition-colors duration-300">
           <div className="mb-2">
             {cocktail.primarySpirit && (
               <p className="font-mono text-[10px] text-terracotta font-bold tracking-widest uppercase mb-1">

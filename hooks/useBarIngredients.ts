@@ -543,18 +543,43 @@ export function useBarIngredients(): UseBarIngredientsResult {
       console.warn(`[useBarIngredients] Ingredient ${id} already in bar`);
       return;
     }
-    
+
+    // VALIDATION: Check if ingredient exists in ingredients table
+    try {
+      const { data: ingredientCheck, error: checkError } = await supabase
+        .from("ingredients")
+        .select("id, name")
+        .eq("id", id)
+        .single();
+
+      if (checkError || !ingredientCheck) {
+        console.error(`[useBarIngredients] Ingredient ${id} does not exist in ingredients table:`, checkError);
+        toast.error("Invalid ingredient - this ingredient doesn't exist in our database");
+        return;
+      }
+
+      // Use the canonical name from the ingredients table
+      const canonicalName = ingredientCheck.name;
+      if (name && name !== canonicalName) {
+        console.warn(`[useBarIngredients] Provided name "${name}" differs from canonical name "${canonicalName}", using canonical`);
+      }
+
+      name = canonicalName;
+    } catch (validationError) {
+      console.error(`[useBarIngredients] Validation failed for ingredient ${id}:`, validationError);
+      toast.error("Failed to validate ingredient");
+      return;
+    }
+
     const newIds = [...ingredientIds, id];
     setIngredientIds(newIds);
-    
-    // Update name map
-    if (name) {
-      setIngredientNameMap(prev => new Map(prev).set(id, name));
-    }
-    
+
+    // Update name map with canonical name
+    setIngredientNameMap(prev => new Map(prev).set(id, name!));
+
     if (isAuthenticated && user) {
       try {
-        // Save to server
+        // Save to server with validated data
         const { error } = await supabase.from("bar_ingredients").upsert({
           user_id: user.id,
           ingredient_id: id,

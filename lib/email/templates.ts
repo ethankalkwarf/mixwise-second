@@ -1088,3 +1088,275 @@ Questions? Visit https://getmixwise.com/contact
 
   return { subject, html, text };
 }
+
+/**
+ * Thirsty Thursday Welcome Email Template
+ * Sent when users sign up for the weekly cocktail newsletter
+ */
+export function thirstyThursdayWelcomeTemplate({
+  userEmail,
+  unsubscribeUrl,
+  featuredCocktail,
+}: {
+  userEmail: string;
+  unsubscribeUrl: string;
+  featuredCocktail?: {
+    name: string;
+    slug: string;
+    description?: string;
+    imageUrl?: string;
+    ingredients?: string;
+    instructions?: string;
+  };
+}): EmailTemplate {
+  const subject = "Welcome to Thirsty Thursday! 🍹 Your first cocktail is here";
+  const previewText = "Get ready for weekly cocktail recipes delivered straight to your inbox every Thursday.";
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+  <title>Welcome to Thirsty Thursday!</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  ${baseStyles}
+  <style>
+    .thirsty-header {
+      background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f97316 100%);
+      padding: 48px 40px;
+      text-align: center;
+      position: relative;
+    }
+    .thirsty-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 42px;
+      font-weight: 900;
+      color: #FFFFFF;
+      margin: 0;
+      letter-spacing: -1px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .thirsty-subtitle {
+      font-size: 20px;
+      color: #FFFFFF;
+      margin: 12px 0 0 0;
+      opacity: 0.95;
+      font-weight: 600;
+    }
+    .gradient-button {
+      background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f97316 100%);
+      color: #FFFFFF !important;
+      text-decoration: none;
+      padding: 18px 40px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 16px;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+    }
+    .feature-box {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%);
+      border-radius: 16px;
+      padding: 20px;
+      margin: 12px 0;
+      border-left: 4px solid;
+      border-image: linear-gradient(135deg, #ec4899, #a855f7, #f97316) 1;
+    }
+  </style>
+</head>
+<body>
+  ${getPreheaderHtml(previewText)}
+  <div class="email-wrapper">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
+      
+      <!-- Header -->
+      <tr>
+        <td class="thirsty-header" bgcolor="#ec4899" style="background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f97316 100%); padding: 48px 40px; text-align: center;">
+          <h1 class="thirsty-title" style="font-family: system-ui, -apple-system, sans-serif; font-size: 42px; font-weight: 900; color: #FFFFFF; margin: 0; letter-spacing: -1px; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+            Thirsty Thursday
+          </h1>
+          <p class="thirsty-subtitle" style="font-size: 20px; color: #FFFFFF; margin: 12px 0 0 0; opacity: 0.95; font-weight: 600;">
+            You're in! 🔥
+          </p>
+        </td>
+      </tr>
+      
+      <!-- Content -->
+      <tr>
+        <td class="email-content" style="padding: 48px 40px;">
+          <div style="text-align: center; font-size: 64px; margin-bottom: 20px;">🎉</div>
+          
+          <h2 style="font-family: system-ui, -apple-system, sans-serif; font-size: 28px; color: #2C3628; margin: 0 0 16px 0; font-weight: 800; text-align: center;">
+            You're all set!
+          </h2>
+          
+          <p style="font-size: 16px; color: #2C3628; margin: 0 0 32px 0; line-height: 1.65; text-align: center;">
+            Every Thursday, we'll send you a fresh cocktail recipe to get your weekend started right.
+          </p>
+          
+          ${featuredCocktail ? `
+          <!-- Featured Cocktail Recipe -->
+          <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.08) 0%, rgba(168, 85, 247, 0.08) 50%, rgba(249, 115, 22, 0.08) 100%); border-radius: 20px; padding: 24px; margin: 0 0 32px 0; border: 2px solid rgba(236, 72, 153, 0.2);">
+            <h3 style="font-family: system-ui, -apple-system, sans-serif; font-size: 22px; color: #3A4D39; margin: 0 0 8px 0; font-weight: 800; text-align: center;">
+              🍸 Your First Cocktail
+            </h3>
+            <h4 style="font-family: system-ui, -apple-system, sans-serif; font-size: 20px; color: #2C3628; margin: 0 0 12px 0; font-weight: 700; text-align: center;">
+              ${featuredCocktail.name}
+            </h4>
+            ${featuredCocktail.description ? `
+            <p style="font-size: 14px; color: #5F6F5E; margin: 0 0 16px 0; line-height: 1.5; text-align: center;">
+              ${featuredCocktail.description}
+            </p>
+            ` : ''}
+            ${featuredCocktail.ingredients ? `
+            <div style="margin: 16px 0;">
+              <p style="font-size: 14px; font-weight: 700; color: #3A4D39; margin: 0 0 8px 0;">Ingredients:</p>
+              <p style="font-size: 14px; color: #2C3628; margin: 0; line-height: 1.6; white-space: pre-line;">${featuredCocktail.ingredients}</p>
+            </div>
+            ` : ''}
+            ${featuredCocktail.instructions ? `
+            <div style="margin: 16px 0;">
+              <p style="font-size: 14px; font-weight: 700; color: #3A4D39; margin: 0 0 8px 0;">Instructions:</p>
+              <p style="font-size: 14px; color: #2C3628; margin: 0; line-height: 1.6; white-space: pre-line;">${featuredCocktail.instructions}</p>
+            </div>
+            ` : ''}
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="https://www.getmixwise.com/cocktails/${featuredCocktail.slug}" style="color: #ec4899; text-decoration: none; font-weight: 600; font-size: 14px;">View Full Recipe →</a>
+            </div>
+          </div>
+          ` : ''}
+          
+          <!-- What to Expect -->
+          <div class="feature-box" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%); border-radius: 16px; padding: 20px; margin: 0 0 16px 0; border-left: 4px solid #ec4899;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr>
+                <td style="width: 48px; vertical-align: top;">
+                  <span style="font-size: 32px;">📅</span>
+                </td>
+                <td style="padding-left: 12px;">
+                  <p style="margin: 0 0 4px 0; font-weight: 700; color: #3A4D39; font-size: 16px;">Every Thursday</p>
+                  <p style="margin: 0; color: #5F6F5E; font-size: 14px; line-height: 1.5;">A new cocktail recipe, delivered weekly to get you weekend-ready.</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+          
+          <div class="feature-box" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%); border-radius: 16px; padding: 20px; margin: 0 0 16px 0; border-left: 4px solid #a855f7;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr>
+                <td style="width: 48px; vertical-align: top;">
+                  <span style="font-size: 32px;">✨</span>
+                </td>
+                <td style="padding-left: 12px;">
+                  <p style="margin: 0 0 4px 0; font-weight: 700; color: #3A4D39; font-size: 16px;">Curated Selection</p>
+                  <p style="margin: 0; color: #5F6F5E; font-size: 14px; line-height: 1.5;">We've tested 300+ cocktails so you only get the best.</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+          
+          <div class="feature-box" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%); border-radius: 16px; padding: 20px; margin: 0 0 32px 0; border-left: 4px solid #f97316;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr>
+                <td style="width: 48px; vertical-align: top;">
+                  <span style="font-size: 32px;">🔥</span>
+                </td>
+                <td style="padding-left: 12px;">
+                  <p style="margin: 0 0 4px 0; font-weight: 700; color: #3A4D39; font-size: 16px;">Expand Your Palate</p>
+                  <p style="margin: 0; color: #5F6F5E; font-size: 14px; line-height: 1.5;">Discover new flavors, techniques, and drinks you'll love.</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+          
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="https://www.getmixwise.com/cocktails" class="gradient-button" style="background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f97316 100%); color: #FFFFFF !important; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 700; font-size: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);">
+              Browse All Recipes 🍸
+            </a>
+          </div>
+          
+          <div style="height: 1px; background: linear-gradient(90deg, transparent, #D1DAD0, transparent); margin: 32px 0;"></div>
+          
+          <p style="font-size: 14px; color: #5F6F5E; margin: 0; line-height: 1.6; text-align: center;">
+            See you next Thursday! 🍹
+          </p>
+        </td>
+      </tr>
+      
+      <!-- Footer -->
+      <tr>
+        <td class="email-footer" style="background-color: #E6EBE4; padding: 32px 40px; text-align: center; border-top: 1px solid #D1DAD0;">
+          <p style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">
+            This email was sent to <strong>${userEmail}</strong>
+          </p>
+          <p style="font-size: 13px; color: #5F6F5E; margin: 0;">
+            © ${new Date().getFullYear()} MixWise · Thirsty Thursday Newsletter
+          </p>
+          <div style="margin: 16px 0 0 0;">
+            <a href="https://www.getmixwise.com" style="color: #3A4D39; text-decoration: none; font-size: 13px; margin: 0 8px;">Visit MixWise</a>
+            <span style="color: #D1DAD0;">|</span>
+            <a href="${unsubscribeUrl}" style="color: #5F6F5E; text-decoration: none; font-size: 13px; margin: 0 8px;">Unsubscribe</a>
+          </div>
+        </td>
+      </tr>
+      
+    </table>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Welcome to Thirsty Thursday! 🍹
+
+You're all set!
+
+Every Thursday, we'll send you a fresh cocktail recipe to get your weekend started right.
+
+${featuredCocktail ? `
+YOUR FIRST COCKTAIL: ${featuredCocktail.name}
+
+${featuredCocktail.description || ''}
+
+${featuredCocktail.ingredients ? `Ingredients:\n${featuredCocktail.ingredients}\n` : ''}
+${featuredCocktail.instructions ? `Instructions:\n${featuredCocktail.instructions}\n` : ''}
+View full recipe: https://www.getmixwise.com/cocktails/${featuredCocktail.slug}
+
+` : ''}
+WHAT TO EXPECT:
+
+📅 EVERY THURSDAY
+A new cocktail recipe, delivered weekly to get you weekend-ready.
+
+✨ CURATED SELECTION
+We've tested 300+ cocktails so you only get the best.
+
+🔥 EXPAND YOUR PALATE
+Discover new flavors, techniques, and drinks you'll love.
+
+Browse all recipes: https://www.getmixwise.com/cocktails
+
+See you next Thursday! 🍹
+
+---
+This email was sent to ${userEmail}
+© ${new Date().getFullYear()} MixWise · Thirsty Thursday Newsletter
+https://www.getmixwise.com
+
+Unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  return { subject, html, text };
+}

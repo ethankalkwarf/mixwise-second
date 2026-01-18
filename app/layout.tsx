@@ -3,8 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { SupabaseProvider } from "./providers";
-import { Navbar } from "@/components/layout/Navbar";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { ConditionalLayoutWrapper } from "@/components/layout/ConditionalLayoutWrapper";
 import { OrganizationSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 
@@ -93,13 +92,9 @@ export default async function RootLayout({
         </a>
         
         <SupabaseProvider initialSession={initialSession}>
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
-              {children}
-            </main>
-            <SiteFooter />
-          </div>
+          <ConditionalLayoutWrapper>
+            {children}
+          </ConditionalLayoutWrapper>
         </SupabaseProvider>
       </body>
     </html>

@@ -21,6 +21,7 @@ interface UseFavoritesResult {
     imageUrl?: string;
   }) => Promise<void>;
   removeFavorite: (cocktailId: string) => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 /**
@@ -212,6 +213,17 @@ export function useFavorites(): UseFavoritesResult {
     }
   }, [isAuthenticated, user, supabase, loadFavorites, toast]);
 
+  // Force refresh favorites from server
+  const refresh = useCallback(async () => {
+    if (!isAuthenticated || !user) return;
+    
+    // Reset the last fetched user ID to force a refetch
+    lastFetchedUserId.current = null;
+    setIsLoading(true);
+    await loadFavorites(user.id);
+    setIsLoading(false);
+  }, [isAuthenticated, user, loadFavorites]);
+
   return {
     favorites,
     favoriteIds,
@@ -219,6 +231,7 @@ export function useFavorites(): UseFavoritesResult {
     isFavorite,
     toggleFavorite,
     removeFavorite,
+    refresh,
   };
 }
 

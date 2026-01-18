@@ -47,13 +47,13 @@ export function Hero({ title, subtitle, featuredCocktails = [] }: HeroProps) {
               <div className="flex flex-col sm:flex-row gap-4 justify-center xl:justify-start">
                 <Link
                   href="/mix"
-                  className="inline-flex items-center justify-center rounded-full px-8 py-4 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark transition-all duration-300 shadow-terracotta hover:shadow-terracotta"
+                  className="inline-flex items-center justify-center rounded-full px-8 py-4 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark active:scale-95 transition-all duration-300 shadow-terracotta hover:shadow-lg hover:shadow-terracotta/30"
                 >
                   Discover Your Perfect Drink
                 </Link>
                 <Link
                   href="/cocktails"
-                  className="inline-flex items-center justify-center rounded-full px-8 py-4 text-sm font-medium border-2 border-forest text-forest hover:bg-forest hover:text-cream transition-all duration-300"
+                  className="inline-flex items-center justify-center rounded-full px-8 py-4 text-sm font-medium border-2 border-forest text-forest hover:bg-forest hover:text-cream active:scale-95 transition-all duration-300 hover:shadow-md"
                 >
                   Browse All Recipes
                 </Link>

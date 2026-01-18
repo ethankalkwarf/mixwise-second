@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { confirmEmailTemplate, resetPasswordTemplate, welcomeEmailTemplate, weeklyDigestTemplate, weddingRecommendationsTemplate } from "@/lib/email/templates";
+import { confirmEmailTemplate, resetPasswordTemplate, welcomeEmailTemplate, weeklyDigestTemplate, weddingRecommendationsTemplate, thirstyThursdayWelcomeTemplate } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Sample data for preview
@@ -81,6 +81,7 @@ function wrapInPreviewPage(templateName: string, emailHtml: string, subject: str
   const templates = [
     { id: "confirmation", name: "Email Confirmation" },
     { id: "welcome", name: "Welcome Email" },
+    { id: "thirsty-thursday", name: "Thirsty Thursday Welcome" },
     { id: "weekly-digest", name: "Weekly Digest (with bar)" },
     { id: "weekly-digest-empty", name: "Weekly Digest (no bar)" },
     { id: "password-reset", name: "Password Reset" },
@@ -413,6 +414,21 @@ export async function GET(request: NextRequest) {
         displayName: SAMPLE_DISPLAY_NAME,
         userEmail: SAMPLE_EMAIL,
         unsubscribeUrl: SAMPLE_UNSUBSCRIBE_URL,
+      });
+      break;
+    case "thirsty-thursday":
+      templateName = "Thirsty Thursday Welcome";
+      emailTemplate = thirstyThursdayWelcomeTemplate({
+        userEmail: SAMPLE_EMAIL,
+        unsubscribeUrl: SAMPLE_UNSUBSCRIBE_URL,
+        featuredCocktail: featuredCocktail ? {
+          name: featuredCocktail.name,
+          slug: featuredCocktail.slug,
+          description: featuredCocktail.description,
+          imageUrl: featuredCocktail.imageUrl,
+          ingredients: "2 oz vodka\n4 oz tomato juice\n0.5 oz fresh lemon juice\n0.25 oz Worcestershire sauce\n2 dashes Tabasco sauce",
+          instructions: "1. Build all ingredients in a highball glass filled with ice.\n2. Roll the drink back and forth into a shaker tin to mix without foaming.\n3. Pour back into the highball glass.\n4. Garnish with a celery stalk and lemon wedge.",
+        } : undefined,
       });
       break;
     case "weekly-digest":

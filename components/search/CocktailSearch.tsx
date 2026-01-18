@@ -114,8 +114,8 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
 
   const inputClassName =
     variant === "desktop"
-      ? "w-full pl-10 pr-10 py-2.5 text-sm border border-mist rounded-xl bg-white text-forest placeholder:text-sage focus:outline-none focus:ring-2 focus:ring-terracotta focus:border-transparent"
-      : "w-full pl-10 pr-10 py-2.5 text-sm border border-mist rounded-xl bg-white text-forest placeholder:text-sage focus:outline-none focus:ring-2 focus:ring-terracotta focus:border-transparent";
+      ? "w-full pl-10 pr-10 py-2.5 text-sm border border-mist rounded-xl bg-white text-forest placeholder:text-sage focus:outline-none focus:ring-2 focus:ring-terracotta focus:border-transparent focus:scale-[1.02] transition-all duration-200 shadow-lg shadow-terracotta/10"
+      : "w-full pl-10 pr-10 py-2.5 text-sm border border-mist rounded-xl bg-white text-forest placeholder:text-sage focus:outline-none focus:ring-2 focus:ring-terracotta focus:border-transparent focus:scale-[1.02] transition-all duration-200";
 
   return (
     <div ref={searchRef} className="relative">
@@ -142,7 +142,7 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
         {searchQuery && (
           <button
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-sage hover:text-forest transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-sage hover:text-forest active:scale-90 transition-all duration-200 rounded-full hover:bg-mist/50"
             aria-label="Clear search"
           >
             <XMarkIcon className="w-4 h-4" />
@@ -151,7 +151,7 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
       </div>
 
       {showResults && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card overflow-hidden z-[60] max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card overflow-hidden z-[60] max-h-96 overflow-y-auto animate-fade-in">
           <ul role="listbox" className="py-2">
             {results.map((cocktail, index) => (
               <li
@@ -160,11 +160,15 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
                 aria-selected={index === selectedIndex}
                 onClick={() => handleResultClick(cocktail)}
                 onMouseEnter={() => setSelectedIndex(index)}
-                className={`px-4 py-3 cursor-pointer transition-colors ${
+                className={`px-4 py-3 cursor-pointer transition-all duration-200 ${
                   index === selectedIndex
-                    ? "bg-terracotta/10 text-terracotta"
-                    : "text-charcoal hover:bg-mist/50"
+                    ? "bg-terracotta/10 text-terracotta scale-[1.02]"
+                    : "text-charcoal hover:bg-mist/50 hover:scale-[1.01]"
                 }`}
+                style={{
+                  animationDelay: `${index * 30}ms`,
+                  animationFillMode: 'both'
+                }}
               >
                 <div className="flex items-center gap-3">
                   {cocktail.image_url && (

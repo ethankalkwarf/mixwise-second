@@ -179,12 +179,12 @@ function AuthCallbackPageContent() {
         // More aggressive timeout: 3 seconds instead of 12
         failSafeTimer = setTimeout(async () => {
           if (cancelled) return;
-          console.warn("[AuthCallbackPage] Failsafe timer triggered (3s) - redirecting to onboarding anyway");
+          console.warn("[AuthCallbackPage] Failsafe timer triggered (3s) - redirecting to mix wizard anyway");
           scrubUrl();
           // Wait for auth to be ready with a shorter timeout (1s) since we're already at 3s timeout
           await waitForAuthReady(authReady, 1000);
-          // At this point, just go to onboarding - Supabase will handle session validation
-          router.replace(next === "/" ? "/onboarding" : next);
+          // At this point, just go to mix wizard - Supabase will handle session validation
+          router.replace(next === "/" ? "/mix" : next);
         }, 3000);
 
         // If we already have a valid session cookie/session, just continue (avoids confusing "Sign-in failed")
@@ -196,9 +196,9 @@ function AuthCallbackPageContent() {
           const { data } = await withTimeout(supabase.auth.getUser(), 8000, "getUser");
           const user = data.user;
           if (user && !cancelled) {
-            console.log("[AuthCallbackPage] Redirecting authenticated user to:", next === "/" ? "/onboarding" : next);
+            console.log("[AuthCallbackPage] Redirecting authenticated user to:", next === "/" ? "/mix" : next);
             await waitForAuthReady(authReady);
-            router.replace(next === "/" ? "/onboarding" : next);
+            router.replace(next === "/" ? "/mix" : next);
             return;
           }
         }
@@ -254,10 +254,10 @@ function AuthCallbackPageContent() {
         // Remove sensitive tokens from the URL
         scrubUrl();
 
-        // If we have valid tokens, go straight to onboarding without checking user
+        // If we have valid tokens, go straight to mix wizard without checking user
         // This prevents hanging on getUser() calls
         if ((accessToken && refreshToken) || code) {
-          const target = next === "/" ? "/onboarding" : next;
+          const target = next === "/" ? "/mix" : next;
           console.log("[AuthCallbackPage] Have valid tokens, redirecting directly to:", target);
           if (!cancelled) {
             console.log("[AuthCallbackPage] Navigating to:", target);
@@ -277,21 +277,34 @@ function AuthCallbackPageContent() {
 
         if (user) {
           console.log("[AuthCallbackPage] User authenticated:", user.id);
-          // If the caller explicitly asked for onboarding, don't block on DB checks — go immediately.
-          if (!cancelled && next === "/onboarding") {
-            console.log("[AuthCallbackPage] Explicit onboarding request, redirecting immediately");
+          // If the caller explicitly asked for mix wizard, don't block on DB checks — go immediately.
+          if (!cancelled && next === "/mix") {
+            console.log("[AuthCallbackPage] Explicit mix wizard request, redirecting immediately");
             // Signal that email confirmation completed (for AuthDialog closure)
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
             }
             // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
             await waitForAuthReady(authReady);
-            router.replace("/onboarding");
+            router.replace("/mix");
+            return;
+          }
+          
+          // Legacy onboarding route - redirect to mix wizard instead
+          if (!cancelled && next === "/onboarding") {
+            console.log("[AuthCallbackPage] Legacy onboarding route detected, redirecting to mix wizard");
+            // Signal that email confirmation completed (for AuthDialog closure)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
+            }
+            // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
+            await waitForAuthReady(authReady);
+            router.replace("/mix");
             return;
           }
 
-          // Determine onboarding status (mirror server-side logic)
-          let needsOnboarding = false;
+          // Check if user is new and automatically mark onboarding as completed
+          // New users will go directly to the mix wizard instead of preferences onboarding
           let isNewUser = false;
 
           try {
@@ -306,18 +319,45 @@ function AuthCallbackPageContent() {
             );
 
             if (prefError && prefError.code === "PGRST116") {
-              needsOnboarding = true;
+              // New user - create preferences record with onboarding completed
               isNewUser = true;
+              try {
+                await supabase
+                  .from("user_preferences")
+                  .insert({
+                    user_id: user.id,
+                    onboarding_completed: true,
+                    onboarding_completed_at: new Date().toISOString(),
+                  });
+                console.log("[AuthCallbackPage] Created user_preferences for new user");
+              } catch (insertError) {
+                console.warn("[AuthCallbackPage] Failed to create user_preferences:", insertError);
+                // Continue anyway - not critical
+              }
             } else if (prefError && prefError.code === "42P01") {
-              // Table doesn't exist - skip onboarding
-              needsOnboarding = false;
+              // Table doesn't exist - skip
             } else if (!prefError && (!preferences || !preferences.onboarding_completed)) {
-              needsOnboarding = true;
+              // User exists but hasn't completed onboarding - mark as completed
               isNewUser = true;
+              try {
+                await supabase
+                  .from("user_preferences")
+                  .upsert({
+                    user_id: user.id,
+                    onboarding_completed: true,
+                    onboarding_completed_at: new Date().toISOString(),
+                  }, {
+                    onConflict: "user_id",
+                  });
+                console.log("[AuthCallbackPage] Marked onboarding as completed for existing user");
+              } catch (updateError) {
+                console.warn("[AuthCallbackPage] Failed to update user_preferences:", updateError);
+                // Continue anyway - not critical
+              }
             }
           } catch {
-            // If anything goes wrong, default to onboarding for safety
-            needsOnboarding = true;
+            // If anything goes wrong, continue to mix wizard anyway
+            console.warn("[AuthCallbackPage] Error checking user preferences, continuing to mix wizard");
           }
 
           // Fire-and-forget welcome email for brand new users
@@ -338,10 +378,48 @@ function AuthCallbackPageContent() {
             }).catch(() => {
               // ignore
             });
+
+            // Send notification email to hello@getmixwise.com for new OAuth signups
+            // Determine signup method from user identities or email domain
+            let signupMethod = "Email/Password"; // default
+            if (user.identities && user.identities.length > 0) {
+              const provider = user.identities[0].provider;
+              if (provider === "google") {
+                signupMethod = "Google";
+              } else if (provider === "apple") {
+                signupMethod = "Apple";
+              } else if (provider === "email") {
+                signupMethod = "Email/Password";
+              }
+            } else if (user.email?.includes("@privaterelay.appleid.com")) {
+              // Apple relay email - likely Apple Sign In
+              signupMethod = "Apple";
+            }
+
+            // Send notification email to hello@getmixwise.com (non-blocking)
+            // Use absolute URL to ensure it works in production
+            const notificationUrl = typeof window !== "undefined" 
+              ? `${window.location.origin}/api/auth/send-signup-notification`
+              : "/api/auth/send-signup-notification";
+            
+            fetch(notificationUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: user.id,
+                userEmail: user.email,
+                displayName,
+                signupMethod,
+              }),
+            }).catch((err) => {
+              // Don't fail the auth flow if notification email fails
+              console.error("[AuthCallbackPage] Failed to send notification email (non-fatal):", err);
+            });
           }
 
           if (!cancelled) {
-            const target = needsOnboarding ? "/onboarding" : next;
+            // Always redirect to mix wizard for new users, or their intended destination
+            const target = isNewUser ? "/mix" : next;
             console.log("[AuthCallbackPage] Redirecting to:", target);
             // Signal that email confirmation completed (for AuthDialog closure)
             if (typeof window !== 'undefined') {
@@ -372,7 +450,7 @@ function AuthCallbackPageContent() {
           scrubUrl();
           // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
           await waitForAuthReady(authReady);
-          router.replace(next === "/" ? "/onboarding" : next);
+          router.replace(next === "/" ? "/mix" : next);
           return;
         }
 

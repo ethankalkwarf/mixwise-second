@@ -38,9 +38,21 @@ body {
     @apply text-xl sm:text-2xl font-bold;
   }
   
-  /* Focus states for accessibility - terracotta accent */
+  /* Focus states for accessibility - terracotta accent with smooth animation */
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-terracotta;
+    animation: focus-pulse 0.3s ease-out;
+  }
+  
+  @keyframes focus-pulse {
+    0% {
+      outline-width: 0px;
+      outline-offset: 4px;
+    }
+    100% {
+      outline-width: 2px;
+      outline-offset: 2px;
+    }
   }
   
   /* Skip link for accessibility */
@@ -52,6 +64,144 @@ body {
   ::selection {
     @apply bg-olive/30 text-forest;
   }
+
+  /* Floating animation for Thirsty Thursday */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(var(--rotate, 0deg));
+    }
+    50% {
+      transform: translateY(-20px) rotate(var(--rotate, 0deg));
+    }
+  }
+
+  @keyframes float3d {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px) rotateY(0deg) rotate(var(--rotate, 0deg));
+    }
+    25% {
+      transform: translateY(-15px) translateX(10px) rotateY(5deg) rotate(var(--rotate, 0deg));
+    }
+    50% {
+      transform: translateY(-25px) translateX(0px) rotateY(0deg) rotate(var(--rotate, 0deg));
+    }
+    75% {
+      transform: translateY(-15px) translateX(-10px) rotateY(-5deg) rotate(var(--rotate, 0deg));
+    }
+  }
+
+  @keyframes float-particle {
+    0% {
+      transform: translateY(0) translateX(0) scale(1);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100vh) translateX(50px) scale(0);
+      opacity: 0;
+    }
+  }
+
+  /* Gradient animation for Thirsty Thursday */
+  @keyframes gradient {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @keyframes confetti {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  @keyframes scale-in {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  @keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  @keyframes count-up {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+  }
+
+  .animate-confetti {
+    animation: confetti linear forwards;
+  }
+
+  .animate-blink {
+    animation: blink 1s infinite;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+  }
+
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  .animate-bounce-subtle {
+    animation: bounce-subtle 2s ease-in-out infinite;
+  }
+
+  .animate-float-particle {
+    animation: float-particle linear infinite;
+  }
+
+  .animate-count-up {
+    animation: count-up 0.6s ease-out;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 @layer components {
@@ -59,7 +209,8 @@ body {
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold 
            bg-terracotta text-cream shadow-terracotta
-           hover:bg-terracotta-dark
+           hover:bg-terracotta-dark hover:shadow-lg hover:shadow-terracotta/30
+           active:scale-95
            transition-all duration-300
            focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-cream;
   }
@@ -67,7 +218,8 @@ body {
   .btn-secondary {
     @apply inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold 
            bg-forest text-cream
-           hover:bg-charcoal
+           hover:bg-charcoal hover:shadow-md
+           active:scale-95
            transition-all duration-300
            focus:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 focus-visible:ring-offset-cream;
   }
@@ -75,7 +227,8 @@ body {
   .btn-ghost {
     @apply inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold 
            bg-white text-forest border border-mist
-           hover:bg-mist/50 hover:border-stone
+           hover:bg-mist/50 hover:border-stone hover:shadow-sm
+           active:scale-95
            transition-all duration-300
            focus:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2;
   }
@@ -206,6 +359,22 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* Smooth scale animation for interactive elements */
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
 /* Error state styling */
 .error-box {
   @apply bg-red-50 border border-red-200 rounded-2xl p-4 text-terracotta;
@@ -296,6 +465,17 @@ body {
 
 .animate-fade-in {
   animation: fade-in 0.5s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Pulse animation for added ingredients */

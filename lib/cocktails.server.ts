@@ -602,10 +602,14 @@ export async function getUserBarIngredients(userId: string): Promise<Array<{
   // First, fetch all ingredients to create name-to-ID mapping
   const { data: allIngredients, error: ingredientsError } = await supabase
     .from('ingredients')
-    .select('id, name, category');
+    .select('id, name, category')
+    .not('id', 'is', null)
+    .not('name', 'is', null);
 
   if (ingredientsError) {
     console.error('Error fetching ingredients list:', ingredientsError);
+    // Return empty array to prevent crashes, but log the issue
+    console.warn('Returning empty bar ingredients due to ingredients fetch failure');
     return [];
   }
 

@@ -17,6 +17,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { confirmEmailTemplate } from "@/lib/email/templates";
 import { getAuthCallbackUrl, getCanonicalSiteUrl } from "@/lib/site";
+import { sendSignupNotification } from "@/lib/email/signup-notification";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -159,7 +160,7 @@ export async function POST(request: NextRequest) {
 
     // Generate signup confirmation link
     // This creates the user AND generates the confirmation link in one step
-    const redirectTo = `${getAuthCallbackUrl()}?next=/onboarding`;
+    const redirectTo = `${getAuthCallbackUrl()}?next=/mix`;
     console.log(`[Signup API] Generating signup link with redirect: ${redirectTo}`);
 
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
@@ -641,26 +642,16 @@ export async function POST(request: NextRequest) {
     console.log(`[Signup API] Confirmation email sent successfully. Resend ID: ${emailData?.id}`);
 
     // Send notification email to hello@getmixwise.com (non-blocking)
-    try {
-      // Call the notification API route
-      const notificationUrl = new URL("/api/auth/send-signup-notification", request.url);
-      await fetch(notificationUrl.toString(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: linkData.user.id,
-          userEmail: trimmedEmail,
-          displayName: fullName,
-          signupMethod: "Email/Password",
-        }),
-      }).catch((err) => {
-          // Don't fail the signup if notification email fails
-          console.error("[Signup API] Failed to send notification email (non-fatal):", err);
-        });
-    } catch (notificationError) {
+    // Call the function directly instead of making an HTTP request for better reliability
+    sendSignupNotification({
+      userId: linkData.user.id,
+      userEmail: trimmedEmail,
+      displayName: fullName,
+      signupMethod: "Email/Password",
+    }).catch((err) => {
       // Don't fail the signup if notification email fails
-      console.error("[Signup API] Failed to send notification email (non-fatal):", notificationError);
-    }
+      console.error("[Signup API] Failed to send notification email (non-fatal):", err);
+    });
 
     return NextResponse.json({
       ok: true,

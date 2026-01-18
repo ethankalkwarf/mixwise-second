@@ -201,18 +201,6 @@ export function Navbar() {
                     <Menu.Item>
                       {({ active }) => (
                         <Link
-                          href="/dashboard"
-                          className={`block px-4 py-2.5 text-sm ${
-                            active ? "bg-mist/50 text-terracotta" : "text-charcoal"
-                          }`}
-                        >
-                          Dashboard
-                        </Link>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <Link
                           href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
                           className={`flex items-center gap-2 px-4 py-2.5 text-sm ${
                             active ? "bg-mist/50 text-terracotta" : "text-charcoal"
@@ -220,6 +208,18 @@ export function Navbar() {
                         >
                           <ShareIcon className="w-4 h-4" />
                           Share My Bar
+                        </Link>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <Link
+                          href="/dashboard"
+                          className={`block px-4 py-2.5 text-sm ${
+                            active ? "bg-mist/50 text-terracotta" : "text-charcoal"
+                          }`}
+                        >
+                          Dashboard
                         </Link>
                       )}
                     </Menu.Item>
@@ -349,19 +349,19 @@ export function Navbar() {
                       </div>
                     </div>
                     <Link
-                      href="/dashboard"
-                      className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
-                    <Link
                       href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
                       className="flex items-center gap-2 px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       <ShareIcon className="w-5 h-5" />
                       Share My Bar
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Dashboard
                     </Link>
                     <Link
                       href="/account"

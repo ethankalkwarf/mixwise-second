@@ -88,7 +88,7 @@ export function InventoryList({
                   className="p-3 bg-cream/30 rounded-lg border border-mist hover:bg-cream/50 transition-colors"
                 >
                   <span className="text-sm font-medium text-forest text-center block">
-                    {ingredient.ingredient_name || ingredient.ingredient_id}
+                    {ingredient.ingredient_name || `Unknown Ingredient (${ingredient.ingredient_id})`}
                   </span>
                 </div>
               ))}
