@@ -19,6 +19,7 @@ import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
 import { InformationCircleIcon, BookmarkIcon, PlusIcon, HomeIcon, WrenchScrewdriverIcon, BookOpenIcon } from "@heroicons/react/24/outline";
 import { createClient } from "@/lib/supabase/client";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { Capacitor } from "@capacitor/core";
 
 // Show sign-up prompt after adding this many ingredients
 const PROMPT_THRESHOLD = 3;
@@ -42,6 +43,22 @@ function MixPageContent() {
   // Three-step funnel state
   const [currentStep, setCurrentStep] = useState<'cabinet' | 'mixer' | 'menu'>('cabinet');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Safe native platform detection (prevents SSR errors and hydration mismatches)
+  const [isNative, setIsNative] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== "undefined" && window.Capacitor) {
+      try {
+        setIsNative(Capacitor.isNativePlatform());
+      } catch (e) {
+        console.error("Error checking native platform in MixPage:", e);
+        setIsNative(false);
+      }
+    }
+  }, []);
 
   const { isAuthenticated, user } = useUser();
   const {
@@ -370,7 +387,7 @@ function MixPageContent() {
   };
 
   return (
-    <div className="py-10 bg-cream min-h-screen">
+    <div className="py-6 bg-cream min-h-screen pb-24">
       {/* Page Header - Matching website aesthetic */}
       <MainContainer className="mb-10">
         <div className="mb-6">
@@ -448,75 +465,77 @@ function MixPageContent() {
         {renderStepContent()}
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-mist z-50 safe-area-inset-bottom">
-        <div className="grid grid-cols-3 py-safe">
-          <button
-            onClick={() => setCurrentStep('cabinet')}
-            className={`flex flex-col items-center py-3 px-2 transition-colors relative ${
-              currentStep === 'cabinet'
-                ? 'text-terracotta bg-terracotta/10'
-                : 'text-sage hover:text-forest'
-            }`}
-          >
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1 ${
-              currentStep === 'cabinet'
-                ? 'bg-terracotta text-white'
-                : 'bg-mist text-sage'
-            }`}>
-              {ingredientIds.length === 0 ? '1' : <HomeIcon className="w-3 h-3" />}
-            </div>
-            <span className="text-xs font-medium">Cabinet</span>
-            <span className="text-xs text-sage/70">Add ingredients</span>
-          </button>
-          <button
-            onClick={() => {
-              if (ingredientIds.length > 0) {
-                setCurrentStep('mixer');
-                setIsProcessing(true);
-                setTimeout(() => {
-                  setIsProcessing(false);
-                  setCurrentStep('menu');
-                }, 2000);
-              }
-            }}
-            className={`flex flex-col items-center py-3 px-2 transition-colors relative ${
-              currentStep === 'mixer'
-                ? 'text-olive bg-olive/10'
-                : 'text-sage hover:text-forest'
-            } ${ingredientIds.length === 0 ? 'opacity-50' : ''}`}
-            disabled={ingredientIds.length === 0}
-          >
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1 ${
-              currentStep === 'mixer'
-                ? 'bg-olive text-white'
-                : ingredientIds.length === 0 ? 'bg-mist/50 text-sage/50' : 'bg-mist text-sage'
-            }`}>
-              {ingredientIds.length === 0 ? '2' : <WrenchScrewdriverIcon className="w-3 h-3" />}
-            </div>
-            <span className="text-xs font-medium">Mix</span>
-            <span className="text-xs text-sage/70">Find cocktails</span>
-          </button>
-          <button
-            onClick={() => setCurrentStep('menu')}
-            className={`flex flex-col items-center py-3 px-2 transition-colors relative ${
-              currentStep === 'menu'
-                ? 'text-forest bg-forest/10'
-                : 'text-sage hover:text-forest'
-            }`}
-          >
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1 ${
-              currentStep === 'menu'
-                ? 'bg-forest text-white'
-                : 'bg-mist text-sage'
-            }`}>
-              {ingredientIds.length === 0 ? '3' : <BookOpenIcon className="w-3 h-3" />}
-            </div>
-            <span className="text-xs font-medium">Menu</span>
-            <span className="text-xs text-sage/70">See recipes</span>
-          </button>
-        </div>
-      </nav>
+      {/* Step Navigation - Only show on web, not on native (native uses app tab bar) */}
+      {isMounted && !isNative && (
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-mist z-50 safe-area-inset-bottom">
+          <div className="grid grid-cols-3 py-safe">
+            <button
+              onClick={() => setCurrentStep('cabinet')}
+              className={`flex flex-col items-center py-3 px-2 transition-colors relative ${
+                currentStep === 'cabinet'
+                  ? 'text-terracotta bg-terracotta/10'
+                  : 'text-sage hover:text-forest'
+              }`}
+            >
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1 ${
+                currentStep === 'cabinet'
+                  ? 'bg-terracotta text-white'
+                  : 'bg-mist text-sage'
+              }`}>
+                {ingredientIds.length === 0 ? '1' : <HomeIcon className="w-3 h-3" />}
+              </div>
+              <span className="text-xs font-medium">Cabinet</span>
+              <span className="text-xs text-sage/70">Add ingredients</span>
+            </button>
+            <button
+              onClick={() => {
+                if (ingredientIds.length > 0) {
+                  setCurrentStep('mixer');
+                  setIsProcessing(true);
+                  setTimeout(() => {
+                    setIsProcessing(false);
+                    setCurrentStep('menu');
+                  }, 2000);
+                }
+              }}
+              className={`flex flex-col items-center py-3 px-2 transition-colors relative ${
+                currentStep === 'mixer'
+                  ? 'text-olive bg-olive/10'
+                  : 'text-sage hover:text-forest'
+              } ${ingredientIds.length === 0 ? 'opacity-50' : ''}`}
+              disabled={ingredientIds.length === 0}
+            >
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1 ${
+                currentStep === 'mixer'
+                  ? 'bg-olive text-white'
+                  : ingredientIds.length === 0 ? 'bg-mist/50 text-sage/50' : 'bg-mist text-sage'
+              }`}>
+                {ingredientIds.length === 0 ? '2' : <WrenchScrewdriverIcon className="w-3 h-3" />}
+              </div>
+              <span className="text-xs font-medium">Mix</span>
+              <span className="text-xs text-sage/70">Find cocktails</span>
+            </button>
+            <button
+              onClick={() => setCurrentStep('menu')}
+              className={`flex flex-col items-center py-3 px-2 transition-colors relative ${
+                currentStep === 'menu'
+                  ? 'text-forest bg-forest/10'
+                  : 'text-sage hover:text-forest'
+              }`}
+            >
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1 ${
+                currentStep === 'menu'
+                  ? 'bg-forest text-white'
+                  : 'bg-mist text-sage'
+              }`}>
+                {ingredientIds.length === 0 ? '3' : <BookOpenIcon className="w-3 h-3" />}
+              </div>
+              <span className="text-xs font-medium">Menu</span>
+              <span className="text-xs text-sage/70">See recipes</span>
+            </button>
+          </div>
+        </nav>
+      )}
 
       {/* Save Bar Prompt for Anonymous Users */}
       {showSavePrompt && !isAuthenticated && (
@@ -555,8 +574,10 @@ function MixPageContent() {
         onCancel={handleCancelClear}
       />
 
-      {/* Add padding for mobile navigation */}
-      <div className="lg:hidden h-16" />
+      {/* Add padding for mobile navigation - Only on web */}
+      {isMounted && !isNative && (
+        <div className="lg:hidden h-16" />
+      )}
     </div>
   );
 }
