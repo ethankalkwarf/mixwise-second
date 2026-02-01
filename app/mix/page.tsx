@@ -19,7 +19,6 @@ import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
 import { InformationCircleIcon, BookmarkIcon, PlusIcon, HomeIcon, WrenchScrewdriverIcon, BookOpenIcon } from "@heroicons/react/24/outline";
 import { createClient } from "@/lib/supabase/client";
 import { MainContainer } from "@/components/layout/MainContainer";
-import { Capacitor } from "@capacitor/core";
 
 // Show sign-up prompt after adding this many ingredients
 const PROMPT_THRESHOLD = 3;
@@ -52,7 +51,8 @@ function MixPageContent() {
     setIsMounted(true);
     if (typeof window !== "undefined" && window.Capacitor) {
       try {
-        setIsNative(Capacitor.isNativePlatform());
+        const cap = (window as unknown as { Capacitor?: { isNativePlatform: () => boolean } }).Capacitor;
+        setIsNative(cap?.isNativePlatform?.() ?? false);
       } catch (e) {
         console.error("Error checking native platform in MixPage:", e);
         setIsNative(false);
