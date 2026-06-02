@@ -17,6 +17,31 @@ npm install
 npx playwright install
 ```
 
+## Email tests (auth + weekly digest)
+
+Automated checks for Resend/auth flows. **Inbox delivery** requires your secrets.
+
+### Safe checks (no secrets) — run against production anytime
+
+```bash
+E2E_BASE_URL=https://www.getmixwise.com npm run test:e2e:email
+```
+
+Covers: cron auth, auth dialog UI, API must not be openly abusable.
+
+### Live delivery (you provide secrets once)
+
+1. Copy `.env.e2e.example` → `.env.e2e` and fill `RESEND_API_KEY`, `E2E_TEST_INBOX`, `CRON_SECRET`, `E2E_BASE_URL`.
+2. Merge the email-fix PR and redeploy Vercel.
+3. Run:
+
+```bash
+set -a && source .env.e2e && set +a
+E2E_LIVE_EMAIL_TESTS=1 npm run test:e2e:email:live
+```
+
+Live tests call signup/reset APIs and confirm delivery via the **Resend API** (no manual inbox needed if Resend lists the send).
+
 ## Running Tests
 
 ### Local Development

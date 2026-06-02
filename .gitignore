@@ -1,3 +1,7 @@
 node_modules/
 .next/
 .env*
+!.env.e2e.example
+/test-results/
+/playwright-report/
+/blob-report/

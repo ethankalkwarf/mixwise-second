@@ -219,7 +219,10 @@ export function AuthDialog({
       } else {
         setEmailSent(true);
         setIsEmailLoading(false);
-        toast.success("If an account with that email exists, we've sent you a password reset link");
+        toast.success(
+          result.message ||
+            "If an account exists for that email, we've sent a password reset link. Check your inbox and spam folder."
+        );
       }
     } else {
       // Sign in with email and password

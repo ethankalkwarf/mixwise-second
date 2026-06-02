@@ -1,38 +1,56 @@
 /**
  * Send Signup Notification API Route
  *
- * API endpoint wrapper for sendSignupNotification function.
- * This endpoint is kept for backwards compatibility and external calls.
+ * Notifies hello@getmixwise.com of a new OAuth signup.
+ * Requires authenticated session; only for recently created accounts.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 import { sendSignupNotification } from "@/lib/email/signup-notification";
+import { isRecentlyCreatedUser } from "@/lib/email/send-welcome";
 
-export async function POST(request: NextRequest) {
+export const dynamic = "force-dynamic";
+
+export async function POST() {
   try {
-    // Parse request body
-    const body = await request.json();
-    const { userId, userEmail, displayName, signupMethod = "Unknown" } = body;
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    // Validate required fields
-    if (!userId || typeof userId !== "string") {
-      return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
-      );
+    if (authError || !user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!userEmail || typeof userEmail !== "string") {
-      return NextResponse.json(
-        { error: "User email is required" },
-        { status: 400 }
-      );
+    if (!isRecentlyCreatedUser(user.created_at)) {
+      return NextResponse.json({ ok: true, skipped: true, reason: "not_new_user" });
     }
 
-    // Call the shared function
+    const isOAuthSignup =
+      user.identities?.some((i) => i.provider === "google" || i.provider === "apple") ??
+      false;
+
+    if (!isOAuthSignup) {
+      return NextResponse.json({ ok: true, skipped: true, reason: "email_signup_handled_server_side" });
+    }
+
+    let signupMethod = "OAuth";
+    const provider = user.identities?.[0]?.provider;
+    if (provider === "google") signupMethod = "Google";
+    else if (provider === "apple") signupMethod = "Apple";
+
+    const displayName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email.split("@")[0];
+
     const result = await sendSignupNotification({
-      userId,
-      userEmail,
+      userId: user.id,
+      userEmail: user.email,
       displayName,
       signupMethod,
     });
@@ -49,13 +67,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ ok: true });
-
   } catch (error) {
     console.error("[Signup Notification API] Unexpected error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

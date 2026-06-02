@@ -9,7 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { confirmEmailTemplate } from "@/lib/email/templates";
-import { getAuthCallbackUrl, getCanonicalSiteUrl } from "@/lib/site";
+import { getAuthCallbackUrl } from "@/lib/site";
+import { buildSafeAuthUrl } from "@/lib/email/auth-links";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = createAdminClient();
 
     // Generate signup confirmation link
-    const redirectTo = `${getAuthCallbackUrl()}?next=/onboarding`;
+    const redirectTo = `${getAuthCallbackUrl(new URL(request.url))}?next=/mix`;
 
     console.log(`[Send Confirmation] Generating confirmation link with redirect: ${redirectTo}`);
 
@@ -126,19 +127,7 @@ export async function POST(request: NextRequest) {
       console.log(`[Send Confirmation] Generated URL: ${confirmUrl}`);
     }
 
-    // Create email template
-    // Prefer a MixWise-hosted verify URL so the email href doesn't contain a Supabase URL (helps Outlook trust)
-    const baseUrl = getCanonicalSiteUrl(new URL(request.url));
-    const parsedConfirmUrl = new URL(confirmUrl);
-    const token = parsedConfirmUrl.searchParams.get("token") || "";
-    const type = parsedConfirmUrl.searchParams.get("type") || "";
-    const redirectToParam = parsedConfirmUrl.searchParams.get("redirect_to") || "";
-    const safeConfirmUrl =
-      token && type
-        ? `${baseUrl}/auth/verify?token=${encodeURIComponent(token)}&type=${encodeURIComponent(type)}${
-            redirectToParam ? `&redirect_to=${encodeURIComponent(redirectToParam)}` : ""
-          }`
-        : `${baseUrl}/auth/redirect?to=${encodeURIComponent(confirmUrl)}`;
+    const safeConfirmUrl = buildSafeAuthUrl(confirmUrl, new URL(request.url));
 
     const emailTemplate = confirmEmailTemplate({
       confirmUrl: safeConfirmUrl,
@@ -152,10 +141,15 @@ export async function POST(request: NextRequest) {
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,
+      replyTo: "hello@getmixwise.com",
       to: trimmedEmail,
       subject: emailTemplate.subject,
       html: emailTemplate.html,
       text: emailTemplate.text,
+      tags: [
+        { name: "category", value: "account_confirmation_resend" },
+        { name: "environment", value: process.env.NODE_ENV || "production" },
+      ],
     });
 
     if (emailError) {

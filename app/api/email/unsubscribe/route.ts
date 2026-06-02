@@ -1,20 +1,19 @@
 /**
  * Email Unsubscribe API Route
  *
- * Handles email unsubscribe requests via secure token.
- * Supports both GET (for one-click unsubscribe) and POST (for preference updates).
+ * Handles unsubscribe requests via secure token (registered users).
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * GET - One-click unsubscribe from all emails
+ * GET - One-click unsubscribe from all emails or a specific category
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
-  const type = searchParams.get("type") || "all"; // all, digest, recommendations, etc.
+  const type = searchParams.get("type") || "all";
 
   if (!token) {
     return NextResponse.json(
@@ -26,7 +25,6 @@ export async function GET(request: NextRequest) {
   try {
     const supabaseAdmin = createAdminClient();
 
-    // Find user by unsubscribe token
     const { data: prefs, error: findError } = await supabaseAdmin
       .from("email_preferences")
       .select("user_id")
@@ -41,7 +39,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Update preferences based on type
     let updateData: Record<string, unknown> = {};
 
     if (type === "all") {
@@ -58,6 +55,8 @@ export async function GET(request: NextRequest) {
       updateData = { recommendations: false };
     } else if (type === "updates") {
       updateData = { product_updates: false };
+    } else if (type === "welcome") {
+      updateData = { welcome_emails: false };
     }
 
     const { error: updateError } = await supabaseAdmin
@@ -73,10 +72,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`[Unsubscribe] Successfully unsubscribed user ${prefs.user_id} from ${type}`);
+    console.log(`[Unsubscribe] User ${prefs.user_id} unsubscribed from ${type}`);
 
     return NextResponse.json({ ok: true, unsubscribedFrom: type });
-
   } catch (error) {
     console.error("[Unsubscribe] Unexpected error:", error);
     return NextResponse.json(
@@ -103,7 +101,6 @@ export async function POST(request: NextRequest) {
 
     const supabaseAdmin = createAdminClient();
 
-    // Validate token exists
     const { data: prefs, error: findError } = await supabaseAdmin
       .from("email_preferences")
       .select("user_id")
@@ -117,21 +114,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build update object with only valid fields
     const validFields = ["welcome_emails", "weekly_digest", "recommendations", "product_updates"];
-    const updateData: Record<string, boolean> = {};
+    const updateData: Record<string, boolean | null> = {};
 
     for (const field of validFields) {
-      if (typeof preferences[field] === "boolean") {
+      if (typeof preferences?.[field] === "boolean") {
         updateData[field] = preferences[field];
       }
     }
 
-    // Check if resubscribing (any field set to true)
-    const isResubscribing = Object.values(updateData).some(v => v === true);
+    const isResubscribing = Object.values(updateData).some((v) => v === true);
     if (isResubscribing) {
-      // Clear the unsubscribed_all_at timestamp
-      (updateData as Record<string, unknown>).unsubscribed_all_at = null;
+      updateData.unsubscribed_all_at = null;
     }
 
     const { error: updateError } = await supabaseAdmin
@@ -147,10 +141,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Unsubscribe] Updated preferences for user ${prefs.user_id}`);
-
     return NextResponse.json({ ok: true, updated: updateData });
-
   } catch (error) {
     console.error("[Unsubscribe] Unexpected error:", error);
     return NextResponse.json(
@@ -159,4 +150,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

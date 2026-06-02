@@ -1002,7 +1002,7 @@ export function weddingRecommendationsTemplate({
             <strong style="color: #3A4D39; font-size: 18px;">${index + 1}. ${rec.name}</strong>
             ${spirit ? `<span style="color: #5F6F5E; font-size: 14px;">${spirit}</span>` : ""}
             <br>
-            <a href="https://getmixwise.com/cocktails/${rec.slug}" style="color: #BC5A45; text-decoration: none; font-size: 14px;">View Recipe →</a>
+            <a href="https://www.getmixwise.com/cocktails/${rec.slug}" style="color: #BC5A45; text-decoration: none; font-size: 14px;">View Recipe →</a>
           </td>
         </tr>
       `;
@@ -1044,7 +1044,7 @@ export function weddingRecommendationsTemplate({
                     </table>
 
                     <div style="text-align: center; margin: 32px 0;">
-                      <a href="https://getmixwise.com/wedding-menu" style="display: inline-block; background-color: #BC5A45; color: #F9F7F2; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                      <a href="https://www.getmixwise.com/wedding-menu" style="display: inline-block; background-color: #BC5A45; color: #F9F7F2; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">
                         View All Recommendations
                       </a>
                     </div>
@@ -1058,7 +1058,7 @@ export function weddingRecommendationsTemplate({
                       This email was sent from MixWise. You can view and save your recommendations anytime by visiting your account.
                     </p>
                     <p style="margin: 0; font-size: 13px; color: #5F6F5E;">
-                      Questions? Reply to this email or visit <a href="https://getmixwise.com/contact" style="color: #BC5A45; text-decoration: none;">getmixwise.com/contact</a>
+                      Questions? Reply to this email or visit <a href="https://www.getmixwise.com/contact" style="color: #BC5A45; text-decoration: none;">getmixwise.com/contact</a>
                     </p>
                   </td>
                 </tr>
@@ -1076,14 +1076,14 @@ Your Wedding Cocktail Recommendations
 Thank you for using our wedding cocktail finder! Here are your ${recommendations.length} personalized cocktail recommendations:
 
 ${recommendations.map((rec, index) => 
-  `${index + 1}. ${rec.name}${rec.base_spirit ? ` • ${rec.base_spirit}` : ""}\n   View: https://getmixwise.com/cocktails/${rec.slug}`
+  `${index + 1}. ${rec.name}${rec.base_spirit ? ` • ${rec.base_spirit}` : ""}\n   View: https://www.getmixwise.com/cocktails/${rec.slug}`
 ).join("\n\n")}
 
-View all recommendations: https://getmixwise.com/wedding-menu
+View all recommendations: https://www.getmixwise.com/wedding-menu
 
 ---
 This email was sent from MixWise.
-Questions? Visit https://getmixwise.com/contact
+Questions? Visit https://www.getmixwise.com/contact
   `.trim();
 
   return { subject, html, text };
