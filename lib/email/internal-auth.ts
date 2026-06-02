@@ -4,12 +4,22 @@
 
 import { NextRequest } from "next/server";
 
+function normalizeSecret(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 /**
  * Returns the shared secret used for cron and internal email API calls.
  * CRON_SECRET is the primary env var; INTERNAL_API_SECRET is an alias.
+ * Values are trimmed — Vercel rejects secrets with leading/trailing whitespace at deploy time.
  */
 export function getInternalApiSecret(): string | undefined {
-  return process.env.CRON_SECRET || process.env.INTERNAL_API_SECRET;
+  return (
+    normalizeSecret(process.env.CRON_SECRET) ||
+    normalizeSecret(process.env.INTERNAL_API_SECRET)
+  );
 }
 
 /**
@@ -37,16 +47,17 @@ export function verifyInternalRequest(request: NextRequest): boolean {
  * Verifies EMAIL_TEST_SECRET for the email test endpoint.
  */
 export function verifyEmailTestSecret(providedSecret: string | undefined): boolean {
-  const testSecret = process.env.EMAIL_TEST_SECRET;
+  const testSecret = normalizeSecret(process.env.EMAIL_TEST_SECRET);
+  const provided = normalizeSecret(providedSecret);
 
   if (process.env.NODE_ENV === "production") {
     if (!testSecret) {
       console.error("[Email Test] EMAIL_TEST_SECRET is required in production");
       return false;
     }
-    return providedSecret === testSecret;
+    return provided === testSecret;
   }
 
   if (!testSecret) return true;
-  return providedSecret === testSecret;
+  return provided === testSecret;
 }
