@@ -16,7 +16,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { confirmEmailTemplate } from "@/lib/email/templates";
-import { getAuthCallbackUrl, getCanonicalSiteUrl } from "@/lib/site";
+import { getAuthCallbackUrl } from "@/lib/site";
+import { buildSafeAuthUrl } from "@/lib/email/auth-links";
 import { sendSignupNotification } from "@/lib/email/signup-notification";
 
 // Rate limiting: simple in-memory store (resets on server restart)
@@ -573,19 +574,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create email template
-    // Prefer a "safe" MixWise-hosted verify URL (better deliverability than exposing Supabase URL in href)
-    const baseUrl = getCanonicalSiteUrl(new URL(request.url));
-    const parsedConfirmUrl = new URL(confirmUrl);
-    const token = parsedConfirmUrl.searchParams.get("token") || "";
-    const type = parsedConfirmUrl.searchParams.get("type") || "";
-    const redirectToParam = parsedConfirmUrl.searchParams.get("redirect_to") || "";
-    const safeConfirmUrl =
-      token && type
-        ? `${baseUrl}/auth/verify?token=${encodeURIComponent(token)}&type=${encodeURIComponent(type)}${
-            redirectToParam ? `&redirect_to=${encodeURIComponent(redirectToParam)}` : ""
-          }`
-        : `${baseUrl}/auth/redirect?to=${encodeURIComponent(confirmUrl)}`;
+    const safeConfirmUrl = buildSafeAuthUrl(confirmUrl, new URL(request.url));
 
     const emailTemplate = confirmEmailTemplate({
       confirmUrl: safeConfirmUrl,
@@ -600,11 +589,14 @@ export async function POST(request: NextRequest) {
     } catch (resendError) {
       const resendErrorMsg = resendError instanceof Error ? resendError.message : String(resendError);
       console.error("[Signup API] Failed to create Resend client:", resendErrorMsg);
-      return NextResponse.json({
-        ok: true,
-        emailSent: false,
-        message: "Account created but email service unavailable. Please try logging in.",
-      });
+      return NextResponse.json(
+        {
+          error:
+            "Your account was created, but we couldn't send the confirmation email. Please use Resend Confirmation on the sign-in page or contact support.",
+          emailSent: false,
+        },
+        { status: 503 }
+      );
     }
 
     console.log(`[Signup API] Sending confirmation email via Resend to: ${trimmedEmail}`);
@@ -632,11 +624,13 @@ export async function POST(request: NextRequest) {
         name: emailError.name,
       });
       
-      return NextResponse.json({
-        ok: true,
-        emailSent: false,
-        message: `Account created but email failed: ${emailError.message}. Please try logging in.`,
-      });
+      return NextResponse.json(
+        {
+          error: `We couldn't send your confirmation email (${emailError.message}). Please try again in a few minutes or use Resend Confirmation.`,
+          emailSent: false,
+        },
+        { status: 503 }
+      );
     }
 
     console.log(`[Signup API] Confirmation email sent successfully. Resend ID: ${emailData?.id}`);

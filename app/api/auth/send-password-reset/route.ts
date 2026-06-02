@@ -9,7 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { resetPasswordTemplate } from "@/lib/email/templates";
-import { getCanonicalSiteUrl, getPasswordResetUrl } from "@/lib/site";
+import { getPasswordResetUrl } from "@/lib/site";
+import { buildSafeAuthUrl } from "@/lib/email/auth-links";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -123,19 +124,7 @@ export async function POST(request: NextRequest) {
       console.log(`[Send Password Reset] Generated URL: ${resetUrl}`);
     }
 
-    // Create email template
-    // Prefer a MixWise-hosted verify URL so the email href doesn't contain a Supabase URL (helps Outlook trust)
-    const baseUrl = getCanonicalSiteUrl(new URL(request.url));
-    const parsedResetUrl = new URL(resetUrl);
-    const token = parsedResetUrl.searchParams.get("token") || "";
-    const type = parsedResetUrl.searchParams.get("type") || "";
-    const redirectToParam = parsedResetUrl.searchParams.get("redirect_to") || "";
-    const safeResetUrl =
-      token && type
-        ? `${baseUrl}/auth/verify?token=${encodeURIComponent(token)}&type=${encodeURIComponent(type)}${
-            redirectToParam ? `&redirect_to=${encodeURIComponent(redirectToParam)}` : ""
-          }`
-        : `${baseUrl}/auth/redirect?to=${encodeURIComponent(resetUrl)}`;
+    const safeResetUrl = buildSafeAuthUrl(resetUrl, new URL(request.url));
 
     const emailTemplate = resetPasswordTemplate({
       resetUrl: safeResetUrl,

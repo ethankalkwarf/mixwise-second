@@ -16,11 +16,10 @@ import {
   confirmEmailTemplate, 
   resetPasswordTemplate, 
   welcomeEmailTemplate,
-  weeklyDigestTemplate 
+  weeklyDigestTemplate,
+  thirstyThursdayWeeklyTemplate,
 } from "@/lib/email/templates";
-
-// Simple auth check - only allow in development or with secret
-const TEST_SECRET = process.env.EMAIL_TEST_SECRET;
+import { verifyEmailTestSecret } from "@/lib/email/internal-auth";
 
 // Fetch a random featured cocktail from the database
 async function getFeaturedCocktail() {
@@ -93,8 +92,7 @@ export async function POST(request: NextRequest) {
   try {
     const { template, email, secret } = await request.json();
 
-    // Security check
-    if (TEST_SECRET && secret !== TEST_SECRET) {
+    if (!verifyEmailTestSecret(secret)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -167,15 +165,28 @@ export async function POST(request: NextRequest) {
 
       case "password-reset":
         emailContent = resetPasswordTemplate({
-          // Link to homepage for test - in production this would be a real reset page
           resetUrl: "https://www.getmixwise.com/login",
           userEmail: email,
         });
         break;
 
+      case "thirsty-thursday":
+        emailContent = thirstyThursdayWeeklyTemplate({
+          userEmail: email,
+          unsubscribeUrl,
+          featuredCocktail: featuredCocktail
+            ? {
+                name: featuredCocktail.name,
+                slug: featuredCocktail.slug,
+                description: featuredCocktail.description,
+              }
+            : undefined,
+        });
+        break;
+
       default:
         return NextResponse.json({ 
-          error: "Invalid template. Use: confirmation, welcome, weekly-digest, weekly-digest-empty, password-reset" 
+          error: "Invalid template. Use: confirmation, welcome, weekly-digest, weekly-digest-empty, password-reset, thirsty-thursday" 
         }, { status: 400 });
     }
 

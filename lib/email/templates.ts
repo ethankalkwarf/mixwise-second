@@ -1002,7 +1002,7 @@ export function weddingRecommendationsTemplate({
             <strong style="color: #3A4D39; font-size: 18px;">${index + 1}. ${rec.name}</strong>
             ${spirit ? `<span style="color: #5F6F5E; font-size: 14px;">${spirit}</span>` : ""}
             <br>
-            <a href="https://getmixwise.com/cocktails/${rec.slug}" style="color: #BC5A45; text-decoration: none; font-size: 14px;">View Recipe →</a>
+            <a href="https://www.getmixwise.com/cocktails/${rec.slug}" style="color: #BC5A45; text-decoration: none; font-size: 14px;">View Recipe →</a>
           </td>
         </tr>
       `;
@@ -1044,7 +1044,7 @@ export function weddingRecommendationsTemplate({
                     </table>
 
                     <div style="text-align: center; margin: 32px 0;">
-                      <a href="https://getmixwise.com/wedding-menu" style="display: inline-block; background-color: #BC5A45; color: #F9F7F2; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                      <a href="https://www.getmixwise.com/wedding-menu" style="display: inline-block; background-color: #BC5A45; color: #F9F7F2; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">
                         View All Recommendations
                       </a>
                     </div>
@@ -1058,7 +1058,7 @@ export function weddingRecommendationsTemplate({
                       This email was sent from MixWise. You can view and save your recommendations anytime by visiting your account.
                     </p>
                     <p style="margin: 0; font-size: 13px; color: #5F6F5E;">
-                      Questions? Reply to this email or visit <a href="https://getmixwise.com/contact" style="color: #BC5A45; text-decoration: none;">getmixwise.com/contact</a>
+                      Questions? Reply to this email or visit <a href="https://www.getmixwise.com/contact" style="color: #BC5A45; text-decoration: none;">getmixwise.com/contact</a>
                     </p>
                   </td>
                 </tr>
@@ -1076,14 +1076,14 @@ Your Wedding Cocktail Recommendations
 Thank you for using our wedding cocktail finder! Here are your ${recommendations.length} personalized cocktail recommendations:
 
 ${recommendations.map((rec, index) => 
-  `${index + 1}. ${rec.name}${rec.base_spirit ? ` • ${rec.base_spirit}` : ""}\n   View: https://getmixwise.com/cocktails/${rec.slug}`
+  `${index + 1}. ${rec.name}${rec.base_spirit ? ` • ${rec.base_spirit}` : ""}\n   View: https://www.getmixwise.com/cocktails/${rec.slug}`
 ).join("\n\n")}
 
-View all recommendations: https://getmixwise.com/wedding-menu
+View all recommendations: https://www.getmixwise.com/wedding-menu
 
 ---
 This email was sent from MixWise.
-Questions? Visit https://getmixwise.com/contact
+Questions? Visit https://www.getmixwise.com/contact
   `.trim();
 
   return { subject, html, text };
@@ -1359,4 +1359,139 @@ Unsubscribe: ${unsubscribeUrl}
   `.trim();
 
   return { subject, html, text };
+}
+
+/**
+ * Thirsty Thursday weekly recipe email (cron, every Thursday).
+ */
+export function thirstyThursdayWeeklyTemplate({
+  userEmail,
+  unsubscribeUrl,
+  featuredCocktail,
+}: {
+  userEmail: string;
+  unsubscribeUrl: string;
+  featuredCocktail?: ThirstyThursdayCocktail;
+}): EmailTemplate {
+  const cocktailName = featuredCocktail?.name || "this week's pick";
+  const subject = `🍹 Thirsty Thursday: ${cocktailName}`;
+  const previewText = featuredCocktail
+    ? `Your weekly cocktail is here — learn to make a ${featuredCocktail.name} tonight.`
+    : "Your weekly cocktail recipe has arrived. Cheers!";
+
+  const cocktailBlock = featuredCocktail
+    ? thirstyThursdayCocktailBlock(featuredCocktail, "🍸 Cocktail of the Week")
+    : "";
+
+  const html = thirstyThursdayEmailShell({
+    headerSubtitle: "Your weekly recipe is here",
+    title: "Happy Thirsty Thursday!",
+    intro: "Here's this week's cocktail to shake up your evening. Save this email and mix when you're ready.",
+    cocktailBlock,
+    userEmail,
+    unsubscribeUrl,
+    previewText,
+  });
+
+  const text = `
+Happy Thirsty Thursday! 🍹
+
+${featuredCocktail ? `This week: ${featuredCocktail.name}\n${featuredCocktail.description || ""}\n` : ""}
+${featuredCocktail?.ingredients ? `Ingredients:\n${featuredCocktail.ingredients}\n` : ""}
+${featuredCocktail?.instructions ? `Instructions:\n${featuredCocktail.instructions}\n` : ""}
+${featuredCocktail ? `Full recipe: https://www.getmixwise.com/cocktails/${featuredCocktail.slug}\n` : ""}
+
+Browse all recipes: https://www.getmixwise.com/cocktails
+
+---
+This email was sent to ${userEmail}
+Unsubscribe: ${unsubscribeUrl}
+  `.trim();
+
+  return { subject, html, text };
+}
+
+type ThirstyThursdayCocktail = {
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  ingredients?: string;
+  instructions?: string;
+};
+
+function thirstyThursdayCocktailBlock(
+  featuredCocktail: ThirstyThursdayCocktail,
+  heading: string
+): string {
+  return `
+          <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.08) 0%, rgba(168, 85, 247, 0.08) 50%, rgba(249, 115, 22, 0.08) 100%); border-radius: 20px; padding: 24px; margin: 0 0 32px 0; border: 2px solid rgba(236, 72, 153, 0.2);">
+            <h3 style="font-family: system-ui, -apple-system, sans-serif; font-size: 22px; color: #3A4D39; margin: 0 0 8px 0; font-weight: 800; text-align: center;">
+              ${heading}
+            </h3>
+            <h4 style="font-family: system-ui, -apple-system, sans-serif; font-size: 20px; color: #2C3628; margin: 0 0 12px 0; font-weight: 700; text-align: center;">
+              ${featuredCocktail.name}
+            </h4>
+            ${featuredCocktail.description ? `<p style="font-size: 14px; color: #5F6F5E; margin: 0 0 16px 0; line-height: 1.5; text-align: center;">${featuredCocktail.description}</p>` : ""}
+            ${featuredCocktail.ingredients ? `<div style="margin: 16px 0;"><p style="font-size: 14px; font-weight: 700; color: #3A4D39; margin: 0 0 8px 0;">Ingredients:</p><p style="font-size: 14px; color: #2C3628; margin: 0; line-height: 1.6; white-space: pre-line;">${featuredCocktail.ingredients}</p></div>` : ""}
+            ${featuredCocktail.instructions ? `<div style="margin: 16px 0;"><p style="font-size: 14px; font-weight: 700; color: #3A4D39; margin: 0 0 8px 0;">Instructions:</p><p style="font-size: 14px; color: #2C3628; margin: 0; line-height: 1.6; white-space: pre-line;">${featuredCocktail.instructions}</p></div>` : ""}
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="https://www.getmixwise.com/cocktails/${featuredCocktail.slug}" style="color: #ec4899; text-decoration: none; font-weight: 600; font-size: 14px;">View Full Recipe →</a>
+            </div>
+          </div>`;
+}
+
+function thirstyThursdayEmailShell(options: {
+  headerSubtitle: string;
+  title: string;
+  intro: string;
+  cocktailBlock: string;
+  userEmail: string;
+  unsubscribeUrl: string;
+  previewText: string;
+}): string {
+  const { headerSubtitle, title, intro, cocktailBlock, userEmail, unsubscribeUrl, previewText } = options;
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  ${baseStyles}
+</head>
+<body>
+  ${getPreheaderHtml(previewText)}
+  <div class="email-wrapper">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; border: 1px solid #E6EBE4;">
+      <tr>
+        <td style="background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f97316 100%); padding: 48px 40px; text-align: center;">
+          <h1 style="font-family: system-ui, sans-serif; font-size: 42px; font-weight: 900; color: #FFFFFF; margin: 0;">Thirsty Thursday</h1>
+          <p style="font-size: 20px; color: #FFFFFF; margin: 12px 0 0 0; font-weight: 600;">${headerSubtitle}</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 48px 40px;">
+          <h2 style="font-family: system-ui, sans-serif; font-size: 28px; color: #2C3628; margin: 0 0 16px 0; font-weight: 800; text-align: center;">${title}</h2>
+          <p style="font-size: 16px; color: #2C3628; margin: 0 0 32px 0; line-height: 1.65; text-align: center;">${intro}</p>
+          ${cocktailBlock}
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="https://www.getmixwise.com/cocktails" style="background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #f97316 100%); color: #FFFFFF !important; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 700; font-size: 16px; display: inline-block;">Browse All Recipes 🍸</a>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="background-color: #E6EBE4; padding: 32px 40px; text-align: center; border-top: 1px solid #D1DAD0;">
+          <p style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">Sent to <strong>${userEmail}</strong></p>
+          <p style="font-size: 13px; color: #5F6F5E; margin: 0;">© ${new Date().getFullYear()} MixWise · Thirsty Thursday</p>
+          <div style="margin: 16px 0 0 0;">
+            <a href="https://www.getmixwise.com" style="color: #3A4D39; text-decoration: none; font-size: 13px;">Visit MixWise</a>
+            <span style="color: #D1DAD0;"> | </span>
+            <a href="${unsubscribeUrl}" style="color: #5F6F5E; text-decoration: none; font-size: 13px;">Unsubscribe</a>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>`.trim();
 }

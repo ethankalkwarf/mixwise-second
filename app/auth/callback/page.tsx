@@ -469,8 +469,8 @@ function AuthCallbackPageContent() {
             console.warn("[AuthCallbackPage] Error checking user preferences, continuing to mix wizard");
           }
 
-          // Fire-and-forget welcome email for brand new users
-          if (isNewUser && user.email) {
+          // Post-confirmation welcome email (once per user, server dedupes)
+          if (user.email_confirmed_at && user.email) {
             const displayName =
               user.user_metadata?.full_name ||
               user.user_metadata?.name ||
@@ -478,89 +478,21 @@ function AuthCallbackPageContent() {
 
             fetch("/api/auth/send-welcome", {
               method: "POST",
+              credentials: "include",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                userId: user.id,
-                userEmail: user.email,
-                displayName,
-              }),
-            }).catch(() => {
-              // ignore
+              body: JSON.stringify({ displayName }),
+            }).catch((err) => {
+              console.warn("[AuthCallbackPage] Welcome email request failed (non-fatal):", err);
             });
           }
 
-          // Send notification email for new OAuth signups
-          // Check if user was created recently (within last 5 minutes) to detect new signups
-          // This is more reliable than checking user_preferences which might already exist from triggers
-          const userCreatedAt = user.created_at ? new Date(user.created_at).getTime() : 0;
-          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-          const isRecentlyCreated = userCreatedAt > fiveMinutesAgo;
-          
-          // Also check if this is an OAuth signup (not email/password)
-          // Email/password signups send notification from the signup route, not here
-          const isOAuthSignup = user.identities && user.identities.length > 0 && 
-            (user.identities[0].provider === "google" || user.identities[0].provider === "apple");
-
-          if (isRecentlyCreated && isOAuthSignup && user.email) {
-            const displayName =
-              user.user_metadata?.full_name ||
-              user.user_metadata?.name ||
-              user.email.split("@")[0];
-
-            // Determine signup method from user identities or email domain
-            let signupMethod = "Email/Password"; // default
-            if (user.identities && user.identities.length > 0) {
-              const provider = user.identities[0].provider;
-              if (provider === "google") {
-                signupMethod = "Google";
-              } else if (provider === "apple") {
-                signupMethod = "Apple";
-              } else if (provider === "email") {
-                signupMethod = "Email/Password";
-              }
-            } else if (user.email?.includes("@privaterelay.appleid.com")) {
-              // Apple relay email - likely Apple Sign In
-              signupMethod = "Apple";
-            }
-
-            // Send notification email to hello@getmixwise.com (non-blocking)
-            // Use absolute URL to ensure it works in production
-            const notificationUrl = typeof window !== "undefined" 
-              ? `${window.location.origin}/api/auth/send-signup-notification`
-              : "/api/auth/send-signup-notification";
-            
-            console.log(`[AuthCallbackPage] Sending signup notification for new OAuth user: ${user.email} (${signupMethod}), created: ${new Date(userCreatedAt).toISOString()}`);
-            
-            fetch(notificationUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                userId: user.id,
-                userEmail: user.email,
-                displayName,
-                signupMethod,
-              }),
-            })
-              .then(async (response) => {
-                if (!response.ok) {
-                  const errorText = await response.text();
-                  console.error(`[AuthCallbackPage] Notification API returned error ${response.status}:`, errorText);
-                } else {
-                  const result = await response.json();
-                  if (result.skipped) {
-                    console.warn("[AuthCallbackPage] Notification email skipped:", result);
-                  } else {
-                    console.log("[AuthCallbackPage] Notification email sent successfully:", result);
-                  }
-                }
-              })
-              .catch((err) => {
-                // Don't fail the auth flow if notification email fails
-                console.error("[AuthCallbackPage] Failed to send notification email (non-fatal):", err);
-              });
-          } else if (isRecentlyCreated && !isOAuthSignup) {
-            console.log(`[AuthCallbackPage] User created recently but not OAuth signup (likely email/password), skipping notification (should be sent from signup route)`);
-          }
+          // Internal alert for new OAuth signups (session-authenticated API)
+          fetch("/api/auth/send-signup-notification", {
+            method: "POST",
+            credentials: "include",
+          }).catch((err) => {
+            console.warn("[AuthCallbackPage] Signup notification failed (non-fatal):", err);
+          });
 
           if (!cancelled) {
             // Always redirect to mix wizard for new users, or their intended destination

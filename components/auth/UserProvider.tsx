@@ -52,7 +52,7 @@ interface UserContextType {
   signInWithEmail: (email: string) => Promise<{ error?: string }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error?: string }>;
   signUpWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
-  resetPassword: (email: string) => Promise<{ error?: string }>;
+  resetPassword: (email: string) => Promise<{ error?: string; message?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -629,7 +629,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   // Reset password
-  const resetPassword = useCallback(async (email: string): Promise<{ error?: string }> => {
+  const resetPassword = useCallback(async (email: string): Promise<{ error?: string; message?: string }> => {
     try {
       const response = await fetch("/api/auth/send-password-reset", {
         method: "POST",
@@ -646,7 +646,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return { error: "Failed to send password reset email. Please try again." };
       }
 
-      return {};
+      // API always returns ok for valid requests (anti-enumeration)
+      return {
+        message:
+          "If an account exists for that email, we've sent a password reset link. Check your inbox and spam folder.",
+      };
     } catch (error) {
       console.error("[UserProvider] Password reset request failed:", error);
       return { error: "Failed to send password reset email. Please try again." };
