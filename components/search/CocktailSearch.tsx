@@ -51,15 +51,15 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Auto-focus input for desktop variant
+  // Auto-focus input when opened (desktop modal or mobile menu)
   useEffect(() => {
-    if (variant === "desktop" && inputRef.current) {
-      // Small delay to ensure transition completes
-      const timer = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
+    if (!inputRef.current) return;
+
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, variant === "desktop" ? 100 : 200);
+
+    return () => clearTimeout(timer);
   }, [variant]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

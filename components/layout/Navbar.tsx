@@ -298,6 +298,12 @@ export function Navbar() {
           leaveTo="opacity-0 -translate-y-2"
         >
           <div className="md:hidden border-t border-mist bg-cream py-4">
+            <div className="px-3 pb-4">
+              <CocktailSearch
+                variant="mobile"
+                onClose={() => setMobileMenuOpen(false)}
+              />
+            </div>
             <div className="space-y-1">
               <Link
                 href="/cocktail-of-the-day"
