@@ -18,7 +18,7 @@ export function getInternalApiSecret(): string | undefined {
  */
 export function verifyInternalRequest(request: NextRequest): boolean {
   const secret = getInternalApiSecret();
-  const authHeader = request.headers.get("authorization");
+  const authHeader = request.headers.get("authorization")?.trim();
 
   if (process.env.NODE_ENV === "production") {
     if (!secret) {

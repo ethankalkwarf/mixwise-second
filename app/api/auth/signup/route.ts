@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     }
 
     // RESEND_API_KEY is optional - if not set, we'll create the user but skip email sending
-    const resendApiKey = process.env.RESEND_API_KEY;
+    const resendApiKey = process.env.RESEND_API_KEY?.trim();
     if (!resendApiKey) {
       console.warn("[Signup API] RESEND_API_KEY not set - emails will be skipped (dev mode)");
     }
