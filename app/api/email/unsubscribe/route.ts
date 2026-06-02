@@ -1,69 +1,25 @@
 /**
  * Email Unsubscribe API Route
  *
- * Handles unsubscribe for registered users (token) and newsletter signups (email + source + token).
+ * Handles unsubscribe requests via secure token (registered users).
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-async function unsubscribeNewsletterSignup(
-  email: string,
-  source: string,
-  token: string
-): Promise<{ ok: boolean; error?: string; status?: number }> {
-  const supabaseAdmin = createAdminClient();
-  const normalizedEmail = email.trim().toLowerCase();
-
-  const { data: signup, error: findError } = await supabaseAdmin
-    .from("email_signups")
-    .select("id, email, source, unsubscribe_token")
-    .eq("email", normalizedEmail)
-    .eq("source", source)
-    .single();
-
-  if (findError || !signup) {
-    return { ok: false, error: "Invalid or expired unsubscribe link", status: 404 };
-  }
-
-  if (signup.unsubscribe_token !== token) {
-    return { ok: false, error: "Invalid or expired unsubscribe link", status: 404 };
-  }
-
-  const { error: updateError } = await supabaseAdmin
-    .from("email_signups")
-    .update({ opted_out_at: new Date().toISOString() })
-    .eq("id", signup.id);
-
-  if (updateError) {
-    console.error("[Unsubscribe] Newsletter update error:", updateError);
-    return { ok: false, error: "Failed to update preferences", status: 500 };
-  }
-
-  console.log(`[Unsubscribe] Newsletter unsubscribed: ${normalizedEmail} (${source})`);
-  return { ok: true };
-}
-
 /**
- * GET - One-click unsubscribe (RFC 8058) or browser follow from List-Unsubscribe
+ * GET - One-click unsubscribe from all emails or a specific category
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
   const type = searchParams.get("type") || "all";
-  const email = searchParams.get("email");
-  const source = searchParams.get("source");
-
-  if (email && source && token) {
-    const result = await unsubscribeNewsletterSignup(email, source, token);
-    if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status || 400 });
-    }
-    return NextResponse.json({ ok: true, unsubscribedFrom: "newsletter", source });
-  }
 
   if (!token) {
-    return NextResponse.json({ error: "Unsubscribe token is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Unsubscribe token is required" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -110,7 +66,10 @@ export async function GET(request: NextRequest) {
 
     if (updateError) {
       console.error("[Unsubscribe] Update error:", updateError);
-      return NextResponse.json({ error: "Failed to update preferences" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to update preferences" },
+        { status: 500 }
+      );
     }
 
     console.log(`[Unsubscribe] User ${prefs.user_id} unsubscribed from ${type}`);
@@ -118,28 +77,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, unsubscribedFrom: type });
   } catch (error) {
     console.error("[Unsubscribe] Unexpected error:", error);
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
   }
 }
 
 /**
- * POST - Update specific email preferences (registered users) or newsletter opt-out
+ * POST - Update specific email preferences
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { token, preferences, email, source } = body;
-
-    if (email && source && token) {
-      const result = await unsubscribeNewsletterSignup(email, source, token);
-      if (!result.ok) {
-        return NextResponse.json({ error: result.error }, { status: result.status || 400 });
-      }
-      return NextResponse.json({ ok: true, unsubscribedFrom: "newsletter", source });
-    }
+    const { token, preferences } = body;
 
     if (!token) {
-      return NextResponse.json({ error: "Unsubscribe token is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Unsubscribe token is required" },
+        { status: 400 }
+      );
     }
 
     const supabaseAdmin = createAdminClient();
@@ -178,12 +135,18 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error("[Unsubscribe] Update error:", updateError);
-      return NextResponse.json({ error: "Failed to update preferences" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to update preferences" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ ok: true, updated: updateData });
   } catch (error) {
     console.error("[Unsubscribe] Unexpected error:", error);
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
   }
 }

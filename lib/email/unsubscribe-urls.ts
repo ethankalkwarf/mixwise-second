@@ -1,5 +1,5 @@
 /**
- * Unsubscribe URL builders for transactional and newsletter emails.
+ * Unsubscribe URL builders for registered-user emails.
  */
 
 import { getSiteUrl } from "@/lib/site";
@@ -9,7 +9,7 @@ export function buildUserUnsubscribeUrl(
   type: "all" | "digest" | "welcome" = "all"
 ): string {
   const siteUrl = getSiteUrl();
-  const typeParam = type === "digest" ? "digest" : type === "welcome" ? "all" : "all";
+  const typeParam = type === "digest" ? "digest" : "all";
   return `${siteUrl}/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}&type=${typeParam}`;
 }
 
@@ -17,22 +17,4 @@ export function buildUserUnsubscribeUrl(
 export function buildUserOneClickUnsubscribeUrl(unsubscribeToken: string): string {
   const siteUrl = getSiteUrl();
   return `${siteUrl}/api/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}&type=digest`;
-}
-
-export function buildNewsletterUnsubscribeUrl(
-  email: string,
-  source: string,
-  unsubscribeToken: string
-): string {
-  const siteUrl = getSiteUrl();
-  return `${siteUrl}/unsubscribe?email=${encodeURIComponent(email)}&source=${encodeURIComponent(source)}&token=${encodeURIComponent(unsubscribeToken)}`;
-}
-
-export function buildNewsletterOneClickUnsubscribeUrl(
-  email: string,
-  source: string,
-  unsubscribeToken: string
-): string {
-  const siteUrl = getSiteUrl();
-  return `${siteUrl}/api/email/unsubscribe?email=${encodeURIComponent(email)}&source=${encodeURIComponent(source)}&token=${encodeURIComponent(unsubscribeToken)}`;
 }

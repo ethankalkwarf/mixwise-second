@@ -9,11 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { thirstyThursdayWelcomeTemplate } from "@/lib/email/templates";
-import { getFeaturedCocktailForEmail } from "@/lib/email/featured-cocktail";
-import {
-  buildNewsletterOneClickUnsubscribeUrl,
-  buildNewsletterUnsubscribeUrl,
-} from "@/lib/email/unsubscribe-urls";
+import { getSiteUrl } from "@/lib/site";
+import { getCocktailsList } from "@/lib/cocktails.server";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -102,7 +99,7 @@ export async function POST(request: NextRequest) {
     // Check if email already exists for this source
     const { data: existingSignup, error: checkError } = await supabaseAdmin
       .from("email_signups")
-      .select("id, email, created_at, unsubscribe_token, opted_out_at")
+      .select("id, email, created_at")
       .eq("email", trimmedEmail)
       .eq("source", "thirsty_thursday")
       .single();
@@ -132,7 +129,7 @@ export async function POST(request: NextRequest) {
         email: trimmedEmail,
         source: "thirsty_thursday",
       })
-      .select("id, email, unsubscribe_token")
+      .select()
       .single();
 
     if (insertError) {
@@ -155,32 +152,107 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Thirsty Thursday Signup] Successfully signed up: ${trimmedEmail}`);
 
-    const featuredCocktail = await getFeaturedCocktailForEmail({ preferImages: true });
-    const unsubscribeToken = newSignup.unsubscribe_token as string | undefined;
+    // Fetch a random cocktail to include in the welcome email
+    let featuredCocktail: {
+      name: string;
+      slug: string;
+      description?: string;
+      imageUrl?: string;
+      ingredients?: string;
+      instructions?: string;
+    } | undefined;
 
+    try {
+      const cocktails = await getCocktailsList({ limit: 50 });
+      if (cocktails.length > 0) {
+        // Pick a random cocktail (prefer ones with images)
+        const cocktailsWithImages = cocktails.filter(c => c.image_url);
+        const selectedCocktail = cocktailsWithImages.length > 0 
+          ? cocktailsWithImages[Math.floor(Math.random() * cocktailsWithImages.length)]
+          : cocktails[Math.floor(Math.random() * cocktails.length)];
+        
+        // Fetch full cocktail details including ingredients and instructions
+        const { data: fullCocktail } = await supabaseAdmin
+          .from("cocktails")
+          .select("name, slug, short_description, image_url, ingredients, instructions")
+          .eq("id", selectedCocktail.id)
+          .single();
+
+        if (fullCocktail) {
+          // Format ingredients
+          let ingredientsText = "";
+          if (fullCocktail.ingredients) {
+            const ingredients = fullCocktail.ingredients as Array<{ ingredient_id?: number; name?: string; amount?: string }> | string;
+            if (Array.isArray(ingredients)) {
+              ingredientsText = ingredients
+                .map(ing => {
+                  if (typeof ing === 'object' && ing.amount && ing.name) {
+                    return `${ing.amount} ${ing.name}`;
+                  }
+                  return typeof ing === 'string' ? ing : '';
+                })
+                .filter(Boolean)
+                .join('\n');
+            } else if (typeof ingredients === 'string') {
+              ingredientsText = ingredients;
+            }
+          }
+
+          // Format instructions
+          let instructionsText = "";
+          if (fullCocktail.instructions) {
+            const instructions = fullCocktail.instructions as Array<{ step?: number; instruction?: string }> | string;
+            if (Array.isArray(instructions)) {
+              instructionsText = instructions
+                .map((inst, idx) => {
+                  if (typeof inst === 'object' && inst.instruction) {
+                    return `${idx + 1}. ${inst.instruction}`;
+                  }
+                  return typeof inst === 'string' ? `${idx + 1}. ${inst}` : '';
+                })
+                .filter(Boolean)
+                .join('\n');
+            } else if (typeof instructions === 'string') {
+              instructionsText = instructions;
+            }
+          }
+
+          featuredCocktail = {
+            name: fullCocktail.name,
+            slug: fullCocktail.slug,
+            description: fullCocktail.short_description || undefined,
+            imageUrl: fullCocktail.image_url || undefined,
+            ingredients: ingredientsText || undefined,
+            instructions: instructionsText || undefined,
+          };
+        }
+      }
+    } catch (cocktailError) {
+      console.error("[Thirsty Thursday Signup] Failed to fetch cocktail for email:", cocktailError);
+      // Continue without cocktail - email will still be sent
+    }
+
+    // Send welcome email via Resend
     const resendApiKey = process.env.RESEND_API_KEY;
-    if (resendApiKey && unsubscribeToken) {
+    if (resendApiKey) {
       try {
         const resend = createResendClient();
-        const footerUnsubscribe = buildNewsletterUnsubscribeUrl(
-          trimmedEmail,
-          "thirsty_thursday",
-          unsubscribeToken
-        );
-        const oneClickUnsubscribe = buildNewsletterOneClickUnsubscribeUrl(
-          trimmedEmail,
-          "thirsty_thursday",
-          unsubscribeToken
-        );
-
+        
+        // Generate unsubscribe URL (simple email-based for non-users)
+        const siteUrl = getSiteUrl();
+        // For email signups, use a simple unsubscribe link with email
+        // In the future, we could add a token field to email_signups table
+        const unsubscribeUrl = `${siteUrl}/unsubscribe?email=${encodeURIComponent(trimmedEmail)}&source=thirsty_thursday`;
+        
+        // Generate email template
         const emailTemplate = thirstyThursdayWelcomeTemplate({
           userEmail: trimmedEmail,
-          unsubscribeUrl: footerUnsubscribe,
+          unsubscribeUrl,
           featuredCocktail,
         });
-
+        
         console.log(`[Thirsty Thursday Signup] Sending welcome email to: ${trimmedEmail}`);
-
+        
         const { data: emailData, error: emailError } = await resend.emails.send({
           from: MIXWISE_FROM_EMAIL,
           to: trimmedEmail,
@@ -189,8 +261,8 @@ export async function POST(request: NextRequest) {
           html: emailTemplate.html,
           text: emailTemplate.text,
           headers: {
-            "X-Entity-Ref-ID": String(newSignup.id || trimmedEmail),
-            "List-Unsubscribe": `<${oneClickUnsubscribe}>`,
+            "X-Entity-Ref-ID": newSignup.id || trimmedEmail,
+            "List-Unsubscribe": `<${unsubscribeUrl}>`,
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
           },
           tags: [
@@ -200,24 +272,16 @@ export async function POST(request: NextRequest) {
         });
 
         if (emailError) {
+          // Don't fail the signup if email fails
           console.error("[Thirsty Thursday Signup] Failed to send welcome email:", emailError);
         } else {
-          console.log(
-            `[Thirsty Thursday Signup] Welcome email sent. Resend ID: ${emailData?.id}`
-          );
-          const now = new Date().toISOString();
-          await supabaseAdmin
-            .from("email_signups")
-            .update({
-              welcome_email_sent_at: now,
-              last_email_sent_at: now,
-            })
-            .eq("id", newSignup.id);
+          console.log(`[Thirsty Thursday Signup] Welcome email sent successfully. Resend ID: ${emailData?.id}`);
         }
       } catch (emailError) {
+        // Don't fail the signup if email fails
         console.error("[Thirsty Thursday Signup] Failed to send welcome email:", emailError);
       }
-    } else if (!resendApiKey) {
+    } else {
       console.log(`[Thirsty Thursday Signup] Skipping email - RESEND_API_KEY not configured`);
     }
 

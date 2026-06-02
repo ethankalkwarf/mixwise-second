@@ -330,30 +330,18 @@ export interface Database {
           email: string;
           source: string;
           created_at: string;
-          unsubscribe_token: string;
-          opted_out_at: string | null;
-          last_email_sent_at: string | null;
-          welcome_email_sent_at: string | null;
         };
         Insert: {
           id?: number;
           email: string;
           source?: string;
           created_at?: string;
-          unsubscribe_token?: string;
-          opted_out_at?: string | null;
-          last_email_sent_at?: string | null;
-          welcome_email_sent_at?: string | null;
         };
         Update: {
           id?: number;
           email?: string;
           source?: string;
           created_at?: string;
-          unsubscribe_token?: string;
-          opted_out_at?: string | null;
-          last_email_sent_at?: string | null;
-          welcome_email_sent_at?: string | null;
         };
       };
       cocktails: {

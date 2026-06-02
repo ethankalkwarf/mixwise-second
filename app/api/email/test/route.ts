@@ -17,7 +17,6 @@ import {
   resetPasswordTemplate, 
   welcomeEmailTemplate,
   weeklyDigestTemplate,
-  thirstyThursdayWeeklyTemplate,
 } from "@/lib/email/templates";
 import { verifyEmailTestSecret } from "@/lib/email/internal-auth";
 
@@ -170,23 +169,9 @@ export async function POST(request: NextRequest) {
         });
         break;
 
-      case "thirsty-thursday":
-        emailContent = thirstyThursdayWeeklyTemplate({
-          userEmail: email,
-          unsubscribeUrl,
-          featuredCocktail: featuredCocktail
-            ? {
-                name: featuredCocktail.name,
-                slug: featuredCocktail.slug,
-                description: featuredCocktail.description,
-              }
-            : undefined,
-        });
-        break;
-
       default:
         return NextResponse.json({ 
-          error: "Invalid template. Use: confirmation, welcome, weekly-digest, weekly-digest-empty, password-reset, thirsty-thursday" 
+          error: "Invalid template. Use: confirmation, welcome, weekly-digest, weekly-digest-empty, password-reset" 
         }, { status: 400 });
     }
 

@@ -14,10 +14,6 @@ interface EmailPreferences {
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const email = searchParams.get("email");
-  const source = searchParams.get("source");
-
-  const isNewsletterLink = Boolean(email && source && token);
 
   const [preferences, setPreferences] = useState<EmailPreferences>({
     welcome_emails: true,
@@ -31,37 +27,10 @@ function UnsubscribeContent() {
   const [unsubscribedAll, setUnsubscribedAll] = useState(false);
 
   useEffect(() => {
-    if (isNewsletterLink && !unsubscribedAll) {
-      handleNewsletterUnsubscribe();
-    } else if (token && !isNewsletterLink && !unsubscribedAll) {
+    if (token && !unsubscribedAll) {
       handleUnsubscribeAll();
     }
-  }, [token, email, source, isNewsletterLink]);
-
-  const handleNewsletterUnsubscribe = async () => {
-    if (!email || !source || !token) return;
-
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams({ email, source, token });
-      const response = await fetch(`/api/email/unsubscribe?${params.toString()}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setUnsubscribedAll(true);
-        setMessage({
-          type: "success",
-          text: "You've been unsubscribed from Thirsty Thursday emails.",
-        });
-      } else {
-        setMessage({ type: "error", text: data.error || "Failed to unsubscribe" });
-      }
-    } catch {
-      setMessage({ type: "error", text: "An error occurred. Please try again." });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [token]);
 
   const handleUnsubscribeAll = async () => {
     if (!token) return;
@@ -119,31 +88,6 @@ function UnsubscribeContent() {
       setIsSaving(false);
     }
   };
-
-  if (isNewsletterLink) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-soft p-8 text-center border border-mist">
-          <div className="text-5xl mb-6">{unsubscribedAll ? "✅" : "📧"}</div>
-          <h1 className="text-2xl font-display font-bold text-forest mb-4">
-            {unsubscribedAll ? "You're unsubscribed" : "Unsubscribing…"}
-          </h1>
-          {message && (
-            <p className={`mb-6 ${message.type === "success" ? "text-forest" : "text-terracotta"}`}>
-              {message.text}
-            </p>
-          )}
-          {isLoading && <p className="text-sage mb-6">Processing your request…</p>}
-          <Link
-            href="/"
-            className="inline-block bg-terracotta text-cream px-6 py-3 rounded-2xl font-semibold hover:bg-terracotta-dark transition-colors"
-          >
-            Back to MixWise
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   if (!token) {
     return (
