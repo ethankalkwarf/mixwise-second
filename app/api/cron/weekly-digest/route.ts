@@ -15,6 +15,10 @@ import {
   buildUserUnsubscribeUrl,
 } from "@/lib/email/unsubscribe-urls";
 import { getWeekNumber } from "@/lib/email/featured-cocktail";
+import {
+  buildCocktailIngredientMap,
+  cocktailsUserCanMakeFromBar,
+} from "@/lib/email/digest-matching";
 
 export async function GET(request: NextRequest) {
   if (!verifyInternalRequest(request)) {
@@ -83,18 +87,48 @@ export async function GET(request: NextRequest) {
     const userIngredients = new Map<string, string[]>();
     (barIngredients || []).forEach((bi) => {
       const existing = userIngredients.get(bi.user_id) || [];
-      existing.push(bi.ingredient_id);
+      existing.push(String(bi.ingredient_id));
       userIngredients.set(bi.user_id, existing);
     });
 
     const { data: cocktails, error: cocktailsError } = await supabaseAdmin
       .from("cocktails")
-      .select("id, slug, name, short_description, image_url, ingredients");
+      .select("id, slug, name, short_description, image_url");
 
     if (cocktailsError || !cocktails?.length) {
       console.error("[Weekly Digest] Error fetching cocktails:", cocktailsError);
       return NextResponse.json({ error: "Failed to fetch cocktails" }, { status: 500 });
     }
+
+    // Prefer cocktail_ingredients_uuid (UUID cocktail ids). Legacy cocktail_ingredients
+    // uses integer cocktail_ids that no longer match public.cocktails.id.
+    const { data: cocktailIngredientRows, error: ciError } = await (
+      supabaseAdmin as unknown as {
+        from: (table: string) => {
+          select: (cols: string) => Promise<{
+            data: Array<{
+              cocktail_id: string;
+              ingredient_id: number;
+              is_optional?: boolean | null;
+            }> | null;
+            error: { message: string } | null;
+          }>;
+        };
+      }
+    )
+      .from("cocktail_ingredients_uuid")
+      .select("cocktail_id, ingredient_id, is_optional");
+
+    if (ciError) {
+      console.error("[Weekly Digest] Error fetching cocktail_ingredients_uuid:", ciError);
+      return NextResponse.json({ error: "Failed to fetch cocktail ingredients" }, { status: 500 });
+    }
+
+    const requiredRows = (cocktailIngredientRows || []).filter((row) => !row.is_optional);
+    const ingredientsByCocktail = buildCocktailIngredientMap(requiredRows);
+    console.log(
+      `[Weekly Digest] Loaded ${requiredRows.length} required cocktail-ingredient links across ${ingredientsByCocktail.size} cocktails`
+    );
 
     const weekNumber = getWeekNumber();
     const featuredCocktail = cocktails[weekNumber % cocktails.length];
@@ -128,29 +162,15 @@ export async function GET(request: NextRequest) {
         }
 
         const ingredientIds = userIngredients.get(user.id) || [];
-        const ingredientSet = new Set(ingredientIds);
-        const cocktailsUserCanMake: Array<{ name: string; slug: string; imageUrl?: string }> = [];
-
-        for (const cocktail of cocktails) {
-          const ingredientArray = cocktail.ingredients as Array<{ ingredient_id: number }> | null;
-          if (!ingredientArray?.length) continue;
-
-          const hasAllIngredients = ingredientArray.every((ing) =>
-            ingredientSet.has(String(ing.ingredient_id))
-          );
-
-          if (hasAllIngredients) {
-            cocktailsUserCanMake.push({
-              name: cocktail.name,
-              slug: cocktail.slug,
-              imageUrl: cocktail.image_url || undefined,
-            });
-          }
-        }
+        const cocktailsUserCanMake = cocktailsUserCanMakeFromBar(
+          cocktails,
+          ingredientIds,
+          ingredientsByCocktail
+        );
 
         const displayName = user.display_name || user.email?.split("@")[0] || "Mixologist";
         const footerUnsubscribe = buildUserUnsubscribeUrl(unsubscribeToken, "digest");
-        const oneClickUnsubscribe = buildUserOneClickUnsubscribeUrl(unsubscribeToken);
+        const oneClickUnsubscribe = buildUserOneClickUnsubscribeUrl(unsubscribeToken, "digest");
 
         const emailTemplate = weeklyDigestTemplate({
           displayName,
@@ -191,14 +211,21 @@ export async function GET(request: NextRequest) {
           errorCount++;
         } else {
           console.log(
-            `[Weekly Digest] Sent to ${user.email} (Resend ID: ${sendData?.id})`
+            `[Weekly Digest] Sent to ${user.email} (Resend ID: ${sendData?.id}, canMake=${cocktailsUserCanMake.length})`
           );
           sentCount++;
 
-          await supabaseAdmin
+          const { error: stampError } = await supabaseAdmin
             .from("email_preferences")
             .update({ last_digest_sent_at: new Date().toISOString() })
             .eq("user_id", user.id);
+
+          if (stampError) {
+            console.error(
+              `[Weekly Digest] Sent but failed to stamp last_digest_sent_at for ${user.email}:`,
+              stampError
+            );
+          }
         }
 
         await new Promise((resolve) => setTimeout(resolve, 100));

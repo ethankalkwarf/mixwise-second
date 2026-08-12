@@ -106,6 +106,51 @@ async function waitForAuthReady(authReady: Promise<void>, timeoutMs: number = 50
 }
 
 /**
+ * Fire welcome + signup-notification after the session cookies are usable.
+ * Must run after waitForAuthReady — earlier auth paths used to redirect before
+ * this ran, so almost no users ever received a welcome email.
+ */
+async function triggerPostAuthEmails(
+  supabase: ReturnType<typeof createClient>
+): Promise<void> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+    if (!user?.email) return;
+
+    if (user.email_confirmed_at) {
+      const displayName =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email.split("@")[0];
+
+      const welcomeRes = await fetch("/api/auth/send-welcome", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ displayName }),
+      });
+      if (!welcomeRes.ok) {
+        console.warn(
+          "[AuthCallbackPage] Welcome email request failed:",
+          welcomeRes.status,
+          await welcomeRes.text().catch(() => "")
+        );
+      }
+    }
+
+    fetch("/api/auth/send-signup-notification", {
+      method: "POST",
+      credentials: "include",
+    }).catch((err) => {
+      console.warn("[AuthCallbackPage] Signup notification failed (non-fatal):", err);
+    });
+  } catch (err) {
+    console.warn("[AuthCallbackPage] Post-auth emails failed (non-fatal):", err);
+  }
+}
+
+/**
  * Inner component that uses useSearchParams().
  * Must be a separate component to avoid "useSearchParams without Suspense" error.
  */
@@ -376,6 +421,7 @@ function AuthCallbackPageContent() {
             }
             // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
             await waitForAuthReady(authReady);
+            await triggerPostAuthEmails(supabase);
             router.replace(target);
           }
           return;
@@ -395,6 +441,7 @@ function AuthCallbackPageContent() {
             }
             // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
             await waitForAuthReady(authReady);
+            await triggerPostAuthEmails(supabase);
             router.replace("/mix");
             return;
           }
@@ -408,6 +455,7 @@ function AuthCallbackPageContent() {
             }
             // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
             await waitForAuthReady(authReady);
+            await triggerPostAuthEmails(supabase);
             router.replace("/mix");
             return;
           }
@@ -469,31 +517,6 @@ function AuthCallbackPageContent() {
             console.warn("[AuthCallbackPage] Error checking user preferences, continuing to mix wizard");
           }
 
-          // Post-confirmation welcome email (once per user, server dedupes)
-          if (user.email_confirmed_at && user.email) {
-            const displayName =
-              user.user_metadata?.full_name ||
-              user.user_metadata?.name ||
-              user.email.split("@")[0];
-
-            fetch("/api/auth/send-welcome", {
-              method: "POST",
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ displayName }),
-            }).catch((err) => {
-              console.warn("[AuthCallbackPage] Welcome email request failed (non-fatal):", err);
-            });
-          }
-
-          // Internal alert for new OAuth signups (session-authenticated API)
-          fetch("/api/auth/send-signup-notification", {
-            method: "POST",
-            credentials: "include",
-          }).catch((err) => {
-            console.warn("[AuthCallbackPage] Signup notification failed (non-fatal):", err);
-          });
-
           if (!cancelled) {
             // Always redirect to mix wizard for new users, or their intended destination
             const target = isNewUser ? "/mix" : next;
@@ -504,6 +527,7 @@ function AuthCallbackPageContent() {
             }
             // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
             await waitForAuthReady(authReady);
+            await triggerPostAuthEmails(supabase);
             router.replace(target);
           }
           return;
@@ -539,6 +563,7 @@ function AuthCallbackPageContent() {
             scrubUrl();
             // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
             await waitForAuthReady(authReady);
+            await triggerPostAuthEmails(supabase);
             router.replace(next === "/" ? "/mix" : next);
             return;
           }

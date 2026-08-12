@@ -787,11 +787,17 @@ export function weeklyDigestTemplate({
   featuredCocktail?: { name: string; slug: string; description?: string; imageUrl?: string };
   barIngredientCount: number;
 }): EmailTemplate {
-  const subject = `🍸 Your Weekly MixWise Digest – ${cocktailsYouCanMake.length} cocktails waiting for you`;
+  const readyCount = cocktailsYouCanMake.length;
+  const subject =
+    readyCount > 0
+      ? `🍸 Your Weekly MixWise Digest – ${readyCount} cocktail${readyCount === 1 ? "" : "s"} waiting for you`
+      : featuredCocktail
+        ? `🍸 Your Weekly MixWise Digest – Try ${featuredCocktail.name}`
+        : `🍸 Your Weekly MixWise Digest`;
   
   // Dynamic preview text based on content
-  const previewText = cocktailsYouCanMake.length > 0
-    ? `You can make ${cocktailsYouCanMake[0].name}${cocktailsYouCanMake.length > 1 ? `, ${cocktailsYouCanMake[1].name}` : ''} and more with what's in your bar!`
+  const previewText = readyCount > 0
+    ? `You can make ${cocktailsYouCanMake[0].name}${readyCount > 1 ? `, ${cocktailsYouCanMake[1].name}` : ''} and more with what's in your bar!`
     : featuredCocktail 
       ? `This week's featured cocktail: ${featuredCocktail.name}. Plus tips to build your home bar.`
       : "Discover new cocktails and build your home bar this week!";

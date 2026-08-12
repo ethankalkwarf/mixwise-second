@@ -27,6 +27,7 @@ import {
   LockClosedIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
+import { NotificationSettings } from "@/components/mobile/NotificationSettings";
 
 // Simple query to get all ingredient names
 const INGREDIENT_NAMES_QUERY = `*[_type == "ingredient"] { _id, name }`;
@@ -87,11 +88,10 @@ export default function AccountPage() {
   const [displayNameInput, setDisplayNameInput] = useState('');
   const [displayNameSaving, setDisplayNameSaving] = useState(false);
   
-  // Email preferences state
+  // Email preferences state (only emails we actually send)
   const [emailPrefs, setEmailPrefs] = useState({
     weekly_digest: true,
-    recommendations: true,
-    product_updates: true,
+    welcome_emails: true,
   });
   const [emailPrefsLoading, setEmailPrefsLoading] = useState(true);
   const [emailPrefsSaving, setEmailPrefsSaving] = useState(false);
@@ -146,8 +146,7 @@ export default function AccountPage() {
           const data = await response.json();
           setEmailPrefs({
             weekly_digest: data.preferences?.weekly_digest ?? true,
-            recommendations: data.preferences?.recommendations ?? true,
-            product_updates: data.preferences?.product_updates ?? true,
+            welcome_emails: data.preferences?.welcome_emails ?? true,
           });
         }
       } catch (err) {
@@ -901,7 +900,7 @@ export default function AccountPage() {
             
             {emailPrefsLoading ? (
               <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
+                {[1, 2].map((i) => (
                   <div key={i} className="h-16 bg-mist/50 rounded-xl animate-pulse" />
                 ))}
               </div>
@@ -927,40 +926,20 @@ export default function AccountPage() {
                   </label>
                 </div>
 
-                {/* Recommendations */}
+                {/* Welcome emails */}
                 <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
                   <div>
-                    <h3 className="font-semibold text-forest">Personalized Recommendations</h3>
+                    <h3 className="font-semibold text-forest">Welcome Email</h3>
                     <p className="text-sm text-sage">
-                      Cocktail suggestions based on your favorites and bar ingredients
+                      One-time tips when you join MixWise (already sent for most accounts)
                     </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       className="sr-only peer"
-                      checked={emailPrefs.recommendations}
-                      onChange={(e) => updateEmailPref("recommendations", e.target.checked)}
-                      disabled={emailPrefsSaving}
-                    />
-                    <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>
-                  </label>
-                </div>
-
-                {/* Product Updates */}
-                <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
-                  <div>
-                    <h3 className="font-semibold text-forest">Product Updates</h3>
-                    <p className="text-sm text-sage">
-                      New features, improvements, and MixWise news
-                    </p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={emailPrefs.product_updates}
-                      onChange={(e) => updateEmailPref("product_updates", e.target.checked)}
+                      checked={emailPrefs.welcome_emails}
+                      onChange={(e) => updateEmailPref("welcome_emails", e.target.checked)}
                       disabled={emailPrefsSaving}
                     />
                     <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>
@@ -968,6 +947,11 @@ export default function AccountPage() {
                 </div>
               </div>
             )}
+          </section>
+
+          {/* Mobile Notification Settings */}
+          <section className="section-botanical">
+            <NotificationSettings />
           </section>
 
           {/* Achievements */}

@@ -71,7 +71,7 @@ export async function sendWelcomeEmail(
     }
 
     const unsubscribeUrl = buildUserUnsubscribeUrl(unsubscribeToken, "all");
-    const oneClickUnsubscribe = buildUserOneClickUnsubscribeUrl(unsubscribeToken);
+    const oneClickUnsubscribe = buildUserOneClickUnsubscribeUrl(unsubscribeToken, "all");
     const name = displayName || userEmail.split("@")[0];
 
     const emailTemplate = welcomeEmailTemplate({

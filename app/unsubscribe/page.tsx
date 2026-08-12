@@ -7,48 +7,87 @@ import Link from "next/link";
 interface EmailPreferences {
   welcome_emails: boolean;
   weekly_digest: boolean;
-  recommendations: boolean;
-  product_updates: boolean;
 }
 
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const typeParam = searchParams.get("type") || "all";
 
   const [preferences, setPreferences] = useState<EmailPreferences>({
     welcome_emails: true,
     weekly_digest: true,
-    recommendations: true,
-    product_updates: true,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [unsubscribedAll, setUnsubscribedAll] = useState(false);
+  const [didInitialUnsubscribe, setDidInitialUnsubscribe] = useState(false);
 
   useEffect(() => {
-    if (token && !unsubscribedAll) {
-      handleUnsubscribeAll();
-    }
-  }, [token]);
+    if (!token || didInitialUnsubscribe) return;
+
+    const unsubscribeType =
+      typeParam === "digest" || typeParam === "welcome" ? typeParam : "all";
+
+    void (async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `/api/email/unsubscribe?token=${encodeURIComponent(token)}&type=${unsubscribeType}`
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setDidInitialUnsubscribe(true);
+          if (unsubscribeType === "all") {
+            setUnsubscribedAll(true);
+            setPreferences({ welcome_emails: false, weekly_digest: false });
+            setMessage({
+              type: "success",
+              text: "You've been unsubscribed from all MixWise emails.",
+            });
+          } else if (unsubscribeType === "digest") {
+            setPreferences((p) => ({ ...p, weekly_digest: false }));
+            setMessage({
+              type: "success",
+              text: "You've been unsubscribed from the weekly digest.",
+            });
+          } else {
+            setPreferences((p) => ({ ...p, welcome_emails: false }));
+            setMessage({
+              type: "success",
+              text: "You've been unsubscribed from welcome emails.",
+            });
+          }
+        } else {
+          setMessage({ type: "error", text: data.error || "Failed to unsubscribe" });
+        }
+      } catch {
+        setMessage({ type: "error", text: "An error occurred. Please try again." });
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [token, typeParam, didInitialUnsubscribe]);
 
   const handleUnsubscribeAll = async () => {
     if (!token) return;
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/email/unsubscribe?token=${token}&type=all`);
+      const response = await fetch(
+        `/api/email/unsubscribe?token=${encodeURIComponent(token)}&type=all`
+      );
       const data = await response.json();
 
       if (response.ok) {
         setUnsubscribedAll(true);
-        setPreferences({
-          welcome_emails: false,
-          weekly_digest: false,
-          recommendations: false,
-          product_updates: false,
+        setPreferences({ welcome_emails: false, weekly_digest: false });
+        setMessage({
+          type: "success",
+          text: "You've been unsubscribed from all MixWise emails.",
         });
-        setMessage({ type: "success", text: "You've been unsubscribed from all MixWise emails." });
       } else {
         setMessage({ type: "error", text: data.error || "Failed to unsubscribe" });
       }
@@ -93,10 +132,10 @@ function UnsubscribeContent() {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-soft p-8 text-center border border-mist">
-          <div className="text-5xl mb-6">🔗</div>
           <h1 className="text-2xl font-display font-bold text-forest mb-4">Invalid Link</h1>
           <p className="text-sage mb-6">
-            This unsubscribe link is invalid or has expired. If you want to manage your email preferences, please log in to your account.
+            This unsubscribe link is invalid or has expired. If you want to manage your email
+            preferences, please log in to your account.
           </p>
           <Link
             href="/account"
@@ -137,7 +176,8 @@ function UnsubscribeContent() {
         ) : unsubscribedAll ? (
           <div className="text-center py-4">
             <p className="text-forest mb-6">
-              You&apos;ve been unsubscribed from all marketing emails. You may still receive essential account emails (like password resets).
+              You&apos;ve been unsubscribed from all marketing emails. You may still receive
+              essential account emails (like password resets).
             </p>
             <Link href="/account" className="text-terracotta font-semibold hover:underline">
               Manage preferences in your account →
@@ -154,21 +194,9 @@ function UnsubscribeContent() {
               />
               <PreferenceToggle
                 label="Welcome emails"
-                description="Tips when you join MixWise"
+                description="One-time tips when you join MixWise"
                 checked={preferences.welcome_emails}
                 onChange={() => handlePreferenceChange("welcome_emails")}
-              />
-              <PreferenceToggle
-                label="Personalized recommendations"
-                description="Cocktail recommendations based on your bar"
-                checked={preferences.recommendations}
-                onChange={() => handlePreferenceChange("recommendations")}
-              />
-              <PreferenceToggle
-                label="Product updates"
-                description="New features and improvements"
-                checked={preferences.product_updates}
-                onChange={() => handlePreferenceChange("product_updates")}
               />
             </div>
 

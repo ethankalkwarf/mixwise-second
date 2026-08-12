@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validFields = ["welcome_emails", "weekly_digest", "recommendations", "product_updates"];
+    const validFields = ["welcome_emails", "weekly_digest"];
     const updateData: Record<string, boolean | null> = {};
 
     for (const field of validFields) {

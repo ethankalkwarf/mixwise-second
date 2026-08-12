@@ -4,17 +4,22 @@
 
 import { getSiteUrl } from "@/lib/site";
 
+export type UnsubscribeType = "all" | "digest" | "welcome";
+
 export function buildUserUnsubscribeUrl(
   unsubscribeToken: string,
-  type: "all" | "digest" | "welcome" = "all"
+  type: UnsubscribeType = "all"
 ): string {
   const siteUrl = getSiteUrl();
-  const typeParam = type === "digest" ? "digest" : "all";
+  const typeParam = type === "digest" ? "digest" : type === "welcome" ? "welcome" : "all";
   return `${siteUrl}/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}&type=${typeParam}`;
 }
 
 /** One-click List-Unsubscribe header target (RFC 8058) */
-export function buildUserOneClickUnsubscribeUrl(unsubscribeToken: string): string {
+export function buildUserOneClickUnsubscribeUrl(
+  unsubscribeToken: string,
+  type: UnsubscribeType = "all"
+): string {
   const siteUrl = getSiteUrl();
-  return `${siteUrl}/api/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}&type=digest`;
+  return `${siteUrl}/api/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}&type=${type}`;
 }
