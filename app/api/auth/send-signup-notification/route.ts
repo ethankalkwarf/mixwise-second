@@ -6,8 +6,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createServerClient } from "@/lib/supabase/server";
 import { sendSignupNotification } from "@/lib/email/signup-notification";
 import { isRecentlyCreatedUser } from "@/lib/email/send-welcome";
 
@@ -15,8 +14,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST() {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createServerClient();
     const {
       data: { user },
       error: authError,

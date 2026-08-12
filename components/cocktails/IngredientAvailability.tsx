@@ -10,6 +10,7 @@ import { ShoppingBagIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
 import { useShoppingList } from "@/hooks/useShoppingList";
+import { debugLog } from "@/lib/debugLog";
 
 interface IngredientRef {
   id: string;
@@ -98,7 +99,7 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
       
       if (process.env.NODE_ENV === 'development') {
         if (!isAvailable) {
-          console.log(`[IngredientAvailability] Missing: "${i.name}" (ID: ${i.id})`, {
+          debugLog(`[IngredientAvailability] Missing: "${i.name}" (ID: ${i.id})`, {
             idMatch: isAvailableById,
             nameMatch: isAvailableByName,
             barIds: Array.from(normalizedBarIds).slice(0, 5),

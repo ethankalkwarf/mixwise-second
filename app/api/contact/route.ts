@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
+import { debugLog } from "@/lib/debugLog";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Contact Form] Processing submission from: ${trimmedName} (${trimmedEmail}), IP: ${clientIP}`);
+    debugLog(`[Contact Form] Processing submission from: ${trimmedName} (${trimmedEmail}), IP: ${clientIP}`);
 
     // Create Resend client
     const resend = createResendClient();
@@ -228,7 +229,7 @@ You can reply directly to this email to respond to ${trimmedName}.
     `.trim();
 
     // Send email via Resend
-    console.log(`[Contact Form] Sending email to: ${CONTACT_EMAIL}`);
+    debugLog(`[Contact Form] Sending email to: ${CONTACT_EMAIL}`);
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,
@@ -254,7 +255,7 @@ You can reply directly to this email to respond to ${trimmedName}.
       );
     }
 
-    console.log(`[Contact Form] Email sent successfully. Resend ID: ${emailData?.id}`);
+    debugLog(`[Contact Form] Email sent successfully. Resend ID: ${emailData?.id}`);
 
     return NextResponse.json({
       ok: true,

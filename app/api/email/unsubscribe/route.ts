@@ -6,6 +6,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { debugLog } from "@/lib/debugLog";
+import type { Database } from "@/lib/supabase/database.types";
+
+type EmailPreferencesUpdate = Database["public"]["Tables"]["email_preferences"]["Update"];
 
 /**
  * GET - One-click unsubscribe from all emails or a specific category
@@ -32,14 +36,14 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (findError || !prefs) {
-      console.error("[Unsubscribe] Invalid token:", token);
+      console.error("[Unsubscribe] Invalid or expired token");
       return NextResponse.json(
         { error: "Invalid or expired unsubscribe link" },
         { status: 404 }
       );
     }
 
-    let updateData: Record<string, unknown> = {};
+    let updateData: EmailPreferencesUpdate = {};
 
     if (type === "all") {
       updateData = {
@@ -72,7 +76,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`[Unsubscribe] User ${prefs.user_id} unsubscribed from ${type}`);
+    debugLog(`[Unsubscribe] User ${prefs.user_id} unsubscribed from ${type}`);
 
     return NextResponse.json({ ok: true, unsubscribedFrom: type });
   } catch (error) {
@@ -114,8 +118,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validFields = ["welcome_emails", "weekly_digest"];
-    const updateData: Record<string, boolean | null> = {};
+    const validFields = ["welcome_emails", "weekly_digest"] as const;
+    const updateData: EmailPreferencesUpdate = {};
 
     for (const field of validFields) {
       if (typeof preferences?.[field] === "boolean") {

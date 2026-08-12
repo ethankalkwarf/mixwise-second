@@ -11,6 +11,8 @@ import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { thirstyThursdayWelcomeTemplate } from "@/lib/email/templates";
 import { getSiteUrl } from "@/lib/site";
 import { getCocktailsList } from "@/lib/cocktails.server";
+import { buildNewsletterUnsubscribeUrl, buildNewsletterUnsubscribeApiUrl } from "@/lib/email/newsletter-token";
+import { debugLog } from "@/lib/debugLog";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Thirsty Thursday Signup] Processing signup for email: ${trimmedEmail}, IP: ${clientIP}`);
+    debugLog(`[Thirsty Thursday Signup] Processing signup for email: ${trimmedEmail}, IP: ${clientIP}`);
 
     // Create Supabase admin client
     let supabaseAdmin;
@@ -114,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     // If already signed up, return success (don't reveal if email exists)
     if (existingSignup) {
-      console.log(`[Thirsty Thursday Signup] Email already signed up: ${trimmedEmail}`);
+      debugLog(`[Thirsty Thursday Signup] Email already signed up: ${trimmedEmail}`);
       return NextResponse.json({
         ok: true,
         message: "You're already signed up! Check your inbox for our weekly emails.",
@@ -150,7 +152,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Thirsty Thursday Signup] Successfully signed up: ${trimmedEmail}`);
+    debugLog(`[Thirsty Thursday Signup] Successfully signed up: ${trimmedEmail}`);
 
     // Fetch a random cocktail to include in the welcome email
     let featuredCocktail: {
@@ -238,11 +240,10 @@ export async function POST(request: NextRequest) {
       try {
         const resend = createResendClient();
         
-        // Generate unsubscribe URL (simple email-based for non-users)
+        // Generate unsubscribe URL (email-based for non-users)
         const siteUrl = getSiteUrl();
-        // For email signups, use a simple unsubscribe link with email
-        // In the future, we could add a token field to email_signups table
-        const unsubscribeUrl = `${siteUrl}/unsubscribe?email=${encodeURIComponent(trimmedEmail)}&source=thirsty_thursday`;
+        const unsubscribeUrl = buildNewsletterUnsubscribeUrl(trimmedEmail, "thirsty_thursday", siteUrl);
+        const listUnsubscribeUrl = buildNewsletterUnsubscribeApiUrl(trimmedEmail, "thirsty_thursday", siteUrl);
         
         // Generate email template
         const emailTemplate = thirstyThursdayWelcomeTemplate({
@@ -251,7 +252,7 @@ export async function POST(request: NextRequest) {
           featuredCocktail,
         });
         
-        console.log(`[Thirsty Thursday Signup] Sending welcome email to: ${trimmedEmail}`);
+        debugLog(`[Thirsty Thursday Signup] Sending welcome email to: ${trimmedEmail}`);
         
         const { data: emailData, error: emailError } = await resend.emails.send({
           from: MIXWISE_FROM_EMAIL,
@@ -261,8 +262,8 @@ export async function POST(request: NextRequest) {
           html: emailTemplate.html,
           text: emailTemplate.text,
           headers: {
-            "X-Entity-Ref-ID": newSignup.id || trimmedEmail,
-            "List-Unsubscribe": `<${unsubscribeUrl}>`,
+            "X-Entity-Ref-ID": String(newSignup.id || trimmedEmail),
+            "List-Unsubscribe": `<${listUnsubscribeUrl}>`,
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
           },
           tags: [
@@ -275,14 +276,14 @@ export async function POST(request: NextRequest) {
           // Don't fail the signup if email fails
           console.error("[Thirsty Thursday Signup] Failed to send welcome email:", emailError);
         } else {
-          console.log(`[Thirsty Thursday Signup] Welcome email sent successfully. Resend ID: ${emailData?.id}`);
+          debugLog(`[Thirsty Thursday Signup] Welcome email sent successfully. Resend ID: ${emailData?.id}`);
         }
       } catch (emailError) {
         // Don't fail the signup if email fails
         console.error("[Thirsty Thursday Signup] Failed to send welcome email:", emailError);
       }
     } else {
-      console.log(`[Thirsty Thursday Signup] Skipping email - RESEND_API_KEY not configured`);
+      debugLog(`[Thirsty Thursday Signup] Skipping email - RESEND_API_KEY not configured`);
     }
 
     return NextResponse.json({

@@ -57,6 +57,8 @@ export function IngredientTile({
     "creme de cacao": "🥜", // Chocolate/nut for crème de cacao
     "aperol": "🍊", // Orange for Aperol
     "campari": "🍊", // Orange/red for Campari
+    "jagermeister": "🦌", // Stag for Jägermeister
+    "jägermeister": "🦌",
 
     // Mixers
     "cola": "🥤", // Glass for cola

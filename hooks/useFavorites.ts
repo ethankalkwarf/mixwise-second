@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
@@ -35,7 +35,7 @@ interface UseFavoritesResult {
  */
 export function useFavorites(): UseFavoritesResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const supabase = getSupabaseClient();
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
   const [favorites, setFavorites] = useState<Favorite[]>([]);

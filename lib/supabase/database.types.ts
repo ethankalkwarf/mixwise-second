@@ -13,9 +13,15 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+type WithRelationships<
+  T extends Record<string, { Row: unknown; Insert: unknown; Update: unknown }>
+> = {
+  [K in keyof T]: T[K] & { Relationships: [] };
+};
+
 export interface Database {
   public: {
-    Tables: {
+    Tables: WithRelationships<{
       profiles: {
         Row: {
           id: string;
@@ -445,6 +451,61 @@ export interface Database {
           updated_at?: string;
         };
       };
+      ingredients: {
+        Row: {
+          id: string;
+          name: string;
+          category: string | null;
+          type: string | null;
+          image_url: string | null;
+          is_staple: boolean | null;
+          legacy_id: string | null;
+          name_normalized: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          category?: string | null;
+          type?: string | null;
+          image_url?: string | null;
+          is_staple?: boolean | null;
+          legacy_id?: string | null;
+          name_normalized?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          category?: string | null;
+          type?: string | null;
+          image_url?: string | null;
+          is_staple?: boolean | null;
+          legacy_id?: string | null;
+          name_normalized?: string | null;
+        };
+      };
+      cocktail_ingredients_uuid: {
+        Row: {
+          cocktail_id: string;
+          ingredient_id: string;
+        };
+        Insert: {
+          cocktail_id: string;
+          ingredient_id: string;
+        };
+        Update: {
+          cocktail_id?: string;
+          ingredient_id?: string;
+        };
+      };
+    }>;
+    Views: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
     Functions: {
       upsert_recently_viewed: {

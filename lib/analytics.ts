@@ -9,6 +9,8 @@
  * - Analytics: Mixpanel, Amplitude, PostHog
  */
 
+import { debugLog } from "@/lib/debugLog";
+
 /**
  * Track when a new user signs up.
  * Called when a user creates their account for the first time.
@@ -19,7 +21,7 @@
 export async function trackUserSignup(userId: string, email?: string | null): Promise<void> {
   // Placeholder for future analytics implementation
   // This would send signup events to analytics service and email platform
-  console.log("[Analytics] User signed up:", { userId, email: email || "N/A" });
+  debugLog("[Analytics] User signed up:", { userId, email: email || "N/A" });
 }
 
 /**
@@ -29,7 +31,7 @@ export async function trackUserSignup(userId: string, email?: string | null): Pr
  */
 export async function trackUserSignIn(userId: string): Promise<void> {
   // Placeholder for future analytics implementation
-  console.log("[Analytics] User signed in:", userId);
+  debugLog("[Analytics] User signed in:", userId);
 }
 
 /**
@@ -45,7 +47,7 @@ export async function trackIngredientAdded(
   ingredientName: string
 ): Promise<void> {
   // Placeholder for future analytics implementation
-  console.log("[Analytics] Ingredient added:", { userId, ingredientId, ingredientName });
+  debugLog("[Analytics] Ingredient added:", { userId, ingredientId, ingredientName });
 }
 
 /**
@@ -61,7 +63,7 @@ export async function trackCocktailFavorited(
   cocktailName: string
 ): Promise<void> {
   // Placeholder for future analytics implementation
-  console.log("[Analytics] Cocktail favorited:", { userId, cocktailId, cocktailName });
+  debugLog("[Analytics] Cocktail favorited:", { userId, cocktailId, cocktailName });
 }
 
 /**
@@ -77,7 +79,7 @@ export async function trackCocktailView(
   cocktailName: string
 ): Promise<void> {
   // Placeholder for future analytics implementation
-  console.log("[Analytics] Cocktail viewed:", { userId, cocktailId, cocktailName });
+  debugLog("[Analytics] Cocktail viewed:", { userId, cocktailId, cocktailName });
 }
 
 /**
@@ -93,7 +95,7 @@ export async function trackMixToolUsed(
   matchCount: number
 ): Promise<void> {
   // Placeholder for future analytics implementation
-  console.log("[Analytics] Mix tool used:", { userId, ingredientCount, matchCount });
+  debugLog("[Analytics] Mix tool used:", { userId, ingredientCount, matchCount });
 }
 
 /**
@@ -108,7 +110,7 @@ export async function trackEmailSignup(
 ): Promise<void> {
   // Placeholder for future analytics implementation
   // This would send email signups to email platform service
-  console.log("[Analytics] Email signup:", { email, source });
+  debugLog("[Analytics] Email signup:", { email, source });
 }
 
 // Make trackEmailSignup available globally for the modal

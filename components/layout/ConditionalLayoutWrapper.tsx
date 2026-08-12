@@ -1,28 +1,55 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import { Navbar } from "./Navbar";
 import { SiteFooter } from "./SiteFooter";
-import { ReactNode } from "react";
+import { MobileLayout } from "@/components/mobile/MobileLayout";
+import { Capacitor } from "@capacitor/core";
 
-interface ConditionalLayoutWrapperProps {
-  children: ReactNode;
-}
-
-// Pages that should hide the navbar
 const NO_NAVBAR_PAGES = ["/thirsty-thursday"];
 
-export function ConditionalLayoutWrapper({ children }: ConditionalLayoutWrapperProps) {
-  const pathname = usePathname();
-  const hideNavbar = NO_NAVBAR_PAGES.some(path => pathname === path || pathname.startsWith(path + "/"));
+function isCapacitorNative(): boolean {
+  if (typeof window === "undefined") return false;
 
+  try {
+    if (Capacitor.isNativePlatform()) return true;
+  } catch {
+    // Capacitor may not be initialized on web
+  }
+
+  const href = window.location.href;
   return (
-    <div className="min-h-screen flex flex-col">
-      {!hideNavbar && <Navbar />}
-      <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
-        {children}
-      </main>
-      <SiteFooter />
-    </div>
+    window.location.protocol === "capacitor:" ||
+    href.includes("capacitor://") ||
+    href.includes("ionic://")
   );
+}
+
+export function ConditionalLayoutWrapper({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const [isNative, setIsNative] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const hideNavbar = NO_NAVBAR_PAGES.some(
+    (path) => pathname === path || pathname.startsWith(path + "/")
+  );
+
+  useEffect(() => {
+    setIsMounted(true);
+    setIsNative(isCapacitorNative());
+  }, []);
+
+  if (!isMounted || !isNative) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        {!hideNavbar && <Navbar />}
+        <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
+          {children}
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  return <MobileLayout>{children}</MobileLayout>;
 }

@@ -19,6 +19,7 @@ import {
   buildCocktailIngredientMap,
   cocktailsUserCanMakeFromBar,
 } from "@/lib/email/digest-matching";
+import { debugLog } from "@/lib/debugLog";
 
 export async function GET(request: NextRequest) {
   if (!verifyInternalRequest(request)) {
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  console.log("[Weekly Digest] Starting weekly digest job...");
+  debugLog("[Weekly Digest] Starting weekly digest job...");
 
   try {
     const supabaseAdmin = createAdminClient();
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!eligibleUsers?.length) {
-      console.log("[Weekly Digest] No eligible users found");
+      debugLog("[Weekly Digest] No eligible users found");
       return NextResponse.json({ message: "No eligible users", sent: 0 });
     }
 
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
       return prefs.weekly_digest !== false;
     });
 
-    console.log(
+    debugLog(
       `[Weekly Digest] Found ${usersToEmail.length} users to email (of ${eligibleUsers.length} with email)`
     );
 
@@ -126,13 +127,13 @@ export async function GET(request: NextRequest) {
 
     const requiredRows = (cocktailIngredientRows || []).filter((row) => !row.is_optional);
     const ingredientsByCocktail = buildCocktailIngredientMap(requiredRows);
-    console.log(
+    debugLog(
       `[Weekly Digest] Loaded ${requiredRows.length} required cocktail-ingredient links across ${ingredientsByCocktail.size} cocktails`
     );
 
     const weekNumber = getWeekNumber();
     const featuredCocktail = cocktails[weekNumber % cocktails.length];
-    console.log(`[Weekly Digest] Week ${weekNumber}, featuring: ${featuredCocktail?.name}`);
+    debugLog(`[Weekly Digest] Week ${weekNumber}, featuring: ${featuredCocktail?.name}`);
 
     let sentCount = 0;
     let errorCount = 0;
@@ -210,7 +211,7 @@ export async function GET(request: NextRequest) {
           console.error(`[Weekly Digest] Failed to send to ${user.email}:`, sendError);
           errorCount++;
         } else {
-          console.log(
+          debugLog(
             `[Weekly Digest] Sent to ${user.email} (Resend ID: ${sendData?.id}, canMake=${cocktailsUserCanMake.length})`
           );
           sentCount++;
@@ -235,7 +236,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log(
+    debugLog(
       `[Weekly Digest] Completed. Sent: ${sentCount}, Errors: ${errorCount}, Skipped: ${skippedCount}`
     );
 

@@ -10,7 +10,7 @@ import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 interface BackgroundCocktail {
   id: string;
   name: string;
-  image_url: string | null;
+  image_url?: string | null;
 }
 
 interface ThirstyThursdayLandingProps {

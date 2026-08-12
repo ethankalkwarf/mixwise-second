@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './supabase/database.types';
+import { debugLog } from "@/lib/debugLog";
 
 // Create a Supabase client for server-side operations
 function createServerSupabaseClient() {
@@ -87,7 +88,7 @@ export async function matchIngredientTextToIds(
     }));
   }
 
-  console.log(`[ingredientMatching] Successfully loaded ${ingredients.length} ingredients from database`);
+  debugLog(`[ingredientMatching] Successfully loaded ${ingredients.length} ingredients from database`);
 
   // Build lookup maps
   type IngredientData = { id: string; name: string; type?: string };

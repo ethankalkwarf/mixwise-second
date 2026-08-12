@@ -2,9 +2,10 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/supabase/database.types";
 import { trackUserSignup } from "@/lib/analytics";
+import { debugLog } from "@/lib/debugLog";
 
 /**
  * UserProvider - Single Source of Truth for Auth State
@@ -13,7 +14,7 @@ import { trackUserSignup } from "@/lib/analytics";
  * All components should use useUser() to access user data.
  * 
  * Architecture:
- * 1. Uses the shared Supabase client from SessionContextProvider
+ * 1. Uses the shared browser Supabase client
  * 2. Subscribes to onAuthStateChange for real-time auth updates
  * 3. Fetches profile data from the profiles table
  * 4. Provides loading, authenticated, and error states
@@ -61,8 +62,8 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Provider component
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  // Get the shared Supabase client from SessionContextProvider
-  const { supabaseClient: supabase, isLoading: sessionContextLoading } = useSessionContext();
+  // Shared browser Supabase client
+  const supabase = getSupabaseClient();
   
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -86,7 +87,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     // Prevent duplicate fetches for the same user
     if (fetchingProfile.current === userId) {
-      console.log("[UserProvider] Profile fetch already in progress for this user, returning null");
+      debugLog("[UserProvider] Profile fetch already in progress for this user, returning null");
       return null;
     }
     fetchingProfile.current = userId;
@@ -101,7 +102,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           // Verify cache is recent (within 24 hours) and for correct user
           const cacheAge = Date.now() - cachedProfile._cachedAt;
           if (cacheAge < 24 * 60 * 60 * 1000 && cachedProfile.id === userId) {
-            console.log("[UserProvider] Profile loaded from cache");
+            debugLog("[UserProvider] Profile loaded from cache");
             return cachedProfile;
           } else {
             // Cache is stale, remove it
@@ -127,12 +128,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             }, PROFILE_FETCH_TIMEOUT);
           });
 
-          const queryPromise = supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", userId)
-            .single()
-            .then(({ data, error: fetchError }) => {
+          const queryPromise = (async () => {
+            try {
+              const { data, error: fetchError } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", userId)
+                .single();
+
               if (timeoutId) clearTimeout(timeoutId);
 
               if (fetchError) {
@@ -147,18 +150,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               try {
                 const cacheData = { ...data, _cachedAt: Date.now() };
                 localStorage.setItem(getProfileCacheKey(userId), JSON.stringify(cacheData));
-                console.log(`[UserProvider] Profile cached and fetched on attempt ${attempt}`);
+                debugLog(`[UserProvider] Profile cached and fetched on attempt ${attempt}`);
               } catch (cacheErr) {
                 console.warn("[UserProvider] Cache write error:", cacheErr);
               }
 
               return data as Profile;
-            })
-            .catch((err) => {
+            } catch (err) {
               if (timeoutId) clearTimeout(timeoutId);
               console.error(`[UserProvider] Profile fetch exception (attempt ${attempt}):`, err);
               return null;
-            });
+            }
+          })();
 
           // Return whichever resolves first
           const result = await Promise.race([queryPromise, timeoutPromise]);
@@ -168,7 +171,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
           // If we got null and this isn't the last attempt, quick retry
           if (attempt < MAX_RETRIES) {
-            console.log(`[UserProvider] Profile fetch attempt ${attempt} returned null, retrying...`);
+            debugLog(`[UserProvider] Profile fetch attempt ${attempt} returned null, retrying...`);
             await new Promise(resolve => setTimeout(resolve, 200)); // Faster retry delay
           }
 
@@ -196,13 +199,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const profile = await fetchProfile(userId);
 
       if (profile) {
-        console.log("[UserProvider] Profile fetch successful");
+        debugLog("[UserProvider] Profile fetch successful");
         return profile;
       }
 
       // If fetch returns null, try to create it
       // This handles the race condition where auth.users was created but profile INSERT hasn't completed
-      console.log("[UserProvider] Profile not found, attempting to create...");
+      debugLog("[UserProvider] Profile not found, attempting to create...");
 
       // Aggressive timeout for profile creation to keep UX fast
       const PROFILE_CREATE_TIMEOUT = parseInt(process.env.NEXT_PUBLIC_PROFILE_CREATE_TIMEOUT || "1000"); // 1 second default
@@ -216,23 +219,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }, PROFILE_CREATE_TIMEOUT);
       });
 
-      const createPromise = supabase
-        .from("profiles")
-        .insert({
-          id: userId,
-          email: userEmail,
-          display_name: userEmail.split("@")[0],
-        })
-        .select()
-        .single()
-        .then(({ data, error }) => {
+      const createPromise = (async () => {
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .insert({
+              id: userId,
+              email: userEmail,
+              display_name: userEmail.split("@")[0],
+            })
+            .select()
+            .single();
           if (timeoutId) clearTimeout(timeoutId);
           return { data, error };
-        })
-        .catch((err) => {
+        } catch (err) {
           if (timeoutId) clearTimeout(timeoutId);
           return { data: null, error: err };
-        });
+        }
+      })();
 
       const { data, error } = await Promise.race([
         createPromise,
@@ -242,7 +246,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         // If it's a duplicate key error (23505), profile exists but we couldn't fetch it - try again
         if ((error as any)?.code === "23505") {
-          console.log("[UserProvider] Profile already exists (duplicate error), retrying fetch...");
+          debugLog("[UserProvider] Profile already exists (duplicate error), retrying fetch...");
           // Quick retry delay
           await new Promise(resolve => setTimeout(resolve, 200));
           return await fetchProfile(userId);
@@ -258,7 +262,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       try {
         const cacheData = { ...data, _cachedAt: Date.now() };
         localStorage.setItem(getProfileCacheKey(userId), JSON.stringify(cacheData));
-        console.log("[UserProvider] Successfully created and cached new profile");
+        debugLog("[UserProvider] Successfully created and cached new profile");
       } catch (cacheErr) {
         console.warn("[UserProvider] Cache write error for new profile:", cacheErr);
       }
@@ -278,7 +282,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       try {
         const cacheKey = getProfileCacheKey(user.id);
         localStorage.removeItem(cacheKey);
-        console.log("[UserProvider] Cleared profile cache before refresh");
+        debugLog("[UserProvider] Cleared profile cache before refresh");
       } catch (cacheErr) {
         console.warn("[UserProvider] Failed to clear cache:", cacheErr);
       }
@@ -298,7 +302,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const updateAuthState = async (newSession: Session | null) => {
       if (!mounted) return;
 
-      console.log("[UserProvider] Updating auth state:", {
+      debugLog("[UserProvider] Updating auth state:", {
         hasSession: !!newSession,
         hasUser: !!newSession?.user,
         userId: newSession?.user?.id,
@@ -310,11 +314,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       if (newSession?.user) {
         // Ensure profile exists (fetch or create if missing due to race condition)
-        console.log("[UserProvider] Ensuring profile exists for user:", newSession.user.id);
+        debugLog("[UserProvider] Ensuring profile exists for user:", newSession.user.id);
         try {
           const userProfile = await ensureProfileExists(newSession.user.id, newSession.user.email || "");
           if (mounted) {
-            console.log("[UserProvider] Profile ensured:", !!userProfile);
+            debugLog("[UserProvider] Profile ensured:", !!userProfile);
             setProfile(userProfile);
 
             // Track new signups (users created in last minute)
@@ -337,13 +341,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         if (mounted) {
-          console.log("[UserProvider] No user session, clearing profile");
+          debugLog("[UserProvider] No user session, clearing profile");
           setProfile(null);
         }
       }
 
       if (mounted) {
-        console.log("[UserProvider] Setting loading to false");
+        debugLog("[UserProvider] Setting loading to false");
         setIsLoading(false);
         
         // Mark initial check as done and resolve the authReady promise
@@ -352,7 +356,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           initialCheckDone.current = true;
           authCheckDone = true;
           authReadyRef.current.resolve();
-          console.log("[UserProvider] Auth initialization complete, authReady promise resolved");
+          debugLog("[UserProvider] Auth initialization complete, authReady promise resolved");
         }
       }
     };
@@ -360,7 +364,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Initial session check - non-blocking
     const initializeAuth = async () => {
       try {
-        console.log("[UserProvider] Initializing auth - getting session...");
+        debugLog("[UserProvider] Initializing auth - getting session...");
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
@@ -373,7 +377,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        console.log("[UserProvider] Initial session result:", {
+        debugLog("[UserProvider] Initial session result:", {
           hasSession: !!currentSession,
           hasUser: !!currentSession?.user,
           sessionExpiry: currentSession?.expires_at
@@ -381,7 +385,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
         // If we got a session immediately, use it
         if (currentSession?.user && mounted) {
-          console.log("[UserProvider] Session found from getSession");
+          debugLog("[UserProvider] Session found from getSession");
           await updateAuthState(currentSession);
         } else {
           // If getSession() didn't return a session, try reading from localStorage
@@ -390,7 +394,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             const storageKey = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')[0]}-auth-token`;
             const storedSession = localStorage.getItem(storageKey);
             if (storedSession) {
-              console.log("[UserProvider] Found stored session in localStorage, attempting to restore");
+              debugLog("[UserProvider] Found stored session in localStorage, attempting to restore");
               try {
                 const parsedSession = JSON.parse(storedSession);
                 if (Array.isArray(parsedSession) && parsedSession[0]) {
@@ -398,13 +402,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                   const accessToken = parsedSession[0];
                   const refreshToken = parsedSession[1];
                   if (accessToken && refreshToken) {
-                    console.log("[UserProvider] Attempting to set session from localStorage");
+                    debugLog("[UserProvider] Attempting to set session from localStorage");
                     const { data: sessionFromStorage, error: setSessionError } = await supabase.auth.setSession({
                       access_token: accessToken,
                       refresh_token: refreshToken,
                     });
                     if (!setSessionError && sessionFromStorage.session) {
-                      console.log("[UserProvider] Successfully restored session from localStorage");
+                      debugLog("[UserProvider] Successfully restored session from localStorage");
                       await updateAuthState(sessionFromStorage.session);
                       return;
                     }
@@ -432,19 +436,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
+        debugLog("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
 
         // Handle different auth events
         switch (event) {
           case "SIGNED_IN":
           case "TOKEN_REFRESHED":
-            console.log("[UserProvider] User signed in or token refreshed");
+            debugLog("[UserProvider] User signed in or token refreshed");
             await updateAuthState(newSession);
             break;
 
           case "SIGNED_OUT":
             if (mounted) {
-              console.log("[UserProvider] User signed out");
+              debugLog("[UserProvider] User signed out");
               // Clear profile cache on sign out
               try {
                 if (user) {
@@ -465,7 +469,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           case "INITIAL_SESSION":
             // This fires when the subscription is set up and detects a session
             // Could be from cookies, localStorage, or the Supabase client state
-            console.log("[UserProvider] INITIAL_SESSION detected:", !!newSession?.user);
+            debugLog("[UserProvider] INITIAL_SESSION detected:", !!newSession?.user);
             if (!authCheckDone) {
               await updateAuthState(newSession);
             }
@@ -500,7 +504,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         initialCheckDone.current = true;
         // Also resolve authReady so waiting code (like /auth/callback) doesn't hang
         authReadyRef.current.resolve();
-        console.log("[UserProvider] Auth timeout - authReady promise resolved");
+        debugLog("[UserProvider] Auth timeout - authReady promise resolved");
       }
     }, AUTH_INIT_TIMEOUT);
 
@@ -530,7 +534,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Sign in with Google OAuth
   const signInWithGoogle = useCallback(async () => {
     const redirectUrl = getAuthRedirectUrl();
-    console.log("[UserProvider] Starting Google OAuth, redirect:", redirectUrl);
+    debugLog("[UserProvider] Starting Google OAuth, redirect:", redirectUrl);
     
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -549,7 +553,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Sign in with Apple OAuth
   const signInWithApple = useCallback(async () => {
     const redirectUrl = getAuthRedirectUrl();
-    console.log("[UserProvider] Starting Apple OAuth, redirect:", redirectUrl);
+    debugLog("[UserProvider] Starting Apple OAuth, redirect:", redirectUrl);
     
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: "apple",
@@ -659,7 +663,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Sign out
   const signOut = useCallback(async () => {
-    console.log("[UserProvider] Signing out");
+    debugLog("[UserProvider] Signing out");
     const { error: signOutError } = await supabase.auth.signOut();
 
     if (signOutError) {

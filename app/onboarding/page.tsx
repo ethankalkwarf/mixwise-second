@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/components/auth/UserProvider";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { debugLog } from "@/lib/debugLog";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function OnboardingPage() {
   // Redirect to home if auth has loaded and user is not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      console.log("[OnboardingPage] Not authenticated, redirecting to home");
+      debugLog("[OnboardingPage] Not authenticated, redirecting to home");
       router.push("/");
     }
   }, [isLoading, isAuthenticated, router]);

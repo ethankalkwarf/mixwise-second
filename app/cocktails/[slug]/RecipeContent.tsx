@@ -272,9 +272,7 @@ export function RecipeContent({
                 id: cocktail.id,
                 name: cocktail.name,
                 slug: cocktail.slug,
-                imageUrl: cocktail.image_url,
-                base_spirit: cocktail.base_spirit,
-                categories_all: cocktail.categories_all,
+                image_url: cocktail.image_url,
               }}
             />
           </div>
@@ -330,7 +328,7 @@ export function RecipeContent({
 
             {ingredients.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">
-                Ingredients coming soon.
+                Ingredient list isn&apos;t available for this recipe yet.
               </p>
             ) : (
               <ul className="mt-3 space-y-1 text-sm">
@@ -418,7 +416,7 @@ export function RecipeContent({
 
         {instructionSteps.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">
-            Instructions coming soon.
+            Step-by-step instructions aren&apos;t listed for this recipe yet.
           </p>
         ) : (
           <ol className="mt-4 space-y-3">

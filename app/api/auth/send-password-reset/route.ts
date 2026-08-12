@@ -11,6 +11,7 @@ import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { resetPasswordTemplate } from "@/lib/email/templates";
 import { getPasswordResetUrl } from "@/lib/site";
 import { buildSafeAuthUrl } from "@/lib/email/auth-links";
+import { debugLog } from "@/lib/debugLog";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Send Password Reset] Processing request for email: ${trimmedEmail}, IP: ${clientIP}`);
+    debugLog(`[Send Password Reset] Processing request for email: ${trimmedEmail}, IP: ${clientIP}`);
 
     // Create Supabase admin client
     const supabaseAdmin = createAdminClient();
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
     // Generate password recovery link
     const redirectTo = getPasswordResetUrl();
 
-    console.log(`[Send Password Reset] Generating recovery link with redirect: ${redirectTo}`);
+    debugLog(`[Send Password Reset] Generating recovery link with redirect: ${redirectTo}`);
 
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
 
       // Don't leak whether user exists - return generic success
       // This is important for security - we don't want to reveal if an email exists in our system
-      console.log(`[Send Password Reset] Returning success even though link generation failed (security)`);
+      debugLog(`[Send Password Reset] Returning success even though link generation failed (security)`);
       return NextResponse.json({ ok: true });
     }
 
@@ -115,13 +116,13 @@ export async function POST(request: NextRequest) {
       console.error("[Send Password Reset] No action_link in generated link data");
 
       // Return success for security (don't leak user existence)
-      console.log(`[Send Password Reset] Returning success even though no action_link found (security)`);
+      debugLog(`[Send Password Reset] Returning success even though no action_link found (security)`);
       return NextResponse.json({ ok: true });
     }
 
     // Debug logging (only in development)
     if (process.env.AUTH_EMAIL_DEBUG === "true" && process.env.NODE_ENV === "development") {
-      console.log(`[Send Password Reset] Generated URL: ${resetUrl}`);
+      debugLog(`[Send Password Reset] Generated URL: ${resetUrl}`);
     }
 
     const safeResetUrl = buildSafeAuthUrl(resetUrl, new URL(request.url));
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
     // Send email via Resend
     const resend = createResendClient();
 
-    console.log(`[Send Password Reset] Sending email via Resend to: ${trimmedEmail}`);
+    debugLog(`[Send Password Reset] Sending email via Resend to: ${trimmedEmail}`);
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,
@@ -157,11 +158,11 @@ export async function POST(request: NextRequest) {
       console.error("[Send Password Reset] Failed to send email via Resend:", emailError);
 
       // Return success for security (don't leak user existence)
-      console.log(`[Send Password Reset] Returning success even though email send failed (security)`);
+      debugLog(`[Send Password Reset] Returning success even though email send failed (security)`);
       return NextResponse.json({ ok: true });
     }
 
-    console.log(`[Send Password Reset] Email sent successfully. Resend ID: ${emailData?.id}`);
+    debugLog(`[Send Password Reset] Email sent successfully. Resend ID: ${emailData?.id}`);
 
     return NextResponse.json({ ok: true });
 
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
     console.error("[Send Password Reset] Unexpected error:", error);
 
     // Return success for security (don't leak user existence)
-    console.log(`[Send Password Reset] Returning success even though unexpected error occurred (security)`);
+    debugLog(`[Send Password Reset] Returning success even though unexpected error occurred (security)`);
     return NextResponse.json({ ok: true });
   }
 }

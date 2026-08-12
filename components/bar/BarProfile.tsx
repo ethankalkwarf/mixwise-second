@@ -7,6 +7,7 @@ import { InventoryList } from "./InventoryList";
 import type { MixCocktail } from "@/lib/mixTypes";
 import Link from "next/link";
 import Image from "next/image";
+import { debugLog } from "@/lib/debugLog";
 
 interface BarProfileProps {
   ingredientIds: string[];
@@ -71,7 +72,7 @@ export async function BarProfile({
       getUserFavorites(userId),
     ]);
 
-    console.log('[BAR PROFILE] Favorites debug:', {
+    debugLog('[BAR PROFILE] Favorites debug:', {
       totalFavorites: favorites.length,
       favoriteIds: favorites.map(f => f.cocktail_id),
       favoriteSlugs: favorites.map(f => f.cocktail_slug),
@@ -88,7 +89,7 @@ export async function BarProfile({
       stapleIngredientIds: stapleIds,
     });
 
-    console.log('[BAR PROFILE] Matching debug:', {
+    debugLog('[BAR PROFILE] Matching debug:', {
       readyCount: ready.length,
       readyCocktailIds: ready.map(m => m.cocktail.id).slice(0, 10),
       readyCocktailSlugs: ready.map(m => m.cocktail.slug).slice(0, 10),
@@ -139,7 +140,7 @@ export async function BarProfile({
 
     favoriteReady = [...makeableFavorites, ...unmatchableFavorites];
 
-    console.log('[BAR PROFILE] Final favorites:', {
+    debugLog('[BAR PROFILE] Final favorites:', {
       makeableCount: makeableFavorites.length,
       unmatchableCount: unmatchableFavorites.length,
       totalFavoriteReady: favoriteReady.length,

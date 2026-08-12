@@ -13,6 +13,9 @@ function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const typeParam = searchParams.get("type") || "all";
+  const email = searchParams.get("email");
+  const source = searchParams.get("source");
+  const isNewsletter = Boolean(email && source && token);
 
   const [preferences, setPreferences] = useState<EmailPreferences>({
     welcome_emails: true,
@@ -27,12 +30,32 @@ function UnsubscribeContent() {
   useEffect(() => {
     if (!token || didInitialUnsubscribe) return;
 
-    const unsubscribeType =
-      typeParam === "digest" || typeParam === "welcome" ? typeParam : "all";
-
     void (async () => {
       setIsLoading(true);
       try {
+        if (isNewsletter && email && source) {
+          const response = await fetch("/api/email/newsletter-unsubscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, source, token }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            setDidInitialUnsubscribe(true);
+            setUnsubscribedAll(true);
+            setMessage({
+              type: "success",
+              text: "You've been unsubscribed from this MixWise mailing list.",
+            });
+          } else {
+            setMessage({ type: "error", text: data.error || "Failed to unsubscribe" });
+          }
+          return;
+        }
+
+        const unsubscribeType =
+          typeParam === "digest" || typeParam === "welcome" ? typeParam : "all";
+
         const response = await fetch(
           `/api/email/unsubscribe?token=${encodeURIComponent(token)}&type=${unsubscribeType}`
         );
@@ -69,7 +92,7 @@ function UnsubscribeContent() {
         setIsLoading(false);
       }
     })();
-  }, [token, typeParam, didInitialUnsubscribe]);
+  }, [token, typeParam, didInitialUnsubscribe, isNewsletter, email, source]);
 
   const handleUnsubscribeAll = async () => {
     if (!token) return;

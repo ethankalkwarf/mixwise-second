@@ -7,6 +7,7 @@
  */
 
 import type { MixCocktail, MixMatchResult, MixMatchGroups } from "./mixTypes";
+import { debugLog } from "@/lib/debugLog";
 
 export type MixMatchParams = {
   cocktails: MixCocktail[];
@@ -52,7 +53,7 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   }
 
   // Always debug Margarita (not just in development)
-  console.log('[MIX-MATCH-DEBUG] Input:', {
+  debugLog('[MIX-MATCH-DEBUG] Input:', {
     ownedCount: ownedIngredientIds.length,
     cocktailCount: cocktails.length,
     stapleCount: stapleIngredientIds.length,
@@ -69,19 +70,19 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   }
 
   if (margarita) {
-    console.log('[MIX-MATCH-DEBUG] Margarita found:', {
+    debugLog('[MIX-MATCH-DEBUG] Margarita found:', {
       id: margarita.id,
       name: margarita.name,
       ingredients: margarita.ingredients.map(i => ({ id: i.id, name: i.name, optional: i.isOptional }))
     });
   } else {
-    console.log('[MIX-MATCH-DEBUG] Margarita not found in cocktails. Available names:', cocktails.slice(0, 10).map(c => c.name));
+    debugLog('[MIX-MATCH-DEBUG] Margarita not found in cocktails. Available names:', cocktails.slice(0, 10).map(c => c.name));
   }
 
   // Specifically debug the basic "Margarita" cocktail
   const basicMargarita = cocktails.find(c => c.name.toLowerCase() === 'margarita');
   if (basicMargarita) {
-    console.log('[MIX-MATCH-DEBUG] BASIC Margarita ingredients:', basicMargarita.ingredients.map(i => ({
+    debugLog('[MIX-MATCH-DEBUG] BASIC Margarita ingredients:', basicMargarita.ingredients.map(i => ({
       id: i.id,
       name: i.name,
       optional: i.isOptional,
@@ -135,7 +136,7 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
 
     // Debug Margarita specifically
     if (cocktail.name.toLowerCase() === 'margarita') {
-      console.log('[MIX-MATCH-DEBUG] BASIC Margarita matching:', {
+      debugLog('[MIX-MATCH-DEBUG] BASIC Margarita matching:', {
         name: cocktail.name,
         requiredTotal,
         requiredCovered,
@@ -184,7 +185,7 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   });
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('[MIX-MATCH-DEBUG] Results:', {
+    debugLog('[MIX-MATCH-DEBUG] Results:', {
       ready: ready.length,
       almostThere: almostThere.length,
       far: far.length,

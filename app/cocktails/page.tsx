@@ -2,43 +2,16 @@ import { getCocktailsList } from "@/lib/cocktails.server";
 import { getCocktailsRandomizationSeed, seededRandom } from "@/lib/randomization";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { CocktailsDirectory } from "@/components/cocktails/CocktailsDirectory";
-import Link from "next/link";
-import type { CocktailListItem } from "@/lib/cocktailTypes";
+import { generatePageMetadata } from "@/lib/seo";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
-export const revalidate = 300; // Revalidate every 5 minutes for better performance
+export const revalidate = 300;
 
-// GROQ query to fetch all cocktails with their ingredients
-// Default ordering: cocktails with images first, then alphabetically
-const COCKTAILS_QUERY = `*[_type == "cocktail"] {
-  _id,
-  name,
-  slug,
-  description,
-  image,
-  externalImageUrl,
-  glass,
-  method,
-  primarySpirit,
-  difficulty,
-  isPopular,
-  isFavorite,
-  isTrending,
-  drinkCategories,
-  garnish,
-  tags,
-  "ingredients": ingredients[] {
-    _key,
-    amount,
-    isOptional,
-    notes,
-    "ingredient": ingredient-> {
-      _id,
-      name,
-      type
-    }
-  }
-}`;
+export const metadata = generatePageMetadata({
+  title: "Cocktail Recipes",
+  description: "Browse handcrafted cocktail recipes with ingredients, instructions, and photos.",
+  path: "/cocktails",
+});
 
 // Deterministic shuffle using Fisher-Yates algorithm with seeded randomness
 function deterministicShuffle<T>(array: T[], seed: string): T[] {
@@ -97,7 +70,7 @@ function mapCocktailListToSanity(cocktails: any[]): SanityCocktail[] {
 
 export default async function CocktailsPage() {
   // Get stable randomization seed for consistent ordering within session
-  const randomizationSeed = getCocktailsRandomizationSeed();
+  const randomizationSeed = await getCocktailsRandomizationSeed();
 
   const cocktails = await getCocktailsList({ includeIngredients: true });
   const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);
@@ -126,11 +99,11 @@ export default async function CocktailsPage() {
               No cocktails yet
             </h2>
             <p className="text-sage max-w-md">
-              Head over to Sanity Studio at{" "}
-              <Link href="/studio" className="text-terracotta hover:underline">
-                /studio
-              </Link>{" "}
-              to create your first cocktail recipe.
+              We&apos;re restocking the back bar. Check back soon, or try the{" "}
+              <a href="/mix" className="text-terracotta hover:underline">
+                mix tool
+              </a>{" "}
+              with what you have at home.
             </p>
           </div>
         )}

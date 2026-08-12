@@ -19,6 +19,7 @@ export type MixCocktailIngredient = {
   amount?: string | null;
   isOptional?: boolean;
   notes?: string | null;
+  category?: string | null;
 };
 
 // Cocktail for the Mix tool (simplified from Sanity)

@@ -9,13 +9,16 @@ import type {
   CocktailListItem,
   CocktailFilters,
   CocktailIngredient,
+} from './cocktailTypes';
+import type {
   MixCocktail,
   MixIngredient,
   MixCocktailIngredient
-} from './cocktailTypes';
+} from './mixTypes';
 import { getDailyIndexFromCount } from "./dailyCocktail";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { debugLog } from "@/lib/debugLog";
 
 // Create a Supabase client for server-side operations that works during build time
 function createServerSupabaseClient() {
@@ -38,7 +41,7 @@ function createServerSupabaseClient() {
 export async function getCocktailBySlug(slug: string): Promise<Cocktail | null> {
   const supabase = createServerSupabaseClient();
 
-  console.log('[getCocktailBySlug] Looking for slug:', slug);
+  debugLog('[getCocktailBySlug] Looking for slug:', slug);
 
   // First try to find by slug
   const { data, error } = await supabase
@@ -47,24 +50,24 @@ export async function getCocktailBySlug(slug: string): Promise<Cocktail | null> 
     .eq('slug', slug)
     .single();
 
-  console.log('[getCocktailBySlug] Slug lookup result:', { data: !!data, error: error?.message });
+  debugLog('[getCocktailBySlug] Slug lookup result:', { data: !!data, error: error?.message });
 
   if (data) {
-    return data as Cocktail;
+    return data as unknown as Cocktail;
   }
 
   // If slug lookup failed, try to find by ID (in case slug is actually an ID)
-  console.log('[getCocktailBySlug] Slug lookup failed, trying ID lookup for:', slug);
+  debugLog('[getCocktailBySlug] Slug lookup failed, trying ID lookup for:', slug);
   const { data: idData, error: idError } = await supabase
     .from('cocktails')
     .select('*')
     .eq('id', slug)
     .single();
 
-  console.log('[getCocktailBySlug] ID lookup result:', { data: !!idData, error: idError?.message });
+  debugLog('[getCocktailBySlug] ID lookup result:', { data: !!idData, error: idError?.message });
 
   if (idData) {
-    return idData as Cocktail;
+    return idData as unknown as Cocktail;
   }
 
   // Debug: show some available cocktails
@@ -73,7 +76,7 @@ export async function getCocktailBySlug(slug: string): Promise<Cocktail | null> 
     .select('id, slug, name')
     .limit(10);
 
-  console.log('[getCocktailBySlug] Available cocktails:', allCocktails?.slice(0, 5));
+  debugLog('[getCocktailBySlug] Available cocktails:', allCocktails?.slice(0, 5));
   return null;
 }
 
@@ -158,7 +161,7 @@ export async function getCocktailsList(filters: CocktailFilters & { includeIngre
     return [];
   }
 
-  return (data || []) as CocktailListItem[];
+  return (data || []) as unknown as CocktailListItem[];
 }
 
 /**
@@ -205,7 +208,8 @@ export async function getUniqueValues(field: 'base_spirit' | 'category_primary' 
     return [];
   }
 
-  const uniqueValues = [...new Set((data || []).map(item => item[field]).filter(Boolean))];
+  const rows = (data || []) as Array<Record<string, string | null>>;
+  const uniqueValues = [...new Set(rows.map((item) => item[field]).filter((value): value is string => Boolean(value)))];
   return uniqueValues.sort();
 }
 
@@ -234,11 +238,11 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   ingredientsWithIds: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
 }>> {
   try {
-    console.log('[SERVER] getCocktailsWithIngredients starting...');
+    debugLog('[SERVER] getCocktailsWithIngredients starting...');
     const supabase = createServerSupabaseClient();
 
     // Get all cocktails WITH ingredients JSON field
-    console.log('[SERVER] Querying cocktails table with ingredients...');
+    debugLog('[SERVER] Querying cocktails table with ingredients...');
     const { data: cocktailData, error: cocktailError } = await supabase
       .from('cocktails')
       .select(`
@@ -261,7 +265,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
       `)
       .order('name');
 
-    console.log('[SERVER] Cocktails query result:', {
+    debugLog('[SERVER] Cocktails query result:', {
       error: cocktailError,
       dataLength: cocktailData?.length,
       firstFew: cocktailData?.slice(0, 3)?.map(c => ({ id: c.id, name: c.name }))
@@ -290,12 +294,12 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
       ingredientNameById.set(String(ing.id), ing.name);
     });
 
-    console.log('[SERVER] Processing cocktails with JSON ingredients...');
-    console.log('[SERVER] Available fields in cocktailData[0]:', Object.keys(cocktailData[0] || {}));
+    debugLog('[SERVER] Processing cocktails with JSON ingredients...');
+    debugLog('[SERVER] Available fields in cocktailData[0]:', Object.keys(cocktailData[0] || {}));
 
-    console.log('[SERVER] First 3 cocktails ingredients data:');
+    debugLog('[SERVER] First 3 cocktails ingredients data:');
     cocktailData.slice(0, 3).forEach((cocktail, i) => {
-      console.log(`[SERVER] Cocktail ${i+1} (${cocktail.name}): ingredients =`, cocktail.ingredients);
+      debugLog(`[SERVER] Cocktail ${i+1} (${cocktail.name}): ingredients =`, cocktail.ingredients);
     });
 
     // Track excluded cocktails for diagnostics
@@ -307,11 +311,11 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
 
     const result = cocktailData.map(cocktail => {
       // Process ingredients from JSON field
-      let ingredients = [];
+      let ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }> = [];
       let processedSuccessfully = false;
 
       try {
-        console.log(`[SERVER] Processing ${cocktail.name}, ingredients type:`, typeof cocktail.ingredients, 'isArray:', Array.isArray(cocktail.ingredients));
+        debugLog(`[SERVER] Processing ${cocktail.name}, ingredients type:`, typeof cocktail.ingredients, 'isArray:', Array.isArray(cocktail.ingredients));
 
         if (cocktail.ingredients && Array.isArray(cocktail.ingredients)) {
           ingredients = cocktail.ingredients.map((ing: any) => {
@@ -337,7 +341,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
               // Clean up extra whitespace
               .trim();
 
-            console.log(`[SERVER] Parsed "${fullText}" → "${ingredientText}"`);
+            debugLog(`[SERVER] Parsed "${fullText}" → "${ingredientText}"`);
 
             if (!ingredientText) {
               return null;
@@ -373,7 +377,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
                     variation.toLowerCase().includes(name.toLowerCase())
                   )) {
                     matchedIngredient = { id, name };
-                    console.log(`[SERVER] Matched "${ingredientText}" → "${name}" using variation "${variation}"`);
+                    debugLog(`[SERVER] Matched "${ingredientText}" → "${name}" using variation "${variation}"`);
                     break;
                   }
                 }
@@ -393,11 +397,11 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
             };
           }).filter(ing => ing !== null); // Remove null entries
 
-          console.log(`[SERVER] Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
+          debugLog(`[SERVER] Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
           processedSuccessfully = ingredients.length > 0;
         } else if (cocktail.ingredients) {
           // Try to handle as string or other format
-          console.log(`[SERVER] Ingredients is not an array for ${cocktail.name}, trying fallback...`);
+          debugLog(`[SERVER] Ingredients is not an array for ${cocktail.name}, trying fallback...`);
           try {
             const parsed = typeof cocktail.ingredients === 'string' ? JSON.parse(cocktail.ingredients) : cocktail.ingredients;
             if (Array.isArray(parsed)) {
@@ -408,7 +412,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
                 isOptional: ing.isOptional || false,
                 notes: ing.notes || null
               }));
-              console.log(`[SERVER] Fallback worked: Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
+              debugLog(`[SERVER] Fallback worked: Mapped ${ingredients.length} ingredients for ${cocktail.name}`);
               processedSuccessfully = ingredients.length > 0;
             }
           } catch (fallbackError) {
@@ -420,7 +424,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
             });
           }
         } else {
-          console.log(`[SERVER] No ingredients field for ${cocktail.name}`);
+          debugLog(`[SERVER] No ingredients field for ${cocktail.name}`);
           excludedCocktails.push({
             id: cocktail.id,
             name: cocktail.name,
@@ -436,7 +440,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
         });
       }
 
-      console.log(`[SERVER] Final: Cocktail ${cocktail.name}: found ${ingredients.length} ingredients`);
+      debugLog(`[SERVER] Final: Cocktail ${cocktail.name}: found ${ingredients.length} ingredients`);
 
       return {
         id: cocktail.id,
@@ -450,9 +454,9 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
         method: cocktail.technique || null,
         primarySpirit: cocktail.base_spirit || null,
         difficulty: cocktail.difficulty || null,
-        isPopular: cocktail.metadata_json?.isPopular || false,
-        isFavorite: cocktail.metadata_json?.isFavorite || false,
-        isTrending: cocktail.metadata_json?.isTrending || false,
+        isPopular: Boolean((cocktail.metadata_json as { isPopular?: boolean } | null)?.isPopular),
+        isFavorite: Boolean((cocktail.metadata_json as { isFavorite?: boolean } | null)?.isFavorite),
+        isTrending: Boolean((cocktail.metadata_json as { isTrending?: boolean } | null)?.isTrending),
         drinkCategories: cocktail.categories_all || [],
         tags: cocktail.tags || [],
         garnish: cocktail.garnish || null,
@@ -460,13 +464,13 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
       };
     });
 
-    console.log('[SERVER] Final result: first cocktail has ingredients:', result[0]?.ingredientsWithIds?.length || 0);
+    debugLog('[SERVER] Final result: first cocktail has ingredients:', result[0]?.ingredientsWithIds?.length || 0);
 
     // Log diagnostic summary
     const validCocktails = result.filter(c => c.ingredientsWithIds && c.ingredientsWithIds.length > 0);
     const invalidCocktails = result.filter(c => !c.ingredientsWithIds || c.ingredientsWithIds.length === 0);
 
-    console.log(`[SERVER] DIAGNOSTIC SUMMARY:
+    debugLog(`[SERVER] DIAGNOSTIC SUMMARY:
 ╔════════════════════════════════════════╗
 ║       COCKTAIL DATA QUALITY REPORT      ║
 ╠════════════════════════════════════════╣
@@ -476,18 +480,18 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
 ╚════════════════════════════════════════╝`);
 
     if (excludedCocktails.length > 0) {
-      console.log(`[SERVER] ⚠️  EXCLUDED COCKTAILS (${excludedCocktails.length}):`);
+      debugLog(`[SERVER] ⚠️  EXCLUDED COCKTAILS (${excludedCocktails.length}):`);
       excludedCocktails.slice(0, 20).forEach((c, i) => {
-        console.log(`[SERVER]   ${i + 1}. ${c.name} (${c.id}): ${c.reason}`);
+        debugLog(`[SERVER]   ${i + 1}. ${c.name} (${c.id}): ${c.reason}`);
       });
       if (excludedCocktails.length > 20) {
-        console.log(`[SERVER]   ... and ${excludedCocktails.length - 20} more`);
+        debugLog(`[SERVER]   ... and ${excludedCocktails.length - 20} more`);
       }
     }
 
     // Return only valid cocktails
     const validResult = validCocktails;
-    console.log(`[SERVER] Returning ${validResult.length} valid cocktails to client`);
+    debugLog(`[SERVER] Returning ${validResult.length} valid cocktails to client`);
     return validResult;
   } catch (error) {
     console.error('[SERVER] Error in getCocktailsWithIngredients:', error);

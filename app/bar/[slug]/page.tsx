@@ -8,9 +8,11 @@ import { getUserBarIngredients } from "@/lib/cocktails.server";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
 import { SignupPrompt } from "@/components/auth/SignupPrompt";
+import { JoinCtaButton } from "@/components/auth/JoinCtaButton";
 import { SITE_CONFIG } from "@/lib/seo";
 import type { Database } from "@/lib/supabase/database.types";
 import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, ShareIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { debugLog } from "@/lib/debugLog";
 
 // Force dynamic rendering to ensure fresh data on every request
 // This ensures ingredients and favorites are always up-to-date
@@ -56,7 +58,7 @@ async function processProfileResult(profile: any, isOwnerView: boolean, supabase
     return { profile: null, preferences: null, ingredients: [], isOwnerView };
   }
   
-  console.log('[BAR PAGE] Processing profile result for:', profile.id);
+  debugLog('[BAR PAGE] Processing profile result for:', profile.id);
 
   try {
     // For owner view, we don't check public_bar_enabled
@@ -102,36 +104,32 @@ async function getProfileData(slug: string): Promise<{
   isOwnerView: boolean;
 }> {
   try {
-    console.log('[BAR PAGE] getProfileData called with slug:', slug);
+    debugLog('[BAR PAGE] getProfileData called with slug:', slug);
 
     // Determine view type first
     const isOwnerView = isUUID(slug);
-    console.log('[BAR PAGE] isOwnerView determined:', isOwnerView);
+    debugLog('[BAR PAGE] isOwnerView determined:', isOwnerView);
 
     // Use authenticated server client for owner views, anon client for public views
-    const supabase = isOwnerView ? createServerClient() : createPublicClient();
-    console.log('[BAR PAGE] Supabase client created, type:', isOwnerView ? 'authenticated' : 'anonymous');
+    const supabase = isOwnerView ? await createServerClient() : createPublicClient();
+    debugLog('[BAR PAGE] Supabase client created, type:', isOwnerView ? 'authenticated' : 'anonymous');
 
     // Build query dynamically to handle missing columns gracefully
-    let selectFields = "id, display_name, avatar_url";
-    if (!isOwnerView) {
-      // For public views, try to include username/public_slug if they exist
-      selectFields += ", username, public_slug";
-    }
+    const selectFields = "id, display_name, avatar_url, username, public_slug" as const;
 
     let profileQuery = supabase
       .from("profiles")
       .select(selectFields);
 
-    console.log('[BAR PAGE] Querying for slug:', slug, 'isOwnerView:', isOwnerView, 'fields:', selectFields);
+    debugLog('[BAR PAGE] Querying for slug:', slug, 'isOwnerView:', isOwnerView, 'fields:', selectFields);
 
     if (isOwnerView) {
       // Owner view: slug is a userId (UUID)
-      console.log('[BAR PAGE] Owner view - querying by ID');
+      debugLog('[BAR PAGE] Owner view - querying by ID');
       profileQuery = profileQuery.eq("id", slug);
     } else {
       // Public view: try username first, fallback to public_slug if column exists
-      console.log('[BAR PAGE] Public view - attempting flexible query');
+      debugLog('[BAR PAGE] Public view - attempting flexible query');
       try {
         // First try with username
         const usernameQuery = supabase
@@ -142,12 +140,12 @@ async function getProfileData(slug: string): Promise<{
         const { data: usernameResult, error: usernameError } = await usernameQuery.single();
 
         if (usernameResult && !usernameError) {
-          console.log('[BAR PAGE] Found profile by username');
+          debugLog('[BAR PAGE] Found profile by username');
           return await processProfileResult(usernameResult, isOwnerView, supabase);
         }
 
         // If username didn't work, try public_slug
-        console.log('[BAR PAGE] Username query failed, trying public_slug');
+        debugLog('[BAR PAGE] Username query failed, trying public_slug');
         const slugQuery = supabase
           .from("profiles")
           .select(selectFields)
@@ -156,12 +154,12 @@ async function getProfileData(slug: string): Promise<{
         const { data: slugResult, error: slugError } = await slugQuery.single();
 
         if (slugResult && !slugError) {
-          console.log('[BAR PAGE] Found profile by public_slug');
+          debugLog('[BAR PAGE] Found profile by public_slug');
           return await processProfileResult(slugResult, isOwnerView, supabase);
         }
 
         // If both fail, the profile doesn't exist
-        console.log('[BAR PAGE] No profile found by username or public_slug');
+        debugLog('[BAR PAGE] No profile found by username or public_slug');
         return { profile: null, preferences: null, ingredients: [], isOwnerView };
 
       } catch (queryError) {
@@ -170,17 +168,17 @@ async function getProfileData(slug: string): Promise<{
       }
     }
 
-    console.log('[BAR PAGE] Executing profile query...');
+    debugLog('[BAR PAGE] Executing profile query...');
     const { data: profile, error: profileError } = await profileQuery.single();
 
-    console.log('[BAR PAGE] Profile query result:', {
+    debugLog('[BAR PAGE] Profile query result:', {
       profile: profile ? 'found' : 'null',
       profileError: profileError ? profileError.message : 'none',
       profileId: profile?.id
     });
 
     if (profileError || !profile) {
-      console.log('[BAR PAGE] No profile found or query error, returning notFound');
+      debugLog('[BAR PAGE] No profile found or query error, returning notFound');
       if (profileError) {
         console.error('[BAR PAGE] Profile query error details:', profileError);
       }
@@ -197,16 +195,16 @@ async function getProfileData(slug: string): Promise<{
 
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    console.log('[BAR PAGE] generateMetadata called with slug:', params.slug);
-    const { profile, isOwnerView } = await getProfileData(params.slug);
+    const { slug } = await params;
+    const { profile, isOwnerView } = await getProfileData(slug);
 
     if (!profile) {
-      console.log('[BAR PAGE] No profile found for metadata');
+      debugLog('[BAR PAGE] No profile found for metadata');
       return {
         title: "Bar Not Found | MixWise",
         description: "This bar profile could not be found.",
@@ -214,7 +212,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const displayName = profile.display_name || profile.username || "Anonymous Bartender";
-    console.log('[BAR PAGE] Generated metadata for:', displayName, 'isOwnerView:', isOwnerView);
+    debugLog('[BAR PAGE] Generated metadata for:', displayName, 'isOwnerView:', isOwnerView);
 
     if (isOwnerView) {
       return {
@@ -243,10 +241,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BarPage({ params }: Props) {
   try {
-    console.log('[BAR PAGE] Loading bar page for slug:', params.slug);
-    const { profile, preferences, ingredients, isOwnerView } = await getProfileData(params.slug);
-    console.log('[BAR PAGE] getProfileData returned:', { hasProfile: !!profile, isOwnerView });
-    console.log('[BAR PAGE] Profile data loaded:', { profile: !!profile, preferences: !!preferences, ingredientsCount: ingredients.length, isOwnerView });
+    const { slug } = await params;
+    const { profile, preferences, ingredients, isOwnerView } = await getProfileData(slug);
+    debugLog('[BAR PAGE] getProfileData returned:', { hasProfile: !!profile, isOwnerView });
+    debugLog('[BAR PAGE] Profile data loaded:', { profile: !!profile, preferences: !!preferences, ingredientsCount: ingredients.length, isOwnerView });
 
   // Profile not found
   if (!profile) {
@@ -442,12 +440,10 @@ export default async function BarPage({ params }: Props) {
               Join MixWise to create your own bar, discover new recipes, and share your cocktail creations with friends.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/auth"
+              <JoinCtaButton
+                label="Join MixWise"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors font-medium"
-              >
-                Join MixWise
-              </Link>
+              />
               <Link
                 href="/"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-mist hover:bg-stone text-forest rounded-xl transition-colors font-medium"

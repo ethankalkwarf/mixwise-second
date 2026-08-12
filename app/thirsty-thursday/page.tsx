@@ -3,6 +3,7 @@ import { ThirstyThursdayLanding } from "@/components/thirsty-thursday/ThirstyThu
 import { WebPageSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 import { getCocktailsList } from "@/lib/cocktails.server";
+import { debugLog } from "@/lib/debugLog";
 
 export const metadata: Metadata = {
   title: "Thirsty Thursday - Weekly Cocktail Newsletter | MixWise",
@@ -34,7 +35,7 @@ export default async function ThirstyThursdayPage() {
   if (cocktailsWithImages.length === 0) {
     console.warn("[Thirsty Thursday] No cocktails with images found. Total cocktails:", allCocktails.length);
   } else {
-    console.log("[Thirsty Thursday] Found", cocktailsWithImages.length, "cocktails with images");
+    debugLog("[Thirsty Thursday] Found", cocktailsWithImages.length, "cocktails with images");
   }
 
   return (

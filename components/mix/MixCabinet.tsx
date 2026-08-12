@@ -168,8 +168,11 @@ export function MixCabinet({
 
   // Helper function to get emoji for ingredient
   const getIngredientEmoji = (ingredient: { name?: string; category?: string }) => {
-    const ingredientKey = ingredient.name?.toLowerCase().replace(/\s+/g, '');
-    return ingredientEmojis[ingredientKey] || categoryIcons[ingredient.category || "Garnish"] || "🍒";
+    const ingredientKey = ingredient.name?.toLowerCase().replace(/\s+/g, "");
+    if (ingredientKey && ingredientEmojis[ingredientKey]) {
+      return ingredientEmojis[ingredientKey];
+    }
+    return categoryIcons[ingredient.category || "Garnish"] || "🍒";
   };
 
   const categories = [

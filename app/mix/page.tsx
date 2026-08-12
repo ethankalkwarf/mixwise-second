@@ -18,6 +18,7 @@ import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
 import { InformationCircleIcon, BookmarkIcon, PlusIcon, HomeIcon, WrenchScrewdriverIcon, BookOpenIcon } from "@heroicons/react/24/outline";
 import { createClient } from "@/lib/supabase/client";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { debugLog } from "@/lib/debugLog";
 
 // Show sign-up prompt after adding this many ingredients
 const PROMPT_THRESHOLD = 3;
@@ -153,7 +154,7 @@ function MixPageContent() {
         setAllCocktails(validCocktails || []);
       } catch (error) {
         console.error('Failed to load data from Supabase:', error);
-        console.log('Using mock data for development...');
+        debugLog('Using mock data for development...');
 
         // Mock data for development when API is unavailable
         const mockIngredients: MixIngredient[] = [

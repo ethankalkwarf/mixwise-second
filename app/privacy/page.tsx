@@ -1,10 +1,14 @@
 import { Metadata } from "next";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { generatePageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+const LAST_UPDATED = "August 12, 2026";
+
+export const metadata: Metadata = generatePageMetadata({
   title: "Privacy Policy",
-  description: "Privacy Policy for MixWise - Learn how we collect, use, and protect your information.",
-};
+  description: "Privacy Policy for MixWise — how we collect, use, and protect your information.",
+  path: "/privacy",
+});
 
 export default function PrivacyPolicyPage() {
   return (
@@ -17,7 +21,7 @@ export default function PrivacyPolicyPage() {
           
           <div className="prose prose-lg max-w-none text-charcoal">
             <p className="text-sage text-sm mb-8">
-              Last updated: {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              Last updated: {LAST_UPDATED}
             </p>
 
             <section className="mb-8">
@@ -140,6 +144,7 @@ export default function PrivacyPolicyPage() {
               <p className="text-charcoal/80">
                 If you have any questions about this Privacy Policy, please contact us through 
                 our <a href="/contact" className="text-terracotta hover:text-terracotta-dark underline">contact page</a>.
+                See also our <a href="/terms" className="text-terracotta hover:text-terracotta-dark underline">Terms of Service</a>.
               </p>
             </section>
           </div>

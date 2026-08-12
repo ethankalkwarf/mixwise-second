@@ -19,6 +19,7 @@ import { confirmEmailTemplate } from "@/lib/email/templates";
 import { getAuthCallbackUrl } from "@/lib/site";
 import { buildSafeAuthUrl } from "@/lib/email/auth-links";
 import { sendSignupNotification } from "@/lib/email/signup-notification";
+import { debugLog } from "@/lib/debugLog";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Signup API] Processing signup for email: ${trimmedEmail}, IP: ${clientIP}`);
+    debugLog(`[Signup API] Processing signup for email: ${trimmedEmail}, IP: ${clientIP}`);
 
     // Validate name fields (required for email/password signup UX)
     const trimmedFirstName = typeof firstName === "string" ? firstName.trim() : "";
@@ -144,13 +145,13 @@ export async function POST(request: NextRequest) {
       console.warn("[Signup API] RESEND_API_KEY not set - emails will be skipped (dev mode)");
     }
 
-    console.log("[Signup API] Environment variables validated, creating admin client...");
+    debugLog("[Signup API] Environment variables validated, creating admin client...");
 
     // Create Supabase admin client
     let supabaseAdmin;
     try {
       supabaseAdmin = createAdminClient();
-      console.log("[Signup API] Admin client created successfully");
+      debugLog("[Signup API] Admin client created successfully");
     } catch (adminError) {
       console.error("[Signup API] Failed to create admin client:", adminError);
       return NextResponse.json(
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
     // Generate signup confirmation link
     // This creates the user AND generates the confirmation link in one step
     const redirectTo = `${getAuthCallbackUrl()}?next=/mix`;
-    console.log(`[Signup API] Generating signup link with redirect: ${redirectTo}`);
+    debugLog(`[Signup API] Generating signup link with redirect: ${redirectTo}`);
 
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "signup",
@@ -214,7 +215,7 @@ export async function POST(request: NextRequest) {
               if (existingProfileUpsertError) {
                 console.error("[Signup API] Failed to upsert profile for existing user (non-fatal):", existingProfileUpsertError);
               } else {
-                console.log(`[Signup API] Ensured profile exists for existing user: ${existingUser.id}`);
+                debugLog(`[Signup API] Ensured profile exists for existing user: ${existingUser.id}`);
               }
             }
           }
@@ -242,7 +243,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Signup API] User created successfully: ${linkData.user.id}`);
+    debugLog(`[Signup API] User created successfully: ${linkData.user.id}`);
 
     const confirmUrl = linkData.properties?.action_link;
 
@@ -270,7 +271,7 @@ export async function POST(request: NextRequest) {
         
         if (userData?.user && !userError) {
           userVerified = true;
-          console.log(`[Signup API] User verified in auth.users: ${linkData.user.id} (attempt ${userVerificationAttempts})`);
+          debugLog(`[Signup API] User verified in auth.users: ${linkData.user.id} (attempt ${userVerificationAttempts})`);
           break;
         }
         
@@ -316,7 +317,7 @@ export async function POST(request: NextRequest) {
       
       if (existingProfile && !fetchError) {
         profileExists = true;
-        console.log(`[Signup API] Profile already exists for user: ${linkData.user.id} (found on attempt ${profileAttempts})`);
+        debugLog(`[Signup API] Profile already exists for user: ${linkData.user.id} (found on attempt ${profileAttempts})`);
         break;
       }
       
@@ -344,7 +345,7 @@ export async function POST(request: NextRequest) {
       if (insertError) {
         // Check if it's a duplicate key error (profile was created between check and insert)
         if (insertError.code === '23505' || insertError.message?.includes('duplicate') || insertError.message?.includes('already exists')) {
-          console.log(`[Signup API] Profile created by trigger or another process (attempt ${profileAttempts})`);
+          debugLog(`[Signup API] Profile created by trigger or another process (attempt ${profileAttempts})`);
           profileExists = true;
           break;
         }
@@ -410,7 +411,7 @@ export async function POST(request: NextRequest) {
         if (upsertError) {
           // Check if it's a duplicate key error
           if (upsertError.code === '23505' || upsertError.message?.includes('duplicate') || upsertError.message?.includes('already exists')) {
-            console.log(`[Signup API] Profile exists (upsert detected duplicate on attempt ${profileAttempts})`);
+            debugLog(`[Signup API] Profile exists (upsert detected duplicate on attempt ${profileAttempts})`);
             profileExists = true;
             break;
           }
@@ -459,7 +460,7 @@ export async function POST(request: NextRequest) {
               .single();
             
             if (lastChanceCheck) {
-              console.log("[Signup API] Profile found on last chance check - continuing");
+              debugLog("[Signup API] Profile found on last chance check - continuing");
               profileExists = true;
               break;
             }
@@ -483,11 +484,11 @@ export async function POST(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 200 * profileAttempts));
         } else {
           profileExists = true;
-          console.log(`[Signup API] Profile created successfully via upsert for user: ${linkData.user.id}`);
+          debugLog(`[Signup API] Profile created successfully via upsert for user: ${linkData.user.id}`);
         }
       } else if (insertData) {
         profileExists = true;
-        console.log(`[Signup API] Profile created successfully via insert for user: ${linkData.user.id}`);
+        debugLog(`[Signup API] Profile created successfully via insert for user: ${linkData.user.id}`);
       }
     }
     
@@ -530,7 +531,7 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       } else {
-        console.log(`[Signup API] Profile found on final check for user: ${linkData.user.id}`);
+        debugLog(`[Signup API] Profile found on final check for user: ${linkData.user.id}`);
         profileExists = true;
       }
     }
@@ -558,13 +559,13 @@ export async function POST(request: NextRequest) {
 
     // Debug logging (only in development)
     if (process.env.AUTH_EMAIL_DEBUG === "true" && process.env.NODE_ENV === "development") {
-      console.log(`[Signup API] Generated confirmation URL: ${confirmUrl}`);
+      debugLog(`[Signup API] Generated confirmation URL: ${confirmUrl}`);
     }
 
     // Skip email sending if RESEND_API_KEY is not configured
     if (!resendApiKey) {
-      console.log(`[Signup API] Skipping email - RESEND_API_KEY not configured`);
-      console.log(`[Signup API] In production, please set RESEND_API_KEY`);
+      debugLog(`[Signup API] Skipping email - RESEND_API_KEY not configured`);
+      debugLog(`[Signup API] In production, please set RESEND_API_KEY`);
       // In dev mode without Resend, return success but note email wasn't sent
       return NextResponse.json({
         ok: true,
@@ -585,7 +586,7 @@ export async function POST(request: NextRequest) {
     let resend;
     try {
       resend = createResendClient();
-      console.log("[Signup API] Resend client created successfully");
+      debugLog("[Signup API] Resend client created successfully");
     } catch (resendError) {
       const resendErrorMsg = resendError instanceof Error ? resendError.message : String(resendError);
       console.error("[Signup API] Failed to create Resend client:", resendErrorMsg);
@@ -599,7 +600,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Signup API] Sending confirmation email via Resend to: ${trimmedEmail}`);
+    debugLog(`[Signup API] Sending confirmation email via Resend to: ${trimmedEmail}`);
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,
@@ -633,7 +634,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Signup API] Confirmation email sent successfully. Resend ID: ${emailData?.id}`);
+    debugLog(`[Signup API] Confirmation email sent successfully. Resend ID: ${emailData?.id}`);
 
     // Send notification email to hello@getmixwise.com (non-blocking)
     // Call the function directly instead of making an HTTP request for better reliability
@@ -649,7 +650,7 @@ export async function POST(request: NextRequest) {
         } else if (!result.success) {
           console.error("[Signup API] Notification email failed:", result.error);
         } else {
-          console.log("[Signup API] Notification email sent successfully");
+          debugLog("[Signup API] Notification email sent successfully");
         }
       })
       .catch((err) => {
@@ -697,7 +698,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: `An unexpected error occurred: ${errorMessage}` },
+      { error: "An unexpected error occurred. Please try again." },
       { status: 500 }
     );
   }

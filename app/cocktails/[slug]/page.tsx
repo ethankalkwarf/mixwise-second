@@ -14,6 +14,7 @@ import { ShoppingListButton } from "@/components/cocktails/ShoppingListButton";
 import { RecipeContent } from "./RecipeContent";
 import { DailyCocktailBanner } from "@/components/cocktails/DailyCocktailBanner";
 import { matchIngredientTextToIds } from "@/lib/ingredientMatching";
+import { debugLog } from "@/lib/debugLog";
 
 // --- helpers for data normalization ---
 
@@ -21,8 +22,8 @@ type IngredientLike =
   | null
   | undefined
   | string
-  | { text?: string }
-  | Array<string | { text?: string }>;
+  | { text?: string; name?: string; amount?: string; measure?: string; notes?: string; isOptional?: boolean; ingredient?: unknown }
+  | Array<unknown>;
 
 function asString(value: unknown): string | null {
   if (typeof value === "string") return value;
@@ -42,33 +43,57 @@ function asStringArray(value: unknown): string[] {
   return [];
 }
 
+function formatIngredientLine(item: unknown): string {
+  if (!item) return "";
+  if (typeof item === "string") return item.trim();
+  if (typeof item !== "object") return String(item).trim();
+
+  const obj = item as Record<string, unknown>;
+  if (typeof obj.text === "string" && obj.text.trim()) return obj.text.trim();
+
+  const nested =
+    obj.ingredient && typeof obj.ingredient === "object"
+      ? (obj.ingredient as Record<string, unknown>)
+      : null;
+  const name =
+    (typeof obj.name === "string" && obj.name) ||
+    (nested && typeof nested.name === "string" && nested.name) ||
+    (typeof obj.ingredient === "string" && obj.ingredient) ||
+    "";
+  const amount =
+    (typeof obj.amount === "string" && obj.amount) ||
+    (typeof obj.measure === "string" && obj.measure) ||
+    "";
+  const notes = typeof obj.notes === "string" ? obj.notes.trim() : "";
+  const optional = obj.isOptional || obj.optional ? " (optional)" : "";
+
+  const core = [amount, name].filter(Boolean).join(" ").trim();
+  if (!core) return "";
+  return notes ? `${core}${optional} — ${notes}` : `${core}${optional}`;
+}
+
 function normalizeIngredients(raw: IngredientLike): { text: string }[] {
   if (!raw) return [];
 
-  if (Array.isArray(raw)) {
-    return raw
-      .map((item) =>
-        typeof item === "string"
-          ? { text: item }
-          : { text: String(item.text ?? "").trim() }
-      )
-      .filter((i) => i.text.length > 0);
-  }
-
   if (typeof raw === "string") {
     try {
-      const parsed = JSON.parse(raw);
-      return normalizeIngredients(parsed);
+      return normalizeIngredients(JSON.parse(raw));
     } catch {
-      const parts = raw
+      return raw
         .split("|")
         .map((s) => s.trim())
-        .filter(Boolean);
-      return parts.map((text) => ({ text }));
+        .filter(Boolean)
+        .map((text) => ({ text }));
     }
   }
 
-  const text = String(raw.text ?? "").trim();
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => ({ text: formatIngredientLine(item) }))
+      .filter((i) => i.text.length > 0);
+  }
+
+  const text = formatIngredientLine(raw);
   return text ? [{ text }] : [];
 }
 
@@ -76,29 +101,53 @@ function normalizeInstructions(
   raw: string | string[] | null | undefined
 ): string[] {
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw.filter((s) => s && typeof s === 'string' && s.trim().length > 0);
 
-  if (typeof raw !== 'string') return [];
+  if (Array.isArray(raw)) {
+    return raw
+      .map((step) => {
+        if (typeof step === "string") return step.trim();
+        if (step && typeof step === "object" && "text" in (step as object)) {
+          return String((step as { text?: unknown }).text ?? "").trim();
+        }
+        return "";
+      })
+      .filter((s) => s.length > 0);
+  }
+
+  if (typeof raw !== "string") return [];
 
   const value = raw.trim();
+  if (!value) return [];
 
-  // First try to split on numbered patterns like "1) ", "2) ", etc.
+  if (value.startsWith("[") || value.startsWith("{")) {
+    try {
+      return normalizeInstructions(JSON.parse(value));
+    } catch {
+      // fall through
+    }
+  }
+
   const numbered = value
     .split(/\s*\d+\)\s*/g)
     .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !/^\d+$/.test(s)); // Remove standalone numbers
+    .filter((s) => s.length > 0 && !/^\d+$/.test(s));
 
   if (numbered.length > 1) return numbered;
 
-  // Fallback: split on sentence endings (periods followed by space)
+  const newlineSteps = value
+    .split(/\n+/)
+    .map((s) => s.replace(/^\s*\d+[\.\)]\s*/, "").trim())
+    .filter((s) => s.length > 0);
+
+  if (newlineSteps.length > 1) return newlineSteps;
+
   const sentences = value
     .split(/\.\s+/g)
     .map((s) => s.trim().replace(/\.$/, ""))
-    .filter((s) => s.length > 0 && !/^\d+$/.test(s)); // Remove standalone numbers
+    .filter((s) => s.length > 0 && !/^\d+$/.test(s));
 
   if (sentences.length > 1) return sentences;
 
-  // Final fallback: if it's a single instruction, return it as one step
   return [value];
 }
 
@@ -249,11 +298,11 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
   const { daily } = await searchParams;
   const isDailyCocktail = daily === 'true';
 
-  console.log('[COCKTAIL PAGE] Received slug:', slug);
+  debugLog('[COCKTAIL PAGE] Received slug:', slug);
 
   const cocktail = await getCocktailBySlug(slug);
 
-  console.log('[COCKTAIL PAGE] Found cocktail:', cocktail ? `${cocktail.name} (id: ${cocktail.id})` : 'null');
+  debugLog('[COCKTAIL PAGE] Found cocktail:', cocktail ? `${cocktail.name} (id: ${cocktail.id})` : 'null');
 
   if (!cocktail) {
     console.error('[COCKTAIL PAGE] No cocktail found for slug:', slug);

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { FavoriteButton } from "./FavoriteButton";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { checkExplorationBadges } from "@/lib/badgeEngine";
 
@@ -25,7 +25,7 @@ interface CocktailActionsProps {
 export function CocktailActions({ cocktail }: CocktailActionsProps) {
   const { recordView } = useRecentlyViewed();
   const { user, isAuthenticated } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const supabase = getSupabaseClient();
   
   // Track if we've already recorded the view for this cocktail
   const hasRecordedView = useRef<string | null>(null);

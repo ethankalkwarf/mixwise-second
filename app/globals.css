@@ -519,3 +519,273 @@ body {
 
 .processing-dots span:nth-child(1) { animation-delay: -0.32s; }
 .processing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+/* ========================================
+   Mobile App Optimizations (Capacitor/iOS)
+   ======================================== */
+
+/* Safe Area Insets for iPhone notch/home indicator */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Main content should respect safe areas */
+  #main-content {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* iOS Safe Area Variables */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+}
+
+/* Touch Target Optimization - Minimum 44x44pt for iOS */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  [role="button"],
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Input fields should be touch-friendly */
+  input,
+  textarea,
+  select,
+  .input-botanical {
+    min-height: 44px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+}
+
+/* Prevent iOS text size adjustment */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Mobile-specific scrolling improvements */
+@media (max-width: 768px) {
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Smooth scrolling for native feel */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better tap highlighting */
+  a, button, [role="button"] {
+    -webkit-tap-highlight-color: rgba(188, 90, 69, 0.2); /* terracotta with opacity */
+  }
+}
+
+/* Pull-to-refresh indicator (for future implementation) */
+.pull-to-refresh-indicator {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1rem;
+  color: var(--terracotta, #BC5A45);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.pull-to-refresh-indicator.active {
+  opacity: 1;
+}
+
+/* Disable text selection on UI elements (unless needed) */
+button, .btn-primary, .btn-secondary, .btn-ghost {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent double-tap zoom on buttons (iOS) */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Keyboard appearance improvements */
+@media (max-width: 768px) {
+  /* Ensure inputs are not covered by keyboard */
+  input:focus,
+  textarea:focus {
+    scroll-margin-bottom: 100px;
+  }
+}
+
+/* Status bar spacing (handled by Capacitor but backup CSS) */
+.status-bar-spacer {
+  height: var(--safe-area-inset-top, 20px);
+}
+
+/* Bottom navigation safe area (for tab bar) */
+.bottom-nav-spacer {
+  padding-bottom: max(1rem, var(--safe-area-inset-bottom));
+}
+
+/* Safe area content padding for mobile app */
+.safe-area-content {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Safe area bottom for fixed elements */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Modern 2026 Premium Styles */
+@layer utilities {
+  /* Glassmorphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+  /* Modern shadow system */
+  .shadow-premium {
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 10px 15px -3px rgba(0, 0, 0, 0.08),
+      0 0 0 1px rgba(0, 0, 0, 0.02);
+  }
+  
+  .shadow-premium-lg {
+    box-shadow: 
+      0 10px 15px -3px rgba(0, 0, 0, 0.08),
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(0, 0, 0, 0.03);
+  }
+
+  /* Smooth page transitions */
+  .page-transition {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Modern card hover effect */
+  .card-modern {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .card-modern:active {
+    transform: scale(0.97);
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, #3A4D39 0%, #8A9A5B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* iOS-style animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+/* Native app scrollbar (hidden on mobile) */
+@media (max-width: 768px) {
+  .native-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .native-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* App-style page transitions */
+.app-page {
+  min-height: 100vh;
+  background: #F9F7F2; /* cream */
+}
+
+/* Native-style list items */
+.native-list-item {
+  @apply bg-white border-b border-mist/50;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  transition: background-color 0.2s;
+}
+
+.native-list-item:active {
+  background-color: #E6EBE4; /* mist */
+}
+
+/* Native-style card */
+.native-card {
+  @apply bg-white rounded-2xl shadow-sm;
+  border: 1px solid rgba(230, 235, 228, 0.5); /* mist with opacity */
+}

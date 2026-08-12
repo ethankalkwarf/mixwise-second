@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
@@ -27,7 +27,7 @@ interface UseRatingsResult {
  */
 export function useRatings(cocktailId: string): UseRatingsResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const supabase = getSupabaseClient();
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
   const [rating, setRatingState] = useState<RatingData>({

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { ShareIcon, LinkIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/components/ui/toast";
+import { Capacitor } from "@capacitor/core";
+// Temporarily disabled - plugin has Swift API errors
+// import { Share } from "@capacitor/share";
 
 // Twitter X Icon
 function XIcon({ className }: { className?: string }) {
@@ -53,11 +56,30 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
   };
 
   const handleNativeShare = async () => {
+    // Temporarily disabled - plugin has Swift API errors
+    // Use Capacitor Share plugin on native platforms for better iOS integration
+    // if (Capacitor.isNativePlatform()) {
+    //   try {
+    //     await Share.share({
+    //       title,
+    //       text: description || title,
+    //       url,
+    //       dialogTitle: `Share ${title}`,
+    //     });
+    //   } catch (err) {
+    //     if ((err as Error).name !== "AbortError") {
+    //       toast.error("Failed to share");
+    //     }
+    //   }
+    //   return;
+    // }
+
+    // Fall back to Web Share API for web browsers
     if (navigator.share) {
       try {
         await navigator.share({
           title,
-          text: description,
+          text: description || title,
           url,
         });
       } catch (err) {
@@ -66,6 +88,9 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
           toast.error("Failed to share");
         }
       }
+    } else {
+      // Fall back to copy link if share API not available
+      handleCopyLink();
     }
   };
 

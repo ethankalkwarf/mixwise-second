@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
@@ -32,6 +32,7 @@ import {
   XMarkIcon,
   ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
+import { debugLog } from "@/lib/debugLog";
 
 interface RecommendedCocktail {
   _id: string;
@@ -50,7 +51,7 @@ interface UserBadge {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, profile, isAuthenticated, isLoading: authLoading } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const supabase = getSupabaseClient();
   const { openAuthDialog } = useAuthDialog();
   const { ingredientIds, isLoading: barLoading, removeIngredient } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
@@ -151,7 +152,7 @@ export default function DashboardPage() {
         });
 
         if (process.env.NODE_ENV === "development") {
-          console.log("[DASHBOARD DEBUG] Matching results:", {
+          debugLog("[DASHBOARD DEBUG] Matching results:", {
             totalCocktails: allCocktails.length,
             ingredientIdsCount: ingredientIds.length,
             stapleIds,
@@ -891,9 +892,9 @@ export default function DashboardPage() {
 
                       // Debug logging
                       if (process.env.NODE_ENV === 'development') {
-                        console.log(`[DASHBOARD] Looking for ingredient ID ${id} (type: ${typeof id})`);
-                        console.log(`[DASHBOARD] Found ingredient:`, ingredient ? `${ingredient.name} (${ingredient.id})` : 'NOT FOUND');
-                        console.log(`[DASHBOARD] allIngredients sample:`, allIngredients.slice(0, 3).map(i => `${i.name} (${i.id})`));
+                        debugLog(`[DASHBOARD] Looking for ingredient ID ${id} (type: ${typeof id})`);
+                        debugLog(`[DASHBOARD] Found ingredient:`, ingredient ? `${ingredient.name} (${ingredient.id})` : 'NOT FOUND');
+                        debugLog(`[DASHBOARD] allIngredients sample:`, allIngredients.slice(0, 3).map(i => `${i.name} (${i.id})`));
                       }
 
                       return (

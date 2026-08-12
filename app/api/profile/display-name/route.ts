@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createServerClient } from "@/lib/supabase/server";
+import { debugLog } from "@/lib/debugLog";
 
 export const dynamic = "force-dynamic";
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -71,7 +70,7 @@ export async function PUT(request: NextRequest) {
 
     // If we got data back, the update succeeded
     if (updatedData) {
-      console.log('✅ Display name update succeeded:', { 
+      debugLog('✅ Display name update succeeded:', { 
         userId: user.id, 
         display_name: updatedData.display_name 
       });
@@ -97,14 +96,5 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// GET endpoint for testing/debugging
-export async function GET(request: NextRequest) {
-  return NextResponse.json({ 
-    message: "Display name API is working",
-    endpoint: "/api/profile/display-name",
-    methods: ["GET", "PUT"]
-  });
 }
 

@@ -1,13 +1,12 @@
-import { sanityClient } from "@/lib/sanityClient";
 import { getCocktailsList } from "@/lib/cocktails.server";
 import { WebPageSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 import { Hero } from "@/components/home/Hero";
-import { FeaturedCocktails } from "@/components/home/FeaturedCocktails";
 import { PlatformSection } from "@/components/home/PlatformSection";
 import { PersonalizedSections } from "@/components/home/PersonalizedSections";
 import { FeaturedCocktailsWrapper } from "@/components/home/FeaturedCocktailsWrapper";
 import { GuestExperienceSection } from "@/components/home/GuestExperienceSection";
+import { HomePageWrapper } from "@/components/mobile/HomePageWrapper";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
 export const revalidate = 60;
@@ -38,10 +37,7 @@ function mapSupabaseToSanityForHome(cocktails: any[]): SanityCocktail[] {
 }
 
 export default async function HomePage() {
-  const [settings, allCocktailsList] = await Promise.all([
-    sanityClient.fetch(`*[_type == "siteSettings"][0]{heroTitle, heroSubtitle}`),
-    getCocktailsList({ limit: 50 }), // Get cocktails from Supabase
-  ]);
+  const allCocktailsList = await getCocktailsList({ limit: 50 });
 
   // Convert to Sanity format for compatibility
   const allCocktails = mapSupabaseToSanityForHome(allCocktailsList);
@@ -58,9 +54,8 @@ export default async function HomePage() {
     .sort(() => Math.random() - 0.5)
     .slice(0, 5);
 
-  const heroTitle = settings?.heroTitle || "Discover Your Next Favorite Cocktail";
+  const heroTitle = "Discover Your Next Favorite Cocktail";
   const heroSubtitle =
-    settings?.heroSubtitle ||
     "Browse handcrafted cocktail recipes, find what you can make with ingredients you have, and expand your mixology skills.";
 
   return (
@@ -71,25 +66,30 @@ export default async function HomePage() {
         url={SITE_CONFIG.url}
       />
 
-      {/* Hero Section */}
-      <Hero title={heroTitle} subtitle={heroSubtitle} featuredCocktails={heroRotationCocktails} />
+      <HomePageWrapper featuredCocktails={featuredCocktails} allCocktails={allCocktails}>
+        {/* Web design */}
+        <>
+          {/* Hero Section */}
+          <Hero title={heroTitle} subtitle={heroSubtitle} featuredCocktails={heroRotationCocktails} />
 
-      {/* Personalized Sections for Logged-in Users - Only render if user is authenticated */}
-      <PersonalizedSections
-        allCocktails={allCocktails}
-        featuredCocktails={featuredCocktails}
-      />
+          {/* Personalized Sections for Logged-in Users - Only render if user is authenticated */}
+          <PersonalizedSections
+            allCocktails={allCocktails}
+            featuredCocktails={featuredCocktails}
+          />
 
-      {/* Featured Cocktails */}
-      {featuredCocktails.length > 0 && (
-        <FeaturedCocktailsWrapper cocktails={featuredCocktails} />
-      )}
+          {/* Featured Cocktails */}
+          {featuredCocktails.length > 0 && (
+            <FeaturedCocktailsWrapper cocktails={featuredCocktails} />
+          )}
 
-      {/* Guest Experience Section */}
-      <GuestExperienceSection />
+          {/* Guest Experience Section */}
+          <GuestExperienceSection />
 
-      {/* Platform Section */}
-      <PlatformSection />
+          {/* Platform Section */}
+          <PlatformSection />
+        </>
+      </HomePageWrapper>
     </>
   );
 }

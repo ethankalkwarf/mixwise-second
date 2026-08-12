@@ -11,6 +11,7 @@ import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { confirmEmailTemplate } from "@/lib/email/templates";
 import { getAuthCallbackUrl } from "@/lib/site";
 import { buildSafeAuthUrl } from "@/lib/email/auth-links";
+import { debugLog } from "@/lib/debugLog";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Send Confirmation] Processing request for email: ${trimmedEmail}, IP: ${clientIP}`);
+    debugLog(`[Send Confirmation] Processing request for email: ${trimmedEmail}, IP: ${clientIP}`);
 
     // Create Supabase admin client
     const supabaseAdmin = createAdminClient();
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
     // Generate signup confirmation link
     const redirectTo = `${getAuthCallbackUrl(new URL(request.url))}?next=/mix`;
 
-    console.log(`[Send Confirmation] Generating confirmation link with redirect: ${redirectTo}`);
+    debugLog(`[Send Confirmation] Generating confirmation link with redirect: ${redirectTo}`);
 
     // Use magiclink type for existing users who need to confirm their email
     // This works for users who already exist but haven't confirmed their email
@@ -104,27 +105,19 @@ export async function POST(request: NextRequest) {
 
     if (linkError) {
       console.error("[Send Confirmation] Failed to generate signup link:", linkError);
-
-      // Don't leak whether user exists - return generic error
-      return NextResponse.json(
-        { error: "Unable to send confirmation email. Please try again." },
-        { status: 500 }
-      );
+      return NextResponse.json({ ok: true });
     }
 
     const confirmUrl = linkData.properties?.action_link;
 
     if (!confirmUrl) {
       console.error("[Send Confirmation] No action_link in generated link data");
-      return NextResponse.json(
-        { error: "Unable to send confirmation email. Please try again." },
-        { status: 500 }
-      );
+      return NextResponse.json({ ok: true });
     }
 
     // Debug logging (only in development)
     if (process.env.AUTH_EMAIL_DEBUG === "true" && process.env.NODE_ENV === "development") {
-      console.log(`[Send Confirmation] Generated URL: ${confirmUrl}`);
+      debugLog(`[Send Confirmation] Generated URL: ${confirmUrl}`);
     }
 
     const safeConfirmUrl = buildSafeAuthUrl(confirmUrl, new URL(request.url));
@@ -137,7 +130,7 @@ export async function POST(request: NextRequest) {
     // Send email via Resend
     const resend = createResendClient();
 
-    console.log(`[Send Confirmation] Sending email via Resend to: ${trimmedEmail}`);
+    debugLog(`[Send Confirmation] Sending email via Resend to: ${trimmedEmail}`);
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,
@@ -160,7 +153,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Send Confirmation] Email sent successfully. Resend ID: ${emailData?.id}`);
+    debugLog(`[Send Confirmation] Email sent successfully. Resend ID: ${emailData?.id}`);
 
     return NextResponse.json({ ok: true });
 

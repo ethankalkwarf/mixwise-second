@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { trackCocktailView } from "@/lib/analytics";
 import type { RecentlyViewed } from "@/lib/supabase/database.types";
@@ -32,7 +32,7 @@ interface UseRecentlyViewedResult {
  */
 export function useRecentlyViewed(): UseRecentlyViewedResult {
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const supabase = getSupabaseClient();
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewed[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   

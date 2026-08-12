@@ -101,6 +101,7 @@ export interface CocktailListItem {
   tags?: string[];
   image_url?: string;
   image_alt?: string;
+  categories_all?: string[];
   flavor_strength?: number;
   flavor_sweetness?: number;
   flavor_tartness?: number;

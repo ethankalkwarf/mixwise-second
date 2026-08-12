@@ -143,6 +143,15 @@ async function main() {
       2
     )
   );
+
+  // Also write local HTML previews of the exact templates
+  const { mkdirSync, writeFileSync } = await import("fs");
+  mkdirSync("tmp/email-proofs", { recursive: true });
+  writeFileSync("tmp/email-proofs/welcome.html", welcome.html);
+  writeFileSync("tmp/email-proofs/weekly-digest.html", digest.html);
+  writeFileSync("tmp/email-proofs/confirmation.html", confirm.html);
+  writeFileSync("tmp/email-proofs/password-reset.html", reset.html);
+  console.log("Wrote HTML previews to tmp/email-proofs/");
 }
 
 main().catch((err) => {

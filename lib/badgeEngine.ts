@@ -7,6 +7,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { BADGES, BadgeDefinition } from "./badges";
+import type { Json } from "./supabase/database.types";
 
 export interface UserBadge {
   id: string;
@@ -35,7 +36,7 @@ async function awardBadge(
       {
         user_id: userId,
         badge_id: badgeId,
-        metadata,
+        metadata: (metadata ?? null) as Json,
       },
       { onConflict: "user_id,badge_id" }
     );
@@ -69,7 +70,7 @@ export async function getUserBadges(
     return [];
   }
 
-  return data || [];
+  return (data || []) as UserBadge[];
 }
 
 /**

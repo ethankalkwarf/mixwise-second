@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createServerClient } from "@/lib/supabase/server";
 import { createClient } from "@supabase/supabase-js";
+import { debugLog } from "@/lib/debugLog";
 
 /**
  * GET /api/bar-ingredients
@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // Get the authenticated user
-    const supabaseAuth = createRouteHandlerClient({ cookies });
+    const supabaseAuth = await createServerClient();
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
 
     if (authError || !user) {
@@ -57,7 +57,7 @@ export async function GET() {
       return NextResponse.json({ ingredients: [], source: "bar_ingredients" });
     }
 
-    console.log("[API] Loaded from bar_ingredients:", barIngredients?.length || 0);
+    debugLog("[API] Loaded from bar_ingredients:", barIngredients?.length || 0);
     return NextResponse.json({ ingredients: barIngredients || [], source: "bar_ingredients" });
   } catch (error) {
     console.error("[API] Unexpected error:", error);

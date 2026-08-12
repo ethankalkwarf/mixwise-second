@@ -9,15 +9,17 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createServerClient } from "@/lib/supabase/server";
+import { debugLog } from "@/lib/debugLog";
+import type { Database } from "@/lib/supabase/database.types";
+
+type EmailPreferencesInsert = Database["public"]["Tables"]["email_preferences"]["Insert"];
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createServerClient();
 
     const {
       data: { user },
@@ -57,8 +59,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createServerClient();
 
     const {
       data: { user },
@@ -75,7 +76,7 @@ export async function PUT(request: NextRequest) {
     const weekly_digest =
       typeof body.weekly_digest === "boolean" ? body.weekly_digest : true;
 
-    const updatePayload: Record<string, unknown> = {
+    const updatePayload: EmailPreferencesInsert = {
       user_id: user.id,
       welcome_emails,
       weekly_digest,
@@ -98,7 +99,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Failed to update preferences" }, { status: 500 });
     }
 
-    console.log(`[Email Preferences] Updated for user ${user.id}`);
+    debugLog(`[Email Preferences] Updated for user ${user.id}`);
 
     return NextResponse.json({ preferences: data, message: "Preferences updated" });
   } catch (error) {

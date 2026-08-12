@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { debugLog } from "@/lib/debugLog";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[POST /api/username] Setting username:', {
+    debugLog('[POST /api/username] Setting username:', {
       username: trimmedUsername,
       userId: user.id
     });
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       console.error('[POST /api/username] Error fetching current profile:', currentError);
     }
 
-    console.log('[POST /api/username] Current profile:', {
+    debugLog('[POST /api/username] Current profile:', {
       id: currentProfile?.id,
       currentUsername: currentProfile?.username,
       requestedUsername: trimmedUsername,
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // If user already has this username (case-insensitive), allow the update
     if (currentProfile?.username?.toLowerCase() === trimmedUsername.toLowerCase()) {
-      console.log('[POST /api/username] ✅ User already has this username, allowing update');
+      debugLog('[POST /api/username] ✅ User already has this username, allowing update');
       // Continue to update (which will just set it to the same value, but that's fine)
     } else {
       // Check if any other user has this username (case-insensitive)
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       
       const isTaken = matchingProfiles.length > 0;
 
-      console.log('[POST /api/username] Uniqueness check:', {
+      debugLog('[POST /api/username] Uniqueness check:', {
         username: trimmedUsername,
         trimmedLower,
         totalProfilesChecked: allProfiles?.length || 0,
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (isTaken) {
-        console.log('[POST /api/username] ❌ Username is taken (case-insensitive):', trimmedUsername);
+        debugLog('[POST /api/username] ❌ Username is taken (case-insensitive):', trimmedUsername);
         return NextResponse.json(
           { error: "Username is already taken" },
           { status: 409 }
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
 // GET endpoint to check username availability
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -161,7 +162,7 @@ export async function GET(request: NextRequest) {
     // Use case-insensitive comparison to avoid false positives
     const trimmedUsername = username.trim();
     
-    console.log('[GET /api/username] Checking availability:', {
+    debugLog('[GET /api/username] Checking availability:', {
       username: trimmedUsername,
       userId: user.id
     });
@@ -177,7 +178,7 @@ export async function GET(request: NextRequest) {
       console.error('[GET /api/username] Error fetching current user profile:', currentUserError);
     }
 
-    console.log('[GET /api/username] Current user profile:', {
+    debugLog('[GET /api/username] Current user profile:', {
       id: currentUserProfile?.id,
       username: currentUserProfile?.username,
       requestedUsername: trimmedUsername,
@@ -186,7 +187,7 @@ export async function GET(request: NextRequest) {
 
     if (currentUserProfile?.username && currentUserProfile.username.toLowerCase() === trimmedUsername.toLowerCase()) {
       // User already has this username (maybe different case) - it's available to them
-      console.log('[GET /api/username] ✅ User already has this username, returning available: true');
+      debugLog('[GET /api/username] ✅ User already has this username, returning available: true');
       return NextResponse.json({
         available: true
       });
@@ -216,7 +217,7 @@ export async function GET(request: NextRequest) {
     
     const isTaken = matchingProfiles.length > 0;
 
-    console.log('[GET /api/username] Username availability check result:', {
+    debugLog('[GET /api/username] Username availability check result:', {
       username: trimmedUsername,
       trimmedLower,
       totalProfilesChecked: allProfiles?.length || 0,

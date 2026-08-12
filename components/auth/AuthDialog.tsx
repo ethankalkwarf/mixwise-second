@@ -7,6 +7,7 @@ import { XMarkIcon, EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/ou
 import { useUser } from "./UserProvider";
 import { useToast } from "@/components/ui/toast";
 import type { AuthDialogMode } from "./AuthDialogProvider";
+import { debugLog } from "@/lib/debugLog";
 
 // Google icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -91,7 +92,7 @@ export function AuthDialog({
     const handleEmailConfirmed = (event: Event) => {
       const customEvent = event as CustomEvent<{ success: boolean }>;
       if (customEvent.detail?.success) {
-        console.log("[AuthDialog] Email confirmation detected, closing dialog");
+        debugLog("[AuthDialog] Email confirmation detected, closing dialog");
         onSuccess?.();
         onClose();
       }

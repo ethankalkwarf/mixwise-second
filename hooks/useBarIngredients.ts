@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
 import { checkBarBadges } from "@/lib/badgeEngine";
 import { buildNameToIdMap, buildIdToNameMap, normalizeToCanonicalMultiple } from "@/lib/ingredientId";
 import type { BarIngredient } from "@/lib/supabase/database.types";
+import { debugLog } from "@/lib/debugLog";
 
 const LOCAL_STORAGE_KEY = "mixwise-bar-inventory";
 
@@ -55,7 +56,7 @@ function normalizeIngredientIds(
       // This prevents data loss for valid IDs that just can't be mapped
       result.push(id);
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[bar] Keeping original ID (normalization failed): "${id}"`);
+        debugLog(`[bar] Keeping original ID (normalization failed): "${id}"`);
       }
     }
   }
@@ -87,7 +88,7 @@ interface UseBarIngredientsResult {
  */
 export function useBarIngredients(): UseBarIngredientsResult {
   const { user, isAuthenticated, isLoading: authLoading, authReady } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const supabase = getSupabaseClient();
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
   const [ingredientIds, setIngredientIds] = useState<string[]>([]);
@@ -143,9 +144,9 @@ export function useBarIngredients(): UseBarIngredientsResult {
   // Load ingredients from server via API endpoint
   // The API uses service role to access legacy inventories table that may not have RLS
   // This matches the server-side getUserBarIngredients behavior used by public bar pages
-  const loadFromServer = useCallback(async () => {
+  const loadFromServer = useCallback(async (): Promise<BarIngredient[]> => {
     if (!user) {
-      console.log("[useBarIngredients] No user, cannot load from server");
+      debugLog("[useBarIngredients] No user, cannot load from server");
       return [];
     }
     
@@ -168,12 +169,12 @@ export function useBarIngredients(): UseBarIngredientsResult {
           console.error("[useBarIngredients] Fallback error:", error);
           return [];
         }
-        console.log("[useBarIngredients] Loaded from fallback bar_ingredients:", data?.length || 0);
+        debugLog("[useBarIngredients] Loaded from fallback bar_ingredients:", data?.length || 0);
         return data || [];
       }
 
       const result = await response.json();
-      console.log("[useBarIngredients] Loaded from API:", {
+      debugLog("[useBarIngredients] Loaded from API:", {
         count: result.ingredients?.length || 0,
         source: result.source,
         error: result.error,
@@ -182,7 +183,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
           ingredient_name: item.ingredient_name,
         })),
       });
-      return result.ingredients || [];
+      return (result.ingredients || []) as BarIngredient[];
     } catch (err) {
       console.error("[useBarIngredients] Exception loading from server:", err);
       return [];
@@ -215,7 +216,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
               authReady,
               new Promise((_, reject) => setTimeout(() => reject(new Error('Auth ready timeout')), 5000))
             ]);
-            console.log("[useBarIngredients] Auth ready, proceeding with queries");
+            debugLog("[useBarIngredients] Auth ready, proceeding with queries");
           } catch (e) {
             console.warn("[useBarIngredients] Auth ready timeout, proceeding anyway");
           }
@@ -305,7 +306,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
         setIngredientNameMap(nameMap);
 
         if (isAuthenticated && user) {
-          console.log("[useBarIngredients] User authenticated, syncing bar for user:", user.id);
+          debugLog("[useBarIngredients] User authenticated, syncing bar for user:", user.id);
           // Use atomic sync strategy: Fetch, validate, then upsert all at once
           await syncAuthenticatedBar(
             user.id,
@@ -313,9 +314,9 @@ export function useBarIngredients(): UseBarIngredientsResult {
             ingredientsData || []
           );
           // Verify state was set after sync
-          console.log("[useBarIngredients] After sync, checking state...");
+          debugLog("[useBarIngredients] After sync, checking state...");
         } else {
-          console.log("[useBarIngredients] User not authenticated, loading from localStorage");
+          debugLog("[useBarIngredients] User not authenticated, loading from localStorage");
           // Load from localStorage for anonymous users
           const localIds = loadFromLocal();
 
@@ -327,14 +328,14 @@ export function useBarIngredients(): UseBarIngredientsResult {
             saveToLocal(normalizedLocalIds);
           }
 
-          console.log("[useBarIngredients] Setting local ingredient IDs:", normalizedLocalIds.length);
+          debugLog("[useBarIngredients] Setting local ingredient IDs:", normalizedLocalIds.length);
           setIngredientIds(normalizedLocalIds);
         }
         
         // Mark as initialized for this user
         hasInitialized.current = true;
         lastUserId.current = currentUserId;
-        console.log("[useBarIngredients] Initialization complete for user:", currentUserId);
+        debugLog("[useBarIngredients] Initialization complete for user:", currentUserId);
       } catch (error) {
         console.error("[useBarIngredients] Initialization failed:", error);
         // Attempt fallback: try to load from server even if initialization failed
@@ -357,7 +358,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
                 return updated;
               });
               
-              console.log("[useBarIngredients] Loaded from server fallback:", serverIds.length, "ingredients");
+              debugLog("[useBarIngredients] Loaded from server fallback:", serverIds.length, "ingredients");
               hasInitialized.current = true;
               lastUserId.current = currentUserId;
             }
@@ -386,7 +387,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
         const serverIds = serverData.map(item => item.ingredient_id);
         const localIds = loadFromLocal();
 
-        console.log("[useBarIngredients] Sync starting:", {
+        debugLog("[useBarIngredients] Sync starting:", {
           userId,
           serverDataCount: serverData.length,
           serverIdsCount: serverIds.length,
@@ -402,7 +403,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
         // Keep ALL server IDs - don't drop any during normalization
         const mergedIds = [...new Set([...serverIds, ...localIds])];
         
-        console.log("[useBarIngredients] Before normalization:", {
+        debugLog("[useBarIngredients] Before normalization:", {
           mergedIdsCount: mergedIds.length,
           mergedIdsSample: mergedIds.slice(0, 5),
           nameToCanonicalIdSize: nameToCanonicalId.size,
@@ -416,7 +417,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
           // If normalization succeeds, use normalized ID; otherwise keep original
           const result = normalized.length > 0 ? normalized[0] : id;
           if (id !== result && process.env.NODE_ENV === 'development') {
-            console.log(`[useBarIngredients] Normalized ID: ${id} → ${result}`);
+            debugLog(`[useBarIngredients] Normalized ID: ${id} → ${result}`);
           }
           return result;
         });
@@ -427,7 +428,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
           ? normalizedMergedIds 
           : mergedIds; // Fallback to originals if normalization lost any
 
-        console.log("[useBarIngredients] After merge:", {
+        debugLog("[useBarIngredients] After merge:", {
           mergedCount: mergedIds.length,
           normalizedCount: normalizedMergedIds.length,
           finalCount: finalIds.length,
@@ -453,13 +454,13 @@ export function useBarIngredients(): UseBarIngredientsResult {
           if (upsertError) {
             console.error("[useBarIngredients] Upsert failed:", upsertError);
           } else {
-            console.log(`[useBarIngredients] Synced ${newLocalIds.length} new local items to server`);
+            debugLog(`[useBarIngredients] Synced ${newLocalIds.length} new local items to server`);
           }
         }
 
         // Step 5: Update UI with ALL ingredient IDs (server + local merged)
         // CRITICAL: Do NOT delete items from server - preserve user's bar
-        console.log("[useBarIngredients] Setting ingredient IDs:", {
+        debugLog("[useBarIngredients] Setting ingredient IDs:", {
           count: finalIds.length,
           ids: finalIds.slice(0, 10),
           serverDataRaw: serverData.slice(0, 3),
@@ -484,7 +485,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
           };
         });
         
-        setServerIngredients(serverIngredientsWithNames);
+        setServerIngredients(serverIngredientsWithNames as BarIngredient[]);
         
         // Update name map with all ingredient names
         const updatedNameMap = new Map(ingredientNameMap);
@@ -498,16 +499,16 @@ export function useBarIngredients(): UseBarIngredientsResult {
         // Clear local storage after successful merge
         clearLocal();
 
-        console.log(`[useBarIngredients] ✅ Sync complete: ${finalIds.length} items in bar`);
+        debugLog(`[useBarIngredients] ✅ Sync complete: ${finalIds.length} items in bar`);
         
         // Double-check state was set (for debugging)
         setTimeout(() => {
-          console.log("[useBarIngredients] State verification - ingredientIds should be:", finalIds.length);
+          debugLog("[useBarIngredients] State verification - ingredientIds should be:", finalIds.length);
         }, 100);
         
         // Double-check state was set (for debugging)
         setTimeout(() => {
-          console.log("[useBarIngredients] State verification - ingredientIds should be:", finalIds.length);
+          debugLog("[useBarIngredients] State verification - ingredientIds should be:", finalIds.length);
         }, 100);
       } catch (error) {
         console.error("[useBarIngredients] Sync failed with exception:", error);
@@ -515,7 +516,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
         try {
           const serverData = await loadFromServer();
           const serverIds = serverData.map(item => item.ingredient_id);
-          console.log("[useBarIngredients] Fallback: loaded", serverIds.length, "ingredients from server");
+          debugLog("[useBarIngredients] Fallback: loaded", serverIds.length, "ingredients from server");
           setIngredientIds(serverIds);
           setServerIngredients(serverData);
           
@@ -607,7 +608,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
             return newMap;
           });
         } else {
-          console.log(`[useBarIngredients] Ingredient ${id} added, bar size: ${newIds.length}`);
+          debugLog(`[useBarIngredients] Ingredient ${id} added, bar size: ${newIds.length}`);
           toast.success("Ingredient added to your bar");
 
           // Check for badge unlocks
@@ -631,7 +632,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
     } else {
       // Save to localStorage
       saveToLocal(newIds);
-      console.log(`[useBarIngredients] Ingredient ${id} added to localStorage, bar size: ${newIds.length}`);
+      debugLog(`[useBarIngredients] Ingredient ${id} added to localStorage, bar size: ${newIds.length}`);
       toast.success("Ingredient added to your bar");
     }
   }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
@@ -655,13 +656,13 @@ export function useBarIngredients(): UseBarIngredientsResult {
         // Revert on error
         setIngredientIds(ingredientIds);
       } else {
-        console.log(`[useBarIngredients] Ingredient ${id} removed, bar size: ${newIds.length}`);
+        debugLog(`[useBarIngredients] Ingredient ${id} removed, bar size: ${newIds.length}`);
         toast.info("Ingredient removed");
       }
     } else {
       // Save to localStorage
       saveToLocal(newIds);
-      console.log(`[useBarIngredients] Ingredient ${id} removed from localStorage, bar size: ${newIds.length}`);
+      debugLog(`[useBarIngredients] Ingredient ${id} removed from localStorage, bar size: ${newIds.length}`);
       toast.info("Ingredient removed");
     }
   }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
@@ -696,7 +697,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
           }
         }
 
-        console.log(`[useBarIngredients] Batch add complete: ${ids.length} items added, total: ${mergedIds.length}`);
+        debugLog(`[useBarIngredients] Batch add complete: ${ids.length} items added, total: ${mergedIds.length}`);
       } catch (error) {
         console.error("[useBarIngredients] Batch update failed:", error);
         toast.error("Failed to update bar");
@@ -736,7 +737,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
     
     const localIds = loadFromLocal();
     if (localIds.length === 0) {
-      console.log("[useBarIngredients] No local items to sync");
+      debugLog("[useBarIngredients] No local items to sync");
       return;
     }
     
@@ -757,7 +758,7 @@ export function useBarIngredients(): UseBarIngredientsResult {
       }
 
       clearLocal();
-      console.log(`[useBarIngredients] Successfully synced ${localIds.length} items to server`);
+      debugLog(`[useBarIngredients] Successfully synced ${localIds.length} items to server`);
       toast.success("Bar saved!");
     } catch (error) {
       console.error("[useBarIngredients] Sync threw exception, keeping local data:", error);

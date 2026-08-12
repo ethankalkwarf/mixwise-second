@@ -10,10 +10,12 @@ import type {
   Cocktail,
   CocktailListItem,
   CocktailFilters,
+} from './cocktailTypes';
+import type {
   MixCocktail,
   MixIngredient,
   MixCocktailIngredient
-} from './cocktailTypes';
+} from './mixTypes';
 
 // =========================
 // CLIENT FUNCTIONS
@@ -35,7 +37,7 @@ export async function getCocktailBySlugClient(slug: string): Promise<Cocktail | 
     return null;
   }
 
-  return data as Cocktail;
+  return data as unknown as Cocktail;
 }
 
 /**
@@ -161,7 +163,7 @@ export async function getMixIngredients(): Promise<MixIngredient[]> {
       return {
         id,
         name: ingredient.name,
-        category: ingredient.type || ingredient.category || 'other',
+        category: (ingredient as { type?: string | null }).type || ingredient.category || 'other',
         imageUrl: ingredient.image_url || null,
         isStaple: ingredient.is_staple || false,
       };
@@ -219,7 +221,7 @@ export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
       drinkCategories: cocktail.drinkCategories,
       tags: cocktail.tags,
       garnish: cocktail.garnish,
-      ingredients: cocktail.ingredientsWithIds
+      ingredients: cocktail.ingredients
     }));
 
     return result;
@@ -405,8 +407,9 @@ async function getCocktailsWithIngredientsClientSide() {
         console.warn(`Error processing ingredients for cocktail ${cocktail.id}:`, error);
       }
 
-      // Extract metadata
-      const metadata = cocktail.metadata_json || {};
+      const metadata = (cocktail.metadata_json && typeof cocktail.metadata_json === "object" && !Array.isArray(cocktail.metadata_json))
+        ? cocktail.metadata_json as Record<string, unknown>
+        : {};
 
       return {
         id: cocktail.id,
@@ -420,9 +423,9 @@ async function getCocktailsWithIngredientsClientSide() {
         method: cocktail.technique,
         primarySpirit: cocktail.base_spirit,
         difficulty: cocktail.difficulty,
-        isPopular: metadata.isPopular || false,
-        isFavorite: metadata.isFavorite || false,
-        isTrending: metadata.isTrending || false,
+        isPopular: Boolean(metadata.isPopular),
+        isFavorite: Boolean(metadata.isFavorite),
+        isTrending: Boolean(metadata.isTrending),
         drinkCategories: Array.isArray(cocktail.categories_all) ? cocktail.categories_all : [],
         tags: Array.isArray(cocktail.tags) ? cocktail.tags : [],
         garnish: cocktail.garnish,
@@ -501,7 +504,7 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
  * Uses server action for consistency with fallback logic
  * Returns numeric IDs that match ingredients.id
  */
-export async function getUserBarIngredientIdsClient(userId: string): Promise<number[]> {
+export async function getUserBarIngredientIdsClient(userId: string): Promise<string[]> {
   const supabase = createClient();
 
   // First, fetch all ingredients to create name-to-ID mapping
@@ -515,19 +518,19 @@ export async function getUserBarIngredientIdsClient(userId: string): Promise<num
   }
 
   // Create mapping from lowercased name to ID
-  const nameToIdMap = new Map<string, number>();
+  const nameToIdMap = new Map<string, string>();
   (allIngredients || []).forEach(ing => {
     if (ing.name) {
-      nameToIdMap.set(ing.name.toLowerCase(), ing.id);
+      nameToIdMap.set(ing.name.toLowerCase(), String(ing.id));
     }
   });
 
   // Helper function to convert string ID to numeric ID
-  const convertToNumericId = (stringId: string): number | null => {
+  const convertToNumericId = (stringId: string): string | null => {
     // First try to parse as integer
     let parsed = parseInt(stringId, 10);
     if (!isNaN(parsed) && parsed > 0) {
-      return parsed;
+      return String(parsed);
     }
 
     // Handle ingredient- prefixed IDs
@@ -535,7 +538,7 @@ export async function getUserBarIngredientIdsClient(userId: string): Promise<num
       const idPart = stringId.substring('ingredient-'.length);
       parsed = parseInt(idPart, 10);
       if (!isNaN(parsed) && parsed > 0) {
-        return parsed;
+        return String(parsed);
       }
     }
 
@@ -589,7 +592,7 @@ export async function getUserBarIngredientIdsClient(userId: string): Promise<num
 
   // First try old inventories table structure
   try {
-    const { data: inventories, error: inventoriesError } = await supabase
+    const { data: inventories, error: inventoriesError } = await (supabase as any)
       .from('inventories')
       .select('id')
       .eq('user_id', userId)
@@ -597,15 +600,15 @@ export async function getUserBarIngredientIdsClient(userId: string): Promise<num
 
     if (!inventoriesError && inventories && inventories.length > 0) {
       const inventoryId = inventories[0].id;
-      const { data: inventoryItems, error: itemsError } = await supabase
+      const { data: inventoryItems, error: itemsError } = await (supabase as any)
         .from('inventory_items')
         .select('ingredient_id, ingredient_name')
         .eq('inventory_id', inventoryId);
 
       if (!itemsError && inventoryItems) {
         return inventoryItems
-          .map(item => convertToNumericId(item.ingredient_id))
-          .filter((id): id is number => id !== null);
+          .map((item: { ingredient_id: string }) => convertToNumericId(item.ingredient_id))
+          .filter((id: string | null): id is string => id !== null);
       }
     }
   } catch (error) {
@@ -625,6 +628,6 @@ export async function getUserBarIngredientIdsClient(userId: string): Promise<num
 
   return (barIngredients || [])
     .map(item => convertToNumericId(item.ingredient_id))
-    .filter((id): id is number => id !== null);
+    .filter((id): id is string => id !== null);
 }
 

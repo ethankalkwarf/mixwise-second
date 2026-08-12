@@ -22,7 +22,7 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
           id: cocktail.id,
           name: cocktail.name,
           slug: cocktail.slug,
-          imageUrl: cocktail.image_url,
+          imageUrl: cocktail.image_url ?? undefined,
         }}
         size="lg"
         showLabel={false}

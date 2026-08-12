@@ -2,20 +2,17 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
-
-export const dynamic = 'force-dynamic';
 import Image from "next/image";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
-import { sanityClient } from "@/lib/sanityClient";
-import { BADGES, BADGE_LIST, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
+import { BADGE_LIST, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
 import { TrophyIcon } from "@heroicons/react/24/outline";
 import {
   UserCircleIcon,
@@ -27,9 +24,9 @@ import {
   LockClosedIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
+import { debugLog } from "@/lib/debugLog";
 
-// Simple query to get all ingredient names
-const INGREDIENT_NAMES_QUERY = `*[_type == "ingredient"] { _id, name }`;
+export const dynamic = "force-dynamic";
 
 interface UserBadge {
   badge_id: string;
@@ -44,7 +41,7 @@ interface BadgeDisplayData extends BadgeDefinition {
 export default function AccountPage() {
   const router = useRouter();
   const { user, profile, isLoading, isAuthenticated, signOut, refreshProfile } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const supabase = getSupabaseClient();
   const { openAuthDialog } = useAuthDialog();
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
   const { ingredientIds } = useBarIngredients();
@@ -55,7 +52,7 @@ export default function AccountPage() {
   useEffect(() => {
     const ensurePublicSlug = async () => {
       if (preferences?.public_bar_enabled && user && !profile?.username && !profile?.public_slug) {
-        console.log("User has public bar enabled but no username/slug, this should not happen with proper migrations");
+        debugLog("User has public bar enabled but no username/slug, this should not happen with proper migrations");
         // Note: This logic is now handled by the database trigger on profile creation
         // If we reach here, it means the migrations haven't been applied yet
         console.warn("Public bar enabled but no username/slug - migrations may not be applied");
@@ -68,14 +65,6 @@ export default function AccountPage() {
   // Get the shareable bar URL (username or public_slug)
   // Using explicit null coalescence to ensure type safety
   const shareableBarUrl: string | null = profile?.username || profile?.public_slug || null;
-
-  // Debug logging for share button
-  console.log("Share button state:", {
-    preferences: preferences?.public_bar_enabled,
-    profileUsername: profile?.username,
-    profileSlug: profile?.public_slug,
-    shareableBarUrl
-  });
 
   // Username management for public profiles
   const [showUsernameInput, setShowUsernameInput] = useState(false);
@@ -96,18 +85,22 @@ export default function AccountPage() {
   const [emailPrefsSaving, setEmailPrefsSaving] = useState(false);
   
   // Fetch ingredient names from Sanity for fallback lookup
-  const [sanityNames, setSanityNames] = useState<Map<string, string>>(new Map());
+  const [ingredientNames, setIngredientNames] = useState<Map<string, string>>(new Map());
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   
   useEffect(() => {
-    sanityClient.fetch<Array<{ _id: string; name: string }>>(INGREDIENT_NAMES_QUERY)
-      .then((data) => {
+    supabase
+      .from("ingredients")
+      .select("id, name")
+      .then(({ data, error }) => {
+        if (error || !data) return;
         const nameMap = new Map<string, string>();
-        data.forEach((ing) => nameMap.set(ing._id, ing.name));
-        setSanityNames(nameMap);
-      })
-      .catch((err) => console.error("Failed to fetch ingredient names:", err));
-  }, []);
+        data.forEach((ing: { id: string | number; name: string | null }) => {
+          if (ing.name) nameMap.set(String(ing.id), ing.name);
+        });
+        setIngredientNames(nameMap);
+      });
+  }, [supabase]);
 
   // Fetch user badges
   useEffect(() => {
@@ -172,7 +165,7 @@ export default function AccountPage() {
     // Try direct Supabase client first (faster, works when bot protection isn't active)
     if (supabase) {
       try {
-        console.log("Attempting direct Supabase update:", { userId: user.id, displayName: trimmedName });
+        debugLog("Attempting direct Supabase update:", { userId: user.id, displayName: trimmedName });
         
         const { data, error } = await supabase
           .from("profiles")
@@ -183,14 +176,14 @@ export default function AccountPage() {
 
         if (!error && data) {
           // Update succeeded - use the returned data
-          console.log("✅ Direct update succeeded:", data);
+          debugLog("✅ Direct update succeeded:", data);
           updateSucceeded = true;
           
           // CRITICAL: Clear localStorage cache to force fresh fetch
           try {
             const cacheKey = `mixwise_profile_${user.id}`;
             localStorage.removeItem(cacheKey);
-            console.log("Cleared profile cache after update");
+            debugLog("Cleared profile cache after update");
           } catch (cacheErr) {
             console.warn("Failed to clear cache:", cacheErr);
           }
@@ -211,7 +204,7 @@ export default function AccountPage() {
 
         // If we get a network error, try API route as fallback
         if (error.message?.includes("Failed to fetch") || error.code === 'PGRST301') {
-          console.log("Direct update failed with network error, trying API route fallback");
+          debugLog("Direct update failed with network error, trying API route fallback");
           // Fall through to API route attempt
         } else {
           // Other errors (permissions, etc.) - show error and stop
@@ -223,7 +216,7 @@ export default function AccountPage() {
       } catch (err: any) {
         // Network errors - try API route fallback
         if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
-          console.log("Direct update exception, trying API route fallback:", err);
+          debugLog("Direct update exception, trying API route fallback:", err);
           // Fall through to API route attempt
         } else {
           console.error("Direct update exception:", err);
@@ -236,7 +229,7 @@ export default function AccountPage() {
 
     // Fallback: Use API route (more reliable when bot protection is active)
     try {
-      console.log("Using API route fallback for display name update");
+      debugLog("Using API route fallback for display name update");
       
       const response = await fetch('/api/profile/display-name', {
         method: 'PUT',
@@ -258,14 +251,14 @@ export default function AccountPage() {
       
       // Check if update succeeded
       if (data?.success || data?.display_name !== undefined) {
-        console.log("✅ API route update succeeded:", data);
+        debugLog("✅ API route update succeeded:", data);
         updateSucceeded = true;
         
         // CRITICAL: Clear localStorage cache to force fresh fetch
         try {
           const cacheKey = `mixwise_profile_${user.id}`;
           localStorage.removeItem(cacheKey);
-          console.log("Cleared profile cache after API update");
+          debugLog("Cleared profile cache after API update");
         } catch (cacheErr) {
           console.warn("Failed to clear cache:", cacheErr);
         }
@@ -304,7 +297,7 @@ export default function AccountPage() {
         }
       } else {
         // Update succeeded but something else failed - don't show error
-        console.log("Update succeeded, ignoring error from catch block");
+        debugLog("Update succeeded, ignoring error from catch block");
       }
     } finally {
       setDisplayNameSaving(false);
@@ -370,7 +363,7 @@ export default function AccountPage() {
 
   // Update username via API
   const updateUsername = useCallback(async (newUsername: string): Promise<{ success: boolean; error?: string }> => {
-    console.log('🔵 [CLIENT] updateUsername called with:', newUsername);
+    debugLog('🔵 [CLIENT] updateUsername called with:', newUsername);
     try {
       const response = await fetch('/api/username', {
         method: 'POST',
@@ -380,7 +373,7 @@ export default function AccountPage() {
         body: JSON.stringify({ username: newUsername.trim() }),
       });
 
-      console.log('🔵 [CLIENT] API response status:', response.status, response.statusText);
+      debugLog('🔵 [CLIENT] API response status:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
@@ -389,7 +382,7 @@ export default function AccountPage() {
       }
 
       const data = await response.json();
-      console.log('✅ [CLIENT] API success response:', data);
+      debugLog('✅ [CLIENT] API success response:', data);
       return { success: true };
     } catch (err) {
       console.error('❌ [CLIENT] Error updating username:', err);
@@ -399,7 +392,7 @@ export default function AccountPage() {
 
   // Handle enabling public bar (with username check)
   const handleTogglePublicBar = useCallback(async (enabled: boolean) => {
-    console.log("Toggle public bar:", enabled, "Profile:", profile);
+    debugLog("Toggle public bar:", enabled, "Profile:", profile);
 
     if (enabled && !profile?.username && !profile?.public_slug) {
       // Need to set username first (will generate public_slug as fallback)
@@ -420,7 +413,7 @@ export default function AccountPage() {
         : "Failed to update privacy setting. Please try again.";
       toast.error(errorMsg);
     } else {
-      console.log("Successfully updated privacy setting");
+      debugLog("Successfully updated privacy setting");
       toast.success(enabled ? "Your bar is now public!" : "Your bar is now private");
     }
   }, [profile, generateDefaultUsername, updatePreferences, toast]);
@@ -516,7 +509,7 @@ export default function AccountPage() {
 
   // Helper to get ingredient display name (from stored name, Sanity, or ID fallback)
   const getIngredientName = (ingredient: { id: string; name: string | null }) => {
-    return ingredient.name || sanityNames.get(ingredient.id) || ingredient.id;
+    return ingredient.name || ingredientNames.get(ingredient.id) || ingredient.id;
   };
 
   // Redirect to home or show auth dialog if not authenticated
@@ -720,7 +713,7 @@ export default function AccountPage() {
                                 return;
                               }
                               
-                              console.log('🔵 [CLIENT] Setting username from display name:', {
+                              debugLog('🔵 [CLIENT] Setting username from display name:', {
                                 suggestedUsername,
                                 currentUsername: profile?.username,
                                 currentPublicSlug: profile?.public_slug,
@@ -730,7 +723,7 @@ export default function AccountPage() {
                               
                               // First, check if user already has this username (case-insensitive)
                               if (profile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
-                                console.log('✅ [CLIENT] User already has this username, refreshing profile');
+                                debugLog('✅ [CLIENT] User already has this username, refreshing profile');
                                 toast.success('You already have this username!');
                                 await refreshProfile();
                                 return;
@@ -740,14 +733,14 @@ export default function AccountPage() {
                               // The API will handle uniqueness checking and return appropriate errors
                               setIsCheckingUsername(true);
                               try {
-                                console.log('🔵 [CLIENT] Calling updateUsername API...');
+                                debugLog('🔵 [CLIENT] Calling updateUsername API...');
                                 // Try to set the username directly - API will check uniqueness
                                 const result = await updateUsername(suggestedUsername);
                                 
-                                console.log('🔵 [CLIENT] API response:', result);
+                                debugLog('🔵 [CLIENT] API response:', result);
                                 
                                 if (result.success) {
-                                  console.log('✅ [CLIENT] Username set successfully:', suggestedUsername);
+                                  debugLog('✅ [CLIENT] Username set successfully:', suggestedUsername);
                                   toast.success('Username set! Your bar URL has been updated.');
                                   // Refresh profile to get updated username
                                   await refreshProfile();
@@ -756,16 +749,17 @@ export default function AccountPage() {
                                   
                                   // If it says "already taken", check if it's actually the user's own username
                                   if (result.error?.includes('taken') || result.error?.includes('already')) {
-                                    console.log('🔵 [CLIENT] Username appears taken, checking if user already has it...');
+                                    debugLog('🔵 [CLIENT] Username appears taken, checking if user already has it...');
                                     // Try to fetch current profile to see if user already has it
                                     try {
+                                      if (!user?.id) return;
                                       const { data: currentProfile, error: fetchError } = await supabase
                                         .from('profiles')
                                         .select('username')
-                                        .eq('id', user?.id)
+                                        .eq('id', user.id)
                                         .single();
                                       
-                                      console.log('🔵 [CLIENT] Fetched current profile:', {
+                                      debugLog('🔵 [CLIENT] Fetched current profile:', {
                                         username: currentProfile?.username,
                                         fetchError,
                                         suggestedUsername,
@@ -774,7 +768,7 @@ export default function AccountPage() {
                                       
                                       if (currentProfile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
                                         // User already has this username - just refresh
-                                        console.log('✅ [CLIENT] User already has this username, refreshing profile');
+                                        debugLog('✅ [CLIENT] User already has this username, refreshing profile');
                                         toast.success('You already have this username!');
                                         await refreshProfile();
                                         setIsCheckingUsername(false);
@@ -968,7 +962,7 @@ export default function AccountPage() {
             ) : (
               <div className="text-center py-8">
                 <p className="text-sage text-sm">
-                  Badge system coming soon
+                  Keep mixing to earn your first badge.
                 </p>
               </div>
             )}

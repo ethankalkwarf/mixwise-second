@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
+import { debugLog } from "@/lib/debugLog";
 
 /**
  * Client component wrapper that refreshes the page when favorites or ingredients change
@@ -36,11 +37,11 @@ export function BarProfileRefresh({ children }: { children: React.ReactNode }) {
     const now = Date.now();
     // Prevent rapid refreshes (max once per second)
     if (now - lastRefreshTimeRef.current < 1000) {
-      console.log(`[BarProfileRefresh] Skipping refresh (${reason}) - rate limited`);
+      debugLog(`[BarProfileRefresh] Skipping refresh (${reason}) - rate limited`);
       return;
     }
     
-    console.log(`[BarProfileRefresh] Triggering refresh (${reason})...`);
+    debugLog(`[BarProfileRefresh] Triggering refresh (${reason})...`);
     lastRefreshTimeRef.current = now;
     
     // Clear any pending refresh
@@ -65,7 +66,7 @@ export function BarProfileRefresh({ children }: { children: React.ReactNode }) {
     
     // Only refresh if favorites actually changed (not on initial mount)
     if (hasMountedRef.current && previousFavoritesRef.current !== currentFavorites) {
-      console.log("[BarProfileRefresh] Favorites changed:", {
+      debugLog("[BarProfileRefresh] Favorites changed:", {
         previous: previousFavoritesRef.current.split(",").filter(Boolean).length,
         current: currentFavorites.split(",").filter(Boolean).length,
         previousIds: previousFavoritesRef.current,
@@ -89,7 +90,7 @@ export function BarProfileRefresh({ children }: { children: React.ReactNode }) {
     
     // Only refresh if ingredients actually changed (not on initial mount)
     if (hasMountedRef.current && previousIngredientsRef.current !== currentIngredients) {
-      console.log("[BarProfileRefresh] Ingredients changed:", {
+      debugLog("[BarProfileRefresh] Ingredients changed:", {
         previous: previousIngredientsRef.current.split(",").filter(Boolean).length,
         current: currentIngredients.split(",").filter(Boolean).length,
       });
@@ -113,7 +114,7 @@ export function BarProfileRefresh({ children }: { children: React.ReactNode }) {
     
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[BarProfileRefresh] Page became visible, triggering refresh');
+        debugLog('[BarProfileRefresh] Page became visible, triggering refresh');
         triggerRefresh('visibility-change');
       }
     };

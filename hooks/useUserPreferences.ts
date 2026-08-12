@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { UserPreferences } from "@/lib/supabase/database.types";
+import { debugLog } from "@/lib/debugLog";
 
 /**
  * Hook to manage user preferences
@@ -15,7 +16,7 @@ import { UserPreferences } from "@/lib/supabase/database.types";
  */
 export function useUserPreferences() {
   const { user, isAuthenticated } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const supabase = getSupabaseClient();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +82,7 @@ export function useUserPreferences() {
     async (updates: Partial<UserPreferences>) => {
       if (!user) return { error: "Not authenticated" };
 
-      console.log("Updating preferences for user:", user.id, "Updates:", updates);
+      debugLog("Updating preferences for user:", user.id, "Updates:", updates);
 
       try {
         // First try to update existing row
@@ -91,11 +92,11 @@ export function useUserPreferences() {
           .eq("user_id", user.id)
           .single();
 
-        console.log("Existing preferences check:", { existing, selectError });
+        debugLog("Existing preferences check:", { existing, selectError });
 
         if (existing) {
           // Update existing row
-          console.log("Updating existing preferences row");
+          debugLog("Updating existing preferences row");
           const { error, data } = await supabase
             .from("user_preferences")
             .update(updates)
@@ -109,10 +110,10 @@ export function useUserPreferences() {
             const errorMessage = error.message || error.details || error.hint || "Failed to update preferences. Please check your permissions.";
             return { error: errorMessage };
           }
-          console.log("Update successful, returned data:", data);
+          debugLog("Update successful, returned data:", data);
         } else {
           // Insert new row
-          console.log("Inserting new preferences row");
+          debugLog("Inserting new preferences row");
           const { error, data } = await supabase
             .from("user_preferences")
             .insert({
@@ -128,7 +129,7 @@ export function useUserPreferences() {
             const errorMessage = error.message || error.details || error.hint || "Failed to create preferences. Please check your permissions.";
             return { error: errorMessage };
           }
-          console.log("Insert successful, returned data:", data);
+          debugLog("Insert successful, returned data:", data);
         }
 
       // Refresh by clearing the last fetched user ID and re-fetching

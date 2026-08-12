@@ -4,23 +4,11 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
-import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
-import type { SanityImage } from "@/lib/sanityTypes";
-
-interface Ingredient {
-  _id: string;
-  name: string;
-  slug: { current: string };
-  type?: string;
-  image?: SanityImage;
-  externalImageUrl?: string;
-  description?: string;
-  cocktailCount: number;
-}
+import type { DirectoryIngredient } from "@/lib/ingredientTypes";
 
 interface IngredientsDirectoryProps {
-  ingredients: Ingredient[];
+  ingredients: DirectoryIngredient[];
 }
 
 const INGREDIENT_TYPES = [
@@ -29,6 +17,7 @@ const INGREDIENT_TYPES = [
   { value: "mixer", label: "Mixers" },
   { value: "syrup", label: "Syrups" },
   { value: "juice", label: "Juices" },
+  { value: "citrus", label: "Citrus" },
   { value: "bitters", label: "Bitters" },
   { value: "garnish", label: "Garnishes" },
   { value: "wine", label: "Wine & Vermouth" },
@@ -43,18 +32,15 @@ export function IngredientsDirectory({ ingredients }: IngredientsDirectoryProps)
   const filteredIngredients = useMemo(() => {
     let results = [...ingredients];
 
-    // Search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       results = results.filter(
         (i) =>
           i.name.toLowerCase().includes(query) ||
-          i.type?.toLowerCase().includes(query) ||
-          i.description?.toLowerCase().includes(query)
+          i.type?.toLowerCase().includes(query)
       );
     }
 
-    // Filter by type
     if (filterType) {
       results = results.filter((i) => i.type === filterType);
     }
@@ -80,47 +66,37 @@ export function IngredientsDirectory({ ingredients }: IngredientsDirectoryProps)
 
   return (
     <div className="space-y-6">
-      {/* Search and Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
-        {/* Search */}
         <div className="relative flex-1">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search ingredients..."
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-4 py-3 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-lime-500/50"
+            className="w-full bg-white border border-mist rounded-lg pl-10 pr-4 py-3 text-charcoal placeholder:text-sage/70 focus:outline-none focus:border-forest/40"
           />
         </div>
 
-        {/* Filter toggle */}
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
             hasActiveFilters
-              ? "bg-lime-500/10 border-lime-500/30 text-lime-400"
-              : "bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-600"
+              ? "bg-forest/10 border-forest/30 text-forest"
+              : "bg-white border-mist text-charcoal hover:border-stone"
           }`}
         >
           <FunnelIcon className="w-5 h-5" />
           Filters
-          {hasActiveFilters && (
-            <span className="w-2 h-2 bg-lime-400 rounded-full" />
-          )}
         </button>
       </div>
 
-      {/* Filter Panel */}
       {showFilters && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+        <div className="bg-white border border-mist rounded-xl p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-slate-200">Filter by type</h3>
+            <h3 className="font-medium text-forest">Filter by type</h3>
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="text-sm text-slate-400 hover:text-slate-200"
-              >
+              <button onClick={clearFilters} className="text-sm text-sage hover:text-forest">
                 Clear all
               </button>
             )}
@@ -135,8 +111,8 @@ export function IngredientsDirectory({ ingredients }: IngredientsDirectoryProps)
                   onClick={() => setFilterType(filterType === type.value ? null : type.value)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     filterType === type.value
-                      ? "bg-lime-500 text-slate-900"
-                      : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                      ? "bg-forest text-cream"
+                      : "bg-mist text-charcoal hover:bg-stone"
                   }`}
                 >
                   {type.label} ({count})
@@ -147,15 +123,14 @@ export function IngredientsDirectory({ ingredients }: IngredientsDirectoryProps)
         </div>
       )}
 
-      {/* Results Count */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-sage">
           {filteredIngredients.length} ingredient{filteredIngredients.length !== 1 ? "s" : ""}
         </p>
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 text-sm text-lime-400 hover:text-lime-300"
+            className="flex items-center gap-1 text-sm text-terracotta hover:text-terracotta-dark"
           >
             <XMarkIcon className="w-4 h-4" />
             Clear filters
@@ -163,25 +138,24 @@ export function IngredientsDirectory({ ingredients }: IngredientsDirectoryProps)
         )}
       </div>
 
-      {/* Ingredients Grid */}
       {filteredIngredients.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredIngredients.map((ingredient) => (
             <IngredientCard
-              key={ingredient._id}
+              key={ingredient.id}
               ingredient={ingredient}
-              isInBar={ingredientIds.includes(ingredient._id)}
-              onAddToBar={() => addIngredient(ingredient._id, ingredient.name)}
-              onRemoveFromBar={() => removeIngredient(ingredient._id)}
+              isInBar={ingredientIds.includes(ingredient.id)}
+              onAddToBar={() => addIngredient(ingredient.id, ingredient.name)}
+              onRemoveFromBar={() => removeIngredient(ingredient.id)}
             />
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-slate-800/30 border border-slate-700 rounded-xl">
-          <p className="text-slate-400">No ingredients found matching your criteria.</p>
+        <div className="text-center py-12 bg-white border border-mist rounded-xl">
+          <p className="text-sage">No ingredients found matching your criteria.</p>
           <button
             onClick={clearFilters}
-            className="mt-4 text-lime-400 hover:text-lime-300 text-sm font-medium"
+            className="mt-4 text-terracotta hover:text-terracotta-dark text-sm font-medium"
           >
             Clear filters
           </button>
@@ -191,53 +165,51 @@ export function IngredientsDirectory({ ingredients }: IngredientsDirectoryProps)
   );
 }
 
-interface IngredientCardProps {
-  ingredient: Ingredient;
+function IngredientCard({
+  ingredient,
+  isInBar,
+  onAddToBar,
+  onRemoveFromBar,
+}: {
+  ingredient: DirectoryIngredient;
   isInBar: boolean;
   onAddToBar: () => void;
   onRemoveFromBar: () => void;
-}
-
-function IngredientCard({ ingredient, isInBar, onAddToBar, onRemoveFromBar }: IngredientCardProps) {
-  const imageUrl = getImageUrl(ingredient.image, { width: 200, height: 200 }) || ingredient.externalImageUrl;
-
+}) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition-all duration-300 hover:border-slate-700">
-      <Link href={`/ingredients/${ingredient.slug.current}`} className="block">
-        <div className="relative h-32 w-full overflow-hidden bg-slate-800">
-          {imageUrl ? (
+    <div className="group relative overflow-hidden rounded-xl border border-mist bg-white transition-all duration-300 hover:border-stone">
+      <Link href={`/ingredients/${ingredient.slug}`} className="block">
+        <div className="relative h-32 w-full overflow-hidden bg-mist">
+          {ingredient.imageUrl ? (
             <Image
-              src={imageUrl}
+              src={ingredient.imageUrl}
               alt=""
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               quality={75}
-              placeholder="blur"
-              blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-slate-700 text-4xl" aria-hidden="true">
-              🧪
+            <div className="h-full w-full flex items-center justify-center text-sage/40 text-sm font-medium">
+              {ingredient.name}
             </div>
           )}
           {ingredient.type && (
-            <span className="absolute top-2 left-2 bg-slate-900/80 backdrop-blur-sm text-slate-300 text-xs font-medium px-2 py-1 rounded capitalize">
+            <span className="absolute top-2 left-2 bg-cream/90 text-forest text-xs font-medium px-2 py-1 rounded capitalize">
               {ingredient.type}
             </span>
           )}
         </div>
         <div className="p-4">
-          <h3 className="font-medium text-slate-100 group-hover:text-lime-400 transition-colors line-clamp-1">
+          <h3 className="font-medium text-forest group-hover:text-terracotta transition-colors line-clamp-1">
             {ingredient.name}
           </h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-sage mt-1">
             {ingredient.cocktailCount} cocktail{ingredient.cocktailCount !== 1 ? "s" : ""}
           </p>
         </div>
       </Link>
-      
-      {/* Add to bar button */}
+
       <button
         onClick={(e) => {
           e.preventDefault();
@@ -245,8 +217,8 @@ function IngredientCard({ ingredient, isInBar, onAddToBar, onRemoveFromBar }: In
         }}
         className={`absolute bottom-4 right-4 p-2 rounded-lg transition-colors ${
           isInBar
-            ? "bg-lime-500 text-slate-900 hover:bg-lime-400"
-            : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+            ? "bg-forest text-cream hover:bg-forest/90"
+            : "bg-mist text-charcoal hover:bg-stone"
         }`}
         aria-label={isInBar ? "Remove from bar" : "Add to bar"}
       >
@@ -255,4 +227,3 @@ function IngredientCard({ ingredient, isInBar, onAddToBar, onRemoveFromBar }: In
     </div>
   );
 }
-

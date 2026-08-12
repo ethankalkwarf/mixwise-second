@@ -7,6 +7,7 @@ import { getMixMatchGroups } from "@/lib/mixMatching";
 import { getMixIngredients } from "@/lib/cocktails";
 import { formatCocktailName } from "@/lib/formatters";
 import type { MixCocktail, MixMatchResult, MixIngredient } from "@/lib/mixTypes";
+import { debugLog } from "@/lib/debugLog";
 
 interface CocktailsYouCanMakeProps {
   ingredientIds: string[];
@@ -51,7 +52,7 @@ export function CocktailsYouCanMake({
   // Calculate staple IDs (same logic as mix wizard)
   const stapleIngredientIds = providedStapleIds || (() => {
     if (loading || allIngredients.length === 0) {
-      console.log('[BAR DEBUG] Still loading ingredients or no ingredients found, using default staples');
+      debugLog('[BAR DEBUG] Still loading ingredients or no ingredients found, using default staples');
       return ["ice", "water"]; // Default while loading
     }
 
@@ -59,7 +60,7 @@ export function CocktailsYouCanMake({
     const manualStaples = ['ice', 'water']; // Only truly universal basics
     const calculatedStaples = [...new Set([...dbStaples, ...manualStaples])];
 
-    console.log('[BAR DEBUG] Staple calculation:', {
+    debugLog('[BAR DEBUG] Staple calculation:', {
       allIngredientsCount: allIngredients.length,
       dbStaples: dbStaples,
       manualStaples: manualStaples,
@@ -80,7 +81,7 @@ export function CocktailsYouCanMake({
 
   // Debug logging (dev only)
   if (process.env.NODE_ENV === "development") {
-    console.log("[CocktailsYouCanMake] Matching results:", {
+    debugLog("[CocktailsYouCanMake] Matching results:", {
       totalCocktails: allCocktails.length,
       cocktailsWithIngredients: allCocktails.filter((c) => c.ingredients && c.ingredients.length > 0).length,
       ingredientIdsCount: ingredientIds.length,
@@ -179,7 +180,7 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
   const slug = cocktail.slug || cocktail.id;
   const href = slug ? `/cocktails/${encodeURIComponent(slug)}` : "/cocktails";
 
-  console.log('[COCKTAIL CARD] Cocktail:', cocktail.name, 'slug:', cocktail.slug, 'id:', cocktail.id, 'href:', href);
+  debugLog('[COCKTAIL CARD] Cocktail:', cocktail.name, 'slug:', cocktail.slug, 'id:', cocktail.id, 'href:', href);
 
   return (
     <Link

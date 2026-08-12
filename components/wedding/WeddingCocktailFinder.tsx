@@ -11,6 +11,7 @@ import type { Cocktail } from "@/lib/cocktailTypes";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useUser } from "@/components/auth/UserProvider";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
+import { debugLog } from "@/lib/debugLog";
 
 export type QuestionnaireStep = "intro" | "questions" | "email-gate" | "results";
 
@@ -38,7 +39,7 @@ export function WeddingCocktailFinder() {
   
   // Debug: log step changes
   useEffect(() => {
-    console.log("Current step:", step);
+    debugLog("Current step:", step);
   }, [step]);
   const [answers, setAnswers] = useState<QuestionnaireAnswers>({
     preferredFlavors: [],
@@ -65,16 +66,16 @@ export function WeddingCocktailFinder() {
       setIsLoading(true);
       try {
         const cocktails = await getCocktailsListClient({});
-        console.log("Loaded cocktails:", cocktails.length);
+        debugLog("Loaded cocktails:", cocktails.length);
         setAllCocktails(cocktails || []);
         
         // Get featured cocktails with images for landing page
         const withImages = cocktails.filter(c => c.image_url);
-        console.log("Cocktails with images:", withImages.length, "out of", cocktails.length);
+        debugLog("Cocktails with images:", withImages.length, "out of", cocktails.length);
         // Shuffle and take 5 for display
         const shuffled = [...withImages].sort(() => Math.random() - 0.5);
         const featured = shuffled.slice(0, 5);
-        console.log("Featured cocktails:", featured.map(c => ({ name: c.name, image_url: c.image_url })));
+        debugLog("Featured cocktails:", featured.map(c => ({ name: c.name, image_url: c.image_url })));
         setFeaturedCocktails(featured);
       } catch (error) {
         console.error("Error loading cocktails:", error);
@@ -89,7 +90,7 @@ export function WeddingCocktailFinder() {
 
   const calculateRecommendations = useCallback(() => {
     if (!allCocktails || allCocktails.length === 0) {
-      console.log("No cocktails to score");
+      debugLog("No cocktails to score");
       setRecommendations([]);
       return;
     }
@@ -182,9 +183,9 @@ export function WeddingCocktailFinder() {
 
 
   const handleStart = () => {
-    console.log("Button clicked! Current step:", step);
+    debugLog("Button clicked! Current step:", step);
     setStep("questions");
-    console.log("Step updated to: questions");
+    debugLog("Step updated to: questions");
   };
 
   const handleStartOver = () => {

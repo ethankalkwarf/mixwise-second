@@ -19,6 +19,7 @@ import {
   weeklyDigestTemplate,
 } from "@/lib/email/templates";
 import { verifyEmailTestSecret } from "@/lib/email/internal-auth";
+import { debugLog } from "@/lib/debugLog";
 
 // Fetch a random featured cocktail from the database
 async function getFeaturedCocktail() {
@@ -38,18 +39,18 @@ async function getFeaturedCocktail() {
     }
     
     if (!data || data.length === 0) {
-      console.log("[Email Test] No cocktails with image_url found in database");
+      debugLog("[Email Test] No cocktails with image_url found in database");
       return null;
     }
     
-    console.log(`[Email Test] Found ${data.length} cocktails with images`);
-    console.log("[Email Test] Sample image_url:", data[0]?.image_url);
+    debugLog(`[Email Test] Found ${data.length} cocktails with images`);
+    debugLog("[Email Test] Sample image_url:", data[0]?.image_url);
     
     // Pick a random one
     const randomIndex = Math.floor(Math.random() * data.length);
     const cocktail = data[randomIndex];
     
-    console.log(`[Email Test] Selected: ${cocktail.name}, image: ${cocktail.image_url}`);
+    debugLog(`[Email Test] Selected: ${cocktail.name}, image: ${cocktail.image_url}`);
     
     return {
       name: cocktail.name,
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log(`[Email Test] Sent ${template} to ${email}. ID: ${data?.id}`);
+    debugLog(`[Email Test] Sent ${template} to ${email}. ID: ${data?.id}`);
 
     return NextResponse.json({ 
       success: true, 

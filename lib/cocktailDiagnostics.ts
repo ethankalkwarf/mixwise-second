@@ -5,6 +5,7 @@
 
 import { getCocktailsWithIngredients } from './cocktails.server';
 import { createClient } from '@supabase/supabase-js';
+import { debugLog } from "@/lib/debugLog";
 
 // Types for diagnostic reports
 export interface CocktailDiagnosticData {
@@ -39,7 +40,7 @@ export interface DiagnosticReport {
  */
 export async function runCocktailDiagnostics(): Promise<DiagnosticReport> {
   try {
-    console.log('[DIAGNOSTICS] Starting cocktail data diagnostic...');
+    debugLog('[DIAGNOSTICS] Starting cocktail data diagnostic...');
 
     // Create Supabase client for direct database access
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -53,7 +54,7 @@ export async function runCocktailDiagnostics(): Promise<DiagnosticReport> {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Query ALL cocktails directly from database with minimal processing
-    console.log('[DIAGNOSTICS] Querying all cocktails from database...');
+    debugLog('[DIAGNOSTICS] Querying all cocktails from database...');
     const { data: allCocktails, error: queryError } = await supabase
       .from('cocktails')
       .select('id, name, slug, ingredients')
@@ -68,7 +69,7 @@ export async function runCocktailDiagnostics(): Promise<DiagnosticReport> {
     }
 
     const totalCount = allCocktails.length;
-    console.log(`[DIAGNOSTICS] Retrieved ${totalCount} cocktails from database`);
+    debugLog(`[DIAGNOSTICS] Retrieved ${totalCount} cocktails from database`);
 
     // Analyze each cocktail
     const diagnosticData: CocktailDiagnosticData[] = [];
@@ -242,8 +243,8 @@ export async function exportDiagnosticReport(filePath: string): Promise<void> {
   const fullPath = path.join(process.cwd(), filePath);
   await fs.writeFile(fullPath, JSON.stringify(report, null, 2), 'utf-8');
 
-  console.log(`[DIAGNOSTICS] Report exported to: ${fullPath}`);
-  console.log(report.summary);
+  debugLog(`[DIAGNOSTICS] Report exported to: ${fullPath}`);
+  debugLog(report.summary);
 }
 
 /**

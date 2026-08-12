@@ -24,6 +24,8 @@ export function OptimizedCocktailImage({
   priority = false,
   sizes,
   quality = 80,
+  width,
+  height,
   placeholder = "blur",
   blurDataURL = COCKTAIL_BLUR_DATA_URL,
   onClick

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/components/auth/UserProvider";
 import { awardSharingBadge } from "@/lib/badgeEngine";
@@ -37,7 +37,7 @@ export function CocktailShareCard({ cocktail }: CocktailShareCardProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const toast = useToast();
   const { user } = useUser();
-  const { supabaseClient: supabase } = useSessionContext();
+  const supabase = getSupabaseClient();
 
   const handleDownload = async () => {
     if (!cardRef.current) return;

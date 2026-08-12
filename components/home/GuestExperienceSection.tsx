@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useUser } from "@/components/auth/UserProvider";
+import { JoinCtaButton } from "@/components/auth/JoinCtaButton";
+import Link from "next/link";
 
 export function GuestExperienceSection() {
   const { isAuthenticated } = useUser();
@@ -36,12 +37,9 @@ export function GuestExperienceSection() {
 
           {/* Inline CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <Link
-              href="/auth"
+            <JoinCtaButton
               className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark transition-all duration-300 shadow-terracotta"
-            >
-              Create a free account
-            </Link>
+            />
             <Link
               href="/mix"
               className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium border-2 border-forest text-forest hover:bg-forest hover:text-cream transition-all duration-300"

@@ -12,6 +12,7 @@ import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { formatCocktailName } from "@/lib/formatters";
 import { PlusCircleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import type { SanityCocktail, SanityImage } from "@/lib/sanityTypes";
 
 interface MixCocktail {
   _id: string;

@@ -1,34 +1,22 @@
 /**
- * Supabase Client-Side Helper
- * 
- * This module provides a client-side Supabase client for use in React components.
- * It handles authentication state and provides typed access to the database.
+ * Browser Supabase client for Client Components.
  */
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "./database.types";
 
-/**
- * Creates a Supabase client for use in client components.
- * This client automatically handles auth state and cookie management.
- */
-export function createClient() {
-  return createClientComponentClient<Database>();
-}
+let browserClient: ReturnType<typeof createBrowserClient<Database>> | undefined;
 
-/**
- * Singleton instance for components that don't need fresh client each render
- */
-let clientInstance: ReturnType<typeof createClientComponentClient<Database>> | null = null;
+export function createClient() {
+  if (!browserClient) {
+    browserClient = createBrowserClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }
+  return browserClient;
+}
 
 export function getSupabaseClient() {
-  if (!clientInstance) {
-    clientInstance = createClientComponentClient<Database>();
-  }
-  return clientInstance;
+  return createClient();
 }
-
-
-
-
-

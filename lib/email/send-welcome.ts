@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { welcomeEmailTemplate } from "@/lib/email/templates";
 import { buildUserOneClickUnsubscribeUrl, buildUserUnsubscribeUrl } from "@/lib/email/unsubscribe-urls";
+import { debugLog } from "@/lib/debugLog";
 
 export interface SendWelcomeEmailParams {
   userId: string;
@@ -110,7 +111,7 @@ export async function sendWelcomeEmail(
       .update({ welcome_email_sent_at: new Date().toISOString() })
       .eq("user_id", userId);
 
-    console.log(`[Send Welcome] Sent to ${userEmail}. Resend ID: ${emailData?.id}`);
+    debugLog(`[Send Welcome] Sent to ${userEmail}. Resend ID: ${emailData?.id}`);
 
     return { success: true, resendId: emailData?.id };
   } catch (error) {

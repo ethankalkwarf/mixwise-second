@@ -1,9 +1,8 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { SupabaseProvider } from "./providers";
 import { ConditionalLayoutWrapper } from "@/components/layout/ConditionalLayoutWrapper";
+import { MobileStyleFix } from "@/components/mobile/MobileStyleFix";
 import { OrganizationSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 
@@ -76,10 +75,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
 
-  // Don't fetch session server-side to avoid static generation issues
-  // Let client-side providers handle session fetching
-  const initialSession = null;
-
   return (
     <html lang="en" className={`${dmSerifDisplay.variable} ${jost.variable}`}>
       <head>
@@ -91,7 +86,8 @@ export default async function RootLayout({
           Skip to main content
         </a>
         
-        <SupabaseProvider initialSession={initialSession}>
+        <SupabaseProvider>
+          <MobileStyleFix />
           <ConditionalLayoutWrapper>
             {children}
           </ConditionalLayoutWrapper>

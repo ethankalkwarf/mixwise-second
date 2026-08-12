@@ -11,6 +11,7 @@
  */
 
 import type { Profile } from "@/lib/supabase/database.types";
+import { debugLog } from "@/lib/debugLog";
 
 // Feature limits by role
 const LIMITS = {
@@ -144,7 +145,7 @@ export async function trackFeatureUsage(
 ): Promise<void> {
   // TODO: Implement actual tracking
   // Would call the increment_feature_usage RPC function
-  console.log(`[Features] Tracking usage: ${feature} for user ${userId}`);
+  debugLog(`[Features] Tracking usage: ${feature} for user ${userId}`);
 }
 
 

@@ -47,6 +47,7 @@ const CATEGORY_FIXES: Record<string, string> = {
   'everclear': 'Spirit',
   'scotch': 'Spirit',
   'whisky': 'Spirit',
+  'whiskey': 'Spirit', // American spelling – ensure both Whiskey/Whisky map to Spirit
   'blended scotch': 'Spirit',
   'islay single malt scotch': 'Spirit',
   
@@ -174,6 +175,8 @@ const CATEGORY_FIXES: Record<string, string> = {
   'disaronno': 'Liqueur',
   'tia maria': 'Liqueur',
   'godiva liqueur': 'Liqueur',
+  'jägermeister': 'Liqueur', // Herbal liqueur – was wrongly in Mixers
+  'jagermeister': 'Liqueur',
   
   // ============================================
   // BEER (combined with Wine)
@@ -314,6 +317,8 @@ const CATEGORY_FIXES: Record<string, string> = {
 // Additional pattern-based rules for ingredients not explicitly listed
 // Note: Categories are capitalized to match Supabase format
 const PATTERN_RULES: Array<{ pattern: RegExp; category: string; priority: number }> = [
+  // Liqueurs wrongly in Mixer (e.g. Jägermeister)
+  { pattern: /\bj[äa]germeister\b/i, category: 'Liqueur', priority: 10 },
   // High priority - specific patterns
   { pattern: /\bginger\s*(beer|ale)\b/i, category: 'Mixer', priority: 10 },
   { pattern: /\broot\s*beer\b/i, category: 'Mixer', priority: 10 },

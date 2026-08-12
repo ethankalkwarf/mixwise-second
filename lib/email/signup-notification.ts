@@ -6,6 +6,7 @@
  */
 
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
+import { debugLog } from "@/lib/debugLog";
 
 const NOTIFICATION_EMAIL = "hello@getmixwise.com";
 
@@ -64,7 +65,7 @@ export async function sendSignupNotification(
     }
 
     // Log that we're attempting to send
-    console.log(`[Signup Notification] Attempting to send notification for new user: ${trimmedEmail} (${signupMethod})`);
+    debugLog(`[Signup Notification] Attempting to send notification for new user: ${trimmedEmail} (${signupMethod})`);
 
     // Create Resend client
     let resend;
@@ -189,7 +190,7 @@ This is an automated notification from MixWise.
     }
 
     // Send email via Resend
-    console.log(`[Signup Notification] Sending notification email to: ${NOTIFICATION_EMAIL} from: ${MIXWISE_FROM_EMAIL}`);
+    debugLog(`[Signup Notification] Sending notification email to: ${NOTIFICATION_EMAIL} from: ${MIXWISE_FROM_EMAIL}`);
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,
@@ -212,7 +213,7 @@ This is an automated notification from MixWise.
       return { success: false, error: "Failed to send notification email" };
     }
 
-    console.log(`[Signup Notification] Notification email sent successfully. Resend ID: ${emailData?.id}`);
+    debugLog(`[Signup Notification] Notification email sent successfully. Resend ID: ${emailData?.id}`);
 
     return { success: true };
 

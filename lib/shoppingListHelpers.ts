@@ -49,7 +49,7 @@ export function getMissingIngredientsForCocktail(
     missing.push({
       id: ingredient.id,
       name: ingredient.name,
-      category: ingredient.category,
+      category: ingredient.category ?? undefined,
     });
   }
 

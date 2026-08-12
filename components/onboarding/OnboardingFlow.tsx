@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSessionContext } from "@supabase/auth-helpers-react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
 import { BrandLogo } from "@/components/common/BrandLogo";
@@ -73,15 +72,7 @@ interface OnboardingFlowProps {
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const router = useRouter();
   const { user, session } = useUser();
-  const { supabaseClient: contextSupabase } = useSessionContext();
   const toast = useToast();
-  
-  const getSupabaseClient = () => {
-    if (contextSupabase) {
-      return contextSupabase;
-    }
-    return createClientComponentClient();
-  };
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -93,6 +93,8 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
   // Restore filter state from sessionStorage on mount
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    
     try {
       const saved = sessionStorage.getItem(FILTER_STATE_KEY);
       if (saved) {
@@ -112,7 +114,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
   // Restore scroll position after filters are applied
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized || typeof window === "undefined") return;
     
     try {
       const savedScroll = sessionStorage.getItem(SCROLL_STATE_KEY);
@@ -120,7 +122,9 @@ export function CocktailsDirectory({ cocktails }: Props) {
         const scrollY = parseInt(savedScroll, 10);
         // Use requestAnimationFrame to ensure DOM is ready
         requestAnimationFrame(() => {
-          window.scrollTo(0, scrollY);
+          if (typeof window !== "undefined") {
+            window.scrollTo(0, scrollY);
+          }
         });
         // Clear the saved scroll after restoring
         sessionStorage.removeItem(SCROLL_STATE_KEY);
@@ -132,7 +136,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
   // Save filter state to sessionStorage when it changes
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized || typeof window === "undefined") return;
     
     const state: FilterState = {
       searchQuery,
@@ -151,10 +155,12 @@ export function CocktailsDirectory({ cocktails }: Props) {
 
   // Save scroll position before navigating to a cocktail
   const handleCocktailClick = useCallback((slug: string) => {
-    try {
-      sessionStorage.setItem(SCROLL_STATE_KEY, window.scrollY.toString());
-    } catch (e) {
-      console.error("Error saving scroll position:", e);
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(SCROLL_STATE_KEY, window.scrollY.toString());
+      } catch (e) {
+        console.error("Error saving scroll position:", e);
+      }
     }
     router.push(`/cocktails/${slug}`);
   }, [router]);

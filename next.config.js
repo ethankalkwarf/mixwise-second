@@ -55,20 +55,8 @@ const nextConfig = {
   },
   // Enable compression
   compress: true,
-  // Optimize build output
-  swcMinify: true,
-  // Experimental features for better performance
-  experimental: {
-    // optimizeCss: true, // Disabled - causing critters dependency issues
-    scrollRestoration: true,
-  },
-  // Ignore ESLint errors during production builds
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  // Ignore TypeScript errors during production builds
-  typescript: {
-    ignoreBuildErrors: true,
+  turbopack: {
+    root: __dirname,
   },
   async redirects() {
     return [
@@ -83,7 +71,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/api/(.*)',
+        source: '/api/cocktails/(.*)',
         headers: [
           {
             key: 'Cache-Control',

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
+import { debugLog } from "@/lib/debugLog";
 
 // Rate limiting for auth requests to prevent 429 errors
 class AuthRateLimiter {
@@ -90,14 +91,14 @@ function scrubUrl() {
  */
 async function waitForAuthReady(authReady: Promise<void>, timeoutMs: number = 5000): Promise<void> {
   try {
-    console.log("[AuthCallbackPage] Waiting for auth to be ready...");
+    debugLog("[AuthCallbackPage] Waiting for auth to be ready...");
     await Promise.race([
       authReady,
       new Promise<void>((_, reject) =>
         setTimeout(() => reject(new Error("Auth ready timeout")), timeoutMs)
       ),
     ]);
-    console.log("[AuthCallbackPage] Auth is ready, proceeding with redirect");
+    debugLog("[AuthCallbackPage] Auth is ready, proceeding with redirect");
   } catch (err) {
     // Don't block on auth ready - just log and continue
     // This handles cases where authReady times out or rejects
@@ -173,7 +174,7 @@ function AuthCallbackPageContent() {
   useEffect(() => {
     // Prevent duplicate runs
     if (hasProcessed.current || processingRef.current) {
-      console.log("[AuthCallbackPage] Already processing or processed, skipping duplicate run");
+      debugLog("[AuthCallbackPage] Already processing or processed, skipping duplicate run");
       return;
     }
     
@@ -186,13 +187,13 @@ function AuthCallbackPageContent() {
       return next.startsWith("/") ? next : "/";
     };
 
-    const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+    const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> => {
       let timeoutId: ReturnType<typeof setTimeout> | null = null;
       const timeoutPromise = new Promise<T>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
       });
       try {
-        return await Promise.race([promise, timeoutPromise]);
+        return await Promise.race([Promise.resolve(promise), timeoutPromise]);
       } finally {
         if (timeoutId) clearTimeout(timeoutId);
       }
@@ -229,7 +230,7 @@ function AuthCallbackPageContent() {
 
           if (attempt <= maxRetries) {
             const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
-            console.log(`[AuthCallbackPage] Retrying ${label} in ${delay}ms (attempt ${attempt + 1})`);
+            debugLog(`[AuthCallbackPage] Retrying ${label} in ${delay}ms (attempt ${attempt + 1})`);
             await new Promise(resolve => setTimeout(resolve, delay));
           }
         }
@@ -300,7 +301,7 @@ function AuthCallbackPageContent() {
       const accessToken = hashParams.get("access_token") || searchParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token") || searchParams.get("refresh_token");
       
-      console.log("[AuthCallbackPage] Callback params:", {
+      debugLog("[AuthCallbackPage] Callback params:", {
         hasCode: !!code,
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
@@ -321,13 +322,13 @@ function AuthCallbackPageContent() {
         }, 3000);
 
         // If we already have a valid session cookie/session, just continue (avoids confusing "Sign-in failed")
-        console.log("[AuthCallbackPage] Checking for existing session...");
+        debugLog("[AuthCallbackPage] Checking for existing session...");
         const { data: existingSession } = await withRetry(
           () => withTimeout(supabase.auth.getSession(), 8000, "getSession"),
           2, 500, "check existing session"
         );
         if (existingSession.session) {
-          console.log("[AuthCallbackPage] Found existing session, user already authenticated");
+          debugLog("[AuthCallbackPage] Found existing session, user already authenticated");
           scrubUrl();
           const { data } = await withRetry(
             () => withTimeout(supabase.auth.getUser(), 8000, "getUser"),
@@ -335,7 +336,7 @@ function AuthCallbackPageContent() {
           );
           const user = data.user;
           if (user && !cancelled) {
-            console.log("[AuthCallbackPage] Redirecting authenticated user to:", next === "/" ? "/mix" : next);
+            debugLog("[AuthCallbackPage] Redirecting authenticated user to:", next === "/" ? "/mix" : next);
             await waitForAuthReady(authReady);
             router.replace(next === "/" ? "/mix" : next);
             return;
@@ -344,7 +345,7 @@ function AuthCallbackPageContent() {
 
         // Establish session (supports both PKCE code flow and implicit hash token flow)
         if (code) {
-          console.log("[AuthCallbackPage] Exchanging code for session...");
+          debugLog("[AuthCallbackPage] Exchanging code for session...");
           try {
             const { error: exchangeError } = await withRetry(
               () => withTimeout(supabase.auth.exchangeCodeForSession(code), 10000, "exchangeCodeForSession"),
@@ -365,16 +366,16 @@ function AuthCallbackPageContent() {
 
               throw exchangeError;
             }
-            console.log("[AuthCallbackPage] Code exchanged successfully");
+            debugLog("[AuthCallbackPage] Code exchanged successfully");
           } catch (err) {
             // Re-throw after specific handling above
             throw err;
           }
         } else if (accessToken && refreshToken) {
-          console.log("[AuthCallbackPage] Setting session from tokens...");
+          debugLog("[AuthCallbackPage] Setting session from tokens...");
           try {
             // Call setSession and wait for it properly
-            console.log("[AuthCallbackPage] Calling setSession...");
+            debugLog("[AuthCallbackPage] Calling setSession...");
             const { error: sessionError } = await withTimeout(
               supabase.auth.setSession({
                 access_token: accessToken,
@@ -389,7 +390,7 @@ function AuthCallbackPageContent() {
               // Don't throw - continue anyway since we have tokens from URL
               // The tokens will be in the hash and getSession may still work
             } else {
-              console.log("[AuthCallbackPage] Session set successfully");
+              debugLog("[AuthCallbackPage] Session set successfully");
             }
           } catch (err) {
             console.error("[AuthCallbackPage] Session setup error (non-fatal):", err);
@@ -397,7 +398,7 @@ function AuthCallbackPageContent() {
           }
         } else {
           // No params — try session again (some providers set cookies without hash/code visible)
-          console.log("[AuthCallbackPage] No code or tokens, checking for cookie-based session...");
+          debugLog("[AuthCallbackPage] No code or tokens, checking for cookie-based session...");
           const { data: fallbackSession } = await withTimeout(supabase.auth.getSession(), 8000, "getSession(fallback)");
           if (!fallbackSession.session) {
             console.error("[AuthCallbackPage] No callback parameters and no session found");
@@ -412,9 +413,9 @@ function AuthCallbackPageContent() {
         // This prevents hanging on getUser() calls
         if ((accessToken && refreshToken) || code) {
           const target = next === "/" ? "/mix" : next;
-          console.log("[AuthCallbackPage] Have valid tokens, redirecting directly to:", target);
+          debugLog("[AuthCallbackPage] Have valid tokens, redirecting directly to:", target);
           if (!cancelled) {
-            console.log("[AuthCallbackPage] Navigating to:", target);
+            debugLog("[AuthCallbackPage] Navigating to:", target);
             // Signal that email confirmation completed (for AuthDialog closure)
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
@@ -431,10 +432,10 @@ function AuthCallbackPageContent() {
         const user = data.user;
 
         if (user) {
-          console.log("[AuthCallbackPage] User authenticated:", user.id);
+          debugLog("[AuthCallbackPage] User authenticated:", user.id);
           // If the caller explicitly asked for mix wizard, don't block on DB checks — go immediately.
           if (!cancelled && next === "/mix") {
-            console.log("[AuthCallbackPage] Explicit mix wizard request, redirecting immediately");
+            debugLog("[AuthCallbackPage] Explicit mix wizard request, redirecting immediately");
             // Signal that email confirmation completed (for AuthDialog closure)
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
@@ -448,7 +449,7 @@ function AuthCallbackPageContent() {
           
           // Legacy onboarding route - redirect to mix wizard instead
           if (!cancelled && next === "/onboarding") {
-            console.log("[AuthCallbackPage] Legacy onboarding route detected, redirecting to mix wizard");
+            debugLog("[AuthCallbackPage] Legacy onboarding route detected, redirecting to mix wizard");
             // Signal that email confirmation completed (for AuthDialog closure)
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
@@ -486,7 +487,7 @@ function AuthCallbackPageContent() {
                     onboarding_completed: true,
                     onboarding_completed_at: new Date().toISOString(),
                   });
-                console.log("[AuthCallbackPage] Created user_preferences for new user");
+                debugLog("[AuthCallbackPage] Created user_preferences for new user");
               } catch (insertError) {
                 console.warn("[AuthCallbackPage] Failed to create user_preferences:", insertError);
                 // Continue anyway - not critical
@@ -506,7 +507,7 @@ function AuthCallbackPageContent() {
                   }, {
                     onConflict: "user_id",
                   });
-                console.log("[AuthCallbackPage] Marked onboarding as completed for existing user");
+                debugLog("[AuthCallbackPage] Marked onboarding as completed for existing user");
               } catch (updateError) {
                 console.warn("[AuthCallbackPage] Failed to update user_preferences:", updateError);
                 // Continue anyway - not critical
@@ -520,7 +521,7 @@ function AuthCallbackPageContent() {
           if (!cancelled) {
             // Always redirect to mix wizard for new users, or their intended destination
             const target = isNewUser ? "/mix" : next;
-            console.log("[AuthCallbackPage] Redirecting to:", target);
+            debugLog("[AuthCallbackPage] Redirecting to:", target);
             // Signal that email confirmation completed (for AuthDialog closure)
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
@@ -559,7 +560,7 @@ function AuthCallbackPageContent() {
             1, 500, "recovery session check"
           );
           if (sessionAfterError.session) {
-            console.log("[AuthCallbackPage] Session recovered after error, proceeding");
+            debugLog("[AuthCallbackPage] Session recovered after error, proceeding");
             scrubUrl();
             // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
             await waitForAuthReady(authReady);

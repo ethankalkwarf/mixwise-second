@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { weddingRecommendationsTemplate } from "@/lib/email/templates";
+import { getSiteUrl } from "@/lib/site";
+import { isRateLimited, getClientIp } from "@/lib/rate-limit";
+import { buildNewsletterUnsubscribeUrl, buildNewsletterUnsubscribeApiUrl } from "@/lib/email/newsletter-token";
+import { debugLog } from "@/lib/debugLog";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +15,13 @@ function isValidEmail(email: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isRateLimited(`wedding:${getClientIp(request)}`, 3)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { email, recommendations, answers } = body;
 
@@ -51,7 +62,7 @@ export async function POST(request: NextRequest) {
         console.error("[Wedding Recommendations] Failed to save email to database:", dbError);
         // Continue anyway - don't block email sending
       } else {
-        console.log(`[Wedding Recommendations] Saved email to database: ${trimmedEmail}`);
+        debugLog(`[Wedding Recommendations] Saved email to database: ${trimmedEmail}`);
       }
     } catch (dbError) {
       console.error("[Wedding Recommendations] Database error:", dbError);
@@ -59,6 +70,9 @@ export async function POST(request: NextRequest) {
     }
 
     const resend = createResendClient();
+    const siteUrl = getSiteUrl();
+    const unsubscribeUrl = buildNewsletterUnsubscribeUrl(trimmedEmail, "wedding_cocktail_finder", siteUrl);
+    const listUnsubscribeUrl = buildNewsletterUnsubscribeApiUrl(trimmedEmail, "wedding_cocktail_finder", siteUrl);
 
     // Use email template from templates library
     const emailTemplate = weddingRecommendationsTemplate({
@@ -69,16 +83,19 @@ export async function POST(request: NextRequest) {
       })),
     });
 
-    console.log(`[Wedding Recommendations] Sending email to: ${trimmedEmail}`);
+    debugLog(`[Wedding Recommendations] Sending email to: ${trimmedEmail}`);
 
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,
       to: trimmedEmail,
+      replyTo: "hello@getmixwise.com",
       subject: emailTemplate.subject,
       html: emailTemplate.html,
       text: emailTemplate.text,
       headers: {
         "X-Entity-Ref-ID": `wedding-recommendations-${Date.now()}`,
+        "List-Unsubscribe": `<${listUnsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
       tags: [
         { name: "category", value: "wedding_recommendations" },
@@ -94,7 +111,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Wedding Recommendations] Email sent successfully. Resend ID: ${emailData?.id}`);
+    debugLog(`[Wedding Recommendations] Email sent successfully. Resend ID: ${emailData?.id}`);
 
     return NextResponse.json({
       ok: true,
