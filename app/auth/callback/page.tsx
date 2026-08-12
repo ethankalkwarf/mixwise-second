@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { debugLog } from "@/lib/debugLog";
+import { BrandLogo } from "@/components/common/BrandLogo";
 
 // Rate limiting for auth requests to prevent 429 errors
 class AuthRateLimiter {
@@ -629,7 +630,9 @@ function AuthCallbackPageContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream via-mint/20 to-cream flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-card-hover p-8 text-center">
-        <div className="text-3xl font-display font-bold text-forest mb-4">mixwise.</div>
+        <div className="text-center mb-4 flex justify-center">
+          <BrandLogo size="lg" variant="dark" />
+        </div>
         {status === "loading" ? (
           <>
             <h1 className="text-xl font-display font-bold text-forest mb-2">Signing you in…</h1>
@@ -727,7 +730,9 @@ export default function AuthCallbackPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-br from-cream via-mint/20 to-cream flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-card-hover p-8 text-center">
-          <div className="text-3xl font-display font-bold text-forest mb-4">mixwise.</div>
+          <div className="mb-4 flex justify-center">
+            <BrandLogo size="lg" variant="dark" linked={false} />
+          </div>
           <h1 className="text-xl font-display font-bold text-forest mb-2">Signing you in…</h1>
           <p className="text-sage">Just a moment while we confirm your account.</p>
         </div>

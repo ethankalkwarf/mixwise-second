@@ -3,19 +3,34 @@
 import { useState, Fragment, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Menu, Transition } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon, UserCircleIcon, MagnifyingGlassIcon, ShareIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, ShareIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { CocktailSearch } from "@/components/search/CocktailSearch";
 
+function navLinkClass(active: boolean, base = "text-sm") {
+  return [
+    base,
+    "transition-colors duration-200",
+    active
+      ? "font-semibold text-forest"
+      : "font-medium text-charcoal hover:text-terracotta",
+  ].join(" ");
+}
+
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
   const { user, profile, isAuthenticated, isLoading, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
+
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/" && pathname?.startsWith(`${href}/`));
 
   const handleSignOut = async () => {
     await signOut();
@@ -105,24 +120,24 @@ export function Navbar() {
             </div>
 
             {/* Desktop Navigation - Centered */}
-            <div className="hidden md:flex items-center space-x-6 absolute left-1/2 -translate-x-1/2">
+            <div className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
               <Link
                 href="/cocktail-of-the-day"
-                className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
+                className={navLinkClass(isActive("/cocktail-of-the-day"))}
               >
                 Drink of the Day
               </Link>
               <div className="relative group">
                 <Link
                   href="/mix"
-                  className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
+                  className={navLinkClass(isActive("/mix"))}
                 >
                   What Can I Make?
                 </Link>
                 {/* Tooltip - appears below */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2
                                 opacity-0 group-hover:opacity-100
-                                bg-forest text-cream text-xs font-medium
+                                bg-forest text-cream text-xs font-medium tracking-wide
                                 px-3 py-2 rounded-lg shadow-lg
                                 pointer-events-none
                                 transition-opacity duration-200 z-50
@@ -134,24 +149,24 @@ export function Navbar() {
               </div>
               <Link
                 href="/cocktails"
-                className="text-charcoal hover:text-terracotta transition-colors font-medium text-sm"
+                className={navLinkClass(isActive("/cocktails"))}
               >
                 All Recipes
               </Link>
             </div>
 
-            {/* Desktop Search Icon - Right side */}
-            <div className="hidden md:flex items-center space-x-3">
+            {/* Desktop Search + Actions */}
+            <div className="hidden md:flex items-center gap-4">
               <button
                 onClick={() => setDesktopSearchOpen(!desktopSearchOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm text-sage hover:text-forest border border-mist rounded-lg hover:bg-mist/50 active:scale-95 transition-all duration-200 hover:shadow-sm"
+                className="flex items-center gap-2 px-2.5 py-1.5 text-sm font-medium text-sage hover:text-forest border border-mist/70 rounded-md hover:border-mist hover:bg-mist/40 active:scale-[0.98] transition-all duration-200"
                 aria-label="Search cocktails (Cmd+K or Ctrl+K)"
                 aria-expanded={desktopSearchOpen}
               >
                 <MagnifyingGlassIcon className="w-4 h-4" />
                 <span className="hidden lg:inline">Search</span>
-                <kbd className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-sage bg-mist/50 border border-mist/50 rounded">
-                  <span className="text-[10px]">
+                <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-sage/80 bg-mist/40 border border-mist/40 rounded">
+                  <span>
                     {typeof window !== "undefined" && /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)
                       ? "⌘"
                       : "Ctrl"}
@@ -160,13 +175,12 @@ export function Navbar() {
                 </kbd>
               </button>
 
-              {/* Desktop Actions */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-mist animate-pulse" />
             ) : isAuthenticated ? (
               <Menu as="div" className="relative">
-                <Menu.Button className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-mist/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta">
+                <Menu.Button className="flex items-center gap-2 px-2.5 py-1.5 rounded-full hover:bg-mist/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta">
                   {avatarUrl ? (
                     <Image
                       src={avatarUrl}
@@ -176,7 +190,7 @@ export function Navbar() {
                       className="w-8 h-8 rounded-full object-cover border border-mist"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-terracotta/20 flex items-center justify-center text-terracotta font-bold text-sm">
+                    <div className="w-8 h-8 rounded-full bg-terracotta/20 flex items-center justify-center text-terracotta font-semibold text-sm">
                       {userInitial}
                     </div>
                   )}
@@ -262,7 +276,7 @@ export function Navbar() {
                 </button>
                 <button
                   onClick={() => openAuthDialog({ mode: "signup" })}
-                  className="inline-flex items-center rounded-full px-5 py-2 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="inline-flex items-center rounded-full px-5 py-2 text-sm font-semibold bg-terracotta text-cream hover:bg-terracotta-dark active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   Sign Up Free
                 </button>
@@ -304,17 +318,25 @@ export function Navbar() {
                 onClose={() => setMobileMenuOpen(false)}
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <Link
                 href="/cocktail-of-the-day"
-                className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
+                className={`block px-3 py-3 text-base rounded-xl transition-colors ${
+                  isActive("/cocktail-of-the-day")
+                    ? "font-semibold text-forest bg-mist/40"
+                    : "font-medium text-charcoal hover:text-terracotta hover:bg-mist/50"
+                }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Drink of the Day
               </Link>
               <Link
                 href="/mix"
-                className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
+                className={`block px-3 py-3 text-base rounded-xl transition-colors ${
+                  isActive("/mix")
+                    ? "font-semibold text-forest bg-mist/40"
+                    : "font-medium text-charcoal hover:text-terracotta hover:bg-mist/50"
+                }`}
                 onClick={() => setMobileMenuOpen(false)}
                 title="Find cocktails by ingredients in your bar"
               >
@@ -322,7 +344,11 @@ export function Navbar() {
               </Link>
               <Link
                 href="/cocktails"
-                className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
+                className={`block px-3 py-3 text-base rounded-xl transition-colors ${
+                  isActive("/cocktails")
+                    ? "font-semibold text-forest bg-mist/40"
+                    : "font-medium text-charcoal hover:text-terracotta hover:bg-mist/50"
+                }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 All Recipes
@@ -345,7 +371,7 @@ export function Navbar() {
                           className="w-10 h-10 rounded-full object-cover border border-mist"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-terracotta/20 flex items-center justify-center text-terracotta font-bold">
+                        <div className="w-10 h-10 rounded-full bg-terracotta/20 flex items-center justify-center text-terracotta font-semibold">
                           {userInitial}
                         </div>
                       )}
@@ -390,7 +416,7 @@ export function Navbar() {
                         openAuthDialog({ mode: "login" });
                         setMobileMenuOpen(false);
                       }}
-                      className="block w-full text-center px-4 py-3 text-base font-medium text-charcoal hover:text-terracotta border border-mist rounded-xl transition-colors"
+                      className="block w-full text-center px-4 py-3 text-base font-medium text-charcoal hover:text-terracotta transition-colors"
                     >
                       Log In
                     </button>
@@ -399,7 +425,7 @@ export function Navbar() {
                         openAuthDialog({ mode: "signup" });
                         setMobileMenuOpen(false);
                       }}
-                      className="block w-full text-center px-4 py-3 text-base font-medium bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark transition-colors"
+                      className="block w-full text-center px-4 py-3 text-base font-semibold bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark transition-colors"
                     >
                       Sign Up Free
                     </button>

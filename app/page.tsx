@@ -48,16 +48,6 @@ export default async function HomePage() {
     ? [...popularCocktails].sort(() => Math.random() - 0.5).slice(0, 5)
     : [...allCocktails].sort(() => Math.random() - 0.5).slice(0, 5);
 
-  // Get random cocktails with images for hero rotation (5 cocktails, changes on every refresh)
-  const heroRotationCocktails = [...allCocktails]
-    .filter(c => c.externalImageUrl || c.image)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 5);
-
-  const heroTitle = "Discover Your Next Favorite Cocktail";
-  const heroSubtitle =
-    "Browse handcrafted cocktail recipes, find what you can make with ingredients you have, and expand your mixology skills.";
-
   return (
     <>
       <WebPageSchema
@@ -69,8 +59,7 @@ export default async function HomePage() {
       <HomePageWrapper featuredCocktails={featuredCocktails} allCocktails={allCocktails}>
         {/* Web design */}
         <>
-          {/* Hero Section */}
-          <Hero title={heroTitle} subtitle={heroSubtitle} featuredCocktails={heroRotationCocktails} />
+          <Hero />
 
           {/* Personalized Sections for Logged-in Users - Only render if user is authenticated */}
           <PersonalizedSections

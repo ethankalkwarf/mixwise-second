@@ -8,6 +8,7 @@ import { useUser } from "./UserProvider";
 import { useToast } from "@/components/ui/toast";
 import type { AuthDialogMode } from "./AuthDialogProvider";
 import { debugLog } from "@/lib/debugLog";
+import { BrandLogo } from "@/components/common/BrandLogo";
 
 // Google icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -347,8 +348,8 @@ export function AuthDialog({
                   <>
                     {/* Header */}
                     <div className="text-center mb-6">
-                      <div className="mb-4">
-                        <span className="text-3xl font-display font-bold text-forest">mixwise.</span>
+                      <div className="mb-4 flex justify-center">
+                        <BrandLogo size="lg" variant="dark" linked={false} />
                       </div>
                       <Dialog.Title className="text-xl font-display font-bold text-forest mb-2">
                         {displayTitle}

@@ -1,82 +1,93 @@
 "use client";
 
+import Link from "next/link";
+import { AutoplayVideo } from "@/components/media/AutoplayVideo";
+
+const FEATURES = [
+  {
+    title: "Curated recipes",
+    body: "An extensive collection of handcrafted cocktails — clear measurements, context, and drinks worth making at home.",
+    href: "/cocktails",
+    label: "Start browsing",
+    accent: "text-olive",
+  },
+  {
+    title: "Your cabinet",
+    body: "Add the spirits and mixers you have. Instantly see what you can craft\u00A0tonight — and what’s worth picking up\u00A0next.",
+    href: "/mix",
+    label: "Open your cabinet",
+    accent: "text-terracotta",
+  },
+  {
+    title: "Home-bar confidence",
+    body: "Built for real kitchens, not professional bars. Learn techniques as you go and enjoy the pour.",
+    href: "/about",
+    label: "About MixWise",
+    accent: "text-olive",
+  },
+] as const;
+
 export function PlatformSection() {
   return (
-    <section className="bg-[#2C3628] text-[#F9F7F2] py-32 lg:py-40 xl:py-48 rounded-t-[3rem] relative overflow-hidden mt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Background Pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
-          backgroundSize: '40px 40px'
-        }}
-      ></div>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-24 text-center md:text-left">
-          <h2 className="text-4xl md:text-6xl font-display max-w-2xl leading-[1.1] mb-6 text-[#E6EBE4]">
-            Everything you need to master home mixology.
-          </h2>
-          <div className="h-1 w-24 bg-[#BC5A45] rounded-full"></div>
-        </div>
-
-        {/* Grid Container */}
-        <div className="grid md:grid-cols-3 gap-12 md:gap-8">
-
-          {/* Column 1 */}
-          <div className="relative group pt-8 border-t border-white/10 md:border-t-0 hover:-translate-y-2 transition-transform duration-500">
-            <div className="absolute -top-12 -left-4 text-[140px] leading-none font-display italic text-white opacity-[0.05] select-none pointer-events-none z-0">1</div>
-            <div className="relative z-10 pt-4">
-              <h3 className="text-3xl font-display mb-4 text-white">Curated Recipes</h3>
-              <p className="text-[#D1DAD0] leading-relaxed mb-8 pr-8">
-                Explore an extensive collection of handcrafted cocktails, complete with historical context and precise measurements.
-              </p>
-              <a
-                href="/cocktails"
-                className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-[#8A9A5B] hover:text-white transition-colors gap-3"
-              >
-                Start Browsing <span className="bg-[#8A9A5B]/20 w-6 h-6 rounded-full flex items-center justify-center text-[10px]">→</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Column 2 */}
-          <div className="relative group pt-8 border-t border-white/10 md:border-t-0 hover:-translate-y-2 transition-transform duration-500 delay-100">
-            <div className="absolute -top-12 -left-4 text-[140px] leading-none font-display italic text-white opacity-[0.05] select-none pointer-events-none z-0">2</div>
-            <div className="relative z-10 pt-4">
-              <h3 className="text-3xl font-display mb-4 text-white">My Cabinet</h3>
-              <p className="text-[#D1DAD0] leading-relaxed mb-8 pr-8">
-                Input your available spirits and mixers to instantly generate a personalized menu of cocktails you can craft right now.
-              </p>
-              <a
-                href="/mix"
-                className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-[#BC5A45] hover:text-white transition-colors gap-3"
-              >
-                Launch My Cabinet <span className="bg-[#BC5A45]/20 w-6 h-6 rounded-full flex items-center justify-center text-[10px]">→</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Column 3 */}
-          <div className="relative group pt-8 border-t border-white/10 md:border-t-0 hover:-translate-y-2 transition-transform duration-500 delay-200">
-            <div className="absolute -top-12 -left-4 text-[140px] leading-none font-display italic text-white opacity-[0.05] select-none pointer-events-none z-0">3</div>
-            <div className="relative z-10 pt-4">
-              <h3 className="text-3xl font-display mb-4 text-white">Master Class</h3>
-              <p className="text-[#D1DAD0] leading-relaxed mb-8 pr-8">
-                Elevate your home bartending with expert guides on essential techniques, glassware selection, and preparation.
-              </p>
-              <a
-                href="/about"
-                className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-[#8A9A5B] hover:text-white transition-colors gap-3"
-              >
-                Read Guides <span className="bg-[#8A9A5B]/20 w-6 h-6 rounded-full flex items-center justify-center text-[10px]">→</span>
-              </a>
-            </div>
-          </div>
-        </div>
+    <div className="relative">
+      {/* Organic wave — cream from the section above shows through the cut */}
+      <div className="bg-cream leading-[0]" aria-hidden>
+        <svg
+          className="block h-10 w-full text-charcoal sm:h-12 lg:h-16"
+          viewBox="0 0 1440 80"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="currentColor"
+            d="M0 52 C120 18 220 8 340 28 C460 48 520 72 660 58 C800 44 860 12 980 22 C1100 32 1220 58 1440 36 L1440 80 L0 80 Z"
+          />
+        </svg>
       </div>
-      </div>
-    </section>
+
+      <section className="relative -mt-px bg-charcoal py-24 text-cream lg:py-36">
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-16 max-w-2xl text-center md:mb-20 md:text-left lg:mb-24">
+            <h2 className="mb-5 [text-wrap:balance] font-display text-4xl leading-[1.1] text-mist md:text-5xl lg:text-6xl">
+              Everything you need behind your own&nbsp;bar.
+            </h2>
+            <div className="mx-auto h-1 w-20 rounded-full bg-terracotta md:mx-0" />
+          </div>
+
+          <div className="mb-16 grid gap-12 md:mb-20 md:grid-cols-3 md:gap-10 lg:gap-14">
+            {FEATURES.map((feature, index) => (
+              <div
+                key={feature.title}
+                className="border-t border-stone/20 pt-8 md:border-t-0 md:pt-0"
+              >
+                <p className="mb-4 font-mono text-xs font-bold uppercase tracking-widest text-stone">
+                  {String(index + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mb-4 font-display text-2xl text-cream sm:text-3xl">
+                  {feature.title}
+                </h3>
+                <p className="mb-7 max-w-sm leading-relaxed text-stone">
+                  {feature.body}
+                </p>
+                <Link
+                  href={feature.href}
+                  className={`inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest transition-colors hover:text-cream ${feature.accent}`}
+                >
+                  {feature.label}
+                  <span aria-hidden>→</span>
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          <AutoplayVideo
+            src="/media/cheers.mp4"
+            webmSrc="/media/cheers.webm"
+            poster="/media/cheers-poster.webp"
+            className="aspect-[21/9] rounded-[1.5rem] sm:aspect-[2.4/1] sm:rounded-[2rem]"
+            alt="Close-up of two people cheering cocktails in a bar"
+          />
+        </div>
+      </section>
+    </div>
   );
 }

@@ -1,53 +1,82 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useUser } from "@/components/auth/UserProvider";
 import { JoinCtaButton } from "@/components/auth/JoinCtaButton";
-import Link from "next/link";
 
 export function GuestExperienceSection() {
   const { isAuthenticated } = useUser();
 
-  // Only show for non-authenticated users
   if (isAuthenticated) {
     return null;
   }
 
   return (
-    <section className="py-12 lg:py-16 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 opacity-[0.03]">
-        <div className="absolute top-10 left-10 w-32 h-32 rounded-full border border-forest/20"></div>
-        <div className="absolute bottom-10 right-10 w-24 h-24 rounded-full border border-terracotta/20"></div>
-        <div className="absolute top-1/2 left-1/4 w-16 h-16 rounded-full border border-olive/20"></div>
-        <div className="absolute bottom-1/4 right-1/3 w-20 h-20 rounded-full border border-sage/20"></div>
-      </div>
+    <section className="relative overflow-x-clip bg-cream py-20 lg:py-28">
+      {/* Organic portrait mask — uneven hand-cut circle */}
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute h-0 w-0 overflow-hidden"
+      >
+        <defs>
+          <clipPath id="shelf-organic-mask" clipPathUnits="objectBoundingBox">
+            <path d="M0.52 0.02 C0.68 0.01 0.82 0.06 0.90 0.16 C0.98 0.27 1.01 0.42 0.99 0.55 C0.97 0.70 0.91 0.82 0.80 0.91 C0.68 0.99 0.52 1.02 0.38 0.98 C0.22 0.93 0.10 0.82 0.04 0.68 C-0.02 0.52 0.00 0.35 0.06 0.22 C0.13 0.08 0.30 0.03 0.52 0.02 Z" />
+          </clipPath>
+        </defs>
+      </svg>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        {/* Central content area */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-5xl xl:text-6xl font-display font-bold text-forest mb-6 leading-tight">
-            Start with what's
+      <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
+        <div className="relative z-10 lg:col-span-5 lg:pr-4 xl:pr-8">
+          <h2 className="mb-5 [text-wrap:balance] font-display text-3xl font-bold leading-tight text-forest lg:text-5xl">
+            Start with what&apos;s
             <br />
-            <span className="text-terracotta italic">already on the shelf</span>
+            <span className="italic text-terracotta">
+              already on your&nbsp;shelf
+            </span>
           </h2>
-
-          <p className="text-lg xl:text-xl text-sage max-w-2xl mx-auto leading-relaxed mb-8">
-            See what you can make tonight, pick up a new technique, and keep a running list of drinks worth repeating.
+          <p className="mb-8 max-w-md [text-wrap:pretty] text-lg leading-relaxed text-sage">
+            See what you can make&nbsp;tonight, pick up a new technique, and keep
+            a running list of drinks worth&nbsp;repeating.
           </p>
-
-          {/* Inline CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <JoinCtaButton
-              className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark transition-all duration-300 shadow-terracotta"
-            />
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+            <JoinCtaButton className="inline-flex items-center justify-center rounded-full bg-terracotta px-8 py-3 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark" />
             <Link
               href="/mix"
-              className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium border-2 border-forest text-forest hover:bg-forest hover:text-cream transition-all duration-300"
+              className="inline-flex items-center justify-center rounded-full border-2 border-forest px-8 py-3 text-sm font-medium text-forest transition-colors hover:bg-forest hover:text-cream"
             >
               Open your cabinet
             </Link>
           </div>
+        </div>
 
+        <div className="relative flex justify-center lg:col-span-7 lg:justify-end">
+          {/* Soft mist disc — anchors the cut silhouette to the composition */}
+          <div
+            aria-hidden
+            className="absolute left-1/2 top-1/2 h-[76%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-mist lg:left-auto lg:right-[8%] lg:translate-x-0"
+          />
+
+          <div
+            className="relative w-full max-w-md sm:max-w-lg lg:mr-4 lg:max-w-xl xl:mr-8"
+            style={{ filter: "drop-shadow(0 24px 40px rgba(58, 77, 57, 0.14))" }}
+          >
+            <div
+              className="relative aspect-square overflow-hidden"
+              style={{
+                clipPath: "url(#shelf-organic-mask)",
+                WebkitClipPath: "url(#shelf-organic-mask)",
+              }}
+            >
+              <Image
+                src="/media/kitchen-shelf.webp"
+                alt="Preparing cocktails at home with ingredients already on the counter"
+                fill
+                sizes="(max-width: 1024px) 90vw, 42vw"
+                className="object-cover object-[center_28%]"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </section>

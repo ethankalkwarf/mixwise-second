@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/common/Button";
+import { BrandLogo } from "@/components/common/BrandLogo";
 
 /**
  * Inner component that uses useSearchParams().
@@ -201,7 +202,9 @@ function ResetPasswordPageContent() {
     <div className="min-h-screen bg-gradient-to-br from-cream via-mint/20 to-cream flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-3xl shadow-card-hover p-8">
         <div className="text-center mb-8">
-          <span className="text-3xl font-display font-bold text-forest">mixwise.</span>
+          <div className="flex justify-center">
+            <BrandLogo size="lg" variant="dark" />
+          </div>
           <h1 className="text-xl font-display font-bold text-forest mt-4 mb-2">Reset Your Password</h1>
           <p className="text-sage text-sm">
             Enter your new password below
@@ -283,7 +286,9 @@ export default function ResetPasswordPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-br from-cream via-mint/20 to-cream flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-card-hover p-8 text-center">
-          <span className="text-3xl font-display font-bold text-forest">mixwise.</span>
+          <div className="flex justify-center mb-2">
+            <BrandLogo size="lg" variant="dark" linked={false} />
+          </div>
           <h1 className="text-xl font-display font-bold text-forest mt-4 mb-2">Reset Your Password</h1>
           <p className="text-sage text-sm">Loading your secure reset session…</p>
         </div>

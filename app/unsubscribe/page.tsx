@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { BrandLogo } from "@/components/common/BrandLogo";
 
 interface EmailPreferences {
   welcome_emails: boolean;
@@ -175,9 +176,9 @@ function UnsubscribeContent() {
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
       <div className="max-w-lg w-full bg-white rounded-3xl shadow-soft p-8 border border-mist">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
-            <span className="font-display text-3xl font-bold text-forest">mixwise.</span>
-          </Link>
+          <div className="mb-6 flex justify-center">
+            <BrandLogo size="lg" variant="dark" />
+          </div>
           <h1 className="text-2xl font-display font-bold text-forest mb-2">Email Preferences</h1>
           <p className="text-sage">Manage what we send to your inbox</p>
         </div>

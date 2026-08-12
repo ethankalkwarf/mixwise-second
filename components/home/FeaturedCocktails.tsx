@@ -11,18 +11,19 @@ interface FeaturedCocktailsProps {
 
 export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
   return (
-    <section className="bg-cream py-8 sm:py-12 lg:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-3">
-            Featured Recipes
+    <section className="bg-cream py-16 sm:py-20 lg:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-12 max-w-xl text-center sm:mx-auto lg:mb-14">
+          <h2 className="mb-3 [text-wrap:balance] font-display text-3xl font-bold text-forest sm:text-4xl">
+            Featured recipes
           </h2>
-          <p className="text-base text-sage max-w-xl mx-auto">
-            Handcrafted cocktails from our collection, perfect for any occasion.
+          <p className="[text-wrap:pretty] text-base leading-relaxed text-sage sm:text-lg">
+            A few drinks from the collection — worth making any night of
+            the&nbsp;week.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4 lg:gap-8 xl:grid-cols-5 2xl:grid-cols-6">
           {cocktails.map((cocktail, index) => (
             <FeaturedCocktailCard
               key={cocktail._id}
@@ -32,12 +33,12 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
           ))}
         </div>
 
-        <div className="text-center mt-10">
+        <div className="mt-12 text-center">
           <Link
             href="/cocktails"
-            className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-medium bg-forest text-cream hover:bg-charcoal transition-all duration-300"
+            className="inline-flex items-center justify-center rounded-full bg-forest px-7 py-3 text-sm font-medium text-cream transition-colors hover:bg-charcoal"
           >
-            View All Recipes
+            View all recipes
           </Link>
         </div>
       </div>
@@ -51,58 +52,48 @@ interface FeaturedCocktailCardProps {
 }
 
 function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps) {
-  const imageUrl = getImageUrl(cocktail.image, {
-    width: 400,
-    height: 300,
-    quality: 80,
-    auto: 'format'
-  }) || cocktail.externalImageUrl;
+  const imageUrl =
+    getImageUrl(cocktail.image, {
+      width: 400,
+      height: 300,
+      quality: 80,
+      auto: "format",
+    }) || cocktail.externalImageUrl;
 
   return (
     <Link
       href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-      className={`group relative flex flex-col bg-white rounded-2xl border border-mist overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta ${
-        isOffset ? 'lg:mt-8' : ''
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-mist bg-white transition-transform duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta ${
+        isOffset ? "lg:mt-8" : ""
       }`}
     >
-      {/* Image */}
-      <div className="bg-mist aspect-[4/3] overflow-hidden">
+      <div className="aspect-[4/3] overflow-hidden bg-mist">
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt={cocktail.name}
             width={400}
             height={300}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             placeholder="blur"
             blurDataURL={COCKTAIL_BLUR_DATA_URL}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-sage text-3xl">
-            🍸
-          </div>
+          <div className="h-full w-full bg-mist" />
         )}
       </div>
 
-      {/* Content */}
-      <div className="p-3 sm:p-4 flex-1">
-        <h3 className="font-display font-bold text-sm sm:text-base text-forest group-hover:text-terracotta transition-colors line-clamp-2">
+      <div className="flex-1 p-3 sm:p-4">
+        <h3 className="line-clamp-2 font-display text-sm font-bold text-forest transition-colors group-hover:text-terracotta sm:text-base">
           {cocktail.name}
         </h3>
 
-        {cocktail.primarySpirit && (
-          <p className="text-xs font-medium uppercase tracking-wide text-sage mt-1">
+        {cocktail.primarySpirit ? (
+          <p className="mt-1 text-xs font-medium uppercase tracking-wide text-sage">
             {cocktail.primarySpirit}
           </p>
-        )}
+        ) : null}
       </div>
-
-      {/* Featured Badge */}
-      {cocktail.isPopular && (
-        <div className="absolute top-2 right-2 bg-terracotta text-cream text-xs font-bold px-2 py-0.5 rounded-full">
-          ★
-        </div>
-      )}
     </Link>
   );
 }
