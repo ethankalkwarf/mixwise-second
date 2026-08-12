@@ -6,6 +6,7 @@ import { IngredientAvailability } from "@/components/cocktails/IngredientAvailab
 import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
 import Image from "next/image";
 import { OptimizedCocktailImage } from "@/components/cocktails/OptimizedCocktailImage";
+import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 import { RecipeActions } from "@/components/cocktails/RecipeActions";
 import { Button } from "@/components/common/Button";
 import { formatCocktailName } from "@/lib/formatters";
@@ -291,9 +292,7 @@ export function RecipeContent({
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                  No image available
-                </div>
+                <ComingSoonCocktailImage name={cocktail.name} />
               )}
             </div>
 
@@ -457,9 +456,7 @@ export function RecipeContent({
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground bg-gray-50">
-                        No image
-                      </div>
+                      <ComingSoonCocktailImage name={recipe.name} size="card" />
                     )}
                   </div>
                   <div className="p-4">

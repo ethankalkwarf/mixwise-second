@@ -7,6 +7,7 @@ import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIc
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { formatCocktailName } from "@/lib/formatters";
+import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
 
@@ -610,9 +611,7 @@ function CocktailCard({
             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80 group-hover:opacity-70 transition-opacity duration-300" />
           </>
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-sage text-5xl">
-            🍸
-          </div>
+          <ComingSoonCocktailImage name={cocktail.name} size="card" />
         )}
 
         {/* Badges */}

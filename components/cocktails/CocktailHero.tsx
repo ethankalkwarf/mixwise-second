@@ -2,6 +2,7 @@ import Image from "next/image";
 import { getImageUrl } from "@/lib/sanityImage";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import { BeakerIcon, Square3Stack3DIcon } from "@heroicons/react/24/outline";
+import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 
 interface CocktailHeroProps {
   cocktail: SanityCocktail;
@@ -36,9 +37,7 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAoACgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAMEB//EACUQAAIBAwMEAwEBAAAAAAAAAAECAwAEEQUSITFBURNhcZEigf/EABUBAFEAAAAAAAAAAAAAAAAAAAH/xAAVEQEBAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACEQMRAD8A4+iiigAooooAKKKKACiiigAooooAKKKKACiiigD/2Q=="
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-sage text-6xl">
-              🍸
-            </div>
+            <ComingSoonCocktailImage name={cocktail.name} />
           )}
 
         </div>

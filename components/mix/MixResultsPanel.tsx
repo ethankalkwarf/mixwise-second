@@ -7,6 +7,7 @@ import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/so
 import Link from "next/link";
 import Image from "next/image";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
+import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 
 type Props = {
   inventoryIds: string[];
@@ -378,9 +379,7 @@ function CocktailCard({
             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
           </>
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-sage text-5xl" aria-hidden="true">
-            🥃
-          </div>
+          <ComingSoonCocktailImage name={cocktail.name} size="card" />
         )}
 
         {/* Status Badges */}
