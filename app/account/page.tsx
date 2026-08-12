@@ -27,7 +27,6 @@ import {
   LockClosedIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
-import { NotificationSettings } from "@/components/mobile/NotificationSettings";
 
 // Simple query to get all ingredient names
 const INGREDIENT_NAMES_QUERY = `*[_type == "ingredient"] { _id, name }`;
