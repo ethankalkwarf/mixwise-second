@@ -10,10 +10,6 @@ import { RecipeActions } from "@/components/cocktails/RecipeActions";
 import { Button } from "@/components/common/Button";
 import { formatCocktailName } from "@/lib/formatters";
 import {
-  BeakerIcon,
-  SparklesIcon,
-  CpuChipIcon,
-  ChartBarIcon,
   ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
 import type { MatchedIngredient } from "@/lib/ingredientMatching";
@@ -200,8 +196,7 @@ export function RecipeContent({
             {/* Base Spirit */}
             {cocktail.base_spirit && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <BeakerIcon className="w-4 h-4 text-sage" />
+                <div className="mb-2">
                   <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                     Base spirit
                   </span>
@@ -217,8 +212,7 @@ export function RecipeContent({
             {/* Style */}
             {cocktail.category_primary && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <SparklesIcon className="w-4 h-4 text-sage" />
+                <div className="mb-2">
                   <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                     Style
                   </span>
@@ -234,8 +228,7 @@ export function RecipeContent({
             {/* Glassware */}
             {cocktail.glassware && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <CpuChipIcon className="w-4 h-4 text-sage" />
+                <div className="mb-2">
                   <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                     Glassware
                   </span>

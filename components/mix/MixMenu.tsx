@@ -5,7 +5,7 @@ import { MixResultsPanel } from "./MixResultsPanel";
 import { YourBarPanel } from "./YourBarPanel";
 import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
 import { getMixMatchGroups } from "@/lib/mixMatching";
-import { ArrowPathIcon, LightBulbIcon, SparklesIcon, PlusIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, LightBulbIcon, PlusIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useShoppingList } from "@/hooks/useShoppingList";
 
@@ -134,8 +134,7 @@ export function MixMenu({
 
           {/* Quick Actions */}
           <div className="bg-white border border-mist rounded-3xl p-6">
-            <h3 className="font-semibold text-forest mb-4 flex items-center gap-2">
-              <SparklesIcon className="w-5 h-5 text-terracotta" />
+            <h3 className="font-semibold text-forest mb-4">
               Quick Actions
             </h3>
             <div className="space-y-3">

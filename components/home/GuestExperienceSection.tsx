@@ -25,13 +25,13 @@ export function GuestExperienceSection() {
         {/* Central content area */}
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-5xl xl:text-6xl font-display font-bold text-forest mb-6 leading-tight">
-            Your Mixology Journey
+            Start with what's
             <br />
-            <span className="text-terracotta italic">Begins Here</span>
+            <span className="text-terracotta italic">already on the shelf</span>
           </h2>
 
           <p className="text-lg xl:text-xl text-sage max-w-2xl mx-auto leading-relaxed mb-8">
-            Transform your home bar into a source of endless inspiration. Discover recipes, master techniques, and create unforgettable moments.
+            See what you can make tonight, pick up a new technique, and keep a running list of drinks worth repeating.
           </p>
 
           {/* Inline CTAs */}
@@ -40,13 +40,13 @@ export function GuestExperienceSection() {
               href="/auth"
               className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium bg-terracotta text-cream hover:bg-terracotta-dark transition-all duration-300 shadow-terracotta"
             >
-              Start Your Journey
+              Create a free account
             </Link>
             <Link
               href="/mix"
               className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-medium border-2 border-forest text-forest hover:bg-forest hover:text-cream transition-all duration-300"
             >
-              Explore Recipes
+              Open your cabinet
             </Link>
           </div>
 

@@ -10,7 +10,6 @@ const FOOTER_LINKS = {
   ],
   learn: [
     { label: "About", href: "/about" },
-    { label: "Account Benefits", href: "/account-benefits" },
     { label: "Contact", href: "/contact" },
   ],
   legal: [
@@ -31,7 +30,7 @@ export function SiteFooter() {
               <BrandLogo variant="light" size="lg" />
             </div>
             <p className="text-stone text-sm leading-relaxed max-w-sm mb-6">
-              A smarter way to make cocktails at home. Discover recipes, learn techniques, 
+              A home bar, made easier. Discover recipes, learn techniques,
               and find drinks you can make with what you have.
             </p>
           </div>

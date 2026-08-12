@@ -26,7 +26,6 @@ import {
   HeartIcon,
   ClockIcon,
   TrophyIcon,
-  SparklesIcon,
   ShareIcon,
   ArrowRightIcon,
   PlusCircleIcon,
@@ -451,7 +450,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between p-6 border-b border-mist">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center">
-                    <SparklesIcon className="w-5 h-5 text-olive" />
+                    <BeakerIcon className="w-5 h-5 text-olive" />
                   </div>
                   <div>
                     <h2 className="text-xl font-display font-bold text-forest">

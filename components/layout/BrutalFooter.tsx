@@ -17,7 +17,7 @@ export function BrutalFooter() {
               </span>
             </Link>
             <p className="mt-4 text-sm font-medium text-brutal-black/70 max-w-xs">
-              A smarter way to make cocktails at home. Find recipes, discover what you can make, and level up your mixology skills.
+              A home bar, made easier. Find recipes, see what you can make, and get more comfortable behind the bar.
             </p>
           </div>
 
@@ -74,14 +74,6 @@ export function BrutalFooter() {
                   className="text-sm font-bold text-brutal-black/70 hover:text-brutal-blue transition-colors"
                 >
                   About
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="/account-benefits" 
-                  className="text-sm font-bold text-brutal-black/70 hover:text-brutal-blue transition-colors"
-                >
-                  Account Benefits
                 </Link>
               </li>
               <li>

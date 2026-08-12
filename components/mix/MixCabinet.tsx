@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { MixIngredient } from "@/lib/mixTypes";
-import { PlusIcon, SparklesIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { formatIngredientCategory } from "@/lib/formatters";
@@ -192,7 +192,7 @@ export function MixCabinet({
           <div className="bg-gradient-to-r from-terracotta/5 to-olive/5 border border-terracotta/20 rounded-3xl p-4 sm:p-6 mb-6 overflow-hidden">
             <div className="flex items-center gap-3 mb-4 min-w-0">
               <div className="w-10 h-10 flex-shrink-0 bg-terracotta/20 rounded-xl flex items-center justify-center">
-                <SparklesIcon className="w-5 h-5 text-terracotta" />
+                <PlusIcon className="w-5 h-5 text-terracotta" />
               </div>
               <div className="min-w-0">
                 <h2 className="text-lg font-display font-bold text-forest">Start with the Basics</h2>

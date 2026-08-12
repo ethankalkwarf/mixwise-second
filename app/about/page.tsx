@@ -2,49 +2,41 @@ import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { WebPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { generatePageMetadata, SITE_CONFIG } from "@/lib/seo";
-import {
-  BeakerIcon,
-  SparklesIcon,
-  HomeIcon,
-} from "@heroicons/react/24/outline";
 
 const FEATURES = [
   {
-    icon: SparklesIcon,
-    title: "Smarter discovery",
-    description: "Browse curated recipes, find new favorites, and use powerful filters to narrow in on the perfect drink for any night.",
-    color: "text-olive",
-    bgColor: "bg-olive/10",
+    number: "01",
+    title: "Find drinks worth making",
+    description:
+      "A curated library of recipes you can actually browse — by spirit, occasion, or whatever sounds good tonight.",
   },
   {
-    icon: BeakerIcon,
-    title: "Ingredient-aware mixing",
-    description: "Tell MixWise what you have on hand, and we will highlight cocktails you can make now and what to buy next.",
-    color: "text-terracotta",
-    bgColor: "bg-terracotta/10",
+    number: "02",
+    title: "Mix with what you have",
+    description:
+      "Add the bottles in your cabinet. See which cocktails you can make now, and what's worth picking up next.",
   },
   {
-    icon: HomeIcon,
-    title: "Built for home bartenders",
-    description: "Designed for real home setups, not professional bars. Learn techniques, build confidence, and enjoy the process.",
-    color: "text-forest",
-    bgColor: "bg-forest/10",
+    number: "03",
+    title: "Built for a real kitchen",
+    description:
+      "Designed for home setups, not a professional bar. Learn the techniques, skip the intimidation, enjoy the pour.",
   },
 ];
 
 export const metadata: any = generatePageMetadata({
   title: "About",
-  description: "MixWise is your smart home bar partner. Discover cocktails, manage ingredients, and master mixology with confidence.",
+  description:
+    "MixWise helps you make better drinks at home. Browse curated recipes, mix with what you have, and build confidence behind your own bar.",
   path: "/about",
 });
 
 export default function AboutPage() {
   return (
     <>
-      {/* JSON-LD Structured Data */}
       <WebPageSchema
         title="About MixWise"
-        description="MixWise is your smart home bar partner. Discover cocktails, manage ingredients, and master mixology with confidence."
+        description="MixWise helps you make better drinks at home. Browse curated recipes, mix with what you have, and build confidence behind your own bar."
         url={`${SITE_CONFIG.url}/about`}
       />
       <BreadcrumbSchema
@@ -56,14 +48,13 @@ export default function AboutPage() {
 
       <div className="py-12 sm:py-16 bg-cream min-h-screen">
         <MainContainer>
-          {/* Hero Section */}
           <div className="text-center mb-16">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-forest mb-6">
               About MixWise
             </h1>
 
             <p className="text-base sm:text-lg text-sage max-w-2xl mx-auto mb-8">
-              Your smart home bar partner.
+              Recipes, your cabinet, and a little more confidence.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -71,36 +62,33 @@ export default function AboutPage() {
                 href="/mix"
                 className="px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-full transition-colors shadow-terracotta"
               >
-                Try MixWise
+                Open your cabinet
               </Link>
               <Link
                 href="/cocktails"
                 className="px-6 py-3 bg-white hover:bg-mist text-forest font-bold rounded-full border border-mist transition-colors"
               >
-                Browse Recipes
+                Browse recipes
               </Link>
             </div>
           </div>
 
-          {/* What MixWise Does */}
-          <div className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-8 text-center">
+          <div className="mb-20">
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-4 text-center">
               What MixWise does
             </h2>
+            <div className="h-1 w-16 bg-terracotta rounded-full mx-auto mb-12" />
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {FEATURES.map((feature, index) => (
-                <div
-                  key={index}
-                  className="p-6 bg-white border border-mist rounded-2xl hover:shadow-card transition-all"
-                >
-                  <div className={`inline-flex p-3 rounded-xl ${feature.bgColor} mb-4`}>
-                    <feature.icon className={`w-6 h-6 ${feature.color}`} />
-                  </div>
-                  <h3 className="text-lg font-display font-bold text-forest mb-2">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-14">
+              {FEATURES.map((feature) => (
+                <div key={feature.number} className="pt-6 border-t border-forest/15">
+                  <span className="block font-mono text-xs font-bold text-terracotta uppercase tracking-widest mb-3">
+                    {feature.number}
+                  </span>
+                  <h3 className="text-xl font-display font-bold text-forest mb-3">
                     {feature.title}
                   </h3>
-                  <p className="text-sage text-sm leading-relaxed">
+                  <p className="text-sage leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -108,7 +96,6 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Why We Built MixWise */}
           <div className="bg-white border border-mist rounded-3xl p-8 sm:p-12 mb-16 shadow-soft">
             <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-6 text-center">
               Why we built MixWise
@@ -120,14 +107,13 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* What's Ahead */}
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-4">
               What's ahead
             </h2>
             <p className="text-sage mb-8 max-w-2xl mx-auto">
-              We are always refining MixWise with new recipes, smarter recommendations, and features to support
-              serious home bartenders. You can start with today's features and grow with us as we evolve.
+              We're adding recipes, tightening recommendations, and building the extras serious home bartenders
+              actually want. Start with what's here today and grow with us.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -135,13 +121,13 @@ export default function AboutPage() {
                 href="/mix"
                 className="px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-full transition-colors shadow-terracotta"
               >
-                Get Started Today
+                Start mixing
               </Link>
               <Link
                 href="/cocktails"
                 className="px-6 py-3 bg-white hover:bg-mist text-forest font-bold rounded-full border border-mist transition-colors"
               >
-                Explore Cocktails
+                Explore cocktails
               </Link>
             </div>
           </div>
@@ -150,4 +136,3 @@ export default function AboutPage() {
     </>
   );
 }
-

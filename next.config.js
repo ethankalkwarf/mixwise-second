@@ -70,6 +70,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/account-benefits',
+        destination: '/about',
+        permanent: true,
+      },
+    ];
+  },
   // Enable headers for better caching
   async headers() {
     return [

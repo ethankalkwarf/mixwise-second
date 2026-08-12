@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { MixIngredient } from "@/lib/mixTypes";
-import { XMarkIcon, ArrowRightIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 
 type OnboardingStep = {
   id: string;
@@ -207,7 +207,6 @@ export function MixOnboardingDialog({
           <div className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
-                <SparklesIcon className="w-5 h-5 text-terracotta" />
                 <span className="text-sm font-bold text-terracotta">
                   Step {currentStep + 1} of {ONBOARDING_STEPS.length}
                 </span>

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useUser } from "./UserProvider";
 import { useAuthDialog } from "./AuthDialogProvider";
 import { Dialog, Transition } from "@headlessui/react";
-import { XMarkIcon, SparklesIcon, ClockIcon, HeartIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, ClockIcon, HeartIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Fragment } from "react";
 
 interface SignupPromptProps {
@@ -70,7 +70,7 @@ export function SignupPrompt({ delay = 7000, enabled = true }: SignupPromptProps
   const handleSignup = () => {
     openSignupDialog({
       title: "Create your free MixWise account",
-      subtitle: "Join thousands of cocktail enthusiasts and unlock personalized recommendations!",
+      subtitle: "Save your cabinet, favorites, and the drinks you've tried.",
       onSuccess: () => {
         setIsVisible(false);
         // Mark as dismissed to prevent showing again
@@ -126,14 +126,11 @@ export function SignupPrompt({ delay = 7000, enabled = true }: SignupPromptProps
 
                 {/* Header */}
                 <div className="text-center mb-6">
-                  <div className="mx-auto w-16 h-16 bg-terracotta/10 rounded-full flex items-center justify-center mb-4">
-                    <SparklesIcon className="w-8 h-8 text-terracotta" />
-                  </div>
                   <Dialog.Title className="text-xl font-serif font-bold text-forest mb-2">
-                    Ready to Mix Like a Pro?
+                    Keep your bar in one place
                   </Dialog.Title>
                   <p className="text-sage text-sm">
-                    Join MixWise and discover cocktails you'll love!
+                    Save your cabinet, favorites, and the drinks you've already tried.
                   </p>
                 </div>
 
@@ -145,7 +142,7 @@ export function SignupPrompt({ delay = 7000, enabled = true }: SignupPromptProps
                   </div>
                   <div className="flex items-center gap-3 text-sm text-charcoal">
                     <MagnifyingGlassIcon className="w-4 h-4 text-olive flex-shrink-0" />
-                    <span>Get personalized recommendations</span>
+                    <span>Suggestions from your cabinet</span>
                   </div>
                   <div className="flex items-center gap-3 text-sm text-charcoal">
                     <ClockIcon className="w-4 h-4 text-olive flex-shrink-0" />
@@ -159,8 +156,7 @@ export function SignupPrompt({ delay = 7000, enabled = true }: SignupPromptProps
                     onClick={handleSignup}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20"
                   >
-                    <SparklesIcon className="w-4 h-4" />
-                    Create Free Account
+                    Create a free account
                   </button>
                   <button
                     onClick={handleDismiss}
