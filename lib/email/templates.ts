@@ -213,13 +213,13 @@ const baseStyles = `
       margin: 32px 0;
     }
     
-    /* Info box */
+    /* Info box — flat, no left accent bar */
     .info-box {
       background-color: #F9F7F2;
       border-radius: 12px;
       padding: 20px;
       margin: 24px 0;
-      border-left: 4px solid #8A9A5B;
+      border: 1px solid #E6EBE4;
     }
     
     .info-box p {
@@ -374,7 +374,7 @@ export function confirmEmailTemplate({
             You're just one step away from discovering your next favorite cocktail. Confirm your email to unlock:
           </p>
           
-          <div class="info-box" style="background-color: #F9F7F2; border-radius: 12px; padding: 20px; margin: 24px 0; border-left: 4px solid #8A9A5B;">
+          <div class="info-box" style="background-color: #F9F7F2; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #E6EBE4;">
             <p style="margin: 0 0 8px 0; font-size: 14px; color: #3A4D39;">✦ <strong>Personalized recommendations</strong> based on your taste</p>
             <p style="margin: 0 0 8px 0; font-size: 14px; color: #3A4D39;">✦ <strong>Save your favorite recipes</strong> for easy access</p>
             <p style="margin: 0; font-size: 14px; color: #3A4D39;">✦ <strong>Build your home bar inventory</strong> and see what you can make</p>
@@ -532,7 +532,7 @@ export function resetPasswordTemplate({
             </p>
           </div>
           
-          <div class="info-box" style="background-color: #F9F7F2; border-radius: 12px; padding: 20px; margin: 24px 0; border-left: 4px solid #8A9A5B;">
+          <div class="info-box" style="background-color: #F9F7F2; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #E6EBE4;">
             <p style="margin: 0; font-size: 14px; color: #3A4D39;">
               <strong>Didn't request this?</strong> You can safely ignore this email and your password will remain unchanged.
             </p>
@@ -770,7 +770,7 @@ Unsubscribe: ${unsubscribeUrl}
 
 /**
  * Weekly digest email template
- * Sent every Sunday with personalized cocktail recommendations
+ * Sent every Thursday with personalized cocktail recommendations
  */
 export function weeklyDigestTemplate({
   displayName,
@@ -878,7 +878,7 @@ export function weeklyDigestTemplate({
       <tr>
         <td class="email-content" style="padding: 48px 40px;">
           <h2 style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 8px 0; font-weight: 400;">
-            Happy Sunday, ${displayName}! 🌿
+            Happy Thursday, ${displayName}! 🌿
           </h2>
           
           <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 24px 0; line-height: 1.65;">
@@ -950,7 +950,7 @@ export function weeklyDigestTemplate({
   const text = `
 Your Weekly MixWise Digest 🍸
 
-Happy Sunday, ${displayName}!
+Happy Thursday, ${displayName}!
 
 Here's your weekly cocktail inspiration based on your bar with ${barIngredientCount} ingredients.
 
@@ -1177,8 +1177,7 @@ export function thirstyThursdayWelcomeTemplate({
       border-radius: 16px;
       padding: 20px;
       margin: 12px 0;
-      border-left: 4px solid;
-      border-image: linear-gradient(135deg, #ec4899, #a855f7, #f97316) 1;
+      border: 1px solid #E6EBE4;
     }
   </style>
 </head>
@@ -1245,7 +1244,7 @@ export function thirstyThursdayWelcomeTemplate({
           ` : ''}
           
           <!-- What to Expect -->
-          <div class="feature-box" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%); border-radius: 16px; padding: 20px; margin: 0 0 16px 0; border-left: 4px solid #ec4899;">
+          <div class="feature-box" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%); border-radius: 16px; padding: 20px; margin: 0 0 16px 0; border: 1px solid #E6EBE4;">
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
               <tr>
                 <td style="width: 48px; vertical-align: top;">
@@ -1259,7 +1258,7 @@ export function thirstyThursdayWelcomeTemplate({
             </table>
           </div>
           
-          <div class="feature-box" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%); border-radius: 16px; padding: 20px; margin: 0 0 16px 0; border-left: 4px solid #a855f7;">
+          <div class="feature-box" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%); border-radius: 16px; padding: 20px; margin: 0 0 16px 0; border: 1px solid #E6EBE4;">
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
               <tr>
                 <td style="width: 48px; vertical-align: top;">
@@ -1273,7 +1272,7 @@ export function thirstyThursdayWelcomeTemplate({
             </table>
           </div>
           
-          <div class="feature-box" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%); border-radius: 16px; padding: 20px; margin: 0 0 32px 0; border-left: 4px solid #f97316;">
+          <div class="feature-box" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(249, 115, 22, 0.05) 100%); border-radius: 16px; padding: 20px; margin: 0 0 32px 0; border: 1px solid #E6EBE4;">
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
               <tr>
                 <td style="width: 48px; vertical-align: top;">

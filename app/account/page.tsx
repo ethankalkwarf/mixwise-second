@@ -910,7 +910,7 @@ export default function AccountPage() {
                   <div>
                     <h3 className="font-semibold text-forest">Weekly Digest</h3>
                     <p className="text-sm text-sage">
-                      Cocktails you can make, featured recipes, and inspiration every Sunday
+                      Cocktails you can make, featured recipes, and inspiration every Thursday at 5pm ET
                     </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -946,11 +946,6 @@ export default function AccountPage() {
                 </div>
               </div>
             )}
-          </section>
-
-          {/* Mobile Notification Settings */}
-          <section className="section-botanical">
-            <NotificationSettings />
           </section>
 
           {/* Achievements */}

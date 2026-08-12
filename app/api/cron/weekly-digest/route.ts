@@ -1,7 +1,7 @@
 /**
  * Weekly Digest Cron Job
  *
- * Runs every Sunday at 10:00 AM UTC
+ * Runs every Thursday at 21:00 UTC (5:00 PM Eastern during EDT / 4:00 PM during EST)
  * Sends personalized cocktail recommendations based on user's bar ingredients
  */
 

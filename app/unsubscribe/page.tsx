@@ -188,7 +188,7 @@ function UnsubscribeContent() {
             <div className="space-y-4 mb-8">
               <PreferenceToggle
                 label="Weekly digest"
-                description="Sunday cocktail inspiration based on your bar"
+                description="Thursday cocktail inspiration based on your bar — weekend-ready at 5pm ET"
                 checked={preferences.weekly_digest}
                 onChange={() => handlePreferenceChange("weekly_digest")}
               />
