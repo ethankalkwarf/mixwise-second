@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { MixResultsPanel } from "@/components/mix/MixResultsPanel";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
 import { CategoryPicker } from "@/components/mix/CategoryPicker";
 import { IngredientTile } from "@/components/mix/IngredientTile";
@@ -387,16 +386,16 @@ function MixPageContent() {
   };
 
   return (
-    <div className="py-6 bg-cream min-h-screen pb-24">
+    <div className="py-6 bg-cream min-h-screen pb-24 overflow-x-hidden">
       {/* Page Header - Matching website aesthetic */}
       <MainContainer className="mb-10">
         <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-forest">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 min-w-0">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-forest min-w-0">
               MixWise Bar Builder
             </h1>
             {ingredientIds.length === 0 && (
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
                 <div className={`px-3 py-1 rounded-full text-sm font-bold ${
                   currentStep === 'cabinet'
                     ? 'bg-terracotta text-white'
@@ -432,7 +431,7 @@ function MixPageContent() {
 
         {/* Progress Actions */}
         {ingredientIds.length > 0 && currentStep !== 'menu' && (
-          <div className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start mb-6 min-w-0">
             {/* Ready to Mix Button */}
             <button
               onClick={() => {
@@ -443,14 +442,14 @@ function MixPageContent() {
                   setCurrentStep('menu');
                 }, 2000);
               }}
-              className="px-8 py-4 bg-terracotta text-cream rounded-2xl font-bold text-lg shadow-lg hover:bg-terracotta-dark transition-all hover:scale-105 flex items-center gap-2"
+              className="w-full sm:w-auto max-w-full px-6 sm:px-8 py-4 bg-terracotta text-cream rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:bg-terracotta-dark transition-all sm:hover:scale-[1.02] flex items-center justify-center gap-2 text-center"
             >
-              🎉 Ready to Mix! See Your Cocktails →
+              <span className="min-w-0">🎉 Ready to Mix! See Your Cocktails →</span>
             </button>
 
             {/* Cocktail Counter */}
             {matchCounts.canMake > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-olive/10 border border-olive/30 rounded-xl">
+              <div className="flex items-center justify-center gap-2 px-4 py-2 bg-olive/10 border border-olive/30 rounded-xl flex-shrink-0">
                 <span className="text-2xl">🍸</span>
                 <span className="font-bold text-olive">{matchCounts.canMake}</span>
                 <span className="text-sage">cocktails ready</span>
@@ -461,7 +460,7 @@ function MixPageContent() {
       </MainContainer>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="flex-1 min-w-0 overflow-x-hidden">
         {renderStepContent()}
       </main>
 
@@ -539,7 +538,7 @@ function MixPageContent() {
 
       {/* Save Bar Prompt for Anonymous Users */}
       {showSavePrompt && !isAuthenticated && (
-        <div className="fixed bottom-20 left-4 right-4 lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm bg-white/95 backdrop-blur-md border-2 border-olive/40 rounded-2xl p-4 shadow-xl z-40">
+        <div className="fixed bottom-24 left-4 right-4 lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm bg-white/95 backdrop-blur-md border-2 border-olive/40 rounded-2xl p-4 shadow-xl z-40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center border border-olive/30">
               <BookmarkIcon className="w-5 h-5 text-olive" />

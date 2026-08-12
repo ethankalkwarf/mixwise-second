@@ -131,6 +131,8 @@ export function MixCabinet({
     "creme de cacao": "🥜", // Chocolate/nut for crème de cacao
     "aperol": "🍊", // Orange for Aperol
     "campari": "🍊", // Orange/red for Campari
+    "jagermeister": "🦌", // Stag for Jägermeister
+    "jägermeister": "🦌",
 
     // Mixers
     "cola": "🥤", // Glass for cola
@@ -182,37 +184,37 @@ export function MixCabinet({
   ];
 
   return (
-    <MainContainer className="py-6 pb-24 lg:pb-6">
+    <MainContainer className="py-6 pb-24 lg:pb-6 overflow-x-hidden">
 
       {/* Popular Ingredients Quick Add */}
       {popularAvailable.length > 0 && (
-        <section className="mb-8">
-          <div className="bg-gradient-to-r from-terracotta/5 to-olive/5 border border-terracotta/20 rounded-3xl p-6 mb-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-terracotta/20 rounded-xl flex items-center justify-center">
+        <section className="mb-8 min-w-0">
+          <div className="bg-gradient-to-r from-terracotta/5 to-olive/5 border border-terracotta/20 rounded-3xl p-4 sm:p-6 mb-6 overflow-hidden">
+            <div className="flex items-center gap-3 mb-4 min-w-0">
+              <div className="w-10 h-10 flex-shrink-0 bg-terracotta/20 rounded-xl flex items-center justify-center">
                 <SparklesIcon className="w-5 h-5 text-terracotta" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-lg font-display font-bold text-forest">Start with the Basics</h2>
                 <p className="text-sm text-sage">Add these essentials to unlock your first cocktails</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 min-w-0">
               {popularAvailable.slice(0, 8).map((ingredient) => (
                 <button
                   key={ingredient!.id}
                   onClick={() => handleAddWithFeedback(ingredient!.id)}
-                  className={`p-3 rounded-xl border-2 text-sm font-medium transition-all hover:scale-105 active:scale-95 ${
+                  className={`p-3 rounded-xl border-2 text-sm font-medium transition-all hover:scale-[1.02] active:scale-95 min-w-0 overflow-hidden ${
                     addedIngredient === ingredient!.id
                       ? 'bg-olive text-white border-olive shadow-lg'
                       : 'bg-white border-mist text-forest hover:border-terracotta hover:bg-terracotta/5'
                   }`}
                 >
-                  <div className="text-center">
+                  <div className="text-center min-w-0">
                     <div className="text-lg mb-1">
                       {getIngredientEmoji(ingredient!)}
                     </div>
-                    <div className="font-semibold">{ingredient!.name}</div>
+                    <div className="font-semibold truncate">{ingredient!.name}</div>
                   </div>
                 </button>
               ))}
@@ -378,8 +380,8 @@ export function MixCabinet({
       ) : (
         <section>
           {/* Category/Results Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 min-w-0">
+            <div className="min-w-0">
               <h2 className="text-xl font-display font-bold text-forest">
                 {formatIngredientCategory(selectedCategory)}
               </h2>
@@ -393,7 +395,7 @@ export function MixCabinet({
                   onSelectCategory(null);
                   setSearchQuery("");
                 }}
-                className="px-6 py-3 bg-white border-2 border-terracotta/30 rounded-xl text-terracotta hover:bg-terracotta hover:text-cream font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 bg-white border-2 border-terracotta/30 rounded-xl text-terracotta hover:bg-terracotta hover:text-cream font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 flex-shrink-0"
               >
                 ← Back to All Categories
               </button>

@@ -119,10 +119,10 @@ export function MixMenu({
   }, [selectedIngredients]);
 
   return (
-    <MainContainer className="py-6">
-      <div className="grid lg:grid-cols-[300px_1fr] gap-8">
+    <MainContainer className="py-6 overflow-x-hidden">
+      <div className="grid lg:grid-cols-[300px_minmax(0,1fr)] gap-8">
         {/* Left Sidebar - Your Bar */}
-        <aside className="lg:sticky lg:top-24 space-y-6">
+        <aside className="lg:sticky lg:top-24 space-y-6 min-w-0">
         <YourBarPanel
           selectedIngredients={selectedIngredients}
           onRemove={onRemoveIngredient}
@@ -143,8 +143,8 @@ export function MixMenu({
                 onClick={() => setShowAllRecipes(!showAllRecipes)}
                 className="w-full text-left p-3 rounded-xl border border-mist hover:border-olive/30 hover:bg-olive/5 transition-all group"
               >
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="min-w-0">
                     <div className="font-medium text-forest text-sm">
                       {showAllRecipes ? "Show My Matches" : "Browse All Recipes"}
                     </div>
@@ -152,7 +152,7 @@ export function MixMenu({
                       {showAllRecipes ? "Filter by your ingredients" : "Explore the full library"}
                     </div>
                   </div>
-                  <ArrowPathIcon className="w-4 h-4 text-sage group-hover:text-olive" />
+                  <ArrowPathIcon className="w-4 h-4 text-sage group-hover:text-olive flex-shrink-0" />
                 </div>
               </button>
 
@@ -160,8 +160,8 @@ export function MixMenu({
                 onClick={() => window.location.href = '/mix'}
                 className="w-full text-left p-3 rounded-xl border border-mist hover:border-olive/30 hover:bg-olive/5 transition-all group"
               >
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="min-w-0">
                     <div className="font-medium text-forest text-sm">
                       Add more ingredients
                     </div>
@@ -169,7 +169,7 @@ export function MixMenu({
                       Return to ingredient selector
                     </div>
                   </div>
-                  <PlusIcon className="w-4 h-4 text-sage group-hover:text-olive" />
+                  <PlusIcon className="w-4 h-4 text-sage group-hover:text-olive flex-shrink-0" />
                 </div>
               </button>
 
@@ -178,16 +178,16 @@ export function MixMenu({
                   onClick={() => window.location.href = `/cocktails/${randomSuggestion.slug}`}
                   className="w-full text-left p-3 rounded-xl border border-mist hover:border-terracotta/30 hover:bg-terracotta/5 transition-all group"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <div className="min-w-0">
                       <div className="font-medium text-forest text-sm">
                         Surprise Me! 🍸
                       </div>
-                      <div className="text-xs text-sage">
+                      <div className="text-xs text-sage truncate">
                         {randomSuggestion.name}
                       </div>
                     </div>
-                    <LightBulbIcon className="w-4 h-4 text-sage group-hover:text-terracotta" />
+                    <LightBulbIcon className="w-4 h-4 text-sage group-hover:text-terracotta flex-shrink-0" />
                   </div>
                 </button>
               )}
@@ -195,8 +195,8 @@ export function MixMenu({
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="space-y-8">
+        {/* Main Content — min-w-0 prevents Ready to Mix grid from overflowing the page */}
+        <main className="space-y-8 min-w-0 overflow-x-hidden">
 
 
           {/* Cocktail Results */}
@@ -226,24 +226,24 @@ export function MixMenu({
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 min-w-0">
                 {almostThereCocktails.map(({ cocktail, missingIngredient }) => (
                   <div
                     key={cocktail.id}
-                    className="bg-white border border-mist rounded-2xl p-4 hover:shadow-md transition-shadow"
+                    className="bg-white border border-mist rounded-2xl p-4 hover:shadow-md transition-shadow min-w-0 overflow-hidden"
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-4 min-w-0">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-forest text-lg leading-tight mb-2">
+                        <h3 className="font-bold text-forest text-lg leading-tight mb-2 break-words">
                           {cocktail.name}
                         </h3>
-                        <div className="text-sm text-sage mb-3">
+                        <div className="text-sm text-sage mb-3 break-words">
                           Missing: <span className="font-medium text-terracotta">{missingIngredient?.name}</span>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 min-w-0">
                           <button
                             onClick={() => onAddToInventory(missingIngredient!.id)}
-                            className="flex-1 bg-terracotta/10 text-terracotta border border-terracotta/20 rounded-xl py-2 px-4 text-sm font-medium hover:bg-terracotta hover:text-cream transition-all"
+                            className="flex-1 min-w-0 bg-terracotta/10 text-terracotta border border-terracotta/20 rounded-xl py-2 px-3 text-sm font-medium hover:bg-terracotta hover:text-cream transition-all truncate"
                           >
                             Add {missingIngredient?.name} & Unlock
                           </button>

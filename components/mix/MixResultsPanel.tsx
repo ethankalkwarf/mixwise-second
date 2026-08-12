@@ -118,17 +118,17 @@ export function MixResultsPanel({
   }, [almostThere, allIngredients]);
 
   return (
-    <section className="space-y-10 pb-24" aria-label="Cocktail results">
+    <section className="space-y-10 pb-24 min-w-0" aria-label="Cocktail results">
       {/* Header & Search */}
-      <div>
+      <div className="min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest">
+          <div className="flex items-center gap-3 min-w-0">
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-forest truncate">
               {showAllRecipes ? "All Recipes" : "Ready to Mix"}
             </h2>
             {displayedDrinks.length > 0 && (
               <span
-                className={`px-3 py-1 rounded-full text-base font-bold font-mono border ${
+                className={`flex-shrink-0 px-3 py-1 rounded-full text-base font-bold font-mono border ${
                   showAllRecipes
                     ? "bg-sage/10 border-sage/20 text-sage"
                     : "bg-olive/10 border-olive/20 text-olive"
@@ -145,7 +145,7 @@ export function MixResultsPanel({
         {/* Category Filters */}
         {displayedDrinks.length > 0 && availableCategories.length > 0 && (
           <div 
-            className="flex gap-2 overflow-x-auto scrollbar-none pb-4 -mx-1 px-1"
+            className="flex gap-2 overflow-x-auto scrollbar-none pb-4 max-w-full"
             role="tablist"
             aria-label="Filter by spirit"
           >
@@ -182,18 +182,18 @@ export function MixResultsPanel({
         {/* Empty State */}
         {displayedDrinks.length === 0 && (
           <div
-            className="flex flex-col items-center justify-center p-12 sm:p-16 border border-dashed border-mist rounded-3xl bg-white text-center min-h-[350px]"
+            className="flex flex-col items-center justify-center p-8 sm:p-10 border border-dashed border-mist rounded-3xl bg-white text-center min-h-[240px] sm:min-h-[280px] w-full max-w-full box-border"
             role="status"
           >
-            <div className="text-7xl mb-6 opacity-70" aria-hidden="true">🍹</div>
-            <h3 className="text-forest font-display font-bold mb-4 text-2xl sm:text-3xl">
+            <div className="text-5xl sm:text-6xl mb-4 opacity-70" aria-hidden="true">🍹</div>
+            <h3 className="text-forest font-display font-bold mb-3 text-xl sm:text-2xl">
               {showAllRecipes
                 ? "No recipes available"
                 : inventoryIds.length === 0
                 ? "What's in your bar?"
                 : "Almost there!"}
             </h3>
-            <p className="text-sage text-base sm:text-lg max-w-md leading-relaxed mx-auto">
+            <p className="text-sage text-sm sm:text-base max-w-md leading-relaxed mx-auto">
               {showAllRecipes
                 ? "There are no cocktail recipes available at the moment."
                 : inventoryIds.length === 0
@@ -201,7 +201,7 @@ export function MixResultsPanel({
                 : "Add a few more ingredients to unlock your first cocktails. Check the suggestions below!"}
             </p>
             {!showAllRecipes && inventoryIds.length > 0 && (
-              <div className="mt-6 text-base text-sage">
+              <div className="mt-4 text-sm sm:text-base text-sage">
                 <span className="text-olive font-bold">{inventoryIds.length}</span>{" "}
                 ingredient{inventoryIds.length !== 1 ? "s" : ""} selected
               </div>
@@ -209,9 +209,9 @@ export function MixResultsPanel({
           </div>
         )}
 
-        {/* Cocktail Grid */}
+        {/* Cocktail Grid — minmax(0,1fr) via min-w-0 on cards keeps previews inside the page */}
         {displayedDrinks.length > 0 && (
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3" role="list">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 min-w-0" role="list">
             {displayedDrinks.map(({ cocktail, missingIngredientIds, missingIngredientNames }) => (
               <CocktailCard
                 key={cocktail.id}
@@ -227,13 +227,13 @@ export function MixResultsPanel({
 
       {/* Smart Additions - Enhanced Recipe Boosters */}
       {!showAllRecipes && unlockPotential.length > 0 && (
-        <div className="border-t border-mist pt-12" aria-labelledby="smart-additions-title">
+        <div className="border-t border-mist pt-12 min-w-0" aria-labelledby="smart-additions-title">
           <div className="mb-8">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-12 h-12 bg-terracotta/20 rounded-2xl flex items-center justify-center border border-terracotta/30">
+            <div className="flex items-center gap-4 mb-3 min-w-0">
+              <div className="w-12 h-12 flex-shrink-0 bg-terracotta/20 rounded-2xl flex items-center justify-center border border-terracotta/30">
                 <span className="text-2xl">🚀</span>
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 id="smart-additions-title" className="text-2xl sm:text-3xl font-display font-bold text-forest">
                   Strategic Acquisitions
                 </h2>
@@ -243,12 +243,12 @@ export function MixResultsPanel({
 
             {/* Impact Summary */}
             <div className="bg-gradient-to-r from-terracotta/5 to-olive/5 border border-terracotta/20 rounded-2xl p-4 mb-6">
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <span className="text-terracotta font-bold">+{unlockPotential.reduce((sum, item) => sum + (item?.count || 0), 0)}</span>
                   <span className="text-sage">additional masterpieces</span>
                 </div>
-                <div className="text-sage">•</div>
+                <div className="hidden sm:block text-sage">•</div>
                 <div className="flex items-center gap-2">
                   <span className="text-olive font-bold">{unlockPotential.length}</span>
                   <span className="text-sage">curated selections</span>
@@ -257,12 +257,12 @@ export function MixResultsPanel({
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" role="list">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 min-w-0" role="list">
             {unlockPotential.slice(0, 9).map((item, index) => (
               item && (
               <div
                 key={item.id}
-                className={`group flex flex-col p-5 rounded-3xl bg-white border transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 ${
+                className={`group flex flex-col p-5 rounded-3xl bg-white border transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 min-w-0 overflow-hidden ${
                   index === 0
                     ? "border-terracotta/30 bg-gradient-to-br from-terracotta/5 to-transparent shadow-lg"
                     : "border-mist hover:border-terracotta/30"
@@ -310,15 +310,15 @@ export function MixResultsPanel({
 
                 <button
                   onClick={() => onAddToInventory(item.id)}
-                  className={`mt-auto w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border transition-all font-bold text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-terracotta/50 ${
+                  className={`mt-auto w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border transition-all font-bold text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-terracotta/50 min-w-0 ${
                     index === 0
                       ? "bg-terracotta text-cream border-terracotta hover:bg-terracotta-dark hover:border-terracotta-dark shadow-lg shadow-terracotta/20"
                       : "bg-terracotta/10 text-terracotta border-terracotta/20 hover:bg-terracotta hover:text-cream hover:border-terracotta"
                   }`}
                   aria-label={`Add ${item.name} to unlock ${item.count} more cocktails`}
                 >
-                  <PlusIcon className="w-5 h-5" aria-hidden="true" />
-                  Add & Unlock {item.count} More
+                  <PlusIcon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+                  <span className="truncate">Add & Unlock {item.count} More</span>
                 </button>
               </div>
               )
@@ -352,22 +352,22 @@ function CocktailCard({
   return (
     <Link
       href={`/cocktails/${cocktail.slug}`}
-      className={`group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-terracotta/50 ${
+      className={`group relative flex flex-col min-w-0 w-full overflow-hidden rounded-3xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-terracotta/50 ${
         isReady
-          ? "bg-white border-mist hover:border-olive/40 hover:shadow-card-hover hover:-translate-y-2"
+          ? "bg-white border-mist hover:border-olive/40 hover:shadow-card-hover hover:-translate-y-1"
           : "bg-cream/50 border-mist/60 opacity-80 hover:opacity-100 hover:border-mist"
       }`}
       role="listitem"
       aria-label={`${cocktail.name}${isReady ? ", ready to make" : `, missing ${missingCount} ingredient${missingCount > 1 ? "s" : ""}`}`}
     >
-      <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-mist">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-mist">
         {cocktail.imageUrl ? (
           <>
             <Image
               src={cocktail.imageUrl}
               alt=""
               fill
-              sizes="(max-width: 640px) 50vw, 33vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
               className={`object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply ${
                 isReady ? "opacity-90 group-hover:opacity-100" : "opacity-60 grayscale-[0.5]"
               }`}
@@ -398,20 +398,20 @@ function CocktailCard({
         </div>
       </div>
 
-      <div className="p-5 flex-1 flex flex-col relative z-10 -mt-14">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col relative z-10 -mt-12 min-w-0">
         <div
-          className={`backdrop-blur-md rounded-2xl p-4 border border-mist/50 shadow-soft flex-1 flex flex-col ${
+          className={`backdrop-blur-md rounded-2xl p-4 border border-mist/50 shadow-soft flex-1 flex flex-col min-w-0 ${
             isReady ? "bg-white/90" : "bg-cream/80"
           }`}
         >
-          <div className="mb-3">
+          <div className="mb-3 min-w-0">
             {cocktail.primarySpirit && (
-              <p className="font-mono text-xs text-terracotta font-bold tracking-widest uppercase mb-1.5">
+              <p className="font-mono text-xs text-terracotta font-bold tracking-widest uppercase mb-1.5 truncate">
                 {cocktail.primarySpirit}
               </p>
             )}
             <h3
-              className={`font-display font-bold text-xl leading-tight ${
+              className={`font-display font-bold text-xl leading-tight break-words ${
                 isReady ? "text-forest" : "text-sage"
               }`}
             >
@@ -425,10 +425,10 @@ function CocktailCard({
               {missingNames.slice(0, 3).map((name, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-terracotta/10 text-terracotta text-xs font-medium rounded-full"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-terracotta/10 text-terracotta text-xs font-medium rounded-full max-w-full"
                 >
-                  <XMarkIcon className="w-3 h-3" />
-                  {name}
+                  <XMarkIcon className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{name}</span>
                 </span>
               ))}
               {missingNames.length > 3 && (
@@ -437,7 +437,7 @@ function CocktailCard({
             </div>
           )}
           
-          <p className="text-sm text-sage line-clamp-2 mt-auto leading-relaxed">
+          <p className="text-sm text-sage line-clamp-2 mt-auto leading-relaxed break-words">
             {cocktail.ingredients.map((i) => i.name).join(", ")}
           </p>
         </div>
