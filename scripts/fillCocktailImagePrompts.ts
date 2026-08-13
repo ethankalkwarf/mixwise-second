@@ -267,7 +267,7 @@ function fillPrompt(c: CocktailRow): string {
 
 * ${inferLighting(c)}
 * Blurred ${inferBackground(c)} with ${inferBokeh(c)}
-* 1200×630 pixel landscape aspect ratio (16:9)
+* 2048×1365 pixel landscape aspect ratio (3:2) — prefer the highest resolution available; avoid 1200×630
 * ${inferKeyCharacteristic(c)}
 * Avoid an overly perfect shot: ${inferImperfections(c)}
 * No humans, no hands, no logos, no text

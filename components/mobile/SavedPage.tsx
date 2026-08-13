@@ -121,7 +121,7 @@ function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boole
                 fill
                 sizes="80px"
                 className="object-cover"
-                quality={80}
+                quality={90}
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-sage text-2xl">🍸</div>
@@ -171,7 +171,7 @@ function RecentTab({ recent, loading }: { recent: any[]; loading: boolean }) {
                 fill
                 sizes="80px"
                 className="object-cover"
-                quality={80}
+                quality={90}
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-sage text-2xl">🍸</div>

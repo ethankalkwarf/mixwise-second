@@ -12,7 +12,7 @@ Create a single hyper-realistic photorealistic image of a **[COCKTAIL NAME]** co
 
 * [LIGHTING STYLE appropriate to the drink, ingredients, or era]
 * Blurred [BACKGROUND/SETTING appropriate to the cocktail] with [BOKEH STYLE]
-* 1200×630 pixel landscape aspect ratio (16:9)
+* 2048×1365 pixel landscape aspect ratio (3:2) — prefer the highest resolution available; avoid 1200×630
 * [KEY VISUAL CHARACTERISTIC: liquid color, carbonation, foam, layers, crushed ice, creaminess, etc.]
 * Avoid an overly perfect shot: [2–4 subtle realistic imperfections appropriate to the drink]
 * No humans, no hands, no logos, no text
@@ -53,7 +53,7 @@ The image must represent the **finished cocktail**, not merely interpret the coc
 
 ## Consistency rules (every MixWise image)
 
-1. **Aspect:** 16:9 landscape at 1200×630
+1. **Aspect:** 3:2 landscape at **2048×1365** (or the model's max; never below 1536×1024). Heroes crop to 4:5 — higher source res keeps ice/glass edges sharp on retina.
 2. **Subject:** one primary drink only
 3. **Framing:** glass dominant, but **not always dead-center** — vary composition:
    - classic centered hero

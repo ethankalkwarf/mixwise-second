@@ -332,7 +332,7 @@ export function WeddingCocktailFinder() {
                                     fill
                                     sizes="(max-width: 768px) 100vw, 50vw"
                                     className="object-cover"
-                                    quality={85}
+                                    quality={90}
                                     placeholder="blur"
                                     blurDataURL={COCKTAIL_BLUR_DATA_URL}
                                   />

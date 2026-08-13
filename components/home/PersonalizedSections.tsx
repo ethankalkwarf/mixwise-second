@@ -280,7 +280,7 @@ interface SmallCocktailCardProps {
 
 function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }: SmallCocktailCardProps) {
   // Prioritize externalImageUrl (from Supabase) over Sanity image for favorites/recent
-  const sanityImageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 });
+  const sanityImageUrl = getImageUrl(cocktail.image, { width: 600, height: 400, quality: 90 });
   const imageUrl = cocktail.externalImageUrl || sanityImageUrl || null;
 
   return (
@@ -298,7 +298,7 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }
               fill
               sizes={compact ? "192px" : "(max-width: 768px) 50vw, 25vw"}
               className="object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
-              quality={80}
+              quality={90}
               placeholder="blur"
               blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
@@ -332,7 +332,7 @@ interface OneAwayCardProps {
 
 function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCardProps) {
   // Prioritize externalImageUrl (from Supabase) over Sanity image
-  const sanityImageUrl = getImageUrl(cocktail.image, { width: 300, height: 200 });
+  const sanityImageUrl = getImageUrl(cocktail.image, { width: 320, height: 240, quality: 90 });
   const imageUrl = cocktail.externalImageUrl || sanityImageUrl || null;
 
   return (
@@ -348,7 +348,7 @@ function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCa
             fill
             sizes="96px"
             className="object-cover mix-blend-multiply"
-            quality={75}
+            quality={85}
             placeholder="blur"
             blurDataURL={COCKTAIL_BLUR_DATA_URL}
           />

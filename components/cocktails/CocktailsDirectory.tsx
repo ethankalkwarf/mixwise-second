@@ -575,7 +575,7 @@ function CocktailCard({
   onClick: (slug: string) => void;
   index?: number;
 }) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 600, height: 400 }) || cocktail.externalImageUrl;
+  const imageUrl = getImageUrl(cocktail.image, { width: 900, height: 600, quality: 90 }) || cocktail.externalImageUrl;
   const ingredientCount = cocktail.ingredients?.length || 0;
   const slug = cocktail.slug?.current || cocktail._id;
 
@@ -604,7 +604,7 @@ function CocktailCard({
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-700 group-hover:scale-110 mix-blend-multiply"
-              quality={80}
+              quality={90}
               placeholder="blur"
               blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />

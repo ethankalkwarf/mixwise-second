@@ -14,9 +14,9 @@ export function FeaturedCocktailsWrapper({ cocktails }: FeaturedCocktailsWrapper
   // Generate URLs for the first few featured cocktails for preloading
   const preloadImageUrls = cocktails.slice(0, 3).map(cocktail =>
     getImageUrl(cocktail.image, {
-      width: 400,
-      height: 300,
-      quality: 80,
+      width: 800,
+      height: 600,
+      quality: 90,
       auto: 'format'
     }) || cocktail.externalImageUrl
   ).filter(Boolean) as string[];

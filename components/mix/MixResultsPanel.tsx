@@ -372,7 +372,7 @@ function CocktailCard({
               className={`object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply ${
                 isReady ? "opacity-90 group-hover:opacity-100" : "opacity-60 grayscale-[0.5]"
               }`}
-              quality={80}
+              quality={90}
               placeholder="blur"
               blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />

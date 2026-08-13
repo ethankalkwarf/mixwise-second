@@ -211,9 +211,9 @@ export function MobileHomePage({ featuredCocktails, allCocktails }: MobileHomePa
 
 function ModernCocktailCard({ cocktail, index }: { cocktail: SanityCocktail; index: number }) {
   const imageUrl = getImageUrl(cocktail.image, {
-    width: 300,
-    height: 200,
-    quality: 80,
+    width: 600,
+    height: 400,
+    quality: 90,
   }) || cocktail.externalImageUrl;
 
   return (
@@ -233,7 +233,7 @@ function ModernCocktailCard({ cocktail, index }: { cocktail: SanityCocktail; ind
               fill
               sizes="(max-width: 768px) 50vw, 25vw"
               className="object-cover group-active:scale-110 transition-transform duration-500"
-              quality={80}
+              quality={90}
               placeholder="blur"
               blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
@@ -262,9 +262,9 @@ function ModernCocktailCard({ cocktail, index }: { cocktail: SanityCocktail; ind
 
 function ModernFeaturedCard({ cocktail, index }: { cocktail: SanityCocktail; index: number }) {
   const imageUrl = getImageUrl(cocktail.image, {
-    width: 200,
-    height: 150,
-    quality: 80,
+    width: 320,
+    height: 320,
+    quality: 90,
   }) || cocktail.externalImageUrl;
 
   return (
@@ -283,7 +283,7 @@ function ModernFeaturedCard({ cocktail, index }: { cocktail: SanityCocktail; ind
             fill
             sizes="80px"
             className="object-cover group-active:scale-110 transition-transform duration-500"
-            quality={80}
+            quality={90}
             placeholder="blur"
             blurDataURL={COCKTAIL_BLUR_DATA_URL}
           />
