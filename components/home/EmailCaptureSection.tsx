@@ -37,7 +37,7 @@ export function EmailCaptureSection() {
       }
 
       setStatus("success");
-      setMessage(data.message || "You're on the list.");
+      setMessage(data.message || "You're on the list — check your email.");
       setEmail("");
     } catch {
       setStatus("error");
@@ -49,22 +49,25 @@ export function EmailCaptureSection() {
     <section className="relative overflow-hidden bg-mist/40 py-16 lg:py-20">
       <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
         <h2 className="mb-3 [text-wrap:balance] font-display text-3xl font-bold text-forest sm:text-4xl">
-          Cocktail ideas,{" "}
-          <span className="italic text-terracotta">when you want them</span>
+          New cocktails{" "}
+          <span className="italic text-terracotta">every week</span>
         </h2>
         <p className="mx-auto mb-8 max-w-md [text-wrap:pretty] text-base leading-relaxed text-sage sm:text-lg">
-          Drop your email for recipes worth making at home. No spam — just drinks
-          you&apos;ll actually pour.
+          Join the list for fresh recipes worth making at home. This is email only —
+          you can create a free account later to save your bar.
         </p>
 
         {status === "success" ? (
           <div className="mx-auto max-w-md rounded-2xl border border-olive/30 bg-white px-6 py-8">
             <CheckCircleIcon className="mx-auto mb-3 h-10 w-10 text-olive" />
-            <p className="mb-4 font-medium text-forest">{message}</p>
-            <p className="mb-4 text-sm text-sage">
-              Want to save your bar and favorites too?
+            <p className="font-medium text-forest">{message}</p>
+            <p className="mt-3 text-sm text-sage">
+              In that email there&apos;s a button to create a free account when
+              you&apos;re ready to save your bar.
             </p>
-            <JoinCtaButton className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-2.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark" />
+            <div className="mt-5">
+              <JoinCtaButton className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-2.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark" />
+            </div>
           </div>
         ) : (
           <form
@@ -96,7 +99,7 @@ export function EmailCaptureSection() {
               disabled={status === "loading" || !email.trim()}
               className="inline-flex shrink-0 items-center justify-center rounded-full bg-terracotta px-7 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {status === "loading" ? "Joining…" : "Keep me posted"}
+              {status === "loading" ? "Joining…" : "Join the list"}
             </button>
           </form>
         )}
@@ -109,12 +112,11 @@ export function EmailCaptureSection() {
 
         {status !== "success" && (
           <p className="mt-4 text-xs text-sage">
-            Or{" "}
+            Want to save your bar now?{" "}
             <JoinCtaButton
-              label="create a free account"
+              label="Create a free account"
               className="font-medium text-terracotta underline-offset-2 hover:underline"
-            />{" "}
-            to save your bar across devices.
+            />
           </p>
         )}
       </div>

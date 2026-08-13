@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { BookmarkIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
-import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -33,11 +32,11 @@ interface SaveBarPromptProps {
 }
 
 export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
-  const { signInWithGoogle, signInWithApple, signInWithEmail } = useUser();
-  const { openSignupDialog } = useAuthDialog();
+  const { signInWithGoogle, signInWithApple } = useUser();
   const toast = useToast();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState<"google" | "apple" | "email" | null>(null);
+  const [sent, setSent] = useState(false);
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
@@ -67,34 +66,27 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
 
     setLoading("email");
 
-    // Also store as a lead so we capture the email even if they bounce before confirming
     try {
-      await fetch("/api/email/signup", {
+      const res = await fetch("/api/auth/email-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), source: "mix_save" }),
       });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Something went wrong. Please try again.");
+        setLoading(null);
+        return;
+      }
+
+      setSent(true);
+      toast.success(data.message || "Check your email to open your account.");
     } catch {
-      // Non-blocking — account flow is the primary path
-    }
-
-    const result = await signInWithEmail(email.trim());
-    if (result.error) {
-      // Fall back to full signup dialog with email prefilled
-      openSignupDialog({
-        title: "Save your bar",
-        subtitle: "Create a free account so you never lose your ingredient list.",
-        initialEmail: email.trim(),
-      });
-      toast.info("Continue in the sign-up form to save your bar.");
-      onDismiss();
+      toast.error("Something went wrong. Please try again.");
+    } finally {
       setLoading(null);
-      return;
     }
-
-    toast.success("Check your email for a link to save your bar.");
-    onDismiss();
-    setLoading(null);
   };
 
   return (
@@ -104,9 +96,11 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
           <BookmarkIcon className="h-5 w-5 text-olive" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-forest">Want to save your bar?</p>
+          <p className="font-bold text-forest">Save your bar with a free account</p>
           <p className="text-sm text-sage">
-            One tap with Google or Apple — or email yourself a link.
+            {sent
+              ? "Check your email for a link to open your account."
+              : "Google, Apple, or email — then you can add a password anytime."}
           </p>
         </div>
         <button
@@ -119,53 +113,67 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
         </button>
       </div>
 
-      <div className="mb-3 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={handleGoogle}
-          disabled={loading !== null}
-          className="flex items-center justify-center gap-2 rounded-xl border border-mist bg-white px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-mist/50 disabled:opacity-50"
-        >
-          {loading === "google" ? <span className="spinner" /> : <GoogleIcon className="h-4 w-4" />}
-          Google
-        </button>
-        <button
-          type="button"
-          onClick={handleApple}
-          disabled={loading !== null}
-          className="flex items-center justify-center gap-2 rounded-xl bg-black px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900 disabled:opacity-50"
-        >
-          {loading === "apple" ? (
-            <span className="spinner border-white/30 border-t-white" />
-          ) : (
-            <AppleIcon className="h-4 w-4" />
-          )}
-          Apple
-        </button>
-      </div>
+      {!sent && (
+        <>
+          <div className="mb-3 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={loading !== null}
+              className="flex items-center justify-center gap-2 rounded-xl border border-mist bg-white px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-mist/50 disabled:opacity-50"
+            >
+              {loading === "google" ? <span className="spinner" /> : <GoogleIcon className="h-4 w-4" />}
+              Google
+            </button>
+            <button
+              type="button"
+              onClick={handleApple}
+              disabled={loading !== null}
+              className="flex items-center justify-center gap-2 rounded-xl bg-black px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-900 disabled:opacity-50"
+            >
+              {loading === "apple" ? (
+                <span className="spinner border-white/30 border-t-white" />
+              ) : (
+                <AppleIcon className="h-4 w-4" />
+              )}
+              Apple
+            </button>
+          </div>
 
-      <form onSubmit={handleEmailSave} className="flex gap-2">
-        <label className="sr-only" htmlFor="save-bar-email">
-          Email
-        </label>
-        <input
-          id="save-bar-email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@email.com"
-          className="input-botanical min-w-0 flex-1 !py-2 !text-sm"
-          autoComplete="email"
-          disabled={loading !== null}
-        />
+          <form onSubmit={handleEmailSave} className="flex gap-2">
+            <label className="sr-only" htmlFor="save-bar-email">
+              Email
+            </label>
+            <input
+              id="save-bar-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              className="input-botanical min-w-0 flex-1 !py-2 !text-sm"
+              autoComplete="email"
+              disabled={loading !== null}
+            />
+            <button
+              type="submit"
+              disabled={loading !== null || !isEmailValid}
+              className="shrink-0 rounded-xl bg-terracotta px-3 py-2 text-sm font-bold text-cream transition-colors hover:bg-terracotta-dark disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading === "email" ? "…" : "Save"}
+            </button>
+          </form>
+        </>
+      )}
+
+      {sent && (
         <button
-          type="submit"
-          disabled={loading !== null || !isEmailValid}
-          className="shrink-0 rounded-xl bg-terracotta px-3 py-2 text-sm font-bold text-cream transition-colors hover:bg-terracotta-dark disabled:cursor-not-allowed disabled:opacity-50"
+          type="button"
+          onClick={onDismiss}
+          className="mt-1 w-full rounded-xl border border-mist px-3 py-2 text-sm text-sage hover:text-forest"
         >
-          {loading === "email" ? "…" : "Save"}
+          Got it
         </button>
-      </form>
+      )}
     </div>
   );
 }

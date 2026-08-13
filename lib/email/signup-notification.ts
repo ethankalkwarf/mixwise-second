@@ -25,16 +25,15 @@ function escapeHtml(text: string): string {
 }
 
 export interface SignupNotificationParams {
-  userId: string;
+  userId?: string;
   userEmail: string;
   displayName?: string;
   signupMethod?: string;
 }
 
 /**
- * Sends a notification email to hello@getmixwise.com when a new user signs up.
- * Returns { success: true } if sent, { success: false, skipped: true } if skipped,
- * or { success: false, error: string } if failed.
+ * Sends a notification email to hello@getmixwise.com when a new user signs up
+ * or joins the email list.
  */
 export async function sendSignupNotification(
   params: SignupNotificationParams
@@ -42,30 +41,26 @@ export async function sendSignupNotification(
   try {
     const { userId, userEmail, displayName, signupMethod = "Unknown" } = params;
 
-    // Validate required fields
-    if (!userId || typeof userId !== "string") {
-      return { success: false, error: "User ID is required" };
-    }
-
     if (!userEmail || typeof userEmail !== "string") {
       return { success: false, error: "User email is required" };
     }
 
     const trimmedEmail = userEmail.trim().toLowerCase();
     const trimmedName = displayName ? displayName.trim() : "Not provided";
+    const idLabel = userId || "n/a (email list)";
 
     // Check if Resend is configured
     const resendApiKey = process.env.RESEND_API_KEY;
     if (!resendApiKey) {
       console.warn("[Signup Notification] RESEND_API_KEY not set - skipping notification email", {
-        userId,
+        userId: idLabel,
         userEmail: trimmedEmail,
       });
       return { success: false, skipped: true };
     }
 
     // Log that we're attempting to send
-    debugLog(`[Signup Notification] Attempting to send notification for new user: ${trimmedEmail} (${signupMethod})`);
+    debugLog(`[Signup Notification] Attempting to send notification for: ${trimmedEmail} (${signupMethod})`);
 
     // Create Resend client
     let resend;
@@ -77,7 +72,9 @@ export async function sendSignupNotification(
     }
 
     // Format email content
-    const emailSubject = `New User Signup: ${trimmedEmail}`;
+    const emailSubject = userId
+      ? `New User Signup: ${trimmedEmail}`
+      : `New Email List Signup: ${trimmedEmail}`;
     
     const emailHtml = `
       <!DOCTYPE html>
@@ -138,7 +135,7 @@ export async function sendSignupNotification(
         <body>
           <div class="container">
             <div class="header">
-              <h1>New User Signup</h1>
+              <h1>${userId ? "New User Signup" : "New Email List Signup"}</h1>
             </div>
             
             <div class="field">
@@ -153,7 +150,7 @@ export async function sendSignupNotification(
             
             <div class="field">
               <div class="field-label">User ID</div>
-              <div class="field-value">${escapeHtml(userId)}</div>
+              <div class="field-value">${escapeHtml(idLabel)}</div>
             </div>
             
             <div class="field">
@@ -163,7 +160,7 @@ export async function sendSignupNotification(
             
             <div class="footer">
               <p>This is an automated notification from MixWise.</p>
-              <p>User account created at ${new Date().toLocaleString()}</p>
+              <p>Recorded at ${new Date().toLocaleString()}</p>
             </div>
           </div>
         </body>
@@ -171,14 +168,14 @@ export async function sendSignupNotification(
     `.trim();
 
     const emailText = `
-New User Signup
+${userId ? "New User Signup" : "New Email List Signup"}
 
 Email: ${trimmedEmail}
 Name: ${trimmedName}
-User ID: ${userId}
+User ID: ${idLabel}
 Signup Method: ${signupMethod}
 
-User account created at ${new Date().toLocaleString()}
+Recorded at ${new Date().toLocaleString()}
 
 This is an automated notification from MixWise.
     `.trim();
@@ -199,10 +196,10 @@ This is an automated notification from MixWise.
       html: emailHtml,
       text: emailText,
       headers: {
-        "X-Entity-Ref-ID": `signup-notification-${userId}`,
+        "X-Entity-Ref-ID": `signup-notification-${userId || trimmedEmail}`,
       },
       tags: [
-        { name: "category", value: "signup_notification" },
+        { name: "category", value: userId ? "signup_notification" : "email_list_notification" },
         { name: "environment", value: process.env.NODE_ENV || "production" },
         { name: "signup_method", value: signupMethod.toLowerCase().replace(/\s+/g, "_") },
       ],

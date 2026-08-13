@@ -449,6 +449,217 @@ https://www.getmixwise.com
 }
 
 /**
+ * Email-list welcome (NOT an account yet) — confirm subscription + convert CTA
+ */
+export function emailListWelcomeTemplate({
+  userEmail,
+  convertUrl,
+  unsubscribeUrl,
+}: {
+  userEmail: string;
+  convertUrl: string;
+  unsubscribeUrl: string;
+}): EmailTemplate {
+  const subject = "You're on the MixWise list 🍸";
+  const previewText =
+    "New cocktails every week. When you're ready, create a free account to save your bar.";
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>You're on the MixWise list</title>
+  ${baseStyles}
+</head>
+<body>
+  ${getPreheaderHtml(previewText)}
+  <div class="email-wrapper">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
+      <tr>
+        <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
+          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+            mixwise.
+          </h1>
+        </td>
+      </tr>
+      <tr>
+        <td class="email-content" style="padding: 48px 40px;">
+          <h2 class="greeting" style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
+            You're on the list
+          </h2>
+          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
+            Thanks for sharing your email. We&apos;ll send <strong>new cocktails every week</strong> — recipes worth making at home, no spam.
+          </p>
+          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
+            <strong>Want more?</strong> Create a free MixWise account so you can save your bar, favorites, and shopping list. After you sign in, you can add a password for next time.
+          </p>
+          <div class="button-wrapper" style="text-align: center; margin: 32px 0;">
+            <a href="${convertUrl}" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
+              Create free account &amp; save your bar
+            </a>
+          </div>
+          <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 24px 0 0 0; line-height: 1.6; text-align: center;">
+            This only creates an account when you click the button.
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td class="email-footer" style="background-color: #E6EBE4; padding: 32px 40px; text-align: center; border-top: 1px solid #D1DAD0;">
+          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">
+            Sent to <strong>${userEmail}</strong>
+          </p>
+          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">
+            <a href="${unsubscribeUrl}" style="color: #3A4D39;">Unsubscribe</a>
+          </p>
+          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0;">
+            © ${new Date().getFullYear()} MixWise
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+You're on the MixWise list 🍸
+
+Thanks for sharing your email. We'll send new cocktails every week — recipes worth making at home.
+
+Want more? Create a free account to save your bar, favorites, and shopping list:
+${convertUrl}
+
+This only creates an account when you click the link.
+
+Unsubscribe: ${unsubscribeUrl}
+
+---
+Sent to ${userEmail}
+© ${new Date().getFullYear()} MixWise
+  `.trim();
+
+  return { subject, html, text };
+}
+
+/**
+ * Finish account setup — magic link for intentional account creation
+ */
+export function finishAccountSetupTemplate({
+  setupUrl,
+  userEmail,
+}: {
+  setupUrl: string;
+  userEmail: string;
+}): EmailTemplate {
+  const subject = "Your MixWise account is ready — one click to open it 🍸";
+  const previewText =
+    "Open your account, save your bar, and optionally add a password so you can sign in anytime.";
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+  <title>Your MixWise account is ready</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  ${baseStyles}
+</head>
+<body>
+  ${getPreheaderHtml(previewText)}
+  <div class="email-wrapper">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
+      <tr>
+        <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
+          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+            mixwise.
+          </h1>
+        </td>
+      </tr>
+      <tr>
+        <td class="email-content" style="padding: 48px 40px;">
+          <div style="text-align: center; font-size: 48px; margin-bottom: 24px;">🍸</div>
+          <h2 class="greeting" style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
+            Your account is ready
+          </h2>
+          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
+            Thanks for joining MixWise. Click below to open your account — you can save your bar, favorites, and shopping list across devices.
+          </p>
+          <div class="info-box" style="background-color: #F9F7F2; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #E6EBE4;">
+            <p style="margin: 0 0 8px 0; font-size: 14px; color: #3A4D39;">✦ No password needed to get started</p>
+            <p style="margin: 0; font-size: 14px; color: #3A4D39;">✦ After you sign in, you can add a password anytime</p>
+          </div>
+          <div class="button-wrapper" style="text-align: center; margin: 32px 0;">
+            <a href="${setupUrl}" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
+              Open MixWise
+            </a>
+          </div>
+          <div class="divider" style="height: 1px; background: linear-gradient(90deg, transparent, #D1DAD0, transparent); margin: 32px 0;"></div>
+          <div class="fallback-box" style="background-color: #E6EBE4; border-radius: 12px; padding: 16px 20px; margin: 24px 0; border: 1px solid #D1DAD0;">
+            <p class="fallback-label" style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E; margin: 0 0 8px 0;">
+              Or copy this link:
+            </p>
+            <p class="fallback-link" style="word-break: break-all; font-family: monospace; font-size: 13px; color: #BC5A45; margin: 0; line-height: 1.5;">
+              ${setupUrl}
+            </p>
+          </div>
+          <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 24px 0 0 0; line-height: 1.6; text-align: center;">
+            Didn&apos;t mean to sign up? You can safely ignore this email.
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td class="email-footer" style="background-color: #E6EBE4; padding: 32px 40px; text-align: center; border-top: 1px solid #D1DAD0;">
+          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">
+            This email was sent to <strong>${userEmail}</strong>
+          </p>
+          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0;">
+            © ${new Date().getFullYear()} MixWise · A smarter way to make cocktails at home
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+Your MixWise account is ready 🍸
+
+Thanks for joining MixWise. Open your account here:
+${setupUrl}
+
+No password needed to get started — after you sign in, you can add a password anytime.
+
+Didn't mean to sign up? You can safely ignore this email.
+
+---
+This email was sent to ${userEmail}
+© ${new Date().getFullYear()} MixWise
+https://www.getmixwise.com
+  `.trim();
+
+  return { subject, html, text };
+}
+
+/**
  * Password reset template for password recovery
  */
 export function resetPasswordTemplate({

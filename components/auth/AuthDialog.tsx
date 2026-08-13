@@ -142,18 +142,41 @@ export function AuthDialog({
     setIsMagicLoading(true);
     setError(null);
 
-    const result = await signInWithEmail(email.trim());
+    // Intentional account / sign-in: Resend magic link (not Supabase default email)
+    try {
+      const response = await fetch("/api/auth/email-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          source: "auth_dialog",
+        }),
+      });
+      const data = await response.json();
 
-    if (result.error) {
-      setError(result.error);
-      toast.error(result.error);
+      if (!response.ok) {
+        // Fall back to client OTP if server path fails
+        const result = await signInWithEmail(email.trim());
+        if (result.error) {
+          setError(data.error || result.error);
+          toast.error(data.error || result.error);
+          setIsMagicLoading(false);
+          return;
+        }
+      }
+
+      setMagicLinkSent(true);
       setIsMagicLoading(false);
-      return;
+      toast.success(
+        mode === "signup"
+          ? "Check your email for a link to open your account."
+          : "Check your email for a sign-in link."
+      );
+    } catch {
+      setError("Failed to send email link. Please try again.");
+      toast.error("Failed to send email link");
+      setIsMagicLoading(false);
     }
-
-    setMagicLinkSent(true);
-    setIsMagicLoading(false);
-    toast.success("Check your email for a sign-in link.");
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -329,7 +352,9 @@ export function AuthDialog({
                       Check your email
                     </Dialog.Title>
                     <p className="text-sage mb-6">
-                      We sent a sign-in link to <strong>{email}</strong>. Open it on this device to continue.
+                      We sent a link to <strong>{email}</strong>. Open it to{" "}
+                      {mode === "signup" ? "finish creating your account" : "sign in"}.
+                      Afterward you can add a password if you want.
                     </p>
                     <button
                       onClick={() => setMagicLinkSent(false)}

@@ -47,7 +47,7 @@ function FooterEmailCapture() {
       }
 
       setStatus("success");
-      setMessage(data.message || "You're on the list.");
+      setMessage(data.message || "You're on the list — check your email.");
       setEmail("");
     } catch {
       setStatus("error");
@@ -84,7 +84,7 @@ function FooterEmailCapture() {
           disabled={status === "loading" || !email.trim()}
           className="shrink-0 rounded-full bg-terracotta px-5 py-2.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark disabled:opacity-50"
         >
-          {status === "loading" ? "…" : "Subscribe"}
+          {status === "loading" ? "…" : "Join list"}
         </button>
       </form>
       {status === "error" && message && (
@@ -113,7 +113,7 @@ export function SiteFooter() {
               and find drinks you can make with what you have.
             </p>
             <p className="mb-3 font-mono text-xs font-bold uppercase tracking-widest text-cream/80">
-              Cocktail ideas by email
+              New cocktails every week
             </p>
             <FooterEmailCapture />
           </div>

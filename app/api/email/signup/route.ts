@@ -1,13 +1,24 @@
 /**
- * Generic email lead capture (homepage, mix save, etc.)
- * Stores in email_signups. Does not use Thirsty Thursday.
+ * Email LIST signup (homepage / footer)
+ *
+ * Intentional newsletter-style capture — does NOT create an account.
+ * Sends a welcome that confirms the list signup and offers a clear CTA
+ * to create an account + save their bar.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
+import { emailListWelcomeTemplate } from "@/lib/email/templates";
+import { sendSignupNotification } from "@/lib/email/signup-notification";
+import {
+  buildNewsletterUnsubscribeUrl,
+  createNewsletterUnsubscribeToken,
+} from "@/lib/email/newsletter-token";
+import { getSiteUrl } from "@/lib/site";
 import { debugLog } from "@/lib/debugLog";
 
-const ALLOWED_SOURCES = new Set(["homepage", "mix_save", "footer"]);
+const ALLOWED_SOURCES = new Set(["homepage", "footer"]);
 
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000;
@@ -32,6 +43,16 @@ function isRateLimited(ip: string): boolean {
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function buildConvertUrl(email: string, source: string, siteUrl: string): string {
+  const token = createNewsletterUnsubscribeToken(email, `convert:${source}`);
+  const params = new URLSearchParams({
+    email: email.trim().toLowerCase(),
+    source,
+    token,
+  });
+  return `${siteUrl}/api/email/convert-to-account?${params.toString()}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -65,68 +86,105 @@ export async function POST(request: NextRequest) {
         ? rawSource
         : "homepage";
 
-    debugLog(`[Email Signup] ${trimmedEmail} via ${source}`);
+    debugLog(`[Email List] ${trimmedEmail} via ${source}`);
 
     let supabaseAdmin;
     try {
       supabaseAdmin = createAdminClient();
     } catch (adminError) {
-      console.error("[Email Signup] Admin client failed:", adminError);
+      console.error("[Email List] Admin client failed:", adminError);
       return NextResponse.json(
         { error: "Server configuration error. Please try again later." },
         { status: 500 }
       );
     }
 
-    const { data: existing, error: checkError } = await supabaseAdmin
+    const { data: existingLead } = await supabaseAdmin
       .from("email_signups")
       .select("id")
       .eq("email", trimmedEmail)
       .eq("source", source)
       .maybeSingle();
 
-    if (checkError) {
-      console.error("[Email Signup] Check failed:", checkError);
-      return NextResponse.json(
-        { error: "Failed to process signup. Please try again." },
-        { status: 500 }
-      );
-    }
+    const alreadySubscribed = Boolean(existingLead);
 
-    if (existing) {
-      return NextResponse.json({
-        ok: true,
-        message: "You're already on the list. Thanks!",
-        alreadySubscribed: true,
+    if (!existingLead) {
+      const { error: insertError } = await supabaseAdmin.from("email_signups").insert({
+        email: trimmedEmail,
+        source,
       });
+      if (insertError && insertError.code !== "23505") {
+        console.error("[Email List] Insert failed:", insertError);
+        return NextResponse.json(
+          { error: "Failed to process signup. Please try again." },
+          { status: 500 }
+        );
+      }
     }
 
-    const { error: insertError } = await supabaseAdmin.from("email_signups").insert({
-      email: trimmedEmail,
-      source,
-    });
+    const siteUrl = getSiteUrl(new URL(request.url));
+    const convertUrl = buildConvertUrl(trimmedEmail, source, siteUrl);
+    const unsubscribeUrl = buildNewsletterUnsubscribeUrl(trimmedEmail, source, siteUrl);
 
-    if (insertError) {
-      if (insertError.code === "23505") {
-        return NextResponse.json({
-          ok: true,
-          message: "You're already on the list. Thanks!",
-          alreadySubscribed: true,
+    let emailSent = false;
+
+    if (!process.env.RESEND_API_KEY || !MIXWISE_FROM_EMAIL) {
+      console.warn("[Email List] Resend not configured — skipping welcome email");
+    } else {
+      const template = emailListWelcomeTemplate({
+        userEmail: trimmedEmail,
+        convertUrl,
+        unsubscribeUrl,
+      });
+
+      try {
+        const resend = createResendClient();
+        const { error: emailError } = await resend.emails.send({
+          from: MIXWISE_FROM_EMAIL,
+          replyTo: "hello@getmixwise.com",
+          to: trimmedEmail,
+          subject: template.subject,
+          html: template.html,
+          text: template.text,
+          tags: [
+            { name: "category", value: "email_list_welcome" },
+            { name: "source", value: source },
+            { name: "environment", value: process.env.NODE_ENV || "production" },
+          ],
         });
+
+        if (emailError) {
+          console.error("[Email List] Resend failed:", emailError);
+        } else {
+          emailSent = true;
+        }
+      } catch (sendErr) {
+        console.error("[Email List] Resend exception:", sendErr);
       }
-      console.error("[Email Signup] Insert failed:", insertError);
-      return NextResponse.json(
-        { error: "Failed to process signup. Please try again." },
-        { status: 500 }
-      );
+    }
+
+    if (!alreadySubscribed) {
+      sendSignupNotification({
+        userEmail: trimmedEmail,
+        signupMethod: `Email list (${source})`,
+      }).catch((err) => {
+        console.error("[Email List] Notification failed (non-fatal):", err);
+      });
     }
 
     return NextResponse.json({
       ok: true,
-      message: "You're on the list. We'll be in touch with cocktail ideas.",
+      emailSent,
+      alreadySubscribed,
+      path: "email_list",
+      message: emailSent
+        ? "You're on the list — check your email. When you're ready, you can create a free account from that message."
+        : alreadySubscribed
+          ? "You're already on the list. Thanks!"
+          : "You're on the list. Thanks!",
     });
   } catch (error) {
-    console.error("[Email Signup] Unexpected error:", error);
+    console.error("[Email List] Unexpected error:", error);
     return NextResponse.json(
       { error: "Something went wrong. Please try again." },
       { status: 500 }
