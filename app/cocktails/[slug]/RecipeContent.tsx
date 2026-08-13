@@ -195,7 +195,7 @@ export function RecipeContent({
           <hr className="border-mist mb-6" />
 
           {/* Drink properties (difficulty, glassware, etc.) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {/* Base Spirit */}
             {cocktail.base_spirit && (
               <div>
