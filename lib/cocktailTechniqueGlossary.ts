@@ -18,6 +18,8 @@ export type GlossaryTerm = {
 
 export type MethodTip = {
   label: string;
+  /** Short line shown above the steps */
+  cue: string;
   summary: string;
   tip: string;
 };
@@ -102,66 +104,79 @@ export const TECHNIQUE_TERMS: GlossaryTerm[] = [
 export const METHOD_TIPS: Record<string, MethodTip> = {
   shake: {
     label: "Shake",
+    cue: "Shake hard · 10–15 seconds",
     summary: "This drink is shaken with ice to chill, dilute, and mix.",
     tip: "Shake hard for about 10–15 seconds, until the shaker feels very cold. Use a shake for citrus, dairy, egg, or any cloudy mix.",
   },
   shaken: {
     label: "Shake",
+    cue: "Shake hard · 10–15 seconds",
     summary: "This drink is shaken with ice to chill, dilute, and mix.",
     tip: "Shake hard for about 10–15 seconds, until the shaker feels very cold. Use a shake for citrus, dairy, egg, or any cloudy mix.",
   },
   stir: {
     label: "Stir",
+    cue: "Stir · 20–30 seconds",
     summary: "This drink is stirred with ice for a clear, silky chill.",
     tip: "Stir for about 20–30 seconds with plenty of ice. Stir spirit-forward drinks (Manhattan, Martini, Negroni) so they stay clear.",
   },
   stirred: {
     label: "Stir",
+    cue: "Stir · 20–30 seconds",
     summary: "This drink is stirred with ice for a clear, silky chill.",
     tip: "Stir for about 20–30 seconds with plenty of ice. Stir spirit-forward drinks (Manhattan, Martini, Negroni) so they stay clear.",
   },
   build: {
     label: "Build",
+    cue: "Build in the glass · brief stir",
     summary: "This drink is built in the glass over ice.",
     tip: "Add ingredients in order, then give a brief stir. Keep sodas and ginger beer cold so you don’t flatten the drink.",
   },
   built: {
     label: "Build",
+    cue: "Build in the glass · brief stir",
     summary: "This drink is built in the glass over ice.",
     tip: "Add ingredients in order, then give a brief stir. Keep sodas and ginger beer cold so you don’t flatten the drink.",
   },
   blend: {
     label: "Blend",
+    cue: "Blend until smooth",
     summary: "This drink is blended with ice for a frozen texture.",
     tip: "Use crushed or small ice and blend until smooth. Don’t over-blend herbs into a puree unless the recipe calls for it.",
   },
   blended: {
     label: "Blend",
+    cue: "Blend until smooth",
     summary: "This drink is blended with ice for a frozen texture.",
     tip: "Use crushed or small ice and blend until smooth. Don’t over-blend herbs into a puree unless the recipe calls for it.",
   },
   layer: {
     label: "Layer",
+    cue: "Layer slowly over a spoon",
     summary: "This drink is layered by density in the glass.",
     tip: "Pour slowly over the back of a spoon. Heavier (usually sweeter) liquids go first; cream and spirits often sit on top.",
   },
   layered: {
     label: "Layer",
+    cue: "Layer slowly over a spoon",
     summary: "This drink is layered by density in the glass.",
     tip: "Pour slowly over the back of a spoon. Heavier (usually sweeter) liquids go first; cream and spirits often sit on top.",
   },
   swizzle: {
     label: "Swizzle",
+    cue: "Swizzle in crushed ice until frosted",
     summary: "This drink is swizzled with crushed ice in the glass.",
     tip: "Pack crushed ice, then spin a swizzle stick or barspoon between your palms until the glass frosts.",
   },
   muddle: {
     label: "Muddle",
+    cue: "Muddle gently · press, don’t shred",
     summary: "This drink starts by muddling herbs or fruit in the glass.",
     tip: "Press gently to release oils and juice. For mint, press — don’t shred — or the drink can taste grassy.",
   },
   muddled: {
     label: "Muddle",
+    cue: "Muddle gently · press, don’t shred",
     summary: "This drink starts by muddling herbs or fruit in the glass.",
     tip: "Press gently to release oils and juice. For mint, press — don’t shred — or the drink can taste grassy.",
   },

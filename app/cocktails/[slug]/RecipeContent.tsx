@@ -9,7 +9,7 @@ import { OptimizedCocktailImage } from "@/components/cocktails/OptimizedCocktail
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 import { RecipeActions } from "@/components/cocktails/RecipeActions";
 import { InstructionStepText } from "@/components/cocktails/InstructionStepText";
-import { TechniqueTipCard } from "@/components/cocktails/TechniqueTipCard";
+import { TechniqueCue } from "@/components/cocktails/TechniqueCue";
 import { Button } from "@/components/common/Button";
 import { formatCocktailName } from "@/lib/formatters";
 import {
@@ -437,7 +437,8 @@ export function RecipeContent({
           </p>
         ) : (
           <>
-            <ol className="mt-4 space-y-3">
+            <TechniqueCue technique={cocktail.technique} />
+            <ol className="space-y-3">
               {instructionSteps.map((step, idx) => (
                 <li key={idx} className="flex gap-3 items-start">
                   <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold">
@@ -447,10 +448,6 @@ export function RecipeContent({
                 </li>
               ))}
             </ol>
-            <TechniqueTipCard
-              technique={cocktail.technique}
-              instructionSteps={instructionSteps}
-            />
           </>
         )}
       </section>
