@@ -10,7 +10,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
-import { formatCocktailName } from "@/lib/formatters";
+import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import { PlusCircleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import type { SanityCocktail, SanityImage } from "@/lib/sanityTypes";
 
@@ -21,6 +21,7 @@ interface MixCocktail {
   image?: SanityImage;
   externalImageUrl?: string;
   primarySpirit?: string;
+  createdAt?: string;
   ingredients?: Array<{
     ingredient?: { _id: string; name: string } | null;
   }>;
@@ -272,6 +273,7 @@ interface SmallCocktailCardProps {
     image?: SanityImage;
     externalImageUrl?: string;
     primarySpirit?: string;
+    createdAt?: string;
   };
   badge?: string;
   badgeColor?: string;
@@ -282,6 +284,7 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }
   // Prioritize externalImageUrl (from Supabase) over Sanity image for favorites/recent
   const sanityImageUrl = getImageUrl(cocktail.image, { width: 600, height: 400, quality: 90 });
   const imageUrl = cocktail.externalImageUrl || sanityImageUrl || null;
+  const showNew = isNewCocktail(cocktail.createdAt);
 
   return (
     <Link
@@ -309,10 +312,19 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }
             🍸
           </div>
         )}
-        {badge && (
-          <span className={`absolute top-2 left-2 ${badgeColor} text-cream text-xs font-bold px-2 py-1 rounded-full shadow-lg`}>
-            {badge}
-          </span>
+        {(badge || showNew) && (
+          <div className="absolute top-2 left-2 flex flex-wrap gap-1 max-w-[85%] z-10">
+            {showNew && (
+              <span className="bg-terracotta text-cream text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                NEW
+              </span>
+            )}
+            {badge && (
+              <span className={`${badgeColor} text-cream text-xs font-bold px-2 py-1 rounded-full shadow-lg`}>
+                {badge}
+              </span>
+            )}
+          </div>
         )}
       </div>
       <div className={`${compact ? "p-3" : "p-4"} flex-1`}>

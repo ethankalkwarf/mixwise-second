@@ -64,7 +64,8 @@ export async function getCocktailsListClient(filters: CocktailFilters = {}): Pro
       flavor_tartness,
       flavor_bitterness,
       flavor_aroma,
-      flavor_texture
+      flavor_texture,
+      created_at
     `)
     .order('name');
 
@@ -218,6 +219,7 @@ export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
       isPopular: cocktail.isPopular,
       isFavorite: cocktail.isFavorite,
       isTrending: cocktail.isTrending,
+      createdAt: cocktail.createdAt ?? undefined,
       drinkCategories: cocktail.drinkCategories,
       tags: cocktail.tags,
       garnish: cocktail.garnish,
@@ -300,6 +302,7 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   isPopular: boolean;
   isFavorite: boolean;
   isTrending: boolean;
+  createdAt: string | null;
   drinkCategories: string[];
   tags: string[];
   garnish: string | null;
@@ -337,7 +340,8 @@ async function getCocktailsWithIngredientsClientSide() {
       tags,
       garnish,
       metadata_json,
-      ingredients
+      ingredients,
+      created_at
     `)
     .order('name');
 
@@ -426,6 +430,7 @@ async function getCocktailsWithIngredientsClientSide() {
         isPopular: Boolean(metadata.isPopular),
         isFavorite: Boolean(metadata.isFavorite),
         isTrending: Boolean(metadata.isTrending),
+        createdAt: cocktail.created_at || null,
         drinkCategories: Array.isArray(cocktail.categories_all) ? cocktail.categories_all : [],
         tags: Array.isArray(cocktail.tags) ? cocktail.tags : [],
         garnish: cocktail.garnish,
@@ -458,6 +463,7 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
   isPopular: boolean;
   isFavorite: boolean;
   isTrending: boolean;
+  createdAt: string | null;
   drinkCategories: string[];
   tags: string[];
   garnish: string | null;

@@ -38,6 +38,8 @@ export type MixCocktail = {
   isPopular?: boolean;
   isFavorite?: boolean;
   isTrending?: boolean;
+  /** ISO timestamp from Supabase `cocktails.created_at` — used for the NEW label */
+  createdAt?: string;
   drinkCategories?: string[];
   tags?: string[];
   garnish?: string | null;

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { getMixIngredients } from "@/lib/cocktails";
-import { formatCocktailName } from "@/lib/formatters";
+import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import type { MixCocktail, MixMatchResult, MixIngredient } from "@/lib/mixTypes";
 import { debugLog } from "@/lib/debugLog";
 
@@ -222,6 +222,11 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
         >
           🍸
         </div>
+        {isNewCocktail(cocktail.createdAt) && (
+          <span className="absolute top-2 left-2 z-10 bg-terracotta text-cream text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">
+            NEW
+          </span>
+        )}
       </div>
       <h4 className="font-semibold text-forest text-sm line-clamp-2 mb-1">
         {formatCocktailName(cocktail.name)}

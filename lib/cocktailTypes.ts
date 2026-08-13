@@ -108,5 +108,6 @@ export interface CocktailListItem {
   flavor_bitterness?: number;
   flavor_aroma?: number;
   flavor_texture?: number;
+  created_at?: string;
 }
 

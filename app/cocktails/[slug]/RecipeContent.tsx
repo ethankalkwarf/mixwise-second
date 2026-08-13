@@ -11,7 +11,7 @@ import { RecipeActions } from "@/components/cocktails/RecipeActions";
 import { InstructionStepText } from "@/components/cocktails/InstructionStepText";
 import { TechniqueCue } from "@/components/cocktails/TechniqueCue";
 import { Button } from "@/components/common/Button";
-import { formatCocktailName } from "@/lib/formatters";
+import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import {
   ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
@@ -167,6 +167,11 @@ export function RecipeContent({
         {/* Text */}
         <div className="flex-1">
           {/* Status badges above title */}
+          {isNewCocktail(cocktail.created_at) && (
+            <div className="mb-2 mr-2 inline-flex items-center gap-1 rounded-full bg-terracotta px-2 py-0.5 text-[11px] font-semibold text-cream">
+              NEW
+            </div>
+          )}
           {cocktail.metadata_json?.is_community_favorite && (
             <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
               ★ Community Favorite
@@ -315,17 +320,23 @@ export function RecipeContent({
             </div>
 
             {/* Ribbon badge */}
-            {cocktail.metadata_json?.is_community_favorite && (
-              <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200">
-                ★ Community Favorite
-              </div>
-            )}
-
-            {!cocktail.metadata_json?.is_community_favorite && cocktail.metadata_json?.is_mixwise_original && (
-              <div className="absolute top-2 left-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200">
-                MixWise Original
-              </div>
-            )}
+            <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+              {isNewCocktail(cocktail.created_at) && (
+                <div className="rounded-full bg-terracotta px-2 py-0.5 text-[11px] font-semibold text-cream shadow-lg">
+                  NEW
+                </div>
+              )}
+              {cocktail.metadata_json?.is_community_favorite && (
+                <div className="rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200">
+                  ★ Community Favorite
+                </div>
+              )}
+              {!cocktail.metadata_json?.is_community_favorite && cocktail.metadata_json?.is_mixwise_original && (
+                <div className="rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-amber-200">
+                  MixWise Original
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>

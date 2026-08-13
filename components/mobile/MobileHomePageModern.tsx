@@ -7,7 +7,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
-import { formatCocktailName } from "@/lib/formatters";
+import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import { 
   SparklesIcon, 
   MagnifyingGlassIcon, 
@@ -244,7 +244,12 @@ function ModernCocktailCard({ cocktail, index }: { cocktail: SanityCocktail; ind
             🍸
           </div>
         )}
-        <div className="absolute bottom-2 left-2 right-2">
+        <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
+          {isNewCocktail(cocktail.createdAt) && (
+            <span className="inline-flex items-center bg-terracotta/95 backdrop-blur-sm text-cream text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg">
+              NEW
+            </span>
+          )}
           <span className="inline-flex items-center gap-1 bg-olive/95 backdrop-blur-sm text-cream text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg">
             <span className="w-1.5 h-1.5 bg-cream rounded-full animate-pulse" />
             Ready
@@ -291,6 +296,11 @@ function ModernFeaturedCard({ cocktail, index }: { cocktail: SanityCocktail; ind
           <div className="h-full w-full flex items-center justify-center text-sage text-2xl">
             🍸
           </div>
+        )}
+        {isNewCocktail(cocktail.createdAt) && (
+          <span className="absolute top-1 left-1 bg-terracotta text-cream text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-lg">
+            NEW
+          </span>
         )}
       </div>
       <div className="flex-1 min-w-0 flex flex-col justify-center">

@@ -54,6 +54,7 @@ function mapCocktailListToSanity(cocktails: any[]): SanityCocktail[] {
     isPopular: false,
     isFavorite: false,
     isTrending: false,
+    createdAt: cocktail.created_at || undefined,
     ingredients: (cocktail.ingredients || []).map((ing: any, index: number) => ({
       _key: `ing${index}`,
       ingredient: ing.ingredient ? {

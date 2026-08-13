@@ -6,7 +6,7 @@ import Image from "next/image";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
-import { formatCocktailName } from "@/lib/formatters";
+import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
@@ -73,6 +73,7 @@ const KEYWORD_MAPPINGS: Record<string, (c: SanityCocktail) => boolean> = {
   favourites: (c) => c.isFavorite === true,
   trending: (c) => c.isTrending === true,
   hot: (c) => c.isTrending === true,
+  new: (c) => isNewCocktail(c.createdAt),
 };
 
 // Number of items to load per batch
@@ -616,6 +617,11 @@ function CocktailCard({
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-1 z-10 max-w-[80%]">
+          {isNewCocktail(cocktail.createdAt) && (
+            <span className="flex items-center gap-1 bg-terracotta text-cream text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">
+              NEW
+            </span>
+          )}
           {cocktail.isTrending && (
             <span className="flex items-center gap-1 bg-terracotta text-cream text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">
               <FireIcon className="w-3 h-3" /> TRENDING

@@ -2,6 +2,23 @@
  * Formatting utilities for display text
  */
 
+/** Cocktails added within this many days show a "NEW" label. */
+export const NEW_COCKTAIL_DAYS = 30;
+
+/**
+ * Whether a cocktail should show the "NEW" label based on when it was added.
+ */
+export function isNewCocktail(
+  createdAt: string | Date | null | undefined,
+  days: number = NEW_COCKTAIL_DAYS
+): boolean {
+  if (!createdAt) return false;
+  const createdMs =
+    createdAt instanceof Date ? createdAt.getTime() : new Date(createdAt).getTime();
+  if (Number.isNaN(createdMs)) return false;
+  return Date.now() - createdMs < days * 24 * 60 * 60 * 1000;
+}
+
 /**
  * Formats a cocktail name with proper title casing
  * Capitalizes every word except filler words (the, and, a, of) unless they're the first word

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import type { SanityCocktail } from "@/lib/sanityTypes";
+import { isNewCocktail } from "@/lib/formatters";
 
 interface FeaturedCocktailsProps {
   cocktails: SanityCocktail[];
@@ -67,7 +68,7 @@ function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps)
         isOffset ? "lg:mt-8" : ""
       }`}
     >
-      <div className="aspect-[4/3] overflow-hidden bg-mist">
+      <div className="relative aspect-[4/3] overflow-hidden bg-mist">
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -82,6 +83,11 @@ function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps)
           />
         ) : (
           <div className="h-full w-full bg-mist" />
+        )}
+        {isNewCocktail(cocktail.createdAt) && (
+          <span className="absolute top-2 left-2 bg-terracotta text-cream text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">
+            NEW
+          </span>
         )}
       </div>
 

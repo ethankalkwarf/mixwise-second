@@ -8,6 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
+import { isNewCocktail } from "@/lib/formatters";
 
 type Props = {
   inventoryIds: string[];
@@ -387,6 +388,11 @@ function CocktailCard({
           {isReady && (
             <div className="bg-olive text-cream text-xs font-bold px-2.5 py-1.5 rounded-full shadow-lg backdrop-blur-sm">
               ✓ READY
+            </div>
+          )}
+          {isNewCocktail(cocktail.createdAt) && (
+            <div className="bg-terracotta text-cream text-xs font-bold px-2.5 py-1.5 rounded-full shadow-lg backdrop-blur-sm tracking-wider">
+              NEW
             </div>
           )}
           {cocktail.isPopular && (

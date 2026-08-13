@@ -105,7 +105,8 @@ export async function getCocktailsList(filters: CocktailFilters & { includeIngre
     flavor_tartness,
     flavor_bitterness,
     flavor_aroma,
-    flavor_texture
+    flavor_texture,
+    created_at
   `;
 
   if (filters.includeIngredients) {
@@ -185,6 +186,7 @@ export async function getMixCocktails(): Promise<MixCocktail[]> {
     isPopular: cocktail.isPopular,
     isFavorite: cocktail.isFavorite,
     isTrending: cocktail.isTrending,
+    createdAt: cocktail.createdAt ?? undefined,
     drinkCategories: cocktail.drinkCategories,
     tags: cocktail.tags,
     garnish: cocktail.garnish,
@@ -232,6 +234,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
   isPopular: boolean;
   isFavorite: boolean;
   isTrending: boolean;
+  createdAt: string | null;
   drinkCategories: string[];
   tags: string[];
   garnish: string | null;
@@ -261,7 +264,8 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
         tags,
         garnish,
         metadata_json,
-        ingredients
+        ingredients,
+        created_at
       `)
       .order('name');
 
@@ -457,6 +461,7 @@ export async function getCocktailsWithIngredients(): Promise<Array<{
         isPopular: Boolean((cocktail.metadata_json as { isPopular?: boolean } | null)?.isPopular),
         isFavorite: Boolean((cocktail.metadata_json as { isFavorite?: boolean } | null)?.isFavorite),
         isTrending: Boolean((cocktail.metadata_json as { isTrending?: boolean } | null)?.isTrending),
+        createdAt: cocktail.created_at || null,
         drinkCategories: cocktail.categories_all || [],
         tags: cocktail.tags || [],
         garnish: cocktail.garnish || null,
