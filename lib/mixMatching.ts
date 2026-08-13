@@ -1,13 +1,12 @@
 /**
  * Matching engine for the Mix tool
  * Determines which cocktails can be made based on owned ingredients
- * 
+ *
  * CRITICAL: All ingredient IDs MUST be in canonical UUID format (strings).
  * This file assumes IDs are already normalized by useBarIngredients and getMixDataClient.
  */
 
 import type { MixCocktail, MixMatchResult, MixMatchGroups } from "./mixTypes";
-import { debugLog } from "@/lib/debugLog";
 
 export type MixMatchParams = {
   cocktails: MixCocktail[];
@@ -24,8 +23,6 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     maxMissing = 2
   } = params;
 
-  // Create sets for O(1) lookup
-  // NOTE: All IDs in both sets MUST be in canonical UUID format for comparison to work
   const owned = new Set<string>(ownedIngredientIds);
   const staples = new Set<string>(stapleIngredientIds);
 
@@ -33,75 +30,15 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
   const almostThere: MixMatchResult[] = [];
   const far: MixMatchResult[] = [];
 
-  // Validation: Check for ID format consistency
-  if (process.env.NODE_ENV === 'development') {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const ownedSamples = ownedIngredientIds.slice(0, 3);
-    const cocktailSamples = cocktails
-      .flatMap(c => c.ingredients.map(i => i.id))
-      .slice(0, 3);
-    
-    const allSamples = [...ownedSamples, ...cocktailSamples];
-    const nonUuidCount = allSamples.filter(id => !uuidRegex.test(id)).length;
-    
-    if (nonUuidCount > 0) {
-      console.warn('[MIX-MATCH-WARN] Found non-UUID ingredient IDs:', {
-        nonUuidCount,
-        examples: allSamples.filter(id => !uuidRegex.test(id))
-      });
-    }
-  }
-
-  // Always debug Margarita (not just in development)
-  debugLog('[MIX-MATCH-DEBUG] Input:', {
-    ownedCount: ownedIngredientIds.length,
-    cocktailCount: cocktails.length,
-    stapleCount: stapleIngredientIds.length,
-    ownedSample: ownedIngredientIds.slice(0, 5),
-    firstCocktailIngredients: cocktails.length > 0 ? cocktails[0].ingredients.slice(0, 3).map(i => ({ id: i.id, name: i.name, optional: i.isOptional })) : []
-  });
-
-  // Debug Margarita specifically - try multiple name variations
-  const margaritaVariations = ['margarita', 'classic margarita', 'tequila margarita'];
-  let margarita = null;
-  for (const variation of margaritaVariations) {
-    margarita = cocktails.find(c => c.name.toLowerCase().includes(variation));
-    if (margarita) break;
-  }
-
-  if (margarita) {
-    debugLog('[MIX-MATCH-DEBUG] Margarita found:', {
-      id: margarita.id,
-      name: margarita.name,
-      ingredients: margarita.ingredients.map(i => ({ id: i.id, name: i.name, optional: i.isOptional }))
-    });
-  } else {
-    debugLog('[MIX-MATCH-DEBUG] Margarita not found in cocktails. Available names:', cocktails.slice(0, 10).map(c => c.name));
-  }
-
-  // Specifically debug the basic "Margarita" cocktail
-  const basicMargarita = cocktails.find(c => c.name.toLowerCase() === 'margarita');
-  if (basicMargarita) {
-    debugLog('[MIX-MATCH-DEBUG] BASIC Margarita ingredients:', basicMargarita.ingredients.map(i => ({
-      id: i.id,
-      name: i.name,
-      optional: i.isOptional,
-      isStaple: stapleIngredientIds.includes(i.id)
-    })));
-  }
-
   for (const cocktail of cocktails) {
-    // Skip cocktails with no ingredients (bad data)
     if (!cocktail.ingredients || cocktail.ingredients.length === 0) {
       continue;
     }
 
-    // Classify ingredients
     const requiredIngredients = cocktail.ingredients.filter(
       (ing) => ing.id && !ing.isOptional && !staples.has(ing.id)
     );
 
-    // Skip cocktails with no valid required ingredients
     if (requiredIngredients.length === 0) {
       continue;
     }
@@ -111,7 +48,6 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     const missingRequiredIds: string[] = [];
     const missingNames: string[] = [];
 
-    // Check required ingredients
     for (const ing of requiredIngredients) {
       if (owned.has(ing.id)) {
         requiredCovered += 1;
@@ -126,79 +62,45 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
 
     const result: MixMatchResult = {
       cocktail,
-      score: matchPercent, // Legacy compatibility
+      score: matchPercent,
       missingRequiredIngredientIds: missingRequiredIds,
-      missingIngredientIds: missingRequiredIds, // Legacy compatibility
-      missingIngredientNames: missingNames, // Legacy compatibility
+      missingIngredientIds: missingRequiredIds,
+      missingIngredientNames: missingNames,
       missingCount,
       matchPercent,
     };
 
-    // Debug Margarita specifically
-    if (cocktail.name.toLowerCase() === 'margarita') {
-      debugLog('[MIX-MATCH-DEBUG] BASIC Margarita matching:', {
-        name: cocktail.name,
-        requiredTotal,
-        requiredCovered,
-        missingCount,
-        matchPercent,
-        requiredIngredients: requiredIngredients.map(i => ({ id: i.id, name: i.name })),
-        missingRequiredIds,
-        ownedIngredientIds: ownedIngredientIds.slice(0, 10),
-        staples: stapleIngredientIds,
-        category: missingCount === 0 ? 'READY' : missingCount <= maxMissing ? 'ALMOST' : 'FAR'
-      });
-    }
-
-    // Categorize cocktails based on missing required ingredients
     if (missingCount === 0) {
-      // READY: All required ingredients owned
       ready.push(result);
     } else if (missingCount <= maxMissing) {
-      // ALMOST THERE: Missing 1-maxMissing required ingredients
       almostThere.push(result);
     } else {
-      // FAR: Missing more than maxMissing required ingredients
       far.push(result);
     }
   }
 
-  // Sort READY: highest matchPercent, then fewest total required ingredients
   ready.sort((a, b) => {
     if (b.matchPercent !== a.matchPercent) return b.matchPercent - a.matchPercent;
-    const aRequiredCount = a.cocktail.ingredients.filter(ing => !ing.isOptional).length;
-    const bRequiredCount = b.cocktail.ingredients.filter(ing => !ing.isOptional).length;
+    const aRequiredCount = a.cocktail.ingredients.filter((ing) => !ing.isOptional).length;
+    const bRequiredCount = b.cocktail.ingredients.filter((ing) => !ing.isOptional).length;
     return aRequiredCount - bRequiredCount;
   });
 
-  // Sort ALMOST THERE: missingCount ascending, then matchPercent descending
   almostThere.sort((a, b) => {
     if (a.missingCount !== b.missingCount) return a.missingCount - b.missingCount;
     if (b.matchPercent !== a.matchPercent) return b.matchPercent - a.matchPercent;
     return a.cocktail.name.localeCompare(b.cocktail.name);
   });
 
-  // Sort FAR: by matchPercent descending (can be ignored by UI)
   far.sort((a, b) => {
     if (b.matchPercent !== a.matchPercent) return b.matchPercent - a.matchPercent;
     return a.cocktail.name.localeCompare(b.cocktail.name);
   });
 
-  if (process.env.NODE_ENV === 'development') {
-    debugLog('[MIX-MATCH-DEBUG] Results:', {
-      ready: ready.length,
-      almostThere: almostThere.length,
-      far: far.length,
-      readySample: ready.slice(0, 3).map(r => ({ name: r.cocktail.name, matchPercent: r.matchPercent })),
-      almostThereSample: almostThere.slice(0, 3).map(r => ({ name: r.cocktail.name, missingCount: r.missingCount, matchPercent: r.matchPercent }))
-    });
-  }
-
   return {
     ready,
     almostThere,
     far,
-    makeNow: ready // Legacy compatibility
+    makeNow: ready
   };
 }
-

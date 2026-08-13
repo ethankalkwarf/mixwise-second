@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react";
 import { MixResultsPanel } from "./MixResultsPanel";
 import { YourBarPanel } from "./YourBarPanel";
-import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
-import { getMixMatchGroups } from "@/lib/mixMatching";
+import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
 import { ArrowPathIcon, LightBulbIcon, PlusIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useShoppingList } from "@/hooks/useShoppingList";
@@ -18,6 +17,7 @@ type Props = {
     canMake: number;
     almostThere: number;
   };
+  matchGroups: MixMatchGroups;
   selectedIngredients: MixIngredient[];
   onRemoveIngredient: (id: string) => void;
   onClearAll: () => void;
@@ -29,6 +29,7 @@ export function MixMenu({
   allIngredients,
   onAddToInventory,
   matchCounts,
+  matchGroups,
   selectedIngredients,
   onRemoveIngredient,
   onClearAll,
@@ -36,45 +37,25 @@ export function MixMenu({
   const [showAllRecipes, setShowAllRecipes] = useState(false);
   const { addItem, isLoading: shoppingLoading } = useShoppingList();
 
-  // Get "Almost There" suggestions - cocktails missing only one ingredient
   const almostThereCocktails = useMemo(() => {
-    const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
-
-    const results = getMixMatchGroups({
-      cocktails: allCocktails,
-      ownedIngredientIds: inventoryIds,
-      stapleIngredientIds: stapleIds,
-      maxMissing: 2
-    });
-
-    return results.almostThere
-      .filter(match => match.missingIngredientIds.length === 1)
+    return matchGroups.almostThere
+      .filter((match) => match.missingIngredientIds.length === 1)
       .slice(0, 6)
-      .map(match => {
-        const missingIngredient = allIngredients.find(i => i.id === match.missingIngredientIds[0]);
+      .map((match) => {
+        const missingIngredient = allIngredients.find((i) => i.id === match.missingIngredientIds[0]);
         return {
           cocktail: match.cocktail,
           missingIngredient
         };
       })
-      .filter(item => item.missingIngredient);
-  }, [allCocktails, allIngredients, inventoryIds]);
+      .filter((item) => item.missingIngredient);
+  }, [matchGroups.almostThere, allIngredients]);
 
-  // Random cocktail suggestion
   const randomSuggestion = useMemo(() => {
-    if (matchCounts.canMake === 0) return null;
-
-    const stapleIds = allIngredients.filter((i) => i.isStaple).map((i) => i.id);
-
-    const results = getMixMatchGroups({
-      cocktails: allCocktails,
-      ownedIngredientIds: inventoryIds,
-      stapleIngredientIds: stapleIds,
-    });
-
-    const randomIndex = Math.floor(Math.random() * results.ready.length);
-    return results.ready[randomIndex]?.cocktail || null;
-  }, [allCocktails, allIngredients, inventoryIds, matchCounts.canMake]);
+    if (matchCounts.canMake === 0 || matchGroups.ready.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * matchGroups.ready.length);
+    return matchGroups.ready[randomIndex]?.cocktail || null;
+  }, [matchGroups.ready, matchCounts.canMake]);
 
   // Ingredient substitution suggestions
   const substitutionSuggestions = useMemo(() => {
@@ -205,6 +186,7 @@ export function MixMenu({
             allIngredients={allIngredients}
             onAddToInventory={onAddToInventory}
             showAllRecipes={showAllRecipes}
+            matchGroups={matchGroups}
           />
 
 

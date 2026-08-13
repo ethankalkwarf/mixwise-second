@@ -6,6 +6,7 @@ import { PlusIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/ou
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { formatIngredientCategory } from "@/lib/formatters";
+import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
 
 type Props = {
   allIngredients: MixIngredient[];
@@ -76,6 +77,10 @@ export function MixCabinet({
 
     return filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   }, [allIngredients, selectedCategory, stapleIds, searchQuery]);
+
+  const { visibleItems: visibleIngredients, hasMore, loadMoreRef } = useInfiniteVisibleCount(
+    filteredIngredients
+  );
 
   // Get popular ingredients that aren't already added
   const popularAvailable = useMemo(() => {
@@ -291,7 +296,7 @@ export function MixCabinet({
           {/* Show ingredients when searching */}
           {searchQuery && filteredIngredients.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
-              {filteredIngredients.map((ingredient) => {
+              {visibleIngredients.map((ingredient) => {
                 const isSelected = ingredientIds.includes(ingredient.id);
                 const isJustAdded = addedIngredient === ingredient.id;
 
@@ -333,6 +338,11 @@ export function MixCabinet({
                   </button>
                 );
               })}
+            </div>
+          )}
+          {searchQuery && hasMore && (
+            <div ref={loadMoreRef} className="flex justify-center py-6 text-sage text-sm">
+              Loading more ingredients...
             </div>
           )}
 
@@ -429,8 +439,9 @@ export function MixCabinet({
 
           {/* Ingredient Grid */}
           {filteredIngredients.length > 0 ? (
+            <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {filteredIngredients.map((ingredient) => {
+              {visibleIngredients.map((ingredient) => {
                 const isSelected = ingredientIds.includes(ingredient.id);
                 const isJustAdded = addedIngredient === ingredient.id;
 
@@ -474,6 +485,12 @@ export function MixCabinet({
                 );
               })}
             </div>
+            {hasMore && (
+              <div ref={loadMoreRef} className="flex justify-center py-6 text-sage text-sm">
+                Loading more ingredients...
+              </div>
+            )}
+            </>
           ) : (
             <div className="text-center py-16">
               <div className="text-4xl mb-4">🔍</div>

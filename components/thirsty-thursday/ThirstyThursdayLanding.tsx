@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { EnvelopeIcon, CheckCircleIcon, SparklesIcon, CalendarDaysIcon, GiftIcon, FireIcon, StarIcon } from "@heroicons/react/24/solid";
@@ -45,6 +45,7 @@ export function ThirstyThursdayLanding({ backgroundCocktails = [] }: ThirstyThur
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const heroRef = useRef<HTMLDivElement>(null);
+  const mouseFrameRef = useRef<number | null>(null);
   const toast = useToast();
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -59,13 +60,23 @@ export function ThirstyThursdayLanding({ backgroundCocktails = [] }: ThirstyThur
     }
   }, [backgroundCocktails.length]);
 
-  // Mouse tracking for interactive gradient
+  // Mouse tracking for interactive gradient (rAF-throttled to avoid per-event re-renders)
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      if (mouseFrameRef.current != null) return;
+      const { clientX, clientY } = e;
+      mouseFrameRef.current = window.requestAnimationFrame(() => {
+        setMousePosition({ x: clientX, y: clientY });
+        mouseFrameRef.current = null;
+      });
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (mouseFrameRef.current != null) {
+        window.cancelAnimationFrame(mouseFrameRef.current);
+      }
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

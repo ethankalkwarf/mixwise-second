@@ -118,6 +118,7 @@ async function fetchCocktailsList(filtersKey: string): Promise<CocktailListItem[
     categories_all,
     image_url,
     image_alt,
+    glassware,
     flavor_strength,
     flavor_sweetness,
     flavor_tartness,
@@ -180,7 +181,56 @@ async function fetchCocktailsList(filtersKey: string): Promise<CocktailListItem[
     return [];
   }
 
-  return (data || []) as unknown as CocktailListItem[];
+  return (data || []).map((row) => {
+    const record = row as unknown as Record<string, unknown>;
+    const item: CocktailListItem = {
+      id: String(record.id),
+      slug: String(record.slug ?? ""),
+      name: String(record.name ?? ""),
+      short_description: (record.short_description as string | undefined) ?? undefined,
+      base_spirit: (record.base_spirit as string | undefined) ?? undefined,
+      category_primary: (record.category_primary as string | undefined) ?? undefined,
+      difficulty: (record.difficulty as string | undefined) ?? undefined,
+      tags: (record.tags as string[] | undefined) ?? undefined,
+      image_url: (record.image_url as string | undefined) ?? undefined,
+      image_alt: (record.image_alt as string | undefined) ?? undefined,
+      categories_all: (record.categories_all as string[] | undefined) ?? undefined,
+      glassware: (record.glassware as string | undefined) ?? undefined,
+      flavor_strength: (record.flavor_strength as number | undefined) ?? undefined,
+      flavor_sweetness: (record.flavor_sweetness as number | undefined) ?? undefined,
+      flavor_tartness: (record.flavor_tartness as number | undefined) ?? undefined,
+      flavor_bitterness: (record.flavor_bitterness as number | undefined) ?? undefined,
+      flavor_aroma: (record.flavor_aroma as number | undefined) ?? undefined,
+      flavor_texture: (record.flavor_texture as number | undefined) ?? undefined,
+      created_at: (record.created_at as string | undefined) ?? undefined,
+    };
+
+    if (filters.includeIngredients) {
+      item.ingredientNames = extractIngredientNames(record.ingredients);
+    }
+
+    return item;
+  });
+}
+
+function extractIngredientNames(ingredients: unknown): string[] {
+  if (!Array.isArray(ingredients)) return [];
+  const names: string[] = [];
+  for (const ing of ingredients) {
+    if (!ing || typeof ing !== "object") continue;
+    const record = ing as Record<string, unknown>;
+    const nested = record.ingredient;
+    const nestedName =
+      nested && typeof nested === "object"
+        ? (nested as Record<string, unknown>).name
+        : undefined;
+    const name =
+      (typeof nestedName === "string" && nestedName) ||
+      (typeof record.name === "string" && record.name) ||
+      null;
+    if (name) names.push(name);
+  }
+  return names;
 }
 
 const getCachedCocktailsList = unstable_cache(

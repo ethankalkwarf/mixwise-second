@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { getMixMatchGroups } from "@/lib/mixMatching";
-import type { MixIngredient, MixCocktail, MixMatchResult } from "@/lib/mixTypes";
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
+import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
 import Image from "next/image";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 import { isNewCocktail } from "@/lib/formatters";
+import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
 
 type Props = {
   inventoryIds: string[];
@@ -16,6 +16,7 @@ type Props = {
   allIngredients: MixIngredient[];
   onAddToInventory: (id: string) => void;
   showAllRecipes?: boolean;
+  matchGroups: MixMatchGroups;
 };
 
 export function MixResultsPanel({
@@ -23,26 +24,11 @@ export function MixResultsPanel({
   allCocktails,
   allIngredients,
   onAddToInventory,
-  showAllRecipes = false
+  showAllRecipes = false,
+  matchGroups
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-
-  // Get staple ingredient IDs
-  const stapleIds = useMemo(() => {
-    return allIngredients.filter((i) => i.isStaple).map((i) => i.id);
-  }, [allIngredients]);
-
-  // Run matching engine
-  const { ready, almostThere, far } = useMemo(
-    () =>
-      getMixMatchGroups({
-        cocktails: allCocktails,
-        ownedIngredientIds: inventoryIds,
-        stapleIngredientIds: stapleIds,
-        maxMissing: 2 // Default max missing ingredients for "almost there"
-      }),
-    [allCocktails, inventoryIds, stapleIds]
-  );
+  const { ready, almostThere } = matchGroups;
 
   // Get available categories
   const availableCategories = useMemo(() => {
@@ -75,7 +61,9 @@ export function MixResultsPanel({
       if (!a.cocktail.isPopular && b.cocktail.isPopular) return 1;
       return a.cocktail.name.localeCompare(b.cocktail.name);
     });
-  }, [ready, activeCategory]);
+  }, [ready, activeCategory, showAllRecipes, allCocktails]);
+
+  const { visibleItems: visibleDrinks, hasMore, loadMoreRef } = useInfiniteVisibleCount(displayedDrinks);
 
   // Smart additions
   const unlockPotential = useMemo(() => {
@@ -213,8 +201,9 @@ export function MixResultsPanel({
 
         {/* Cocktail Grid — minmax(0,1fr) via min-w-0 on cards keeps previews inside the page */}
         {displayedDrinks.length > 0 && (
+          <>
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 min-w-0" role="list">
-            {displayedDrinks.map(({ cocktail, missingIngredientIds, missingIngredientNames }) => (
+            {visibleDrinks.map(({ cocktail, missingIngredientIds, missingIngredientNames }) => (
               <CocktailCard
                 key={cocktail.id}
                 cocktail={cocktail}
@@ -223,6 +212,12 @@ export function MixResultsPanel({
               />
             ))}
           </div>
+          {hasMore && (
+            <div ref={loadMoreRef} className="flex justify-center py-8 text-sage text-sm">
+              Loading more recipes...
+            </div>
+          )}
+          </>
         )}
       </div>
 
@@ -373,7 +368,7 @@ function CocktailCard({
               className={`object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-multiply ${
                 isReady ? "opacity-90 group-hover:opacity-100" : "opacity-60 grayscale-[0.5]"
               }`}
-              quality={90}
+              quality={75}
               placeholder="blur"
               blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />

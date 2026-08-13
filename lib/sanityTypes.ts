@@ -97,6 +97,8 @@ export type SanityCocktail = {
   method?: "shaken" | "stirred" | "built" | "blended" | "muddled" | "layered";
   instructions?: SanityBlock[];
   ingredients?: SanityCocktailIngredient[];
+  /** Directory-only: ingredient names for search without hydrating full objects */
+  ingredientNames?: string[];
   garnish?: string;
   tags?: string[];
   drinkCategories?: string[];

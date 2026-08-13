@@ -102,6 +102,7 @@ export interface CocktailListItem {
   image_url?: string;
   image_alt?: string;
   categories_all?: string[];
+  glassware?: string;
   flavor_strength?: number;
   flavor_sweetness?: number;
   flavor_tartness?: number;
@@ -109,5 +110,7 @@ export interface CocktailListItem {
   flavor_aroma?: number;
   flavor_texture?: number;
   created_at?: string;
+  /** Slim names for directory search — not full ingredient objects */
+  ingredientNames?: string[];
 }
 

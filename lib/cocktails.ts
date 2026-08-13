@@ -197,6 +197,18 @@ function getFallbackIngredients(): MixIngredient[] {
   ];
 }
 
+type MixCocktailRow = {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl: string | null;
+  primarySpirit: string | null;
+  isPopular: boolean;
+  createdAt: string | null;
+  ingredients: Array<{ id: string; name: string; isOptional?: boolean }>;
+  ingredientsWithIds?: Array<{ id: string; name: string; isOptional?: boolean }>;
+};
+
 /**
  * Fetch cocktails for mix logic (client-side)
  */
@@ -204,29 +216,16 @@ export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
   try {
     const cocktailsWithIngredients = await getCocktailsWithIngredientsClient();
 
-    const result = cocktailsWithIngredients.map(cocktail => ({
+    return cocktailsWithIngredients.map((cocktail) => ({
       id: cocktail.id,
       name: cocktail.name,
       slug: cocktail.slug,
-      description: cocktail.description,
-      instructions: cocktail.instructions,
-      category: cocktail.category,
       imageUrl: cocktail.imageUrl,
-      glass: cocktail.glass,
-      method: cocktail.method,
       primarySpirit: cocktail.primarySpirit,
-      difficulty: cocktail.difficulty,
       isPopular: cocktail.isPopular,
-      isFavorite: cocktail.isFavorite,
-      isTrending: cocktail.isTrending,
       createdAt: cocktail.createdAt ?? undefined,
-      drinkCategories: cocktail.drinkCategories,
-      tags: cocktail.tags,
-      garnish: cocktail.garnish,
-      ingredients: cocktail.ingredients
+      ingredients: cocktail.ingredients,
     }));
-
-    return result;
   } catch (error) {
     console.error('Error in getMixCocktailsClient:', error);
     throw error;
@@ -291,22 +290,11 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   id: string;
   name: string;
   slug: string;
-  description: string | null;
-  instructions: string | null;
-  category: string | null;
   imageUrl: string | null;
-  glass: string | null;
-  method: string | null;
   primarySpirit: string | null;
-  difficulty: string | null;
   isPopular: boolean;
-  isFavorite: boolean;
-  isTrending: boolean;
   createdAt: string | null;
-  drinkCategories: string[];
-  tags: string[];
-  garnish: string | null;
-  ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+  ingredients: Array<{ id: string; name: string; isOptional?: boolean }>;
 }>> {
   try {
     // Skip client-side entirely and go straight to server-side API
@@ -452,22 +440,11 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
   id: string;
   name: string;
   slug: string;
-  description: string | null;
-  instructions: string | null;
-  category: string | null;
   imageUrl: string | null;
-  glass: string | null;
-  method: string | null;
   primarySpirit: string | null;
-  difficulty: string | null;
   isPopular: boolean;
-  isFavorite: boolean;
-  isTrending: boolean;
   createdAt: string | null;
-  drinkCategories: string[];
-  tags: string[];
-  garnish: string | null;
-  ingredients: Array<{ id: string; name: string; amount?: string | null; isOptional?: boolean; notes?: string | null }>;
+  ingredients: Array<{ id: string; name: string; isOptional?: boolean }>;
 }>> {
 
   // Make a request to our own API route with timeout
@@ -490,9 +467,18 @@ async function getCocktailsWithIngredientsServerSide(): Promise<Array<{
       throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as MixCocktailRow[];
 
-    return data;
+    return (data || []).map((cocktail) => ({
+      id: cocktail.id,
+      name: cocktail.name,
+      slug: cocktail.slug,
+      imageUrl: cocktail.imageUrl,
+      primarySpirit: cocktail.primarySpirit,
+      isPopular: Boolean(cocktail.isPopular),
+      createdAt: cocktail.createdAt || null,
+      ingredients: cocktail.ingredients || cocktail.ingredientsWithIds || [],
+    }));
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error && error.name === 'AbortError') {

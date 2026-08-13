@@ -4,6 +4,7 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { CocktailsDirectory } from "@/components/cocktails/CocktailsDirectory";
 import { generatePageMetadata } from "@/lib/seo";
 import type { SanityCocktail } from "@/lib/sanityTypes";
+import type { CocktailListItem } from "@/lib/cocktailTypes";
 
 export const revalidate = 300;
 
@@ -35,9 +36,8 @@ function deterministicShuffle<T>(array: T[], seed: string): T[] {
   }
 }
 
-// Temporary mapping function to convert Supabase types to Sanity types for component compatibility
-function mapCocktailListToSanity(cocktails: any[]): SanityCocktail[] {
-  return cocktails.map(cocktail => ({
+function mapCocktailListToSanity(cocktails: CocktailListItem[]): SanityCocktail[] {
+  return cocktails.map((cocktail) => ({
     _id: cocktail.id,
     _type: "cocktail" as const,
     name: cocktail.name,
@@ -45,27 +45,15 @@ function mapCocktailListToSanity(cocktails: any[]): SanityCocktail[] {
     description: cocktail.short_description || undefined,
     externalImageUrl: cocktail.image_url || undefined,
     glass: cocktail.glassware || undefined,
-    method: cocktail.technique || undefined,
     primarySpirit: cocktail.base_spirit || undefined,
-    difficulty: cocktail.difficulty || undefined,
+    difficulty: cocktail.difficulty as SanityCocktail["difficulty"] | undefined,
     drinkCategories: cocktail.categories_all || [],
     tags: cocktail.tags || [],
-    // Add other required fields with defaults
     isPopular: false,
     isFavorite: false,
     isTrending: false,
     createdAt: cocktail.created_at || undefined,
-    ingredients: (cocktail.ingredients || []).map((ing: any, index: number) => ({
-      _key: `ing${index}`,
-      ingredient: ing.ingredient ? {
-        _id: ing.ingredient.id,
-        name: ing.ingredient.name,
-        type: ing.ingredient.type || 'other'
-      } : null,
-      amount: ing.amount,
-      isOptional: ing.isOptional,
-      notes: ing.notes,
-    })),
+    ingredientNames: cocktail.ingredientNames || [],
   }));
 }
 

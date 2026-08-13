@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
+import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
 import type { DirectoryIngredient } from "@/lib/ingredientTypes";
 
 interface IngredientsDirectoryProps {
@@ -47,6 +48,8 @@ export function IngredientsDirectory({ ingredients }: IngredientsDirectoryProps)
 
     return results;
   }, [ingredients, searchQuery, filterType]);
+
+  const { visibleItems, hasMore, loadMoreRef } = useInfiniteVisibleCount(filteredIngredients);
 
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -139,17 +142,24 @@ export function IngredientsDirectory({ ingredients }: IngredientsDirectoryProps)
       </div>
 
       {filteredIngredients.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredIngredients.map((ingredient) => (
-            <IngredientCard
-              key={ingredient.id}
-              ingredient={ingredient}
-              isInBar={ingredientIds.includes(ingredient.id)}
-              onAddToBar={() => addIngredient(ingredient.id, ingredient.name)}
-              onRemoveFromBar={() => removeIngredient(ingredient.id)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {visibleItems.map((ingredient) => (
+              <IngredientCard
+                key={ingredient.id}
+                ingredient={ingredient}
+                isInBar={ingredientIds.includes(ingredient.id)}
+                onAddToBar={() => addIngredient(ingredient.id, ingredient.name)}
+                onRemoveFromBar={() => removeIngredient(ingredient.id)}
+              />
+            ))}
+          </div>
+          {hasMore && (
+            <div ref={loadMoreRef} className="flex justify-center py-6 text-sage text-sm">
+              Loading more ingredients...
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-12 bg-white border border-mist rounded-xl">
           <p className="text-sage">No ingredients found matching your criteria.</p>

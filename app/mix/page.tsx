@@ -15,7 +15,7 @@ import { getMixMatchGroups } from "@/lib/mixMatching";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
 import { SaveBarPrompt } from "@/components/auth/SaveBarPrompt";
-import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
+import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
 import { InformationCircleIcon, PlusIcon, HomeIcon, WrenchScrewdriverIcon, BookOpenIcon } from "@heroicons/react/24/outline";
 import { createClient } from "@/lib/supabase/client";
 import { MainContainer } from "@/components/layout/MainContainer";
@@ -284,33 +284,33 @@ function MixPageContent() {
   }, [allIngredients, selectedCategory, stapleIds]);
 
   // Get match counts for display - only run when all data is loaded and stable
-  const matchCounts = useMemo(() => {
-    // CRITICAL: Only run matching when ALL data is loaded and we have cocktails with ingredients
-    if (dataLoading || !allCocktails || allCocktails.length === 0 || !allIngredients || allIngredients.length === 0 || !ingredientIds) {
-      return { canMake: 0, almostThere: 0 };
+  const mixMatches: MixMatchGroups = useMemo(() => {
+    const empty: MixMatchGroups = { ready: [], almostThere: [], far: [], makeNow: [] };
+    if (dataLoading || !allCocktails?.length || !allIngredients?.length || !ingredientIds) {
+      return empty;
     }
 
-    // Additional check: ensure at least one cocktail has ingredients
-    const cocktailsWithIngredients = allCocktails.filter(c => c.ingredients && c.ingredients.length > 0);
+    const cocktailsWithIngredients = allCocktails.filter(
+      (c) => c.ingredients && c.ingredients.length > 0
+    );
     if (cocktailsWithIngredients.length === 0) {
-      return { canMake: 0, almostThere: 0 };
+      return empty;
     }
 
-    // stapleIds is now calculated at component level
-
-    const result = getMixMatchGroups({
+    return getMixMatchGroups({
       cocktails: cocktailsWithIngredients,
       ownedIngredientIds: ingredientIds,
       stapleIngredientIds: stapleIds,
     });
+  }, [allCocktails, allIngredients, ingredientIds, dataLoading, stapleIds]);
 
-    const matchCounts = {
-      canMake: result.ready.length,
-      almostThere: result.almostThere.length,
-    };
-
-    return matchCounts;
-  }, [allCocktails, allIngredients, ingredientIds, dataLoading]);
+  const matchCounts = useMemo(
+    () => ({
+      canMake: mixMatches.ready.length,
+      almostThere: mixMatches.almostThere.length,
+    }),
+    [mixMatches]
+  );
 
   if (dataLoading || barLoading) {
     return <MixSkeleton />;
@@ -371,6 +371,7 @@ function MixPageContent() {
             allIngredients={allIngredients}
             onAddToInventory={handleAddToInventory}
             matchCounts={matchCounts}
+            matchGroups={mixMatches}
             selectedIngredients={selectedIngredients}
             onRemoveIngredient={handleRemoveFromInventory}
             onClearAll={handleClearAll}

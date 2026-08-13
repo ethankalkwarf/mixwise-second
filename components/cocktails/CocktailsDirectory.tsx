@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
@@ -8,6 +8,7 @@ import type { SanityCocktail } from "@/lib/sanityTypes";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
+import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
 
@@ -89,9 +90,7 @@ export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFil
   const [filterGlass, setFilterGlass] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(Boolean(initialSpirit));
-  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [isInitialized, setIsInitialized] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Restore filter state from sessionStorage on mount (URL params win)
   useEffect(() => {
@@ -210,7 +209,8 @@ export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFil
         if (c.name.toLowerCase().includes(q)) return true;
         // Match description
         if (c.description?.toLowerCase().includes(q)) return true;
-        // Match ingredient names
+        // Match ingredient names (slim directory payload)
+        if (c.ingredientNames?.some((name) => name.toLowerCase().includes(q))) return true;
         if (c.ingredients?.some((ing) => ing.ingredient?.name?.toLowerCase().includes(q))) return true;
         // Match primary spirit
         if (c.primarySpirit?.toLowerCase().includes(q)) return true;
@@ -279,37 +279,10 @@ export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFil
     return results;
   }, [cocktails, searchQuery, sortBy, filterSpirit, filterGlass, filterCategory]);
 
-  // Reset visible count when filters change
-  useEffect(() => {
-    setVisibleCount(ITEMS_PER_PAGE);
-  }, [searchQuery, sortBy, filterSpirit, filterGlass, filterCategory]);
-
-  // Lazy loading with Intersection Observer
-  const loadMore = useCallback(() => {
-    if (visibleCount < filteredCocktails.length) {
-      setVisibleCount((prev) => Math.min(prev + ITEMS_PER_PAGE, filteredCocktails.length));
-    }
-  }, [visibleCount, filteredCocktails.length]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1, rootMargin: "100px" }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [loadMore]);
-
-  const visibleCocktails = filteredCocktails.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredCocktails.length;
+  const { visibleItems: visibleCocktails, hasMore, loadMoreRef } = useInfiniteVisibleCount(
+    filteredCocktails,
+    ITEMS_PER_PAGE
+  );
 
   const activeFilterCount = [filterSpirit, filterGlass, filterCategory].filter(Boolean).length;
 
@@ -589,8 +562,8 @@ function CocktailCard({
   onClick: (slug: string) => void;
   index?: number;
 }) {
-  const imageUrl = getImageUrl(cocktail.image, { width: 900, height: 600, quality: 90 }) || cocktail.externalImageUrl;
-  const ingredientCount = cocktail.ingredients?.length || 0;
+  const imageUrl = getImageUrl(cocktail.image, { width: 900, height: 600, quality: 75 }) || cocktail.externalImageUrl;
+  const ingredientCount = cocktail.ingredientNames?.length || cocktail.ingredients?.length || 0;
   const slug = cocktail.slug?.current || cocktail._id;
 
   const handleClick = (e: React.MouseEvent) => {
@@ -618,7 +591,7 @@ function CocktailCard({
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-700 group-hover:scale-110 mix-blend-multiply"
-              quality={90}
+              quality={75}
               placeholder="blur"
               blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />

@@ -12,7 +12,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useShoppingList } from "@/hooks/useShoppingList";
-import { getCocktailsWithIngredientsClient, getMixDataClient } from "@/lib/cocktails";
+import { getMixDataClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { createClient } from "@/lib/supabase/client";
 import { formatCocktailName } from "@/lib/formatters";
