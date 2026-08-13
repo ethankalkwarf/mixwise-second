@@ -11,7 +11,7 @@ interface HeroProps {
 }
 
 export function Hero({
-  subtitle = "Recipes worth making, matched to what’s already in your\u00A0cabinet — so you can pour something good\u00A0tonight.",
+  subtitle = "Recipes worth making, matched to what’s already in your\u00A0cabinet, so you can pour something good\u00A0tonight.",
 }: HeroProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
