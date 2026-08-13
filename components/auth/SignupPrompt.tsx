@@ -1,175 +1,157 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { useUser } from "./UserProvider";
 import { useAuthDialog } from "./AuthDialogProvider";
-import { Dialog, Transition } from "@headlessui/react";
-import { XMarkIcon, ClockIcon, HeartIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { Fragment } from "react";
+
+const SESSION_KEY = "mixwise-signup-prompt-dismissed";
+const COOLDOWN_KEY = "mixwise-signup-prompt-until";
+const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 interface SignupPromptProps {
-  /** Delay in milliseconds after page load before showing the prompt (default: 7000ms = 7 seconds) */
-  delay?: number;
-  /** Whether the prompt is enabled */
+  /** Time on site before signup can open (default: 45s) */
+  delayMs?: number;
+  /** Meaningful clicks (links/buttons) before signup can open */
+  clickThreshold?: number;
+  /** Scroll depth (0–1) before signup can open */
+  scrollThreshold?: number;
   enabled?: boolean;
 }
 
-export function SignupPrompt({ delay = 7000, enabled = true }: SignupPromptProps) {
+function isCoolingDown(): boolean {
+  if (typeof window === "undefined") return true;
+  if (sessionStorage.getItem(SESSION_KEY) === "true") return true;
+  const until = Number(localStorage.getItem(COOLDOWN_KEY) || 0);
+  return Number.isFinite(until) && until > Date.now();
+}
+
+function markDismissed() {
+  sessionStorage.setItem(SESSION_KEY, "true");
+  localStorage.setItem(COOLDOWN_KEY, String(Date.now() + COOLDOWN_MS));
+}
+
+function isMeaningfulClick(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  const el = target.closest("a, button, [role='button']");
+  if (!el) return false;
+  if (el.closest("[data-auth-dialog]")) return false;
+  return true;
+}
+
+/**
+ * Engagement-triggered signup: opens AuthDialog directly (Google / Apple / email)
+ * after time, clicks, or scroll — no intermediate teaser modal.
+ */
+export function SignupPrompt({
+  delayMs = 45_000,
+  clickThreshold = 4,
+  scrollThreshold = 0.5,
+  enabled = true,
+}: SignupPromptProps) {
   const { isAuthenticated, isLoading } = useUser();
-  const { openSignupDialog } = useAuthDialog();
-  const [isVisible, setIsVisible] = useState(false);
-  const [hasBeenDismissed, setHasBeenDismissed] = useState(false);
-  const [pageLoaded, setPageLoaded] = useState(false);
+  const { isOpen: authOpen, openSignupDialog } = useAuthDialog();
+  const [blocked, setBlocked] = useState(true);
 
-  // Check if user has already dismissed the prompt in this session
+  const openedRef = useRef(false);
+  const openedByUsRef = useRef(false);
+  const clicksRef = useRef(0);
+  const scrolledRef = useRef(false);
+  const timedOutRef = useRef(false);
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const dismissed = sessionStorage.getItem("mixwise-signup-prompt-dismissed");
-      if (dismissed === "true") {
-        setHasBeenDismissed(true);
-      }
+    if (!enabled) return;
+    if (typeof window === "undefined") return;
+    if (Capacitor.isNativePlatform()) {
+      setBlocked(true);
+      return;
     }
-  }, []);
+    setBlocked(isCoolingDown());
+  }, [enabled]);
 
-  // Listen for page load event to ensure all images and resources are loaded
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const handleLoad = () => {
-        setPageLoaded(true);
-      };
-
-      // If page is already loaded, set immediately
-      if (document.readyState === 'complete') {
-        setPageLoaded(true);
-      } else {
-        window.addEventListener('load', handleLoad);
-        return () => window.removeEventListener('load', handleLoad);
-      }
+  const tryOpen = useCallback(() => {
+    if (openedRef.current || blocked || isAuthenticated || isLoading || authOpen) {
+      return;
     }
-  }, []);
-
-  // Timer logic to show prompt after both delay AND page load
-  // This ensures all images and content are loaded before showing the prompt for better UX
-  useEffect(() => {
-    if (!enabled || isAuthenticated || isLoading || hasBeenDismissed || !pageLoaded) {
+    if (!(timedOutRef.current || clicksRef.current >= clickThreshold || scrolledRef.current)) {
       return;
     }
 
-    const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, delay);
-
-    return () => clearTimeout(timer);
-  }, [enabled, isAuthenticated, isLoading, hasBeenDismissed, pageLoaded, delay]);
-
-  // Don't show if conditions aren't met
-  if (!enabled || isAuthenticated || isLoading || hasBeenDismissed || !isVisible) {
-    return null;
-  }
-
-  const handleSignup = () => {
+    openedRef.current = true;
+    openedByUsRef.current = true;
     openSignupDialog({
       title: "Create your free MixWise account",
       subtitle: "Save your cabinet, favorites, and the drinks you've tried.",
       onSuccess: () => {
-        setIsVisible(false);
-        // Mark as dismissed to prevent showing again
-        sessionStorage.setItem("mixwise-signup-prompt-dismissed", "true");
+        markDismissed();
+        setBlocked(true);
       },
     });
-  };
+  }, [authOpen, blocked, clickThreshold, isAuthenticated, isLoading, openSignupDialog]);
 
-  const handleDismiss = () => {
-    setIsVisible(false);
-    setHasBeenDismissed(true);
-    // Store dismissal in session storage
-    sessionStorage.setItem("mixwise-signup-prompt-dismissed", "true");
-  };
+  // Time on site
+  useEffect(() => {
+    if (!enabled || blocked || isAuthenticated || isLoading) return;
 
-  return (
-    <Transition appear show={isVisible} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={handleDismiss}>
-        {/* Backdrop */}
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-forest/60 backdrop-blur-sm" />
-        </Transition.Child>
+    const timer = window.setTimeout(() => {
+      timedOutRef.current = true;
+      tryOpen();
+    }, delayMs);
 
-        {/* Modal content */}
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-3xl bg-white border border-mist p-6 text-left align-middle shadow-card-hover transition-all">
-                {/* Close button */}
-                <button
-                  onClick={handleDismiss}
-                  className="absolute top-4 right-4 p-1 rounded-xl text-sage hover:text-forest hover:bg-mist transition-colors"
-                  aria-label="Close signup prompt"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
+    return () => window.clearTimeout(timer);
+  }, [blocked, delayMs, enabled, isAuthenticated, isLoading, tryOpen]);
 
-                {/* Header */}
-                <div className="text-center mb-6">
-                  <Dialog.Title className="text-xl font-serif font-bold text-forest mb-2">
-                    Keep your bar in one place
-                  </Dialog.Title>
-                  <p className="text-sage text-sm">
-                    Save your cabinet, favorites, and the drinks you've already tried.
-                  </p>
-                </div>
+  // Clicks + scroll
+  useEffect(() => {
+    if (!enabled || blocked || isAuthenticated || isLoading) return;
 
-                {/* Benefits */}
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-sm text-charcoal">
-                    <HeartIcon className="w-4 h-4 text-olive flex-shrink-0" />
-                    <span>Save your favorite cocktails</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-charcoal">
-                    <MagnifyingGlassIcon className="w-4 h-4 text-olive flex-shrink-0" />
-                    <span>Suggestions from your cabinet</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-charcoal">
-                    <ClockIcon className="w-4 h-4 text-olive flex-shrink-0" />
-                    <span>Track your cocktail history</span>
-                  </div>
-                </div>
+    const onClick = (e: MouseEvent) => {
+      if (!isMeaningfulClick(e.target)) return;
+      clicksRef.current += 1;
+      tryOpen();
+    };
 
-                {/* CTA Buttons */}
-                <div className="space-y-3">
-                  <button
-                    onClick={handleSignup}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20"
-                  >
-                    Create a free account
-                  </button>
-                  <button
-                    onClick={handleDismiss}
-                    className="w-full px-4 py-2 text-sage hover:text-forest text-sm font-medium transition-colors"
-                  >
-                    Maybe Later
-                  </button>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
-  );
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      if (max <= 0) return;
+      if (window.scrollY / max >= scrollThreshold) {
+        scrolledRef.current = true;
+        tryOpen();
+      }
+    };
+
+    window.addEventListener("click", onClick, true);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      window.removeEventListener("click", onClick, true);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [blocked, enabled, isAuthenticated, isLoading, scrollThreshold, tryOpen]);
+
+  // When auth closes: cool down if we opened it; otherwise retry if engaged
+  useEffect(() => {
+    if (authOpen) return;
+
+    if (openedByUsRef.current) {
+      openedByUsRef.current = false;
+      markDismissed();
+      setBlocked(true);
+      return;
+    }
+
+    tryOpen();
+  }, [authOpen, tryOpen]);
+
+  // If they sign in another way, stop listening
+  useEffect(() => {
+    if (isAuthenticated) {
+      openedRef.current = true;
+      setBlocked(true);
+    }
+  }, [isAuthenticated]);
+
+  return null;
 }

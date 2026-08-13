@@ -47,33 +47,34 @@ export function Hero({
         <source src="/media/strainer-pour.mp4" type="video/mp4" />
       </video>
 
-      {/* Editorial scrim — keeps type solid on moving media */}
-      <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/70 to-charcoal/25" />
-      <div className="absolute inset-0 bg-gradient-to-r from-charcoal/80 via-charcoal/35 to-transparent" />
+      {/* Even scrim — readable type when content is centered over the pour */}
+      <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/65 to-charcoal/30" />
+      <div className="absolute inset-0 bg-charcoal/25" />
 
-      <div className="relative z-10 flex min-h-[88vh] items-end">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-28 sm:px-6 sm:pb-20 lg:px-8 lg:pb-24">
-          <h1 className="mb-5 max-w-3xl [text-wrap:balance] text-4xl font-semibold leading-[1.08] tracking-tight text-cream sm:text-5xl lg:text-6xl xl:text-7xl">
+      <div className="relative z-10 flex min-h-[88vh] items-center justify-center">
+        <div className="mx-auto w-full max-w-5xl px-4 pb-16 pt-28 text-center sm:px-6 sm:pb-20 lg:px-8 lg:pb-24">
+          <h1 className="mb-6 [text-wrap:balance] text-6xl font-semibold leading-[1.02] tracking-tight text-cream sm:text-7xl lg:text-8xl xl:text-[7.5rem]">
             Find your{" "}
             <span className="italic text-terracotta">
               next
-              <br className="hidden lg:block" /> favorite
+              <br />
+              favorite
             </span>
             {"\u00A0"}cocktail
           </h1>
-          <p className="mb-9 max-w-lg [text-wrap:pretty] text-base leading-relaxed text-mist sm:text-lg">
+          <p className="mx-auto mb-10 max-w-xl [text-wrap:pretty] text-base leading-relaxed text-mist sm:text-lg lg:text-xl">
             {subtitle}
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
             <Link
               href="/mix"
-              className="inline-flex items-center justify-center rounded-full bg-terracotta px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark"
+              className="inline-flex items-center justify-center rounded-full bg-terracotta px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark sm:px-10 sm:py-4 sm:text-base"
             >
               Open your cabinet
             </Link>
             <Link
               href="/cocktails"
-              className="inline-flex items-center justify-center rounded-full border-2 border-cream px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-cream hover:text-forest"
+              className="inline-flex items-center justify-center rounded-full border-2 border-cream px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-cream hover:text-forest sm:px-10 sm:py-4 sm:text-base"
             >
               Browse recipes
             </Link>

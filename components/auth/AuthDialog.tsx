@@ -286,7 +286,7 @@ export function AuthDialog({
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={handleClose}>
+      <Dialog as="div" className="relative z-50" onClose={handleClose} data-auth-dialog>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
