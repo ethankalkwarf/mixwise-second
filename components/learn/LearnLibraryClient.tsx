@@ -61,15 +61,15 @@ function PathStartCard({
     >
       <Image
         src={path.coverImage}
-        alt={path.coverAlt}
+        alt=""
         fill
         sizes={featured ? "100vw" : "(max-width: 768px) 100vw, 50vw"}
-        className={`object-cover transition-transform duration-700 group-hover:scale-105 ${imagePosition}`}
+        className={`pointer-events-none object-cover transition-transform duration-700 group-hover:scale-105 ${imagePosition}`}
         priority={featured}
+        aria-hidden
       />
-      <div className="absolute inset-0 bg-forest/40" />
-      <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/70 to-forest/15" />
-      {/* Fill the card height so cream type sits on the dark scrim, not the light photo top */}
+      <div className="pointer-events-none absolute inset-0 bg-forest/40" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest via-forest/70 to-forest/15" />
       <div className={`relative z-10 flex ${minH} flex-col justify-end p-6 sm:p-8`}>
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] !text-olive font-bold mb-2">
           {path.eyebrow} · ~{path.estimatedMinutes} min
@@ -112,10 +112,11 @@ function GuideRow({ guide }: { guide: LearnGuide }) {
       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
         <Image
           src={guide.coverImage}
-          alt={guide.coverAlt}
+          alt=""
           fill
           sizes="96px"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="pointer-events-none object-cover transition-transform duration-500 group-hover:scale-105"
+          aria-hidden
         />
       </div>
       <div className="min-w-0 flex flex-col justify-center py-1 pr-2">
