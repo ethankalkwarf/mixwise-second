@@ -28,13 +28,13 @@ const TECHNIQUE_PRACTICE: Record<string, string[]> = {
 const TECHNIQUE_COVER: Record<string, { src: string; alt: string }> = {
   "dry-shake": { src: "/learn/technique-dry-shake.webp", alt: "Dry shaking a cocktail tin" },
   "fine-strain": { src: "/learn/technique-fine-strain.webp", alt: "Fine-straining into a coupe" },
-  express: { src: "/learn/garnish-with-intent.webp", alt: "Garnishing a cocktail" },
-  muddle: { src: "/media/ice-mojito-poster.webp", alt: "Muddled mint drink" },
-  swizzle: { src: "/occasions/tiki.jpg", alt: "Crushed-ice tropical cocktail" },
-  rinse: { src: "/media/three-cocktails-dark.webp", alt: "Spirit-forward cocktails" },
-  float: { src: "/media/cocktails-overhead.webp", alt: "Layered cocktail" },
-  layer: { src: "/media/cocktails-overhead.webp", alt: "Layered drinks overhead" },
-  build: { src: "/media/ice-mojito-poster.webp", alt: "Built drink over ice" },
+  express: { src: "/learn/technique-express.webp", alt: "Expressing citrus peel over a cocktail" },
+  muddle: { src: "/learn/technique-muddle.webp", alt: "Muddling mint in a glass" },
+  swizzle: { src: "/learn/technique-swizzle.webp", alt: "Swizzling crushed ice" },
+  rinse: { src: "/learn/technique-rinse.webp", alt: "Absinthe rinse coating a glass" },
+  float: { src: "/learn/technique-float.webp", alt: "Floating a layer over a sour" },
+  layer: { src: "/learn/method-layer.webp", alt: "Layered density bands in a glass" },
+  build: { src: "/learn/method-build.webp", alt: "Building a highball over ice" },
 };
 
 type PageProps = {
