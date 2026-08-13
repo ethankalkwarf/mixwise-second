@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 import { SITE_CONFIG } from "@/lib/seo";
 import { getCocktailsList } from "@/lib/cocktails.server";
 import { getIngredientsDirectory } from "@/lib/ingredients.server";
+import { OCCASIONS } from "@/lib/occasions";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_CONFIG.url;
@@ -10,6 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${baseUrl}/cocktail-of-the-day`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/cocktails`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
+    { url: `${baseUrl}/occasions`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.85 },
     { url: `${baseUrl}/mix`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${baseUrl}/ingredients`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
     { url: `${baseUrl}/wedding-menu`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
@@ -18,6 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },
     { url: `${baseUrl}/privacy`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
     { url: `${baseUrl}/terms`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
+    ...OCCASIONS.map((occasion) => ({
+      url: `${baseUrl}/occasions/${occasion.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.75,
+    })),
   ];
 
   let cocktailPages: MetadataRoute.Sitemap = [];

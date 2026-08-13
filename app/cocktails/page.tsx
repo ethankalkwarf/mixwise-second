@@ -88,7 +88,11 @@ export default async function CocktailsPage() {
             Cocktail Recipes
           </h1>
           <p className="text-sage max-w-2xl">
-            Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each recipe includes detailed ingredients and instructions.
+            Browse our collection of {cocktails.length} handcrafted cocktail recipes. Prefer{" "}
+            <a href="/occasions" className="text-terracotta hover:underline font-medium">
+              seasons and occasions
+            </a>
+            ? Start there. Each recipe includes detailed ingredients and instructions.
           </p>
         </div>
 

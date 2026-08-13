@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
 
-export default function CollectionDetailPage() {
-  redirect("/cocktails");
+type PageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+export default async function CollectionDetailPage({ params }: PageProps) {
+  const { slug } = await params;
+  redirect(`/occasions/${slug}`);
 }

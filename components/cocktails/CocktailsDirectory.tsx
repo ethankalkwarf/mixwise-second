@@ -62,7 +62,7 @@ const BASE_SPIRITS = [
   { value: "scotch", label: "Scotch" },
   { value: "brandy", label: "Brandy" },
   { value: "cognac", label: "Cognac" },
-  { value: "none", label: "Non-Alcoholic" },
+  { value: "non-alcoholic", label: "Non-Alcoholic" },
 ];
 
 // Keywords that map to special filters
@@ -223,9 +223,17 @@ export function CocktailsDirectory({ cocktails }: Props) {
       });
     }
 
-    // Spirit filter
+    // Spirit filter (case-insensitive; Non-Alcoholic matches NA base spirits)
     if (filterSpirit) {
-      results = results.filter((c) => c.primarySpirit === filterSpirit);
+      const spirit = filterSpirit.toLowerCase();
+      results = results.filter((c) => {
+        const primary = (c.primarySpirit || "").toLowerCase();
+        if (!primary) return false;
+        if (spirit === "non-alcoholic") {
+          return primary.includes("non-alcoholic") || primary === "none";
+        }
+        return primary === spirit || primary.includes(spirit);
+      });
     }
 
     // Glass filter

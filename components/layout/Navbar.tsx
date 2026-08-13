@@ -148,6 +148,12 @@ export function Navbar() {
                 </div>
               </div>
               <Link
+                href="/occasions"
+                className={navLinkClass(isActive("/occasions"))}
+              >
+                Occasions
+              </Link>
+              <Link
                 href="/cocktails"
                 className={navLinkClass(isActive("/cocktails"))}
               >
@@ -341,6 +347,17 @@ export function Navbar() {
                 title="Find cocktails by ingredients in your bar"
               >
                 What Can I Make?
+              </Link>
+              <Link
+                href="/occasions"
+                className={`block px-3 py-3 text-base rounded-xl transition-colors ${
+                  isActive("/occasions")
+                    ? "font-semibold text-forest bg-mist/40"
+                    : "font-medium text-charcoal hover:text-terracotta hover:bg-mist/50"
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Occasions
               </Link>
               <Link
                 href="/cocktails"
