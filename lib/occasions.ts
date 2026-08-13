@@ -81,7 +81,7 @@ export const OCCASIONS: OccasionDefinition[] = [
     matchTokens: ["holiday", "christmas", "thanksgiving", "halloween", "winter", "nye", "valentine", "st-patricks"],
     coverSlugs: ["eggnog", "peppermint-martini", "coquito", "wassail"],
     staticCoverPath: "/occasions/holidays.jpg",
-    childSlugs: ["christmas", "halloween", "thanksgiving", "new-years", "valentines", "st-patricks"],
+    childSlugs: ["halloween", "thanksgiving", "christmas", "new-years", "valentines", "st-patricks"],
   },
   {
     slug: "christmas",
@@ -252,11 +252,60 @@ export function getTopLevelOccasions(): OccasionDefinition[] {
   return OCCASIONS.filter((o) => !o.parentSlug);
 }
 
-export function getChildOccasions(parent: OccasionDefinition): OccasionDefinition[] {
+/** US Thanksgiving = 4th Thursday of November */
+function thanksgivingDate(year: number): Date {
+  const nov1 = new Date(year, 10, 1);
+  const weekday = nov1.getDay(); // 0 Sun … 4 Thu
+  const firstThursday = 1 + ((4 - weekday + 7) % 7);
+  return new Date(year, 10, firstThursday + 21);
+}
+
+/** Calendar anchors for holiday children (month is 0-indexed). */
+const HOLIDAY_DATE: Record<string, { month: number; day: number } | "thanksgiving"> = {
+  "new-years": { month: 0, day: 1 },
+  valentines: { month: 1, day: 14 },
+  "st-patricks": { month: 2, day: 17 },
+  halloween: { month: 9, day: 31 },
+  thanksgiving: "thanksgiving",
+  christmas: { month: 11, day: 25 },
+};
+
+/** Next occurrence of a holiday on/after `from` (start of local day). */
+export function nextHolidayOccurrence(slug: string, from: Date = new Date()): Date | null {
+  const spec = HOLIDAY_DATE[slug];
+  if (!spec) return null;
+
+  const start = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+
+  const dateInYear = (year: number): Date => {
+    if (spec === "thanksgiving") return thanksgivingDate(year);
+    return new Date(year, spec.month, spec.day);
+  };
+
+  const thisYear = dateInYear(start.getFullYear());
+  if (thisYear >= start) return thisYear;
+  return dateInYear(start.getFullYear() + 1);
+}
+
+export function getChildOccasions(
+  parent: OccasionDefinition,
+  now: Date = new Date()
+): OccasionDefinition[] {
   if (!parent.childSlugs?.length) return [];
-  return parent.childSlugs
+  const children = parent.childSlugs
     .map((slug) => OCCASIONS.find((o) => o.slug === slug))
     .filter((o): o is OccasionDefinition => Boolean(o));
+
+  // Holiday hub: chronological from the next upcoming holiday
+  if (parent.slug === "holidays") {
+    return [...children].sort((a, b) => {
+      const aNext = nextHolidayOccurrence(a.slug, now)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+      const bNext = nextHolidayOccurrence(b.slug, now)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+      return aNext - bNext;
+    });
+  }
+
+  return children;
 }
 
 export function getSiblingOccasions(occasion: OccasionDefinition): OccasionDefinition[] {
