@@ -177,7 +177,7 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                                   />
                                 ) : null}
                               </span>
-                              <span className="font-display text-base font-bold text-charcoal transition-colors group-hover:text-terracotta">
+                              <span className="text-[15px] font-semibold tracking-tight text-charcoal transition-colors group-hover:text-terracotta">
                                 {item.name}
                               </span>
                             </Link>
@@ -205,44 +205,6 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                     </div>
                   </div>
                 </div>
-
-                <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-mist py-3.5">
-                  <Link
-                    href="/cocktails"
-                    onClick={closeMenu}
-                    className="text-sm font-semibold text-charcoal transition-colors hover:text-terracotta"
-                  >
-                    All recipes →
-                  </Link>
-                  <Link
-                    href="/mix"
-                    onClick={closeMenu}
-                    className="text-sm font-medium text-sage transition-colors hover:text-terracotta"
-                  >
-                    What can I make?
-                  </Link>
-                  <Link
-                    href="/cocktail-of-the-day"
-                    onClick={closeMenu}
-                    className="text-sm font-medium text-sage transition-colors hover:text-terracotta"
-                  >
-                    Drink of the day
-                  </Link>
-                  <Link
-                    href="/learn"
-                    onClick={closeMenu}
-                    className="text-sm font-medium text-sage transition-colors hover:text-terracotta"
-                  >
-                    Learn
-                  </Link>
-                  <Link
-                    href="/occasions/holidays"
-                    onClick={closeMenu}
-                    className="text-sm font-medium text-sage transition-colors hover:text-terracotta"
-                  >
-                    Holidays
-                  </Link>
-                </div>
               </div>
             </div>
           </div>,
@@ -265,7 +227,7 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
           aria-controls={panelId}
           onClick={() => setOpen((v) => !v)}
         >
-          All Recipes
+          Browse All Recipes
           <ChevronDownIcon
             className={`h-4 w-4 transition-transform duration-200 ${
               open ? "rotate-180 text-terracotta" : "text-sage"

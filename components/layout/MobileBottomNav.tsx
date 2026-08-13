@@ -186,7 +186,7 @@ export function MobileBottomNav() {
               className="block px-3 py-3 text-base font-medium text-charcoal rounded-xl hover:text-terracotta hover:bg-mist/50 transition-colors"
               onClick={closeMore}
             >
-              All Recipes
+              Browse All Recipes
             </Link>
 
             <div className="pl-3 pb-2 space-y-0.5">
