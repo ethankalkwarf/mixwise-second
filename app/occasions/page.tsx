@@ -17,9 +17,9 @@ import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 export const revalidate = 300;
 
 export const metadata = generatePageMetadata({
-  title: "Cocktail Recipes by Season & Occasion",
+  title: "Cocktail Collections by Season & Style",
   description:
-    "Find cocktail recipes for summer, fall, Christmas, Halloween, brunch, parties, aperitivo, tiki, and zero-proof — curated collections from the MixWise library.",
+    "Browse MixWise cocktail collections — summer, fall, holidays, classics, hot drinks, punch, brunch, tiki, and more.",
   path: "/occasions",
 });
 
@@ -59,13 +59,13 @@ export default async function OccasionsPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/45 to-transparent" />
         <MainContainer className="relative flex min-h-[42vh] sm:min-h-[48vh] flex-col justify-end pb-12 pt-24">
           <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-terracotta font-bold mb-3">
-            Browse by moment
+            Cocktail collections
           </p>
           <h1 className="font-display text-4xl sm:text-6xl font-bold text-charcoal mb-4 max-w-3xl drop-shadow-sm [text-wrap:balance]">
-            Cocktail recipes for every season
+            Collections for every season
           </h1>
           <p className="text-forest max-w-xl text-base sm:text-lg leading-relaxed">
-            Curated collections for summer patios, holiday tables, brunch, parties, and more — without digging through tags.
+            Curated cocktail collections for summer patios, holiday tables, brunch, parties, and more — without digging through tags.
           </p>
         </MainContainer>
       </section>

@@ -72,7 +72,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
             alt={heroAlt}
             fill
             priority
-            className="object-cover"
+            className={["object-cover", occasion.coverFocusClass || ""].join(" ")}
             sizes="100vw"
             placeholder="blur"
             blurDataURL={COCKTAIL_BLUR_DATA_URL}

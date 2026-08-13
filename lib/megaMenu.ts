@@ -4,6 +4,7 @@ export type MegaMenuCover = {
   href: string;
   imageUrl: string | null;
   eyebrow?: string;
+  focusClass?: string;
 };
 
 export type MegaMenuData = {

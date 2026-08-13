@@ -12,6 +12,7 @@ type MegaCover = {
   href: string;
   imageUrl: string | null;
   eyebrow?: string;
+  focusClass?: string;
 };
 
 const SPIRITS = [
@@ -114,7 +115,10 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                             src={featuredCover.imageUrl}
                             alt=""
                             fill
-                            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                            className={[
+                              "object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]",
+                              featuredCover.focusClass || "",
+                            ].join(" ")}
                             sizes="(max-width: 1024px) 100vw, 30vw"
                             priority
                           />
@@ -148,7 +152,7 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                     <div>
                       <div className="mb-3 flex items-end justify-between border-b border-mist pb-2.5">
                         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
-                          By occasion
+                          Collections
                         </p>
                         <Link
                           href="/occasions"
@@ -172,7 +176,7 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                                     src={item.imageUrl}
                                     alt=""
                                     fill
-                                    className="object-cover"
+                                    className={["object-cover", item.focusClass || ""].join(" ")}
                                     sizes="40px"
                                   />
                                 ) : null}

@@ -24,6 +24,7 @@ async function loadMegaMenuData(): Promise<MegaMenuData> {
         href: `/occasions/${occasion.slug}`,
         imageUrl: staticUrl || cover?.image_url || null,
         eyebrow: occasion.headline,
+        focusClass: occasion.coverFocusClass,
       };
     });
 
@@ -47,6 +48,7 @@ async function loadMegaMenuData(): Promise<MegaMenuData> {
             href: `/occasions/${featuredOccasion.slug}`,
             imageUrl: featuredStatic || featured?.image_url || null,
             eyebrow: featuredOccasion.headline,
+            focusClass: featuredOccasion.coverFocusClass,
           }
         : null,
     };

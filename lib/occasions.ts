@@ -17,6 +17,8 @@ export type OccasionDefinition = {
   coverSlugs?: string[];
   /** Optional static Envato/local cover under /public/occasions/{slug}.jpg */
   staticCoverPath?: string;
+  /** Tailwind object-position class for cover crops (e.g. object-[center_80%]) */
+  coverFocusClass?: string;
   /** Extra matcher beyond token bag (optional) */
   matchExtra?: (c: OccasionCocktail) => boolean;
   /** Hub parent — child pages nest under this collection */
@@ -66,6 +68,8 @@ export const OCCASIONS: OccasionDefinition[] = [
     matchTokens: ["fall", "autumn"],
     coverSlugs: ["apple-cider-old-fashioned", "maple-old-fashioned", "spiced-pear-cocktail", "stone-fence"],
     staticCoverPath: "/occasions/fall.jpg",
+    // Portrait whiskey shot — keep the glass (lower third) in the crop
+    coverFocusClass: "object-[center_82%]",
   },
   {
     slug: "holidays",
@@ -74,10 +78,10 @@ export const OCCASIONS: OccasionDefinition[] = [
     description:
       "Dive into Christmas, Halloween, Thanksgiving, New Year’s, and more — then keep browsing sibling collections.",
     accentClass: "from-forest/15 via-cream to-cream",
-    matchTokens: ["holiday", "christmas", "thanksgiving", "halloween", "winter", "nye", "valentine"],
+    matchTokens: ["holiday", "christmas", "thanksgiving", "halloween", "winter", "nye", "valentine", "st-patricks"],
     coverSlugs: ["eggnog", "peppermint-martini", "coquito", "wassail"],
     staticCoverPath: "/occasions/holidays.jpg",
-    childSlugs: ["christmas", "halloween", "thanksgiving", "new-years", "valentines"],
+    childSlugs: ["christmas", "halloween", "thanksgiving", "new-years", "valentines", "st-patricks"],
   },
   {
     slug: "christmas",
@@ -111,6 +115,7 @@ export const OCCASIONS: OccasionDefinition[] = [
     matchTokens: ["thanksgiving", "cranberry", "apple-cider"],
     coverSlugs: ["thanksgiving-punch", "cranberry-mule", "apple-cider-old-fashioned", "cranberry-cosmo"],
     staticCoverPath: "/occasions/fall.jpg",
+    coverFocusClass: "object-[center_82%]",
     parentSlug: "holidays",
   },
   {
@@ -136,6 +141,18 @@ export const OCCASIONS: OccasionDefinition[] = [
     staticCoverPath: "/occasions/party.jpg",
     parentSlug: "holidays",
     matchExtra: (c) => /pink lady|clover club|aviation|amour/i.test(c.name || ""),
+  },
+  {
+    slug: "st-patricks",
+    name: "St. Patrick’s",
+    headline: "Irish whiskey and emerald-hour pours",
+    description: "Irish mules, whiskey highballs, and green-season classics for March gatherings.",
+    accentClass: "from-olive/30 via-cream to-cream",
+    matchTokens: ["st-patricks", "irish", "irish-whiskey"],
+    coverSlugs: ["irish-mule", "irish-coffee", "blackthorn"],
+    staticCoverPath: "/occasions/zero-proof.jpg",
+    parentSlug: "holidays",
+    matchExtra: (c) => /irish|blackthorn|shamrock/i.test(c.name || ""),
   },
   {
     slug: "party",
@@ -187,6 +204,48 @@ export const OCCASIONS: OccasionDefinition[] = [
     matchTokens: ["tiki", "tiki-adjacent"],
     coverSlugs: ["mai-tai", "blue-hawaiian", "pina-colada", "jungle-bird"],
     staticCoverPath: "/occasions/tiki.jpg",
+  },
+  {
+    slug: "classics",
+    name: "Classics",
+    headline: "The canon worth knowing by heart",
+    description: "IBA and modern-classic builds that form the backbone of any home bar.",
+    accentClass: "from-forest/20 via-cream to-cream",
+    matchTokens: ["classic", "modern-classic", "iba", "pre-prohibition"],
+    coverSlugs: ["manhattan", "negroni", "old-fashioned", "daiquiri"],
+    staticCoverPath: "/occasions/aperitivo.jpg",
+  },
+  {
+    slug: "hot-drinks",
+    name: "Hot Drinks",
+    headline: "Steam, spice, and mug weather",
+    description: "Toddies, mulled pours, and warming cups for cold nights.",
+    accentClass: "from-terracotta/25 via-cream to-cream",
+    matchTokens: ["hot", "toddy", "mulled"],
+    coverSlugs: ["hot-toddy", "mulled-wine", "hot-buttered-rum", "wassail"],
+    staticCoverPath: "/occasions/fall.jpg",
+    coverFocusClass: "object-[center_82%]",
+    matchExtra: (c) => /toddy|mulled|buttered rum|tom and jerry|irish coffee/i.test(c.name || ""),
+  },
+  {
+    slug: "punch",
+    name: "Punch",
+    headline: "Batchable bowls for a crowd",
+    description: "Punches, pitchers, and shareable builds meant for the table — not just one glass.",
+    accentClass: "from-olive/20 via-cream to-cream",
+    matchTokens: ["punch", "sharing", "hosting"],
+    coverSlugs: ["sangria", "thanksgiving-punch", "apple-cider-punch", "fish-house-punch"],
+    staticCoverPath: "/occasions/party.jpg",
+  },
+  {
+    slug: "dessert",
+    name: "Dessert",
+    headline: "After-dinner sweets in a glass",
+    description: "Creamy, chocolate-leaning, and flip-style drinks that finish a meal.",
+    accentClass: "from-terracotta/20 via-cream to-cream",
+    matchTokens: ["dessert", "after-dinner", "flip", "digestif"],
+    coverSlugs: ["porto-flip", "golden-dream", "stinger", "brandy-alexander"],
+    staticCoverPath: "/occasions/holidays.jpg",
   },
 ];
 

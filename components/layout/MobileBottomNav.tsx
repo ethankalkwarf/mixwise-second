@@ -191,7 +191,7 @@ export function MobileBottomNav() {
 
             <div className="pl-3 pb-2 space-y-0.5">
               <p className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-sage">
-                By occasion
+                By collection
               </p>
               {OCCASION_LINKS.map((occasion) => (
                 <Link

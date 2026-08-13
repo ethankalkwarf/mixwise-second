@@ -31,7 +31,10 @@ export function OccasionCard({ occasion, count, cover, compact }: Props) {
           src={imageUrl}
           alt={cover?.image_alt || cover?.name || occasion.name}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          className={[
+            "object-cover transition-transform duration-700 group-hover:scale-105",
+            occasion.coverFocusClass || "",
+          ].join(" ")}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           placeholder="blur"
           blurDataURL={COCKTAIL_BLUR_DATA_URL}
