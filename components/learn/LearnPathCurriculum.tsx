@@ -63,10 +63,11 @@ function PathStepCard({
   onToggle: () => void;
 }) {
   const meta = pathStepMedia(step);
+  const minH = "min-h-[280px] sm:min-h-[320px]";
 
   if (featured) {
     return (
-      <article className="group relative overflow-hidden rounded-3xl border border-mist min-h-[280px] sm:min-h-[320px]">
+      <article className={`group relative overflow-hidden rounded-3xl border border-mist bg-forest ${minH}`}>
         <Image
           src={meta.image}
           alt={meta.imageAlt}
@@ -76,10 +77,10 @@ function PathStepCard({
           priority
         />
         <div className="absolute inset-0 bg-forest/45" />
-        <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/70 to-forest/10" />
-        <div className="relative z-10 flex h-full min-h-[280px] sm:min-h-[320px] flex-col justify-end p-6 sm:p-8">
+        <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/70 to-forest/15" />
+        <div className={`relative z-10 flex ${minH} flex-col justify-end p-6 sm:p-8`}>
           <div className="flex items-center gap-3 mb-3">
-            <span className="rounded-full bg-cream/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-cream backdrop-blur-sm">
+            <span className="rounded-full bg-cream/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider !text-cream backdrop-blur-sm">
               Start here · {meta.kind}
             </span>
             {canToggle && (
@@ -92,7 +93,7 @@ function PathStepCard({
                 className={`ml-auto inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
                   done
                     ? "border-olive bg-olive text-forest"
-                    : "border-cream/40 bg-cream/10 text-cream hover:bg-cream/20"
+                    : "border-cream/40 bg-cream/10 !text-cream hover:bg-cream/20"
                 }`}
                 aria-label={done ? "Mark incomplete" : "Mark complete"}
               >

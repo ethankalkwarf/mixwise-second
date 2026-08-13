@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { isLearnPublic } from "@/lib/learnAccess";
 
 type Props = {
   /** Unique per lesson — used for session lock persistence */
@@ -17,7 +18,7 @@ const storageKey = (gateId: string) => `mixwise-learn-gate:${gateId}`;
 
 /**
  * Show the full lesson first. After ~1 minute (guests only), blur and ask to sign in / register.
- * Signed-in users never see the gate. Once fired in a tab session, stays locked for that lesson.
+ * Signed-in users never see the gate. Disabled while Learn is unpublished (direct-URL preview).
  */
 export function LearnContentGate({
   gateId,
@@ -28,9 +29,10 @@ export function LearnContentGate({
   const { isAuthenticated, isLoading } = useUser();
   const { openSignupDialog, openLoginDialog } = useAuthDialog();
   const [locked, setLocked] = useState(false);
+  const gatingEnabled = isLearnPublic();
 
   useEffect(() => {
-    if (isLoading || isAuthenticated) {
+    if (!gatingEnabled || isLoading || isAuthenticated) {
       setLocked(false);
       return;
     }
@@ -58,13 +60,9 @@ export function LearnContentGate({
     }, 1000);
 
     return () => window.clearInterval(tick);
-  }, [isAuthenticated, isLoading, gateId, delayMs]);
+  }, [gatingEnabled, isAuthenticated, isLoading, gateId, delayMs]);
 
-  if (isLoading) {
-    return <>{children}</>;
-  }
-
-  if (isAuthenticated || !locked) {
+  if (!gatingEnabled || isLoading || isAuthenticated || !locked) {
     return <>{children}</>;
   }
 

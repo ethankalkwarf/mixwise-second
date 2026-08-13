@@ -52,12 +52,12 @@ function PathStartCard({
   featured?: boolean;
   imagePosition?: string;
 }) {
+  const minH = featured ? "min-h-[280px] sm:min-h-[320px]" : "min-h-[240px]";
+
   return (
     <Link
       href={`/learn/paths/${path.slug}`}
-      className={`group relative overflow-hidden rounded-3xl border border-mist transition-all hover:-translate-y-0.5 hover:shadow-card-hover ${
-        featured ? "min-h-[280px] sm:min-h-[320px]" : "min-h-[240px]"
-      }`}
+      className={`group relative block overflow-hidden rounded-3xl border border-mist bg-forest transition-all hover:-translate-y-0.5 hover:shadow-card-hover ${minH}`}
     >
       <Image
         src={path.coverImage}
@@ -67,20 +67,21 @@ function PathStartCard({
         className={`object-cover transition-transform duration-700 group-hover:scale-105 ${imagePosition}`}
         priority={featured}
       />
-      <div className="absolute inset-0 bg-forest/30" />
-      <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/55 to-transparent" />
-      <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-8">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-olive font-bold mb-2">
+      <div className="absolute inset-0 bg-forest/40" />
+      <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/70 to-forest/15" />
+      {/* Fill the card height so cream type sits on the dark scrim, not the light photo top */}
+      <div className={`relative z-10 flex ${minH} flex-col justify-end p-6 sm:p-8`}>
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] !text-olive font-bold mb-2">
           {path.eyebrow} · ~{path.estimatedMinutes} min
         </p>
-        <h3 className="font-display text-2xl sm:text-3xl font-bold text-cream mb-2 drop-shadow-sm">
+        <h3 className="font-display text-2xl sm:text-3xl font-bold !text-cream mb-2 drop-shadow-sm">
           {path.title}
         </h3>
-        <p className={`text-sm text-cream/90 leading-relaxed ${featured ? "max-w-lg" : "line-clamp-2"}`}>
+        <p className={`text-sm !text-cream/90 leading-relaxed ${featured ? "max-w-lg" : "line-clamp-2"}`}>
           {path.summary}
         </p>
         {featured && (
-          <span className="mt-5 inline-flex w-fit items-center rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-cream">
+          <span className="mt-5 inline-flex w-fit items-center rounded-full bg-terracotta px-4 py-2 text-sm font-semibold !text-cream">
             Start this path →
           </span>
         )}
@@ -89,9 +90,9 @@ function PathStartCard({
             {path.steps.slice(0, 3).map((step, i) => (
               <li
                 key={`${step.type}-${"slug" in step ? step.slug : "swaps"}`}
-                className="flex gap-2 text-xs text-cream/80"
+                className="flex gap-2 text-xs !text-cream/80"
               >
-                <span className="font-mono text-olive w-4 shrink-0">{i + 1}.</span>
+                <span className="font-mono !text-olive w-4 shrink-0">{i + 1}.</span>
                 <span className="capitalize">{pathStepLabel(step)}</span>
               </li>
             ))}
