@@ -1,16 +1,23 @@
-# Occasion cover downloads
+# Collection cover downloads
 
-Local Envato covers live here as `{slug}.jpg` (or `.webp`). Pages prefer these over catalog cocktail photos.
+Local covers live here as `{slug}.jpg` (or `.webp`). Pages prefer these over catalog cocktail photos.
 
-| File | Vibe |
-|------|------|
-| `summer.jpg` | Citrus + mint flat lay |
-| `fall.jpg` | Whiskey / Old Fashioned on barrel |
-| `holidays.jpg` | Eggnog + holly |
-| `party.jpg` | Colorful fruit-garnish assortment |
-| `brunch.jpg` | Twin mimosas |
-| `zero-proof.jpg` | Bright multi-drink white tabletop |
-| `aperitivo.jpg` | Cheers / spritz clink |
-| `tiki.jpg` | Tropical palm-shadow assortment |
+## Holiday covers
+| File | Source |
+|------|--------|
+| `holidays.jpg` | Envato festive eggnog hub |
+| `valentines.jpg` | Envato pink martini set |
+| `halloween.jpg` | Envato orange + candy eyes |
+| `st-patricks.jpg` | Envato Irish coffee |
+| `christmas.jpg` | Catalog: Eggnog |
+| `thanksgiving.jpg` | Catalog: Thanksgiving Punch |
+| `new-years.jpg` | Catalog: Black Velvet |
 
-Landscape crop ~1600×900+ preferred. Soft context is fine; avoid busy lifestyle clutter.
+## Other collections
+| File | Source |
+|------|--------|
+| `summer.jpg` / `fall.jpg` / `party.jpg` / `brunch.jpg` / `aperitivo.jpg` / `tiki.jpg` / `zero-proof.jpg` | Envato |
+| `classics.jpg` | Catalog: Improved Whiskey Cocktail |
+| `hot-drinks.jpg` | Catalog: Hot Toddy |
+| `punch.jpg` | Catalog: Apple Cider Punch |
+| `dessert.jpg` | Catalog: Porto Flip |
