@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
 import type { SanityCocktail } from "@/lib/sanityTypes";
@@ -81,8 +81,6 @@ type Props = {
 const ITEMS_PER_PAGE = 24;
 
 export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFilter = null }: Props) {
-  const router = useRouter();
-  
   // Initialize state from sessionStorage if available
   const [searchQuery, setSearchQuery] = useState(initialFilter === "new" ? "new" : "");
   const [sortBy, setSortBy] = useState<SortOption>("default");
@@ -159,17 +157,15 @@ export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFil
     }
   }, [isInitialized, searchQuery, sortBy, filterSpirit, filterGlass, filterCategory, showFilters]);
 
-  // Save scroll position before navigating to a cocktail
-  const handleCocktailClick = useCallback((slug: string) => {
-    if (typeof window !== "undefined") {
-      try {
-        sessionStorage.setItem(SCROLL_STATE_KEY, window.scrollY.toString());
-      } catch (e) {
-        console.error("Error saving scroll position:", e);
-      }
+  // Save scroll position before navigating to a cocktail.
+  // Do not preventDefault — intercepted client navigation was hanging the tab.
+  const handleCocktailClick = useCallback(() => {
+    try {
+      sessionStorage.setItem(SCROLL_STATE_KEY, window.scrollY.toString());
+    } catch (e) {
+      console.error("Error saving scroll position:", e);
     }
-    router.push(`/cocktails/${slug}`);
-  }, [router]);
+  }, []);
 
   // Extract unique filter options from data
   const filterOptions = useMemo(() => {
@@ -529,7 +525,7 @@ export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFil
               <CocktailCard 
                 key={cocktail._id} 
                 cocktail={cocktail} 
-                onClick={handleCocktailClick}
+                onNavigate={handleCocktailClick}
                 index={index}
               />
             ))}
@@ -555,29 +551,25 @@ export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFil
 
 function CocktailCard({ 
   cocktail, 
-  onClick,
+  onNavigate,
   index = 0
 }: { 
   cocktail: SanityCocktail;
-  onClick: (slug: string) => void;
+  onNavigate: () => void;
   index?: number;
 }) {
   const imageUrl = getImageUrl(cocktail.image, { width: 900, height: 600, quality: 75 }) || cocktail.externalImageUrl;
   const ingredientCount = cocktail.ingredientNames?.length || cocktail.ingredients?.length || 0;
   const slug = cocktail.slug?.current || cocktail._id;
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    onClick(slug);
-  };
-
   return (
-    <a
+    <Link
       href={`/cocktails/${slug}`}
-      onClick={handleClick}
+      prefetch={false}
+      onClick={onNavigate}
       className="group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-500 hover:-translate-y-2 hover:shadow-card-hover cursor-pointer animate-fade-in"
       style={{
-        animationDelay: `${index * 50}ms`,
+        animationDelay: `${Math.min(index, 8) * 40}ms`,
         animationFillMode: 'both'
       }}
     >
@@ -672,6 +664,6 @@ function CocktailCard({
           </div>
         </div>
       </div>
-    </a>
+    </Link>
   );
 }

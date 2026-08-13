@@ -215,13 +215,11 @@ function mapSupabaseToSanityCocktail(cocktail: any) {
 
 type PageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 // Generate metadata for SEO
-export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const { daily } = await searchParams;
   const cocktail = await getCocktailBySlug(slug);
   const sanityCocktail = cocktail ? mapSupabaseToSanityCocktail(cocktail) : null;
 
@@ -229,13 +227,8 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     return { title: "Cocktail Not Found" };
   }
 
-  const isDailyCocktail = daily === 'true';
-  const baseTitle = sanityCocktail.seoTitle || sanityCocktail.name;
-  const title = isDailyCocktail ? `Cocktail of the Day: ${baseTitle}` : baseTitle;
-  const baseDescription = sanityCocktail.metaDescription || sanityCocktail.description || `${sanityCocktail.name} cocktail recipe with ingredients and instructions.`;
-  const description = isDailyCocktail
-    ? `Today's featured cocktail: ${baseDescription}`
-    : baseDescription;
+  const title = sanityCocktail.seoTitle || sanityCocktail.name;
+  const description = sanityCocktail.metaDescription || sanityCocktail.description || `${sanityCocktail.name} cocktail recipe with ingredients and instructions.`;
 
   return {
     title,
@@ -291,10 +284,8 @@ function generateRecipeSchema(args: {
   };
 }
 
-export default async function CocktailDetailPage({ params, searchParams }: PageProps) {
+export default async function CocktailDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const { daily } = await searchParams;
-  const isDailyCocktail = daily === 'true';
 
   debugLog('[COCKTAIL PAGE] Received slug:', slug);
 
@@ -327,8 +318,7 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
     getTodaysDailyCocktailSlug(),
   ]);
 
-  const isDailyCocktailBanner =
-    daily === "true" || Boolean(todaysDailySlug && todaysDailySlug === cocktail.slug);
+  const isDailyCocktailBanner = Boolean(todaysDailySlug && todaysDailySlug === cocktail.slug);
 
   // Use external image URL from Supabase
   const imageUrl = sanityCocktail.externalImageUrl || null;
@@ -386,7 +376,7 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
       <BreadcrumbSchema
         items={[
           { name: "Home", url: SITE_CONFIG.url },
-          ...(isDailyCocktail ? [
+          ...(todaysDailySlug && todaysDailySlug === cocktail.slug ? [
             { name: "Cocktail of the Day", url: `${SITE_CONFIG.url}/cocktail-of-the-day` }
           ] : [
             { name: "Cocktails", url: `${SITE_CONFIG.url}/cocktails` }
