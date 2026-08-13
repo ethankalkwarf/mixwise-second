@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/common/BrandLogo";
-import { useUser } from "@/components/auth/UserProvider";
 import { isLearnPublic } from "@/lib/learnAccess";
 
 const FOOTER_LINKS = {
@@ -102,9 +101,9 @@ function FooterEmailCapture() {
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
-  const { isAuthenticated } = useUser();
-  const showLearnNav = isLearnPublic() || isAuthenticated;
-  const learnLinks = FOOTER_LINKS.learn.filter((link) => showLearnNav || !("learnOnly" in link && link.learnOnly));
+  const learnLinks = FOOTER_LINKS.learn.filter(
+    (link) => isLearnPublic() || !("learnOnly" in link && link.learnOnly)
+  );
 
   return (
     <footer className="bg-forest mt-auto">

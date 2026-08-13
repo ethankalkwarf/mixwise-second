@@ -4,7 +4,6 @@
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isLearnPublic, isLearnRoute } from "@/lib/learnAccess";
 
 const PROTECTED_ROUTES = ["/account"];
 
@@ -34,14 +33,14 @@ export async function proxy(request: NextRequest) {
   });
 
   const { data: { user } } = await supabase.auth.getUser();
-  const pathname = request.nextUrl.pathname;
 
-  const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
-  const isLearnPreviewOnly = isLearnRoute(pathname) && !isLearnPublic();
+  const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
+    request.nextUrl.pathname.startsWith(route)
+  );
 
-  if ((isProtectedRoute || isLearnPreviewOnly) && !user) {
+  if (isProtectedRoute && !user) {
     const redirectUrl = new URL("/", request.url);
-    redirectUrl.searchParams.set("redirect", pathname);
+    redirectUrl.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
 

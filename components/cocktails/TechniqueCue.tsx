@@ -4,7 +4,6 @@ import { useId, useState } from "react";
 import { getMethodTip } from "@/lib/cocktailTechniqueGlossary";
 import { getLearnMethodByTechniqueKey } from "@/lib/learnLibrary";
 import { isLearnPublic } from "@/lib/learnAccess";
-import { useUser } from "@/components/auth/UserProvider";
 
 interface TechniqueCueProps {
   technique?: string | null;
@@ -17,13 +16,11 @@ interface TechniqueCueProps {
 export function TechniqueCue({ technique }: TechniqueCueProps) {
   const method = getMethodTip(technique);
   const learnMethod = getLearnMethodByTechniqueKey(technique);
-  const { isAuthenticated } = useUser();
   const [open, setOpen] = useState(false);
   const panelId = useId();
 
   if (!method) return null;
 
-  const showLearnLink = isLearnPublic() || isAuthenticated;
   const learnHref = learnMethod ? `/learn/methods/${learnMethod.slug}` : "/learn";
 
   return (
@@ -60,7 +57,7 @@ export function TechniqueCue({ technique }: TechniqueCueProps) {
           <p className="text-sm leading-relaxed text-muted-foreground">
             {method.summary} {method.tip}
           </p>
-          {showLearnLink && (
+          {isLearnPublic() && (
             <a
               href={learnHref}
               className="inline-block text-xs font-medium text-terracotta hover:underline"

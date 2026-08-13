@@ -1,13 +1,8 @@
 /**
- * Learn is hidden from guests until published.
- * Set NEXT_PUBLIC_LEARN_PUBLIC=true to open it to everyone.
- * While gated, signed-in users can still preview at /learn.
+ * Learn is unpublished: keep routes alive for direct-URL preview,
+ * but hide every public discovery path until NEXT_PUBLIC_LEARN_PUBLIC=true.
  */
 
 export function isLearnPublic(): boolean {
   return process.env.NEXT_PUBLIC_LEARN_PUBLIC === "true";
-}
-
-export function isLearnRoute(pathname: string): boolean {
-  return pathname === "/learn" || pathname.startsWith("/learn/");
 }

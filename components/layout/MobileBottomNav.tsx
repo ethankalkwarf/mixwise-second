@@ -204,7 +204,7 @@ export function MobileBottomNav() {
                   {occasion.name}
                 </Link>
               ))}
-              {(isLearnPublic() || isAuthenticated) && (
+              {isLearnPublic() && (
                 <Link
                   href="/learn"
                   className="block px-3 py-2 text-sm rounded-lg text-terracotta font-medium hover:bg-mist/50"

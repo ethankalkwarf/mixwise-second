@@ -401,17 +401,15 @@ export function RecipeContent({
             </div>
           )}
 
-          <p className="text-xs text-sage">
-            Missing a bottle?{" "}
-            {isLearnPublic() || isAuthenticated ? (
+          {isLearnPublic() && (
+            <p className="text-xs text-sage">
+              Missing a bottle?{" "}
               <Link href="/learn/swaps" className="text-terracotta hover:underline font-medium">
                 See smart swaps in Learn
               </Link>
-            ) : (
-              <span>Try a close substitute from what you have on hand</span>
-            )}
-            .
-          </p>
+              .
+            </p>
+          )}
         </div>
       </div>
 
