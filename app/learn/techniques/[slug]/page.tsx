@@ -26,9 +26,9 @@ const TECHNIQUE_PRACTICE: Record<string, string[]> = {
 };
 
 const TECHNIQUE_COVER: Record<string, { src: string; alt: string }> = {
-  "dry-shake": { src: "/media/bartender-home.webp", alt: "Shaking a cocktail tin" },
-  "fine-strain": { src: "/media/strainer-pour-poster.webp", alt: "Straining a cocktail" },
-  express: { src: "/media/three-cocktails-dark.webp", alt: "Finished cocktails" },
+  "dry-shake": { src: "/learn/technique-dry-shake.webp", alt: "Dry shaking a cocktail tin" },
+  "fine-strain": { src: "/learn/technique-fine-strain.webp", alt: "Fine-straining into a coupe" },
+  express: { src: "/learn/garnish-with-intent.webp", alt: "Garnishing a cocktail" },
   muddle: { src: "/media/ice-mojito-poster.webp", alt: "Muddled mint drink" },
   swizzle: { src: "/occasions/tiki.jpg", alt: "Crushed-ice tropical cocktail" },
   rinse: { src: "/media/three-cocktails-dark.webp", alt: "Spirit-forward cocktails" },

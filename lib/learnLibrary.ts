@@ -295,8 +295,8 @@ export const LEARN_METHODS: LearnMethod[] = [
     summary: "Chill, dilute, and integrate citrus, egg, dairy, or any cloudy mix.",
     tip: "Shake hard until the tin is painfully cold. Short shakes leave drinks warm; marathon shakes over-dilute.",
     techniqueKeys: ["shake", "shaken"],
-    coverImage: "/media/bartender-home.webp",
-    coverAlt: "Shaking a cocktail",
+    coverImage: "/learn/method-shake.webp",
+    coverAlt: "Hands shaking a condensed cocktail tin at home",
     practiceSlugs: ["daiquiri", "whiskey-sour", "margarita", "clover-club"],
     relatedTechniqueSlugs: ["dry-shake", "fine-strain"],
     relatedGuideSlug: "shake-vs-stir",
@@ -331,8 +331,8 @@ export const LEARN_METHODS: LearnMethod[] = [
     summary: "Clear, silky chill for all-spirit drinks.",
     tip: "Plenty of ice, smooth circles, taste if unsure — cold and slightly softened, not watery.",
     techniqueKeys: ["stir", "stirred"],
-    coverImage: "/media/three-cocktails-dark.webp",
-    coverAlt: "Spirit-forward cocktails",
+    coverImage: "/learn/method-stir.webp",
+    coverAlt: "Barspoon stirring a clear cocktail in a mixing glass",
     practiceSlugs: ["manhattan", "martini", "negroni", "boulevardier"],
     relatedTechniqueSlugs: ["express", "rinse"],
     relatedGuideSlug: "shake-vs-stir",
@@ -615,8 +615,8 @@ export function pathStepLabel(step: LearnPathStep): string {
 }
 
 const TECHNIQUE_STEP_COVERS: Record<string, { src: string; alt: string }> = {
-  "dry-shake": { src: "/learn/shake-vs-stir.webp", alt: "Cocktail shaker at home" },
-  "fine-strain": { src: "/media/strainer-pour-poster.webp", alt: "Straining a cocktail" },
+  "dry-shake": { src: "/learn/technique-dry-shake.webp", alt: "Dry shaking a cocktail tin without ice" },
+  "fine-strain": { src: "/learn/technique-fine-strain.webp", alt: "Double-straining a cocktail through fine mesh into a coupe" },
   express: { src: "/learn/garnish-with-intent.webp", alt: "Garnishing a cocktail" },
   muddle: { src: "/media/ice-mojito-poster.webp", alt: "Muddled drink" },
   swizzle: { src: "/occasions/tiki.jpg", alt: "Crushed-ice cocktail" },
@@ -653,18 +653,29 @@ export function pathStepMedia(step: LearnPathStep): {
         title: m?.label ?? step.slug,
         blurb: m?.summary ?? m?.tip ?? "",
         kind: "Core method",
-        image: m?.coverImage ?? "/learn/shake-vs-stir.webp",
+        image: m?.coverImage ?? "/learn/method-shake.webp",
         imageAlt: m?.coverAlt ?? m?.label ?? "Method",
         href,
       };
     }
     case "technique": {
       const cover = TECHNIQUE_STEP_COVERS[step.slug];
+      const blurbs: Record<string, string> = {
+        "dry-shake": "Shake without ice first to build foam — then chill with a wet shake.",
+        "fine-strain": "Hawthorne plus fine mesh — catch chips and pulp for drinks served up.",
+        express: "Oils over the surface beat juice in the glass.",
+        muddle: "Press to release — don’t shred herbs into bitterness.",
+        swizzle: "Spin crushed ice until the glass frosts.",
+        rinse: "Coat the glass, discard the excess — aroma, not a pour.",
+        float: "Slow pour over a spoon so layers hold.",
+        layer: "Density order and a steady hand.",
+        build: "Made in the glass you’ll drink from.",
+      };
       return {
         title: step.slug.replace(/-/g, " "),
-        blurb: "A focused technique deep-dive — short, practical, then practice on a recipe.",
+        blurb: blurbs[step.slug] ?? "A focused technique deep-dive — short, practical, then practice on a recipe.",
         kind: "Technique",
-        image: cover?.src ?? "/learn/shake-vs-stir.webp",
+        image: cover?.src ?? "/learn/method-shake.webp",
         imageAlt: cover?.alt ?? step.slug,
         href,
       };
