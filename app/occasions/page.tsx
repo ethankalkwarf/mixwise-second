@@ -61,7 +61,7 @@ export default async function OccasionsPage() {
           <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-terracotta font-bold mb-3">
             Cocktail collections
           </p>
-          <h1 className="font-display text-4xl sm:text-6xl font-bold text-charcoal mb-4 max-w-3xl drop-shadow-sm [text-wrap:balance]">
+          <h1 className="font-display text-4xl sm:text-6xl font-semibold tracking-tight leading-tight text-charcoal mb-4 max-w-3xl drop-shadow-sm [text-wrap:balance]">
             Collections for every season
           </h1>
           <p className="text-forest max-w-xl text-base sm:text-lg leading-relaxed">
@@ -77,7 +77,7 @@ export default async function OccasionsPage() {
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                 Collections
               </p>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
+              <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-forest">
                 Seasons & styles
               </h2>
             </div>
@@ -101,7 +101,7 @@ export default async function OccasionsPage() {
                 <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                   Nested collections
                 </p>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
+                <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-forest">
                   Holiday cocktails
                 </h2>
                 <p className="mt-1 text-sm text-sage max-w-xl">

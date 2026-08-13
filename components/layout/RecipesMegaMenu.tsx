@@ -130,7 +130,7 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                         <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
                           Featured
                         </p>
-                        <h3 className="font-display text-xl font-bold text-charcoal transition-colors group-hover:text-terracotta sm:text-2xl">
+                        <h3 className="font-display text-xl font-semibold tracking-tight leading-tight text-charcoal transition-colors group-hover:text-terracotta sm:text-2xl">
                           {featuredCover?.name || "Seasonal collections"}
                         </h3>
                         {featuredCover?.eyebrow ? (

@@ -106,7 +106,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
             </span>
             <span className="text-charcoal font-medium">{occasion.name}</span>
           </nav>
-          <h1 className="font-display text-4xl sm:text-5xl font-bold text-charcoal mb-3 drop-shadow-sm">
+          <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight leading-tight text-charcoal mb-3 drop-shadow-sm">
             {occasion.name}
           </h1>
           <p className="text-lg font-medium text-forest max-w-2xl mb-2">{occasion.headline}</p>
@@ -124,7 +124,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                 Go deeper
               </p>
-              <h2 className="font-display text-2xl font-bold text-forest">Pick a holiday</h2>
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-forest">Pick a holiday</h2>
             </div>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {children.map((child) => (
@@ -146,7 +146,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                 Full collection
               </p>
-              <h2 className="font-display text-2xl font-bold text-forest">All {occasion.name.toLowerCase()} drinks</h2>
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-forest">All {occasion.name.toLowerCase()} drinks</h2>
             </div>
           ) : null}
           <OccasionCocktailGrid cocktails={matched} />
@@ -158,7 +158,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                 Keep browsing
               </p>
-              <h2 className="font-display text-2xl font-bold text-forest">More holidays</h2>
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-forest">More holidays</h2>
             </div>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {siblings.map((sib) => (
@@ -188,7 +188,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                 Keep browsing
               </p>
-              <h2 className="font-display text-2xl font-bold text-forest">Related collections</h2>
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-forest">Related collections</h2>
             </div>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {related.map((item) => (
@@ -210,7 +210,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                 Also explore
               </p>
-              <h2 className="font-display text-2xl font-bold text-forest">Other collections</h2>
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-forest">Other collections</h2>
             </div>
             <div className="flex flex-wrap gap-3">
               {related.map((item) => (
