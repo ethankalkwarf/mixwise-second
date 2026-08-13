@@ -115,7 +115,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
 
       <header className="border-b border-mist bg-cream/95 backdrop-blur-md sticky top-0 z-50 relative">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 relative" aria-label="Main navigation">
-          <div className="h-16 sm:h-18 flex items-center justify-between relative">
+          <div className="h-16 flex items-center justify-between relative">
             {/* Logo */}
             <div className="flex items-center">
               <BrandLogo size="md" variant="dark" />
@@ -355,7 +355,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 All Recipes
               </Link>
               <div className="pl-3 pb-2 space-y-0.5">
-                <p className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-sage">Occasions</p>
+                <p className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-sage">By occasion</p>
                 {["summer", "fall", "holidays", "party", "brunch", "zero-proof", "aperitivo", "tiki"].map((slug) => (
                   <Link
                     key={slug}

@@ -8,25 +8,16 @@ import {
   getOccasionCovers,
   type OccasionCocktail,
 } from "@/lib/occasions";
+import { staticOccasionCoverIfPresent } from "@/lib/occasionCovers";
 import { generatePageMetadata } from "@/lib/seo";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
-import { existsSync } from "fs";
-import path from "path";
 
 export const revalidate = 300;
 
-function staticCoverIfPresent(slug: string): string | null {
-  const rel = `/occasions/${slug}.jpg`;
-  const abs = path.join(process.cwd(), "public", "occasions", `${slug}.jpg`);
-  const absWebp = path.join(process.cwd(), "public", "occasions", `${slug}.webp`);
-  if (existsSync(abs)) return rel;
-  if (existsSync(absWebp)) return `/occasions/${slug}.webp`;
-  return null;
-}
-
 export const metadata = generatePageMetadata({
-  title: "Occasions",
-  description: "Browse MixWise cocktails by season and occasion — summer, fall, holidays, brunch, zero-proof, and more.",
+  title: "Cocktail Recipes by Season & Occasion",
+  description:
+    "Find cocktail recipes for summer, fall, holidays, brunch, parties, aperitivo, tiki, and zero-proof — curated collections from the MixWise library.",
   path: "/occasions",
 });
 
@@ -34,10 +25,10 @@ export default async function OccasionsPage() {
   const cocktails = (await getCocktailsList()) as OccasionCocktail[];
   const counts = countCocktailsByOccasion(cocktails);
   const covers = getOccasionCovers(cocktails);
-  const heroStatic = staticCoverIfPresent("summer") || staticCoverIfPresent("party");
+  const heroStatic = staticOccasionCoverIfPresent("summer") || staticOccasionCoverIfPresent("party");
   const heroCocktail = covers.summer || covers.party || Object.values(covers).find(Boolean) || null;
   const heroUrl = heroStatic || heroCocktail?.image_url || null;
-  const heroAlt = heroCocktail?.image_alt || heroCocktail?.name || "Occasions";
+  const heroAlt = heroCocktail?.image_alt || heroCocktail?.name || "Seasonal cocktail collections";
 
   return (
     <div className="min-h-screen bg-cream">
@@ -56,16 +47,18 @@ export default async function OccasionsPage() {
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-forest via-forest/90 to-olive/40" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/55 to-forest/35" />
+        <div className="absolute inset-0 bg-forest/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/92 to-cream/25 sm:to-cream/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/45 to-transparent" />
         <MainContainer className="relative flex min-h-[42vh] sm:min-h-[48vh] flex-col justify-end pb-12 pt-24">
           <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-terracotta font-bold mb-3">
             Browse by moment
           </p>
-          <h1 className="font-display text-4xl sm:text-6xl font-bold text-forest mb-4 max-w-2xl">
-            Occasions
+          <h1 className="font-display text-4xl sm:text-6xl font-bold text-charcoal mb-4 max-w-3xl drop-shadow-sm [text-wrap:balance]">
+            Cocktail recipes for every season
           </h1>
-          <p className="text-forest/80 max-w-xl text-base sm:text-lg">
-            Seasonal and hosting collections from the live library — summer patios to holiday tables, without digging through tags.
+          <p className="text-forest max-w-xl text-base sm:text-lg leading-relaxed">
+            Curated collections for summer patios, holiday tables, brunch, parties, and more — without digging through tags.
           </p>
         </MainContainer>
       </section>
@@ -75,7 +68,7 @@ export default async function OccasionsPage() {
           {OCCASIONS.map((occasion) => {
             const count = counts[occasion.slug] || 0;
             const cover = covers[occasion.slug];
-            const imageUrl = staticCoverIfPresent(occasion.slug) || cover?.image_url || null;
+            const imageUrl = staticOccasionCoverIfPresent(occasion.slug) || cover?.image_url || null;
             return (
               <Link
                 key={occasion.slug}
@@ -95,13 +88,26 @@ export default async function OccasionsPage() {
                 ) : (
                   <div className={`absolute inset-0 bg-gradient-to-br ${occasion.accentClass}`} />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-forest/90 via-forest/35 to-transparent" />
-                <div className="relative z-10 flex h-full flex-col justify-end p-5 text-cream">
-                  <h2 className="font-display text-2xl font-bold mb-1 group-hover:text-olive transition-colors">
+                {/* Strong bottom scrim so cream type stays readable on bright Envato covers */}
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/75 to-charcoal/10" />
+                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-charcoal/90 to-transparent" />
+                <div className="relative z-10 flex h-full min-h-[280px] flex-col justify-end p-5">
+                  <h2
+                    className="font-sans text-[1.35rem] font-semibold tracking-tight text-cream mb-1.5 transition-colors group-hover:text-olive"
+                    style={{ textShadow: "0 1px 2px rgba(0,0,0,0.45)" }}
+                  >
                     {occasion.name}
                   </h2>
-                  <p className="text-sm text-cream/85 mb-3">{occasion.headline}</p>
-                  <p className="text-xs font-medium text-cream/70">
+                  <p
+                    className="text-sm font-medium text-cream mb-3 leading-snug"
+                    style={{ textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}
+                  >
+                    {occasion.headline}
+                  </p>
+                  <p
+                    className="text-xs font-semibold uppercase tracking-wide text-cream"
+                    style={{ textShadow: "0 1px 2px rgba(0,0,0,0.35)" }}
+                  >
                     {count} drink{count === 1 ? "" : "s"}
                   </p>
                 </div>

@@ -1,5 +1,6 @@
 import { getCocktailsList } from "@/lib/cocktails.server";
 import { OCCASIONS, getOccasionCovers, type OccasionCocktail } from "@/lib/occasions";
+import { staticOccasionCoverIfPresent } from "@/lib/occasionCovers";
 import { ConditionalLayoutWrapper } from "@/components/layout/ConditionalLayoutWrapper";
 import type { MegaMenuData } from "@/lib/megaMenu";
 
@@ -11,11 +12,13 @@ async function loadMegaMenuData(): Promise<MegaMenuData> {
     const covers = getOccasionCovers(cocktails);
     const occasionCovers = OCCASIONS.map((occasion) => {
       const cover = covers[occasion.slug];
+      const staticUrl = staticOccasionCoverIfPresent(occasion.slug);
       return {
         slug: occasion.slug,
         name: occasion.name,
         href: `/occasions/${occasion.slug}`,
-        imageUrl: cover?.image_url || null,
+        imageUrl: staticUrl || cover?.image_url || null,
+        eyebrow: occasion.headline,
       };
     });
 
@@ -24,6 +27,9 @@ async function loadMegaMenuData(): Promise<MegaMenuData> {
       OCCASIONS.find((o) => covers[o.slug]?.image_url) ||
       OCCASIONS[0];
     const featured = featuredOccasion ? covers[featuredOccasion.slug] : null;
+    const featuredStatic = featuredOccasion
+      ? staticOccasionCoverIfPresent(featuredOccasion.slug)
+      : null;
 
     return {
       occasionCovers,
@@ -32,7 +38,7 @@ async function loadMegaMenuData(): Promise<MegaMenuData> {
             slug: featuredOccasion.slug,
             name: featuredOccasion.name,
             href: `/occasions/${featuredOccasion.slug}`,
-            imageUrl: featured?.image_url || null,
+            imageUrl: featuredStatic || featured?.image_url || null,
             eyebrow: featuredOccasion.headline,
           }
         : null,

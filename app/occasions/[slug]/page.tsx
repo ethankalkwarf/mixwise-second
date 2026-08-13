@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { OccasionCocktailGrid } from "@/components/occasions/OccasionCocktailGrid";
 import { getCocktailsList } from "@/lib/cocktails.server";
+import { staticOccasionCoverIfPresent } from "@/lib/occasionCovers";
 import {
   OCCASIONS,
   filterCocktailsForOccasion,
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: PageProps) {
   const occasion = getOccasion(slug);
   if (!occasion) return {};
   return generatePageMetadata({
-    title: `${occasion.name} Cocktails`,
+    title: `${occasion.name} Cocktail Recipes`,
     description: occasion.description,
     path: `/occasions/${occasion.slug}`,
   });
@@ -43,14 +44,17 @@ export default async function OccasionDetailPage({ params }: PageProps) {
   const cocktails = (await getCocktailsList()) as OccasionCocktail[];
   const matched = filterCocktailsForOccasion(cocktails, occasion);
   const cover = pickOccasionCover(occasion, cocktails);
+  const staticUrl = staticOccasionCoverIfPresent(occasion.slug);
+  const heroUrl = staticUrl || cover?.image_url || null;
+  const heroAlt = cover?.image_alt || cover?.name || occasion.name;
 
   return (
     <div className="min-h-screen bg-cream">
       <section className="relative min-h-[36vh] overflow-hidden">
-        {cover?.image_url ? (
+        {heroUrl ? (
           <Image
-            src={cover.image_url}
-            alt={cover.image_alt || cover.name}
+            src={heroUrl}
+            alt={heroAlt}
             fill
             priority
             className="object-cover"
@@ -61,18 +65,23 @@ export default async function OccasionDetailPage({ params }: PageProps) {
         ) : (
           <div className={`absolute inset-0 bg-gradient-to-br ${occasion.accentClass}`} />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/60 to-forest/30" />
+        {/* Dim photo + opaque cream wash behind copy so bright drinks stay readable */}
+        <div className="absolute inset-0 bg-forest/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/92 to-cream/25 sm:to-cream/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/40 to-transparent" />
         <MainContainer className="relative py-12 sm:py-16">
           <Link
             href="/occasions"
-            className="inline-flex text-sm font-medium text-sage hover:text-terracotta transition-colors mb-6"
+            className="inline-flex text-sm font-semibold text-forest hover:text-terracotta transition-colors mb-6"
           >
-            ← All occasions
+            ← All collections
           </Link>
-          <h1 className="font-display text-4xl sm:text-5xl font-bold text-forest mb-3">{occasion.name}</h1>
-          <p className="text-lg text-forest/80 max-w-2xl mb-2">{occasion.headline}</p>
-          <p className="text-sage max-w-2xl">{occasion.description}</p>
-          <p className="mt-6 text-sm font-medium text-forest/70">
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-charcoal mb-3 drop-shadow-sm">
+            {occasion.name}
+          </h1>
+          <p className="text-lg font-medium text-forest max-w-2xl mb-2">{occasion.headline}</p>
+          <p className="text-charcoal/85 max-w-2xl leading-relaxed">{occasion.description}</p>
+          <p className="mt-6 text-sm font-semibold text-forest">
             {matched.length} drink{matched.length === 1 ? "" : "s"}
           </p>
         </MainContainer>
