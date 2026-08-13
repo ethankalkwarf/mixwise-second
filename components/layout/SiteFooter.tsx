@@ -102,8 +102,9 @@ function FooterEmailCapture() {
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
-  const learnPublic = isLearnPublic();
-  const learnLinks = FOOTER_LINKS.learn.filter((link) => learnPublic || !("learnOnly" in link && link.learnOnly));
+  const { isAuthenticated } = useUser();
+  const showLearnNav = isLearnPublic() || isAuthenticated;
+  const learnLinks = FOOTER_LINKS.learn.filter((link) => showLearnNav || !("learnOnly" in link && link.learnOnly));
 
   return (
     <footer className="bg-forest mt-auto">
