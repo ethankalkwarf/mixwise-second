@@ -59,16 +59,15 @@ export default async function LearnMethodPage({ params }: PageProps) {
 
       <MainContainer className="py-10 sm:py-14 max-w-2xl">
         <LearnContentGate gateId={`method:${slug}`} teaserLabel="Keep learning this method">
-          <article className="space-y-12">
-            {/* Opening lede — not a tip card */}
-            <p className="font-display text-xl sm:text-2xl !text-charcoal leading-snug">
+          <article className="space-y-14">
+            {/* Opening lede — same body scale, not a second display size */}
+            <p className="text-[17px] !text-charcoal/85 leading-[1.7] border-b border-mist pb-10">
               {method.tip}
             </p>
 
             {ruleSection && <LearnSectionBlock section={ruleSection} />}
 
-            {/* Mid-lesson visual beat */}
-            <figure className="relative -mx-4 sm:mx-0 overflow-hidden rounded-2xl sm:rounded-3xl aspect-[16/10] bg-mist">
+            <figure className="relative -mx-4 sm:mx-0 overflow-hidden rounded-2xl aspect-[16/10] bg-mist">
               <Image
                 src={method.coverImage}
                 alt={method.coverAlt}
@@ -77,7 +76,7 @@ export default async function LearnMethodPage({ params }: PageProps) {
                 className="object-cover"
               />
               <figcaption className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-forest/80 to-transparent px-5 py-4">
-                <p className="text-sm font-medium !text-cream">{method.cue}</p>
+                <p className="text-[13px] font-medium !text-cream/95 tracking-wide">{method.cue}</p>
               </figcaption>
             </figure>
 
@@ -95,20 +94,20 @@ export default async function LearnMethodPage({ params }: PageProps) {
 
         {(relatedGuide || relatedTechniques.length > 0) && (
           <nav className="mt-14 pt-8 border-t border-mist">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-terracotta mb-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-terracotta mb-5">
               Keep going
             </p>
-            <ul className="space-y-3">
+            <ul className="space-y-1">
               {relatedGuide && (
                 <li>
                   <Link
                     href={`/learn/guides/${relatedGuide.slug}`}
-                    className="group flex items-baseline justify-between gap-4 py-2"
+                    className="group flex items-baseline justify-between gap-4 py-3 border-b border-mist/80"
                   >
-                    <span className="font-display text-lg !text-charcoal group-hover:text-terracotta transition-colors">
+                    <span className="font-display text-2xl !text-charcoal group-hover:text-terracotta transition-colors tracking-tight">
                       {relatedGuide.title}
                     </span>
-                    <span className="text-sm text-sage shrink-0">Guide →</span>
+                    <span className="text-[13px] !text-charcoal/50 shrink-0">Guide</span>
                   </Link>
                 </li>
               )}
@@ -117,12 +116,12 @@ export default async function LearnMethodPage({ params }: PageProps) {
                   <li key={term.learnPath}>
                     <Link
                       href={term.learnPath || "/learn"}
-                      className="group flex items-baseline justify-between gap-4 py-2"
+                      className="group flex items-baseline justify-between gap-4 py-3 border-b border-mist/80"
                     >
-                      <span className="font-display text-lg !text-charcoal capitalize group-hover:text-terracotta transition-colors">
+                      <span className="font-display text-2xl !text-charcoal capitalize group-hover:text-terracotta transition-colors tracking-tight">
                         {term.label}
                       </span>
-                      <span className="text-sm text-sage shrink-0">Technique →</span>
+                      <span className="text-[13px] !text-charcoal/50 shrink-0">Technique</span>
                     </Link>
                   </li>
                 ) : null

@@ -64,17 +64,17 @@ export function LearnHero({
           </Link>
         ) : null}
         <p
-          className={`font-mono text-[11px] uppercase tracking-[0.18em] text-terracotta font-bold ${
+          className={`font-mono text-[11px] uppercase tracking-[0.16em] text-terracotta font-semibold ${
             backHref ? "mt-6" : ""
           } mb-3`}
         >
           {eyebrow}
         </p>
-        <h1 className="font-display text-4xl sm:text-5xl font-bold text-charcoal mb-4 max-w-2xl drop-shadow-sm">
+        <h1 className="font-display text-4xl sm:text-5xl font-bold !text-charcoal mb-4 max-w-2xl tracking-tight">
           {title}
         </h1>
         {summary && (
-          <p className="text-base sm:text-lg text-charcoal/85 leading-relaxed max-w-xl font-medium">
+          <p className="text-[17px] !text-charcoal/80 leading-[1.7] max-w-xl">
             {summary}
           </p>
         )}

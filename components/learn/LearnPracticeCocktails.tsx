@@ -20,13 +20,15 @@ export async function LearnPracticeCocktails({
   if (cocktails.length === 0) return null;
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-6">
       <div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-terracotta mb-3">
           In the glass
         </p>
-        <h2 className="font-display text-2xl font-bold text-forest">{heading}</h2>
-        {subcopy && <p className="text-sm text-sage mt-1 max-w-xl">{subcopy}</p>}
+        <h2 className="font-display text-2xl font-bold !text-charcoal tracking-tight">{heading}</h2>
+        {subcopy && (
+          <p className="text-[17px] !text-charcoal/70 leading-[1.7] mt-2 max-w-xl">{subcopy}</p>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

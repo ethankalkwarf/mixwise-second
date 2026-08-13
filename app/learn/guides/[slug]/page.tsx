@@ -58,9 +58,9 @@ export default async function LearnGuidePage({ params }: PageProps) {
         backHref="/learn"
       />
 
-      <MainContainer className="py-10 sm:py-14 max-w-2xl space-y-12">
+      <MainContainer className="py-10 sm:py-14 max-w-2xl space-y-14">
         <LearnContentGate gateId={`guide:${slug}`} teaserLabel="Keep reading this lesson">
-          <div className="space-y-12">
+          <div className="space-y-14">
             {guide.sections.map((section) => (
               <LearnSectionBlock key={section.heading} section={section} />
             ))}
