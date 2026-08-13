@@ -75,11 +75,11 @@ function PathStepCard({
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           priority
         />
-        <div className="absolute inset-0 bg-forest/35" />
-        <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/50 to-transparent" />
+        <div className="absolute inset-0 bg-forest/45" />
+        <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/70 to-forest/10" />
         <div className="relative z-10 flex h-full min-h-[280px] sm:min-h-[320px] flex-col justify-end p-6 sm:p-8">
           <div className="flex items-center gap-3 mb-3">
-            <span className="rounded-full bg-cream/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-cream/90 backdrop-blur-sm">
+            <span className="rounded-full bg-cream/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-cream backdrop-blur-sm">
               Start here · {meta.kind}
             </span>
             {canToggle && (
@@ -100,15 +100,15 @@ function PathStepCard({
               </button>
             )}
           </div>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-cream mb-2 capitalize drop-shadow-sm">
+          <h2 className="font-display text-3xl sm:text-4xl font-bold !text-cream mb-2 capitalize drop-shadow-sm">
             {meta.title}
           </h2>
-          <p className="text-sm sm:text-base text-cream/85 leading-relaxed max-w-xl mb-5">
+          <p className="text-sm sm:text-base !text-cream/95 leading-relaxed max-w-xl mb-5 drop-shadow-sm">
             {meta.blurb}
           </p>
           <Link
             href={meta.href}
-            className="inline-flex w-fit items-center gap-2 rounded-full bg-terracotta px-5 py-2.5 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
+            className="inline-flex w-fit items-center gap-2 rounded-full bg-terracotta px-5 py-2.5 text-sm font-semibold !text-cream hover:bg-terracotta/90 transition-colors"
           >
             Open lesson
             <ArrowRightIcon className="h-4 w-4" />
