@@ -27,9 +27,15 @@ interface IngredientAvailabilityProps {
    */
   ingredients: IngredientRef[];
   quantity?: number;
+  /** Scaled recipe lines aligned to the recipe (for party shopping notes) */
+  scaledIngredientLines?: string[];
 }
 
-export function IngredientAvailability({ ingredients, quantity = 1 }: IngredientAvailabilityProps) {
+export function IngredientAvailability({
+  ingredients,
+  quantity = 1,
+  scaledIngredientLines = [],
+}: IngredientAvailabilityProps) {
   const { isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, ingredients: barIngredients, isLoading: barLoading } = useBarIngredients();
   const { addItems, isLoading: shoppingListLoading } = useShoppingList();
@@ -249,11 +255,22 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
               setIsAdding(true);
               setDidAdd(false);
               try {
-                const scaledIngredients = missingIngredients.map(ing => ({
-                  id: ing.id,
-                  name: ing.name,
-                  category: ing.category,
-                }));
+                const scaledIngredients = missingIngredients.map((ing) => {
+                  const matchLine = scaledIngredientLines.find((line) =>
+                    line.toLowerCase().includes(ing.name.toLowerCase())
+                  );
+                  const name =
+                    quantity > 1
+                      ? matchLine
+                        ? `${ing.name} — ${matchLine} (${quantity} drinks)`
+                        : `${ing.name} (×${quantity})`
+                      : ing.name;
+                  return {
+                    id: ing.id,
+                    name,
+                    category: ing.category,
+                  };
+                });
                 await addItems(scaledIngredients);
                 setDidAdd(true);
                 setTimeout(() => setDidAdd(false), 2000);
@@ -279,7 +296,9 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
             ) : (
               <>
                 <ShoppingBagIcon className="w-4 h-4" />
-                Add missing ingredients to shopping list
+                {quantity > 1
+                  ? `Add missing for ${quantity} drinks`
+                  : "Add missing ingredients to shopping list"}
               </>
             )}
           </button>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { QuantitySelector } from "@/components/cocktails/QuantitySelector";
+import { CopyScaledRecipeButton } from "@/components/cocktails/CopyScaledRecipeButton";
 import { IngredientAvailability } from "@/components/cocktails/IngredientAvailability";
 import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
 import Image from "next/image";
@@ -12,6 +13,7 @@ import { InstructionStepText } from "@/components/cocktails/InstructionStepText"
 import { TechniqueCue } from "@/components/cocktails/TechniqueCue";
 import { Button } from "@/components/common/Button";
 import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
+import { scaleIngredientLines } from "@/lib/scaleRecipe";
 import {
   ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
@@ -28,37 +30,6 @@ interface RecipeContentProps {
   tagLine: string;
   imageUrl: string | null;
   similarRecipes: any[];
-}
-
-function scaleIngredient(ingredientText: string, scale: number): string {
-  // Simple regex to find measurements like "1.5 oz", "2 cups", "1/2 tsp", etc.
-  const measurementRegex = /(\d+(?:\.\d+)?|\d+\/\d+)\s*(oz|cup|cups|tbsp|tsp|ml|cl|dash|dashes|drop|drops|slice|slices|piece|pieces|sprig|sprigs|leaf|leaves|wheel|wheels|twist|twists|rim|rims)/gi;
-
-  return ingredientText.replace(measurementRegex, (match, amount, unit) => {
-    const numericAmount = amount.includes('/') ? eval(amount) : parseFloat(amount);
-    const scaledAmount = numericAmount * scale;
-
-    // Format the scaled amount nicely
-    let formattedAmount: string;
-    if (scaledAmount % 1 === 0) {
-      formattedAmount = scaledAmount.toString();
-    } else if (scaledAmount < 1) {
-      // Convert to fraction for amounts less than 1
-      const fractions: { [key: number]: string } = {
-        0.125: "1/8",
-        0.25: "1/4",
-        0.33: "1/3",
-        0.5: "1/2",
-        0.67: "2/3",
-        0.75: "3/4",
-      };
-      formattedAmount = fractions[scaledAmount] || scaledAmount.toFixed(2);
-    } else {
-      formattedAmount = scaledAmount.toFixed(1);
-    }
-
-    return `${formattedAmount} ${unit}`;
-  });
 }
 
 export function RecipeContent({
@@ -81,10 +52,7 @@ export function RecipeContent({
     setMounted(true);
   }, []);
 
-  const scaledIngredients = ingredients.map(ing => ({
-    ...ing,
-    text: quantity === 1 ? ing.text : scaleIngredient(ing.text, quantity),
-  }));
+  const scaledIngredients = scaleIngredientLines(ingredients, quantity);
 
   // Helper function to extract ingredient name from text (matches ingredientMatching.ts logic)
   const extractIngredientNameFromText = (fullText: string): string => {
@@ -366,6 +334,16 @@ export function RecipeContent({
               </ul>
             )}
 
+            {ingredients.length > 0 && (
+              <div className="mt-4">
+                <CopyScaledRecipeButton
+                  cocktailName={formatCocktailName(cocktail.name)}
+                  quantity={quantity}
+                  ingredientLines={scaledIngredients.map((ing) => ing.text)}
+                />
+              </div>
+            )}
+
             {ingredients.length > 0 && mounted && (
               <div className="mt-6 pt-6 border-t border-gray-100">
                 {!authLoading && isAuthenticated ? (
@@ -374,6 +352,7 @@ export function RecipeContent({
                     <IngredientAvailability 
                       ingredients={shoppingListIngredients} 
                       quantity={quantity}
+                      scaledIngredientLines={scaledIngredients.map((ing) => ing.text)}
                     />
                   </>
                 ) : !authLoading && !isAuthenticated ? (
