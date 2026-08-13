@@ -61,15 +61,39 @@ The image must represent the **finished cocktail**, not merely interpret the coc
    - closer crop that fills more of the frame
    - tighter detail on ice, garnish, foam, or rim when that is the drink’s visual story
 4. **Depth:** shallow depth of field
-5. **Background:** contextual but blurred; never competing with the drink. **Vary the setting** so the catalog feels approachable — not a wall of dark bars. Prefer a mix of:
+5. **Background:** contextual but blurred; never competing with the drink. Use **light lifestyle context**, not a full staged vignette:
    - home kitchens / sunny counters
    - dining tables and casual indoor tables
    - decks, patios, and outdoor daylight
    - bright recipe-studio surfaces
    - occasional classic bar scenes (use sparingly)
+   - Keep background soft and simple: a hint of table, window, greenery, or room — **not** salad plates, fruit bowls, napkins, chairs, and props all competing
 6. **Forbidden:** bottles, branding, logos, text, humans, hands
-7. **Realism:** deliberately introduce small physical imperfections so the image does not look like sterile CGI
-8. **Mood:** welcoming and everyday; avoid making every drink look like nightlife exclusivity
+7. **Camera authenticity:** must look like a **DSLR recipe photo**, not CGI and not stock lifestyle advertising
+8. **Realism:** deliberately introduce small physical imperfections so the image does not look sterile
+9. **Mood:** welcoming and everyday; avoid making every drink look like nightlife exclusivity
+
+## Anti-AI material rules (critical)
+
+These are the details that most often look fake — get them right:
+
+| Element | Do | Avoid |
+| --- | --- | --- |
+| **Ice** | Slightly cloudy or uneven edges; natural melt; irregular chips or fractures | Perfect crystal cubes, glowing ice, geometrically flawless blocks |
+| **Liquid / texture** | Realistic viscosity, natural meniscus, believable opacity | Plastic-smooth surfaces, neon saturation, self-illuminated liquid |
+| **Garnish** | Slight asymmetry; natural citrus pith/pores; mint that isn’t perfectly fluffed | Pristine glowing fruit, plastic mint, overly styled garnish sculpture |
+| **Reflections / glass** | Soft, uneven highlights; minor smudge or fingerprint; real refraction | Mirror-perfect CGI reflections, symmetric sparkle flares, chrome-like glass |
+| **Condensation** | Light, irregular, patchy where cold glass meets air | Uniform droplet grids or heavy fake dripping |
+| **Color** | Muted real-camera white balance | Oversaturated “Instagram food” color |
+| **Lifestyle context** | Soft hint of place behind the drink | Busy staged tablescapes with multiple prop clusters |
+| **Garnish choice (batch preference)** | Prefer mint, cherry, orange, pineapple, grapefruit, celery, lime, or ungarnished when the drink still reads clearly | Avoid lemon wheels and strawberry garnishes unless the drink truly requires them visually |
+
+### Preferred closing line for every prompt
+
+Add this verbatim near the end:
+
+> Shot like a DSLR recipe photo (50mm, natural light). Believable ice, garnish, glass reflections, and textures. Light lifestyle context only — background softly blurred and secondary. Not CGI, not stock lifestyle advertising, not hyper-perfect food media.
+
 
 ## Camera angle guidance
 
