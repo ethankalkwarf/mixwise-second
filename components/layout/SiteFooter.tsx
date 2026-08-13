@@ -11,6 +11,8 @@ const FOOTER_LINKS = {
     { label: "Wedding Cocktail Finder", href: "/wedding-menu" },
   ],
   learn: [
+    { label: "Learning portal", href: "/learn" },
+    { label: "Smart Swaps", href: "/learn/swaps" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
   ],

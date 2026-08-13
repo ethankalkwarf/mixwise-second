@@ -1,33 +1,49 @@
+import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { LearnHero } from "@/components/learn/LearnHero";
 import { LearnLibraryClient } from "@/components/learn/LearnLibraryClient";
 import { generatePageMetadata } from "@/lib/seo";
+import { LEARN_PATHS } from "@/lib/learnLibrary";
 
 export const metadata = generatePageMetadata({
   title: "Learn Mixology",
   description:
-    "A searchable MixWise learning library for home mixologists — guides, techniques, balance, spirits, and smart swaps.",
+    "Training library for home mixologists — learning paths, guides, core methods, techniques, and smart swaps.",
   path: "/learn",
 });
 
 export default function LearnPage() {
+  const starter = LEARN_PATHS[0];
+
   return (
     <div className="min-h-screen bg-cream">
-      <div className="border-b border-mist bg-gradient-to-br from-olive/20 via-cream to-terracotta/10">
-        <MainContainer className="py-14 sm:py-16">
-          <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-terracotta font-bold mb-3">
-            Education
-          </p>
-          <h1 className="font-display text-4xl sm:text-5xl font-bold text-forest mb-4 max-w-3xl">
-            Learn to make better drinks
-          </h1>
-          <p className="text-sage max-w-2xl text-base sm:text-lg">
-            Not a glossary dump — a training library for home mixologists. Search techniques, read deeper guides, and keep smart swaps off the recipe page until you need them.
-          </p>
-        </MainContainer>
-      </div>
+      <LearnHero
+        imageSrc="/media/bartender-home.webp"
+        imageAlt="Home bartender preparing a cocktail"
+        eyebrow="Education"
+        title="Learn to make better drinks"
+        summary="Follow a short path, then look up methods and techniques when you need them — training, not a glossary dump."
+      >
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href={`/learn/paths/${starter.slug}`}
+            className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
+          >
+            Start: {starter.title} →
+          </Link>
+          <a
+            href="#library"
+            className="inline-flex items-center justify-center rounded-full border border-forest/20 bg-white/80 px-6 py-3 text-sm font-semibold text-forest hover:border-terracotta/40 transition-colors"
+          >
+            Browse library
+          </a>
+        </div>
+      </LearnHero>
 
-      <MainContainer className="py-10 sm:py-12">
-        <LearnLibraryClient />
+      <MainContainer className="py-10 sm:py-14">
+        <div id="library">
+          <LearnLibraryClient />
+        </div>
       </MainContainer>
     </div>
   );

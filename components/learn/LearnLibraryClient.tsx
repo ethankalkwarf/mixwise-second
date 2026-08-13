@@ -2,176 +2,353 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { LEARN_GUIDES } from "@/lib/learnLibrary";
-import { getAllTechniqueLearnEntries, METHOD_TIPS } from "@/lib/cocktailTechniqueGlossary";
+import {
+  LEARN_GUIDES,
+  LEARN_METHODS,
+  LEARN_PATHS,
+  pathStepLabel,
+  type LearnGuide,
+  type LearnMethod,
+  type LearnPath,
+} from "@/lib/learnLibrary";
+import { getAllTechniqueLearnEntries } from "@/lib/cocktailTechniqueGlossary";
 import { SUBSTITUTION_TIPS } from "@/lib/cocktailSubstitutions";
+
+type BrowseTab = "guides" | "methods" | "techniques" | "swaps";
+
+const TABS: { id: BrowseTab; label: string }[] = [
+  { id: "guides", label: "Guides" },
+  { id: "methods", label: "Methods" },
+  { id: "techniques", label: "Techniques" },
+  { id: "swaps", label: "Swaps" },
+];
+
+function PathStartCard({ path, featured = false }: { path: LearnPath; featured?: boolean }) {
+  return (
+    <Link
+      href={`/learn/paths/${path.slug}`}
+      className={`group relative overflow-hidden rounded-3xl border border-mist transition-all hover:-translate-y-0.5 hover:shadow-card-hover ${
+        featured ? "md:col-span-2 min-h-[300px]" : "min-h-[260px]"
+      }`}
+    >
+      <Image
+        src={path.coverImage}
+        alt={path.coverAlt}
+        fill
+        sizes={featured ? "(max-width: 768px) 100vw, 66vw" : "(max-width: 768px) 100vw, 33vw"}
+        className="object-cover transition-transform duration-700 group-hover:scale-105"
+        priority={featured}
+      />
+      <div className="absolute inset-0 bg-forest/45" />
+      <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/70 to-forest/20" />
+      <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-8">
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-olive font-bold mb-2">
+          {path.eyebrow} · ~{path.estimatedMinutes} min
+        </p>
+        <h3 className="font-display text-2xl sm:text-3xl font-bold text-cream mb-2 drop-shadow-sm">
+          {path.title}
+        </h3>
+        <p className={`text-sm text-cream/90 leading-relaxed ${featured ? "max-w-lg" : "line-clamp-2"}`}>
+          {path.summary}
+        </p>
+        {featured && (
+          <span className="mt-5 inline-flex w-fit items-center rounded-full bg-terracotta px-4 py-2 text-sm font-semibold text-cream">
+            Start this path →
+          </span>
+        )}
+        {!featured && (
+          <ol className="mt-4 space-y-1 border-t border-cream/20 pt-3">
+            {path.steps.slice(0, 3).map((step, i) => (
+              <li
+                key={`${step.type}-${"slug" in step ? step.slug : "swaps"}`}
+                className="flex gap-2 text-xs text-cream/80"
+              >
+                <span className="font-mono text-olive w-4 shrink-0">{i + 1}.</span>
+                <span className="capitalize">{pathStepLabel(step)}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+function GuideRow({ guide }: { guide: LearnGuide }) {
+  return (
+    <Link
+      href={`/learn/guides/${guide.slug}`}
+      className="group flex gap-4 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
+    >
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
+        <Image
+          src={guide.coverImage}
+          alt={guide.coverAlt}
+          fill
+          sizes="96px"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </div>
+      <div className="min-w-0 flex flex-col justify-center py-1 pr-2">
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta font-bold mb-0.5">
+          {guide.eyebrow} · {guide.readingMinutes} min
+        </p>
+        <h3 className="font-display text-lg font-bold text-forest group-hover:text-terracotta transition-colors">
+          {guide.title}
+        </h3>
+        <p className="text-xs text-sage line-clamp-2 mt-1">{guide.summary}</p>
+      </div>
+    </Link>
+  );
+}
+
+function MethodChip({ method }: { method: LearnMethod }) {
+  return (
+    <Link
+      href={`/learn/methods/${method.slug}`}
+      className="rounded-2xl border border-mist bg-white px-4 py-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
+    >
+      <p className="font-display text-lg font-bold text-forest">{method.label}</p>
+      <p className="text-xs text-terracotta font-medium mt-0.5">{method.cue}</p>
+    </Link>
+  );
+}
 
 export function LearnLibraryClient() {
   const [query, setQuery] = useState("");
+  const [tab, setTab] = useState<BrowseTab>("guides");
   const techniques = getAllTechniqueLearnEntries();
-  const methods = Object.values(
-    Object.fromEntries(Object.entries(METHOD_TIPS).map(([, tip]) => [tip.label, tip]))
-  );
+  const starterPath = LEARN_PATHS[0];
+  const otherPaths = LEARN_PATHS.slice(1);
 
-  const filteredGuides = useMemo(() => {
+  const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return LEARN_GUIDES;
-    return LEARN_GUIDES.filter((g) => {
-      const hay = [g.title, g.summary, g.eyebrow, ...g.topics].join(" ").toLowerCase();
-      return hay.includes(q);
-    });
-  }, [query]);
-
-  const filteredTechniques = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return techniques;
-    return techniques.filter(
-      (t) =>
-        t.label.toLowerCase().includes(q) ||
-        t.explanation.toLowerCase().includes(q) ||
-        (t.why || "").toLowerCase().includes(q)
-    );
+    if (!q) {
+      return {
+        guides: LEARN_GUIDES,
+        methods: LEARN_METHODS,
+        techniques,
+        swaps: SUBSTITUTION_TIPS,
+      };
+    }
+    return {
+      guides: LEARN_GUIDES.filter((g) =>
+        [g.title, g.summary, g.eyebrow, ...g.topics].join(" ").toLowerCase().includes(q)
+      ),
+      methods: LEARN_METHODS.filter(
+        (m) =>
+          m.label.toLowerCase().includes(q) ||
+          m.summary.toLowerCase().includes(q) ||
+          m.tip.toLowerCase().includes(q)
+      ),
+      techniques: techniques.filter(
+        (t) =>
+          t.label.toLowerCase().includes(q) ||
+          t.explanation.toLowerCase().includes(q) ||
+          (t.why || "").toLowerCase().includes(q)
+      ),
+      swaps: SUBSTITUTION_TIPS.filter((tip) =>
+        [tip.have, tip.use, tip.note || ""].join(" ").toLowerCase().includes(q)
+      ),
+    };
   }, [query, techniques]);
 
-  const filteredMethods = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return methods;
-    return methods.filter(
-      (m) =>
-        m.label.toLowerCase().includes(q) ||
-        m.summary.toLowerCase().includes(q) ||
-        m.tip.toLowerCase().includes(q)
-    );
-  }, [query, methods]);
-
-  const showSwaps =
-    !query.trim() ||
-    ["swap", "substitut", "replace", "cointreau", "mezcal", "egg"].some((k) =>
-      query.toLowerCase().includes(k)
-    );
+  const searching = Boolean(query.trim());
 
   return (
-    <div className="space-y-14">
-      <div className="relative max-w-xl">
-        <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search techniques, balance, agave, zero-proof…"
-          className="w-full rounded-2xl border border-mist bg-white py-3.5 pl-12 pr-4 text-sm text-forest placeholder:text-sage/70 focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta"
-        />
-      </div>
-
+    <div className="space-y-16">
+      {/* 1. Guided start */}
       <section>
-        <div className="flex items-end justify-between gap-4 mb-5">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
-              Guides
-            </p>
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
-              Train like you mean it
-            </h2>
+        <div className="mb-6 max-w-2xl">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
+            Step 1 · Start here
+          </p>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
+            Pick a path — we&apos;ll sequence the rest
+          </h2>
+          <p className="text-sm text-sage mt-2 leading-relaxed">
+            Paths are short curricula. Follow the steps in order; jump into the full library only when you need a reference.
+          </p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <PathStartCard path={starterPath} featured />
+          <div className="grid gap-5">
+            {otherPaths.map((path) => (
+              <PathStartCard key={path.slug} path={path} />
+            ))}
           </div>
         </div>
-        {filteredGuides.length === 0 ? (
-          <p className="text-sm text-sage">No guides match that search.</p>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2">
-            {filteredGuides.map((guide, index) => (
-              <Link
-                key={guide.slug}
-                href={`/learn/guides/${guide.slug}`}
-                className={`group relative overflow-hidden rounded-3xl border border-mist p-6 transition-all hover:-translate-y-0.5 hover:shadow-card-hover ${
-                  index === 0 ? "md:col-span-2 bg-gradient-to-br from-forest to-forest/85 text-cream" : "bg-white"
-                }`}
-              >
-                <p
-                  className={`font-mono text-[10px] uppercase tracking-[0.18em] mb-2 ${
-                    index === 0 ? "text-olive" : "text-terracotta"
+      </section>
+
+      {/* 2. Browse library — one tab at a time */}
+      <section>
+        <div className="mb-5 max-w-2xl">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
+            Step 2 · Browse the library
+          </p>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
+            Or look something up
+          </h2>
+          <p className="text-sm text-sage mt-2">
+            Guides teach judgment. Methods and techniques are quick references while you mix.
+          </p>
+        </div>
+
+        <div className="relative max-w-xl mb-5">
+          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search guides, shake, agave, swaps…"
+            className="w-full rounded-2xl border border-mist bg-white py-3.5 pl-12 pr-4 text-sm text-forest placeholder:text-sage/70 focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta"
+          />
+        </div>
+
+        {!searching && (
+          <div
+            className="flex flex-wrap gap-2 mb-6 border-b border-mist pb-4"
+            role="tablist"
+            aria-label="Library sections"
+          >
+            {TABS.map((item) => {
+              const active = tab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setTab(item.id)}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                    active
+                      ? "bg-forest text-cream"
+                      : "bg-white text-forest border border-mist hover:border-terracotta/40"
                   }`}
                 >
-                  {guide.eyebrow} · {guide.readingMinutes} min
-                </p>
-                <h3
-                  className={`font-display text-2xl font-bold mb-2 ${
-                    index === 0 ? "text-cream" : "text-forest group-hover:text-terracotta"
-                  }`}
-                >
-                  {guide.title}
-                </h3>
-                <p className={`text-sm leading-relaxed max-w-2xl ${index === 0 ? "text-cream/80" : "text-sage"}`}>
-                  {guide.summary}
-                </p>
-              </Link>
-            ))}
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
         )}
-      </section>
 
-      <section>
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
-          Core methods
-        </p>
-        <h2 className="font-display text-2xl font-bold text-forest mb-5">Shake, stir, build, blend…</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredMethods.map((method) => (
-            <div key={method.label} className="rounded-2xl border border-mist bg-white p-5 shadow-soft">
-              <h3 className="font-display text-xl font-bold text-forest mb-1">{method.label}</h3>
-              <p className="text-sm text-terracotta font-medium mb-2">{method.cue}</p>
-              <p className="text-sm text-sage leading-relaxed mb-2">{method.summary}</p>
-              <p className="text-sm text-sage/90 leading-relaxed">{method.tip}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
-          Technique deep-dives
-        </p>
-        <h2 className="font-display text-2xl font-bold text-forest mb-5">Jargon, decoded</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {filteredTechniques.map((term) => (
-            <Link
-              key={term.slug}
-              href={`/learn/techniques/${term.slug}`}
-              className="rounded-2xl border border-mist bg-white p-5 shadow-soft hover:border-terracotta/30 transition-all"
-            >
-              <h3 className="font-display text-lg font-bold text-forest capitalize mb-1">{term.label}</h3>
-              <p className="text-sm text-sage line-clamp-3">{term.explanation}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {showSwaps && (
-        <section className="rounded-3xl border border-mist bg-white p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
-                When you&apos;re stuck
-              </p>
-              <h2 className="font-display text-2xl font-bold text-forest">Smart swaps</h2>
-              <p className="text-sm text-sage mt-1 max-w-xl">
-                Practical bottle substitutions — kept here so recipe pages stay focused on making the drink as written.
-              </p>
-            </div>
-            <Link href="/learn/swaps" className="text-sm font-medium text-terracotta hover:underline">
-              Open full swap guide →
-            </Link>
+        {searching ? (
+          <div className="space-y-10">
+            {filtered.guides.length > 0 && (
+              <BrowseBlock title="Guides">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {filtered.guides.map((g) => (
+                    <GuideRow key={g.slug} guide={g} />
+                  ))}
+                </div>
+              </BrowseBlock>
+            )}
+            {filtered.methods.length > 0 && (
+              <BrowseBlock title="Methods">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {filtered.methods.map((m) => (
+                    <MethodChip key={m.slug} method={m} />
+                  ))}
+                </div>
+              </BrowseBlock>
+            )}
+            {filtered.techniques.length > 0 && (
+              <BrowseBlock title="Techniques">
+                <TechniqueList techniques={filtered.techniques} />
+              </BrowseBlock>
+            )}
+            {filtered.swaps.length > 0 && (
+              <BrowseBlock title="Swaps">
+                <SwapPreview tips={filtered.swaps} />
+              </BrowseBlock>
+            )}
+            {filtered.guides.length === 0 &&
+              filtered.methods.length === 0 &&
+              filtered.techniques.length === 0 &&
+              filtered.swaps.length === 0 && (
+                <p className="text-sm text-sage">Nothing matches that search.</p>
+              )}
           </div>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {SUBSTITUTION_TIPS.slice(0, 4).map((tip) => (
-              <li key={tip.id} className="rounded-xl bg-cream border border-mist px-4 py-3">
-                <p className="text-sm text-forest font-medium">
-                  {tip.have} <span className="text-sage font-normal">→</span> {tip.use}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
+        ) : (
+          <>
+            {tab === "guides" && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {filtered.guides.map((g) => (
+                  <GuideRow key={g.slug} guide={g} />
+                ))}
+              </div>
+            )}
+            {tab === "methods" && (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {filtered.methods.map((m) => (
+                  <MethodChip key={m.slug} method={m} />
+                ))}
+              </div>
+            )}
+            {tab === "techniques" && <TechniqueList techniques={filtered.techniques} />}
+            {tab === "swaps" && <SwapPreview tips={filtered.swaps} showAllLink />}
+          </>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function BrowseBlock({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="font-display text-lg font-bold text-forest mb-3">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function TechniqueList({
+  techniques,
+}: {
+  techniques: ReturnType<typeof getAllTechniqueLearnEntries>;
+}) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {techniques.map((term) => (
+        <Link
+          key={term.slug}
+          href={`/learn/techniques/${term.slug}`}
+          className="rounded-xl border border-mist bg-white px-4 py-3 hover:border-terracotta/30 transition-colors"
+        >
+          <p className="font-display font-bold text-forest capitalize text-base">{term.label}</p>
+          <p className="text-xs text-sage line-clamp-2 mt-1">{term.explanation}</p>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function SwapPreview({
+  tips,
+  showAllLink = false,
+}: {
+  tips: typeof SUBSTITUTION_TIPS;
+  showAllLink?: boolean;
+}) {
+  const list = tips.slice(0, showAllLink ? 6 : tips.length);
+  return (
+    <div className="space-y-3">
+      <ul className="grid gap-2 sm:grid-cols-2">
+        {list.map((tip) => (
+          <li key={tip.id} className="rounded-xl border border-mist bg-white px-4 py-3 text-sm text-forest">
+            <span className="font-medium">{tip.have}</span>{" "}
+            <span className="text-sage">→</span> {tip.use}
+          </li>
+        ))}
+      </ul>
+      {showAllLink && (
+        <Link href="/learn/swaps" className="inline-block text-sm font-medium text-terracotta hover:underline">
+          Open full swap guide →
+        </Link>
       )}
     </div>
   );

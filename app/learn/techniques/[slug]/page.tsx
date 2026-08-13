@@ -1,11 +1,41 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { LearnHero } from "@/components/learn/LearnHero";
+import { LearnPracticeCocktails } from "@/components/learn/LearnPracticeCocktails";
+import { LearnJoinCta } from "@/components/learn/LearnJoinCta";
+import { LearnContentGate } from "@/components/learn/LearnContentGate";
+import { LearnTechniqueVisual } from "@/components/learn/LearnTechniqueVisual";
 import {
   getAllTechniqueLearnEntries,
   getTechniqueTermBySlug,
 } from "@/lib/cocktailTechniqueGlossary";
+import { LEARN_METHODS } from "@/lib/learnLibrary";
 import { generatePageMetadata } from "@/lib/seo";
+
+const TECHNIQUE_PRACTICE: Record<string, string[]> = {
+  "dry-shake": ["whiskey-sour", "clover-club", "pisco-sour", "amaretto-sour"],
+  "fine-strain": ["daiquiri", "aviation", "last-word", "martini"],
+  express: ["old-fashioned", "martini", "sazerac", "negroni"],
+  muddle: ["mojito", "whiskey-smash", "caipirinha", "gin-basil-smash"],
+  swizzle: ["queens-park-swizzle", "chartreuse-swizzle"],
+  rinse: ["sazerac", "remember-the-maine"],
+  float: ["new-york-sour", "mai-tai"],
+  layer: ["new-york-sour", "black-and-tan"],
+  build: ["gin-and-tonic", "paloma", "americano", "dark-n-stormy"],
+};
+
+const TECHNIQUE_COVER: Record<string, { src: string; alt: string }> = {
+  "dry-shake": { src: "/media/bartender-home.webp", alt: "Shaking a cocktail tin" },
+  "fine-strain": { src: "/media/strainer-pour-poster.webp", alt: "Straining a cocktail" },
+  express: { src: "/media/three-cocktails-dark.webp", alt: "Finished cocktails" },
+  muddle: { src: "/media/ice-mojito-poster.webp", alt: "Muddled mint drink" },
+  swizzle: { src: "/occasions/tiki.jpg", alt: "Crushed-ice tropical cocktail" },
+  rinse: { src: "/media/three-cocktails-dark.webp", alt: "Spirit-forward cocktails" },
+  float: { src: "/media/cocktails-overhead.webp", alt: "Layered cocktail" },
+  layer: { src: "/media/cocktails-overhead.webp", alt: "Layered drinks overhead" },
+  build: { src: "/media/ice-mojito-poster.webp", alt: "Built drink over ice" },
+};
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -34,45 +64,78 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
   const related = getAllTechniqueLearnEntries()
     .filter((t) => t.slug !== slug)
     .slice(0, 4);
+  const practiceSlugs = TECHNIQUE_PRACTICE[slug] ?? [];
+  const cover = TECHNIQUE_COVER[slug] ?? {
+    src: "/media/bartender-home.webp",
+    alt: term.label,
+  };
+  const relatedMethod = LEARN_METHODS.find(
+    (m) =>
+      m.relatedTechniqueSlugs.includes(slug) ||
+      m.slug === slug ||
+      m.label.toLowerCase() === term.label.toLowerCase()
+  );
 
   return (
     <div className="min-h-screen bg-cream">
-      <div className="border-b border-mist bg-gradient-to-br from-olive/15 via-cream to-cream">
-        <MainContainer className="py-12 sm:py-16 max-w-3xl">
-          <Link href="/learn" className="text-sm font-medium text-sage hover:text-terracotta transition-colors">
-            ← Learn library
-          </Link>
-          <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.18em] text-terracotta font-bold">
-            Technique
-          </p>
-          <h1 className="mt-2 font-display text-4xl sm:text-5xl font-bold text-forest capitalize mb-4">
-            {term.label}
-          </h1>
-          <p className="text-lg text-forest/85 leading-relaxed">{term.explanation}</p>
-        </MainContainer>
-      </div>
+      <LearnHero
+        imageSrc={cover.src}
+        imageAlt={cover.alt}
+        eyebrow="Technique"
+        title={term.label}
+        summary={term.explanation}
+        backHref="/learn"
+        compact
+      />
 
-      <MainContainer className="py-10 sm:py-12 max-w-3xl space-y-8">
+      <MainContainer className="py-10 sm:py-12 max-w-3xl space-y-10">
+        <LearnTechniqueVisual slug={slug} label={term.label} />
+
         {term.why && (
-          <section className="rounded-3xl border border-mist bg-white p-6 sm:p-8 shadow-soft">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-terracotta mb-3">
+          <section className="rounded-2xl border border-forest/15 bg-forest/[0.04] px-5 py-5 sm:px-6">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-2">
               Why it matters
             </p>
-            <p className="text-base text-sage leading-relaxed">{term.why}</p>
+            <p className="text-base text-charcoal/80 leading-relaxed">{term.why}</p>
           </section>
         )}
 
-        <section className="rounded-3xl border border-mist bg-white p-6 sm:p-8 shadow-soft">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-terracotta mb-3">
-            Practice it
-          </p>
-          <p className="text-base text-sage leading-relaxed mb-4">
-            Open a recipe that uses this move, read the tip above the steps, and make the drink once focusing only on this technique. Repetition beats reading alone.
-          </p>
-          <Link href="/cocktails" className="text-sm font-medium text-terracotta hover:underline">
-            Browse recipes →
+        <LearnContentGate teaserLabel="Practice this technique">
+          <div className="space-y-8">
+            {practiceSlugs.length > 0 ? (
+              <LearnPracticeCocktails
+                slugs={practiceSlugs}
+                heading="Practice it"
+                subcopy="Open a recipe, focus on this move once, then make it again next week."
+              />
+            ) : (
+              <section className="rounded-2xl border border-mist bg-white px-5 py-5">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-2">
+                  Practice it
+                </p>
+                <p className="text-base text-sage leading-relaxed mb-3">
+                  Find a recipe that uses this move and make the drink once focusing only on this technique.
+                </p>
+                <Link href="/cocktails" className="text-sm font-medium text-terracotta hover:underline">
+                  Browse recipes →
+                </Link>
+              </section>
+            )}
+          </div>
+        </LearnContentGate>
+
+        {relatedMethod && (
+          <Link
+            href={`/learn/methods/${relatedMethod.slug}`}
+            className="block rounded-2xl border border-mist bg-white px-5 py-4 hover:border-terracotta/30 transition-colors"
+          >
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta mb-1">
+              Related method
+            </p>
+            <p className="font-display text-xl font-bold text-forest">{relatedMethod.label}</p>
+            <p className="text-sm text-sage mt-1">{relatedMethod.summary}</p>
           </Link>
-        </section>
+        )}
 
         <section>
           <h2 className="font-display text-xl font-bold text-forest mb-3">Related techniques</h2>
@@ -89,6 +152,8 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
             ))}
           </ul>
         </section>
+
+        <LearnJoinCta />
       </MainContainer>
     </div>
   );

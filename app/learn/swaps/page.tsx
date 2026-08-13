@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { LearnHero } from "@/components/learn/LearnHero";
+import { LearnJoinCta } from "@/components/learn/LearnJoinCta";
 import { SUBSTITUTION_TIPS } from "@/lib/cocktailSubstitutions";
 import { generatePageMetadata } from "@/lib/seo";
 
@@ -13,25 +15,37 @@ export const metadata = generatePageMetadata({
 export default function LearnSwapsPage() {
   return (
     <div className="min-h-screen bg-cream">
-      <MainContainer className="py-12 sm:py-16 max-w-3xl">
-        <Link href="/learn" className="text-sm font-medium text-sage hover:text-terracotta">
-          ← Learn library
-        </Link>
-        <h1 className="mt-6 font-display text-4xl font-bold text-forest mb-3">Smart swaps</h1>
-        <p className="text-sage text-lg leading-relaxed mb-10">
-          Use this when you are mid-shop or mid-mix and missing a bottle. Recipe pages stay focused on the drink as written — swaps live here on purpose.
-        </p>
+      <LearnHero
+        imageSrc="/media/kitchen-shelf.webp"
+        imageAlt="Bar bottles on a shelf"
+        eyebrow="Reference"
+        title="Smart swaps"
+        summary="Use this when you are mid-shop or mid-mix and missing a bottle. Recipe pages stay focused on the drink as written."
+        backHref="/learn"
+        compact
+      />
 
-        <ul className="space-y-4">
-          {SUBSTITUTION_TIPS.map((tip) => (
-            <li key={tip.id} className="rounded-2xl border border-mist bg-white p-5 shadow-soft">
-              <p className="text-forest font-medium text-base">
-                {tip.have} <span className="text-sage font-normal">→</span> {tip.use}
-              </p>
-              {tip.note && <p className="text-sm text-sage mt-2 leading-relaxed">{tip.note}</p>}
-            </li>
-          ))}
-        </ul>
+      <MainContainer className="py-10 sm:py-12 max-w-3xl space-y-4">
+        {SUBSTITUTION_TIPS.map((tip) => (
+          <article
+            key={tip.id}
+            className="rounded-2xl border border-mist bg-white px-5 py-5 sm:px-6"
+          >
+            <p className="text-charcoal font-medium text-base">
+              {tip.have} <span className="text-sage font-normal">→</span> {tip.use}
+            </p>
+            {tip.note && <p className="text-sm text-sage mt-2 leading-relaxed">{tip.note}</p>}
+          </article>
+        ))}
+
+        <div className="pt-6">
+          <LearnJoinCta />
+        </div>
+        <p className="text-center text-sm text-sage">
+          <Link href="/learn" className="font-medium text-terracotta hover:underline">
+            Back to Learn
+          </Link>
+        </p>
       </MainContainer>
     </div>
   );

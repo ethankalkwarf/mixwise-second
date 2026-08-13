@@ -4,7 +4,7 @@ import { getCocktailsList } from "@/lib/cocktails.server";
 import { getIngredientsDirectory } from "@/lib/ingredients.server";
 import { OCCASIONS } from "@/lib/occasions";
 import { getAllTechniqueLearnEntries } from "@/lib/cocktailTechniqueGlossary";
-import { LEARN_GUIDES } from "@/lib/learnLibrary";
+import { LEARN_GUIDES, LEARN_METHODS, LEARN_PATHS } from "@/lib/learnLibrary";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_CONFIG.url;
@@ -16,11 +16,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/occasions`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.85 },
     { url: `${baseUrl}/learn`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/learn/swaps`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.55 },
+    ...LEARN_PATHS.map((path) => ({
+      url: `${baseUrl}/learn/paths/${path.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.65,
+    })),
     ...LEARN_GUIDES.map((guide) => ({
       url: `${baseUrl}/learn/guides/${guide.slug}`,
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.6,
+    })),
+    ...LEARN_METHODS.map((method) => ({
+      url: `${baseUrl}/learn/methods/${method.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.55,
     })),
     { url: `${baseUrl}/mix`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${baseUrl}/ingredients`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },

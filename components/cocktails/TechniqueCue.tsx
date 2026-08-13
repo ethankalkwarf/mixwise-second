@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { getMethodTip } from "@/lib/cocktailTechniqueGlossary";
+import { getLearnMethodByTechniqueKey } from "@/lib/learnLibrary";
 
 interface TechniqueCueProps {
   technique?: string | null;
@@ -13,10 +14,13 @@ interface TechniqueCueProps {
  */
 export function TechniqueCue({ technique }: TechniqueCueProps) {
   const method = getMethodTip(technique);
+  const learnMethod = getLearnMethodByTechniqueKey(technique);
   const [open, setOpen] = useState(false);
   const panelId = useId();
 
   if (!method) return null;
+
+  const learnHref = learnMethod ? `/learn/methods/${learnMethod.slug}` : "/learn";
 
   return (
     <div className="mb-5">
@@ -53,10 +57,10 @@ export function TechniqueCue({ technique }: TechniqueCueProps) {
             {method.summary} {method.tip}
           </p>
           <a
-            href="/learn"
+            href={learnHref}
             className="inline-block text-xs font-medium text-terracotta hover:underline"
           >
-            More techniques in Learn →
+            {learnMethod ? `Learn ${learnMethod.label} →` : "More in Learn →"}
           </a>
         </div>
       )}
