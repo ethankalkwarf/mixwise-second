@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
-import Link from "next/link";
+import { HardNavLink } from "@/components/layout/HardNavLink";
 import Image from "next/image";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
@@ -347,7 +347,7 @@ function CocktailCard({
   const isReady = missingCount === 0;
 
   return (
-    <Link
+    <HardNavLink
       href={`/cocktails/${cocktail.slug}`}
       className={`group relative flex flex-col min-w-0 w-full overflow-hidden rounded-3xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-terracotta/50 ${
         isReady
@@ -442,6 +442,6 @@ function CocktailCard({
           </p>
         </div>
       </div>
-    </Link>
+    </HardNavLink>
   );
 }

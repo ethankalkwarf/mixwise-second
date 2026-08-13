@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { HardNavLink } from "@/components/layout/HardNavLink";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
@@ -102,7 +102,7 @@ export function MobileBottomNav() {
           const active = tab.match(pathname || "");
           const Icon = active ? tab.IconActive : tab.Icon;
           return (
-            <Link
+            <HardNavLink
               key={tab.id}
               href={tab.href}
               className={`mw-tabbar__item${active ? " is-active" : ""}`}
@@ -110,7 +110,7 @@ export function MobileBottomNav() {
             >
               <Icon className="mw-tabbar__icon" aria-hidden />
               <span>{tab.label}</span>
-            </Link>
+            </HardNavLink>
           );
         })}
         <button
@@ -167,51 +167,51 @@ export function MobileBottomNav() {
           </div>
 
           <div className="space-y-0.5">
-            <Link
+            <HardNavLink
               href="/cocktail-of-the-day"
               className="block px-3 py-3 text-base font-medium text-charcoal rounded-xl hover:text-terracotta hover:bg-mist/50 transition-colors"
               onClick={closeMore}
             >
               Drink of the Day
-            </Link>
-            <Link
+            </HardNavLink>
+            <HardNavLink
               href="/mix"
               className="block px-3 py-3 text-base font-medium text-charcoal rounded-xl hover:text-terracotta hover:bg-mist/50 transition-colors"
               onClick={closeMore}
               title="Find cocktails by ingredients in your bar"
             >
               What Can I Make?
-            </Link>
-            <Link
+            </HardNavLink>
+            <HardNavLink
               href="/cocktails"
               className="block px-3 py-3 text-base font-medium text-charcoal rounded-xl hover:text-terracotta hover:bg-mist/50 transition-colors"
               onClick={closeMore}
             >
               Browse All Recipes
-            </Link>
+            </HardNavLink>
 
             <div className="pl-3 pb-2 space-y-0.5">
               <p className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-sage">
                 By collection
               </p>
               {OCCASION_LINKS.map((occasion) => (
-                <Link
+                <HardNavLink
                   key={occasion.slug}
                   href={`/occasions/${occasion.slug}`}
                   className="block px-3 py-2 text-sm rounded-lg text-charcoal hover:text-terracotta hover:bg-mist/50"
                   onClick={closeMore}
                 >
                   {occasion.name}
-                </Link>
+                </HardNavLink>
               ))}
               {isLearnPublic() && (
-                <Link
+                <HardNavLink
                   href="/learn"
                   className="block px-3 py-2 text-sm rounded-lg text-terracotta font-medium hover:bg-mist/50"
                   onClick={closeMore}
                 >
                   Learn mixology
-                </Link>
+                </HardNavLink>
               )}
             </div>
 
@@ -241,28 +241,28 @@ export function MobileBottomNav() {
                       <p className="text-xs text-sage">{user?.email}</p>
                     </div>
                   </div>
-                  <Link
+                  <HardNavLink
                     href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
                     className="flex items-center gap-2 px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
                     onClick={closeMore}
                   >
                     <ShareIcon className="w-5 h-5" />
                     Share My Bar
-                  </Link>
-                  <Link
+                  </HardNavLink>
+                  <HardNavLink
                     href="/dashboard"
                     className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
                     onClick={closeMore}
                   >
                     Dashboard
-                  </Link>
-                  <Link
+                  </HardNavLink>
+                  <HardNavLink
                     href="/account"
                     className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
                     onClick={closeMore}
                   >
                     Account Settings
-                  </Link>
+                  </HardNavLink>
                   <button
                     type="button"
                     onClick={handleSignOut}

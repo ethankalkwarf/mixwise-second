@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { getCocktailsListClient } from "@/lib/cocktails";
 import type { CocktailListItem } from "@/lib/cocktailTypes";
@@ -12,7 +11,6 @@ type CocktailSearchProps = {
 };
 
 export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchProps) {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<CocktailListItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -96,13 +94,7 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
   };
 
   const handleResultClick = (cocktail: CocktailListItem) => {
-    router.push(`/cocktails/${cocktail.slug}`);
-    setSearchQuery("");
-    setResults([]);
-    setShowResults(false);
-    if (onClose) {
-      onClose();
-    }
+    window.location.assign(`/cocktails/${cocktail.slug}`);
   };
 
   const handleClear = () => {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
 import type { SanityCocktail } from "@/lib/sanityTypes";
@@ -9,6 +8,7 @@ import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
+import { HardNavLink } from "@/components/layout/HardNavLink";
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
 
@@ -563,9 +563,8 @@ function CocktailCard({
   const slug = cocktail.slug?.current || cocktail._id;
 
   return (
-    <Link
+    <HardNavLink
       href={`/cocktails/${slug}`}
-      prefetch={false}
       onClick={onNavigate}
       className="group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-500 hover:-translate-y-2 hover:shadow-card-hover cursor-pointer animate-fade-in"
       style={{
@@ -664,6 +663,6 @@ function CocktailCard({
           </div>
         </div>
       </div>
-    </Link>
+    </HardNavLink>
   );
 }

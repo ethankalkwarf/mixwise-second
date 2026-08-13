@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { HardNavLink } from "@/components/layout/HardNavLink";
 
 export type BrandLogoVariant = "light" | "dark" | "olive";
 export type BrandLogoSize = "sm" | "md" | "lg" | "hero";
@@ -96,12 +96,12 @@ export function BrandLogo({
   }
 
   return (
-    <Link
+    <HardNavLink
       href="/"
       className={`inline-flex items-center hover:opacity-80 transition-opacity ${className}`}
       aria-label="MixWise Home"
     >
       {mark}
-    </Link>
+    </HardNavLink>
   );
 }
