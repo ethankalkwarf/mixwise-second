@@ -1,14 +1,14 @@
 # Learn cover photos
 
-Drop Envato (or other licensed) covers here as `{guide-slug}.webp`.
+Wired in `lib/learnLibrary.ts`:
 
-Expected:
-- shake-vs-stir.webp
-- balance-and-taste.webp
-- garnish-with-intent.webp
-- spirit-primer-agave.webp
-- zero-proof-mindset.webp
+| File | Guide |
+|------|--------|
+| *(uses `/media/kitchen-shelf.webp`)* | Home bar fundamentals |
+| `shake-vs-stir.webp` | When to shake vs stir |
+| `balance-and-taste.webp` | Balance |
+| `garnish-with-intent.webp` | Garnish with intent |
+| `spirit-primer-agave.webp` | Agave primer |
+| `zero-proof-mindset.webp` | Zero-proof mindset |
 
-Home bar fundamentals keeps `/media/kitchen-shelf.webp`.
-
-See `docs/LEARN_ENVATO_COVERS.md` for search briefs.
+See `docs/LEARN_ENVATO_COVERS.md` for the original brief.
