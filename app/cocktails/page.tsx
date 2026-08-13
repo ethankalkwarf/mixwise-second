@@ -69,7 +69,15 @@ function mapCocktailListToSanity(cocktails: any[]): SanityCocktail[] {
   }));
 }
 
-export default async function CocktailsPage() {
+export default async function CocktailsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ spirit?: string; filter?: string }>;
+}) {
+  const params = (await searchParams) || {};
+  const initialSpirit = params.spirit?.toLowerCase() || null;
+  const initialFilter = params.filter?.toLowerCase() || null;
+
   // Get stable randomization seed for consistent ordering within session
   const randomizationSeed = await getCocktailsRandomizationSeed();
 
@@ -88,11 +96,7 @@ export default async function CocktailsPage() {
             Cocktail Recipes
           </h1>
           <p className="text-sage max-w-2xl">
-            Browse our collection of {cocktails.length} handcrafted cocktail recipes. Prefer{" "}
-            <a href="/occasions" className="text-terracotta hover:underline font-medium">
-              seasons and occasions
-            </a>
-            ? Start there. Each recipe includes detailed ingredients and instructions.
+            Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each recipe includes detailed ingredients and instructions.
           </p>
         </div>
 
@@ -114,7 +118,13 @@ export default async function CocktailsPage() {
         )}
 
         {/* Cocktail Directory with Search, Filters, and Grid */}
-        {cocktails.length > 0 && <CocktailsDirectory cocktails={randomizedCocktails} />}
+        {cocktails.length > 0 && (
+          <CocktailsDirectory
+            cocktails={randomizedCocktails}
+            initialSpirit={initialSpirit}
+            initialFilter={initialFilter}
+          />
+        )}
       </MainContainer>
     </div>
   );

@@ -11,10 +11,6 @@ import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCockta
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
 
-type Props = {
-  cocktails: SanityCocktail[];
-};
-
 // Key for persisting filter state
 const FILTER_STATE_KEY = "mixwise-cocktails-filters";
 const SCROLL_STATE_KEY = "mixwise-cocktails-scroll";
@@ -50,7 +46,6 @@ const CATEGORY_CONFIG: Record<string, { label: string; emoji: string; color: str
   quick: { label: "Quick", emoji: "⚡", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
 };
 
-// Predefined list of base spirits
 const BASE_SPIRITS = [
   { value: "vodka", label: "Vodka" },
   { value: "gin", label: "Gin" },
@@ -65,7 +60,6 @@ const BASE_SPIRITS = [
   { value: "non-alcoholic", label: "Non-Alcoholic" },
 ];
 
-// Keywords that map to special filters
 const KEYWORD_MAPPINGS: Record<string, (c: SanityCocktail) => boolean> = {
   popular: (c) => c.isPopular === true,
   featured: (c) => c.isPopular === true,
@@ -76,26 +70,37 @@ const KEYWORD_MAPPINGS: Record<string, (c: SanityCocktail) => boolean> = {
   new: (c) => isNewCocktail(c.createdAt),
 };
 
+type Props = {
+  cocktails: SanityCocktail[];
+  initialSpirit?: string | null;
+  initialFilter?: string | null;
+};
+
 // Number of items to load per batch
 const ITEMS_PER_PAGE = 24;
 
-export function CocktailsDirectory({ cocktails }: Props) {
+export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFilter = null }: Props) {
   const router = useRouter();
   
   // Initialize state from sessionStorage if available
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialFilter === "new" ? "new" : "");
   const [sortBy, setSortBy] = useState<SortOption>("default");
-  const [filterSpirit, setFilterSpirit] = useState<string | null>(null);
+  const [filterSpirit, setFilterSpirit] = useState<string | null>(initialSpirit);
   const [filterGlass, setFilterGlass] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(Boolean(initialSpirit));
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [isInitialized, setIsInitialized] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Restore filter state from sessionStorage on mount
+  // Restore filter state from sessionStorage on mount (URL params win)
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    if (initialSpirit || initialFilter) {
+      setIsInitialized(true);
+      return;
+    }
     
     try {
       const saved = sessionStorage.getItem(FILTER_STATE_KEY);
@@ -112,7 +117,7 @@ export function CocktailsDirectory({ cocktails }: Props) {
       console.error("Error restoring filter state:", e);
     }
     setIsInitialized(true);
-  }, []);
+  }, [initialSpirit, initialFilter]);
 
   // Restore scroll position after filters are applied
   useEffect(() => {

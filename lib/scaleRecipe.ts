@@ -86,5 +86,3 @@ export function estimateTotalOz(lines: string[]): number | null {
   }
   return found ? total : null;
 }
-
-export const PARTY_PRESETS = [1, 2, 4, 6, 8, 12, 16, 24] as const;

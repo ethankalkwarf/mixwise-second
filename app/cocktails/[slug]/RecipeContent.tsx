@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { QuantitySelector } from "@/components/cocktails/QuantitySelector";
-import { CopyScaledRecipeButton } from "@/components/cocktails/CopyScaledRecipeButton";
 import { IngredientAvailability } from "@/components/cocktails/IngredientAvailability";
 import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
-import { SubstitutionsCard } from "@/components/cocktails/SubstitutionsCard";
 import Image from "next/image";
 import { OptimizedCocktailImage } from "@/components/cocktails/OptimizedCocktailImage";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
@@ -15,13 +13,13 @@ import { TechniqueCue } from "@/components/cocktails/TechniqueCue";
 import { Button } from "@/components/common/Button";
 import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import { scaleIngredientLines } from "@/lib/scaleRecipe";
-import { getSubstitutionTipsForIngredients } from "@/lib/cocktailSubstitutions";
 import {
   ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
 import type { MatchedIngredient } from "@/lib/ingredientMatching";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import Link from "next/link";
 
 interface RecipeContentProps {
   cocktail: any;
@@ -55,10 +53,6 @@ export function RecipeContent({
   }, []);
 
   const scaledIngredients = scaleIngredientLines(ingredients, quantity);
-  const substitutionTips = useMemo(
-    () => getSubstitutionTipsForIngredients(ingredients.map((ing) => ing.text)),
-    [ingredients]
-  );
 
   // Helper function to extract ingredient name from text (matches ingredientMatching.ts logic)
   const extractIngredientNameFromText = (fullText: string): string => {
@@ -340,30 +334,17 @@ export function RecipeContent({
               </ul>
             )}
 
-            {ingredients.length > 0 && (
-              <div className="mt-4">
-                <CopyScaledRecipeButton
-                  cocktailName={formatCocktailName(cocktail.name)}
-                  quantity={quantity}
-                  ingredientLines={scaledIngredients.map((ing) => ing.text)}
-                />
-              </div>
-            )}
-
             {ingredients.length > 0 && mounted && (
               <div className="mt-6 pt-6 border-t border-gray-100">
                 {!authLoading && isAuthenticated ? (
                   <>
-                    {/* Logged in: Show bar progress with integrated shopping list button */}
                     <IngredientAvailability 
                       ingredients={shoppingListIngredients} 
                       quantity={quantity}
-                      scaledIngredientLines={scaledIngredients.map((ing) => ing.text)}
                     />
                   </>
                 ) : !authLoading && !isAuthenticated ? (
                   <>
-                    {/* Anonymous: Show simple "Add to shopping list" button that prompts login */}
                     <button
                       onClick={() => openAuthDialog({ 
                         mode: "signup",
@@ -419,7 +400,13 @@ export function RecipeContent({
             </div>
           )}
 
-          <SubstitutionsCard tips={substitutionTips} />
+          <p className="text-xs text-sage">
+            Missing a bottle?{" "}
+            <Link href="/learn/swaps" className="text-terracotta hover:underline font-medium">
+              See smart swaps in Learn
+            </Link>
+            .
+          </p>
         </div>
       </div>
 

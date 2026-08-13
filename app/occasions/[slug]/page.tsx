@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MainContainer } from "@/components/layout/MainContainer";
@@ -7,9 +8,11 @@ import {
   OCCASIONS,
   filterCocktailsForOccasion,
   getOccasion,
+  pickOccasionCover,
   type OccasionCocktail,
 } from "@/lib/occasions";
 import { generatePageMetadata } from "@/lib/seo";
+import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 
 export const revalidate = 300;
 
@@ -39,11 +42,27 @@ export default async function OccasionDetailPage({ params }: PageProps) {
 
   const cocktails = (await getCocktailsList()) as OccasionCocktail[];
   const matched = filterCocktailsForOccasion(cocktails, occasion);
+  const cover = pickOccasionCover(occasion, cocktails);
 
   return (
     <div className="min-h-screen bg-cream">
-      <div className={`relative overflow-hidden border-b border-mist bg-gradient-to-br ${occasion.accentClass}`}>
-        <MainContainer className="relative py-12 sm:py-14">
+      <section className="relative min-h-[36vh] overflow-hidden">
+        {cover?.image_url ? (
+          <Image
+            src={cover.image_url}
+            alt={cover.image_alt || cover.name}
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+            placeholder="blur"
+            blurDataURL={COCKTAIL_BLUR_DATA_URL}
+          />
+        ) : (
+          <div className={`absolute inset-0 bg-gradient-to-br ${occasion.accentClass}`} />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/60 to-forest/30" />
+        <MainContainer className="relative py-12 sm:py-16">
           <Link
             href="/occasions"
             className="inline-flex text-sm font-medium text-sage hover:text-terracotta transition-colors mb-6"
@@ -57,7 +76,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
             {matched.length} drink{matched.length === 1 ? "" : "s"}
           </p>
         </MainContainer>
-      </div>
+      </section>
 
       <MainContainer className="py-10 sm:py-12">
         <OccasionCocktailGrid cocktails={matched} />

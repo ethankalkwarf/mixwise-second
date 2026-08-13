@@ -10,6 +10,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { CocktailSearch } from "@/components/search/CocktailSearch";
+import { RecipesMegaMenu } from "@/components/layout/RecipesMegaMenu";
 
 function navLinkClass(active: boolean, base = "text-sm") {
   return [
@@ -147,18 +148,7 @@ export function Navbar() {
                                   border-4 border-transparent border-b-forest"></div>
                 </div>
               </div>
-              <Link
-                href="/occasions"
-                className={navLinkClass(isActive("/occasions"))}
-              >
-                Occasions
-              </Link>
-              <Link
-                href="/cocktails"
-                className={navLinkClass(isActive("/cocktails"))}
-              >
-                All Recipes
-              </Link>
+              <RecipesMegaMenu active={isActive("/cocktails") || isActive("/occasions")} />
             </div>
 
             {/* Desktop Search + Actions */}
@@ -349,17 +339,6 @@ export function Navbar() {
                 What Can I Make?
               </Link>
               <Link
-                href="/occasions"
-                className={`block px-3 py-3 text-base rounded-xl transition-colors ${
-                  isActive("/occasions")
-                    ? "font-semibold text-forest bg-mist/40"
-                    : "font-medium text-charcoal hover:text-terracotta hover:bg-mist/50"
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Occasions
-              </Link>
-              <Link
                 href="/cocktails"
                 className={`block px-3 py-3 text-base rounded-xl transition-colors ${
                   isActive("/cocktails")
@@ -370,6 +349,26 @@ export function Navbar() {
               >
                 All Recipes
               </Link>
+              <div className="pl-3 pb-2 space-y-0.5">
+                <p className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-sage">Occasions</p>
+                {["summer", "fall", "holidays", "party", "brunch", "zero-proof", "aperitivo", "tiki"].map((slug) => (
+                  <Link
+                    key={slug}
+                    href={`/occasions/${slug}`}
+                    className="block px-3 py-2 text-sm rounded-lg text-charcoal capitalize hover:text-terracotta hover:bg-mist/50"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {slug.replace("-", " ")}
+                  </Link>
+                ))}
+                <Link
+                  href="/learn"
+                  className="block px-3 py-2 text-sm rounded-lg text-terracotta font-medium hover:bg-mist/50"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Learn mixology
+                </Link>
+              </div>
 
               <div className="border-t border-mist mt-4 pt-4">
                 {isLoading ? (
