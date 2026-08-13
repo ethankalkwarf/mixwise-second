@@ -1,7 +1,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { SupabaseProvider } from "./providers";
-import { ConditionalLayoutWrapper } from "@/components/layout/ConditionalLayoutWrapper";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 import { MobileStyleFix } from "@/components/mobile/MobileStyleFix";
 import { OrganizationSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
@@ -88,9 +88,9 @@ export default async function RootLayout({
         
         <SupabaseProvider>
           <MobileStyleFix />
-          <ConditionalLayoutWrapper>
+          <SiteChrome>
             {children}
-          </ConditionalLayoutWrapper>
+          </SiteChrome>
         </SupabaseProvider>
       </body>
     </html>

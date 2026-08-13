@@ -1,9 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import { OCCASIONS } from "@/lib/occasions";
+
+type MegaCover = {
+  slug: string;
+  name: string;
+  href: string;
+  imageUrl: string | null;
+  eyebrow?: string;
+};
 
 const SPIRITS = [
   { label: "Vodka", href: "/cocktails?spirit=vodka" },
@@ -12,139 +20,220 @@ const SPIRITS = [
   { label: "Tequila", href: "/cocktails?spirit=tequila" },
   { label: "Mezcal", href: "/cocktails?spirit=mezcal" },
   { label: "Whiskey", href: "/cocktails?spirit=whiskey" },
-  { label: "Non-Alcoholic", href: "/occasions/zero-proof" },
+  { label: "Zero-Proof", href: "/occasions/zero-proof" },
 ];
-
-const FEATURED = [
-  { label: "All recipes", href: "/cocktails", note: "Full library" },
-  { label: "New this month", href: "/cocktails?filter=new", note: "Freshly added" },
-  { label: "Drink of the Day", href: "/cocktail-of-the-day", note: "One daily pick" },
-  { label: "What can I make?", href: "/mix", note: "From your bar" },
-];
-
-function navTriggerClass(active: boolean) {
-  return [
-    "inline-flex items-center gap-1 text-sm transition-colors duration-200",
-    active
-      ? "font-semibold text-forest"
-      : "font-medium text-charcoal hover:text-terracotta",
-  ].join(" ");
-}
 
 type Props = {
   active: boolean;
+  occasionCovers: MegaCover[];
+  featuredCover?: MegaCover | null;
 };
 
-export function RecipesMegaMenu({ active }: Props) {
+export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props) {
   const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const scheduleClose = () => {
-    closeTimer.current = setTimeout(() => setOpen(false), 120);
-  };
 
   const cancelClose = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     setOpen(true);
   };
 
+  const scheduleClose = () => {
+    closeTimer.current = setTimeout(() => setOpen(false), 140);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const onPointer = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointer);
+    };
+  }, [open]);
+
+  const topOccasions = occasionCovers.slice(0, 6);
+
   return (
-    <div className="relative" onMouseEnter={cancelClose} onMouseLeave={scheduleClose}>
-      <Link
-        href="/cocktails"
-        className={navTriggerClass(active || open)}
+    <div
+      ref={rootRef}
+      className="relative"
+      onMouseEnter={cancelClose}
+      onMouseLeave={scheduleClose}
+    >
+      <button
+        type="button"
+        className={[
+          "inline-flex items-center gap-1 text-sm transition-colors duration-200",
+          active || open
+            ? "font-semibold text-forest"
+            : "font-medium text-charcoal hover:text-terracotta",
+        ].join(" ")}
         aria-expanded={open}
-        onFocus={cancelClose}
+        aria-controls={panelId}
+        onClick={() => setOpen((v) => !v)}
       >
         All Recipes
         <ChevronDownIcon
-          className={`h-4 w-4 transition-transform ${open ? "rotate-180 text-terracotta" : "text-sage"}`}
+          className={`h-4 w-4 transition-transform duration-200 ${
+            open ? "rotate-180 text-terracotta" : "text-sage"
+          }`}
           aria-hidden
         />
-      </Link>
+      </button>
 
       {open && (
-        <div className="absolute left-1/2 z-50 mt-3 w-screen max-w-4xl -translate-x-1/2 px-4">
-          <div className="overflow-hidden rounded-3xl border border-mist bg-cream shadow-2xl shadow-forest/10">
-            <div className="grid grid-cols-12">
-              <div className="col-span-4 bg-gradient-to-br from-forest to-forest/90 p-6 text-cream">
-                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-olive mb-4">
-                  Start here
-                </p>
-                <ul className="space-y-3">
-                  {FEATURED.map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className="group block rounded-xl px-3 py-2.5 hover:bg-white/10 transition-colors"
-                        onClick={() => setOpen(false)}
-                      >
-                        <span className="block font-display text-lg font-semibold group-hover:text-olive transition-colors">
-                          {item.label}
-                        </span>
-                        <span className="text-xs text-cream/65">{item.note}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+        <div
+          id={panelId}
+          className="fixed inset-x-0 top-16 sm:top-18 z-40 px-3 sm:px-6"
+        >
+          <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl border border-mist bg-cream shadow-[0_30px_80px_-20px_rgba(35,52,40,0.35)]">
+            <div className="grid lg:grid-cols-[1.15fr_1fr]">
+              {/* Visual lead */}
+              <div className="relative min-h-[280px] lg:min-h-[360px] overflow-hidden">
+                {featuredCover?.imageUrl ? (
+                  <Image
+                    src={featuredCover.imageUrl}
+                    alt={featuredCover.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 55vw"
+                    priority
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-forest via-forest/90 to-olive/50" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-forest/95 via-forest/45 to-forest/10" />
+                <div className="relative z-10 flex h-full flex-col justify-end p-7 sm:p-9">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-olive mb-3">
+                    {featuredCover?.eyebrow || "Featured"}
+                  </p>
+                  <h3 className="font-display text-3xl sm:text-4xl font-bold text-cream max-w-md leading-tight mb-3">
+                    {featuredCover?.name || "Explore the library"}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={featuredCover?.href || "/cocktails"}
+                      onClick={() => setOpen(false)}
+                      className="inline-flex items-center rounded-full bg-cream px-4 py-2 text-sm font-semibold text-forest hover:bg-olive transition-colors"
+                    >
+                      Open collection
+                    </Link>
+                    <Link
+                      href="/cocktails"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex items-center rounded-full border border-cream/35 px-4 py-2 text-sm font-medium text-cream hover:bg-cream/10 transition-colors"
+                    >
+                      All recipes
+                    </Link>
+                  </div>
+                </div>
               </div>
 
-              <div className="col-span-8 p-6 grid grid-cols-2 gap-8 bg-cream">
+              {/* Navigation columns */}
+              <div className="p-6 sm:p-8 flex flex-col gap-7 bg-cream">
                 <div>
                   <div className="flex items-baseline justify-between mb-3">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-terracotta font-bold">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold">
                       Occasions
                     </p>
                     <Link
                       href="/occasions"
-                      className="text-[11px] font-medium text-sage hover:text-terracotta"
                       onClick={() => setOpen(false)}
+                      className="text-[11px] font-medium text-sage hover:text-terracotta"
                     >
                       View all
                     </Link>
                   </div>
-                  <ul className="grid grid-cols-2 gap-1.5">
-                    {OCCASIONS.map((occasion) => (
-                      <li key={occasion.slug}>
-                        <Link
-                          href={`/occasions/${occasion.slug}`}
-                          className="block rounded-lg px-2.5 py-2 text-sm text-forest hover:bg-mist/70 hover:text-terracotta transition-colors"
-                          onClick={() => setOpen(false)}
-                        >
-                          {occasion.name}
-                        </Link>
-                      </li>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {topOccasions.map((item) => (
+                      <Link
+                        key={item.slug}
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className="group relative overflow-hidden rounded-2xl border border-mist bg-mist/40 aspect-[4/3]"
+                      >
+                        {item.imageUrl ? (
+                          <Image
+                            src={item.imageUrl}
+                            alt=""
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            sizes="160px"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-olive/30 to-forest/20" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-forest/80 via-forest/20 to-transparent" />
+                        <span className="absolute bottom-2 left-2 right-2 font-display text-sm font-semibold text-cream drop-shadow">
+                          {item.name}
+                        </span>
+                      </Link>
                     ))}
-                  </ul>
+                  </div>
                 </div>
 
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-terracotta font-bold mb-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-3">
                     By spirit
                   </p>
-                  <ul className="space-y-1">
+                  <div className="flex flex-wrap gap-2">
                     {SPIRITS.map((spirit) => (
-                      <li key={spirit.href}>
-                        <Link
-                          href={spirit.href}
-                          className="block rounded-lg px-2.5 py-2 text-sm text-forest hover:bg-mist/70 hover:text-terracotta transition-colors"
-                          onClick={() => setOpen(false)}
-                        >
-                          {spirit.label}
-                        </Link>
-                      </li>
+                      <Link
+                        key={spirit.href}
+                        href={spirit.href}
+                        onClick={() => setOpen(false)}
+                        className="rounded-full border border-mist bg-white px-3.5 py-1.5 text-sm text-forest hover:border-terracotta/40 hover:text-terracotta transition-colors"
+                      >
+                        {spirit.label}
+                      </Link>
                     ))}
-                  </ul>
-                  <div className="mt-5 pt-4 border-t border-mist">
-                    <Link
-                      href="/learn"
-                      className="block rounded-xl bg-olive/10 px-3 py-3 hover:bg-olive/15 transition-colors"
-                      onClick={() => setOpen(false)}
-                    >
-                      <span className="block text-sm font-semibold text-forest">Learn mixology</span>
-                      <span className="text-xs text-sage">Techniques, tools & smart swaps</span>
-                    </Link>
                   </div>
+                </div>
+
+                <div className="mt-auto grid grid-cols-2 gap-2 pt-1 border-t border-mist">
+                  <Link
+                    href="/cocktails?filter=new"
+                    onClick={() => setOpen(false)}
+                    className="rounded-2xl px-3 py-3 hover:bg-mist/60 transition-colors"
+                  >
+                    <span className="block text-sm font-semibold text-forest">New</span>
+                    <span className="text-xs text-sage">Added this month</span>
+                  </Link>
+                  <Link
+                    href="/mix"
+                    onClick={() => setOpen(false)}
+                    className="rounded-2xl px-3 py-3 hover:bg-mist/60 transition-colors"
+                  >
+                    <span className="block text-sm font-semibold text-forest">Your bar</span>
+                    <span className="text-xs text-sage">What can I make?</span>
+                  </Link>
+                  <Link
+                    href="/cocktail-of-the-day"
+                    onClick={() => setOpen(false)}
+                    className="rounded-2xl px-3 py-3 hover:bg-mist/60 transition-colors"
+                  >
+                    <span className="block text-sm font-semibold text-forest">Daily drink</span>
+                    <span className="text-xs text-sage">One pick today</span>
+                  </Link>
+                  <Link
+                    href="/learn"
+                    onClick={() => setOpen(false)}
+                    className="rounded-2xl px-3 py-3 hover:bg-mist/60 transition-colors"
+                  >
+                    <span className="block text-sm font-semibold text-forest">Learn</span>
+                    <span className="text-xs text-sage">Train at home</span>
+                  </Link>
                 </div>
               </div>
             </div>

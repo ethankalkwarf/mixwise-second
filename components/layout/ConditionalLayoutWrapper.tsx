@@ -6,6 +6,7 @@ import { Navbar } from "./Navbar";
 import { SiteFooter } from "./SiteFooter";
 import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { Capacitor } from "@capacitor/core";
+import type { MegaMenuData } from "@/lib/megaMenu";
 
 const NO_NAVBAR_PAGES = ["/thirsty-thursday"];
 
@@ -26,7 +27,13 @@ function isCapacitorNative(): boolean {
   );
 }
 
-export function ConditionalLayoutWrapper({ children }: { children: ReactNode }) {
+export function ConditionalLayoutWrapper({
+  children,
+  megaMenu,
+}: {
+  children: ReactNode;
+  megaMenu?: MegaMenuData;
+}) {
   const pathname = usePathname();
   const [isNative, setIsNative] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -42,7 +49,7 @@ export function ConditionalLayoutWrapper({ children }: { children: ReactNode }) 
   if (!isMounted || !isNative) {
     return (
       <div className="min-h-screen flex flex-col">
-        {!hideNavbar && <Navbar />}
+        {!hideNavbar && <Navbar megaMenu={megaMenu} />}
         <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
           {children}
         </main>

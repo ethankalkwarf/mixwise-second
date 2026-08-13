@@ -15,6 +15,8 @@ export type OccasionDefinition = {
   matchTokens: string[];
   /** Preferred catalog cocktail slugs for cover photography */
   coverSlugs?: string[];
+  /** Optional static Envato/local cover under /public/occasions/{slug}.jpg */
+  staticCoverPath?: string;
   /** Extra matcher beyond token bag (optional) */
   matchExtra?: (c: OccasionCocktail) => boolean;
 };

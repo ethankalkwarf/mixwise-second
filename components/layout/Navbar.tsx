@@ -11,6 +11,7 @@ import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { CocktailSearch } from "@/components/search/CocktailSearch";
 import { RecipesMegaMenu } from "@/components/layout/RecipesMegaMenu";
+import type { MegaMenuData } from "@/lib/megaMenu";
 
 function navLinkClass(active: boolean, base = "text-sm") {
   return [
@@ -22,7 +23,7 @@ function navLinkClass(active: boolean, base = "text-sm") {
   ].join(" ");
 }
 
-export function Navbar() {
+export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -148,7 +149,11 @@ export function Navbar() {
                                   border-4 border-transparent border-b-forest"></div>
                 </div>
               </div>
-              <RecipesMegaMenu active={isActive("/cocktails") || isActive("/occasions")} />
+              <RecipesMegaMenu
+                active={isActive("/cocktails") || isActive("/occasions") || isActive("/learn") || isActive("/mix")}
+                occasionCovers={megaMenu?.occasionCovers || []}
+                featuredCover={megaMenu?.featuredCover || null}
+              />
             </div>
 
             {/* Desktop Search + Actions */}
