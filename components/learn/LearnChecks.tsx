@@ -20,7 +20,7 @@ export function LearnChecks({ checks, title = "Quick check" }: Props) {
           Learning check
         </p>
         <h2 className="font-display text-2xl font-bold !text-charcoal">{title}</h2>
-        <p className="text-sm text-sage mt-1">No grade — just lock in what you read.</p>
+        <p className="text-sm !text-charcoal/70 mt-1">No grade — just lock in what you read.</p>
       </div>
       <div className="space-y-4">
         {checks.map((check) => (

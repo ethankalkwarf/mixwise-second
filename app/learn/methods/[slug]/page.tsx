@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MainContainer } from "@/components/layout/MainContainer";
@@ -42,6 +43,8 @@ export default async function LearnMethodPage({ params }: PageProps) {
     .map((s) => getTechniqueTermBySlug(s))
     .filter(Boolean);
   const checks = getMethodChecks(slug);
+  const ruleSection = method.sections.find((s) => s.kind === "rule");
+  const otherSections = method.sections.filter((s) => s.kind !== "rule");
 
   return (
     <div className="min-h-screen bg-cream">
@@ -54,61 +57,83 @@ export default async function LearnMethodPage({ params }: PageProps) {
         backHref="/learn"
       />
 
-      <MainContainer className="py-10 sm:py-12 max-w-3xl space-y-10">
+      <MainContainer className="py-10 sm:py-14 max-w-2xl">
         <LearnContentGate gateId={`method:${slug}`} teaserLabel="Keep learning this method">
-          <div className="space-y-10">
-            <aside className="rounded-2xl border border-olive/30 bg-olive/10 px-5 py-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
-                Quick tip
-              </p>
-              <p className="text-charcoal/85 leading-relaxed font-medium">{method.tip}</p>
-            </aside>
+          <article className="space-y-12">
+            {/* Opening lede — not a tip card */}
+            <p className="font-display text-xl sm:text-2xl !text-charcoal leading-snug">
+              {method.tip}
+            </p>
 
-            {method.sections.map((section) => (
+            {ruleSection && <LearnSectionBlock section={ruleSection} />}
+
+            {/* Mid-lesson visual beat */}
+            <figure className="relative -mx-4 sm:mx-0 overflow-hidden rounded-2xl sm:rounded-3xl aspect-[16/10] bg-mist">
+              <Image
+                src={method.coverImage}
+                alt={method.coverAlt}
+                fill
+                sizes="(max-width: 768px) 100vw, 672px"
+                className="object-cover"
+              />
+              <figcaption className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-forest/80 to-transparent px-5 py-4">
+                <p className="text-sm font-medium !text-cream">{method.cue}</p>
+              </figcaption>
+            </figure>
+
+            {otherSections.map((section) => (
               <LearnSectionBlock key={section.heading} section={section} />
             ))}
+
             <LearnChecks checks={checks} title="Quick check" />
             <LearnPracticeCocktails
               slugs={method.practiceSlugs}
               heading={`Practice ${method.label.toLowerCase()}`}
             />
-          </div>
+          </article>
         </LearnContentGate>
 
         {(relatedGuide || relatedTechniques.length > 0) && (
-          <section className="space-y-4 border-t border-mist pt-8">
-            <h2 className="font-display text-xl font-bold !text-charcoal">Keep going</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
+          <nav className="mt-14 pt-8 border-t border-mist">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-terracotta mb-4">
+              Keep going
+            </p>
+            <ul className="space-y-3">
               {relatedGuide && (
-                <Link
-                  href={`/learn/guides/${relatedGuide.slug}`}
-                  className="rounded-2xl border border-mist bg-white px-4 py-4 hover:border-terracotta/30 transition-colors"
-                >
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta mb-1">
-                    Guide
-                  </p>
-                  <p className="font-display font-bold !text-charcoal">{relatedGuide.title}</p>
-                </Link>
+                <li>
+                  <Link
+                    href={`/learn/guides/${relatedGuide.slug}`}
+                    className="group flex items-baseline justify-between gap-4 py-2"
+                  >
+                    <span className="font-display text-lg !text-charcoal group-hover:text-terracotta transition-colors">
+                      {relatedGuide.title}
+                    </span>
+                    <span className="text-sm text-sage shrink-0">Guide →</span>
+                  </Link>
+                </li>
               )}
               {relatedTechniques.map((term) =>
                 term ? (
-                  <Link
-                    key={term.learnPath}
-                    href={term.learnPath || "/learn"}
-                    className="rounded-2xl border border-mist bg-white px-4 py-4 hover:border-terracotta/30 transition-colors"
-                  >
-                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta mb-1">
-                      Technique
-                    </p>
-                    <p className="font-display font-bold !text-charcoal capitalize">{term.label}</p>
-                  </Link>
+                  <li key={term.learnPath}>
+                    <Link
+                      href={term.learnPath || "/learn"}
+                      className="group flex items-baseline justify-between gap-4 py-2"
+                    >
+                      <span className="font-display text-lg !text-charcoal capitalize group-hover:text-terracotta transition-colors">
+                        {term.label}
+                      </span>
+                      <span className="text-sm text-sage shrink-0">Technique →</span>
+                    </Link>
+                  </li>
                 ) : null
               )}
-            </div>
-          </section>
+            </ul>
+          </nav>
         )}
 
-        <LearnJoinCta />
+        <div className="mt-12">
+          <LearnJoinCta />
+        </div>
       </MainContainer>
     </div>
   );
