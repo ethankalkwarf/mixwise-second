@@ -79,7 +79,8 @@ These are the details that most often look fake — get them right:
 
 | Element | Do | Avoid |
 | --- | --- | --- |
-| **Ice** | Slightly cloudy or uneven edges; natural melt; irregular chips or fractures | Perfect crystal cubes, glowing ice, geometrically flawless blocks |
+| **Ice (cubes)** | Slightly cloudy or uneven edges; natural melt; irregular chips or fractures | Perfect crystal cubes, glowing ice, geometrically flawless blocks |
+| **Ice (crushed)** | Jagged broken shards and chips of mixed sizes; wet melt water in gaps; frosty/cloudy facets; uneven mound that looks hand-packed | Smooth glass-bead pebble ice; uniform spheres; dry plastic mound; fused gel-like ice cap; perfectly sculpted dome |
 | **Liquid / texture** | Realistic viscosity, natural meniscus, believable opacity | Plastic-smooth surfaces, neon saturation, self-illuminated liquid |
 | **Garnish** | Slight asymmetry; natural citrus pith/pores; mint that isn’t perfectly fluffed | Pristine glowing fruit, plastic mint, overly styled garnish sculpture |
 | **Reflections / glass** | Soft, uneven highlights; minor smudge or fingerprint; real refraction | Mirror-perfect CGI reflections, symmetric sparkle flares, chrome-like glass |
@@ -116,8 +117,17 @@ Do **not** force the same centered full-glass hero for every drink. Keep variety
 | Stirred spirit-forward | Exceptional clarity, crisp reflections |
 | Creamy dessert | Realistic viscosity, soft opacity |
 | Layered / floated | Explicit direction and color of each layer |
-| Crushed / pebble ice | Irregular ice texture, wet melt edges |
+| Crushed ice (swizzle, cobbler, crush, julep-style) | **Hard requirement:** broken/jagged shards and chips, mixed sizes, wet melt between pieces, cloudy facets — never smooth bead/pebble spheres or a dry plastic dome. Prefer “hand-packed crushed ice” wording over “pebble ice” unless the recipe truly uses commercial pebble ice. |
+| Pebble ice (only when recipe calls for it) | Small irregular nuggets with slight cloudiness and melt — still avoid perfect spheres |
 | Built highball | Tall silhouette, ice stack, possible light condensation |
+
+### Crushed-ice prompt snippet (paste when ice is crushed)
+
+```text
+Ice MUST look like real bar crushed ice: sharp jagged shards and irregular chips of mixed sizes (not round beads, not uniform pebble spheres, not a sculpted dome). Wet melt water glistens between pieces. Some cloudy/frosty facets. Hand-packed uneven mound slightly above the rim. Avoid plastic, CGI, or gel-like ice.
+```
+
+**Model note:** Current image models often default crushed ice to glossy pebble beads. If that happens, switch wording to **fine white fluffy shaved ice / snow-cone pack** (julep-style snow) with wet melt and liquid stain — usually more believable than “crushed” or “pebble.” Avoid referencing prior AI images that already show bead ice.
 
 ## Critical accuracy rule
 
