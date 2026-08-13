@@ -17,3 +17,7 @@ ios/App/Pods/
 ios/App/build/
 ios/App/DerivedData/
 tmp/
+.vercel
+# Local image review dumps (large; not needed for builds)
+data/image-review*/
+data/review-batch-*.csv

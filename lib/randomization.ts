@@ -1,24 +1,12 @@
-import { cookies } from "next/headers";
-
-const COCKTAILS_SEED_COOKIE = "mw_cocktails_seed";
-
-export async function getCocktailsRandomizationSeed(): Promise<string> {
-  try {
-    const cookieStore = await cookies();
-    const seed = cookieStore.get(COCKTAILS_SEED_COOKIE)?.value;
-    if (seed) return seed;
-    return generateUUID();
-  } catch {
-    return "fallback-seed-" + Date.now().toString();
-  }
-}
-
-function generateUUID(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+/**
+ * Deterministic cocktail-directory shuffle seed.
+ * Uses UTC calendar day so /cocktails can stay ISR-friendly (no cookies()).
+ */
+export function getCocktailsRandomizationSeed(date: Date = new Date()): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `cocktails-${year}-${month}-${day}`;
 }
 
 export function seededRandom(seed: string, input: string): number {

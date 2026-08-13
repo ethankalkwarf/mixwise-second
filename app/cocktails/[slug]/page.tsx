@@ -1,4 +1,4 @@
-import { getCocktailBySlug, getCocktailsList } from "@/lib/cocktails.server";
+import { getCocktailBySlug, getCocktailsList, getTodaysDailyCocktailSlug } from "@/lib/cocktails.server";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 import { notFound } from "next/navigation";
@@ -309,22 +309,26 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
 
   const sanityCocktail = mapSupabaseToSanityCocktail(cocktail);
 
-  // Get all cocktails for daily cocktail comparison
-  const rawAllCocktails = await getCocktailsList();
-  // Only pass id and slug to DailyCocktailBanner for performance
-  const allCocktails = rawAllCocktails
-    .filter(c => c && c.id && c.slug)
-    .map(c => ({ id: c.id, slug: c.slug }));
-
   // Normalize data from Supabase
   const ingredients = normalizeIngredients(cocktail.ingredients as any);
   const instructionSteps = normalizeInstructions(cocktail.instructions as any);
   const tags = normalizeTags(cocktail.tags as any);
   const tagLine = buildTagLine(tags);
 
-  // Match ingredients to database IDs for shopping list
-  const ingredientTexts = ingredients.map(ing => ing.text);
-  const matchedIngredients = await matchIngredientTextToIds(ingredientTexts);
+  // Parallelize independent work: shopping-list match, similar recipes, daily slug
+  const [matchedIngredients, rawSimilarRecipes, todaysDailySlug] = await Promise.all([
+    matchIngredientTextToIds(ingredients.map((ing) => ing.text)),
+    getSimilarRecipes(
+      cocktail.id,
+      cocktail.base_spirit,
+      cocktail.tags,
+      cocktail.categories_all
+    ),
+    getTodaysDailyCocktailSlug(),
+  ]);
+
+  const isDailyCocktailBanner =
+    daily === "true" || Boolean(todaysDailySlug && todaysDailySlug === cocktail.slug);
 
   // Use external image URL from Supabase
   const imageUrl = sanityCocktail.externalImageUrl || null;
@@ -337,14 +341,6 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
     instructionSteps,
     keywords: [...tags, ...asStringArray(sanityCocktail.bestFor)].filter(Boolean),
   });
-
-  // Get similar recipes for recommendations
-  const rawSimilarRecipes = await getSimilarRecipes(
-    cocktail.id,
-    cocktail.base_spirit,
-    cocktail.tags,
-    cocktail.categories_all
-  );
 
   // Sanitize similar recipes data for client components
   const similarRecipes = rawSimilarRecipes
@@ -402,11 +398,7 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
       {/* MAIN PAGE WRAPPER */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
         {/* Cocktail of the Day Banner */}
-        <DailyCocktailBanner
-          cocktailId={cocktail.id}
-          allCocktails={allCocktails}
-          isInitiallyDaily={daily === 'true'}
-        />
+        <DailyCocktailBanner isInitiallyDaily={isDailyCocktailBanner} />
 
         {/* Back Link */}
         <div className="mb-8">

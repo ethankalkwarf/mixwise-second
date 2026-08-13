@@ -78,8 +78,8 @@ export default async function CocktailsPage({
   const initialSpirit = params.spirit?.toLowerCase() || null;
   const initialFilter = params.filter?.toLowerCase() || null;
 
-  // Get stable randomization seed for consistent ordering within session
-  const randomizationSeed = await getCocktailsRandomizationSeed();
+  // UTC-day seed keeps shuffle stable without cookies() (so ISR can work)
+  const randomizationSeed = getCocktailsRandomizationSeed();
 
   const cocktails = await getCocktailsList({ includeIngredients: true });
   const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);

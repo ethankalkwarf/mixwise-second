@@ -40,7 +40,7 @@ export function Hero({
         loop
         playsInline
         autoPlay
-        preload="auto"
+        preload="metadata"
         poster="/media/strainer-pour-poster.webp"
         aria-hidden
       >
