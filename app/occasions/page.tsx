@@ -10,8 +10,19 @@ import {
 } from "@/lib/occasions";
 import { generatePageMetadata } from "@/lib/seo";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
+import { existsSync } from "fs";
+import path from "path";
 
 export const revalidate = 300;
+
+function staticCoverIfPresent(slug: string): string | null {
+  const rel = `/occasions/${slug}.jpg`;
+  const abs = path.join(process.cwd(), "public", "occasions", `${slug}.jpg`);
+  const absWebp = path.join(process.cwd(), "public", "occasions", `${slug}.webp`);
+  if (existsSync(abs)) return rel;
+  if (existsSync(absWebp)) return `/occasions/${slug}.webp`;
+  return null;
+}
 
 export const metadata = generatePageMetadata({
   title: "Occasions",
@@ -23,15 +34,18 @@ export default async function OccasionsPage() {
   const cocktails = (await getCocktailsList()) as OccasionCocktail[];
   const counts = countCocktailsByOccasion(cocktails);
   const covers = getOccasionCovers(cocktails);
-  const hero = covers.summer || covers.party || Object.values(covers).find(Boolean) || null;
+  const heroStatic = staticCoverIfPresent("summer") || staticCoverIfPresent("party");
+  const heroCocktail = covers.summer || covers.party || Object.values(covers).find(Boolean) || null;
+  const heroUrl = heroStatic || heroCocktail?.image_url || null;
+  const heroAlt = heroCocktail?.image_alt || heroCocktail?.name || "Occasions";
 
   return (
     <div className="min-h-screen bg-cream">
       <section className="relative min-h-[42vh] sm:min-h-[48vh] overflow-hidden">
-        {hero?.image_url ? (
+        {heroUrl ? (
           <Image
-            src={hero.image_url}
-            alt={hero.image_alt || hero.name}
+            src={heroUrl}
+            alt={heroAlt}
             fill
             priority
             className="object-cover"
@@ -61,16 +75,17 @@ export default async function OccasionsPage() {
           {OCCASIONS.map((occasion) => {
             const count = counts[occasion.slug] || 0;
             const cover = covers[occasion.slug];
+            const imageUrl = staticCoverIfPresent(occasion.slug) || cover?.image_url || null;
             return (
               <Link
                 key={occasion.slug}
                 href={`/occasions/${occasion.slug}`}
                 className="group relative overflow-hidden rounded-3xl border border-mist bg-white min-h-[280px] transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover"
               >
-                {cover?.image_url ? (
+                {imageUrl ? (
                   <Image
-                    src={cover.image_url}
-                    alt={cover.image_alt || cover.name}
+                    src={imageUrl}
+                    alt={cover?.image_alt || cover?.name || occasion.name}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

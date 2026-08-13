@@ -45,6 +45,7 @@ export const OCCASIONS: OccasionDefinition[] = [
     accentClass: "from-olive/25 via-cream to-cream",
     matchTokens: ["summer"],
     coverSlugs: ["limoncello-spritz", "whiskey-smash", "gin-gin-mule", "strawberry-daiquiri"],
+    staticCoverPath: "/occasions/summer.jpg",
   },
   {
     slug: "fall",
@@ -54,6 +55,7 @@ export const OCCASIONS: OccasionDefinition[] = [
     accentClass: "from-terracotta/20 via-cream to-cream",
     matchTokens: ["fall", "autumn"],
     coverSlugs: ["apple-cider-old-fashioned", "maple-old-fashioned", "spiced-pear-cocktail", "stone-fence"],
+    staticCoverPath: "/occasions/fall.jpg",
   },
   {
     slug: "holidays",
@@ -63,6 +65,7 @@ export const OCCASIONS: OccasionDefinition[] = [
     accentClass: "from-forest/15 via-cream to-cream",
     matchTokens: ["holiday", "christmas", "thanksgiving", "winter"],
     coverSlugs: ["eggnog", "peppermint-martini", "coquito", "wassail"],
+    staticCoverPath: "/occasions/holidays.jpg",
   },
   {
     slug: "party",
@@ -72,6 +75,7 @@ export const OCCASIONS: OccasionDefinition[] = [
     accentClass: "from-terracotta/15 via-cream to-cream",
     matchTokens: ["party"],
     coverSlugs: ["long-island-iced-tea", "sangria", "electric-lemonade", "fuzzy-navel"],
+    staticCoverPath: "/occasions/party.jpg",
   },
   {
     slug: "brunch",
@@ -81,6 +85,7 @@ export const OCCASIONS: OccasionDefinition[] = [
     accentClass: "from-olive/20 via-cream to-cream",
     matchTokens: ["brunch"],
     coverSlugs: ["bloody-caesar", "mimosa", "bellini", "virgin-mary"],
+    staticCoverPath: "/occasions/brunch.jpg",
   },
   {
     slug: "zero-proof",
@@ -90,6 +95,7 @@ export const OCCASIONS: OccasionDefinition[] = [
     accentClass: "from-olive/30 via-cream to-cream",
     matchTokens: ["zero-proof", "mocktail"],
     coverSlugs: ["virgin-mojito", "hibiscus-cooler", "shirley-temple", "zero-proof-margarita"],
+    staticCoverPath: "/occasions/zero-proof.jpg",
     matchExtra: (c) => /non-?alcoholic/i.test(c.base_spirit || ""),
   },
   {
@@ -100,6 +106,7 @@ export const OCCASIONS: OccasionDefinition[] = [
     accentClass: "from-terracotta/25 via-cream to-cream",
     matchTokens: ["aperitif", "aperitivo", "spritz", "low-abv"],
     coverSlugs: ["aperol-spritz", "campari-soda", "negroni-sbagliato", "vermouth-tonic"],
+    staticCoverPath: "/occasions/aperitivo.jpg",
   },
   {
     slug: "tiki",
@@ -109,8 +116,24 @@ export const OCCASIONS: OccasionDefinition[] = [
     accentClass: "from-olive/15 via-cream to-cream",
     matchTokens: ["tiki", "tiki-adjacent"],
     coverSlugs: ["mai-tai", "blue-hawaiian", "pina-colada", "jungle-bird"],
+    staticCoverPath: "/occasions/tiki.jpg",
   },
 ];
+
+export function getOccasionStaticCover(occasion: OccasionDefinition): string | null {
+  return occasion.staticCoverPath || null;
+}
+
+export function resolveOccasionCoverUrl(
+  occasion: OccasionDefinition,
+  cocktails: OccasionCocktail[]
+): string | null {
+  // Prefer Envato/local static file when present on disk (checked at request by path convention).
+  // Pages can pass through staticCoverPath; Next will 404 if missing, so we only use catalog
+  // here unless the caller verified the file exists.
+  const cover = pickOccasionCover(occasion, cocktails);
+  return cover?.image_url || null;
+}
 
 export function pickOccasionCover(
   occasion: OccasionDefinition,
