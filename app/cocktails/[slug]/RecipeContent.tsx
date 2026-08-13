@@ -8,6 +8,8 @@ import Image from "next/image";
 import { OptimizedCocktailImage } from "@/components/cocktails/OptimizedCocktailImage";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 import { RecipeActions } from "@/components/cocktails/RecipeActions";
+import { InstructionStepText } from "@/components/cocktails/InstructionStepText";
+import { TechniqueTipCard } from "@/components/cocktails/TechniqueTipCard";
 import { Button } from "@/components/common/Button";
 import { formatCocktailName } from "@/lib/formatters";
 import {
@@ -242,6 +244,22 @@ export function RecipeContent({
               </div>
             )}
 
+            {/* Technique */}
+            {cocktail.technique && (
+              <div>
+                <div className="mb-2">
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Technique
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-mist text-sage text-sm font-medium rounded-full">
+                    {cocktail.technique.charAt(0).toUpperCase() + cocktail.technique.slice(1).toLowerCase()}
+                  </span>
+                </div>
+              </div>
+            )}
+
           </div>
 
           <hr className="border-mist mb-6" />
@@ -418,16 +436,22 @@ export function RecipeContent({
             Step-by-step instructions aren&apos;t listed for this recipe yet.
           </p>
         ) : (
-          <ol className="mt-4 space-y-3">
-            {instructionSteps.map((step, idx) => (
-              <li key={idx} className="flex gap-3 items-start">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold">
-                  {idx + 1}
-                </span>
-                <span className="text-sm">{step}</span>
-              </li>
-            ))}
-          </ol>
+          <>
+            <ol className="mt-4 space-y-3">
+              {instructionSteps.map((step, idx) => (
+                <li key={idx} className="flex gap-3 items-start">
+                  <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold">
+                    {idx + 1}
+                  </span>
+                  <InstructionStepText text={step} />
+                </li>
+              ))}
+            </ol>
+            <TechniqueTipCard
+              technique={cocktail.technique}
+              instructionSteps={instructionSteps}
+            />
+          </>
         )}
       </section>
 

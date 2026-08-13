@@ -369,6 +369,7 @@ export default async function CocktailDetailPage({ params, searchParams }: PageP
     base_spirit: cocktail.base_spirit,
     category_primary: cocktail.category_primary,
     glassware: cocktail.glassware,
+    technique: cocktail.technique,
     image_url: cocktail.image_url,
     image_alt: cocktail.image_alt,
     categories_all: cocktail.categories_all,
