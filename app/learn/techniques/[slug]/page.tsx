@@ -66,7 +66,7 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
     .slice(0, 4);
   const practiceSlugs = TECHNIQUE_PRACTICE[slug] ?? [];
   const cover = TECHNIQUE_COVER[slug] ?? {
-    src: "/media/bartender-home.webp",
+    src: "/learn/method-shake.webp",
     alt: term.label,
   };
   const relatedMethod = LEARN_METHODS.find(
