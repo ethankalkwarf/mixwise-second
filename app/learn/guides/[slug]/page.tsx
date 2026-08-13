@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { LearnHero } from "@/components/learn/LearnHero";
-import { LearnSectionBlock } from "@/components/learn/LearnSectionBlock";
+import { LearnLessonArticle } from "@/components/learn/LearnLessonArticle";
 import { LearnPracticeCocktails } from "@/components/learn/LearnPracticeCocktails";
 import { LearnChecks } from "@/components/learn/LearnChecks";
 import { LearnContentGate } from "@/components/learn/LearnContentGate";
@@ -60,13 +60,15 @@ export default async function LearnGuidePage({ params }: PageProps) {
 
       <MainContainer className="py-10 sm:py-14 max-w-2xl space-y-14">
         <LearnContentGate gateId={`guide:${slug}`} teaserLabel="Keep reading this lesson">
-          <div className="space-y-14">
-            {guide.sections.map((section) => (
-              <LearnSectionBlock key={section.heading} section={section} />
-            ))}
-            <LearnChecks checks={checks} title="Did it stick?" />
-            <LearnPracticeCocktails slugs={guide.practiceSlugs} />
-          </div>
+          <LearnLessonArticle
+            layers={guide}
+            afterCore={
+              <>
+                <LearnChecks checks={checks} title="Did it stick?" />
+                <LearnPracticeCocktails slugs={guide.practiceSlugs} />
+              </>
+            }
+          />
         </LearnContentGate>
 
         <LearnLessonFooter next={next} path={pathUsingGuide} />

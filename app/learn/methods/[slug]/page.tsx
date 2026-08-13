@@ -3,12 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { LearnHero } from "@/components/learn/LearnHero";
-import { LearnSectionBlock } from "@/components/learn/LearnSectionBlock";
+import { LearnLessonArticle } from "@/components/learn/LearnLessonArticle";
 import { LearnPracticeCocktails } from "@/components/learn/LearnPracticeCocktails";
 import { LearnJoinCta } from "@/components/learn/LearnJoinCta";
 import { LearnChecks } from "@/components/learn/LearnChecks";
 import { LearnContentGate } from "@/components/learn/LearnContentGate";
 import { LEARN_METHODS, getLearnGuide, getLearnMethod } from "@/lib/learnLibrary";
+import { getMethodLessonLayers } from "@/lib/learnMethodsContent";
 import { getMethodChecks } from "@/lib/learnChecks";
 import { getTechniqueTermBySlug } from "@/lib/cocktailTechniqueGlossary";
 import { generatePageMetadata } from "@/lib/seo";
@@ -43,8 +44,22 @@ export default async function LearnMethodPage({ params }: PageProps) {
     .map((s) => getTechniqueTermBySlug(s))
     .filter(Boolean);
   const checks = getMethodChecks(slug);
-  const ruleSection = method.sections.find((s) => s.kind === "rule");
-  const otherSections = method.sections.filter((s) => s.kind !== "rule");
+  const layers = getMethodLessonLayers(method);
+
+  const midFigure = (
+    <figure className="relative -mx-4 sm:mx-0 overflow-hidden rounded-2xl aspect-[16/10] bg-mist">
+      <Image
+        src={method.coverImage}
+        alt={method.coverAlt}
+        fill
+        sizes="(max-width: 768px) 100vw, 672px"
+        className="object-cover"
+      />
+      <figcaption className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-forest/80 to-transparent px-5 py-4">
+        <p className="text-[13px] font-medium !text-cream/95 tracking-wide">{method.cue}</p>
+      </figcaption>
+    </figure>
+  );
 
   return (
     <div className="min-h-screen bg-cream">
@@ -59,37 +74,19 @@ export default async function LearnMethodPage({ params }: PageProps) {
 
       <MainContainer className="py-10 sm:py-14 max-w-2xl">
         <LearnContentGate gateId={`method:${slug}`} teaserLabel="Keep learning this method">
-          <article className="space-y-14">
-            {/* Opening lede — same body scale, not a second display size */}
-            <p className="text-[17px] !text-charcoal/85 leading-[1.7] border-b border-mist pb-10">
-              {method.tip}
-            </p>
-
-            {ruleSection && <LearnSectionBlock section={ruleSection} />}
-
-            <figure className="relative -mx-4 sm:mx-0 overflow-hidden rounded-2xl aspect-[16/10] bg-mist">
-              <Image
-                src={method.coverImage}
-                alt={method.coverAlt}
-                fill
-                sizes="(max-width: 768px) 100vw, 672px"
-                className="object-cover"
-              />
-              <figcaption className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-forest/80 to-transparent px-5 py-4">
-                <p className="text-[13px] font-medium !text-cream/95 tracking-wide">{method.cue}</p>
-              </figcaption>
-            </figure>
-
-            {otherSections.map((section) => (
-              <LearnSectionBlock key={section.heading} section={section} />
-            ))}
-
-            <LearnChecks checks={checks} title="Quick check" />
-            <LearnPracticeCocktails
-              slugs={method.practiceSlugs}
-              heading={`Practice ${method.label.toLowerCase()}`}
-            />
-          </article>
+          <LearnLessonArticle
+            layers={layers}
+            midFigure={midFigure}
+            afterCore={
+              <>
+                <LearnChecks checks={checks} title="Quick check" />
+                <LearnPracticeCocktails
+                  slugs={method.practiceSlugs}
+                  heading={`Practice ${method.label.toLowerCase()}`}
+                />
+              </>
+            }
+          />
         </LearnContentGate>
 
         {(relatedGuide || relatedTechniques.length > 0) && (
