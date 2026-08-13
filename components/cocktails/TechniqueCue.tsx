@@ -48,12 +48,17 @@ export function TechniqueCue({ technique }: TechniqueCueProps) {
       </button>
 
       {open && (
-        <p
-          id={panelId}
-          className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground"
-        >
-          {method.summary} {method.tip}
-        </p>
+        <div id={panelId} className="mt-2 max-w-xl space-y-2">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {method.summary} {method.tip}
+          </p>
+          <a
+            href="/learn"
+            className="inline-block text-xs font-medium text-terracotta hover:underline"
+          >
+            More techniques in Learn →
+          </a>
+        </div>
       )}
     </div>
   );

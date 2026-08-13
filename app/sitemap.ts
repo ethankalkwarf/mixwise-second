@@ -3,6 +3,7 @@ import { SITE_CONFIG } from "@/lib/seo";
 import { getCocktailsList } from "@/lib/cocktails.server";
 import { getIngredientsDirectory } from "@/lib/ingredients.server";
 import { OCCASIONS } from "@/lib/occasions";
+import { getAllTechniqueLearnEntries } from "@/lib/cocktailTechniqueGlossary";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_CONFIG.url;
@@ -12,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/cocktail-of-the-day`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/cocktails`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/occasions`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.85 },
+    { url: `${baseUrl}/learn`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/mix`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${baseUrl}/ingredients`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
     { url: `${baseUrl}/wedding-menu`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
@@ -25,6 +27,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.75,
+    })),
+    ...getAllTechniqueLearnEntries().map((term) => ({
+      url: `${baseUrl}/learn/techniques/${term.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.55,
     })),
   ];
 

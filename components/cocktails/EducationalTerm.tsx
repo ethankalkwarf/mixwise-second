@@ -65,6 +65,15 @@ export function EducationalTerm({ term, children }: EducationalTermProps) {
           {term.why && (
             <span className="mt-1.5 block text-cream/75">{term.why}</span>
           )}
+          {term.learnPath && (
+            <a
+              href={term.learnPath}
+              className="mt-2 inline-block text-[11px] font-semibold uppercase tracking-wide text-olive hover:text-cream"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Learn more →
+            </a>
+          )}
           <span
             aria-hidden
             className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-6 border-t-6 border-x-transparent border-t-forest"

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { QuantitySelector } from "@/components/cocktails/QuantitySelector";
 import { CopyScaledRecipeButton } from "@/components/cocktails/CopyScaledRecipeButton";
 import { IngredientAvailability } from "@/components/cocktails/IngredientAvailability";
 import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
+import { SubstitutionsCard } from "@/components/cocktails/SubstitutionsCard";
 import Image from "next/image";
 import { OptimizedCocktailImage } from "@/components/cocktails/OptimizedCocktailImage";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
@@ -14,6 +15,7 @@ import { TechniqueCue } from "@/components/cocktails/TechniqueCue";
 import { Button } from "@/components/common/Button";
 import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import { scaleIngredientLines } from "@/lib/scaleRecipe";
+import { getSubstitutionTipsForIngredients } from "@/lib/cocktailSubstitutions";
 import {
   ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
@@ -53,6 +55,10 @@ export function RecipeContent({
   }, []);
 
   const scaledIngredients = scaleIngredientLines(ingredients, quantity);
+  const substitutionTips = useMemo(
+    () => getSubstitutionTipsForIngredients(ingredients.map((ing) => ing.text)),
+    [ingredients]
+  );
 
   // Helper function to extract ingredient name from text (matches ingredientMatching.ts logic)
   const extractIngredientNameFromText = (fullText: string): string => {
@@ -412,6 +418,8 @@ export function RecipeContent({
               <p className="text-sm text-muted-foreground leading-relaxed">{cocktail.notes}</p>
             </div>
           )}
+
+          <SubstitutionsCard tips={substitutionTips} />
         </div>
       </div>
 

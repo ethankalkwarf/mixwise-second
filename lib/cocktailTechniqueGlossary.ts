@@ -203,6 +203,23 @@ export function getSortedTechniqueTerms(): GlossaryTerm[] {
   });
 }
 
+export function techniqueSlugFromLearnPath(learnPath?: string): string | null {
+  if (!learnPath) return null;
+  const match = learnPath.match(/\/learn\/techniques\/([^/]+)/);
+  return match?.[1] || null;
+}
+
+export function getTechniqueTermBySlug(slug: string): GlossaryTerm | undefined {
+  return TECHNIQUE_TERMS.find((term) => techniqueSlugFromLearnPath(term.learnPath) === slug);
+}
+
+export function getAllTechniqueLearnEntries(): Array<GlossaryTerm & { slug: string }> {
+  return TECHNIQUE_TERMS.map((term) => {
+    const slug = techniqueSlugFromLearnPath(term.learnPath);
+    return slug ? { ...term, slug } : null;
+  }).filter((t): t is GlossaryTerm & { slug: string } => Boolean(t));
+}
+
 export function findTermsInText(text: string): GlossaryTerm[] {
   const found: GlossaryTerm[] = [];
   for (const term of getSortedTechniqueTerms()) {
