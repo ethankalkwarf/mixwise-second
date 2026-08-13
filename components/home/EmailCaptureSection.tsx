@@ -53,8 +53,8 @@ export function EmailCaptureSection() {
           <span className="italic text-terracotta">every week</span>
         </h2>
         <p className="mx-auto mb-8 max-w-md [text-wrap:pretty] text-base leading-relaxed text-sage sm:text-lg">
-          Join the list for fresh recipes worth making at home. This is email only —
-          you can create a free account later to save your bar.
+          Join the list for fresh recipes worth making at home. No account
+          needed. Save your bar whenever you&apos;re ready.
         </p>
 
         {status === "success" ? (
