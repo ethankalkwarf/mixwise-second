@@ -14,8 +14,9 @@ import { getMixDataClient, getUserBarIngredientIdsClient } from "@/lib/cocktails
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
+import { SaveBarPrompt } from "@/components/auth/SaveBarPrompt";
 import type { MixIngredient, MixCocktail } from "@/lib/mixTypes";
-import { InformationCircleIcon, BookmarkIcon, PlusIcon, HomeIcon, WrenchScrewdriverIcon, BookOpenIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, PlusIcon, HomeIcon, WrenchScrewdriverIcon, BookOpenIcon } from "@heroicons/react/24/outline";
 import { createClient } from "@/lib/supabase/client";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { debugLog } from "@/lib/debugLog";
@@ -68,7 +69,6 @@ function MixPageContent() {
     removeIngredient,
     setIngredients,
     clearAll,
-    promptToSave,
   } = useBarIngredients();
 
   const searchParams = useSearchParams();
@@ -253,11 +253,6 @@ function MixPageContent() {
   const handleDismissPrompt = () => {
     setShowSavePrompt(false);
     setPromptDismissed(true);
-  };
-
-  const handleSavePromptClick = () => {
-    setShowSavePrompt(false);
-    promptToSave();
   };
 
   // Get selected ingredient objects
@@ -539,31 +534,7 @@ function MixPageContent() {
 
       {/* Save Bar Prompt for Anonymous Users */}
       {showSavePrompt && !isAuthenticated && (
-        <div className="fixed bottom-24 left-4 right-4 lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm bg-white/95 backdrop-blur-md border-2 border-olive/40 rounded-2xl p-4 shadow-xl z-40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center border border-olive/30">
-              <BookmarkIcon className="w-5 h-5 text-olive" />
-            </div>
-            <div className="flex-1">
-              <p className="text-forest font-bold">Want to save your bar?</p>
-              <p className="text-sm text-sage">Create a free account so you never lose your ingredient list.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-3">
-            <button
-              onClick={handleDismissPrompt}
-              className="flex-1 px-3 py-2 text-sm text-sage hover:text-forest transition-colors border border-mist rounded-xl"
-            >
-              Not now
-            </button>
-            <button
-              onClick={handleSavePromptClick}
-              className="flex-1 px-4 py-2 bg-terracotta text-cream font-bold text-sm rounded-xl hover:bg-terracotta-dark transition-all shadow-lg shadow-terracotta/20"
-            >
-              Save my bar
-            </button>
-          </div>
-        </div>
+        <SaveBarPrompt onDismiss={handleDismissPrompt} />
       )}
 
 

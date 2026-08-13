@@ -6,6 +6,7 @@ import { PlatformSection } from "@/components/home/PlatformSection";
 import { PersonalizedSections } from "@/components/home/PersonalizedSections";
 import { FeaturedCocktailsWrapper } from "@/components/home/FeaturedCocktailsWrapper";
 import { GuestExperienceSection } from "@/components/home/GuestExperienceSection";
+import { EmailCaptureSection } from "@/components/home/EmailCaptureSection";
 import { HomePageWrapper } from "@/components/mobile/HomePageWrapper";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
@@ -74,6 +75,9 @@ export default async function HomePage() {
 
           {/* Guest Experience Section */}
           <GuestExperienceSection />
+
+          {/* Email capture — lead list, not Thirsty Thursday */}
+          <EmailCaptureSection />
 
           {/* Platform Section */}
           <PlatformSection />

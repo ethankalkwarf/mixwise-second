@@ -108,17 +108,13 @@ export async function POST(request: NextRequest) {
 
     debugLog(`[Signup API] Processing signup for email: ${trimmedEmail}, IP: ${clientIP}`);
 
-    // Validate name fields (required for email/password signup UX)
+    // Names are optional — reduce signup friction; fall back to email local-part
     const trimmedFirstName = typeof firstName === "string" ? firstName.trim() : "";
     const trimmedLastName = typeof lastName === "string" ? lastName.trim() : "";
-    if (!trimmedFirstName) {
-      return NextResponse.json({ error: "First name is required" }, { status: 400 });
-    }
-    if (!trimmedLastName) {
-      return NextResponse.json({ error: "Last name is required" }, { status: 400 });
-    }
-
-    const fullName = `${trimmedFirstName} ${trimmedLastName}`.trim();
+    const fullName =
+      `${trimmedFirstName} ${trimmedLastName}`.trim() ||
+      trimmedEmail.split("@")[0] ||
+      "Friend";
 
     // Validate environment variables early
     // Support both SUPABASE_URL and NEXT_PUBLIC_SUPABASE_URL for flexibility

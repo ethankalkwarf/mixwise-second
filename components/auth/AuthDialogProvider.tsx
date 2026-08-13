@@ -18,6 +18,7 @@ interface AuthDialogOptions {
   mode?: AuthDialogMode;
   title?: string;
   subtitle?: string;
+  initialEmail?: string;
   onSuccess?: () => void;
 }
 
@@ -53,11 +54,20 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const setMode = useCallback((mode: AuthDialogMode) => {
-    setOptions(prev => ({ ...prev, mode }));
+    setOptions((prev) => ({ ...prev, mode }));
   }, []);
 
   return (
-    <AuthDialogContext.Provider value={{ isOpen, openAuthDialog, openLoginDialog, openSignupDialog, openResetDialog, closeAuthDialog }}>
+    <AuthDialogContext.Provider
+      value={{
+        isOpen,
+        openAuthDialog,
+        openLoginDialog,
+        openSignupDialog,
+        openResetDialog,
+        closeAuthDialog,
+      }}
+    >
       {children}
       <AuthDialog
         isOpen={isOpen}
@@ -65,6 +75,7 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
         mode={options.mode || "signup"}
         title={options.title}
         subtitle={options.subtitle}
+        initialEmail={options.initialEmail}
         onSuccess={options.onSuccess}
         onModeChange={setMode}
       />
@@ -79,4 +90,3 @@ export function useAuthDialog() {
   }
   return context;
 }
-

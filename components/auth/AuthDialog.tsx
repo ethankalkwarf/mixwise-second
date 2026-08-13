@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, Fragment } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, Fragment, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon, EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useUser } from "./UserProvider";
@@ -10,7 +9,6 @@ import type { AuthDialogMode } from "./AuthDialogProvider";
 import { debugLog } from "@/lib/debugLog";
 import { BrandLogo } from "@/components/common/BrandLogo";
 
-// Google icon component
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -22,7 +20,6 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-// Apple icon component
 function AppleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -37,6 +34,7 @@ interface AuthDialogProps {
   mode?: AuthDialogMode;
   title?: string;
   subtitle?: string;
+  initialEmail?: string;
   onSuccess?: () => void;
   onModeChange?: (mode: AuthDialogMode) => void;
 }
@@ -47,47 +45,48 @@ export function AuthDialog({
   mode = "signup",
   title,
   subtitle,
+  initialEmail = "",
   onSuccess,
   onModeChange,
 }: AuthDialogProps) {
-  const router = useRouter();
-  const { signInWithGoogle, signInWithApple, signInWithPassword, resetPassword, isAuthenticated } = useUser();
+  const { signInWithGoogle, signInWithApple, signInWithPassword, signInWithEmail, resetPassword, isAuthenticated } = useUser();
   const toast = useToast();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isMagicLoading, setIsMagicLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Default titles based on mode
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
+
   const defaultTitle = mode === "login"
     ? "Welcome back to MixWise"
     : mode === "reset"
     ? "Reset your password"
     : "Create your free MixWise account";
-  
+
   const displayTitle = title || defaultTitle;
-
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const showSignupDetails = mode === "signup" && isEmailValid;
+  const anyLoading = isEmailLoading || isMagicLoading || isGoogleLoading || isAppleLoading;
 
-  // Close dialog if user becomes authenticated
-  React.useEffect(() => {
+  useEffect(() => {
+    if (isOpen && initialEmail) {
+      setEmail(initialEmail);
+    }
+  }, [isOpen, initialEmail]);
+
+  useEffect(() => {
     if (isAuthenticated && isOpen) {
       onSuccess?.();
       onClose();
     }
   }, [isAuthenticated, isOpen, onClose, onSuccess]);
 
-  // Close dialog when email confirmation completes
-  // This handles the signup flow where user clicks email link and is redirected
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isOpen) return;
 
     const handleEmailConfirmed = (event: Event) => {
@@ -99,18 +98,25 @@ export function AuthDialog({
       }
     };
 
-    window.addEventListener('mixwise:emailConfirmed', handleEmailConfirmed);
+    window.addEventListener("mixwise:emailConfirmed", handleEmailConfirmed);
     return () => {
-      window.removeEventListener('mixwise:emailConfirmed', handleEmailConfirmed);
+      window.removeEventListener("mixwise:emailConfirmed", handleEmailConfirmed);
     };
   }, [isOpen, onClose, onSuccess]);
+
+  // Reset password-path UI when switching modes — lead with magic link for signup & login
+  useEffect(() => {
+    setShowPasswordFields(false);
+    setError(null);
+    setPassword("");
+  }, [mode]);
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError(null);
     try {
       await signInWithGoogle();
-    } catch (err) {
+    } catch {
       setError("Failed to sign in with Google. Please try again.");
       setIsGoogleLoading(false);
     }
@@ -121,10 +127,33 @@ export function AuthDialog({
     setError(null);
     try {
       await signInWithApple();
-    } catch (err) {
+    } catch {
       setError("Failed to sign in with Apple. Please try again.");
       setIsAppleLoading(false);
     }
+  };
+
+  const handleMagicLink = async () => {
+    if (!isEmailValid) {
+      setError("Enter a valid email address");
+      return;
+    }
+
+    setIsMagicLoading(true);
+    setError(null);
+
+    const result = await signInWithEmail(email.trim());
+
+    if (result.error) {
+      setError(result.error);
+      toast.error(result.error);
+      setIsMagicLoading(false);
+      return;
+    }
+
+    setMagicLinkSent(true);
+    setIsMagicLoading(false);
+    toast.success("Check your email for a sign-in link.");
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -135,18 +164,6 @@ export function AuthDialog({
     setError(null);
 
     if (mode === "signup") {
-      if (!firstName.trim()) {
-        setError("First name is required");
-        setIsEmailLoading(false);
-        return;
-      }
-      if (!lastName.trim()) {
-        setError("Last name is required");
-        setIsEmailLoading(false);
-        return;
-      }
-
-      // Validate password for signup
       if (!password.trim()) {
         setError("Password is required");
         setIsEmailLoading(false);
@@ -159,23 +176,11 @@ export function AuthDialog({
         return;
       }
 
-      if (password !== confirmPassword) {
-        setError("Passwords do not match");
-        setIsEmailLoading(false);
-        return;
-      }
-
-      // Use server-side signup API to create user and send confirmation email
-      // This bypasses Supabase's default email flow
       try {
         const response = await fetch("/api/auth/signup", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
             email: email.trim(),
             password: password.trim(),
           }),
@@ -211,7 +216,6 @@ export function AuthDialog({
         setIsEmailLoading(false);
       }
     } else if (mode === "reset") {
-      // Reset password
       const result = await resetPassword(email.trim());
 
       if (result.error) {
@@ -227,7 +231,6 @@ export function AuthDialog({
         );
       }
     } else {
-      // Sign in with email and password
       if (!password.trim()) {
         setError("Password is required");
         setIsEmailLoading(false);
@@ -241,7 +244,6 @@ export function AuthDialog({
         toast.error(result.error);
         setIsEmailLoading(false);
       } else {
-        // Success - the useEffect will close the dialog when isAuthenticated becomes true
         toast.success("Welcome back!");
         setIsEmailLoading(false);
       }
@@ -251,9 +253,10 @@ export function AuthDialog({
   const handleClose = () => {
     setEmail("");
     setPassword("");
-    setConfirmPassword("");
     setEmailSent(false);
+    setMagicLinkSent(false);
     setSignupSuccess(false);
+    setShowPasswordFields(false);
     setError(null);
     onClose();
   };
@@ -261,7 +264,6 @@ export function AuthDialog({
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={handleClose}>
-        {/* Backdrop */}
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -274,7 +276,6 @@ export function AuthDialog({
           <div className="fixed inset-0 bg-forest/30 backdrop-blur-sm" />
         </Transition.Child>
 
-        {/* Dialog content */}
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Transition.Child
@@ -287,7 +288,6 @@ export function AuthDialog({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-white border border-mist p-6 sm:p-8 text-left align-middle shadow-card-hover transition-all">
-                {/* Close button */}
                 <button
                   onClick={handleClose}
                   className="absolute top-4 right-4 p-2 rounded-xl text-sage hover:text-forest hover:bg-mist transition-colors"
@@ -297,7 +297,6 @@ export function AuthDialog({
                 </button>
 
                 {signupSuccess ? (
-                  // Signup success - email confirmation sent
                   <div className="text-center py-6">
                     <div className="mx-auto w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center mb-4">
                       <CheckCircleIcon className="w-8 h-8 text-olive" />
@@ -309,7 +308,7 @@ export function AuthDialog({
                       We sent a confirmation link to <strong>{email}</strong>.
                     </p>
                     <p className="text-sm text-sage mb-6 bg-mist/30 rounded-2xl p-4">
-                      Click the link in your email to verify your account. Once confirmed, you'll be automatically signed in and can start onboarding.
+                      Click the link in your email to verify your account. Once confirmed, you&apos;ll be signed in automatically.
                     </p>
                     <button
                       onClick={() => {
@@ -321,8 +320,25 @@ export function AuthDialog({
                       Already confirmed? Log in
                     </button>
                   </div>
+                ) : magicLinkSent ? (
+                  <div className="text-center py-6">
+                    <div className="mx-auto w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center mb-4">
+                      <CheckCircleIcon className="w-8 h-8 text-olive" />
+                    </div>
+                    <Dialog.Title className="text-xl font-display font-bold text-forest mb-2">
+                      Check your email
+                    </Dialog.Title>
+                    <p className="text-sage mb-6">
+                      We sent a sign-in link to <strong>{email}</strong>. Open it on this device to continue.
+                    </p>
+                    <button
+                      onClick={() => setMagicLinkSent(false)}
+                      className="text-sm text-terracotta hover:text-terracotta-dark font-medium"
+                    >
+                      Use a different email
+                    </button>
+                  </div>
                 ) : emailSent ? (
-                  // Password reset email sent
                   <div className="text-center py-6">
                     <div className="mx-auto w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center mb-4">
                       <CheckCircleIcon className="w-8 h-8 text-olive" />
@@ -344,9 +360,7 @@ export function AuthDialog({
                     </button>
                   </div>
                 ) : (
-                  // Sign in form
                   <>
-                    {/* Header */}
                     <div className="text-center mb-6">
                       <div className="mb-4 flex justify-center">
                         <BrandLogo size="lg" variant="dark" linked={false} />
@@ -363,53 +377,55 @@ export function AuthDialog({
                       </p>
                     </div>
 
-                    {/* Error message */}
                     {error && (
                       <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-terracotta text-sm">
                         {error}
                       </div>
                     )}
 
-                    {/* OAuth sign in buttons */}
-                    <div className="space-y-3 mb-4">
-                      <button
-                        onClick={handleGoogleSignIn}
-                        disabled={isGoogleLoading || isAppleLoading}
-                        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-mist/50 text-forest font-medium rounded-2xl border border-mist transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isGoogleLoading ? (
-                          <div className="spinner" />
-                        ) : (
-                          <GoogleIcon className="w-5 h-5" />
-                        )}
-                        Continue with Google
-                      </button>
-                      
-                      <button
-                        onClick={handleAppleSignIn}
-                        disabled={isAppleLoading || isGoogleLoading}
-                        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-black hover:bg-gray-900 text-white font-medium rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isAppleLoading ? (
-                          <div className="spinner border-white/30 border-t-white" />
-                        ) : (
-                          <AppleIcon className="w-5 h-5" />
-                        )}
-                        Continue with Apple
-                      </button>
-                    </div>
+                    {mode !== "reset" && (
+                      <div className="space-y-3 mb-4">
+                        <button
+                          type="button"
+                          onClick={handleGoogleSignIn}
+                          disabled={anyLoading}
+                          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-mist/50 text-forest font-medium rounded-2xl border border-mist transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isGoogleLoading ? (
+                            <div className="spinner" />
+                          ) : (
+                            <GoogleIcon className="w-5 h-5" />
+                          )}
+                          Continue with Google
+                        </button>
 
-                    {/* Divider */}
-                    <div className="relative my-6">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-mist" />
+                        <button
+                          type="button"
+                          onClick={handleAppleSignIn}
+                          disabled={anyLoading}
+                          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-black hover:bg-gray-900 text-white font-medium rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isAppleLoading ? (
+                            <div className="spinner border-white/30 border-t-white" />
+                          ) : (
+                            <AppleIcon className="w-5 h-5" />
+                          )}
+                          Continue with Apple
+                        </button>
                       </div>
-                      <div className="relative flex justify-center text-xs">
-                        <span className="bg-white px-3 text-sage">or</span>
-                      </div>
-                    </div>
+                    )}
 
-                    {/* Email auth */}
+                    {mode !== "reset" && (
+                      <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-mist" />
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                          <span className="bg-white px-3 text-sage">or continue with email</span>
+                        </div>
+                      </div>
+                    )}
+
                     <form onSubmit={handleEmailAuth}>
                       <label className="label-botanical">Email Address</label>
                       <div className="relative mb-4">
@@ -421,95 +437,92 @@ export function AuthDialog({
                           placeholder="Enter your email"
                           className="input-botanical pl-11"
                           required
+                          autoComplete="email"
                         />
                       </div>
 
-                      {showSignupDetails && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <label className="label-botanical">First Name</label>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                placeholder="First name"
-                                className="input-botanical"
-                                required
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="label-botanical">Last Name</label>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                placeholder="Last name"
-                                className="input-botanical"
-                                required
-                              />
-                            </div>
-                          </div>
+                      {mode !== "reset" && !showPasswordFields && (
+                        <div className="space-y-3">
+                          <button
+                            type="button"
+                            onClick={handleMagicLink}
+                            disabled={anyLoading || !isEmailValid}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isMagicLoading ? (
+                              <div className="spinner border-cream/30 border-t-cream" />
+                            ) : (
+                              "Email me a sign-in link"
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowPasswordFields(true)}
+                            className="w-full text-sm text-sage hover:text-forest transition-colors py-1"
+                          >
+                            {mode === "signup" ? "Prefer a password instead?" : "Sign in with password"}
+                          </button>
                         </div>
                       )}
 
-                      {(mode === "login" || showSignupDetails) && (
+                      {(mode === "reset" || showPasswordFields) && (
                         <>
-                          <label className="label-botanical">Password</label>
-                          <div className="relative mb-4">
-                            <input
-                              type="password"
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              placeholder={mode === "signup" ? "Create a password" : "Enter your password"}
-                              className="input-botanical"
-                              required
-                              minLength={8}
-                            />
-                          </div>
-
-                          {mode === "signup" && showSignupDetails && (
+                          {(mode === "login" || mode === "signup") && (
                             <>
-                              <label className="label-botanical">Confirm Password</label>
+                              <label className="label-botanical">Password</label>
                               <div className="relative mb-4">
                                 <input
                                   type="password"
-                                  value={confirmPassword}
-                                  onChange={(e) => setConfirmPassword(e.target.value)}
-                                  placeholder="Confirm your password"
+                                  value={password}
+                                  onChange={(e) => setPassword(e.target.value)}
+                                  placeholder={mode === "signup" ? "Create a password (8+ characters)" : "Enter your password"}
                                   className="input-botanical"
                                   required
                                   minLength={8}
+                                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
                                 />
                               </div>
                             </>
                           )}
+
+                          <button
+                            type="submit"
+                            disabled={
+                              anyLoading ||
+                              !email.trim() ||
+                              (mode === "signup" && (!isEmailValid || !password.trim())) ||
+                              (mode === "login" && !password.trim())
+                            }
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isEmailLoading ? (
+                              <div className="spinner border-cream/30 border-t-cream" />
+                            ) : mode === "signup" ? (
+                              "Create Account"
+                            ) : mode === "reset" ? (
+                              "Send Reset Link"
+                            ) : (
+                              "Log In"
+                            )}
+                          </button>
+
+                          {mode !== "reset" && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowPasswordFields(false);
+                                setPassword("");
+                                setError(null);
+                              }}
+                              className="w-full mt-3 text-sm text-sage hover:text-forest transition-colors py-1"
+                            >
+                              Use email link instead
+                            </button>
+                          )}
                         </>
                       )}
-
-                      <button
-                        type="submit"
-                        disabled={
-                          isEmailLoading || 
-                          !email.trim() || 
-                          (mode === "signup" && (!isEmailValid || !firstName.trim() || !lastName.trim() || !password.trim() || !confirmPassword.trim())) ||
-                          (mode === "login" && !password.trim())
-                        }
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isEmailLoading ? (
-                          <div className="spinner border-cream/30 border-t-cream" />
-                        ) : (
-                          mode === "signup" ? "Create Account" :
-                          mode === "reset" ? "Send Reset Link" :
-                          "Log In"
-                        )}
-                      </button>
                     </form>
 
-                    {/* Benefits list (only for signup mode) */}
                     {mode === "signup" && (
                       <div className="mt-6 pt-6 border-t border-mist">
                         <p className="font-mono text-xs text-sage text-center mb-3 uppercase tracking-widest">Free accounts include:</p>
@@ -530,7 +543,6 @@ export function AuthDialog({
                       </div>
                     )}
 
-                    {/* Mode switcher */}
                     <div className="mt-6 pt-6 border-t border-mist text-center">
                       {mode === "signup" ? (
                         <p className="text-sm text-sage">
@@ -543,17 +555,15 @@ export function AuthDialog({
                           </button>
                         </p>
                       ) : mode === "reset" ? (
-                        <div className="space-y-2">
-                          <p className="text-sm text-sage">
-                            Remember your password?{" "}
-                            <button
-                              onClick={() => onModeChange?.("login")}
-                              className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
-                            >
-                              Back to login
-                            </button>
-                          </p>
-                        </div>
+                        <p className="text-sm text-sage">
+                          Remember your password?{" "}
+                          <button
+                            onClick={() => onModeChange?.("login")}
+                            className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
+                          >
+                            Back to login
+                          </button>
+                        </p>
                       ) : (
                         <div className="space-y-2">
                           <p className="text-sm text-sage">
@@ -577,7 +587,6 @@ export function AuthDialog({
                       )}
                     </div>
 
-                    {/* Terms */}
                     <p className="mt-4 text-xs text-sage text-center">
                       By continuing, you agree to our Terms of Service and{" "}
                       <a href="/privacy" className="text-terracotta hover:text-terracotta-dark underline">
