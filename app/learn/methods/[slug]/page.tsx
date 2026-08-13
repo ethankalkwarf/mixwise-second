@@ -41,8 +41,6 @@ export default async function LearnMethodPage({ params }: PageProps) {
   const relatedTechniques = method.relatedTechniqueSlugs
     .map((s) => getTechniqueTermBySlug(s))
     .filter(Boolean);
-  const freeSection = method.sections[0];
-  const gatedSections = method.sections.slice(1);
   const checks = getMethodChecks(slug);
 
   return (
@@ -57,18 +55,16 @@ export default async function LearnMethodPage({ params }: PageProps) {
       />
 
       <MainContainer className="py-10 sm:py-12 max-w-3xl space-y-10">
-        <aside className="rounded-2xl border border-olive/30 bg-olive/10 px-5 py-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
-            Quick tip
-          </p>
-          <p className="text-charcoal/85 leading-relaxed font-medium">{method.tip}</p>
-        </aside>
-
-        {freeSection && <LearnSectionBlock section={freeSection} />}
-
-        <LearnContentGate teaserLabel="Unlock the full method">
+        <LearnContentGate gateId={`method:${slug}`} teaserLabel="Keep learning this method">
           <div className="space-y-10">
-            {gatedSections.map((section) => (
+            <aside className="rounded-2xl border border-olive/30 bg-olive/10 px-5 py-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                Quick tip
+              </p>
+              <p className="text-charcoal/85 leading-relaxed font-medium">{method.tip}</p>
+            </aside>
+
+            {method.sections.map((section) => (
               <LearnSectionBlock key={section.heading} section={section} />
             ))}
             <LearnChecks checks={checks} title="Quick check" />
@@ -81,7 +77,7 @@ export default async function LearnMethodPage({ params }: PageProps) {
 
         {(relatedGuide || relatedTechniques.length > 0) && (
           <section className="space-y-4 border-t border-mist pt-8">
-            <h2 className="font-display text-xl font-bold text-forest">Keep going</h2>
+            <h2 className="font-display text-xl font-bold !text-charcoal">Keep going</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {relatedGuide && (
                 <Link
@@ -91,7 +87,7 @@ export default async function LearnMethodPage({ params }: PageProps) {
                   <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta mb-1">
                     Guide
                   </p>
-                  <p className="font-display font-bold text-forest">{relatedGuide.title}</p>
+                  <p className="font-display font-bold !text-charcoal">{relatedGuide.title}</p>
                 </Link>
               )}
               {relatedTechniques.map((term) =>
@@ -104,7 +100,7 @@ export default async function LearnMethodPage({ params }: PageProps) {
                     <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta mb-1">
                       Technique
                     </p>
-                    <p className="font-display font-bold text-forest capitalize">{term.label}</p>
+                    <p className="font-display font-bold !text-charcoal capitalize">{term.label}</p>
                   </Link>
                 ) : null
               )}

@@ -19,8 +19,6 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-const FREE_SECTIONS = 2;
-
 export function generateStaticParams() {
   return LEARN_GUIDES.map((g) => ({ slug: g.slug }));
 }
@@ -47,8 +45,6 @@ export default async function LearnGuidePage({ params }: PageProps) {
   const pathUsingGuide = LEARN_PATHS.find((p) =>
     p.steps.some((s) => s.type === "guide" && s.slug === slug)
   );
-  const freeSections = guide.sections.slice(0, FREE_SECTIONS);
-  const gatedSections = guide.sections.slice(FREE_SECTIONS);
   const checks = getGuideChecks(slug);
 
   return (
@@ -63,21 +59,15 @@ export default async function LearnGuidePage({ params }: PageProps) {
       />
 
       <MainContainer className="py-10 sm:py-12 max-w-3xl space-y-10">
-        {freeSections.map((section) => (
-          <LearnSectionBlock key={section.heading} section={section} />
-        ))}
-
-        {(gatedSections.length > 0 || checks.length > 0 || guide.practiceSlugs.length > 0) && (
-          <LearnContentGate teaserLabel="Continue this lesson free">
-            <div className="space-y-10">
-              {gatedSections.map((section) => (
-                <LearnSectionBlock key={section.heading} section={section} />
-              ))}
-              <LearnChecks checks={checks} title="Did it stick?" />
-              <LearnPracticeCocktails slugs={guide.practiceSlugs} />
-            </div>
-          </LearnContentGate>
-        )}
+        <LearnContentGate gateId={`guide:${slug}`} teaserLabel="Keep reading this lesson">
+          <div className="space-y-10">
+            {guide.sections.map((section) => (
+              <LearnSectionBlock key={section.heading} section={section} />
+            ))}
+            <LearnChecks checks={checks} title="Did it stick?" />
+            <LearnPracticeCocktails slugs={guide.practiceSlugs} />
+          </div>
+        </LearnContentGate>
 
         <LearnLessonFooter next={next} path={pathUsingGuide} />
       </MainContainer>

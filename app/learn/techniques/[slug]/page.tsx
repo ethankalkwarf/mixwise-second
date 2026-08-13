@@ -89,19 +89,19 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
       />
 
       <MainContainer className="py-10 sm:py-12 max-w-3xl space-y-10">
-        <LearnTechniqueVisual slug={slug} label={term.label} />
+        <LearnContentGate gateId={`technique:${slug}`} teaserLabel="Unlock practice recipes">
+          <div className="space-y-10">
+            <LearnTechniqueVisual slug={slug} label={term.label} />
 
-        {term.why && (
-          <section className="rounded-2xl border border-forest/15 bg-forest/[0.04] px-5 py-5 sm:px-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-2">
-              Why it matters
-            </p>
-            <p className="text-base text-charcoal/80 leading-relaxed">{term.why}</p>
-          </section>
-        )}
+            {term.why && (
+              <section className="rounded-2xl border border-forest/15 bg-forest/[0.04] px-5 py-5 sm:px-6">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-2">
+                  Why it matters
+                </p>
+                <p className="text-base text-charcoal/80 leading-relaxed">{term.why}</p>
+              </section>
+            )}
 
-        <LearnContentGate teaserLabel="Practice this technique">
-          <div className="space-y-8">
             {practiceSlugs.length > 0 ? (
               <LearnPracticeCocktails
                 slugs={practiceSlugs}
@@ -132,13 +132,13 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta mb-1">
               Related method
             </p>
-            <p className="font-display text-xl font-bold text-forest">{relatedMethod.label}</p>
+            <p className="font-display text-xl font-bold !text-charcoal">{relatedMethod.label}</p>
             <p className="text-sm text-sage mt-1">{relatedMethod.summary}</p>
           </Link>
         )}
 
         <section>
-          <h2 className="font-display text-xl font-bold text-forest mb-3">Related techniques</h2>
+          <h2 className="font-display text-xl font-bold !text-charcoal mb-3">Related techniques</h2>
           <ul className="grid gap-2 sm:grid-cols-2">
             {related.map((item) => (
               <li key={item.slug}>

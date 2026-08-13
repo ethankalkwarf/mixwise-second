@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
-import { pathStepHref, type LearnPathStep } from "@/lib/learnLibrary";
+import type { LearnPathStep } from "@/lib/learnLibrary";
 
 const storageKey = (pathSlug: string, userId: string) =>
   `mixwise-learn-path:${userId}:${pathSlug}`;
@@ -11,12 +11,72 @@ const storageKey = (pathSlug: string, userId: string) =>
 type Props = {
   pathSlug: string;
   steps: LearnPathStep[];
+  done?: boolean[];
 };
 
-export function LearnPathProgress({ pathSlug, steps }: Props) {
+/** Quiet progress strip — not a white dashboard card. */
+export function LearnPathProgress({ steps, done: controlledDone }: Props) {
+  const { isAuthenticated } = useUser();
+  const { openSignupDialog, openLoginDialog } = useAuthDialog();
+  const done = controlledDone ?? steps.map(() => false);
+  const completed = done.filter(Boolean).length;
+  const pct = Math.round((completed / Math.max(steps.length, 1)) * 100);
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between pb-2 border-b border-mist/80">
+      <div className="flex-1 min-w-0 max-w-md">
+        <p className="text-sm mb-2">
+          {isAuthenticated ? (
+            <>
+              <span className="font-semibold !text-charcoal">{completed}</span>
+              <span className="text-sage"> of {steps.length} done</span>
+            </>
+          ) : (
+            <span className="text-sage">{steps.length} lessons in this path</span>
+          )}
+        </p>
+        <div className="h-1 rounded-full bg-mist overflow-hidden">
+          <div
+            className="h-full rounded-full bg-terracotta transition-all duration-500"
+            style={{ width: `${isAuthenticated ? Math.max(pct, 0) : 6}%` }}
+          />
+        </div>
+      </div>
+      {!isAuthenticated && (
+        <div className="flex gap-4 text-sm shrink-0">
+          <button
+            type="button"
+            onClick={() =>
+              openLoginDialog({
+                title: "Save path progress",
+                subtitle: "Sign in to pick up where you left off.",
+              })
+            }
+            className="font-semibold text-terracotta hover:underline"
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              openSignupDialog({
+                title: "Join MixWise free",
+                subtitle: "Unlock the full path and save progress.",
+              })
+            }
+            className="font-medium text-forest hover:text-terracotta transition-colors"
+          >
+            Create account
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function useLearnPathDone(pathSlug: string, stepCount: number) {
   const { user, isAuthenticated } = useUser();
-  const { openSignupDialog } = useAuthDialog();
-  const [done, setDone] = useState<boolean[]>(() => steps.map(() => false));
+  const [done, setDone] = useState<boolean[]>(() => Array(stepCount).fill(false));
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
@@ -24,91 +84,25 @@ export function LearnPathProgress({ pathSlug, steps }: Props) {
       const raw = localStorage.getItem(storageKey(pathSlug, user.id));
       if (!raw) return;
       const parsed = JSON.parse(raw) as boolean[];
-      if (Array.isArray(parsed) && parsed.length === steps.length) {
-        setDone(parsed);
-      }
+      if (Array.isArray(parsed) && parsed.length === stepCount) setDone(parsed);
     } catch {
       /* ignore */
     }
-  }, [isAuthenticated, user?.id, pathSlug, steps.length]);
+  }, [isAuthenticated, user?.id, pathSlug, stepCount]);
 
-  const persist = useCallback(
-    (next: boolean[]) => {
-      setDone(next);
-      if (!user?.id) return;
-      localStorage.setItem(storageKey(pathSlug, user.id), JSON.stringify(next));
+  const toggle = useCallback(
+    (index: number) => {
+      setDone((prev) => {
+        const next = [...prev];
+        next[index] = !next[index];
+        if (user?.id) {
+          localStorage.setItem(storageKey(pathSlug, user.id), JSON.stringify(next));
+        }
+        return next;
+      });
     },
     [pathSlug, user?.id]
   );
 
-  const completed = done.filter(Boolean).length;
-  const pct = Math.round((completed / steps.length) * 100);
-
-  return (
-    <div className="rounded-2xl border border-mist bg-white px-5 py-4 sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold">
-            Your progress
-          </p>
-          <p className="text-sm text-charcoal/80 font-medium">
-            {isAuthenticated
-              ? `${completed} of ${steps.length} steps · ${pct}%`
-              : "Sign in to save path progress on this device"}
-          </p>
-        </div>
-        {!isAuthenticated && (
-          <button
-            type="button"
-            onClick={() =>
-              openSignupDialog({
-                title: "Save your learning progress",
-                subtitle: "Free account — pick up paths where you left off.",
-              })
-            }
-            className="text-sm font-semibold text-terracotta hover:underline"
-          >
-            Sign in
-          </button>
-        )}
-      </div>
-      <div className="h-2 rounded-full bg-mist overflow-hidden mb-4">
-        <div
-          className="h-full rounded-full bg-terracotta transition-all duration-500"
-          style={{ width: `${isAuthenticated ? pct : 0}%` }}
-        />
-      </div>
-      {isAuthenticated && (
-        <ul className="space-y-2">
-          {steps.map((step, index) => {
-            const href = pathStepHref(step);
-            const checked = done[index];
-            return (
-              <li key={`${href}-${index}`} className="flex items-center gap-3">
-                <button
-                  type="button"
-                  aria-pressed={checked}
-                  onClick={() => {
-                    const next = [...done];
-                    next[index] = !next[index];
-                    persist(next);
-                  }}
-                  className={`h-5 w-5 shrink-0 rounded border flex items-center justify-center text-[10px] font-bold transition-colors ${
-                    checked
-                      ? "border-terracotta bg-terracotta text-cream"
-                      : "border-mist bg-cream text-transparent hover:border-terracotta/50"
-                  }`}
-                >
-                  ✓
-                </button>
-                <a href={href} className="text-sm text-forest hover:text-terracotta capitalize">
-                  Step {index + 1}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
+  return { done, toggle, isAuthenticated };
 }

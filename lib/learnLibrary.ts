@@ -614,6 +614,73 @@ export function pathStepLabel(step: LearnPathStep): string {
   }
 }
 
+const TECHNIQUE_STEP_COVERS: Record<string, { src: string; alt: string }> = {
+  "dry-shake": { src: "/learn/shake-vs-stir.webp", alt: "Cocktail shaker at home" },
+  "fine-strain": { src: "/media/strainer-pour-poster.webp", alt: "Straining a cocktail" },
+  express: { src: "/learn/garnish-with-intent.webp", alt: "Garnishing a cocktail" },
+  muddle: { src: "/media/ice-mojito-poster.webp", alt: "Muddled drink" },
+  swizzle: { src: "/occasions/tiki.jpg", alt: "Crushed-ice cocktail" },
+  rinse: { src: "/media/three-cocktails-dark.webp", alt: "Spirit-forward cocktails" },
+  float: { src: "/media/cocktails-overhead.webp", alt: "Layered cocktail" },
+  layer: { src: "/media/cocktails-overhead.webp", alt: "Layered drinks" },
+  build: { src: "/media/ice-mojito-poster.webp", alt: "Built drink over ice" },
+};
+
+export function pathStepMedia(step: LearnPathStep): {
+  title: string;
+  blurb: string;
+  kind: string;
+  image: string;
+  imageAlt: string;
+  href: string;
+} {
+  const href = pathStepHref(step);
+  switch (step.type) {
+    case "guide": {
+      const g = getLearnGuide(step.slug);
+      return {
+        title: g?.title ?? step.slug,
+        blurb: g?.summary ?? "",
+        kind: g?.eyebrow ?? "Guide",
+        image: g?.coverImage ?? "/media/kitchen-shelf.webp",
+        imageAlt: g?.coverAlt ?? g?.title ?? "Guide",
+        href,
+      };
+    }
+    case "method": {
+      const m = getLearnMethod(step.slug);
+      return {
+        title: m?.label ?? step.slug,
+        blurb: m?.summary ?? m?.tip ?? "",
+        kind: "Core method",
+        image: m?.coverImage ?? "/learn/shake-vs-stir.webp",
+        imageAlt: m?.coverAlt ?? m?.label ?? "Method",
+        href,
+      };
+    }
+    case "technique": {
+      const cover = TECHNIQUE_STEP_COVERS[step.slug];
+      return {
+        title: step.slug.replace(/-/g, " "),
+        blurb: "A focused technique deep-dive — short, practical, then practice on a recipe.",
+        kind: "Technique",
+        image: cover?.src ?? "/learn/shake-vs-stir.webp",
+        imageAlt: cover?.alt ?? step.slug,
+        href,
+      };
+    }
+    case "swaps":
+      return {
+        title: "Smart swaps",
+        blurb: "Bottle substitutions when you’re mid-shop or mid-mix.",
+        kind: "Reference",
+        image: "/media/kitchen-shelf.webp",
+        imageAlt: "Bar bottles on a shelf",
+        href,
+      };
+  }
+}
+
 export function searchLearnLibrary(query: string): {
   guides: LearnGuide[];
   methods: LearnMethod[];
