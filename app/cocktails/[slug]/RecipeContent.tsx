@@ -195,7 +195,7 @@ export function RecipeContent({
           <hr className="border-mist mb-6" />
 
           {/* Drink properties (difficulty, glassware, etc.) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
             {/* Base Spirit */}
             {cocktail.base_spirit && (
               <div>
@@ -306,8 +306,8 @@ export function RecipeContent({
                   src={imageUrl}
                   alt={cocktail.image_alt ?? cocktail.name}
                   priority
-                  quality={80}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  quality={92}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 512px"
                 />
               ) : (
                 <ComingSoonCocktailImage name={cocktail.name} />
@@ -476,7 +476,7 @@ export function RecipeContent({
                         src={recipe.image_url}
                         alt={recipe.name}
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        quality={75}
+                        quality={85}
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                       />
                     ) : (

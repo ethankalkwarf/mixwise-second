@@ -39,8 +39,8 @@ export function getImageUrl(
     result = result.height(options.height);
   }
 
-  // Default to high quality (85) if not specified, or use provided quality
-  const quality = options?.quality ?? 85;
+  // Default high quality — cocktail photography softens badly below ~85–90
+  const quality = options?.quality ?? 90;
   result = result.quality(quality);
 
   // Auto-format for better compression and modern browser support
@@ -72,7 +72,7 @@ export function getResponsiveImageUrls(
     urls[key] = imageBuilder
       .width(width)
       .height(height)
-      .quality(85)
+      .quality(90)
       .auto('format')
       .url();
   }

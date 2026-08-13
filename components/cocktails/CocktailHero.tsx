@@ -13,8 +13,9 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
   // Generate optimized image URL with proper transformations
   const optimizedImageUrl = cocktail.image ?
     getImageUrl(cocktail.image, {
-      width: 800,
-      height: 1000,
+      // Request 2x retina pixels so Next/Image does not upscale a soft 800px source
+      width: 1600,
+      height: 2000,
       quality: 90,
       auto: 'format'
     }) : imageUrl;
@@ -31,8 +32,8 @@ export function CocktailHero({ cocktail, imageUrl }: CocktailHeroProps) {
               fill
               priority
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
-              quality={90}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 640px"
+              quality={92}
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAoACgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAMEB//EACUQAAIBAwMEAwEBAAAAAAAAAAECAwAEEQUSITFBURNhcZEigf/EABUBAFEAAAAAAAAAAAAAAAAAAAH/xAAVEQEBAAAAAAAAAAAAAAAAAAAAAf/aAAwDAQACEQMRAD8A4+iiigAooooAKKKKACiiigAooooAKKKKACiiigD/2Q=="
             />

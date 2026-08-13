@@ -23,7 +23,7 @@ export function OptimizedCocktailImage({
   fill = true,
   priority = false,
   sizes,
-  quality = 80,
+  quality = 90,
   width,
   height,
   placeholder = "blur",

@@ -54,9 +54,9 @@ interface FeaturedCocktailCardProps {
 function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps) {
   const imageUrl =
     getImageUrl(cocktail.image, {
-      width: 400,
-      height: 300,
-      quality: 80,
+      width: 800,
+      height: 600,
+      quality: 90,
       auto: "format",
     }) || cocktail.externalImageUrl;
 
@@ -72,11 +72,13 @@ function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps)
           <Image
             src={imageUrl}
             alt={cocktail.name}
-            width={400}
-            height={300}
+            width={800}
+            height={600}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             placeholder="blur"
             blurDataURL={COCKTAIL_BLUR_DATA_URL}
+            quality={90}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
           <div className="h-full w-full bg-mist" />
