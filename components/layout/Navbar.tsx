@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, Transition } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, ShareIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, ShareIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { BrandLogo } from "@/components/common/BrandLogo";
@@ -24,7 +24,6 @@ function navLinkClass(active: boolean, base = "text-sm") {
 }
 
 export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -36,7 +35,6 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
 
   const handleSignOut = async () => {
     await signOut();
-    setMobileMenuOpen(false);
   };
 
   // Get user display info
@@ -156,8 +154,8 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
               />
             </div>
 
-            {/* Desktop Search + Actions */}
-            <div className="hidden md:flex items-center gap-4">
+            {/* Search + Actions — search stays available on mobile; auth is desktop-only (in More sheet) */}
+            <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={() => setDesktopSearchOpen(!desktopSearchOpen)}
                 className="flex items-center gap-2 px-2.5 py-1.5 text-sm font-medium text-sage hover:text-forest border border-mist/70 rounded-md hover:border-mist hover:bg-mist/40 active:scale-[0.98] transition-all duration-200"
@@ -176,7 +174,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 </kbd>
               </button>
 
-              <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-3">
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-mist animate-pulse" />
             ) : isAuthenticated ? (
@@ -285,177 +283,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
             )}
               </div>
             </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-charcoal hover:text-terracotta transition-colors rounded-xl"
-            aria-expanded={mobileMenuOpen}
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <XMarkIcon className="w-6 h-6" />
-            ) : (
-              <Bars3Icon className="w-6 h-6" />
-            )}
-          </button>
         </div>
-
-        {/* Mobile Menu */}
-        <Transition
-          show={mobileMenuOpen}
-          as={Fragment}
-          enter="transition ease-out duration-200"
-          enterFrom="opacity-0 -translate-y-2"
-          enterTo="opacity-100 translate-y-0"
-          leave="transition ease-in duration-150"
-          leaveFrom="opacity-100 translate-y-0"
-          leaveTo="opacity-0 -translate-y-2"
-        >
-          <div className="md:hidden border-t border-mist bg-cream py-4">
-            <div className="px-3 pb-4">
-              <CocktailSearch
-                variant="mobile"
-                onClose={() => setMobileMenuOpen(false)}
-              />
-            </div>
-            <div className="space-y-0.5">
-              <Link
-                href="/cocktail-of-the-day"
-                className={`block px-3 py-3 text-base rounded-xl transition-colors ${
-                  isActive("/cocktail-of-the-day")
-                    ? "font-semibold text-forest bg-mist/40"
-                    : "font-medium text-charcoal hover:text-terracotta hover:bg-mist/50"
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Drink of the Day
-              </Link>
-              <Link
-                href="/mix"
-                className={`block px-3 py-3 text-base rounded-xl transition-colors ${
-                  isActive("/mix")
-                    ? "font-semibold text-forest bg-mist/40"
-                    : "font-medium text-charcoal hover:text-terracotta hover:bg-mist/50"
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-                title="Find cocktails by ingredients in your bar"
-              >
-                What Can I Make?
-              </Link>
-              <Link
-                href="/cocktails"
-                className={`block px-3 py-3 text-base rounded-xl transition-colors ${
-                  isActive("/cocktails")
-                    ? "font-semibold text-forest bg-mist/40"
-                    : "font-medium text-charcoal hover:text-terracotta hover:bg-mist/50"
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                All Recipes
-              </Link>
-              <div className="pl-3 pb-2 space-y-0.5">
-                <p className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-sage">By occasion</p>
-                {["summer", "fall", "holidays", "party", "brunch", "zero-proof", "aperitivo", "tiki"].map((slug) => (
-                  <Link
-                    key={slug}
-                    href={`/occasions/${slug}`}
-                    className="block px-3 py-2 text-sm rounded-lg text-charcoal capitalize hover:text-terracotta hover:bg-mist/50"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {slug.replace("-", " ")}
-                  </Link>
-                ))}
-                <Link
-                  href="/learn"
-                  className="block px-3 py-2 text-sm rounded-lg text-terracotta font-medium hover:bg-mist/50"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Learn mixology
-                </Link>
-              </div>
-
-              <div className="border-t border-mist mt-4 pt-4">
-                {isLoading ? (
-                  <div className="px-3 py-2">
-                    <div className="h-10 bg-mist rounded-xl animate-pulse" />
-                  </div>
-                ) : isAuthenticated ? (
-                  <>
-                    <div className="px-3 py-2 flex items-center gap-3">
-                      {avatarUrl ? (
-                        <Image
-                          src={avatarUrl}
-                          alt=""
-                          width={40}
-                          height={40}
-                          className="w-10 h-10 rounded-full object-cover border border-mist"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-terracotta/20 flex items-center justify-center text-terracotta font-semibold">
-                          {userInitial}
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-forest">{displayName}</p>
-                        <p className="text-xs text-sage">{user?.email}</p>
-                      </div>
-                    </div>
-                    <Link
-                      href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
-                      className="flex items-center gap-2 px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <ShareIcon className="w-5 h-5" />
-                      Share My Bar
-                    </Link>
-                    <Link
-                      href="/dashboard"
-                      className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
-                    <Link
-                      href="/account"
-                      className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Account Settings
-                    </Link>
-                    <button
-                      onClick={handleSignOut}
-                      className="block w-full text-left px-3 py-3 text-base font-medium text-terracotta hover:bg-terracotta/10 rounded-xl transition-colors"
-                    >
-                      Sign Out
-                    </button>
-                  </>
-                ) : (
-                  <div className="space-y-2 px-3">
-                    <button
-                      onClick={() => {
-                        openAuthDialog({ mode: "login" });
-                        setMobileMenuOpen(false);
-                      }}
-                      className="block w-full text-center px-4 py-3 text-base font-medium text-charcoal hover:text-terracotta transition-colors"
-                    >
-                      Log In
-                    </button>
-                    <button
-                      onClick={() => {
-                        openAuthDialog({ mode: "signup" });
-                        setMobileMenuOpen(false);
-                      }}
-                      className="block w-full text-center px-4 py-3 text-base font-semibold bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark transition-colors"
-                    >
-                      Sign Up Free
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </Transition>
       </nav>
     </header>
     </>

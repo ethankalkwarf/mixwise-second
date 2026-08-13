@@ -19,6 +19,10 @@ export type OccasionDefinition = {
   staticCoverPath?: string;
   /** Extra matcher beyond token bag (optional) */
   matchExtra?: (c: OccasionCocktail) => boolean;
+  /** Hub parent — child pages nest under this collection */
+  parentSlug?: string;
+  /** Child occasion slugs when this is a hub (e.g. Holidays) */
+  childSlugs?: string[];
 };
 
 function tokenBag(c: OccasionCocktail): Set<string> {
@@ -33,6 +37,12 @@ function tokenBag(c: OccasionCocktail): Set<string> {
   }
   if (c.category_primary) bag.add(c.category_primary.toLowerCase());
   if (c.base_spirit) bag.add(c.base_spirit.toLowerCase());
+  // Also index cocktail name words for holiday matching (eggnog, wassail, etc.)
+  String(c.name || "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length > 2)
+    .forEach((t) => bag.add(t));
   return bag;
 }
 
@@ -61,11 +71,71 @@ export const OCCASIONS: OccasionDefinition[] = [
     slug: "holidays",
     name: "Holidays",
     headline: "Festive pours for the table",
-    description: "Christmas, Thanksgiving, and party-table classics — from punches to peppermint.",
+    description:
+      "Dive into Christmas, Halloween, Thanksgiving, New Year’s, and more — then keep browsing sibling collections.",
     accentClass: "from-forest/15 via-cream to-cream",
-    matchTokens: ["holiday", "christmas", "thanksgiving", "winter"],
+    matchTokens: ["holiday", "christmas", "thanksgiving", "halloween", "winter", "nye", "valentine"],
     coverSlugs: ["eggnog", "peppermint-martini", "coquito", "wassail"],
     staticCoverPath: "/occasions/holidays.jpg",
+    childSlugs: ["christmas", "halloween", "thanksgiving", "new-years", "valentines"],
+  },
+  {
+    slug: "christmas",
+    name: "Christmas",
+    headline: "Peppermint, spice, and table punches",
+    description: "Eggnog, coquito, peppermint builds, and warming classics for Christmas Eve through Boxing Day.",
+    accentClass: "from-forest/20 via-cream to-cream",
+    matchTokens: ["christmas", "peppermint", "eggnog", "coquito", "wassail", "gingerbread"],
+    coverSlugs: ["eggnog", "peppermint-martini", "coquito", "peppermint-white-russian"],
+    staticCoverPath: "/occasions/holidays.jpg",
+    parentSlug: "holidays",
+  },
+  {
+    slug: "halloween",
+    name: "Halloween",
+    headline: "Dark, dramatic, and a little theatrical",
+    description: "Black, blood-orange, and smoky pours with costume-party energy — still worth drinking.",
+    accentClass: "from-charcoal/30 via-cream to-cream",
+    matchTokens: ["halloween", "spooky", "black-magic"],
+    coverSlugs: ["black-magic", "corpse-reviver", "blood-and-sand"],
+    staticCoverPath: "/occasions/party.jpg",
+    parentSlug: "holidays",
+    matchExtra: (c) => /black magic|corpse|blood|vampire|witch/i.test(c.name || ""),
+  },
+  {
+    slug: "thanksgiving",
+    name: "Thanksgiving",
+    headline: "Orchard spice for the long table",
+    description: "Apple cider, cranberry, maple, and batch-friendly punches that sit well with a feast.",
+    accentClass: "from-terracotta/25 via-cream to-cream",
+    matchTokens: ["thanksgiving", "cranberry", "apple-cider"],
+    coverSlugs: ["thanksgiving-punch", "cranberry-mule", "apple-cider-old-fashioned", "cranberry-cosmo"],
+    staticCoverPath: "/occasions/fall.jpg",
+    parentSlug: "holidays",
+  },
+  {
+    slug: "new-years",
+    name: "New Year’s",
+    headline: "Sparkle for midnight",
+    description: "Champagne cocktails, sparkling highballs, and celebratory pours for ringing in the year.",
+    accentClass: "from-olive/20 via-cream to-cream",
+    matchTokens: ["new-year", "nye", "new-years", "champagne", "sparkling"],
+    coverSlugs: ["french-75", "champagne-cocktail", "kir-royale", "bellini"],
+    staticCoverPath: "/occasions/aperitivo.jpg",
+    parentSlug: "holidays",
+    matchExtra: (c) => /french 75|champagne|sparkling|bellini|kir|mimosa/i.test(c.name || ""),
+  },
+  {
+    slug: "valentines",
+    name: "Valentine’s",
+    headline: "Romantic reds and soft pinks",
+    description: "Berry, chocolate-leaning, and blush cocktails for date night — intimate, not overdone.",
+    accentClass: "from-terracotta/30 via-cream to-cream",
+    matchTokens: ["valentine", "romance", "date-night"],
+    coverSlugs: ["pink-lady", "aviation", "clover-club", "boulevardier"],
+    staticCoverPath: "/occasions/party.jpg",
+    parentSlug: "holidays",
+    matchExtra: (c) => /pink lady|clover club|aviation|amour/i.test(c.name || ""),
   },
   {
     slug: "party",
@@ -120,6 +190,33 @@ export const OCCASIONS: OccasionDefinition[] = [
   },
 ];
 
+/** Top-level collections shown on /occasions (excludes nested holiday children). */
+export function getTopLevelOccasions(): OccasionDefinition[] {
+  return OCCASIONS.filter((o) => !o.parentSlug);
+}
+
+export function getChildOccasions(parent: OccasionDefinition): OccasionDefinition[] {
+  if (!parent.childSlugs?.length) return [];
+  return parent.childSlugs
+    .map((slug) => OCCASIONS.find((o) => o.slug === slug))
+    .filter((o): o is OccasionDefinition => Boolean(o));
+}
+
+export function getSiblingOccasions(occasion: OccasionDefinition): OccasionDefinition[] {
+  if (!occasion.parentSlug) return [];
+  const parent = getOccasion(occasion.parentSlug);
+  if (!parent) return [];
+  return getChildOccasions(parent).filter((o) => o.slug !== occasion.slug);
+}
+
+export function getRelatedOccasions(occasion: OccasionDefinition, limit = 4): OccasionDefinition[] {
+  const siblings = getSiblingOccasions(occasion);
+  if (siblings.length >= limit) return siblings.slice(0, limit);
+  const exclude = new Set([occasion.slug, occasion.parentSlug, ...siblings.map((s) => s.slug)].filter(Boolean));
+  const others = getTopLevelOccasions().filter((o) => !exclude.has(o.slug) && o.slug !== "holidays");
+  return [...siblings, ...others].slice(0, limit);
+}
+
 export function getOccasionStaticCover(occasion: OccasionDefinition): string | null {
   return occasion.staticCoverPath || null;
 }
@@ -128,9 +225,6 @@ export function resolveOccasionCoverUrl(
   occasion: OccasionDefinition,
   cocktails: OccasionCocktail[]
 ): string | null {
-  // Prefer Envato/local static file when present on disk (checked at request by path convention).
-  // Pages can pass through staticCoverPath; Next will 404 if missing, so we only use catalog
-  // here unless the caller verified the file exists.
   const cover = pickOccasionCover(occasion, cocktails);
   return cover?.image_url || null;
 }
@@ -165,7 +259,12 @@ export function getOccasion(slug: string): OccasionDefinition | undefined {
 export function cocktailMatchesOccasion(c: OccasionCocktail, occasion: OccasionDefinition): boolean {
   if (occasion.matchExtra?.(c)) return true;
   const bag = tokenBag(c);
-  return occasion.matchTokens.some((token) => bag.has(token.toLowerCase()));
+  return occasion.matchTokens.some((token) => {
+    const t = token.toLowerCase();
+    if (bag.has(t)) return true;
+    // Allow multi-word tokens via hyphen/space variants
+    return [...bag].some((b) => b.includes(t) || t.includes(b));
+  });
 }
 
 export function filterCocktailsForOccasion(

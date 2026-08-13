@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { OccasionCard } from "@/components/occasions/OccasionCard";
 import { getCocktailsList } from "@/lib/cocktails.server";
 import {
-  OCCASIONS,
   countCocktailsByOccasion,
+  getChildOccasions,
   getOccasionCovers,
+  getTopLevelOccasions,
   type OccasionCocktail,
 } from "@/lib/occasions";
 import { staticOccasionCoverIfPresent } from "@/lib/occasionCovers";
@@ -17,7 +19,7 @@ export const revalidate = 300;
 export const metadata = generatePageMetadata({
   title: "Cocktail Recipes by Season & Occasion",
   description:
-    "Find cocktail recipes for summer, fall, holidays, brunch, parties, aperitivo, tiki, and zero-proof — curated collections from the MixWise library.",
+    "Find cocktail recipes for summer, fall, Christmas, Halloween, brunch, parties, aperitivo, tiki, and zero-proof — curated collections from the MixWise library.",
   path: "/occasions",
 });
 
@@ -25,6 +27,11 @@ export default async function OccasionsPage() {
   const cocktails = (await getCocktailsList()) as OccasionCocktail[];
   const counts = countCocktailsByOccasion(cocktails);
   const covers = getOccasionCovers(cocktails);
+  const topLevel = getTopLevelOccasions();
+  const holidayHub = topLevel.find((o) => o.slug === "holidays");
+  const holidayChildren = holidayHub ? getChildOccasions(holidayHub) : [];
+  const primary = topLevel.filter((o) => o.slug !== "holidays");
+
   const heroStatic = staticOccasionCoverIfPresent("summer") || staticOccasionCoverIfPresent("party");
   const heroCocktail = covers.summer || covers.party || Object.values(covers).find(Boolean) || null;
   const heroUrl = heroStatic || heroCocktail?.image_url || null;
@@ -63,60 +70,66 @@ export default async function OccasionsPage() {
         </MainContainer>
       </section>
 
-      <MainContainer className="py-10 sm:py-12">
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {OCCASIONS.map((occasion) => {
-            const count = counts[occasion.slug] || 0;
-            const cover = covers[occasion.slug];
-            const imageUrl = staticOccasionCoverIfPresent(occasion.slug) || cover?.image_url || null;
-            return (
-              <Link
+      <MainContainer className="py-10 sm:py-12 space-y-14">
+        <section>
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                Collections
+              </p>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
+                Seasons & styles
+              </h2>
+            </div>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {primary.map((occasion) => (
+              <OccasionCard
                 key={occasion.slug}
-                href={`/occasions/${occasion.slug}`}
-                className="group relative overflow-hidden rounded-3xl border border-mist bg-white min-h-[280px] transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover"
-              >
-                {imageUrl ? (
-                  <Image
-                    src={imageUrl}
-                    alt={cover?.image_alt || cover?.name || occasion.name}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    placeholder="blur"
-                    blurDataURL={COCKTAIL_BLUR_DATA_URL}
-                  />
-                ) : (
-                  <div className={`absolute inset-0 bg-gradient-to-br ${occasion.accentClass}`} />
-                )}
-                {/* Strong bottom scrim so cream type stays readable on bright Envato covers */}
-                <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/75 to-charcoal/10" />
-                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-charcoal/90 to-transparent" />
-                <div className="relative z-10 flex h-full min-h-[280px] flex-col justify-end p-5">
-                  <h2
-                    className="font-sans text-[1.35rem] font-semibold tracking-tight text-cream mb-1.5 transition-colors group-hover:text-olive"
-                    style={{ textShadow: "0 1px 2px rgba(0,0,0,0.45)" }}
-                  >
-                    {occasion.name}
-                  </h2>
-                  <p
-                    className="text-sm font-medium text-cream mb-3 leading-snug"
-                    style={{ textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}
-                  >
-                    {occasion.headline}
-                  </p>
-                  <p
-                    className="text-xs font-semibold uppercase tracking-wide text-cream"
-                    style={{ textShadow: "0 1px 2px rgba(0,0,0,0.35)" }}
-                  >
-                    {count} drink{count === 1 ? "" : "s"}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                occasion={occasion}
+                count={counts[occasion.slug] || 0}
+                cover={covers[occasion.slug]}
+              />
+            ))}
+          </div>
+        </section>
 
-        <div className="mt-12 pt-8 border-t border-mist flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {holidayHub && holidayChildren.length > 0 ? (
+          <section>
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                  Nested collections
+                </p>
+                <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
+                  Holiday cocktails
+                </h2>
+                <p className="mt-1 text-sm text-sage max-w-xl">
+                  Start with a holiday, then keep going — each page leads to sibling celebrations and related seasons.
+                </p>
+              </div>
+              <Link
+                href={`/occasions/${holidayHub.slug}`}
+                className="text-sm font-semibold text-forest hover:text-terracotta transition-colors shrink-0"
+              >
+                All holidays →
+              </Link>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              {holidayChildren.map((occasion) => (
+                <OccasionCard
+                  key={occasion.slug}
+                  occasion={occasion}
+                  count={counts[occasion.slug] || 0}
+                  cover={covers[occasion.slug]}
+                  compact
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <div className="pt-8 border-t border-mist flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <p className="text-sm text-sage">Looking for something specific?</p>
           <Link
             href="/cocktails"

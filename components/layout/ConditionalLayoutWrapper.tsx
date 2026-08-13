@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Navbar } from "./Navbar";
 import { SiteFooter } from "./SiteFooter";
+import { MobileBottomNav } from "./MobileBottomNav";
 import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { Capacitor } from "@capacitor/core";
 import type { MegaMenuData } from "@/lib/megaMenu";
@@ -54,6 +55,7 @@ export function ConditionalLayoutWrapper({
           {children}
         </main>
         <SiteFooter />
+        {!hideNavbar && <MobileBottomNav />}
       </div>
     );
   }

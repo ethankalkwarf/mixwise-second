@@ -2,13 +2,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { OccasionCard } from "@/components/occasions/OccasionCard";
 import { OccasionCocktailGrid } from "@/components/occasions/OccasionCocktailGrid";
 import { getCocktailsList } from "@/lib/cocktails.server";
 import { staticOccasionCoverIfPresent } from "@/lib/occasionCovers";
 import {
   OCCASIONS,
+  countCocktailsByOccasion,
   filterCocktailsForOccasion,
+  getChildOccasions,
   getOccasion,
+  getOccasionCovers,
+  getRelatedOccasions,
+  getSiblingOccasions,
   pickOccasionCover,
   type OccasionCocktail,
 } from "@/lib/occasions";
@@ -44,9 +50,18 @@ export default async function OccasionDetailPage({ params }: PageProps) {
   const cocktails = (await getCocktailsList()) as OccasionCocktail[];
   const matched = filterCocktailsForOccasion(cocktails, occasion);
   const cover = pickOccasionCover(occasion, cocktails);
-  const staticUrl = staticOccasionCoverIfPresent(occasion.slug);
+  const covers = getOccasionCovers(cocktails);
+  const counts = countCocktailsByOccasion(cocktails);
+  const staticUrl =
+    staticOccasionCoverIfPresent(occasion.slug) ||
+    (occasion.parentSlug ? staticOccasionCoverIfPresent(occasion.parentSlug) : null);
   const heroUrl = staticUrl || cover?.image_url || null;
   const heroAlt = cover?.image_alt || cover?.name || occasion.name;
+
+  const parent = occasion.parentSlug ? getOccasion(occasion.parentSlug) : null;
+  const children = getChildOccasions(occasion);
+  const siblings = getSiblingOccasions(occasion);
+  const related = getRelatedOccasions(occasion, 4);
 
   return (
     <div className="min-h-screen bg-cream">
@@ -65,17 +80,32 @@ export default async function OccasionDetailPage({ params }: PageProps) {
         ) : (
           <div className={`absolute inset-0 bg-gradient-to-br ${occasion.accentClass}`} />
         )}
-        {/* Dim photo + opaque cream wash behind copy so bright drinks stay readable */}
         <div className="absolute inset-0 bg-forest/35" />
         <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/92 to-cream/25 sm:to-cream/10" />
         <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/40 to-transparent" />
         <MainContainer className="relative py-12 sm:py-16">
-          <Link
-            href="/occasions"
-            className="inline-flex text-sm font-semibold text-forest hover:text-terracotta transition-colors mb-6"
-          >
-            ← All collections
-          </Link>
+          <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm">
+            <Link href="/occasions" className="font-semibold text-forest hover:text-terracotta transition-colors">
+              Collections
+            </Link>
+            {parent ? (
+              <>
+                <span className="text-sage" aria-hidden>
+                  /
+                </span>
+                <Link
+                  href={`/occasions/${parent.slug}`}
+                  className="font-semibold text-forest hover:text-terracotta transition-colors"
+                >
+                  {parent.name}
+                </Link>
+              </>
+            ) : null}
+            <span className="text-sage" aria-hidden>
+              /
+            </span>
+            <span className="text-charcoal font-medium">{occasion.name}</span>
+          </nav>
           <h1 className="font-display text-4xl sm:text-5xl font-bold text-charcoal mb-3 drop-shadow-sm">
             {occasion.name}
           </h1>
@@ -87,8 +117,120 @@ export default async function OccasionDetailPage({ params }: PageProps) {
         </MainContainer>
       </section>
 
-      <MainContainer className="py-10 sm:py-12">
-        <OccasionCocktailGrid cocktails={matched} />
+      <MainContainer className="py-10 sm:py-12 space-y-14">
+        {children.length > 0 ? (
+          <section>
+            <div className="mb-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                Go deeper
+              </p>
+              <h2 className="font-display text-2xl font-bold text-forest">Pick a holiday</h2>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              {children.map((child) => (
+                <OccasionCard
+                  key={child.slug}
+                  occasion={child}
+                  count={counts[child.slug] || 0}
+                  cover={covers[child.slug]}
+                  compact
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <section>
+          {children.length > 0 ? (
+            <div className="mb-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                Full collection
+              </p>
+              <h2 className="font-display text-2xl font-bold text-forest">All {occasion.name.toLowerCase()} drinks</h2>
+            </div>
+          ) : null}
+          <OccasionCocktailGrid cocktails={matched} />
+        </section>
+
+        {siblings.length > 0 ? (
+          <section className="border-t border-mist pt-10">
+            <div className="mb-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                Keep browsing
+              </p>
+              <h2 className="font-display text-2xl font-bold text-forest">More holidays</h2>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {siblings.map((sib) => (
+                <OccasionCard
+                  key={sib.slug}
+                  occasion={sib}
+                  count={counts[sib.slug] || 0}
+                  cover={covers[sib.slug]}
+                  compact
+                />
+              ))}
+            </div>
+            {parent ? (
+              <Link
+                href={`/occasions/${parent.slug}`}
+                className="mt-6 inline-flex text-sm font-semibold text-forest hover:text-terracotta transition-colors"
+              >
+                ← Back to {parent.name}
+              </Link>
+            ) : null}
+          </section>
+        ) : null}
+
+        {related.length > 0 && siblings.length === 0 ? (
+          <section className="border-t border-mist pt-10">
+            <div className="mb-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                Keep browsing
+              </p>
+              <h2 className="font-display text-2xl font-bold text-forest">Related collections</h2>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {related.map((item) => (
+                <OccasionCard
+                  key={item.slug}
+                  occasion={item}
+                  count={counts[item.slug] || 0}
+                  cover={covers[item.slug]}
+                  compact
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {related.length > 0 && siblings.length > 0 ? (
+          <section className="border-t border-mist pt-10">
+            <div className="mb-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                Also explore
+              </p>
+              <h2 className="font-display text-2xl font-bold text-forest">Other collections</h2>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {related.map((item) => (
+                <Link
+                  key={item.slug}
+                  href={`/occasions/${item.slug}`}
+                  className="rounded-full border border-mist bg-white px-4 py-2 text-sm font-medium text-forest hover:border-terracotta/40 hover:text-terracotta transition-colors"
+                >
+                  {item.name}
+                </Link>
+              ))}
+              <Link
+                href="/occasions"
+                className="rounded-full border border-mist bg-white px-4 py-2 text-sm font-semibold text-charcoal hover:border-terracotta/40 hover:text-terracotta transition-colors"
+              >
+                All collections →
+              </Link>
+            </div>
+          </section>
+        ) : null}
       </MainContainer>
     </div>
   );

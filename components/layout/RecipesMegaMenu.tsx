@@ -75,7 +75,10 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
     setOpen(false);
   };
 
-  const occasions = occasionCovers.slice(0, 8);
+  // Don't repeat the featured occasion in the list
+  const occasions = occasionCovers
+    .filter((item) => item.slug !== featuredCover?.slug)
+    .slice(0, 7);
 
   const panel =
     open && mounted
@@ -86,10 +89,8 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
             onMouseEnter={openMenu}
             onMouseLeave={scheduleClose}
           >
-            {/* Hover bridge into panel */}
             <div className="absolute inset-x-0 -top-2 h-2" aria-hidden />
 
-            {/* Soft page dim — click closes */}
             <button
               type="button"
               aria-label="Close menu"
@@ -97,45 +98,44 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
               onClick={closeMenu}
             />
 
-            {/* Full-bleed panel — flush with header, not a floating card */}
             <div className="border-b border-mist bg-cream shadow-[0_18px_40px_-28px_rgba(44,54,40,0.45)] animate-in fade-in slide-in-from-top-1 duration-200">
               <div className="mx-auto max-w-7xl px-4 sm:px-6">
-                <div className="grid gap-10 py-8 lg:grid-cols-12 lg:gap-12 lg:py-10">
-                  {/* Featured story */}
-                  <div className="lg:col-span-5">
+                <div className="grid gap-8 py-7 lg:grid-cols-12 lg:items-stretch lg:gap-10 lg:py-8">
+                  {/* Featured — slightly shorter so bottom aligns with spirits column */}
+                  <div className="flex lg:col-span-4">
                     <Link
                       href={featuredCover?.href || "/occasions"}
                       onClick={closeMenu}
-                      className="group block"
+                      className="group flex w-full flex-col"
                     >
-                      <div className="relative aspect-[4/3] overflow-hidden bg-mist">
+                      <div className="relative aspect-[16/11] overflow-hidden bg-mist sm:aspect-[5/3] lg:aspect-auto lg:min-h-0 lg:flex-1 lg:max-h-[240px]">
                         {featuredCover?.imageUrl ? (
                           <Image
                             src={featuredCover.imageUrl}
                             alt=""
                             fill
                             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                            sizes="(max-width: 1024px) 100vw, 40vw"
+                            sizes="(max-width: 1024px) 100vw, 30vw"
                             priority
                           />
                         ) : (
                           <div className="absolute inset-0 bg-forest" />
                         )}
                       </div>
-                      <div className="pt-4">
-                        <p className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+                      <div className="pt-3">
+                        <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
                           Featured
                         </p>
-                        <h3 className="font-display text-2xl font-bold text-charcoal transition-colors group-hover:text-terracotta sm:text-[1.75rem]">
+                        <h3 className="font-display text-xl font-bold text-charcoal transition-colors group-hover:text-terracotta sm:text-2xl">
                           {featuredCover?.name || "Seasonal collections"}
                         </h3>
                         {featuredCover?.eyebrow ? (
-                          <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-sage">
+                          <p className="mt-1 max-w-sm text-sm leading-snug text-sage line-clamp-2">
                             {featuredCover.eyebrow}
                           </p>
                         ) : null}
-                        <span className="mt-3 inline-flex items-center text-sm font-semibold text-forest transition-colors group-hover:text-terracotta">
-                          Explore collection
+                        <span className="mt-2 inline-flex items-center text-sm font-semibold text-forest transition-colors group-hover:text-terracotta">
+                          Explore
                           <span className="ml-1.5 transition-transform group-hover:translate-x-0.5" aria-hidden>
                             →
                           </span>
@@ -144,10 +144,9 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                     </Link>
                   </div>
 
-                  {/* Occasions + spirits */}
-                  <div className="flex flex-col gap-9 lg:col-span-7">
+                  <div className="flex flex-col justify-between gap-7 lg:col-span-8">
                     <div>
-                      <div className="mb-4 flex items-end justify-between border-b border-mist pb-3">
+                      <div className="mb-3 flex items-end justify-between border-b border-mist pb-2.5">
                         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
                           By occasion
                         </p>
@@ -159,26 +158,26 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                           View all
                         </Link>
                       </div>
-                      <ul className="grid gap-x-8 gap-y-1 sm:grid-cols-2">
+                      <ul className="grid gap-x-8 gap-y-0.5 sm:grid-cols-2">
                         {occasions.map((item) => (
                           <li key={item.slug}>
                             <Link
                               href={item.href}
                               onClick={closeMenu}
-                              className="group flex items-center gap-3.5 rounded-lg py-2.5 pr-2 transition-colors hover:bg-mist/60"
+                              className="group flex items-center gap-3 rounded-lg py-2 pr-2 transition-colors hover:bg-mist/60"
                             >
-                              <span className="relative h-12 w-12 shrink-0 overflow-hidden bg-mist">
+                              <span className="relative h-10 w-10 shrink-0 overflow-hidden bg-mist">
                                 {item.imageUrl ? (
                                   <Image
                                     src={item.imageUrl}
                                     alt=""
                                     fill
                                     className="object-cover"
-                                    sizes="48px"
+                                    sizes="40px"
                                   />
                                 ) : null}
                               </span>
-                              <span className="text-[15px] font-semibold tracking-tight text-charcoal transition-colors group-hover:text-terracotta">
+                              <span className="font-display text-base font-bold text-charcoal transition-colors group-hover:text-terracotta">
                                 {item.name}
                               </span>
                             </Link>
@@ -188,7 +187,7 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                     </div>
 
                     <div>
-                      <p className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+                      <p className="mb-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
                         By spirit
                       </p>
                       <div className="flex flex-wrap gap-x-5 gap-y-2">
@@ -207,8 +206,7 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                   </div>
                 </div>
 
-                {/* Footer strip */}
-                <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-mist py-4">
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-mist py-3.5">
                   <Link
                     href="/cocktails"
                     onClick={closeMenu}
@@ -236,6 +234,13 @@ export function RecipesMegaMenu({ active, occasionCovers, featuredCover }: Props
                     className="text-sm font-medium text-sage transition-colors hover:text-terracotta"
                   >
                     Learn
+                  </Link>
+                  <Link
+                    href="/occasions/holidays"
+                    onClick={closeMenu}
+                    className="text-sm font-medium text-sage transition-colors hover:text-terracotta"
+                  >
+                    Holidays
                   </Link>
                 </div>
               </div>
