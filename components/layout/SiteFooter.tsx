@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { useUser } from "@/components/auth/UserProvider";
+import { isLearnPublic } from "@/lib/learnAccess";
 
 const FOOTER_LINKS = {
   explore: [
@@ -11,8 +13,8 @@ const FOOTER_LINKS = {
     { label: "Wedding Cocktail Finder", href: "/wedding-menu" },
   ],
   learn: [
-    { label: "Learn Mixology", href: "/learn" },
-    { label: "Smart Swaps", href: "/learn/swaps" },
+    { label: "Learn Mixology", href: "/learn", learnOnly: true },
+    { label: "Smart Swaps", href: "/learn/swaps", learnOnly: true },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
   ],
@@ -100,6 +102,8 @@ function FooterEmailCapture() {
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
+  const learnPublic = isLearnPublic();
+  const learnLinks = FOOTER_LINKS.learn.filter((link) => learnPublic || !("learnOnly" in link && link.learnOnly));
 
   return (
     <footer className="bg-forest mt-auto">
@@ -145,7 +149,7 @@ export function SiteFooter() {
               Learn
             </h3>
             <ul className="space-y-3">
-              {FOOTER_LINKS.learn.map((link) => (
+              {learnLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}

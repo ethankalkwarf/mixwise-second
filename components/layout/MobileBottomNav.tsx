@@ -21,6 +21,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { CocktailSearch } from "@/components/search/CocktailSearch";
 import { getTopLevelOccasions } from "@/lib/occasions";
+import { isLearnPublic } from "@/lib/learnAccess";
 
 const TABS = [
   {
@@ -203,13 +204,15 @@ export function MobileBottomNav() {
                   {occasion.name}
                 </Link>
               ))}
-              <Link
-                href="/learn"
-                className="block px-3 py-2 text-sm rounded-lg text-terracotta font-medium hover:bg-mist/50"
-                onClick={closeMore}
-              >
-                Learn mixology
-              </Link>
+              {(isLearnPublic() || isAuthenticated) && (
+                <Link
+                  href="/learn"
+                  className="block px-3 py-2 text-sm rounded-lg text-terracotta font-medium hover:bg-mist/50"
+                  onClick={closeMore}
+                >
+                  Learn mixology
+                </Link>
+              )}
             </div>
 
             <div className="border-t border-mist mt-4 pt-4">

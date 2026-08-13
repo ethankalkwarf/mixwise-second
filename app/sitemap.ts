@@ -5,35 +5,49 @@ import { getIngredientsDirectory } from "@/lib/ingredients.server";
 import { OCCASIONS } from "@/lib/occasions";
 import { getAllTechniqueLearnEntries } from "@/lib/cocktailTechniqueGlossary";
 import { LEARN_GUIDES, LEARN_METHODS, LEARN_PATHS } from "@/lib/learnLibrary";
+import { isLearnPublic } from "@/lib/learnAccess";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_CONFIG.url;
+  const learnPublic = isLearnPublic();
+
+  const learnPages: MetadataRoute.Sitemap = learnPublic
+    ? [
+        { url: `${baseUrl}/learn`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
+        { url: `${baseUrl}/learn/swaps`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.55 },
+        ...LEARN_PATHS.map((path) => ({
+          url: `${baseUrl}/learn/paths/${path.slug}`,
+          lastModified: new Date(),
+          changeFrequency: "monthly" as const,
+          priority: 0.65,
+        })),
+        ...LEARN_GUIDES.map((guide) => ({
+          url: `${baseUrl}/learn/guides/${guide.slug}`,
+          lastModified: new Date(),
+          changeFrequency: "monthly" as const,
+          priority: 0.6,
+        })),
+        ...LEARN_METHODS.map((method) => ({
+          url: `${baseUrl}/learn/methods/${method.slug}`,
+          lastModified: new Date(),
+          changeFrequency: "monthly" as const,
+          priority: 0.55,
+        })),
+        ...getAllTechniqueLearnEntries().map((term) => ({
+          url: `${baseUrl}/learn/techniques/${term.slug}`,
+          lastModified: new Date(),
+          changeFrequency: "monthly" as const,
+          priority: 0.55,
+        })),
+      ]
+    : [];
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${baseUrl}/cocktail-of-the-day`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/cocktails`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/occasions`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.85 },
-    { url: `${baseUrl}/learn`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
-    { url: `${baseUrl}/learn/swaps`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.55 },
-    ...LEARN_PATHS.map((path) => ({
-      url: `${baseUrl}/learn/paths/${path.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.65,
-    })),
-    ...LEARN_GUIDES.map((guide) => ({
-      url: `${baseUrl}/learn/guides/${guide.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    })),
-    ...LEARN_METHODS.map((method) => ({
-      url: `${baseUrl}/learn/methods/${method.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.55,
-    })),
+    ...learnPages,
     { url: `${baseUrl}/mix`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${baseUrl}/ingredients`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
     { url: `${baseUrl}/wedding-menu`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
@@ -47,12 +61,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.75,
-    })),
-    ...getAllTechniqueLearnEntries().map((term) => ({
-      url: `${baseUrl}/learn/techniques/${term.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.55,
     })),
   ];
 
