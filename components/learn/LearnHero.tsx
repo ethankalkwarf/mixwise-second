@@ -45,10 +45,10 @@ export function LearnHero({
         sizes="100vw"
         className="object-cover object-[center_30%]"
       />
-      {/* Match occasions: darken photo, then cream wash for type */}
-      <div className="absolute inset-0 bg-forest/40" />
-      <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/95 to-cream/30 sm:to-cream/15" />
-      <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/50 to-transparent" />
+      {/* Keep the photo present; only soften behind the type column */}
+      <div className="absolute inset-0 bg-forest/25" />
+      <div className="absolute inset-0 bg-gradient-to-r from-cream/95 via-cream/55 to-transparent sm:via-cream/40" />
+      <div className="absolute inset-0 bg-gradient-to-t from-cream/80 via-transparent to-transparent" />
 
       <MainContainer
         className={`relative z-10 ${compact ? "py-10 sm:py-12" : "py-12 sm:py-16"} ${

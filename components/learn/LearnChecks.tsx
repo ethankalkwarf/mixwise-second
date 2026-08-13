@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { QuestionMarkCircleIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import type { LearnCheck } from "@/lib/learnChecks";
 
 type Props = {
@@ -14,10 +15,11 @@ export function LearnChecks({ checks, title = "Quick check" }: Props) {
   return (
     <section className="space-y-4">
       <div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
+        <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
+          <QuestionMarkCircleIcon className="h-4 w-4" aria-hidden />
           Learning check
         </p>
-        <h2 className="font-display text-2xl font-bold text-forest">{title}</h2>
+        <h2 className="font-display text-2xl font-bold !text-charcoal">{title}</h2>
         <p className="text-sm text-sage mt-1">No grade — just lock in what you read.</p>
       </div>
       <div className="space-y-4">
@@ -36,7 +38,7 @@ function CheckCard({ check }: { check: LearnCheck }) {
 
   return (
     <div className="rounded-2xl border border-mist bg-white px-5 py-5 sm:px-6">
-      <p className="font-medium text-forest leading-relaxed mb-4">{check.prompt}</p>
+      <p className="font-medium !text-charcoal leading-relaxed mb-4">{check.prompt}</p>
       <ul className="space-y-2">
         {check.options.map((option, index) => {
           const isSelected = selected === index;
@@ -70,15 +72,16 @@ function CheckCard({ check }: { check: LearnCheck }) {
         })}
       </ul>
       {revealed && (
-        <p
-          className={`mt-4 text-sm leading-relaxed ${
-            correct ? "text-forest" : "text-forest/80"
-          }`}
-        >
-          <span className="font-semibold text-terracotta">
-            {correct ? "Nice." : "Not quite."}
-          </span>{" "}
-          {check.explanation}
+        <p className="mt-4 text-sm leading-relaxed text-charcoal/80 flex gap-2">
+          {correct ? (
+            <CheckCircleIcon className="h-5 w-5 shrink-0 text-olive" aria-hidden />
+          ) : (
+            <XCircleIcon className="h-5 w-5 shrink-0 text-terracotta" aria-hidden />
+          )}
+          <span>
+            <span className="font-semibold text-terracotta">{correct ? "Nice." : "Not quite."}</span>{" "}
+            {check.explanation}
+          </span>
         </p>
       )}
     </div>

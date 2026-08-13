@@ -5,6 +5,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import {
+  BookOpenIcon,
+  ArrowsRightLeftIcon,
+  WrenchScrewdriverIcon,
+  DocumentTextIcon,
+  BeakerIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
+import {
   LEARN_GUIDES,
   LEARN_METHODS,
   LEARN_PATHS,
@@ -18,31 +26,49 @@ import { SUBSTITUTION_TIPS } from "@/lib/cocktailSubstitutions";
 
 type BrowseTab = "guides" | "methods" | "techniques" | "swaps";
 
-const TABS: { id: BrowseTab; label: string }[] = [
-  { id: "guides", label: "Guides" },
-  { id: "methods", label: "Methods" },
-  { id: "techniques", label: "Techniques" },
-  { id: "swaps", label: "Swaps" },
+const TABS: { id: BrowseTab; label: string; Icon: typeof BookOpenIcon }[] = [
+  { id: "guides", label: "Guides", Icon: BookOpenIcon },
+  { id: "methods", label: "Methods", Icon: BeakerIcon },
+  { id: "techniques", label: "Techniques", Icon: WrenchScrewdriverIcon },
+  { id: "swaps", label: "Swaps", Icon: ArrowsRightLeftIcon },
 ];
 
-function PathStartCard({ path, featured = false }: { path: LearnPath; featured?: boolean }) {
+const METHOD_ICONS: Record<string, typeof BeakerIcon> = {
+  shake: SparklesIcon,
+  stir: BeakerIcon,
+  build: DocumentTextIcon,
+  blend: SparklesIcon,
+  layer: ArrowsRightLeftIcon,
+  swizzle: BeakerIcon,
+  muddle: WrenchScrewdriverIcon,
+};
+
+function PathStartCard({
+  path,
+  featured = false,
+  imagePosition = "object-center",
+}: {
+  path: LearnPath;
+  featured?: boolean;
+  imagePosition?: string;
+}) {
   return (
     <Link
       href={`/learn/paths/${path.slug}`}
       className={`group relative overflow-hidden rounded-3xl border border-mist transition-all hover:-translate-y-0.5 hover:shadow-card-hover ${
-        featured ? "md:col-span-2 min-h-[300px]" : "min-h-[260px]"
+        featured ? "min-h-[280px] sm:min-h-[320px]" : "min-h-[240px]"
       }`}
     >
       <Image
         src={path.coverImage}
         alt={path.coverAlt}
         fill
-        sizes={featured ? "(max-width: 768px) 100vw, 66vw" : "(max-width: 768px) 100vw, 33vw"}
-        className="object-cover transition-transform duration-700 group-hover:scale-105"
+        sizes={featured ? "100vw" : "(max-width: 768px) 100vw, 50vw"}
+        className={`object-cover transition-transform duration-700 group-hover:scale-105 ${imagePosition}`}
         priority={featured}
       />
-      <div className="absolute inset-0 bg-forest/45" />
-      <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/70 to-forest/20" />
+      <div className="absolute inset-0 bg-forest/30" />
+      <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/55 to-transparent" />
       <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-8">
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-olive font-bold mb-2">
           {path.eyebrow} · ~{path.estimatedMinutes} min
@@ -105,13 +131,21 @@ function GuideRow({ guide }: { guide: LearnGuide }) {
 }
 
 function MethodChip({ method }: { method: LearnMethod }) {
+  const Icon = METHOD_ICONS[method.slug] ?? BeakerIcon;
   return (
     <Link
       href={`/learn/methods/${method.slug}`}
-      className="rounded-2xl border border-mist bg-white px-4 py-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
+      className="group flex gap-3 rounded-2xl border border-mist bg-white px-4 py-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
     >
-      <p className="font-display text-lg font-bold text-forest">{method.label}</p>
-      <p className="text-xs text-terracotta font-medium mt-0.5">{method.cue}</p>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cream border border-mist text-terracotta group-hover:border-terracotta/30">
+        <Icon className="h-5 w-5" aria-hidden />
+      </span>
+      <span className="min-w-0">
+        <p className="font-display text-lg font-bold text-forest group-hover:text-terracotta transition-colors">
+          {method.label}
+        </p>
+        <p className="text-xs text-terracotta font-medium mt-0.5">{method.cue}</p>
+      </span>
     </Link>
   );
 }
@@ -172,9 +206,13 @@ export function LearnLibraryClient() {
             Paths are short curricula. Follow the steps in order; jump into the full library only when you need a reference.
           </p>
         </div>
-        <div className="grid gap-5 md:grid-cols-2">
-          <PathStartCard path={starterPath} featured />
-          <div className="grid gap-5">
+        <div className="space-y-5">
+          <PathStartCard
+            path={starterPath}
+            featured
+            imagePosition="object-[center_20%]"
+          />
+          <div className="grid gap-5 md:grid-cols-2">
             {otherPaths.map((path) => (
               <PathStartCard key={path.slug} path={path} />
             ))}
@@ -215,6 +253,7 @@ export function LearnLibraryClient() {
           >
             {TABS.map((item) => {
               const active = tab === item.id;
+              const Icon = item.Icon;
               return (
                 <button
                   key={item.id}
@@ -222,12 +261,13 @@ export function LearnLibraryClient() {
                   role="tab"
                   aria-selected={active}
                   onClick={() => setTab(item.id)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                     active
                       ? "bg-forest text-cream"
                       : "bg-white text-forest border border-mist hover:border-terracotta/40"
                   }`}
                 >
+                  <Icon className="h-4 w-4" aria-hidden />
                   {item.label}
                 </button>
               );
