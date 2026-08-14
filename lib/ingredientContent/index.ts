@@ -23,6 +23,17 @@ export function hasIngredientGuide(slug: string): boolean {
   return bySlug.has(slug);
 }
 
+/** Canonical slug for a finished public guide, including alias lookups. */
+export function publishedIngredientSlug(slug: string): string | null {
+  return getIngredientGuide(slug)?.slug || null;
+}
+
+/** True only for the canonical URL of a finished guide — not aliases, not stubs. */
+export function isPublishedIngredientSlug(slug: string): boolean {
+  const guide = getIngredientGuide(slug);
+  return Boolean(guide && guide.slug === slug);
+}
+
 export function listIngredientGuideSlugs(): string[] {
   return GUIDES.map((guide) => guide.slug);
 }
@@ -53,41 +64,3 @@ export function ingredientHeadings(name: string) {
   };
 }
 
-function categoryPhrase(type: string): string {
-  const t = type.toLowerCase();
-  if (t.includes("spirit")) return "spirit";
-  if (t.includes("liqueur") || t.includes("amaro")) return "liqueur";
-  if (t.includes("bitter")) return "bitters";
-  if (t.includes("syrup")) return "syrup";
-  if (t.includes("citrus")) return "citrus";
-  if (t.includes("wine") || t.includes("vermouth") || t.includes("beer")) return "wine or beer";
-  if (t.includes("garnish")) return "garnish";
-  if (t.includes("mixer")) return "mixer";
-  return "cocktail ingredient";
-}
-
-export function fallbackIngredientGuide(args: {
-  slug: string;
-  name: string;
-  type: string;
-  cocktailCount: number;
-}): IngredientGuide {
-  const kind = categoryPhrase(args.type);
-  const countLine =
-    args.cocktailCount > 0
-      ? `It currently matches ${args.cocktailCount} cocktail${args.cocktailCount === 1 ? "" : "s"} in the MixWise library.`
-      : "It does not yet match a MixWise recipe by name; this page remains the catalog entry when a spec calls for it.";
-
-  return {
-    slug: args.slug,
-    seoTitle: args.name,
-    seoDescription: `What is ${args.name}? A ${kind} used in cocktails — taste, how to use it, and MixWise recipes that call for it.`,
-    dek: `${args.name} is catalogued as a ${kind}. ${countLine}`,
-    tastingNotes: `Taste ${args.name} on its own before building a drink around it. Match it to recipes that name it rather than forcing it into a template written for a different ${kind}.`,
-    whatItIs: `${args.name} appears in MixWise as a ${kind}. This is a catalog stub rather than a full monograph: the drinks list below is the evidence of how the library uses it.\n\nIf you already have a bottle, add it to your bar and use Mix to see what you can make. When substituting, stay inside the same category and expect the drink’s structure — sweetness, bitterness, proof — to shift.`,
-    history: `MixWise has not yet published a full origin note for ${args.name}. For most home-bar purposes the useful questions are which templates call for it, and whether those drinks share other bottles you already own.`,
-    howToUse: `Use ${args.name} when a recipe lists it. Fresh juices and vermouths oxidize in the refrigerator; distilled spirits and most liqueurs are stable at room temperature. If you are substituting, stay inside the same category (${kind}) and taste rather than assuming a one-to-one swap.`,
-    pairsWith: [],
-    signatureSlugs: [],
-  };
-}

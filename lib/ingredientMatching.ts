@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './supabase/database.types';
 import { debugLog } from "@/lib/debugLog";
 import { slugifyIngredientName } from "@/lib/ingredientSlug";
+import { publishedIngredientSlug } from "@/lib/ingredientContent";
 
 // Create a Supabase client for server-side operations
 function createServerSupabaseClient() {
@@ -27,6 +28,8 @@ export interface MatchedIngredient {
   category?: string;
   originalText: string;
   slug?: string;
+  /** Canonical published guide URL slug, if this bottle has a finished page. */
+  guideSlug?: string;
 }
 
 /**
@@ -110,12 +113,14 @@ export async function matchIngredientTextToIds(
     const cleanedName = extractIngredientName(text);
     const matched = matchIngredientName(cleanedName, nameToIngredient);
     
+    const slug = matched ? slugifyIngredientName(matched.name) : undefined;
     return {
       id: matched?.id || generateFallbackId(cleanedName),
       name: matched?.name || cleanedName,
       category: matched?.type,
       originalText: text,
-      slug: matched ? slugifyIngredientName(matched.name) : undefined,
+      slug,
+      guideSlug: slug ? publishedIngredientSlug(slug) || undefined : undefined,
     };
   });
 }

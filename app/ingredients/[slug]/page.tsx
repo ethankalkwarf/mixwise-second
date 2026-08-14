@@ -2,9 +2,14 @@ import { WebPageSchema, BreadcrumbSchema, IngredientTermSchema } from "@/compone
 import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 import { IngredientGuideView } from "@/components/ingredients/IngredientGuideView";
 import { getIngredientBySlug, getIngredientsDirectory } from "@/lib/ingredients.server";
-import { fallbackIngredientGuide, getIngredientGuide, ingredientMetaDescription, ingredientMetaTitle } from "@/lib/ingredientContent";
+import {
+  getIngredientGuide,
+  ingredientMetaDescription,
+  ingredientMetaTitle,
+  isPublishedIngredientSlug,
+} from "@/lib/ingredientContent";
 import { getIngredientWayfinder } from "@/lib/ingredientTaxonomy";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -16,7 +21,9 @@ type PageProps = {
 export async function generateStaticParams() {
   try {
     const ingredients = await getIngredientsDirectory();
-    return ingredients.map((ingredient) => ({ slug: ingredient.slug }));
+    return ingredients
+      .filter((ingredient) => isPublishedIngredientSlug(ingredient.slug))
+      .map((ingredient) => ({ slug: ingredient.slug }));
   } catch {
     return [];
   }
@@ -24,20 +31,15 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const ingredient = await getIngredientBySlug(slug);
-
-  if (!ingredient) {
+  const guide = getIngredientGuide(slug);
+  if (!guide) {
     return { title: "Ingredient Not Found" };
   }
 
-  const guide =
-    getIngredientGuide(slug) ||
-    fallbackIngredientGuide({
-      slug,
-      name: ingredient.name,
-      type: ingredient.type,
-      cocktailCount: ingredient.cocktailCount,
-    });
+  const ingredient = await getIngredientBySlug(guide.slug);
+  if (!ingredient) {
+    return { title: "Ingredient Not Found" };
+  }
 
   return generatePageMetadata({
     title: ingredientMetaTitle(ingredient.name),
@@ -58,6 +60,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function IngredientDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const guide = getIngredientGuide(slug);
+  if (!guide) {
+    notFound();
+  }
+  if (guide.slug !== slug) {
+    redirect(`/ingredients/${guide.slug}`);
+  }
+
   const [ingredient, directory] = await Promise.all([
     getIngredientBySlug(slug),
     getIngredientsDirectory(),
@@ -67,15 +77,8 @@ export default async function IngredientDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const guide =
-    getIngredientGuide(slug) ||
-    fallbackIngredientGuide({
-      slug,
-      name: ingredient.name,
-      type: ingredient.type,
-      cocktailCount: ingredient.cocktailCount,
-    });
-  const wayfinder = getIngredientWayfinder(ingredient, directory);
+  const published = directory.filter((item) => isPublishedIngredientSlug(item.slug));
+  const wayfinder = getIngredientWayfinder(ingredient, published);
 
   const pageUrl = `${SITE_CONFIG.url}/ingredients/${ingredient.slug}`;
   const faqs = [

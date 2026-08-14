@@ -103,6 +103,11 @@ test.describe('MixWise Smoke Tests', () => {
     await expect(page.locator('h1')).toContainText(/What is Campari/i);
     await expect(page.locator('text=What Campari is').or(page.locator('text=What Campari tastes like'))).toBeVisible();
   });
+
+  test('Unfinished ingredient stubs are not published', async ({ page }) => {
+    await page.goto(`${BASE_URL}/ingredients/pineapple-juice`);
+    await expect(page.locator('text=Page not found').or(page.locator('text=404'))).toBeVisible();
+  });
 });
 
 

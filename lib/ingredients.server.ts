@@ -112,7 +112,7 @@ function toDirectoryItem(row: IngredientRow, slug: string, cocktailCount: number
     imageUrl: upgradeIngredientImageUrl(row.image_url) || row.image_url || null,
     isStaple: Boolean(row.is_staple),
     cocktailCount,
-    hasGuide: Boolean(guide),
+    hasGuide: Boolean(guide && guide.slug === slug),
     dek: guide?.dek,
   };
 }
@@ -162,7 +162,10 @@ export const getIngredientBySlug = cache(async (slug: string): Promise<Ingredien
   const guide = getIngredientGuide(slug);
   const related = (guide?.pairsWith || [])
     .map((pairSlug) => directory.find((item) => item.slug === pairSlug))
-    .filter((item): item is DirectoryIngredient => !!item && item.slug !== slug);
+    .filter(
+      (item): item is DirectoryIngredient =>
+        !!item && item.slug !== slug && Boolean(item.hasGuide)
+    );
 
   return {
     ...ingredient,

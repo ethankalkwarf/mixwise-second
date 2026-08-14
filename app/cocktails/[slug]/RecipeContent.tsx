@@ -40,7 +40,7 @@ function RecipeIngredientLine({
   text: string;
   matched?: MatchedIngredient;
 }) {
-  if (!matched?.slug || !matched.name) {
+  if (!matched?.guideSlug || !matched.name) {
     return <>• {text}</>;
   }
 
@@ -52,7 +52,7 @@ function RecipeIngredientLine({
       <>
         • {text}{" "}
         <Link
-          href={`/ingredients/${matched.slug}`}
+          href={`/ingredients/${matched.guideSlug}`}
           className="mw-inline-term text-terracotta hover:underline"
         >
           {matched.name}
@@ -65,7 +65,7 @@ function RecipeIngredientLine({
     <>
       • {text.slice(0, idx)}
       <Link
-        href={`/ingredients/${matched.slug}`}
+        href={`/ingredients/${matched.guideSlug}`}
         className="mw-inline-term text-terracotta hover:underline"
       >
         {text.slice(idx, idx + matched.name.length)}

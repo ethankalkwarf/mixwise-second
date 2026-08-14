@@ -17,8 +17,7 @@ export const metadata = generatePageMetadata({
 });
 
 export default async function IngredientsPage() {
-  const ingredients = await getIngredientsDirectory();
-  const guided = ingredients.filter((item) => item.hasGuide).length;
+  const ingredients = (await getIngredientsDirectory()).filter((item) => item.hasGuide);
 
   return (
     <>
@@ -53,8 +52,7 @@ export default async function IngredientsPage() {
               What each spirit, aperitivo, and mixer actually is — and the MixWise recipes that use it.
             </p>
             <p className="mt-4 text-sm text-sage/80">
-              {ingredients.length} ingredients
-              {guided > 0 ? ` · ${guided} with full guides` : ""}
+              {ingredients.length} guides
             </p>
           </MainContainer>
         </section>

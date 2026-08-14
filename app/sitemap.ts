@@ -88,12 +88,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let ingredientPages: MetadataRoute.Sitemap = [];
   try {
     const ingredients = await getIngredientsDirectory();
-    ingredientPages = ingredients.map((ingredient) => ({
-      url: `${baseUrl}/ingredients/${ingredient.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.5,
-    }));
+    ingredientPages = ingredients
+      .filter((ingredient) => ingredient.hasGuide)
+      .map((ingredient) => ({
+        url: `${baseUrl}/ingredients/${ingredient.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.5,
+      }));
   } catch (error) {
     console.error("Failed to fetch ingredients for sitemap:", error);
   }
