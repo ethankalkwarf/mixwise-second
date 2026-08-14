@@ -13,12 +13,9 @@ function JoinContent() {
   const { isAuthenticated } = useUser();
   const email = searchParams.get("email")?.trim().toLowerCase() || "";
   const source = searchParams.get("source") || "homepage";
-  const token = searchParams.get("token");
+  const token = searchParams.get("token") || undefined;
   const error = searchParams.get("error");
-  const convertHref =
-    email && token
-      ? `/api/email/convert-to-account?${new URLSearchParams({ email, source, token }).toString()}`
-      : undefined;
+  const fromList = Boolean(email && token);
 
   if (isAuthenticated) {
     return (
@@ -41,17 +38,19 @@ function JoinContent() {
     <div className="grid items-start gap-12 lg:grid-cols-2">
       <div>
         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
-          Free MixWise account
+          {fromList ? "One last step" : "Free MixWise account"}
         </p>
         <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-forest sm:text-5xl">
-          Save the bar. See what you can pour tonight.
+          {fromList ? "Your bar, remembered." : "Save the bar. See what you can pour tonight."}
         </h1>
         <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
-          The weekly list is just the email. An account keeps your cabinet, favorites, and shopping list with you.
+          {fromList
+            ? "Set a password. MixWise keeps the cabinet, the keepers, and the bottles you're missing."
+            : "Add what's in the cabinet once. MixWise matches every recipe to the bottles you already have."}
         </p>
         {error && (
           <p className="mt-4 max-w-md rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-terracotta">
-            That link expired or didn&apos;t work. Create your account with Google, Apple, or email.
+            That link expired or didn&apos;t work. Use Google, Apple, or email to finish.
           </p>
         )}
         <ul className="mt-8 space-y-5">
@@ -66,7 +65,7 @@ function JoinContent() {
           ))}
         </ul>
       </div>
-      <AuthPanel initialEmail={email} convertHref={convertHref} />
+      <AuthPanel initialEmail={email} convertSource={source} convertToken={token} />
     </div>
   );
 }

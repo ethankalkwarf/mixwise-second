@@ -5,15 +5,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCocktailName } from "@/lib/formatters";
 
-export const WELCOME_COCKTAIL_SLUGS = [
-  "french-75",
-  "whiskey-sour",
-  "espresso-martini",
-  "gimlet",
-  "daiquiri",
-  "margarita",
-  "aperol-spritz",
-] as const;
+export const WELCOME_COCKTAIL_SLUG = "income-tax";
+export const WELCOME_COCKTAIL_SLUGS = [WELCOME_COCKTAIL_SLUG] as const;
 
 export interface FeaturedCocktailForEmail {
   name: string;

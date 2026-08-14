@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
   if (result.alreadyExists) {
     return NextResponse.json(
       {
-        error: "This email already has a MixWise account. Log in instead.",
+        error: "This email already has a MixWise account.",
         alreadyExists: true,
       },
       { status: 409 }

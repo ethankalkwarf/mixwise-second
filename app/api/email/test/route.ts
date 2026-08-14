@@ -187,9 +187,9 @@ export async function POST(request: NextRequest) {
           convertUrl: "https://www.getmixwise.com/join",
           unsubscribeUrl,
           featuredCocktail: featuredCocktail || {
-            name: "French 75",
-            slug: "french-75",
-            description: "Gin, lemon, sugar, and champagne. A tall cold one that still feels like an occasion.",
+            name: "Income Tax",
+            slug: "income-tax",
+            description: "A bitters-heavy riff on the Bronx cocktail.",
           },
         });
         break;

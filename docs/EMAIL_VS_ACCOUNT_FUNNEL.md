@@ -32,9 +32,9 @@ Unsubscribing from the **list** deletes `email_signups` for that source. If they
 1. Row in `email_signups` (no Auth user)
 2. Resend contact tagged `mixwise_list=true`
 3. Notify `hello@getmixwise.com` — “New Email List Signup”
-4. Confirmation email: list copy. Account CTA is a quiet text link **only if they have no account**.
+4. Confirmation email: Thursday drink + optional “set a password” CTA **only if they have no account**.
 
-**Conversion (list-only):** optional link hits `GET /api/email/convert-to-account` → passwordless account → `/mix`.
+**Conversion (list-only):** email CTA → `/join?email&source&token`. They set a password. `POST /api/email/convert-to-account` creates a confirmed Auth user with that password, then the page signs them in and sends them to `/mix`. Google / Apple still work. Older one-click GET links still create a passwordless account and redirect through a magic link.
 
 ## Path B — Account creation
 

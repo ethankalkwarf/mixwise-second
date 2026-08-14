@@ -503,11 +503,11 @@ export function emailListWelcomeTemplate({
     : "";
 
   const subject = featuredCocktail
-    ? `You're in 🍸 Make a ${featuredCocktail.name} tonight`
-    : "You're in 🍸 New cocktails, every Thursday";
+    ? `Thursday just got a lot more interesting — ${featuredCocktail.name} tonight`
+    : "Thursday just got a lot more interesting";
   const previewText = featuredCocktail
-    ? `${featuredCocktail.name} for tonight. Another one next Thursday — account or not.`
-    : "A short note every Thursday with drinks worth making at home.";
+    ? `Every week we'll send you a curated cocktail you can make at home. Start with a ${featuredCocktail.name} tonight.`
+    : "Every week we'll send you a curated cocktail you can make at home.";
 
   const featuredSection = featuredCocktail
     ? `
@@ -561,7 +561,7 @@ export function emailListWelcomeTemplate({
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
   <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
-  <title>You're in</title>
+  <title>Thursday just got a lot more interesting</title>
   ${baseStyles}
 </head>
 <body>
@@ -577,31 +577,33 @@ export function emailListWelcomeTemplate({
       </tr>
       <tr>
         <td class="email-content" style="padding: 48px 40px;">
-          <div style="text-align: center; font-size: 48px; margin-bottom: 16px;">🎉</div>
-          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 28px; color: #3A4D39; margin: 0 0 16px 0; font-weight: 400; text-align: center;">
-            You're in.
+          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 28px; color: #3A4D39; margin: 0 0 16px 0; font-weight: 400; text-align: center; line-height: 1.25;">
+            Thursday just got<br>a lot more interesting.
           </h2>
           <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 24px 0; line-height: 1.65; text-align: center;">
-            Every Thursday we'll send a drink worth making at home. ${featuredCocktail ? "Start with this one tonight." : "First one lands next Thursday."}
+            Every week we'll send you a curated cocktail you can make at home.${featuredCocktail ? " Start with this one tonight." : ""}
           </p>
           ${featuredSection}
-          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
-            Want MixWise to remember what's in the cabinet? A free account does this:
+          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 24px; color: #3A4D39; margin: 8px 0 12px 0; font-weight: 400; text-align: center;">
+            Your bar, remembered.
+          </h2>
+          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65; text-align: center;">
+            One last step — set a password.
           </p>
           <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 24px;">
             ${benefitsHtml}
           </table>
           <div class="button-wrapper" style="text-align: center; margin: 8px 0 24px 0;">
             <a href="${safeConvert}" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
-              Create your free account
+              Set a password →
             </a>
           </div>
           <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 0 0 20px 0; line-height: 1.6; text-align: center;">
-            Don't want an account? You're still on the list. Next Thursday's drink shows up either way.
+            Skip this and you're still getting a new drink every Thursday.
           </p>
           <div class="divider" style="height: 1px; background: linear-gradient(90deg, transparent, #D1DAD0, transparent); margin: 8px 0 24px 0;"></div>
           <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 0; line-height: 1.6; text-align: center;">
-            See you next Thursday.<br>— Ethan
+            See you next week!<br>— Ethan
           </p>
         </td>
       </tr>
@@ -627,9 +629,10 @@ export function emailListWelcomeTemplate({
   `.trim();
 
   const text = `
-You're in.
+Thursday just got
+a lot more interesting.
 
-Every Thursday we'll send a drink worth making at home.${featuredCocktail ? " Start with this one tonight." : ""}
+Every week we'll send you a curated cocktail you can make at home.${featuredCocktail ? " Start with this one tonight." : ""}
 
 ${
   featuredCocktail
@@ -639,19 +642,21 @@ ${siteUrl}/cocktails/${featuredCocktail.slug}
 
 `
     : ""
-}Want MixWise to remember what's in the cabinet? A free account lets you:
+}Your bar, remembered.
+
+One last step — set a password.
 
 🍸 Save your bar
 ✨ See what you can make
 ❤️ Heart the keepers
-🛒 Build a shopping list
+🛒 Stock the gaps
 
-Create your free account:
+Set a password:
 ${convertUrl}
 
-Don't want an account? You're still on the list. Next Thursday's drink shows up either way.
+Skip this and you're still getting a new drink every Thursday.
 
-See you next Thursday.
+See you next week!
 — Ethan
 
 Unsubscribe: ${unsubscribeUrl}

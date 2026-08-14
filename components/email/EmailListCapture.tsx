@@ -22,7 +22,7 @@ export function EmailListCapture({
   const [submittedEmail, setSubmittedEmail] = useState("");
   const [status, setStatus] = useState<CaptureStatus>("idle");
   const [message, setMessage] = useState("");
-  const [clearing, setClearing] = useState(false);
+  const [joinUrl, setJoinUrl] = useState("");
 
   const isDark = variant === "dark";
 
@@ -56,6 +56,7 @@ export function EmailListCapture({
 
       setStatus("success");
       setMessage(data.message || "You're on the list — check your email.");
+      setJoinUrl(typeof data.joinUrl === "string" ? data.joinUrl : "/join");
       setEmail("");
     } catch {
       setStatus("error");
@@ -125,14 +126,14 @@ export function EmailListCapture({
         {!isDark && (
           <>
             <p className="mt-3 text-sm text-sage">
-              We sent a drink to start with. Create an account when you want to save your bar.
+              We sent a drink to start with. One last step if you want MixWise to remember the cabinet.
             </p>
             <div className="mt-5">
               <Link
-                href="/join"
+                href={joinUrl || "/join"}
                 className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-2.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark"
               >
-                See what an account gets you
+                Set a password
               </Link>
             </div>
           </>

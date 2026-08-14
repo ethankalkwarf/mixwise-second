@@ -2,8 +2,8 @@
  * Email LIST signup (homepage / footer)
  *
  * Intentional newsletter-style capture — does NOT create an account.
- * Sends a welcome that confirms the list signup and offers a clear CTA
- * to create an account + save their bar.
+ * Sends a welcome that confirms they're on the Thursday list, then offers
+ * one last step: set a password so MixWise can remember the cabinet.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -16,7 +16,7 @@ import {
   buildNewsletterUnsubscribeApiUrl,
   createNewsletterUnsubscribeToken,
 } from "@/lib/email/newsletter-token";
-import { getFeaturedCocktailForEmail, getWeekNumber, WELCOME_COCKTAIL_SLUGS } from "@/lib/email/featured-cocktail";
+import { getFeaturedCocktailForEmail, WELCOME_COCKTAIL_SLUG } from "@/lib/email/featured-cocktail";
 import { getSiteUrl } from "@/lib/site";
 import { isRateLimited, getClientIp } from "@/lib/rate-limit";
 import { debugLog } from "@/lib/debugLog";
@@ -106,9 +106,8 @@ export async function POST(request: NextRequest) {
       console.warn("[Email List] Resend not configured — skipping welcome email");
     } else {
       const featuredCocktail = await getFeaturedCocktailForEmail({
-        weekSeed: getWeekNumber(),
-        preferImages: true,
-        slugs: WELCOME_COCKTAIL_SLUGS,
+        preferImages: false,
+        slugs: [WELCOME_COCKTAIL_SLUG],
       }).catch((err) => {
         console.error("[Email List] Featured cocktail failed (non-fatal):", err);
         return undefined;
@@ -166,6 +165,7 @@ export async function POST(request: NextRequest) {
       emailSent,
       alreadySubscribed: persisted.alreadySubscribed,
       path: "email_list",
+      joinUrl: convertUrl,
       message: emailSent
         ? "You're on the list — check your email."
         : persisted.alreadySubscribed
