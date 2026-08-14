@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useState } from "react";
 import { getMethodTip } from "@/lib/cocktailTechniqueGlossary";
 import { getLearnMethodByTechniqueKey } from "@/lib/learnLibrary";
 import { isLearnPublic } from "@/lib/learnAccess";
@@ -17,9 +17,12 @@ export function TechniqueCue({ technique }: TechniqueCueProps) {
   const method = getMethodTip(technique);
   const learnMethod = getLearnMethodByTechniqueKey(technique);
   const [open, setOpen] = useState(false);
-  const panelId = useId();
 
   if (!method) return null;
+
+  const panelId = `mw-technique-${(technique || method.label)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")}`;
 
   const learnHref = learnMethod ? `/learn/methods/${learnMethod.slug}` : "/learn";
 

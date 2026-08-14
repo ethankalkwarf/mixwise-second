@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { GlossaryTerm } from "@/lib/cocktailTechniqueGlossary";
 
@@ -63,7 +63,9 @@ export function EducationalTerm({ term, children }: EducationalTermProps) {
   const [pos, setPos] = useState<PanelPos | null>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
   const panelRef = useRef<HTMLSpanElement>(null);
-  const panelId = useId();
+  const panelId = `mw-term-${term.label}-${children}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-");
 
   useEffect(() => {
     setMounted(true);

@@ -113,10 +113,11 @@ export function buildNameToIdMap(
   ingredients: Array<{ id: string; name?: string | null; legacy_id?: string | null }>
 ): Map<string, string> {
   const map = new Map<string, string>();
+  let nonUuidCount = 0;
 
   for (const ingredient of ingredients) {
     if (!isValidUuid(ingredient.id)) {
-      console.warn(`[IngredientId] Ingredient has non-UUID ID: "${ingredient.id}"`);
+      nonUuidCount += 1;
     }
 
     // Map by name (case-insensitive)
@@ -134,6 +135,12 @@ export function buildNameToIdMap(
         map.set(ingredient.legacy_id.toLowerCase(), ingredient.id);
       }
     }
+  }
+
+  if (nonUuidCount > 0 && process.env.NODE_ENV === "development") {
+    console.warn(
+      `[IngredientId] ${nonUuidCount} ingredient(s) have non-UUID IDs. Logging each one was locking the tab.`
+    );
   }
 
   return map;

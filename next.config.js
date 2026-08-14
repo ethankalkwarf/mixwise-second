@@ -49,6 +49,9 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     // Enable WebP and AVIF formats for better compression
     formats: ['image/webp', 'image/avif'],
+    // Next 16 defaults to [75] only; unlisted qualities spam huge warnings
+    // that freeze the browser console. Keep every quality we actually use.
+    qualities: [70, 75, 85, 90, 92],
     // Aggressive optimization for better performance
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

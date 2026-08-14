@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { HardNavLink } from "@/components/layout/HardNavLink";
 
 export const MEGA_ROOT_ID = "mixwise-mega-root";
 
@@ -39,13 +40,14 @@ export function navMegaTriggerClass(active: boolean, open: boolean) {
 }
 
 export function NavMegaTrigger({
+  href,
   label,
   active,
   open,
   panelId,
   toggle,
 }: {
-  href?: string;
+  href: string;
   label: string;
   active: boolean;
   open: boolean;
@@ -53,31 +55,38 @@ export function NavMegaTrigger({
   toggle: () => void;
 }) {
   return (
-    <button
-      type="button"
-      className={`inline-flex items-center gap-0.5 ${navMegaTriggerClass(active, open)}`}
-      aria-expanded={open}
-      aria-haspopup="true"
-      aria-controls={panelId}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        toggle();
-      }}
-    >
-      {label}
-      <ChevronDownIcon
-        className={`h-4 w-4 transition-transform duration-200 ${
-          open ? "rotate-180 text-terracotta" : "text-sage"
-        }`}
-        aria-hidden
-      />
-    </button>
+    <div className="inline-flex items-center">
+      <HardNavLink href={href} className={navMegaTriggerClass(active, open)}>
+        {label}
+      </HardNavLink>
+      <button
+        type="button"
+        className={`-ml-0.5 inline-flex items-center p-0.5 ${navMegaTriggerClass(active, open)}`}
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-controls={panelId}
+        aria-label={`${label} menu`}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          toggle();
+        }}
+      >
+        <ChevronDownIcon
+          className={`h-4 w-4 transition-transform duration-200 ${
+            open ? "rotate-180 text-terracotta" : "text-sage"
+          }`}
+          aria-hidden
+        />
+      </button>
+    </div>
   );
 }
 
 export function NavMegaShell({ id, controller, trigger, children }: Props) {
-  const panelId = useId();
+  // Stable across SSR/client — React useId() was mismatching in the navbar and
+  // regenerating the whole page tree (looks like a crash on every load).
+  const panelId = `mixwise-mega-${id}`;
   const open = controller.openId === id;
   const [slot, setSlot] = useState<HTMLElement | null>(null);
 
