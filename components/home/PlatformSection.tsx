@@ -19,10 +19,10 @@ const FEATURES = [
     accent: "text-terracotta",
   },
   {
-    title: "Home-bar confidence",
-    body: "Built for real kitchens, not professional bars. Learn techniques as you go and enjoy the pour.",
-    href: "/about",
-    label: "About MixWise",
+    title: "Know the bottle",
+    body: "What gin is, what Campari tastes like, and which drinks each bottle actually opens.",
+    href: "/ingredients",
+    label: "Ingredient guides",
     accent: "text-olive",
   },
 ] as const;

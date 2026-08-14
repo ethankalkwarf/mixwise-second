@@ -1,7 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
+import { cache } from "react";
 import type { DirectoryIngredient, IngredientCocktail, IngredientDetail } from "@/lib/ingredientTypes";
+import { slugifyIngredientName } from "@/lib/ingredientSlug";
+import { getCocktailsList } from "@/lib/cocktails.server";
+import { getIngredientGuide } from "@/lib/ingredientContent";
+import { cocktailUsesIngredient, isSpiritType } from "@/lib/ingredientCocktailMatch";
+import { upgradeIngredientImageUrl } from "@/lib/ingredientImages";
+import type { CocktailListItem } from "@/lib/cocktailTypes";
 
 export type { DirectoryIngredient, IngredientCocktail, IngredientDetail };
+export { slugifyIngredientName };
 
 function createServerSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -13,15 +21,6 @@ function createServerSupabaseClient() {
   }
 
   return createClient(supabaseUrl, supabaseKey);
-}
-
-export function slugifyIngredientName(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }
 
 function assignSlugs(rows: Array<{ id: string; name: string }>): Map<string, string> {
@@ -63,100 +62,115 @@ async function fetchIngredientRows(): Promise<IngredientRow[]> {
   return (data || []) as IngredientRow[];
 }
 
-async function fetchCocktailCounts(): Promise<Map<string, number>> {
-  const supabase = createServerSupabaseClient();
-  const counts = new Map<string, number>();
+const getCocktailsForIngredientPages = cache(async () => {
+  return getCocktailsList({ includeIngredients: true });
+});
 
-  const { data, error } = await supabase
-    .from("cocktail_ingredients_uuid")
-    .select("ingredient_id");
-
-  if (error || !data) {
-    return counts;
-  }
-
-  for (const row of data as Array<{ ingredient_id: string | number }>) {
-    const key = String(row.ingredient_id);
-    counts.set(key, (counts.get(key) || 0) + 1);
-  }
-
-  return counts;
+function extraNamesForIngredient(ingredient: DirectoryIngredient): string[] {
+  return getIngredientGuide(ingredient.slug)?.matchNames || [];
 }
 
-function toDirectoryItem(
-  row: IngredientRow,
-  slug: string,
-  cocktailCount: number
-): DirectoryIngredient {
+function cocktailsUsingIngredient(
+  ingredient: DirectoryIngredient,
+  cocktails: CocktailListItem[],
+  extraNames: string[]
+): CocktailListItem[] {
+  const guide = getIngredientGuide(ingredient.slug);
+  const signature = new Set(guide?.signatureSlugs || []);
+  const matchBaseSpirit = isSpiritType(ingredient.type);
+  const matched: CocktailListItem[] = [];
+  const pinned: CocktailListItem[] = [];
+  const seen = new Set<string>();
+
+  for (const cocktail of cocktails) {
+    const uses = cocktailUsesIngredient({
+      ingredientName: ingredient.name,
+      extraNames,
+      matchBaseSpirit,
+      ingredientNames: cocktail.ingredientNames || [],
+      baseSpirit: cocktail.base_spirit,
+    });
+    const isSignature = signature.has(cocktail.slug);
+    if (!uses && !isSignature) continue;
+    if (seen.has(cocktail.id)) continue;
+    seen.add(cocktail.id);
+    if (isSignature) pinned.push(cocktail);
+    else matched.push(cocktail);
+  }
+
+  matched.sort((a, b) => a.name.localeCompare(b.name));
+  return [...pinned, ...matched];
+}
+
+function toDirectoryItem(row: IngredientRow, slug: string, cocktailCount: number): DirectoryIngredient {
+  const guide = getIngredientGuide(slug);
   return {
     id: String(row.id),
     name: row.name || "Untitled",
     slug,
     type: row.type || row.category || "other",
-    imageUrl: row.image_url || null,
+    imageUrl: upgradeIngredientImageUrl(row.image_url) || row.image_url || null,
     isStaple: Boolean(row.is_staple),
     cocktailCount,
+    hasGuide: Boolean(guide),
+    dek: guide?.dek,
   };
 }
 
-export async function getIngredientsDirectory(): Promise<DirectoryIngredient[]> {
-  const [rows, counts] = await Promise.all([fetchIngredientRows(), fetchCocktailCounts()]);
+function toIngredientCocktail(cocktail: CocktailListItem): IngredientCocktail {
+  return {
+    id: cocktail.id,
+    name: cocktail.name,
+    slug: cocktail.slug,
+    imageUrl: cocktail.image_url || null,
+    imageAlt: cocktail.image_alt || cocktail.name,
+    primarySpirit: cocktail.base_spirit || null,
+    shortDescription: cocktail.short_description || null,
+    category: cocktail.category_primary || null,
+    createdAt: cocktail.created_at || null,
+  };
+}
+
+export const getIngredientsDirectory = cache(async (): Promise<DirectoryIngredient[]> => {
+  const [rows, cocktails] = await Promise.all([fetchIngredientRows(), getCocktailsForIngredientPages()]);
   const named = rows.filter((row) => row.name);
   const slugs = assignSlugs(named.map((row) => ({ id: String(row.id), name: row.name as string })));
 
-  return named
-    .map((row) =>
-      toDirectoryItem(row, slugs.get(String(row.id)) || slugifyIngredientName(row.name || ""), counts.get(String(row.id)) || 0)
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
+  const draft: DirectoryIngredient[] = named.map((row) =>
+    toDirectoryItem(row, slugs.get(String(row.id)) || slugifyIngredientName(row.name || ""), 0)
+  );
 
-export async function getIngredientBySlug(slug: string): Promise<IngredientDetail | null> {
-  const directory = await getIngredientsDirectory();
+  return draft
+    .map((item) => {
+      const extraNames = extraNamesForIngredient(item);
+      const count = cocktailsUsingIngredient(item, cocktails, extraNames).length;
+      return { ...item, cocktailCount: count };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+});
+
+export const getIngredientBySlug = cache(async (slug: string): Promise<IngredientDetail | null> => {
+  const [directory, cocktails] = await Promise.all([
+    getIngredientsDirectory(),
+    getCocktailsForIngredientPages(),
+  ]);
   const ingredient = directory.find((item) => item.slug === slug);
   if (!ingredient) return null;
 
-  const supabase = createServerSupabaseClient();
-  const { data: links, error: linkError } = await supabase
-    .from("cocktail_ingredients_uuid")
-    .select("cocktail_id")
-    .eq("ingredient_id", ingredient.id);
+  const extraNames = extraNamesForIngredient(ingredient);
+  const matched = cocktailsUsingIngredient(ingredient, cocktails, extraNames).map(toIngredientCocktail);
+  const guide = getIngredientGuide(slug);
+  const related = (guide?.pairsWith || [])
+    .map((pairSlug) => directory.find((item) => item.slug === pairSlug))
+    .filter((item): item is DirectoryIngredient => !!item && item.slug !== slug);
 
-  let cocktailIds = (links || []).map((row: { cocktail_id: string }) => String(row.cocktail_id));
-
-  if (linkError || cocktailIds.length === 0) {
-    const numericId = Number(ingredient.id);
-    if (!Number.isNaN(numericId)) {
-      const { data: numericLinks } = await supabase
-        .from("cocktail_ingredients_uuid")
-        .select("cocktail_id")
-        .eq("ingredient_id", numericId);
-      cocktailIds = (numericLinks || []).map((row: { cocktail_id: string }) => String(row.cocktail_id));
-    }
-  }
-
-  let cocktails: IngredientCocktail[] = [];
-  if (cocktailIds.length > 0) {
-    const { data: cocktailRows } = await supabase
-      .from("cocktails")
-      .select("id, name, slug, image_url, base_spirit")
-      .in("id", cocktailIds.slice(0, 24))
-      .order("name");
-
-    cocktails = (cocktailRows || []).map((c: {
-      id: string;
-      name: string;
-      slug: string;
-      image_url: string | null;
-      base_spirit: string | null;
-    }) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-      imageUrl: c.image_url,
-      primarySpirit: c.base_spirit,
-    }));
-  }
-
-  return { ...ingredient, cocktails };
-}
+  return {
+    ...ingredient,
+    cocktailCount: matched.length,
+    cocktails: matched,
+    related,
+    heroImageUrl: ingredient.imageUrl,
+    heroImageAlt: `${ingredient.name} bottle used in cocktails`,
+    heroIsCocktailPhoto: false,
+  };
+});

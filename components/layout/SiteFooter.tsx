@@ -10,8 +10,8 @@ import { EmailListCapture } from "@/components/email/EmailListCapture";
 const FOOTER_LINKS = {
   explore: [
     { label: "Browse Cocktail Recipes", href: "/cocktails" },
+    { label: "Ingredient Guides", href: "/ingredients" },
     { label: "Open Mixology Wizard", href: "/mix" },
-    { label: "Wedding Cocktail Finder", href: "/wedding-menu" },
   ],
   learn: [
     { label: "Learn Mixology", href: "/learn", learnOnly: true },

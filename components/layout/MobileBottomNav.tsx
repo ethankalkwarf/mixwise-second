@@ -49,7 +49,8 @@ const TABS = [
       path === "/cocktails" ||
       path.startsWith("/cocktails/") ||
       path.startsWith("/occasions") ||
-      path.startsWith("/learn"),
+      path.startsWith("/learn") ||
+      path.startsWith("/ingredients"),
     Icon: BookOpenIcon,
     IconActive: BookOpenIconSolid,
   },
@@ -191,6 +192,14 @@ export function MobileBottomNav() {
             >
               <span className="block text-base font-medium text-charcoal">Browse All Recipes</span>
               <span className="block text-sm text-sage">The full library — search and filter</span>
+            </HardNavLink>
+            <HardNavLink
+              href="/ingredients"
+              className="block px-3 py-3 rounded-xl hover:bg-mist/50 transition-colors"
+              onClick={closeMore}
+            >
+              <span className="block text-base font-medium text-charcoal">Ingredient Guides</span>
+              <span className="block text-sm text-sage">What each bottle is, and what you can make</span>
             </HardNavLink>
 
             <div className="pt-1 pb-2">

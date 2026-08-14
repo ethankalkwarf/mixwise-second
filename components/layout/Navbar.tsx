@@ -245,7 +245,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 imageFocusClass="object-[center_40%]"
               />
               <RecipesMegaMenu
-                active={isActive("/cocktails") || isActive("/occasions") || isActive("/learn")}
+                active={isActive("/cocktails") || isActive("/occasions") || isActive("/learn") || isActive("/ingredients")}
                 occasionCovers={megaMenu?.occasionCovers || []}
                 featuredCover={megaMenu?.featuredCover || null}
                 controller={megaController}

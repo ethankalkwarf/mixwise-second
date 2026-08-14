@@ -19,6 +19,7 @@ test.describe('MixWise Smoke Tests', () => {
 
     // Check navigation
     await expect(page.locator('text=Browse Cocktail Recipes')).toBeVisible();
+    await expect(page.locator('text=Ingredient Guides')).toBeVisible();
     await expect(page.locator('text=Open Mixology Wizard')).toBeVisible();
   });
 
@@ -60,7 +61,7 @@ test.describe('MixWise Smoke Tests', () => {
   test('Mix tool page loads', async ({ page }) => {
     await page.goto(`${BASE_URL}/mix`);
 
-    // Check page loads
+    await expect(page.getByRole('heading', { name: /what can i make with what i have/i })).toBeVisible();
     await expect(page.locator('text=What\'s in your bar').or(page.locator('text=Your Bar'))).toBeVisible();
   });
 
@@ -94,6 +95,13 @@ test.describe('MixWise Smoke Tests', () => {
 
     // Should show 404 content
     await expect(page.locator('text=Page not found').or(page.locator('text=404'))).toBeVisible();
+  });
+
+  test('Ingredient product page loads', async ({ page }) => {
+    await page.goto(`${BASE_URL}/ingredients/campari`);
+
+    await expect(page.locator('h1')).toContainText(/What is Campari/i);
+    await expect(page.locator('text=What Campari is').or(page.locator('text=What Campari tastes like'))).toBeVisible();
   });
 });
 

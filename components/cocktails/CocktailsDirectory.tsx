@@ -75,14 +75,22 @@ type Props = {
   cocktails: SanityCocktail[];
   initialSpirit?: string | null;
   initialFilter?: string | null;
+  initialQuery?: string | null;
 };
 
 // Number of items to load per batch
 const ITEMS_PER_PAGE = 24;
 
-export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFilter = null }: Props) {
+export function CocktailsDirectory({
+  cocktails,
+  initialSpirit = null,
+  initialFilter = null,
+  initialQuery = null,
+}: Props) {
   // Initialize state from sessionStorage if available
-  const [searchQuery, setSearchQuery] = useState(initialFilter === "new" ? "new" : "");
+  const [searchQuery, setSearchQuery] = useState(
+    initialQuery || (initialFilter === "new" ? "new" : "")
+  );
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [filterSpirit, setFilterSpirit] = useState<string | null>(initialSpirit);
   const [filterGlass, setFilterGlass] = useState<string | null>(null);
@@ -94,7 +102,7 @@ export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFil
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    if (initialSpirit || initialFilter) {
+    if (initialSpirit || initialFilter || initialQuery) {
       setIsInitialized(true);
       return;
     }
@@ -114,7 +122,7 @@ export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFil
       console.error("Error restoring filter state:", e);
     }
     setIsInitialized(true);
-  }, [initialSpirit, initialFilter]);
+  }, [initialSpirit, initialFilter, initialQuery]);
 
   // Restore scroll position after filters are applied
   useEffect(() => {

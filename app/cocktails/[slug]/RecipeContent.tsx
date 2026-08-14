@@ -33,6 +33,48 @@ interface RecipeContentProps {
   similarRecipes: any[];
 }
 
+function RecipeIngredientLine({
+  text,
+  matched,
+}: {
+  text: string;
+  matched?: MatchedIngredient;
+}) {
+  if (!matched?.slug || !matched.name) {
+    return <>• {text}</>;
+  }
+
+  const lowerText = text.toLowerCase();
+  const lowerName = matched.name.toLowerCase();
+  const idx = lowerText.lastIndexOf(lowerName);
+  if (idx < 0) {
+    return (
+      <>
+        • {text}{" "}
+        <Link
+          href={`/ingredients/${matched.slug}`}
+          className="mw-inline-term text-terracotta hover:underline"
+        >
+          {matched.name}
+        </Link>
+      </>
+    );
+  }
+
+  return (
+    <>
+      • {text.slice(0, idx)}
+      <Link
+        href={`/ingredients/${matched.slug}`}
+        className="mw-inline-term text-terracotta hover:underline"
+      >
+        {text.slice(idx, idx + matched.name.length)}
+      </Link>
+      {text.slice(idx + matched.name.length)}
+    </>
+  );
+}
+
 export function RecipeContent({
   cocktail,
   sanityCocktail,
@@ -332,7 +374,9 @@ export function RecipeContent({
             ) : (
               <ul className="mt-3 space-y-1 text-sm">
                 {scaledIngredients.map((ing, idx) => (
-                  <li key={idx}>• {ing.text}</li>
+                  <li key={idx}>
+                    <RecipeIngredientLine text={ing.text} matched={matchedIngredients?.[idx]} />
+                  </li>
                 ))}
               </ul>
             )}

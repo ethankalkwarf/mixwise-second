@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getCocktailsList } from "@/lib/cocktails.server";
 import { getCocktailsRandomizationSeed, seededRandom } from "@/lib/randomization";
 import { MainContainer } from "@/components/layout/MainContainer";
@@ -60,11 +61,12 @@ function mapCocktailListToSanity(cocktails: CocktailListItem[]): SanityCocktail[
 export default async function CocktailsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ spirit?: string; filter?: string }>;
+  searchParams?: Promise<{ spirit?: string; filter?: string; q?: string; ingredient?: string }>;
 }) {
   const params = (await searchParams) || {};
   const initialSpirit = params.spirit?.toLowerCase() || null;
   const initialFilter = params.filter?.toLowerCase() || null;
+  const initialQuery = (params.ingredient || params.q || "").trim();
 
   // UTC-day seed keeps shuffle stable without cookies() (so ISR can work)
   const randomizationSeed = getCocktailsRandomizationSeed();
@@ -84,7 +86,11 @@ export default async function CocktailsPage({
             Cocktail Recipes
           </h1>
           <p className="text-sage max-w-2xl">
-            Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each recipe includes detailed ingredients and instructions.
+            Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each recipe includes detailed ingredients and instructions.             Looking up a bottle? See the{" "}
+            <Link href="/ingredients" className="text-terracotta hover:underline">
+              ingredient guides
+            </Link>
+            .
           </p>
         </div>
 
@@ -111,6 +117,7 @@ export default async function CocktailsPage({
             cocktails={randomizedCocktails}
             initialSpirit={initialSpirit}
             initialFilter={initialFilter}
+            initialQuery={initialQuery || null}
           />
         )}
       </MainContainer>

@@ -108,26 +108,48 @@ export function RecipesMegaMenu({
 
         <div className="flex flex-col justify-between gap-7 lg:col-span-8">
           <div>
-            <Link
-              href="/cocktails"
-              onClick={controller.closeMenu}
-              className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-mist bg-white px-4 py-3.5 transition-colors hover:border-terracotta/40 hover:bg-mist/40"
-            >
-              <span>
-                <span className="mb-0.5 block font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
-                  Full library
+            <div className="mb-6 grid gap-3 sm:grid-cols-2">
+              <Link
+                href="/cocktails"
+                onClick={controller.closeMenu}
+                className="flex items-center justify-between gap-4 rounded-xl border border-mist bg-white px-4 py-3.5 transition-colors hover:border-terracotta/40 hover:bg-mist/40"
+              >
+                <span>
+                  <span className="mb-0.5 block font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+                    Full library
+                  </span>
+                  <span className="block text-[15px] font-semibold tracking-tight text-charcoal">
+                    Browse every cocktail
+                  </span>
                 </span>
-                <span className="block text-[15px] font-semibold tracking-tight text-charcoal">
-                  Browse every cocktail
+                <span className="inline-flex shrink-0 items-center text-sm font-semibold text-forest">
+                  Recipes
+                  <span className="ml-1.5" aria-hidden>
+                    →
+                  </span>
                 </span>
-              </span>
-              <span className="inline-flex shrink-0 items-center text-sm font-semibold text-forest">
-                All recipes
-                <span className="ml-1.5" aria-hidden>
-                  →
+              </Link>
+              <Link
+                href="/ingredients"
+                onClick={controller.closeMenu}
+                className="flex items-center justify-between gap-4 rounded-xl border border-mist bg-white px-4 py-3.5 transition-colors hover:border-terracotta/40 hover:bg-mist/40"
+              >
+                <span>
+                  <span className="mb-0.5 block font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+                    The bottles
+                  </span>
+                  <span className="block text-[15px] font-semibold tracking-tight text-charcoal">
+                    Ingredient guides
+                  </span>
                 </span>
-              </span>
-            </Link>
+                <span className="inline-flex shrink-0 items-center text-sm font-semibold text-forest">
+                  Guides
+                  <span className="ml-1.5" aria-hidden>
+                    →
+                  </span>
+                </span>
+              </Link>
+            </div>
 
             <div className="mb-3 flex items-end justify-between border-b border-mist pb-2.5">
               <Link
@@ -174,13 +196,22 @@ export function RecipesMegaMenu({
           </div>
 
           <div>
-            <Link
-              href="/cocktails"
-              onClick={controller.closeMenu}
-              className="mb-2.5 inline-block font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta transition-colors hover:text-forest"
-            >
-              By spirit
-            </Link>
+            <div className="mb-2.5 flex items-end justify-between">
+              <Link
+                href="/cocktails"
+                onClick={controller.closeMenu}
+                className="inline-block font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta transition-colors hover:text-forest"
+              >
+                By spirit
+              </Link>
+              <Link
+                href="/ingredients"
+                onClick={controller.closeMenu}
+                className="text-xs font-medium text-sage transition-colors hover:text-terracotta"
+              >
+                Bottle guides
+              </Link>
+            </div>
             <div className="flex flex-wrap gap-x-5 gap-y-2">
               {SPIRITS.map((spirit) => (
                 <Link

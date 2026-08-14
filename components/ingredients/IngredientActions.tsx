@@ -1,6 +1,7 @@
 "use client";
 
-import { PlusCircleIcon, CheckCircleIcon, ShoppingBagIcon } from "@heroicons/react/24/solid";
+import Link from "next/link";
+import { PlusCircleIcon, CheckCircleIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useShoppingList } from "@/hooks/useShoppingList";
 
@@ -10,9 +11,10 @@ interface IngredientActionsProps {
     name: string;
     type?: string;
   };
+  mixHref: string;
 }
 
-export function IngredientActions({ ingredient }: IngredientActionsProps) {
+export function IngredientActions({ ingredient, mixHref }: IngredientActionsProps) {
   const { ingredientIds, addIngredient, removeIngredient, isLoading: barLoading } = useBarIngredients();
   const { addItem, isInList, isLoading: shoppingLoading } = useShoppingList();
 
@@ -37,49 +39,47 @@ export function IngredientActions({ ingredient }: IngredientActionsProps) {
 
   return (
     <div className="space-y-3">
-      {/* Add to bar button */}
+      <Link
+        href={mixHref}
+        className="flex items-center justify-center w-full px-4 py-3 rounded-xl font-semibold bg-forest text-cream hover:bg-charcoal transition-colors"
+      >
+        Mix with {ingredient.name}
+      </Link>
+
       <button
         onClick={handleBarToggle}
         disabled={barLoading}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-colors disabled:opacity-50 ${
+        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 ${
           isInBar
-            ? "bg-lime-500 text-slate-900 hover:bg-lime-400"
-            : "bg-slate-800 text-slate-200 hover:bg-slate-700"
+            ? "bg-forest/10 text-forest border border-forest/20 hover:bg-forest/15"
+            : "bg-terracotta hover:bg-terracotta-dark text-cream"
         }`}
       >
         {isInBar ? (
           <>
             <CheckCircleIcon className="w-5 h-5" />
-            In My Bar
+            In my bar
           </>
         ) : (
           <>
             <PlusCircleIcon className="w-5 h-5" />
-            Add to My Bar
+            Add to my bar
           </>
         )}
       </button>
 
-      {/* Add to shopping list button (only show if not in bar) */}
-      {!isInBar && (
-        <button
-          onClick={handleAddToShoppingList}
-          disabled={shoppingLoading || isInShoppingList}
-          className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 ${
-            isInShoppingList
-              ? "bg-slate-700 text-slate-400 cursor-not-allowed"
-              : "bg-slate-800/50 border border-slate-700 text-slate-300 hover:bg-slate-800"
-          }`}
-        >
-          <ShoppingBagIcon className="w-5 h-5" />
-          {isInShoppingList ? "In Shopping List" : "Add to Shopping List"}
-        </button>
-      )}
+      <button
+        onClick={handleAddToShoppingList}
+        disabled={shoppingLoading || isInShoppingList}
+        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 ${
+          isInShoppingList
+            ? "bg-mist text-sage cursor-not-allowed"
+            : "bg-white border border-mist text-forest hover:border-stone"
+        }`}
+      >
+        <ShoppingBagIcon className="w-5 h-5" />
+        {isInShoppingList ? "In shopping list" : "Add to shopping list"}
+      </button>
     </div>
   );
 }
-
-
-
-
-

@@ -1,14 +1,13 @@
-import { MainContainer } from "@/components/layout/MainContainer";
-import { WebPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
+import { WebPageSchema, BreadcrumbSchema, IngredientTermSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
-import { IngredientActions } from "@/components/ingredients/IngredientActions";
+import { IngredientGuideView } from "@/components/ingredients/IngredientGuideView";
 import { getIngredientBySlug, getIngredientsDirectory } from "@/lib/ingredients.server";
-import Link from "next/link";
-import Image from "next/image";
+import { fallbackIngredientGuide, getIngredientGuide, ingredientMetaDescription, ingredientMetaTitle } from "@/lib/ingredientContent";
+import { getIngredientWayfinder } from "@/lib/ingredientTaxonomy";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -31,128 +30,104 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Ingredient Not Found" };
   }
 
+  const guide =
+    getIngredientGuide(slug) ||
+    fallbackIngredientGuide({
+      slug,
+      name: ingredient.name,
+      type: ingredient.type,
+      cocktailCount: ingredient.cocktailCount,
+    });
+
   return generatePageMetadata({
-    title: ingredient.name,
-    description: `Learn about ${ingredient.name} and discover cocktails you can make with it.`,
+    title: ingredientMetaTitle(ingredient.name),
+    description: ingredientMetaDescription(ingredient.name, guide.seoDescription),
     path: `/ingredients/${ingredient.slug}`,
-    ogImage: ingredient.imageUrl || undefined,
+    ogImage: ingredient.heroImageUrl || ingredient.imageUrl || undefined,
+    keywords: [
+      ingredient.name,
+      `what is ${ingredient.name}`,
+      `${ingredient.name} cocktails`,
+      `what does ${ingredient.name} taste like`,
+      `how to use ${ingredient.name} in cocktails`,
+      `drinks with ${ingredient.name}`,
+      `${ingredient.name} history`,
+    ],
   });
 }
 
 export default async function IngredientDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const ingredient = await getIngredientBySlug(slug);
+  const [ingredient, directory] = await Promise.all([
+    getIngredientBySlug(slug),
+    getIngredientsDirectory(),
+  ]);
 
   if (!ingredient) {
     notFound();
   }
 
+  const guide =
+    getIngredientGuide(slug) ||
+    fallbackIngredientGuide({
+      slug,
+      name: ingredient.name,
+      type: ingredient.type,
+      cocktailCount: ingredient.cocktailCount,
+    });
+  const wayfinder = getIngredientWayfinder(ingredient, directory);
+
+  const pageUrl = `${SITE_CONFIG.url}/ingredients/${ingredient.slug}`;
+  const faqs = [
+    {
+      question: `What is ${ingredient.name}?`,
+      answer: guide.whatItIs,
+    },
+    {
+      question: `What does ${ingredient.name} taste like?`,
+      answer: guide.tastingNotes,
+    },
+    {
+      question: `How do you use ${ingredient.name} in cocktails?`,
+      answer: guide.howToUse,
+    },
+    {
+      question: `What cocktails can I make with ${ingredient.name}?`,
+      answer:
+        ingredient.cocktails.length > 0
+          ? `MixWise is a free tool that matches cocktails to the bottles in your cabinet. ${ingredient.name} is used in ${ingredient.cocktails
+              .slice(0, 8)
+              .map((c) => c.name)
+              .join(", ")}${ingredient.cocktails.length > 8 ? ", and more" : ""}. Add ${ingredient.name} plus whatever else you own at getmixwise.com/mix to see what you can pour tonight — not only a list of ${ingredient.name} drinks.`
+          : `MixWise is a free cocktail tool that matches drinks to what you already have. Add ${ingredient.name} to your bar at getmixwise.com/mix to see what you can make.`,
+    },
+  ];
+
   return (
     <>
-      <WebPageSchema
-        title={`${ingredient.name} | ${SITE_CONFIG.name}`}
-        description={`Learn about ${ingredient.name}.`}
-        url={`${SITE_CONFIG.url}/ingredients/${ingredient.slug}`}
-      />
+      <WebPageSchema title={`${ingredientMetaTitle(ingredient.name)} | ${SITE_CONFIG.name}`} description={ingredientMetaDescription(ingredient.name, guide.seoDescription)} url={pageUrl} />
       <BreadcrumbSchema
         items={[
           { name: "Home", url: SITE_CONFIG.url },
           { name: "Ingredients", url: `${SITE_CONFIG.url}/ingredients` },
-          { name: ingredient.name, url: `${SITE_CONFIG.url}/ingredients/${ingredient.slug}` },
+          { name: wayfinder.sectionTitle, url: `${SITE_CONFIG.url}/ingredients#${wayfinder.sectionId}` },
+          { name: ingredient.name, url: pageUrl },
         ]}
       />
+      <IngredientTermSchema
+        name={ingredient.name}
+        description={guide.seoDescription}
+        url={pageUrl}
+        image={ingredient.heroImageUrl || ingredient.imageUrl}
+        faqs={faqs}
+        cocktails={ingredient.cocktails.map((cocktail) => ({
+          name: cocktail.name,
+          url: `${SITE_CONFIG.url}/cocktails/${cocktail.slug}`,
+        }))}
+      />
 
-      <div className="py-10 bg-cream min-h-screen">
-        <MainContainer>
-          <Link
-            href="/ingredients"
-            className="inline-flex items-center gap-2 text-sm text-sage hover:text-forest transition-colors mb-6"
-          >
-            ← All ingredients
-          </Link>
-
-          <div className="grid lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-1">
-              <div className="sticky top-24 space-y-6">
-                <div className="relative rounded-2xl overflow-hidden bg-mist aspect-square">
-                  {ingredient.imageUrl ? (
-                    <Image
-                      src={ingredient.imageUrl}
-                      alt={ingredient.name}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 33vw"
-                      className="object-cover"
-                      quality={85}
-                      priority
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-sage text-xl font-display">
-                      {ingredient.name}
-                    </div>
-                  )}
-                  {ingredient.isStaple && (
-                    <span className="absolute top-3 left-3 bg-forest text-cream text-xs font-medium px-2 py-1 rounded">
-                      Staple
-                    </span>
-                  )}
-                </div>
-
-                <IngredientActions
-                  ingredient={{
-                    id: ingredient.id,
-                    name: ingredient.name,
-                    type: ingredient.type,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="lg:col-span-2 space-y-8">
-              <div>
-                {ingredient.type && (
-                  <p className="text-sm uppercase tracking-widest text-sage mb-2">{ingredient.type}</p>
-                )}
-                <h1 className="text-4xl font-display font-bold text-forest mb-4">{ingredient.name}</h1>
-                <p className="text-sage">
-                  Used in {ingredient.cocktailCount} cocktail{ingredient.cocktailCount !== 1 ? "s" : ""} in the MixWise library.
-                </p>
-              </div>
-
-              {ingredient.cocktails.length > 0 && (
-                <section>
-                  <h2 className="text-xl font-display font-bold text-forest mb-4">Cocktails with {ingredient.name}</h2>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {ingredient.cocktails.map((cocktail) => (
-                      <Link
-                        key={cocktail.id}
-                        href={`/cocktails/${cocktail.slug}`}
-                        className="flex items-center gap-4 p-3 bg-white border border-mist rounded-xl hover:border-stone transition-colors"
-                      >
-                        <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-mist shrink-0">
-                          {cocktail.imageUrl ? (
-                            <Image
-                              src={cocktail.imageUrl}
-                              alt=""
-                              fill
-                              sizes="64px"
-                              className="object-cover"
-                            />
-                          ) : null}
-                        </div>
-                        <div>
-                          <p className="font-medium text-forest">{cocktail.name}</p>
-                          {cocktail.primarySpirit && (
-                            <p className="text-sm text-sage">{cocktail.primarySpirit}</p>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              )}
-            </div>
-          </div>
-        </MainContainer>
+      <div className="bg-cream min-h-screen">
+        <IngredientGuideView ingredient={ingredient} guide={guide} wayfinder={wayfinder} />
       </div>
     </>
   );

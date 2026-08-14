@@ -6,6 +6,8 @@ export type DirectoryIngredient = {
   imageUrl: string | null;
   isStaple: boolean;
   cocktailCount: number;
+  hasGuide?: boolean;
+  dek?: string;
 };
 
 export type IngredientCocktail = {
@@ -13,9 +15,17 @@ export type IngredientCocktail = {
   name: string;
   slug: string;
   imageUrl: string | null;
+  imageAlt?: string | null;
   primarySpirit: string | null;
+  shortDescription?: string | null;
+  category?: string | null;
+  createdAt?: string | null;
 };
 
 export type IngredientDetail = DirectoryIngredient & {
   cocktails: IngredientCocktail[];
+  related: DirectoryIngredient[];
+  heroImageUrl: string | null;
+  heroImageAlt: string;
+  heroIsCocktailPhoto: boolean;
 };
