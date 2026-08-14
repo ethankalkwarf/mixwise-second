@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { FavoriteButton } from "./FavoriteButton";
 import { ShareButtons } from "./ShareButtons";
 import { useRecordCocktailView } from "@/hooks/useRecentlyViewed";
@@ -23,6 +23,7 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
   const recordView = useRecordCocktailView();
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
   const supabase = getSupabaseClient();
+  const checkedBadgesFor = useRef<string | null>(null);
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/cocktails/${cocktail.slug}`;
 
   useEffect(() => {
@@ -36,12 +37,16 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
     });
 
     if (isAuthenticated && user) {
-      checkExplorationBadges(supabase, user.id, {
-        primarySpirit: cocktail.base_spirit ?? undefined,
-        categories: cocktail.categories_all ?? undefined,
-      }).catch((badgeError) => {
-        console.error("Error checking exploration badges:", badgeError);
-      });
+      const badgeKey = `${user.id}:${cocktail.id}`;
+      if (checkedBadgesFor.current !== badgeKey) {
+        checkedBadgesFor.current = badgeKey;
+        checkExplorationBadges(supabase, user.id, {
+          primarySpirit: cocktail.base_spirit ?? undefined,
+          categories: cocktail.categories_all ?? undefined,
+        }).catch((badgeError) => {
+          console.error("Error checking exploration badges:", badgeError);
+        });
+      }
     }
   }, [
     authLoading,

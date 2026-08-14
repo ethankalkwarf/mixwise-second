@@ -267,7 +267,7 @@ export default async function BarPage({ params }: Props) {
         <MainContainer>
           <div className="max-w-4xl mx-auto space-y-8">
             {/* Header with Navigation */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <Link
                 href="/"
                 className="inline-flex items-center gap-2 text-sage hover:text-forest transition-colors"
@@ -276,8 +276,7 @@ export default async function BarPage({ params }: Props) {
                 Back to MixWise
               </Link>
 
-              <div className="flex items-center gap-3">
-                <ShareBarButton showPreview={false} />
+              <div className="flex flex-wrap items-center gap-2">
                 <Link
                   href="/mix"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-olive hover:bg-olive-dark text-cream rounded-xl transition-colors font-medium"
@@ -297,18 +296,21 @@ export default async function BarPage({ params }: Props) {
 
             {/* Owner Bar Header */}
             <div className="card p-8">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center">
-                  <UserCircleIcon className="w-8 h-8 text-olive" />
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center">
+                    <UserCircleIcon className="w-8 h-8 text-olive" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-serif font-bold text-forest">
+                      {displayName}
+                    </h1>
+                    <p className="text-sage mt-1">
+                      Your personal bar • {ingredients.length} ingredients
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-serif font-bold text-forest">
-                    {displayName}
-                  </h1>
-                  <p className="text-sage mt-1">
-                    Your personal bar • {ingredients.length} ingredients
-                  </p>
-                </div>
+                <ShareBarButton />
               </div>
             </div>
 

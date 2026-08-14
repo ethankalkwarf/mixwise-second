@@ -19,7 +19,6 @@ import {
   ArrowRightOnRectangleIcon,
   ArrowRightIcon,
   TrashIcon,
-  ShareIcon,
   GlobeAltIcon,
   LockClosedIcon,
   EnvelopeIcon,
