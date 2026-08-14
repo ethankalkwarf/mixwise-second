@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { isLearnPublic } from "@/lib/learnAccess";
+import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 
 type Props = {
   /** Unique per lesson — used for session lock persistence */
@@ -30,6 +31,7 @@ export function LearnContentGate({
   const { openSignupDialog, openLoginDialog } = useAuthDialog();
   const [locked, setLocked] = useState(false);
   const gatingEnabled = isLearnPublic();
+  const preferredMode = usePreferredAuthMode();
 
   useEffect(() => {
     if (!gatingEnabled || isLoading || isAuthenticated) {
@@ -84,34 +86,66 @@ export function LearnContentGate({
             {teaserLabel}
           </h2>
           <p className="text-charcoal/75 text-sm leading-relaxed mb-5">
-            Create a free account or sign in to finish this lesson, run learning checks, and save path
-            progress.
+            {preferredMode === "login"
+              ? "Sign in to finish this lesson, run learning checks, and save path progress."
+              : "Create a free account or sign in to finish this lesson, run learning checks, and save path progress."}
           </p>
           <div className="flex flex-wrap justify-center sm:justify-start gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                openSignupDialog({
-                  title: "Unlock Learn",
-                  subtitle: "Free account — keep reading and save your bar.",
-                })
-              }
-              className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
-            >
-              Create free account →
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                openLoginDialog({
-                  title: "Sign in to continue",
-                  subtitle: "Pick up this lesson where you left off.",
-                })
-              }
-              className="inline-flex items-center justify-center rounded-full border border-mist bg-cream px-6 py-3 text-sm font-semibold text-forest hover:border-terracotta/40 transition-colors"
-            >
-              Sign in
-            </button>
+            {preferredMode === "login" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openLoginDialog({
+                      title: "Sign in to continue",
+                      subtitle: "Pick up this lesson where you left off.",
+                    })
+                  }
+                  className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
+                >
+                  Sign in →
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openSignupDialog({
+                      title: "Unlock Learn",
+                      subtitle: "Free account — keep reading and save your bar.",
+                    })
+                  }
+                  className="inline-flex items-center justify-center rounded-full border border-mist bg-cream px-6 py-3 text-sm font-semibold text-forest hover:border-terracotta/40 transition-colors"
+                >
+                  Create free account
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openSignupDialog({
+                      title: "Unlock Learn",
+                      subtitle: "Free account — keep reading and save your bar.",
+                    })
+                  }
+                  className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
+                >
+                  Create free account →
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openLoginDialog({
+                      title: "Sign in to continue",
+                      subtitle: "Pick up this lesson where you left off.",
+                    })
+                  }
+                  className="inline-flex items-center justify-center rounded-full border border-mist bg-cream px-6 py-3 text-sm font-semibold text-forest hover:border-terracotta/40 transition-colors"
+                >
+                  Sign in
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

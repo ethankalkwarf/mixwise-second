@@ -19,10 +19,20 @@
  * - Body: Jost (fallback: system-ui, sans-serif)
  */
 
+import { ACCOUNT_BENEFITS } from "@/lib/accountBenefits";
+
 export interface EmailTemplate {
   subject: string;
   html: string;
   text: string;
+}
+
+export function escapeEmailHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 /**
@@ -455,20 +465,92 @@ https://www.getmixwise.com
 }
 
 /**
- * Email-list welcome (NOT an account yet) — confirm subscription + convert CTA
+ * Weekly-list confirmation for guests. Account holders never receive this.
  */
 export function emailListWelcomeTemplate({
   userEmail,
   convertUrl,
   unsubscribeUrl,
+  featuredCocktail,
+  siteUrl = "https://www.getmixwise.com",
 }: {
   userEmail: string;
   convertUrl: string;
   unsubscribeUrl: string;
+  featuredCocktail?: {
+    name: string;
+    slug: string;
+    description?: string;
+    imageUrl?: string;
+  };
+  siteUrl?: string;
 }): EmailTemplate {
-  const subject = "You're on the MixWise list 🍸";
-  const previewText =
-    "New cocktails every week. When you're ready, create a free account to save your bar.";
+  const safeEmail = escapeEmailHtml(userEmail);
+  const safeConvert = escapeEmailHtml(convertUrl);
+  const safeUnsub = escapeEmailHtml(unsubscribeUrl);
+  const safeSite = escapeEmailHtml(siteUrl);
+  const cocktailName = featuredCocktail?.name
+    ? escapeEmailHtml(featuredCocktail.name)
+    : "";
+  const cocktailSlug = featuredCocktail?.slug
+    ? encodeURIComponent(featuredCocktail.slug)
+    : "";
+  const cocktailDesc = featuredCocktail?.description
+    ? escapeEmailHtml(featuredCocktail.description)
+    : "";
+  const cocktailImage = featuredCocktail?.imageUrl
+    ? escapeEmailHtml(featuredCocktail.imageUrl)
+    : "";
+
+  const subject = featuredCocktail
+    ? `You're in 🍸 Make a ${featuredCocktail.name} tonight`
+    : "You're in 🍸 New cocktails, every Thursday";
+  const previewText = featuredCocktail
+    ? `${featuredCocktail.name} for tonight. Another one next Thursday — account or not.`
+    : "A short note every Thursday with drinks worth making at home.";
+
+  const featuredSection = featuredCocktail
+    ? `
+          <div style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); border-radius: 16px; overflow: hidden; margin: 8px 0 28px 0;">
+            ${
+              cocktailImage
+                ? `<a href="${safeSite}/cocktails/${cocktailSlug}" style="display:block;text-decoration:none;line-height:0;">
+              <img src="${cocktailImage}" alt="${cocktailName}" width="480" style="display:block;width:100%;max-width:480px;height:auto;border:0;" />
+            </a>`
+                : ""
+            }
+            <div style="padding: 24px; text-align: center;">
+              <h3 style="margin: 0 0 10px 0; font-family: ${EMAIL_SERIF}; font-size: 26px; color: #FFFFFF; font-weight: 400;">${cocktailName}</h3>
+              ${
+                cocktailDesc
+                  ? `<p style="margin: 0 0 18px 0; font-size: 14px; color: #E6EBE4; line-height: 1.55;">${cocktailDesc}</p>`
+                  : ""
+              }
+              <a href="${safeSite}/cocktails/${cocktailSlug}" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;">Make this one →</a>
+            </div>
+          </div>
+`
+    : "";
+
+  const benefitsHtml = ACCOUNT_BENEFITS.map(
+    (benefit, index) => `
+            ${index > 0 ? `<tr><td style="height: 12px;"></td></tr>` : ""}
+            <tr>
+              <td style="padding: 16px; background-color: #F9F7F2; border-radius: 16px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                  <tr>
+                    <td style="width: 48px; vertical-align: top;">
+                      <span style="font-size: 32px;">${benefit.emoji}</span>
+                    </td>
+                    <td style="padding-left: 12px;">
+                      <p style="margin: 0 0 4px 0; font-weight: 600; color: #3A4D39; font-size: 16px;">${escapeEmailHtml(benefit.title)}</p>
+                      <p style="margin: 0; color: #5F6F5E; font-size: 14px; line-height: 1.5;">${escapeEmailHtml(benefit.description)}</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>`
+  ).join("");
 
   const html = `
 <!DOCTYPE html>
@@ -478,7 +560,8 @@ export function emailListWelcomeTemplate({
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  <title>You're on the MixWise list</title>
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+  <title>You're in</title>
   ${baseStyles}
 </head>
 <body>
@@ -494,36 +577,47 @@ export function emailListWelcomeTemplate({
       </tr>
       <tr>
         <td class="email-content" style="padding: 48px 40px;">
-          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
-            You're on the list
+          <div style="text-align: center; font-size: 48px; margin-bottom: 16px;">🎉</div>
+          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 28px; color: #3A4D39; margin: 0 0 16px 0; font-weight: 400; text-align: center;">
+            You're in.
           </h2>
-          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
-            Thanks for sharing your email. We&apos;ll send <strong>new cocktails every week</strong> — recipes worth making at home, no spam.
+          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 24px 0; line-height: 1.65; text-align: center;">
+            Every Thursday we'll send a drink worth making at home. ${featuredCocktail ? "Start with this one tonight." : "First one lands next Thursday."}
           </p>
+          ${featuredSection}
           <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
-            <strong>Want more?</strong> Create a free MixWise account so you can save your bar, favorites, and shopping list. After you sign in, you can add a password for next time.
+            Want MixWise to remember what's in the cabinet? A free account does this:
           </p>
-          <div class="button-wrapper" style="text-align: center; margin: 32px 0;">
-            <a href="${convertUrl}" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
-              Create free account &amp; save your bar
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 24px;">
+            ${benefitsHtml}
+          </table>
+          <div class="button-wrapper" style="text-align: center; margin: 8px 0 24px 0;">
+            <a href="${safeConvert}" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
+              Create your free account
             </a>
           </div>
-          <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 24px 0 0 0; line-height: 1.6; text-align: center;">
-            This only creates an account when you click the button.
+          <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 0 0 20px 0; line-height: 1.6; text-align: center;">
+            Don't want an account? You're still on the list. Next Thursday's drink shows up either way.
+          </p>
+          <div class="divider" style="height: 1px; background: linear-gradient(90deg, transparent, #D1DAD0, transparent); margin: 8px 0 24px 0;"></div>
+          <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 0; line-height: 1.6; text-align: center;">
+            See you next Thursday.<br>— Ethan
           </p>
         </td>
       </tr>
       <tr>
         <td class="email-footer" style="background-color: #E6EBE4; padding: 32px 40px; text-align: center; border-top: 1px solid #D1DAD0;">
           <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">
-            Sent to <strong>${userEmail}</strong>
-          </p>
-          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">
-            <a href="${unsubscribeUrl}" style="color: #3A4D39;">Unsubscribe</a>
+            Sent to <strong>${safeEmail}</strong>
           </p>
           <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0;">
             © ${new Date().getFullYear()} MixWise
           </p>
+          <div class="footer-links" style="margin: 16px 0 0 0;">
+            <a href="${safeSite}" style="color: #3A4D39; text-decoration: none; font-size: 13px; margin: 0 8px;">Visit MixWise</a>
+            <span style="color: #D1DAD0;">|</span>
+            <a href="${safeUnsub}" style="color: #5F6F5E; text-decoration: none; font-size: 13px; margin: 0 8px;">Unsubscribe</a>
+          </div>
         </td>
       </tr>
     </table>
@@ -533,20 +627,39 @@ export function emailListWelcomeTemplate({
   `.trim();
 
   const text = `
-You're on the MixWise list 🍸
+You're in.
 
-Thanks for sharing your email. We'll send new cocktails every week — recipes worth making at home.
+Every Thursday we'll send a drink worth making at home.${featuredCocktail ? " Start with this one tonight." : ""}
 
-Want more? Create a free account to save your bar, favorites, and shopping list:
+${
+  featuredCocktail
+    ? `${featuredCocktail.name}
+${featuredCocktail.description || ""}
+${siteUrl}/cocktails/${featuredCocktail.slug}
+
+`
+    : ""
+}Want MixWise to remember what's in the cabinet? A free account lets you:
+
+🍸 Save your bar
+✨ See what you can make
+❤️ Heart the keepers
+🛒 Build a shopping list
+
+Create your free account:
 ${convertUrl}
 
-This only creates an account when you click the link.
+Don't want an account? You're still on the list. Next Thursday's drink shows up either way.
+
+See you next Thursday.
+— Ethan
 
 Unsubscribe: ${unsubscribeUrl}
 
 ---
 Sent to ${userEmail}
 © ${new Date().getFullYear()} MixWise
+${siteUrl}
   `.trim();
 
   return { subject, html, text };

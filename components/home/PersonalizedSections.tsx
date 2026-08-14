@@ -145,7 +145,39 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
   const hasPersonalizedContent = hasBar || hasFavorites || hasRecent;
 
   if (!hasPersonalizedContent) {
-    return null;
+    return (
+      <section className="bg-cream py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-6 rounded-3xl border border-mist bg-white p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div className="max-w-xl">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-2">
+                Your bar
+              </p>
+              <h2 className="font-display text-2xl font-bold text-forest mb-2">
+                Add what&apos;s on your shelf
+              </h2>
+              <p className="text-sage text-sm leading-relaxed">
+                Once your cabinet is saved, we&apos;ll show drinks you can make tonight, plus your favorites and recents.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:shrink-0">
+              <Link
+                href="/mix"
+                className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-cream hover:bg-terracotta-dark transition-colors"
+              >
+                Open Mix
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center rounded-full border border-mist bg-cream px-6 py-3 text-sm font-semibold text-forest hover:border-terracotta/40 transition-colors"
+              >
+                Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (

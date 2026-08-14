@@ -4,7 +4,8 @@ import { useState, Fragment, useEffect, useRef, useCallback, useMemo } from "rea
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Transition } from "@headlessui/react";
-import { MagnifyingGlassIcon, ShareIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { ShareBarButton } from "@/components/bar/ShareBarButton";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { BrandLogo } from "@/components/common/BrandLogo";
@@ -13,7 +14,7 @@ import { CocktailSearch } from "@/components/search/CocktailSearch";
 import { RecipesMegaMenu } from "@/components/layout/RecipesMegaMenu";
 import { ExplainerMegaMenu } from "@/components/layout/ExplainerMegaMenu";
 import type { NavMegaController, NavMegaId } from "@/components/layout/MegaMenuFrame";
-import { MEGA_ROOT_ID, navMegaTriggerClass } from "@/components/layout/MegaMenuFrame";
+import { MEGA_ROOT_ID } from "@/components/layout/MegaMenuFrame";
 import type { MegaMenuData } from "@/lib/megaMenu";
 
 export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
@@ -198,16 +199,20 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
             </div>
 
             {/* Desktop Navigation - Centered */}
-            <div className="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
+            <div className={`hidden lg:flex items-center absolute left-1/2 -translate-x-1/2 ${isAuthenticated ? "gap-5" : "gap-6"}`}>
               {isAuthenticated && (
                 <HardNavLink
                   href="/dashboard"
-                  className={navMegaTriggerClass(isActive("/dashboard"), false)}
+                  className={`text-sm font-semibold rounded-full px-3 py-1.5 transition-colors ${
+                    isActive("/dashboard")
+                      ? "bg-terracotta text-cream"
+                      : "bg-terracotta/10 text-terracotta hover:bg-terracotta/20"
+                  }`}
                 >
                   Dashboard
                 </HardNavLink>
               )}
-              {!isAuthenticated && !isLoading && (
+              {(isAuthenticated || !isLoading) && (
                 <ExplainerMegaMenu
                   id="daily"
                   controller={megaController}
@@ -249,6 +254,18 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
 
             {/* Search + Actions — search stays available on mobile; auth is desktop-only (in More sheet) */}
             <div className="flex items-center gap-3 sm:gap-4">
+              {isAuthenticated && (
+                <HardNavLink
+                  href="/dashboard"
+                  className={`lg:hidden text-sm font-semibold rounded-full px-3 py-1.5 transition-colors ${
+                    isActive("/dashboard")
+                      ? "bg-terracotta text-cream"
+                      : "bg-terracotta/10 text-terracotta hover:bg-terracotta/20"
+                  }`}
+                >
+                  Dashboard
+                </HardNavLink>
+              )}
               <button
                 onClick={() => setDesktopSearchOpen(!desktopSearchOpen)}
                 className="flex items-center gap-2 px-2.5 py-1.5 text-sm font-medium text-sage hover:text-forest border border-mist/70 rounded-md hover:border-mist hover:bg-mist/40 active:scale-[0.98] transition-all duration-200"
@@ -308,14 +325,10 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                       <p className="text-sm font-medium text-forest truncate">{displayName}</p>
                       <p className="text-xs text-sage truncate">{user?.email}</p>
                     </div>
-                    <HardNavLink
-                      href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
-                      role="menuitem"
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-charcoal hover:bg-mist/50 hover:text-terracotta"
-                    >
-                      <ShareIcon className="w-4 h-4" />
-                      Share My Bar
-                    </HardNavLink>
+                    <ShareBarButton
+                      variant="menu"
+                      onShared={() => setAccountMenuOpen(false)}
+                    />
                     <HardNavLink
                       href="/account"
                       role="menuitem"

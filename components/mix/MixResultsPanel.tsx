@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { ShareBarButton } from "@/components/bar/ShareBarButton";
 import { HardNavLink } from "@/components/layout/HardNavLink";
 import Image from "next/image";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
@@ -127,6 +128,9 @@ export function MixResultsPanel({
               >
                 {displayedDrinks.length}
               </span>
+            )}
+            {!showAllRecipes && inventoryIds.length > 0 && ready.length > 0 && (
+              <ShareBarButton variant="inline" className="flex-shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-terracotta hover:text-terracotta-dark" />
             )}
           </div>
 

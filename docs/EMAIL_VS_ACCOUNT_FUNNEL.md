@@ -1,33 +1,49 @@
-# Email list vs account creation
+# Email list vs MixWise account
 
-Two separate intents. Do not blur them in UI copy or follow-up email.
+Two identities. Same person can have both. Do not treat them as one.
 
-## Path A — Email list (low commitment)
+## External (what the person hears)
 
-**Surfaces:** homepage mid-page capture, footer subscribe  
-**API:** `POST /api/email/signup` (`source`: `homepage` | `footer`)  
-**What happens:**
+**List** — homepage / footer “join the list”  
+You will get weekly cocktail emails. This is **not** an account. Saving a bar requires a separate, optional step.
+
+**Account** — Sign Up, Mix “save your bar”, OAuth  
+You can save a bar, favorites, and shopping list. Weekly digest is an account preference (`email_preferences.weekly_digest`).
+
+**If an account holder later joins the list**  
+Confirm the list only. Do not offer “create an account.”
+
+## Internal (where we store them)
+
+| Identity | Source of truth | Marketing mail | Transactional mail |
+|---|---|---|---|
+| List-only | `email_signups` | Resend General segment (`mixwise_list=true`, `mixwise_account=false`) | none |
+| Account | `auth.users` + `profiles` + `email_preferences` | Thursday digest cron if `weekly_digest`; Resend broadcasts if still subscribed | magic link, password, account welcome |
+| Both | both rows, same email | union of the above | account transactional |
+
+Resend contact properties: `mixwise_list`, `mixwise_account`.  
+Unsubscribing from the **list** deletes `email_signups` for that source. If they still have an account, do **not** mark the Resend contact unsubscribed.
+
+## Path A — Email list
+
+**Surfaces:** homepage capture, footer  
+**API:** `POST /api/email/signup` (`source`: `homepage` | `footer`)
+
 1. Row in `email_signups` (no Auth user)
-2. Notify `hello@getmixwise.com` — “New Email List Signup”
-3. Resend: “You’re on the MixWise list” + CTA **Create free account & save your bar**
+2. Resend contact tagged `mixwise_list=true`
+3. Notify `hello@getmixwise.com` — “New Email List Signup”
+4. Confirmation email: list copy. Account CTA is a quiet text link **only if they have no account**.
 
-**Conversion:** CTA hits `GET /api/email/convert-to-account?email&source&token`  
-→ creates passwordless account → redirects through magic link → user lands on `/mix` → `SetPasswordPrompt` if `needs_password`
+**Conversion (list-only):** optional link hits `GET /api/email/convert-to-account` → passwordless account → `/mix`.
 
-## Path B — Account creation (high intent)
+## Path B — Account creation
 
 **Surfaces:** Navbar Sign Up, AuthDialog, Mix “Save your bar”  
-**API:** `POST /api/auth/email-account` (`source`: `mix_save` | `auth_dialog`) or OAuth / password signup  
-**What happens:**
-1. Auth user + profile created (passwordless email path sets `needs_password: true`)
-2. Also logged in `email_signups` for analytics when using Mix email path
+**API:** `POST /api/auth/email-account` or OAuth / `POST /api/auth/signup`
+
+1. Auth user + profile
+2. `email_preferences` (defaults weekly digest on)
 3. Notify `hello@getmixwise.com` — “New User Signup”
-4. Resend: “Your MixWise account is ready” magic link
-5. After login: soft prompt to **add a password**
+4. Magic link / confirmation — **not** the list welcome
 
-Password signup via AuthDialog still uses `POST /api/auth/signup` (confirm email flow).
-
-## Goal
-
-Email list → account (password + saved bar) via the nurture CTA.  
-Account path already lands them in Mix with bar sync.
+Do not log Mix/auth signups as if they joined the public list. `email_signups` with `source=mix_save` is analytics only.

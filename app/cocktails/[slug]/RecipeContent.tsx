@@ -266,6 +266,8 @@ export function RecipeContent({
                 name: cocktail.name,
                 slug: cocktail.slug,
                 image_url: cocktail.image_url,
+                base_spirit: cocktail.base_spirit,
+                categories_all: cocktail.categories_all,
               }}
             />
           </div>
@@ -347,15 +349,14 @@ export function RecipeContent({
                 ) : !authLoading && !isAuthenticated ? (
                   <>
                     <button
-                      onClick={() => openAuthDialog({ 
-                        mode: "signup",
-                        title: "Create an account to save your shopping list",
-                        subtitle: "Sign up to add ingredients to your shopping list and track your bar inventory."
+                      onClick={() => openAuthDialog({
+                        title: "Track the bottles you're missing",
+                        subtitle: "Sign in to save missing ingredients and add them to your bar when you pick them up.",
                       })}
                       className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-semibold rounded-xl transition-colors"
                     >
                       <ShoppingBagIcon className="w-4 h-4" />
-                      Add to shopping list
+                      Get the missing bottles
                     </button>
                   </>
                 ) : null}

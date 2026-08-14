@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { thirstyThursdayWelcomeTemplate } from "@/lib/email/templates";
+import { addToResendAudience } from "@/lib/email/subscribe-list";
 import { getSiteUrl } from "@/lib/site";
 import { getCocktailsList } from "@/lib/cocktails.server";
 import { buildNewsletterUnsubscribeUrl, buildNewsletterUnsubscribeApiUrl } from "@/lib/email/newsletter-token";
@@ -153,6 +154,10 @@ export async function POST(request: NextRequest) {
     }
 
     debugLog(`[Thirsty Thursday Signup] Successfully signed up: ${trimmedEmail}`);
+
+    addToResendAudience(trimmedEmail).catch((err) => {
+      console.error("[Thirsty Thursday Signup] Audience sync failed (non-fatal):", err);
+    });
 
     // Fetch a random cocktail to include in the welcome email
     let featuredCocktail: {

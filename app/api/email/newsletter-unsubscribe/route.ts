@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyNewsletterUnsubscribeToken } from "@/lib/email/newsletter-token";
+import { syncResendAfterListUnsubscribe } from "@/lib/email/subscribe-list";
 
 async function unsubscribeSignup(email: string, source: string, token: string) {
   if (!verifyNewsletterUnsubscribeToken(email, source, token)) {
@@ -24,6 +25,15 @@ async function unsubscribeSignup(email: string, source: string, token: string) {
   if (error) {
     console.error("[Newsletter Unsubscribe] Error deleting signup:", error);
     return { ok: false as const, status: 500, error: "Failed to process unsubscribe request" };
+  }
+
+  const { count } = await supabaseAdmin
+    .from("email_signups")
+    .select("id", { count: "exact", head: true })
+    .eq("email", email);
+
+  if (!count) {
+    await syncResendAfterListUnsubscribe(email);
   }
 
   return { ok: true as const };

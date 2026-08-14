@@ -25,6 +25,8 @@ import {
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
 import { debugLog } from "@/lib/debugLog";
+import { usePreferredAuthMode } from "@/lib/auth/returning-user";
+import { ShareBarButton } from "@/components/bar/ShareBarButton";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,7 @@ export default function AccountPage() {
   const { user, profile, isLoading, isAuthenticated, signOut, refreshProfile } = useUser();
   const supabase = getSupabaseClient();
   const { openAuthDialog } = useAuthDialog();
+  const preferredAuthMode = usePreferredAuthMode();
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
   const { ingredientIds } = useBarIngredients();
   const { preferences, updatePreferences } = useUserPreferences();
@@ -516,8 +519,9 @@ export default function AccountPage() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       openAuthDialog({
+        mode: "login",
         title: "Sign in to view your account",
-        subtitle: "Create a free account to save your bar, favorites, and more.",
+        subtitle: "Log in to manage your bar, favorites, and settings.",
         onSuccess: () => {
           // Stay on account page after sign in
         },
@@ -555,13 +559,15 @@ export default function AccountPage() {
               Sign in to access your account
             </h1>
             <p className="text-sage mb-6">
-              Create a free account to save your bar, favorite cocktails, and more.
+              {preferredAuthMode === "login"
+                ? "Log in to manage your bar, favorites, and settings."
+                : "Create a free account to save your bar, favorite cocktails, and more."}
             </p>
             <button
-              onClick={() => openAuthDialog()}
+              onClick={() => openAuthDialog({ mode: preferredAuthMode })}
               className="btn-primary"
             >
-              Sign in
+              {preferredAuthMode === "login" ? "Log In" : "Create Free Account"}
             </button>
           </div>
         </MainContainer>
@@ -982,17 +988,11 @@ export default function AccountPage() {
                 </div>
                 <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-forest" />
               </button>
-              {ingredientIds.length > 0 && user?.id && (
-                <Link
-                  href={`/bar/${user.id}`}
-                  className="flex items-center justify-between p-4 bg-mist/50 hover:bg-mist rounded-xl transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <ShareIcon className="w-5 h-5 text-sage group-hover:text-forest" />
-                    <span className="text-forest">Share My Bar</span>
-                  </div>
-                  <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-forest" />
-                </Link>
+              {ingredientIds.length > 0 && (
+                <ShareBarButton
+                  variant="menu"
+                  className="flex items-center justify-between p-4 bg-mist/50 hover:bg-mist rounded-xl transition-colors w-full text-left group text-forest"
+                />
               )}
               <button
                 onClick={handleSignOut}

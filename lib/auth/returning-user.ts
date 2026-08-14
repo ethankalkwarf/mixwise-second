@@ -43,6 +43,17 @@ export function getLastAuthEmail(): string {
   }
 }
 
+/** Drop local “this browser has an account” hints after a reset. */
+export function clearReturningUserHints(): void {
+  if (!canUseStorage()) return;
+  try {
+    localStorage.removeItem(HAS_ACCOUNT_KEY);
+    localStorage.removeItem(LAST_EMAIL_KEY);
+  } catch {
+    /* private mode / storage blocked */
+  }
+}
+
 export function getPreferredAuthMode(): PreferredAuthMode {
   return hasLikelyAccount() ? "login" : "signup";
 }

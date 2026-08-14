@@ -8,7 +8,6 @@ import {
   Bars3Icon,
   BookOpenIcon,
   HomeIcon,
-  ShareIcon,
   ShoppingBagIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -22,6 +21,8 @@ import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { CocktailSearch } from "@/components/search/CocktailSearch";
 import { getTopLevelOccasions } from "@/lib/occasions";
 import { isLearnPublic } from "@/lib/learnAccess";
+import { usePreferredAuthMode } from "@/lib/auth/returning-user";
+import { ShareBarButton } from "@/components/bar/ShareBarButton";
 
 const TABS = [
   {
@@ -59,6 +60,7 @@ export function MobileBottomNav() {
   const [moreOpen, setMoreOpen] = useState(false);
   const { user, profile, isAuthenticated, isLoading, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
+  const preferredAuthMode = usePreferredAuthMode();
   const occasionLinks = getTopLevelOccasions();
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
@@ -165,7 +167,7 @@ export function MobileBottomNav() {
             ) : null}
           </div>
 
-          <div className="space-y-0.5">
+            <div className="space-y-0.5">
             <HardNavLink
               href="/cocktail-of-the-day"
               className="block px-3 py-3 rounded-xl hover:bg-mist/50 transition-colors"
@@ -271,20 +273,17 @@ export function MobileBottomNav() {
                     </div>
                   </div>
                   <HardNavLink
-                    href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
-                    className="flex items-center gap-2 px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
-                    onClick={closeMore}
-                  >
-                    <ShareIcon className="w-5 h-5" />
-                    Share My Bar
-                  </HardNavLink>
-                  <HardNavLink
                     href="/dashboard"
-                    className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
+                    className="block px-3 py-3 text-base font-semibold text-terracotta hover:bg-terracotta/10 rounded-xl transition-colors"
                     onClick={closeMore}
                   >
                     Dashboard
                   </HardNavLink>
+                  <ShareBarButton
+                    variant="menu"
+                    className="flex w-full items-center gap-2 px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
+                    onShared={closeMore}
+                  />
                   <HardNavLink
                     href="/account"
                     className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
@@ -302,26 +301,53 @@ export function MobileBottomNav() {
                 </>
               ) : (
                 <div className="space-y-2 px-3 pb-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      openAuthDialog({ mode: "login" });
-                      closeMore();
-                    }}
-                    className="block w-full text-center px-4 py-3 text-base font-medium text-charcoal hover:text-terracotta transition-colors"
-                  >
-                    Log In
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      openAuthDialog({ mode: "signup" });
-                      closeMore();
-                    }}
-                    className="block w-full text-center px-4 py-3 text-base font-semibold bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark transition-colors"
-                  >
-                    Sign Up Free
-                  </button>
+                  {preferredAuthMode === "login" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAuthDialog({ mode: "login" });
+                          closeMore();
+                        }}
+                        className="block w-full text-center px-4 py-3 text-base font-semibold bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark transition-colors"
+                      >
+                        Log In
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAuthDialog({ mode: "signup" });
+                          closeMore();
+                        }}
+                        className="block w-full text-center px-4 py-3 text-base font-medium text-charcoal hover:text-terracotta transition-colors"
+                      >
+                        Sign Up Free
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAuthDialog({ mode: "login" });
+                          closeMore();
+                        }}
+                        className="block w-full text-center px-4 py-3 text-base font-medium text-charcoal hover:text-terracotta transition-colors"
+                      >
+                        Log In
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAuthDialog({ mode: "signup" });
+                          closeMore();
+                        }}
+                        className="block w-full text-center px-4 py-3 text-base font-semibold bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark transition-colors"
+                      >
+                        Sign Up Free
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>

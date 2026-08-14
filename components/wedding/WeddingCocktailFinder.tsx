@@ -12,6 +12,7 @@ import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useUser } from "@/components/auth/UserProvider";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { debugLog } from "@/lib/debugLog";
+import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 
 export type QuestionnaireStep = "intro" | "questions" | "email-gate" | "results";
 
@@ -34,8 +35,9 @@ export interface SelectedCocktails {
 
 export function WeddingCocktailFinder() {
   const [step, setStep] = useState<QuestionnaireStep>("intro");
-  const { openSignupDialog } = useAuthDialog();
+  const { openPreferredAuthDialog } = useAuthDialog();
   const { isAuthenticated } = useUser();
+  const preferredAuthMode = usePreferredAuthMode();
   
   // Debug: log step changes
   useEffect(() => {
@@ -438,16 +440,18 @@ export function WeddingCocktailFinder() {
                   Save Your Selections
                 </h3>
                 <p className="text-sage mb-6 max-w-2xl mx-auto">
-                  Create a free account to save your cocktail selections and get personalized recommendations for your home bar.
+                  {preferredAuthMode === "login"
+                    ? "Sign in to save your cocktail selections and get personalized recommendations for your home bar."
+                    : "Create a free account to save your cocktail selections and get personalized recommendations for your home bar."}
                 </p>
                 <button
-                  onClick={() => openSignupDialog({
-                    title: "Create Your Free MixWise Account",
+                  onClick={() => openPreferredAuthDialog({
+                    title: preferredAuthMode === "login" ? "Welcome back" : "Create Your Free MixWise Account",
                     subtitle: "Save your selections and discover more cocktails"
                   })}
                   className="px-8 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-full transition-colors shadow-lg shadow-terracotta/20"
                 >
-                  Sign Up Free
+                  {preferredAuthMode === "login" ? "Log In" : "Sign Up Free"}
                 </button>
                 <p className="text-xs text-sage mt-4">
                   No credit card required • Takes 30 seconds
@@ -542,9 +546,9 @@ export function WeddingCocktailFinder() {
               answers={answers}
               isLoading={isLoading}
               isAuthenticated={isAuthenticated}
-              onSignupClick={() => openSignupDialog({
-                title: "Create Your Free Account",
-                subtitle: "Sign up to create and save your wedding menu"
+              onSignupClick={() => openPreferredAuthDialog({
+                title: preferredAuthMode === "login" ? "Welcome back" : "Create Your Free Account",
+                subtitle: "Sign in to create and save your wedding menu"
               })}
             />
           </>

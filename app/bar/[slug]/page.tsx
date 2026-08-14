@@ -7,10 +7,13 @@ import { createServerClient } from "@/lib/supabase/server";
 import { getUserBarIngredients } from "@/lib/cocktails.server";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
-import { JoinCtaButton } from "@/components/auth/JoinCtaButton";
+import { PublicBarJoinCta } from "@/components/bar/PublicBarJoinCta";
 import { SITE_CONFIG } from "@/lib/seo";
 import type { Database } from "@/lib/supabase/database.types";
-import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, ShareIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, Cog6ToothIcon, BeakerIcon } from "@heroicons/react/24/outline";
+import { ShareBarButton } from "@/components/bar/ShareBarButton";
+import { PublicBarShare } from "@/components/bar/PublicBarShare";
+import { getBarSharePath } from "@/lib/barShare";
 import { debugLog } from "@/lib/debugLog";
 
 // Force dynamic rendering to ensure fresh data on every request
@@ -273,12 +276,13 @@ export default async function BarPage({ params }: Props) {
                 Back to MixWise
               </Link>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <ShareBarButton showPreview={false} />
                 <Link
                   href="/mix"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors font-medium"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-olive hover:bg-olive-dark text-cream rounded-xl transition-colors font-medium"
                 >
-                  <ShareIcon className="w-4 h-4" />
+                  <BeakerIcon className="w-4 h-4" />
                   Mix Cocktails
                 </Link>
                 <Link
@@ -409,9 +413,13 @@ export default async function BarPage({ params }: Props) {
                 {profile.username && (
                   <p className="text-sage mb-4">@{profile.username}</p>
                 )}
-                <p className="text-sage">
-                  Public bar • {ingredients.length} ingredients
-                </p>
+                  <p className="text-sage">
+                    Public bar • {ingredients.length} ingredients
+                  </p>
+                  <PublicBarShare
+                    displayName={displayName}
+                    sharePath={getBarSharePath(profile) || `/bar/${slug}`}
+                  />
               </div>
             </div>
           </div>
@@ -427,27 +435,7 @@ export default async function BarPage({ params }: Props) {
             userId={profile.id}
           />
 
-          {/* CTA to Join MixWise */}
-          <div className="card p-8 text-center bg-gradient-to-r from-terracotta/10 to-olive/10 border-terracotta/20">
-            <h3 className="text-xl font-serif font-bold text-forest mb-2">
-              Ready to Mix Your Own Cocktails?
-            </h3>
-            <p className="text-sage mb-6 max-w-md mx-auto">
-              Join MixWise to create your own bar, discover new recipes, and share your cocktail creations with friends.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <JoinCtaButton
-                label="Join MixWise"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors font-medium"
-              />
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-mist hover:bg-stone text-forest rounded-xl transition-colors font-medium"
-              >
-                Browse Cocktails
-              </Link>
-            </div>
-          </div>
+          <PublicBarJoinCta />
         </div>
       </MainContainer>
     </div>

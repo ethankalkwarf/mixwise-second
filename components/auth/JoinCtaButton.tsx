@@ -1,23 +1,27 @@
 "use client";
 
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 
 export function JoinCtaButton({
-  label = "Create a free account",
+  label,
   className,
 }: {
   label?: string;
   className?: string;
 }) {
-  const { openSignupDialog } = useAuthDialog();
+  const { openPreferredAuthDialog } = useAuthDialog();
+  const preferredMode = usePreferredAuthMode();
+  const buttonLabel =
+    label ?? (preferredMode === "login" ? "Log in" : "Create a free account");
 
   return (
     <button
       type="button"
-      onClick={() => openSignupDialog()}
+      onClick={() => openPreferredAuthDialog()}
       className={className}
     >
-      {label}
+      {buttonLabel}
     </button>
   );
 }

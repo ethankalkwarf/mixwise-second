@@ -16,6 +16,7 @@ interface BrandLogoProps {
    * `img` — static SVG asset from /public/brand (fixed fill per variant).
    */
   render?: "inline" | "img";
+  href?: string;
 }
 
 const SIZE_CLASSES: Record<BrandLogoSize, string> = {
@@ -71,6 +72,7 @@ export function BrandLogo({
   className = "",
   linked = true,
   render = "inline",
+  href = "/",
 }: BrandLogoProps) {
   const sizeClass = SIZE_CLASSES[size];
   const colorClass = VARIANT_COLOR[variant];
@@ -97,9 +99,9 @@ export function BrandLogo({
 
   return (
     <HardNavLink
-      href="/"
+      href={href}
       className={`inline-flex items-center hover:opacity-80 transition-opacity ${className}`}
-      aria-label="MixWise Home"
+      aria-label={href === "/dashboard" ? "MixWise Dashboard" : "MixWise Home"}
     >
       {mark}
     </HardNavLink>

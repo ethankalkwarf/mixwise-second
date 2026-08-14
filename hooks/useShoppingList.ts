@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
 import { formatIngredientCategory } from "@/lib/formatters";
+import { isValidUuid } from "@/lib/ingredientId";
 
 const LOCAL_STORAGE_KEY = "mixwise-shopping-list";
 
@@ -79,6 +80,11 @@ export function useShoppingList() {
   // Add single item
   const addItem = useCallback(async (ingredient: { id: string; name: string; category?: string }) => {
     if (isIce(ingredient.name)) return;
+
+    if (!isValidUuid(String(ingredient.id))) {
+      toast.info(`Add ${ingredient.name} from Mix — it isn't in our ingredient catalog yet.`);
+      return;
+    }
     
     const ingredientId = String(ingredient.id);
     
@@ -112,8 +118,8 @@ export function useShoppingList() {
         if (response.ok) {
           // Update state optimistically (like clearAll does)
           setItems(prev => [newItem, ...prev]);
-          toast.success(`Added ${ingredient.name} to shopping list`, 5000, {
-            label: "View shopping list",
+          toast.success(`Added ${ingredient.name} to your list`, 5000, {
+            label: "View list",
             href: "/shopping-list"
           });
         } else {
@@ -128,8 +134,8 @@ export function useShoppingList() {
       const updated = [newItem, ...items];
       setItems(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-      toast.success(`Added ${ingredient.name} to shopping list`, 5000, {
-        label: "View shopping list",
+      toast.success(`Added ${ingredient.name} to your list`, 5000, {
+        label: "View list",
         href: "/shopping-list"
       });
     }
@@ -137,12 +143,19 @@ export function useShoppingList() {
 
   // Add multiple items
   const addItems = useCallback(async (ingredients: { id: string; name: string; category?: string }[]) => {
-    const filtered = ingredients.filter(ing => 
+    const catalogItems = ingredients.filter(ing => isValidUuid(String(ing.id)));
+    const skipped = ingredients.length - catalogItems.length;
+
+    const filtered = catalogItems.filter(ing =>
       !isIce(ing.name) && !items.some(i => String(i.ingredient_id) === String(ing.id))
     );
-    
+
     if (filtered.length === 0) {
-      toast.info("All items are already in your shopping list");
+      if (skipped > 0 && catalogItems.length === 0) {
+        toast.info("Those bottles aren't in our catalog yet. Add them from Mix instead.");
+      } else {
+        toast.info("All items are already in your shopping list");
+      }
       return;
     }
 
@@ -171,8 +184,8 @@ export function useShoppingList() {
         if (response.ok) {
           // Update state optimistically (like clearAll does)
           setItems(prev => [...newItems, ...prev]);
-          toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`, 5000, {
-            label: "View shopping list",
+          toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to your list`, 5000, {
+            label: "View list",
             href: "/shopping-list"
           });
         } else {
@@ -187,8 +200,8 @@ export function useShoppingList() {
       const updated = [...newItems, ...items];
       setItems(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-      toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to shopping list`, 5000, {
-        label: "View shopping list",
+      toast.success(`Added ${filtered.length} item${filtered.length > 1 ? 's' : ''} to your list`, 5000, {
+        label: "View list",
         href: "/shopping-list"
       });
     }

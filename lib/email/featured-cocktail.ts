@@ -3,7 +3,17 @@
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCocktailsList } from "@/lib/cocktails.server";
+import { formatCocktailName } from "@/lib/formatters";
+
+export const WELCOME_COCKTAIL_SLUGS = [
+  "french-75",
+  "whiskey-sour",
+  "espresso-martini",
+  "gimlet",
+  "daiquiri",
+  "margarita",
+  "aperol-spritz",
+] as const;
 
 export interface FeaturedCocktailForEmail {
   name: string;
@@ -59,19 +69,33 @@ function formatInstructions(instructions: unknown): string | undefined {
 export async function getFeaturedCocktailForEmail(options?: {
   weekSeed?: number;
   preferImages?: boolean;
+  slugs?: readonly string[];
 }): Promise<FeaturedCocktailForEmail | undefined> {
   const preferImages = options?.preferImages ?? true;
 
   try {
     const supabaseAdmin = createAdminClient();
-    const cocktails = await getCocktailsList({ limit: 80 });
+    let query = supabaseAdmin
+      .from("cocktails")
+      .select("name, slug, short_description, image_url, ingredients, instructions")
+      .limit(80);
 
-    if (cocktails.length === 0) return undefined;
+    if (options?.slugs?.length) {
+      query = query.in("slug", [...options.slugs]);
+    }
 
-    const pool =
-      preferImages && cocktails.some((c) => c.image_url)
-        ? cocktails.filter((c) => c.image_url)
-        : cocktails;
+    if (preferImages) {
+      query = query.not("image_url", "is", null);
+    }
+
+    const { data: cocktails, error } = await query;
+    if (error) {
+      console.error("[Featured Cocktail] Query failed:", error);
+      return undefined;
+    }
+
+    const pool = cocktails || [];
+    if (pool.length === 0) return undefined;
 
     const index =
       options?.weekSeed !== undefined
@@ -81,21 +105,13 @@ export async function getFeaturedCocktailForEmail(options?: {
     const selected = pool[index];
     if (!selected) return undefined;
 
-    const { data: fullCocktail } = await supabaseAdmin
-      .from("cocktails")
-      .select("name, slug, short_description, image_url, ingredients, instructions")
-      .eq("id", selected.id)
-      .single();
-
-    if (!fullCocktail) return undefined;
-
     return {
-      name: fullCocktail.name,
-      slug: fullCocktail.slug,
-      description: fullCocktail.short_description || undefined,
-      imageUrl: fullCocktail.image_url || undefined,
-      ingredients: formatIngredients(fullCocktail.ingredients),
-      instructions: formatInstructions(fullCocktail.instructions),
+      name: formatCocktailName(selected.name),
+      slug: selected.slug,
+      description: selected.short_description || undefined,
+      imageUrl: selected.image_url || undefined,
+      ingredients: formatIngredients(selected.ingredients),
+      instructions: formatInstructions(selected.instructions),
     };
   } catch (error) {
     console.error("[Featured Cocktail] Failed to load cocktail:", error);

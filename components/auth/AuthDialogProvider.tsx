@@ -2,12 +2,19 @@
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { AuthDialog } from "./AuthDialog";
+import {
+  getLastAuthEmail,
+  getPreferredAuthMode,
+  preferredAuthCopy,
+} from "@/lib/auth/returning-user";
 
 export type AuthDialogMode = "signup" | "login" | "reset";
 
 interface AuthDialogContextType {
   isOpen: boolean;
   openAuthDialog: (options?: AuthDialogOptions) => void;
+  /** Login vs signup based on whether this browser has signed in before. */
+  openPreferredAuthDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
   openLoginDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
   openSignupDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
   openResetDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
@@ -29,12 +36,34 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
   const [options, setOptions] = useState<AuthDialogOptions>({});
 
   const openAuthDialog = useCallback((opts?: AuthDialogOptions) => {
-    setOptions(opts || {});
+    const mode = opts?.mode ?? getPreferredAuthMode();
+    setOptions({
+      ...opts,
+      mode,
+      initialEmail: opts?.initialEmail || getLastAuthEmail() || undefined,
+    });
+    setIsOpen(true);
+  }, []);
+
+  const openPreferredAuthDialog = useCallback((opts?: Omit<AuthDialogOptions, "mode">) => {
+    const mode = getPreferredAuthMode();
+    const copy = preferredAuthCopy(mode);
+    setOptions({
+      title: copy.title,
+      subtitle: copy.subtitle,
+      ...opts,
+      mode,
+      initialEmail: opts?.initialEmail || getLastAuthEmail() || undefined,
+    });
     setIsOpen(true);
   }, []);
 
   const openLoginDialog = useCallback((opts?: Omit<AuthDialogOptions, "mode">) => {
-    setOptions({ ...opts, mode: "login" });
+    setOptions({
+      ...opts,
+      mode: "login",
+      initialEmail: opts?.initialEmail || getLastAuthEmail() || undefined,
+    });
     setIsOpen(true);
   }, []);
 
@@ -62,6 +91,7 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
       value={{
         isOpen,
         openAuthDialog,
+        openPreferredAuthDialog,
         openLoginDialog,
         openSignupDialog,
         openResetDialog,

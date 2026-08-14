@@ -7,62 +7,41 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
 import { emailListWelcomeTemplate } from "@/lib/email/templates";
 import { sendSignupNotification } from "@/lib/email/signup-notification";
+import { persistEmailSignup, addToResendAudience, lookupMixwiseAccount } from "@/lib/email/subscribe-list";
 import {
   buildNewsletterUnsubscribeUrl,
+  buildNewsletterUnsubscribeApiUrl,
   createNewsletterUnsubscribeToken,
 } from "@/lib/email/newsletter-token";
+import { getFeaturedCocktailForEmail, getWeekNumber, WELCOME_COCKTAIL_SLUGS } from "@/lib/email/featured-cocktail";
 import { getSiteUrl } from "@/lib/site";
+import { isRateLimited, getClientIp } from "@/lib/rate-limit";
 import { debugLog } from "@/lib/debugLog";
 
 const ALLOWED_SOURCES = new Set(["homepage", "footer"]);
-
-const rateLimit = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60 * 1000;
-const RATE_LIMIT_MAX_REQUESTS = 5;
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const limit = rateLimit.get(ip);
-
-  if (!limit || now > limit.resetTime) {
-    rateLimit.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return false;
-  }
-
-  if (limit.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return true;
-  }
-
-  limit.count++;
-  return false;
-}
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function buildConvertUrl(email: string, source: string, siteUrl: string): string {
+function buildJoinUrl(email: string, source: string, siteUrl: string): string {
   const token = createNewsletterUnsubscribeToken(email, `convert:${source}`);
   const params = new URLSearchParams({
     email: email.trim().toLowerCase(),
     source,
     token,
   });
-  return `${siteUrl}/api/email/convert-to-account?${params.toString()}`;
+  return `${siteUrl}/join?${params.toString()}`;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const clientIP =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
+    const clientIP = getClientIp(request);
 
-    if (isRateLimited(clientIP)) {
+    if (isRateLimited(`email-list:${clientIP}`, 5)) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
         { status: 429 }
@@ -88,53 +67,59 @@ export async function POST(request: NextRequest) {
 
     debugLog(`[Email List] ${trimmedEmail} via ${source}`);
 
-    let supabaseAdmin;
-    try {
-      supabaseAdmin = createAdminClient();
-    } catch (adminError) {
-      console.error("[Email List] Admin client failed:", adminError);
+    const { hasAccount } = await lookupMixwiseAccount(trimmedEmail);
+    if (hasAccount) {
+      return NextResponse.json({
+        ok: true,
+        hasAccount: true,
+        path: "existing_account",
+        emailSent: false,
+        message: "This email already has a MixWise account.",
+      });
+    }
+
+    const persisted = await persistEmailSignup(trimmedEmail, source);
+    const audience = await addToResendAudience(trimmedEmail, { hasAccount: false }).catch((err) => {
+      console.error("[Email List] Audience sync failed (non-fatal):", err);
+      return { ok: false as const };
+    });
+
+    if (!persisted.saved && !audience.ok) {
       return NextResponse.json(
-        { error: "Server configuration error. Please try again later." },
+        { error: "Failed to process signup. Please try again." },
         { status: 500 }
       );
     }
 
-    const { data: existingLead } = await supabaseAdmin
-      .from("email_signups")
-      .select("id")
-      .eq("email", trimmedEmail)
-      .eq("source", source)
-      .maybeSingle();
-
-    const alreadySubscribed = Boolean(existingLead);
-
-    if (!existingLead) {
-      const { error: insertError } = await supabaseAdmin.from("email_signups").insert({
-        email: trimmedEmail,
-        source,
-      });
-      if (insertError && insertError.code !== "23505") {
-        console.error("[Email List] Insert failed:", insertError);
-        return NextResponse.json(
-          { error: "Failed to process signup. Please try again." },
-          { status: 500 }
-        );
-      }
-    }
-
     const siteUrl = getSiteUrl(new URL(request.url));
-    const convertUrl = buildConvertUrl(trimmedEmail, source, siteUrl);
+    const convertUrl = buildJoinUrl(trimmedEmail, source, siteUrl);
     const unsubscribeUrl = buildNewsletterUnsubscribeUrl(trimmedEmail, source, siteUrl);
+    const listUnsubscribeUrl = buildNewsletterUnsubscribeApiUrl(
+      trimmedEmail,
+      source,
+      siteUrl
+    );
 
     let emailSent = false;
 
     if (!process.env.RESEND_API_KEY || !MIXWISE_FROM_EMAIL) {
       console.warn("[Email List] Resend not configured — skipping welcome email");
     } else {
+      const featuredCocktail = await getFeaturedCocktailForEmail({
+        weekSeed: getWeekNumber(),
+        preferImages: true,
+        slugs: WELCOME_COCKTAIL_SLUGS,
+      }).catch((err) => {
+        console.error("[Email List] Featured cocktail failed (non-fatal):", err);
+        return undefined;
+      });
+
       const template = emailListWelcomeTemplate({
         userEmail: trimmedEmail,
         convertUrl,
         unsubscribeUrl,
+        featuredCocktail,
+        siteUrl,
       });
 
       try {
@@ -146,6 +131,10 @@ export async function POST(request: NextRequest) {
           subject: template.subject,
           html: template.html,
           text: template.text,
+          headers: {
+            "List-Unsubscribe": `<${listUnsubscribeUrl}>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
           tags: [
             { name: "category", value: "email_list_welcome" },
             { name: "source", value: source },
@@ -163,7 +152,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!alreadySubscribed) {
+    if (!persisted.alreadySubscribed) {
       sendSignupNotification({
         userEmail: trimmedEmail,
         signupMethod: `Email list (${source})`,
@@ -175,11 +164,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       emailSent,
-      alreadySubscribed,
+      alreadySubscribed: persisted.alreadySubscribed,
       path: "email_list",
       message: emailSent
-        ? "You're on the list — check your email. When you're ready, you can create a free account from that message."
-        : alreadySubscribed
+        ? "You're on the list — check your email."
+        : persisted.alreadySubscribed
           ? "You're already on the list. Thanks!"
           : "You're on the list. Thanks!",
     });

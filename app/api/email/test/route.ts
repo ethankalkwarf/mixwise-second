@@ -17,7 +17,9 @@ import {
   resetPasswordTemplate, 
   welcomeEmailTemplate,
   weeklyDigestTemplate,
+  emailListWelcomeTemplate,
 } from "@/lib/email/templates";
+import { weekendKickoffTemplate } from "@/lib/email/weekend-kickoff";
 import { verifyEmailTestSecret } from "@/lib/email/internal-auth";
 import { debugLog } from "@/lib/debugLog";
 
@@ -170,9 +172,31 @@ export async function POST(request: NextRequest) {
         });
         break;
 
+      case "weekend-kickoff":
+        emailContent = weekendKickoffTemplate({
+          mode: "literal",
+          firstName: email.split("@")[0],
+          userEmail: email,
+          unsubscribeUrl,
+        });
+        break;
+
+      case "email-list-welcome":
+        emailContent = emailListWelcomeTemplate({
+          userEmail: email,
+          convertUrl: "https://www.getmixwise.com/join",
+          unsubscribeUrl,
+          featuredCocktail: featuredCocktail || {
+            name: "French 75",
+            slug: "french-75",
+            description: "Gin, lemon, sugar, and champagne. A tall cold one that still feels like an occasion.",
+          },
+        });
+        break;
+
       default:
         return NextResponse.json({ 
-          error: "Invalid template. Use: confirmation, welcome, weekly-digest, weekly-digest-empty, password-reset" 
+          error: "Invalid template. Use: confirmation, welcome, weekly-digest, weekly-digest-empty, password-reset, weekend-kickoff, email-list-welcome" 
         }, { status: 400 });
     }
 

@@ -169,3 +169,59 @@ export function useRecentlyViewed(): UseRecentlyViewedResult {
   };
 }
 
+/**
+ * Record a cocktail view without loading the recently-viewed list.
+ * Use this on recipe pages so dashboard history stays in sync.
+ */
+export function useRecordCocktailView() {
+  const { user, isAuthenticated, isLoading: authLoading } = useUser();
+  const supabase = getSupabaseClient();
+  const recordedId = useRef<string | null>(null);
+
+  const recordView = useCallback(async (cocktail: {
+    id: string;
+    name: string;
+    slug?: string;
+    imageUrl?: string;
+  }) => {
+    if (!cocktail.id) return;
+
+    trackCocktailView(user?.id || null, cocktail.id, cocktail.name);
+
+    if (authLoading || !isAuthenticated || !user) return;
+    const viewKey = `${user.id}:${cocktail.id}`;
+    if (recordedId.current === viewKey) return;
+    recordedId.current = viewKey;
+
+    const { error } = await supabase.rpc("upsert_recently_viewed", {
+      p_user_id: user.id,
+      p_cocktail_id: cocktail.id,
+      p_cocktail_name: cocktail.name,
+      p_cocktail_slug: cocktail.slug,
+      p_cocktail_image_url: cocktail.imageUrl,
+    });
+
+    if (error) {
+      console.error("Error recording view:", error);
+      const { error: upsertError } = await supabase
+        .from("recently_viewed_cocktails")
+        .upsert({
+          user_id: user.id,
+          cocktail_id: cocktail.id,
+          cocktail_name: cocktail.name,
+          cocktail_slug: cocktail.slug,
+          cocktail_image_url: cocktail.imageUrl,
+          viewed_at: new Date().toISOString(),
+        }, {
+          onConflict: "user_id,cocktail_id",
+        });
+      if (upsertError) {
+        recordedId.current = null;
+        console.error("Error recording view (upsert fallback):", upsertError);
+      }
+    }
+  }, [authLoading, isAuthenticated, user, supabase]);
+
+  return recordView;
+}
+

@@ -2,6 +2,7 @@
 
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useUser } from "@/components/auth/UserProvider";
+import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 
 /**
  * Quiet Learn conversion band — cream surface, charcoal type (global h2 is forest).
@@ -9,6 +10,7 @@ import { useUser } from "@/components/auth/UserProvider";
 export function LearnJoinCta() {
   const { isAuthenticated } = useUser();
   const { openSignupDialog, openLoginDialog } = useAuthDialog();
+  const preferredMode = usePreferredAuthMode();
 
   if (isAuthenticated) return null;
 
@@ -27,30 +29,61 @@ export function LearnJoinCta() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5 shrink-0">
-          <button
-            type="button"
-            onClick={() =>
-              openSignupDialog({
-                title: "Join MixWise free",
-                subtitle: "Unlock Learn and save recipes to your bar.",
-              })
-            }
-            className="inline-flex items-center justify-center rounded-full bg-terracotta px-5 py-2.5 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
-          >
-            Create account
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              openLoginDialog({
-                title: "Welcome back",
-                subtitle: "Sign in to continue learning.",
-              })
-            }
-            className="inline-flex items-center justify-center rounded-full border border-mist bg-cream px-5 py-2.5 text-sm font-semibold text-forest hover:border-terracotta/40 transition-colors"
-          >
-            Sign in
-          </button>
+          {preferredMode === "login" ? (
+            <>
+              <button
+                type="button"
+                onClick={() =>
+                  openLoginDialog({
+                    title: "Welcome back",
+                    subtitle: "Sign in to continue learning.",
+                  })
+                }
+                className="inline-flex items-center justify-center rounded-full bg-terracotta px-5 py-2.5 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  openSignupDialog({
+                    title: "Join MixWise free",
+                    subtitle: "Unlock Learn and save recipes to your bar.",
+                  })
+                }
+                className="inline-flex items-center justify-center rounded-full border border-mist bg-cream px-5 py-2.5 text-sm font-semibold text-forest hover:border-terracotta/40 transition-colors"
+              >
+                Create account
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() =>
+                  openSignupDialog({
+                    title: "Join MixWise free",
+                    subtitle: "Unlock Learn and save recipes to your bar.",
+                  })
+                }
+                className="inline-flex items-center justify-center rounded-full bg-terracotta px-5 py-2.5 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
+              >
+                Create account
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  openLoginDialog({
+                    title: "Welcome back",
+                    subtitle: "Sign in to continue learning.",
+                  })
+                }
+                className="inline-flex items-center justify-center rounded-full border border-mist bg-cream px-5 py-2.5 text-sm font-semibold text-forest hover:border-terracotta/40 transition-colors"
+              >
+                Sign in
+              </button>
+            </>
+          )}
         </div>
       </div>
     </aside>

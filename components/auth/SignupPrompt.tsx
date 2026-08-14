@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useUser } from "./UserProvider";
 import { useAuthDialog } from "./AuthDialogProvider";
+import { getPreferredAuthMode, preferredAuthCopy } from "@/lib/auth/returning-user";
 
 const SESSION_KEY = "mixwise-signup-prompt-dismissed";
 const COOLDOWN_KEY = "mixwise-signup-prompt-until";
@@ -50,7 +51,7 @@ export function SignupPrompt({
   enabled = true,
 }: SignupPromptProps) {
   const { isAuthenticated, isLoading } = useUser();
-  const { isOpen: authOpen, openSignupDialog } = useAuthDialog();
+  const { isOpen: authOpen, openPreferredAuthDialog } = useAuthDialog();
   const [blocked, setBlocked] = useState(true);
 
   const openedRef = useRef(false);
@@ -79,15 +80,20 @@ export function SignupPrompt({
 
     openedRef.current = true;
     openedByUsRef.current = true;
-    openSignupDialog({
-      title: "Create your free MixWise account",
-      subtitle: "Save your cabinet, favorites, and the drinks you've tried.",
+    const mode = getPreferredAuthMode();
+    const copy = preferredAuthCopy(mode);
+    openPreferredAuthDialog({
+      title: copy.title,
+      subtitle:
+        mode === "login"
+          ? "Sign in to pick up your cabinet, favorites, and drinks you've tried."
+          : "Save your cabinet, favorites, and the drinks you've tried.",
       onSuccess: () => {
         markDismissed();
         setBlocked(true);
       },
     });
-  }, [authOpen, blocked, clickThreshold, isAuthenticated, isLoading, openSignupDialog]);
+  }, [authOpen, blocked, clickThreshold, isAuthenticated, isLoading, openPreferredAuthDialog]);
 
   // Time on site
   useEffect(() => {

@@ -1,6 +1,6 @@
 /**
- * Shared helpers for creating passwordless accounts from an email address
- * and sending a MixWise-hosted magic link via Resend.
+ * Shared helpers for creating MixWise accounts from an email address
+ * (passwordless magic-link, or password set in one step from the list welcome).
  */
 
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -181,4 +181,95 @@ export async function createPasswordlessAccountFromEmail(options: {
     emailSent,
     setupUrl,
   };
+}
+
+/**
+ * List-welcome conversion: create a confirmed account with the password they
+ * just typed, so the join page can sign them in immediately.
+ */
+export async function createAccountWithPassword(options: {
+  email: string;
+  password: string;
+  source: string;
+}): Promise<{
+  ok: boolean;
+  userId?: string;
+  alreadyExists?: boolean;
+  error?: string;
+}> {
+  const trimmedEmail = options.email.trim().toLowerCase();
+  const password = options.password;
+
+  if (password.length < 8) {
+    return { ok: false, error: "Password must be at least 8 characters" };
+  }
+
+  let supabaseAdmin;
+  try {
+    supabaseAdmin = createAdminClient();
+  } catch (adminError) {
+    console.error("[Create Account] Admin client failed:", adminError);
+    return { ok: false, error: "Server configuration error" };
+  }
+
+  const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    email: trimmedEmail,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      needs_password: false,
+      signup_source: options.source,
+    },
+  });
+
+  if (createError) {
+    const alreadyExists =
+      createError.message?.toLowerCase().includes("already") ||
+      createError.message?.toLowerCase().includes("registered") ||
+      (createError as { code?: string }).code === "email_exists";
+
+    if (alreadyExists) {
+      return {
+        ok: false,
+        alreadyExists: true,
+        error: "This email already has a MixWise account.",
+      };
+    }
+
+    console.error("[Create Account] createUser with password failed:", createError);
+    return { ok: false, error: "Failed to create account" };
+  }
+
+  const userId = created.user?.id;
+  if (!userId) {
+    return { ok: false, error: "Failed to create account" };
+  }
+
+  try {
+    await supabaseAdmin.from("profiles").upsert(
+      {
+        id: userId,
+        email: trimmedEmail,
+        display_name: trimmedEmail.split("@")[0],
+        role: "free",
+        preferences: {},
+      },
+      { onConflict: "id" }
+    );
+  } catch (profileError) {
+    console.error("[Create Account] Profile upsert failed (non-fatal):", profileError);
+  }
+
+  sendSignupNotification({
+    userId,
+    userEmail: trimmedEmail,
+    displayName: trimmedEmail.split("@")[0],
+    signupMethod: `Account creation (${options.source})`,
+  }).catch((err) => {
+    console.error("[Create Account] Notification failed (non-fatal):", err);
+  });
+
+  debugLog(`[Create Account] Password account created for ${trimmedEmail}`);
+
+  return { ok: true, userId };
 }

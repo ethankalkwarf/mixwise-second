@@ -274,12 +274,12 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
             ) : didAdd ? (
               <>
                 <CheckIcon className="w-4 h-4" />
-                Added to shopping list
+                Added to your list
               </>
             ) : (
               <>
                 <ShoppingBagIcon className="w-4 h-4" />
-                Add missing ingredients to shopping list
+                Add missing bottles
               </>
             )}
           </button>
@@ -291,7 +291,7 @@ export function IngredientAvailability({ ingredients, quantity = 1 }: Ingredient
               className="inline-flex items-center gap-2 text-sm font-semibold text-terracotta hover:text-terracotta-dark transition-colors group"
             >
               <ShoppingBagIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              View your shopping list
+              View your list
               <span className="group-hover:translate-x-0.5 transition-transform">→</span>
             </Link>
           </div>

@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/toast";
 import type { AuthDialogMode } from "./AuthDialogProvider";
 import { debugLog } from "@/lib/debugLog";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { markHasAccount } from "@/lib/auth/returning-user";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -213,6 +214,14 @@ export function AuthDialog({
 
         if (!response.ok) {
           console.error("Signup failed:", data);
+          const alreadyExists = typeof data.error === "string" && /already exists/i.test(data.error);
+          if (alreadyExists) {
+            markHasAccount(email.trim());
+            onModeChange?.("login");
+            toast.info("An account already exists for this email. Log in instead.");
+            setIsEmailLoading(false);
+            return;
+          }
           setError(data.error || "Failed to create account. Please try again.");
           toast.error(data.error || "Failed to create account");
           setIsEmailLoading(false);

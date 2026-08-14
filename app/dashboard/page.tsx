@@ -9,9 +9,10 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
-import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useShoppingList } from "@/hooks/useShoppingList";
+import { ShareBarButton } from "@/components/bar/ShareBarButton";
+import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { getMixDataClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { createClient } from "@/lib/supabase/client";
@@ -26,7 +27,6 @@ import {
   HeartIcon,
   ClockIcon,
   TrophyIcon,
-  ShareIcon,
   ArrowRightIcon,
   PlusCircleIcon,
   XMarkIcon,
@@ -53,11 +53,11 @@ export default function DashboardPage() {
   const { user, profile, isAuthenticated, isLoading: authLoading } = useUser();
   const supabase = getSupabaseClient();
   const { openAuthDialog } = useAuthDialog();
+  const preferredAuthMode = usePreferredAuthMode();
   const { ingredientIds, isLoading: barLoading, removeIngredient } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
-  const { preferences, isLoading: preferencesLoading, needsOnboarding } = useUserPreferences();
-  const { addItems, isLoading: shoppingLoading } = useShoppingList();
+  const { addItems, isLoading: shoppingLoading, itemCount: shoppingCount } = useShoppingList();
 
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<any[]>([]);
@@ -366,10 +366,10 @@ export default function DashboardPage() {
               Sign in to track your bar inventory, favorites, recommendations, and badges.
             </p>
             <button
-              onClick={() => openAuthDialog()}
+              onClick={() => openAuthDialog({ mode: preferredAuthMode })}
               className="px-8 py-4 bg-terracotta text-cream font-bold rounded-2xl hover:bg-terracotta-dark transition-all shadow-lg shadow-terracotta/20"
             >
-              Create Free Account
+              {preferredAuthMode === "login" ? "Log In" : "Create Free Account"}
             </button>
           </div>
         </MainContainer>
@@ -395,44 +395,13 @@ export default function DashboardPage() {
                 Track your bar, favorites, and progress
               </p>
             </div>
-          {/* Share buttons - show placeholder to prevent layout shift */}
-          {ingredientIds.length > 0 && user?.id && (
-            <div className="min-w-[160px]">
-              {preferencesLoading ? (
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-mist rounded-2xl text-sm font-medium">
-                  <ShareIcon className="w-4 h-4 text-sage" />
-                  <span className="text-sage">Loading...</span>
-                </div>
-              ) : preferences?.public_bar_enabled ? (
-                <Link
-                  href={`/bar/${profile?.username || profile?.public_slug || user.id}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
-                >
-                  <ShareIcon className="w-4 h-4" />
-                  Share My Bar
-                </Link>
-              ) : (
-                <Link
-                  href="/account"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-olive hover:bg-olive-dark text-cream rounded-2xl transition-all text-sm font-medium shadow-soft"
-                >
-                  <ShareIcon className="w-4 h-4" />
-                  Enable Public Bar
-                </Link>
-              )}
-            </div>
+          {ingredientIds.length > 0 && (
+            <ShareBarButton />
           )}
         </div>
 
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-3 mb-6">
-          <Link
-            href="/shopping-list"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-cream rounded-2xl transition-all text-sm font-medium shadow-soft"
-          >
-            <ShoppingBagIcon className="w-4 h-4" />
-            Shopping List
-          </Link>
           <Link
             href="/mix"
             className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
@@ -440,6 +409,15 @@ export default function DashboardPage() {
             <BeakerIcon className="w-4 h-4" />
             Mix Wizard
           </Link>
+          {shoppingCount > 0 && (
+            <Link
+              href="/shopping-list"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
+            >
+              <ShoppingBagIcon className="w-4 h-4" />
+              Shopping List ({shoppingCount})
+            </Link>
+          )}
         </div>
 
         {/* Bento Grid Layout */}
@@ -937,36 +915,13 @@ export default function DashboardPage() {
                   <span className="text-forest group-hover:text-terracotta transition-colors">Browse Cocktails</span>
                   <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
                 </Link>
-                {/* Show share buttons when user has ingredients - handle loading gracefully */}
                 {ingredientIds.length > 0 && (
-                  preferences ? (
-                    preferences.public_bar_enabled ? (
-                      <Link
-                        href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
-                        prefetch={false}
-                        className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
-                      >
-                        <span className="text-forest group-hover:text-terracotta transition-colors">Share My Bar</span>
-                        <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
-                      </Link>
-                    ) : (
-                      <Link
-                        href="/account"
-                        className="flex items-center justify-between p-3 bg-olive/20 hover:bg-olive/30 rounded-xl transition-colors group"
-                      >
-                        <span className="text-olive group-hover:text-olive-dark transition-colors">Enable Public Bar</span>
-                        <ArrowRightIcon className="w-4 h-4 text-olive group-hover:text-olive-dark transition-colors" />
-                      </Link>
-                    )
-                  ) : (
-                    // Loading placeholder while preferences load
-                    <div className="flex items-center justify-between p-3 bg-mist rounded-xl">
-                      <span className="text-sage">Loading share options...</span>
-                      <ArrowRightIcon className="w-4 h-4 text-sage" />
-                    </div>
-                  )
+                  <ShareBarButton
+                    variant="menu"
+                    className="flex w-full items-center justify-between p-3 bg-olive/15 hover:bg-olive/25 rounded-xl transition-colors text-sm font-medium text-olive"
+                    showPreview={false}
+                  />
                 )}
-                {/* Preferences onboarding is disabled - users manage preferences via the mix wizard */}
               </div>
             </section>
           </div>

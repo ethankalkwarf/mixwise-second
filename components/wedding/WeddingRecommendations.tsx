@@ -194,16 +194,16 @@ export function WeddingRecommendations({
             <div className="text-center py-8">
               <div className="text-5xl mb-4">🔒</div>
               <h3 className="text-xl font-display font-bold text-forest mb-3">
-                Sign Up to Save Your Selections
+                Save Your Selections
               </h3>
               <p className="text-sage mb-6 max-w-md mx-auto">
-                Create a free account to save your cocktail selections and get personalized recommendations for your home bar.
+                Sign in or create a free account to save your cocktail selections and get personalized recommendations for your home bar.
               </p>
               <button
                 onClick={onSignupClick}
                 className="px-8 py-4 bg-terracotta hover:bg-terracotta-dark text-cream font-bold text-lg rounded-full transition-colors shadow-lg shadow-terracotta/20 mb-3"
               >
-                Sign Up Free
+                Continue
               </button>
               <p className="text-xs text-sage">
                 No credit card required • Takes 30 seconds

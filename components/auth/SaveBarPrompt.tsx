@@ -4,6 +4,10 @@ import { useState } from "react";
 import { BookmarkIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
+import {
+  getLastAuthEmail,
+  usePreferredAuthMode,
+} from "@/lib/auth/returning-user";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -34,7 +38,9 @@ interface SaveBarPromptProps {
 export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
   const { signInWithGoogle, signInWithApple } = useUser();
   const toast = useToast();
-  const [email, setEmail] = useState("");
+  const preferredMode = usePreferredAuthMode();
+  const isReturning = preferredMode === "login";
+  const [email, setEmail] = useState(getLastAuthEmail);
   const [loading, setLoading] = useState<"google" | "apple" | "email" | null>(null);
   const [sent, setSent] = useState(false);
 
@@ -81,7 +87,12 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
       }
 
       setSent(true);
-      toast.success(data.message || "Check your email to open your account.");
+      toast.success(
+        data.message ||
+          (isReturning
+            ? "Check your email for a sign-in link."
+            : "Check your email to open your account.")
+      );
     } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -96,11 +107,17 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
           <BookmarkIcon className="h-5 w-5 text-olive" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-forest">Save your bar with a free account</p>
+          <p className="font-bold text-forest">
+            {isReturning ? "Sign in to save your bar" : "Save your bar with a free account"}
+          </p>
           <p className="text-sm text-sage">
             {sent
-              ? "Check your email for a link to open your account."
-              : "Google, Apple, or email — then you can add a password anytime."}
+              ? isReturning
+                ? "Check your email for a sign-in link."
+                : "Check your email for a link to open your account."
+              : isReturning
+                ? "Welcome back — sign in to keep this cabinet synced."
+                : "Google, Apple, or email — then you can add a password anytime."}
           </p>
         </div>
         <button
@@ -159,7 +176,7 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
               disabled={loading !== null || !isEmailValid}
               className="shrink-0 rounded-xl bg-terracotta px-3 py-2 text-sm font-bold text-cream transition-colors hover:bg-terracotta-dark disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading === "email" ? "…" : "Save"}
+              {loading === "email" ? "…" : isReturning ? "Sign in" : "Save"}
             </button>
           </form>
         </>
