@@ -11,7 +11,7 @@ interface HeroProps {
 }
 
 export function Hero({
-  subtitle = "Recipes worth making, matched to what’s already in your\u00A0cabinet, so you can pour something good\u00A0tonight.",
+  subtitle = "Recipes worth making, matched to what’s already in your cabinet, so you can pour something good tonight.",
 }: HeroProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -23,19 +23,19 @@ export function Hero({
   }, []);
 
   return (
-    <section className="relative isolate min-h-[88vh] overflow-hidden bg-charcoal">
+    <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-charcoal lg:min-h-[88vh]">
       <Image
         src="/media/strainer-pour-poster.webp"
         alt=""
         fill
         priority
         sizes="100vw"
-        className="object-cover object-center"
+        className="object-cover object-[center_28%] lg:object-center"
         aria-hidden
       />
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover object-[center_28%] lg:object-center"
         muted
         loop
         playsInline
@@ -47,34 +47,34 @@ export function Hero({
         <source src="/media/strainer-pour.mp4" type="video/mp4" />
       </video>
 
-      {/* Even scrim — readable type when content is centered over the pour */}
-      <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/65 to-charcoal/30" />
+      <div className="absolute inset-0 bg-gradient-to-t from-charcoal from-[18%] via-charcoal/70 to-charcoal/25 lg:from-charcoal lg:via-charcoal/65 lg:to-charcoal/30" />
       <div className="absolute inset-0 bg-charcoal/25" />
 
-      <div className="relative z-10 flex min-h-[88vh] items-center justify-center">
-        <div className="mx-auto w-full max-w-5xl px-4 pb-16 pt-28 text-center sm:px-6 sm:pb-20 lg:px-8 lg:pb-24">
-          <h1 className="mb-6 [text-wrap:balance] text-6xl font-semibold leading-[1.02] tracking-tight text-cream sm:text-7xl lg:text-8xl xl:text-[7.5rem]">
+      <div className="relative z-10 flex min-h-[calc(100svh-4rem)] items-end justify-center lg:min-h-[88vh] lg:items-center">
+        <div className="mx-auto w-full max-w-5xl px-5 pb-[calc(var(--mw-tabbar-h)+env(safe-area-inset-bottom,0px)+1.25rem)] pt-8 text-left sm:px-6 lg:px-8 lg:pb-24 lg:pt-28 lg:text-center">
+          <h1 className="mb-4 [text-wrap:balance] text-[2.35rem] font-semibold leading-[1.12] tracking-tight text-cream sm:mb-6 sm:text-6xl sm:leading-[1.02] lg:text-8xl xl:text-[7.5rem]">
             Find your{" "}
             <span className="italic text-terracotta">
               next
-              <br />
+              <br className="hidden sm:block" />
+              {` `}
               favorite
-            </span>
-            {"\u00A0"}cocktail
+            </span>{" "}
+            cocktail
           </h1>
-          <p className="mx-auto mb-10 max-w-xl [text-wrap:pretty] text-base leading-relaxed text-mist sm:text-lg lg:text-xl">
+          <p className="mb-7 max-w-md [text-wrap:pretty] text-[15px] leading-relaxed text-mist sm:mx-auto sm:mb-10 sm:max-w-xl sm:text-lg lg:text-xl">
             {subtitle}
           </p>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
             <Link
               href="/mix"
-              className="inline-flex items-center justify-center rounded-full bg-terracotta px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark sm:px-10 sm:py-4 sm:text-base"
+              className="inline-flex w-full items-center justify-center rounded-full bg-terracotta px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark sm:w-auto sm:px-10 sm:py-4 sm:text-base"
             >
               Open your cabinet
             </Link>
             <Link
               href="/cocktails"
-              className="inline-flex items-center justify-center rounded-full border-2 border-cream px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-cream hover:text-forest sm:px-10 sm:py-4 sm:text-base"
+              className="inline-flex w-full items-center justify-center rounded-full border-2 border-cream px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-cream hover:text-forest sm:w-auto sm:px-10 sm:py-4 sm:text-base"
             >
               Browse recipes
             </Link>
