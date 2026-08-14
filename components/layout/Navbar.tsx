@@ -1,27 +1,29 @@
 "use client";
 
 import { useState, Fragment, useEffect, useRef, useCallback, useMemo } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, Transition } from "@headlessui/react";
+import { Transition } from "@headlessui/react";
 import { MagnifyingGlassIcon, ShareIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { HardNavLink } from "@/components/layout/HardNavLink";
 import { CocktailSearch } from "@/components/search/CocktailSearch";
 import { RecipesMegaMenu } from "@/components/layout/RecipesMegaMenu";
 import { ExplainerMegaMenu } from "@/components/layout/ExplainerMegaMenu";
 import type { NavMegaController, NavMegaId } from "@/components/layout/MegaMenuFrame";
-import { MEGA_ROOT_ID } from "@/components/layout/MegaMenuFrame";
+import { MEGA_ROOT_ID, navMegaTriggerClass } from "@/components/layout/MegaMenuFrame";
 import type { MegaMenuData } from "@/lib/megaMenu";
 
 export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [megaMounted, setMegaMounted] = useState(false);
   const [openMega, setOpenMega] = useState<NavMegaId | null>(null);
   const megaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const { user, profile, isAuthenticated, isLoading, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
@@ -71,11 +73,40 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
     if (pathnameRef.current === pathname) return;
     pathnameRef.current = pathname;
     closeMenu();
+    setAccountMenuOpen(false);
   }, [pathname, closeMenu]);
 
   useEffect(() => {
-    if (desktopSearchOpen) closeMenu();
+    if (desktopSearchOpen) {
+      closeMenu();
+      setAccountMenuOpen(false);
+    }
   }, [desktopSearchOpen, closeMenu]);
+
+  useEffect(() => {
+    if (openMega) setAccountMenuOpen(false);
+  }, [openMega]);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (accountMenuRef.current && !accountMenuRef.current.contains(target)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccountMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [accountMenuOpen]);
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname?.startsWith(`${href}/`));
@@ -168,19 +199,29 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
 
             {/* Desktop Navigation - Centered */}
             <div className="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-              <ExplainerMegaMenu
-                id="daily"
-                controller={megaController}
-                active={isActive("/cocktail-of-the-day")}
-                href="/cocktail-of-the-day"
-                label="Drink of the Day"
-                eyebrow="Daily pour"
-                title={megaMenu?.dailyDrink?.name || "Drink of the Day"}
-                body="A new recipe every day — worth making tonight."
-                cta="See today’s drink"
-                imageUrl={megaMenu?.dailyDrink?.imageUrl || "/media/strainer-pour-poster.webp"}
-                imageAlt={megaMenu?.dailyDrink?.name || "Drink of the Day"}
-              />
+              {isAuthenticated && (
+                <HardNavLink
+                  href="/dashboard"
+                  className={navMegaTriggerClass(isActive("/dashboard"), false)}
+                >
+                  Dashboard
+                </HardNavLink>
+              )}
+              {!isAuthenticated && !isLoading && (
+                <ExplainerMegaMenu
+                  id="daily"
+                  controller={megaController}
+                  active={isActive("/cocktail-of-the-day")}
+                  href="/cocktail-of-the-day"
+                  label="Drink of the Day"
+                  eyebrow="Daily pour"
+                  title={megaMenu?.dailyDrink?.name || "Drink of the Day"}
+                  body="A new recipe every day — worth making tonight."
+                  cta="See today’s drink"
+                  imageUrl={megaMenu?.dailyDrink?.imageUrl || "/media/strainer-pour-poster.webp"}
+                  imageAlt={megaMenu?.dailyDrink?.name || "Drink of the Day"}
+                />
+              )}
               <ExplainerMegaMenu
                 id="mix"
                 controller={megaController}
@@ -189,8 +230,12 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 label="What Can I Make?"
                 eyebrow="Your cabinet"
                 title="What can you make tonight?"
-                body="Add what’s in your bar. We’ll show what’s ready to pour."
-                cta="Open your cabinet"
+                body={
+                  isAuthenticated
+                    ? "Your bar is saved. We’ll show what’s ready to pour."
+                    : "Add what’s in your bar. We’ll show what’s ready to pour."
+                }
+                cta={isAuthenticated ? "Open Mix" : "Open your cabinet"}
                 imageUrl="/media/kitchen-shelf.webp"
                 imageFocusClass="object-[center_40%]"
               />
@@ -226,8 +271,17 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-mist animate-pulse" />
             ) : isAuthenticated ? (
-              <Menu as="div" className="relative">
-                <Menu.Button className="flex items-center gap-2 px-2.5 py-1.5 rounded-full hover:bg-mist/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta">
+              <div className="relative" ref={accountMenuRef}>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-full hover:bg-mist/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
+                  aria-expanded={accountMenuOpen}
+                  aria-haspopup="menu"
+                  onClick={() => {
+                    closeMenu();
+                    setAccountMenuOpen((open) => !open);
+                  }}
+                >
                   {avatarUrl ? (
                     <Image
                       src={avatarUrl}
@@ -244,75 +298,44 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                   <span className="text-sm text-forest font-medium max-w-[100px] truncate">
                     {displayName}
                   </span>
-                </Menu.Button>
-                <Transition
-                  as={Fragment}
-                  enter="transition ease-out duration-100"
-                  enterFrom="transform opacity-0 scale-95"
-                  enterTo="transform opacity-100 scale-100"
-                  leave="transition ease-in duration-75"
-                  leaveFrom="transform opacity-100 scale-100"
-                  leaveTo="transform opacity-0 scale-95"
-                >
-                  <Menu.Items className="absolute right-0 mt-2 w-56 bg-white border border-mist rounded-2xl shadow-card py-2 z-50 overflow-hidden">
+                </button>
+                {accountMenuOpen ? (
+                  <div
+                    role="menu"
+                    className="absolute right-0 mt-2 w-56 bg-white border border-mist rounded-2xl shadow-card py-2 z-50 overflow-hidden"
+                  >
                     <div className="px-4 py-3 border-b border-mist">
                       <p className="text-sm font-medium text-forest truncate">{displayName}</p>
                       <p className="text-xs text-sage truncate">{user?.email}</p>
                     </div>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <Link
-                          href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
-                          className={`flex items-center gap-2 px-4 py-2.5 text-sm ${
-                            active ? "bg-mist/50 text-terracotta" : "text-charcoal"
-                          }`}
-                        >
-                          <ShareIcon className="w-4 h-4" />
-                          Share My Bar
-                        </Link>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <Link
-                          href="/dashboard"
-                          className={`block px-4 py-2.5 text-sm ${
-                            active ? "bg-mist/50 text-terracotta" : "text-charcoal"
-                          }`}
-                        >
-                          Dashboard
-                        </Link>
-                      )}
-                    </Menu.Item>
-                    <Menu.Item>
-                      {({ active }) => (
-                        <Link
-                          href="/account"
-                          className={`block px-4 py-2.5 text-sm ${
-                            active ? "bg-mist/50 text-terracotta" : "text-charcoal"
-                          }`}
-                        >
-                          Account Settings
-                        </Link>
-                      )}
-                    </Menu.Item>
+                    <HardNavLink
+                      href={`/bar/${profile?.username || profile?.public_slug || user?.id}`}
+                      role="menuitem"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-charcoal hover:bg-mist/50 hover:text-terracotta"
+                    >
+                      <ShareIcon className="w-4 h-4" />
+                      Share My Bar
+                    </HardNavLink>
+                    <HardNavLink
+                      href="/account"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm text-charcoal hover:bg-mist/50 hover:text-terracotta"
+                    >
+                      Account Settings
+                    </HardNavLink>
                     <div className="border-t border-mist mt-1 pt-1">
-                      <Menu.Item>
-                        {({ active }) => (
-                          <button
-                            onClick={handleSignOut}
-                            className={`block w-full text-left px-4 py-2.5 text-sm ${
-                              active ? "bg-terracotta/10 text-terracotta" : "text-sage"
-                            }`}
-                          >
-                            Sign Out
-                          </button>
-                        )}
-                      </Menu.Item>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={handleSignOut}
+                        className="block w-full text-left px-4 py-2.5 text-sm text-sage hover:bg-terracotta/10 hover:text-terracotta"
+                      >
+                        Sign Out
+                      </button>
                     </div>
-                  </Menu.Items>
-                </Transition>
-              </Menu>
+                  </div>
+                ) : null}
+              </div>
             ) : (
               <>
                 <button
