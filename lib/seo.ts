@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 
-// Base site configuration
 export const SITE_CONFIG = {
   name: "MixWise",
   tagline: "A smarter way to make cocktails at home",
-  description: "MixWise is a cocktail platform designed to help people make better drinks at home. Curated recipes, clear instructions, and tools that make cocktail discovery easy.",
+  description:
+    "MixWise is a cocktail platform designed to help people make better drinks at home. Curated recipes, clear instructions, and tools that make cocktail discovery easy.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.getmixwise.com",
   ogImage: "/og-image.jpg",
+  logo: "/logo.png",
   twitterHandle: "@mixwise",
+  sameAs: [] as string[],
 };
 
 type MetadataOptions = {
@@ -23,8 +25,18 @@ type MetadataOptions = {
   keywords?: string[];
 };
 
+function stripSiteSuffix(value: string): string {
+  return value.replace(new RegExp(`\\s*[|–-]\\s*${SITE_CONFIG.name}\\s*$`, "i"), "").trim();
+}
+
+function absoluteUrl(pathOrUrl: string): string {
+  if (pathOrUrl.startsWith("http")) return pathOrUrl;
+  return `${SITE_CONFIG.url}${pathOrUrl.startsWith("/") ? pathOrUrl : `/${pathOrUrl}`}`;
+}
+
 /**
- * Generate metadata for a page
+ * Generate metadata for a page.
+ * `title` should not include "| MixWise" — the root title template adds it.
  */
 export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
   const {
@@ -40,17 +52,14 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
     keywords,
   } = options;
 
-  const pageTitle = title 
-    ? `${title} | ${SITE_CONFIG.name}` 
+  const pageTitle = title
+    ? `${stripSiteSuffix(title)} | ${SITE_CONFIG.name}`
     : `${SITE_CONFIG.name} - ${SITE_CONFIG.tagline}`;
-  
+
   const url = `${SITE_CONFIG.url}${path}`;
-  const imageUrl = ogImage 
-    ? (ogImage.startsWith("http") ? ogImage : `${SITE_CONFIG.url}${ogImage}`)
-    : `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`;
+  const imageUrl = ogImage ? absoluteUrl(ogImage) : absoluteUrl(SITE_CONFIG.ogImage);
 
   const metadata: Metadata = {
-    title: pageTitle,
     description,
     metadataBase: new URL(SITE_CONFIG.url),
     alternates: {
@@ -68,7 +77,7 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: title || SITE_CONFIG.name,
+          alt: title ? `${stripSiteSuffix(title)} | ${SITE_CONFIG.name}` : SITE_CONFIG.name,
         },
       ],
     },
@@ -79,10 +88,14 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
       images: [imageUrl],
       creator: SITE_CONFIG.twitterHandle,
     },
-    robots: noIndex 
-      ? { index: false, follow: false } 
+    robots: noIndex
+      ? { index: false, follow: false }
       : { index: true, follow: true },
   };
+
+  if (title) {
+    metadata.title = stripSiteSuffix(title);
+  }
 
   if (keywords && keywords.length > 0) {
     metadata.keywords = keywords;
@@ -118,20 +131,22 @@ export function generateCocktailMetadata(cocktail: {
     .slice(0, 5)
     .join(", ");
 
-  const title = cocktail.seoTitle || `${cocktail.name} Recipe`;
+  const rawSeo = cocktail.seoTitle?.trim();
+  const title =
+    rawSeo && rawSeo.length <= 70 && rawSeo !== cocktail.metaDescription
+      ? stripSiteSuffix(rawSeo)
+      : `${cocktail.name} Recipe`;
 
-  const description = cocktail.metaDescription
-    || cocktail.description
-    || `Learn how to make a ${cocktail.name}${cocktail.primarySpirit ? ` with ${cocktail.primarySpirit}` : ""}${ingredientNames ? `. Made with ${ingredientNames}.` : "."}`;
-
-  // Handle image from Sanity or external URL
-  const imageUrl = cocktail.externalImageUrl;
+  const description =
+    cocktail.metaDescription ||
+    cocktail.description ||
+    `Learn how to make a ${cocktail.name}${cocktail.primarySpirit ? ` with ${cocktail.primarySpirit}` : ""}${ingredientNames ? `. Made with ${ingredientNames}.` : "."}`;
 
   return generatePageMetadata({
     title,
     description,
     path: `/cocktails/${cocktail.slug?.current}`,
-    ogImage: imageUrl,
+    ogImage: cocktail.externalImageUrl || SITE_CONFIG.ogImage,
     keywords: [
       cocktail.name,
       "cocktail recipe",
@@ -157,10 +172,9 @@ export function generateArticleMetadata(article: {
     title: article.title,
     description: article.excerpt,
     path: `/blog/${article.slug.current}`,
-    ogImage: article.image?.asset?.url,
+    ogImage: article.image?.asset?.url || SITE_CONFIG.ogImage,
     type: "article",
     publishedTime: article.publishedAt,
     authors: article.author?.name ? [article.author.name] : undefined,
   });
 }
-

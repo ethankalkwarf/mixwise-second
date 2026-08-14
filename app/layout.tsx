@@ -30,6 +30,9 @@ export const metadata: Metadata = {
   },
   description: SITE_CONFIG.description,
   metadataBase: new URL(SITE_CONFIG.url),
+  alternates: {
+    canonical: SITE_CONFIG.url,
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -39,10 +42,10 @@ export const metadata: Metadata = {
     description: SITE_CONFIG.description,
     images: [
       {
-        url: `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`,
+        url: SITE_CONFIG.ogImage,
         width: 1200,
         height: 630,
-        alt: SITE_CONFIG.name,
+        alt: `${SITE_CONFIG.name} - ${SITE_CONFIG.tagline}`,
       },
     ],
   },
@@ -50,6 +53,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${SITE_CONFIG.name} - ${SITE_CONFIG.tagline}`,
     description: SITE_CONFIG.description,
+    images: [SITE_CONFIG.ogImage],
     creator: SITE_CONFIG.twitterHandle,
   },
   robots: {
@@ -57,8 +61,12 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   manifest: "/site.webmanifest",
 };

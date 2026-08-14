@@ -8,7 +8,7 @@ import { getUserBarIngredients } from "@/lib/cocktails.server";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
 import { PublicBarJoinCta } from "@/components/bar/PublicBarJoinCta";
-import { SITE_CONFIG } from "@/lib/seo";
+import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 import type { Database } from "@/lib/supabase/database.types";
 import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, Cog6ToothIcon, BeakerIcon } from "@heroicons/react/24/outline";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
@@ -207,37 +207,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!profile) {
       debugLog('[BAR PAGE] No profile found for metadata');
-      return {
-        title: "Bar Not Found | MixWise",
+      return generatePageMetadata({
+        title: "Bar Not Found",
         description: "This bar profile could not be found.",
-      };
+        path: `/bar/${slug}`,
+        noIndex: true,
+      });
     }
 
     const displayName = profile.display_name || profile.username || "Anonymous Bartender";
     debugLog('[BAR PAGE] Generated metadata for:', displayName, 'isOwnerView:', isOwnerView);
 
     if (isOwnerView) {
-      return {
-        title: `${displayName} | MixWise`,
-        description: `Manage your bar with ingredients and discover new cocktails!`,
-      };
+      return generatePageMetadata({
+        title: displayName,
+        description: "Manage your bar with ingredients and discover new cocktails.",
+        path: `/bar/${slug}`,
+        noIndex: true,
+      });
     }
 
-    return {
-      title: `${displayName}'s Bar | MixWise`,
-      description: `Check out ${displayName}'s bar and see what cocktails they can make!`,
-      openGraph: {
-        title: `${displayName}'s Bar | MixWise`,
-        description: `Check out ${displayName}'s bar and see what cocktails they can make!`,
-        type: "profile",
-      },
-    };
+    return generatePageMetadata({
+      title: `${displayName}'s Bar`,
+      description: `Check out ${displayName}'s bar and see what cocktails they can make.`,
+      path: `/bar/${slug}`,
+    });
   } catch (error) {
     console.error('[BAR PAGE] Error in generateMetadata:', error);
-    return {
-      title: "Bar Not Found | MixWise",
+    return generatePageMetadata({
+      title: "Bar Not Found",
       description: "This bar profile could not be found.",
-    };
+      noIndex: true,
+    });
   }
 }
 

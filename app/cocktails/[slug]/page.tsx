@@ -1,6 +1,6 @@
 import { getCocktailBySlug, getCocktailsList, getTodaysDailyCocktailSlug } from "@/lib/cocktails.server";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
-import { SITE_CONFIG } from "@/lib/seo";
+import { SITE_CONFIG, generateCocktailMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
@@ -217,34 +217,24 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-// Generate metadata for SEO
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const cocktail = await getCocktailBySlug(slug);
-  const sanityCocktail = cocktail ? mapSupabaseToSanityCocktail(cocktail) : null;
 
-  if (!sanityCocktail) {
+  if (!cocktail) {
     return { title: "Cocktail Not Found" };
   }
 
-  const title = sanityCocktail.seoTitle || sanityCocktail.name;
-  const description = sanityCocktail.metaDescription || sanityCocktail.description || `${sanityCocktail.name} cocktail recipe with ingredients and instructions.`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      images: sanityCocktail.externalImageUrl ? [{ url: sanityCocktail.externalImageUrl }] : [],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: sanityCocktail.externalImageUrl ? [{ url: sanityCocktail.externalImageUrl }] : [],
-    },
-  };
+  return generateCocktailMetadata({
+    name: cocktail.name,
+    slug: { current: cocktail.slug },
+    description: cocktail.short_description || cocktail.long_description,
+    externalImageUrl: cocktail.image_url,
+    seoTitle: cocktail.metadata_json?.seoTitle,
+    metaDescription: cocktail.seo_description,
+    ingredients: cocktail.ingredients,
+    primarySpirit: cocktail.base_spirit,
+  });
 }
 
 // Generate JSON-LD Recipe Schema
@@ -267,7 +257,7 @@ function generateRecipeSchema(args: {
     "@type": "Recipe",
     name: args.name,
     description: args.description || undefined,
-    image: args.imageUrl || undefined,
+    image: args.imageUrl || `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`,
     recipeIngredient: args.ingredients,
     "recipeInstructions": instructions,
     keywords: args.keywords.join(", "),
@@ -275,12 +265,18 @@ function generateRecipeSchema(args: {
     "recipeCuisine": "Cocktail",
     "author": {
       "@type": "Organization",
-      "name": "MixWise"
+      "name": SITE_CONFIG.name,
+      "url": SITE_CONFIG.url,
     },
     "publisher": {
       "@type": "Organization",
-      "name": "MixWise"
-    }
+      "name": SITE_CONFIG.name,
+      "url": SITE_CONFIG.url,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_CONFIG.url}${SITE_CONFIG.logo}`,
+      },
+    },
   };
 }
 

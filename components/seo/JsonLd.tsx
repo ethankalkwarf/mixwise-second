@@ -1,5 +1,22 @@
 import { SITE_CONFIG } from "@/lib/seo";
 
+const organizationId = `${SITE_CONFIG.url}/#organization`;
+const websiteId = `${SITE_CONFIG.url}/#website`;
+
+const organizationLogo = {
+  "@type": "ImageObject",
+  url: `${SITE_CONFIG.url}${SITE_CONFIG.logo}`,
+  width: 512,
+  height: 512,
+};
+
+const organizationRef = {
+  "@type": "Organization",
+  "@id": organizationId,
+  name: SITE_CONFIG.name,
+  url: SITE_CONFIG.url,
+};
+
 type WebPageSchemaProps = {
   title: string;
   description: string;
@@ -15,6 +32,7 @@ export function WebPageSchema({ title, description, url }: WebPageSchemaProps) {
     url,
     isPartOf: {
       "@type": "WebSite",
+      "@id": websiteId,
       name: SITE_CONFIG.name,
       url: SITE_CONFIG.url,
     },
@@ -58,13 +76,12 @@ export function RecipeSchema({
     "@type": "Recipe",
     name,
     description: description || `Learn how to make a ${name} cocktail.`,
-    image: image || `${SITE_CONFIG.url}/og-image.jpg`,
-    author: {
-      "@type": "Organization",
-      name: SITE_CONFIG.name,
-      url: SITE_CONFIG.url,
+    image: image || `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`,
+    author: organizationRef,
+    publisher: {
+      ...organizationRef,
+      logo: organizationLogo,
     },
-    datePublished: new Date().toISOString().split("T")[0],
     prepTime,
     totalTime,
     recipeYield: `${servings} serving${servings > 1 ? "s" : ""}`,
@@ -113,7 +130,7 @@ export function ArticleSchema({
     "@type": "Article",
     headline: title,
     description,
-    image: image || `${SITE_CONFIG.url}/og-image.jpg`,
+    image: image || `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`,
     author: author
       ? {
           "@type": "Person",
@@ -125,9 +142,8 @@ export function ArticleSchema({
           url: SITE_CONFIG.url,
         },
     publisher: {
-      "@type": "Organization",
-      name: SITE_CONFIG.name,
-      url: SITE_CONFIG.url,
+      ...organizationRef,
+      logo: organizationLogo,
     },
     datePublished: publishedAt,
     dateModified: modifiedAt || publishedAt,
@@ -149,13 +165,26 @@ export function ArticleSchema({
 export function OrganizationSchema() {
   const schema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: SITE_CONFIG.name,
-    url: SITE_CONFIG.url,
-    description: SITE_CONFIG.description,
-    logo: `${SITE_CONFIG.url}/logo.png`,
-    sameAs: [
-      // Add social links here when available
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": organizationId,
+        name: SITE_CONFIG.name,
+        url: SITE_CONFIG.url,
+        description: SITE_CONFIG.description,
+        logo: organizationLogo,
+        image: `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`,
+        ...(SITE_CONFIG.sameAs.length > 0 ? { sameAs: SITE_CONFIG.sameAs } : {}),
+      },
+      {
+        "@type": "WebSite",
+        "@id": websiteId,
+        name: SITE_CONFIG.name,
+        url: SITE_CONFIG.url,
+        description: SITE_CONFIG.description,
+        publisher: { "@id": organizationId },
+        inLanguage: "en-US",
+      },
     ],
   };
 

@@ -2,7 +2,7 @@ import { WebPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { generatePageMetadata, SITE_CONFIG } from "@/lib/seo";
 import { AboutPageContent } from "@/components/about/AboutPageContent";
 
-export const metadata: any = generatePageMetadata({
+export const metadata = generatePageMetadata({
   title: "About",
   description:
     "MixWise helps you make better drinks at home. Browse curated recipes, mix with what you have, and build confidence behind your own bar.",

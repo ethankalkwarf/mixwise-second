@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return generatePageMetadata({
-    title: `${ingredient.name} | Ingredients`,
+    title: ingredient.name,
     description: `Learn about ${ingredient.name} and discover cocktails you can make with it.`,
     path: `/ingredients/${ingredient.slug}`,
     ogImage: ingredient.imageUrl || undefined,
