@@ -106,7 +106,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
             </span>
             <span className="text-charcoal font-medium">{occasion.name}</span>
           </nav>
-          <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight leading-tight text-charcoal mb-3 drop-shadow-sm">
+          <h1 className="font-display text-3xl sm:text-5xl font-semibold tracking-tight leading-tight text-charcoal mb-3 drop-shadow-sm break-words [text-wrap:balance]">
             {occasion.name}
           </h1>
           <p className="text-lg font-medium text-forest max-w-2xl mb-2">{occasion.headline}</p>

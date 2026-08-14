@@ -153,7 +153,7 @@ export function RecipeContent({
           )}
 
           {/* Drink title */}
-          <h1 className="text-4xl font-semibold tracking-tight mb-6">
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-6 break-words [text-wrap:balance]">
             {formatCocktailName(sanityCocktail.name)}
           </h1>
 
@@ -314,7 +314,7 @@ export function RecipeContent({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* INGREDIENTS COLUMN */}
         <div className="lg:col-span-5 space-y-8">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 sticky top-24">
+          <div className="bg-white p-5 sm:p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 lg:sticky lg:top-24">
             <h2 className="font-serif text-2xl font-bold text-gray-900 mb-4">Ingredients</h2>
             <div className="mb-6">
               <QuantitySelector
@@ -404,7 +404,7 @@ export function RecipeContent({
           {isLearnPublic() && (
             <p className="text-xs text-sage">
               Missing a bottle?{" "}
-              <Link href="/learn/swaps" className="text-terracotta hover:underline font-medium">
+              <Link href="/learn/swaps" className="mw-inline-term text-terracotta hover:underline font-medium">
                 See smart swaps in Learn
               </Link>
               .
@@ -415,7 +415,7 @@ export function RecipeContent({
 
       {/* Instructions Section */}
       <section id="recipe" className="mt-16">
-        <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
+        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4 break-words">
           How to make the {formatCocktailName(sanityCocktail.name)}
         </h2>
 
@@ -443,7 +443,7 @@ export function RecipeContent({
       {/* Drinks similar to [Drink Name] */}
       {similarRecipes.length > 0 && (
         <section className="mt-16">
-          <h2 className="font-serif text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-4 break-words">
             Drinks similar to {formatCocktailName(sanityCocktail.name)}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

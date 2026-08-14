@@ -552,7 +552,7 @@ body {
   display: none;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   body:has(.mw-tabbar) {
     padding-bottom: calc(
       var(--mw-tabbar-h) + env(safe-area-inset-bottom, 0px)
@@ -672,6 +672,13 @@ body {
   transform: translateY(0);
 }
 
+.mw-mobile-sheet a,
+.mw-mobile-sheet button:not(.mw-mobile-sheet__close):not(.mw-mobile-sheet__backdrop) {
+  justify-content: flex-start;
+  text-align: left;
+  min-width: 0;
+}
+
 .mw-mobile-sheet__handle {
   width: 40px;
   height: 4px;
@@ -717,11 +724,29 @@ body {
   color: #bc5a45;
 }
 
+/* Inline glossary terms / in-sentence links must stay inline — the 44pt rule
+   otherwise turns “shake” into a 44×44 square and blows up recipe steps. */
+.mw-inline-term {
+  min-height: 0 !important;
+  min-width: 0 !important;
+  height: auto !important;
+  width: auto !important;
+  display: inline !important;
+  padding: 0.05em 0.12em;
+  vertical-align: baseline;
+  -webkit-tap-highlight-color: rgba(188, 90, 69, 0.18);
+}
+
+.mw-inline-expand {
+  min-width: 0 !important;
+  justify-content: flex-start !important;
+}
+
 /* Touch Target Optimization - Minimum 44x44pt for iOS */
 @media (hover: none) and (pointer: coarse) {
-  button,
-  a,
-  [role="button"],
+  button:not(.mw-inline-term):not(.mw-inline-expand),
+  a:not(.mw-inline-term),
+  [role="button"]:not(.mw-inline-term),
   .btn-primary,
   .btn-secondary,
   .btn-ghost {

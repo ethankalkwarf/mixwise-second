@@ -100,7 +100,7 @@ export function MixMenu({
   }, [selectedIngredients]);
 
   return (
-    <MainContainer className="py-6 overflow-x-hidden">
+    <MainContainer className="py-6 pb-24 lg:pb-6 overflow-x-hidden">
       <div className="grid lg:grid-cols-[300px_minmax(0,1fr)] gap-8">
         {/* Left Sidebar - Your Bar */}
         <aside className="lg:sticky lg:top-24 space-y-6 min-w-0">

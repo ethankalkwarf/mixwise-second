@@ -27,7 +27,7 @@ export function TechniqueCue({ technique }: TechniqueCueProps) {
     <div className="mb-5">
       <button
         type="button"
-        className="group inline-flex max-w-full items-center gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-olive/40 rounded-sm"
+        className="mw-inline-expand group inline-flex max-w-full items-center justify-start gap-2.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-olive/40 rounded-sm"
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}

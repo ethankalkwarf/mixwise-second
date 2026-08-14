@@ -94,7 +94,7 @@ export function MobileBottomNav() {
   return (
     <>
       <nav
-        className="mw-tabbar md:hidden"
+        className="mw-tabbar lg:hidden"
         aria-label="Mobile navigation"
       >
         {TABS.map((tab) => {
@@ -130,7 +130,7 @@ export function MobileBottomNav() {
 
       <div
         id="mw-mobile-sheet"
-        className={`mw-mobile-sheet md:hidden${moreOpen ? " is-open" : ""}`}
+        className={`mw-mobile-sheet lg:hidden${moreOpen ? " is-open" : ""}`}
         hidden={!moreOpen}
       >
         <button
@@ -191,20 +191,48 @@ export function MobileBottomNav() {
               <span className="block text-sm text-sage">The full library — search and filter</span>
             </HardNavLink>
 
-            <div className="pl-3 pb-2 space-y-0.5">
-              <p className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-sage">
-                By collection
-              </p>
-              {occasionLinks.map((occasion) => (
+            <div className="pt-1 pb-2">
+              <div className="flex items-center justify-between px-3 pb-1">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-sage">
+                  By collection
+                </p>
                 <HardNavLink
-                  key={occasion.slug}
-                  href={`/occasions/${occasion.slug}`}
-                  className="block px-3 py-2 text-sm rounded-lg text-charcoal hover:text-terracotta hover:bg-mist/50"
+                  href="/occasions"
+                  className="mw-inline-term text-[11px] font-semibold text-terracotta"
                   onClick={closeMore}
                 >
-                  {occasion.name}
+                  View all
                 </HardNavLink>
-              ))}
+              </div>
+              {occasionLinks
+                .filter((occasion) => occasion.slug === "party")
+                .map((occasion) => (
+                  <HardNavLink
+                    key={occasion.slug}
+                    href={`/occasions/${occasion.slug}`}
+                    className="block mx-1 mb-1 px-3 py-3 rounded-xl bg-mist/50 text-charcoal"
+                    onClick={closeMore}
+                  >
+                    <span className="block text-base font-medium">
+                      {occasion.navName || occasion.name}
+                    </span>
+                    <span className="block text-sm text-sage">{occasion.headline}</span>
+                  </HardNavLink>
+                ))}
+              <div className="grid grid-cols-2 gap-0.5 px-1">
+                {occasionLinks
+                  .filter((occasion) => occasion.slug !== "party")
+                  .map((occasion) => (
+                    <HardNavLink
+                      key={occasion.slug}
+                      href={`/occasions/${occasion.slug}`}
+                      className="px-3 py-2.5 text-sm rounded-lg text-charcoal hover:text-terracotta hover:bg-mist/50"
+                      onClick={closeMore}
+                    >
+                      {occasion.navName || occasion.name}
+                    </HardNavLink>
+                  ))}
+              </div>
               {isLearnPublic() && (
                 <HardNavLink
                   href="/learn"

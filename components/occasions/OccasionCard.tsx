@@ -53,7 +53,7 @@ export function OccasionCard({ occasion, count, cover, compact }: Props) {
         <h2
           className={[
             "font-display font-semibold tracking-tight leading-tight text-cream mb-1.5 transition-colors group-hover:text-olive",
-            compact ? "text-xl" : "text-2xl",
+            compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl",
           ].join(" ")}
           style={{ textShadow: "0 1px 2px rgba(0,0,0,0.45)" }}
         >

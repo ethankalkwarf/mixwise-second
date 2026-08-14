@@ -25,6 +25,8 @@ export type OccasionDefinition = {
   parentSlug?: string;
   /** Child occasion slugs when this is a hub (e.g. Holidays) */
   childSlugs?: string[];
+  /** Compact label for tight nav (mobile sheet, chips). Falls back to `name`. */
+  navName?: string;
 };
 
 function tokenBag(c: OccasionCocktail): Set<string> {
@@ -156,6 +158,7 @@ export const OCCASIONS: OccasionDefinition[] = [
   {
     slug: "party",
     name: "52 Crowd-Pleasing Cocktails",
+    navName: "Crowd-Pleasers",
     headline: "The ones people actually ask for",
     description: "Familiar, colorful, and shareable drinks that scale for a gathering — easy to batch, easy to love.",
     accentClass: "from-terracotta/15 via-cream to-cream",

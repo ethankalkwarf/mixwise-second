@@ -304,7 +304,7 @@ export function CocktailsDirectory({ cocktails, initialSpirit = null, initialFil
           <div className="relative flex-1 group">
             <input
               type="text"
-              placeholder="Search: cocktails, ingredients, 'popular', 'tiki', 'holiday'..."
+              placeholder="Search cocktails or ingredients..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="input-botanical pl-10 pr-10 transition-all duration-300 focus:scale-[1.02] focus:shadow-lg focus:shadow-terracotta/20"

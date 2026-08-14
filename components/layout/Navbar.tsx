@@ -143,7 +143,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-forest/20 backdrop-blur-sm z-[100] flex items-start justify-center pt-32">
+          <div className="fixed inset-0 bg-forest/20 backdrop-blur-sm z-[1300] flex items-start justify-center pt-20 sm:pt-32">
             <div
               ref={searchContainerRef}
               className="w-full max-w-2xl mx-4"
@@ -167,7 +167,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
             </div>
 
             {/* Desktop Navigation - Centered */}
-            <div className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
+            <div className="hidden lg:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
               <ExplainerMegaMenu
                 id="daily"
                 controller={megaController}
@@ -221,7 +221,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 </kbd>
               </button>
 
-              <div className="hidden md:flex items-center gap-3">
+              <div className="hidden lg:flex items-center gap-3">
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-mist animate-pulse" />
             ) : isAuthenticated ? (

@@ -35,7 +35,7 @@ export function BartendersNoteCard({ note, sources }: BartendersNoteCardProps) {
                       href={source.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline hover:text-amber-900 transition-colors"
+                      className="mw-inline-term underline hover:text-amber-900 transition-colors"
                     >
                       {source.label}
                     </a>

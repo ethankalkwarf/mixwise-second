@@ -16,7 +16,7 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
   const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/cocktails/${cocktail.slug}`;
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       <FavoriteButton
         cocktail={{
           id: cocktail.id,

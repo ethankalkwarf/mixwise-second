@@ -49,13 +49,14 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Auto-focus input when opened (desktop modal or mobile menu)
+  // Auto-focus only in the desktop overlay. Focusing the More-sheet field
+  // immediately opens the iOS keyboard and covers the rest of the menu.
   useEffect(() => {
-    if (!inputRef.current) return;
+    if (variant !== "desktop" || !inputRef.current) return;
 
     const timer = setTimeout(() => {
       inputRef.current?.focus();
-    }, variant === "desktop" ? 100 : 200);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, [variant]);
@@ -143,7 +144,7 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
       </div>
 
       {showResults && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card overflow-hidden z-[60] max-h-96 overflow-y-auto animate-fade-in">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card overflow-hidden z-[60] max-h-[min(24rem,45svh)] overflow-y-auto animate-fade-in">
           <ul role="listbox" className="py-2">
             {results.map((cocktail, index) => (
               <li
