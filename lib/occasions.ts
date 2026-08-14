@@ -50,6 +50,27 @@ function tokenBag(c: OccasionCocktail): Set<string> {
   return bag;
 }
 
+/** Hyphen variants and hyphen-delimited segments — not raw substrings (avoids "tai" matching "mocktail"). */
+function tokensAlign(bagToken: string, matchToken: string): boolean {
+  if (bagToken === matchToken) return true;
+  const compactBag = bagToken.replace(/-/g, "");
+  const compactMatch = matchToken.replace(/-/g, "");
+  if (compactBag === compactMatch) return true;
+
+  const bagParts = bagToken.split("-").filter(Boolean);
+  const matchParts = matchToken.split("-").filter(Boolean);
+  // Tag "modern-classic" should match occasion token "classic"
+  if (bagParts.includes(matchToken)) return true;
+  // Occasion token "tiki-adjacent" should match tag "tiki" — but not name word "new" vs "new-year"
+  if (bagToken.length >= 5 && matchParts.includes(bagToken)) return true;
+
+  // Plural/prefix for longer tokens: "new-year" ~ "new-years"
+  if (compactBag.length >= 5 && compactMatch.length >= 5) {
+    if (compactBag.startsWith(compactMatch) || compactMatch.startsWith(compactBag)) return true;
+  }
+  return false;
+}
+
 export const OCCASIONS: OccasionDefinition[] = [
   {
     slug: "summer",
@@ -371,8 +392,7 @@ export function cocktailMatchesOccasion(c: OccasionCocktail, occasion: OccasionD
   return occasion.matchTokens.some((token) => {
     const t = token.toLowerCase();
     if (bag.has(t)) return true;
-    // Allow multi-word tokens via hyphen/space variants
-    return [...bag].some((b) => b.includes(t) || t.includes(b));
+    return [...bag].some((b) => tokensAlign(b, t));
   });
 }
 
