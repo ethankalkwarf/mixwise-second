@@ -54,13 +54,12 @@ const TABS = [
   },
 ] as const;
 
-const OCCASION_LINKS = getTopLevelOccasions();
-
 export function MobileBottomNav() {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const { user, profile, isAuthenticated, isLoading, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
+  const occasionLinks = getTopLevelOccasions();
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || null;
@@ -169,32 +168,34 @@ export function MobileBottomNav() {
           <div className="space-y-0.5">
             <HardNavLink
               href="/cocktail-of-the-day"
-              className="block px-3 py-3 text-base font-medium text-charcoal rounded-xl hover:text-terracotta hover:bg-mist/50 transition-colors"
+              className="block px-3 py-3 rounded-xl hover:bg-mist/50 transition-colors"
               onClick={closeMore}
             >
-              Drink of the Day
+              <span className="block text-base font-medium text-charcoal">Drink of the Day</span>
+              <span className="block text-sm text-sage">Today’s recipe, worth making tonight</span>
             </HardNavLink>
             <HardNavLink
               href="/mix"
-              className="block px-3 py-3 text-base font-medium text-charcoal rounded-xl hover:text-terracotta hover:bg-mist/50 transition-colors"
+              className="block px-3 py-3 rounded-xl hover:bg-mist/50 transition-colors"
               onClick={closeMore}
-              title="Find cocktails by ingredients in your bar"
             >
-              What Can I Make?
+              <span className="block text-base font-medium text-charcoal">What Can I Make?</span>
+              <span className="block text-sm text-sage">Match recipes to your cabinet</span>
             </HardNavLink>
             <HardNavLink
               href="/cocktails"
-              className="block px-3 py-3 text-base font-medium text-charcoal rounded-xl hover:text-terracotta hover:bg-mist/50 transition-colors"
+              className="block px-3 py-3 rounded-xl hover:bg-mist/50 transition-colors"
               onClick={closeMore}
             >
-              Browse All Recipes
+              <span className="block text-base font-medium text-charcoal">Browse All Recipes</span>
+              <span className="block text-sm text-sage">The full library — search and filter</span>
             </HardNavLink>
 
             <div className="pl-3 pb-2 space-y-0.5">
               <p className="px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-sage">
                 By collection
               </p>
-              {OCCASION_LINKS.map((occasion) => (
+              {occasionLinks.map((occasion) => (
                 <HardNavLink
                   key={occasion.slug}
                   href={`/occasions/${occasion.slug}`}

@@ -33,7 +33,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; emoji: string; color: str
   modern: { label: "Modern", emoji: "✨", color: "bg-olive/20 text-olive border-olive/30" },
   dessert: { label: "Dessert", emoji: "🍰", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
   mocktail: { label: "Mocktail", emoji: "🍹", color: "bg-olive/20 text-olive border-olive/30" },
-  party: { label: "Party", emoji: "🎉", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
+  party: { label: "Crowd-Pleasers", emoji: "🎉", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
   summer: { label: "Summer", emoji: "☀️", color: "bg-olive/20 text-olive border-olive/30" },
   winter: { label: "Winter", emoji: "❄️", color: "bg-forest/20 text-forest border-forest/30" },
   fall: { label: "Fall", emoji: "🍂", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },

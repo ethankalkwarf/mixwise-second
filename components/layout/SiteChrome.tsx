@@ -24,7 +24,7 @@ function loadMegaMenuData(): MegaMenuData {
     };
   });
 
-  // Feature Party (or first with art) so Summer isn't the hero + a list row
+  // Feature the party collection (or first with art) so Summer isn't the hero + a list row
   const featuredOccasion =
     topLevel.find((o) => o.slug === "party") ||
     topLevel.find((o) => o.slug === "aperitivo") ||

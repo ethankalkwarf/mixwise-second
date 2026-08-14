@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Fragment, useEffect, useRef } from "react";
+import { useState, Fragment, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -11,24 +11,71 @@ import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { CocktailSearch } from "@/components/search/CocktailSearch";
 import { RecipesMegaMenu } from "@/components/layout/RecipesMegaMenu";
+import { ExplainerMegaMenu } from "@/components/layout/ExplainerMegaMenu";
+import type { NavMegaController, NavMegaId } from "@/components/layout/MegaMenuFrame";
+import { MEGA_ROOT_ID } from "@/components/layout/MegaMenuFrame";
 import type { MegaMenuData } from "@/lib/megaMenu";
-
-function navLinkClass(active: boolean, base = "text-sm") {
-  return [
-    base,
-    "transition-colors duration-200",
-    active
-      ? "font-semibold text-forest"
-      : "font-medium text-charcoal hover:text-terracotta",
-  ].join(" ");
-}
 
 export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
+  const [megaMounted, setMegaMounted] = useState(false);
+  const [openMega, setOpenMega] = useState<NavMegaId | null>(null);
+  const megaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const { user, profile, isAuthenticated, isLoading, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
+
+  useEffect(() => setMegaMounted(true), []);
+
+  useEffect(() => {
+    return () => {
+      if (megaCloseTimer.current) clearTimeout(megaCloseTimer.current);
+    };
+  }, []);
+
+  const openMenu = useCallback((id: NavMegaId) => {
+    if (megaCloseTimer.current) {
+      clearTimeout(megaCloseTimer.current);
+      megaCloseTimer.current = null;
+    }
+    setOpenMega(id);
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    if (megaCloseTimer.current) {
+      clearTimeout(megaCloseTimer.current);
+      megaCloseTimer.current = null;
+    }
+    setOpenMega(null);
+  }, []);
+
+  const scheduleClose = useCallback(() => {
+    if (megaCloseTimer.current) clearTimeout(megaCloseTimer.current);
+    megaCloseTimer.current = setTimeout(() => setOpenMega(null), 280);
+  }, []);
+
+  const megaController: NavMegaController = useMemo(
+    () => ({
+      openId: openMega,
+      mounted: megaMounted,
+      openMenu,
+      scheduleClose,
+      closeMenu,
+    }),
+    [openMega, megaMounted, openMenu, scheduleClose, closeMenu]
+  );
+
+  const pathnameRef = useRef(pathname);
+  useEffect(() => {
+    if (pathnameRef.current === pathname) return;
+    pathnameRef.current = pathname;
+    closeMenu();
+  }, [pathname, closeMenu]);
+
+  useEffect(() => {
+    if (desktopSearchOpen) closeMenu();
+  }, [desktopSearchOpen, closeMenu]);
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/" && pathname?.startsWith(`${href}/`));
@@ -121,36 +168,36 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
 
             {/* Desktop Navigation - Centered */}
             <div className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-              <Link
+              <ExplainerMegaMenu
+                id="daily"
+                controller={megaController}
+                active={isActive("/cocktail-of-the-day")}
                 href="/cocktail-of-the-day"
-                className={navLinkClass(isActive("/cocktail-of-the-day"))}
-              >
-                Drink of the Day
-              </Link>
-              <div className="relative group">
-                <Link
-                  href="/mix"
-                  className={navLinkClass(isActive("/mix"))}
-                >
-                  What Can I Make?
-                </Link>
-                {/* Tooltip - appears below */}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2
-                                opacity-0 group-hover:opacity-100
-                                bg-forest text-cream text-xs font-medium tracking-wide
-                                px-3 py-2 rounded-lg shadow-lg
-                                pointer-events-none
-                                transition-opacity duration-200 z-50
-                                w-48 text-center">
-                  Find cocktails by ingredients in your bar
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-0
-                                  border-4 border-transparent border-b-forest"></div>
-                </div>
-              </div>
+                label="Drink of the Day"
+                eyebrow="Daily pour"
+                title="Drink of the Day"
+                body="A new recipe every day — worth making tonight."
+                cta="See today’s drink"
+                imageUrl="/media/strainer-pour-poster.webp"
+              />
+              <ExplainerMegaMenu
+                id="mix"
+                controller={megaController}
+                active={isActive("/mix")}
+                href="/mix"
+                label="What Can I Make?"
+                eyebrow="Your cabinet"
+                title="What can you make tonight?"
+                body="Add what’s in your bar. We’ll show what’s ready to pour."
+                cta="Open your cabinet"
+                imageUrl="/media/kitchen-shelf.webp"
+                imageFocusClass="object-[center_40%]"
+              />
               <RecipesMegaMenu
-                active={isActive("/cocktails") || isActive("/occasions") || isActive("/learn") || isActive("/mix")}
+                active={isActive("/cocktails") || isActive("/occasions") || isActive("/learn")}
                 occasionCovers={megaMenu?.occasionCovers || []}
                 featuredCover={megaMenu?.featuredCover || null}
+                controller={megaController}
               />
             </div>
 
@@ -166,7 +213,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 <span className="hidden lg:inline">Search</span>
                 <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-sage/80 bg-mist/40 border border-mist/40 rounded">
                   <span>
-                    {typeof window !== "undefined" && /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)
+                    {megaMounted && /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)
                       ? "⌘"
                       : "Ctrl"}
                   </span>
@@ -285,6 +332,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
             </div>
         </div>
       </nav>
+      <div id={MEGA_ROOT_ID} className="absolute inset-x-0 top-full z-[60]" />
     </header>
     </>
   );

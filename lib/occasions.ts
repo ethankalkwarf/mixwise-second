@@ -155,9 +155,9 @@ export const OCCASIONS: OccasionDefinition[] = [
   },
   {
     slug: "party",
-    name: "Party",
-    headline: "Crowd-pleasers that scale",
-    description: "Familiar, colorful, and shareable drinks people actually ask for at a gathering.",
+    name: "52 Crowd-Pleasing Cocktails",
+    headline: "The ones people actually ask for",
+    description: "Familiar, colorful, and shareable drinks that scale for a gathering — easy to batch, easy to love.",
     accentClass: "from-terracotta/15 via-cream to-cream",
     matchTokens: ["party"],
     coverSlugs: ["long-island-iced-tea", "sangria", "electric-lemonade", "fuzzy-navel"],

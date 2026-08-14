@@ -65,7 +65,7 @@ export default async function OccasionsPage() {
             Collections for every season
           </h1>
           <p className="text-forest max-w-xl text-base sm:text-lg leading-relaxed">
-            Curated cocktail collections for summer patios, holiday tables, brunch, parties, and more — without digging through tags.
+            Curated cocktail collections for summer patios, holiday tables, brunch, crowd-pleasing cocktails, and more — without digging through tags.
           </p>
         </MainContainer>
       </section>

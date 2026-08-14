@@ -80,7 +80,7 @@ export default async function RootLayout({
       <head>
         <OrganizationSchema />
       </head>
-      <body className="bg-cream text-charcoal font-sans antialiased">
+      <body className="bg-cream text-charcoal font-sans antialiased" suppressHydrationWarning>
         {/* Skip to main content link for accessibility */}
         <a href="#main-content" className="skip-link">
           Skip to main content
