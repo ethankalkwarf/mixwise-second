@@ -6,6 +6,7 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/supabase/database.types";
 import { trackUserSignup } from "@/lib/analytics";
 import { debugLog } from "@/lib/debugLog";
+import { markHasAccount } from "@/lib/auth/returning-user";
 
 /**
  * UserProvider - Single Source of Truth for Auth State
@@ -60,6 +61,10 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+function getProfileCacheKey(userId: string) {
+  return `mixwise_profile_${userId}`;
+}
+
 // Provider component
 export function UserProvider({ children }: { children: React.ReactNode }) {
   // Shared browser Supabase client
@@ -79,9 +84,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const initialCheckDone = useRef(false);
   // Ref to prevent duplicate profile fetches
   const fetchingProfile = useRef<string | null>(null);
-
-  // Cache key for profile data
-  const getProfileCacheKey = (userId: string) => `mixwise_profile_${userId}`;
+  const userIdRef = useRef<string | null>(null);
+  const accessTokenRef = useRef<string | null>(null);
+  const ensureProfileExistsRef = useRef<(userId: string, userEmail: string) => Promise<Profile | null>>(
+    async () => null
+  );
 
   // Fetch user profile from cache or database with fast timeout
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
@@ -272,7 +279,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       console.error("[UserProvider] Exception in ensureProfileExists:", err);
       return null;
     }
-  }, [supabase, fetchProfile, getProfileCacheKey]);
+  }, [supabase, fetchProfile]);
+
+  ensureProfileExistsRef.current = ensureProfileExists;
 
   // Refresh profile data (can be called after profile updates)
   // IMPORTANT: Clears cache to ensure fresh data after updates
@@ -290,7 +299,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const newProfile = await ensureProfileExists(user.id, user.email || "");
       setProfile(newProfile);
     }
-  }, [user, ensureProfileExists, getProfileCacheKey]);
+  }, [user, ensureProfileExists]);
 
   // Main auth state initialization and subscription
   useEffect(() => {
@@ -301,6 +310,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Function to update auth state
     const updateAuthState = async (newSession: Session | null) => {
       if (!mounted) return;
+
+      const nextUserId = newSession?.user?.id ?? null;
+      const nextToken = newSession?.access_token ?? null;
+      const sameSession =
+        nextUserId === userIdRef.current && nextToken === accessTokenRef.current;
+
+      if (sameSession) {
+        if (mounted) setIsLoading(false);
+        return;
+      }
+
+      userIdRef.current = nextUserId;
+      accessTokenRef.current = nextToken;
 
       debugLog("[UserProvider] Updating auth state:", {
         hasSession: !!newSession,
@@ -313,10 +335,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setUser(newSession?.user ?? null);
 
       if (newSession?.user) {
+        markHasAccount(newSession.user.email);
         // Ensure profile exists (fetch or create if missing due to race condition)
         debugLog("[UserProvider] Ensuring profile exists for user:", newSession.user.id);
         try {
-          const userProfile = await ensureProfileExists(newSession.user.id, newSession.user.email || "");
+          const userProfile = await ensureProfileExistsRef.current(
+            newSession.user.id,
+            newSession.user.email || ""
+          );
           if (mounted) {
             debugLog("[UserProvider] Profile ensured:", !!userProfile);
             setProfile(userProfile);
@@ -451,12 +477,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               debugLog("[UserProvider] User signed out");
               // Clear profile cache on sign out
               try {
-                if (user) {
-                  localStorage.removeItem(getProfileCacheKey(user.id));
+                if (userIdRef.current) {
+                  localStorage.removeItem(getProfileCacheKey(userIdRef.current));
                 }
               } catch (err) {
                 console.warn("[UserProvider] Error clearing profile cache:", err);
               }
+              userIdRef.current = null;
+              accessTokenRef.current = null;
               setSession(null);
               setUser(null);
               setProfile(null);
@@ -479,7 +507,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             // User data was updated, refresh profile
             if (newSession?.user && mounted) {
               setUser(newSession.user);
-              const userProfile = await ensureProfileExists(newSession.user.id, newSession.user.email || "");
+              const userProfile = await ensureProfileExistsRef.current(
+                newSession.user.id,
+                newSession.user.email || ""
+              );
               if (mounted) {
                 setProfile(userProfile);
               }
@@ -517,7 +548,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [supabase, fetchProfile, ensureProfileExists]);
+    // Subscribe once. Recreating this effect re-fires INITIAL_SESSION and
+    // setSession in a loop (Maximum update depth / frozen tab).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
 
   // Get the correct redirect URL for auth
   const getAuthRedirectUrl = useCallback(() => {
