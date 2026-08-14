@@ -7,7 +7,14 @@ export type MegaMenuCover = {
   focusClass?: string;
 };
 
+export type MegaMenuDailyDrink = {
+  name: string;
+  href: string;
+  imageUrl: string | null;
+};
+
 export type MegaMenuData = {
   occasionCovers: MegaMenuCover[];
   featuredCover: MegaMenuCover | null;
+  dailyDrink: MegaMenuDailyDrink | null;
 };

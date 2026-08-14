@@ -672,6 +672,38 @@ export const getTodaysDailyCocktailSlug = cache(async (): Promise<string | null>
   return getCachedTodaysDailyCocktailSlug(dateKey);
 });
 
+export type DailyCocktailCover = {
+  slug: string;
+  name: string;
+  imageUrl: string | null;
+};
+
+async function fetchTodaysDailyCocktailCover(): Promise<DailyCocktailCover | null> {
+  const dateKey = getCurrentLocalDateString();
+  const slug = await fetchTodaysDailyCocktailSlug(dateKey);
+  if (!slug) return null;
+
+  const cocktail = await fetchCocktailBySlug(slug);
+  if (!cocktail) return null;
+
+  return {
+    slug: cocktail.slug,
+    name: cocktail.name,
+    imageUrl: cocktail.image_url || null,
+  };
+}
+
+const getCachedTodaysDailyCocktailCover = unstable_cache(
+  fetchTodaysDailyCocktailCover,
+  ["daily-cocktail-cover"],
+  { revalidate: 3600, tags: ["cocktails"] }
+);
+
+/** Today's drink of the day — name + photo for the nav mega menu. Cached for the UTC hour. */
+export const getTodaysDailyCocktailCover = cache(async (): Promise<DailyCocktailCover | null> => {
+  return getCachedTodaysDailyCocktailCover();
+});
+
 /**
  * Get user's bar ingredients with fallback logic
  * First tries inventories/inventory_items tables, then falls back to bar_ingredients

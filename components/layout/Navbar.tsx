@@ -175,10 +175,11 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 href="/cocktail-of-the-day"
                 label="Drink of the Day"
                 eyebrow="Daily pour"
-                title="Drink of the Day"
+                title={megaMenu?.dailyDrink?.name || "Drink of the Day"}
                 body="A new recipe every day — worth making tonight."
                 cta="See today’s drink"
-                imageUrl="/media/strainer-pour-poster.webp"
+                imageUrl={megaMenu?.dailyDrink?.imageUrl || "/media/strainer-pour-poster.webp"}
+                imageAlt={megaMenu?.dailyDrink?.name || "Drink of the Day"}
               />
               <ExplainerMegaMenu
                 id="mix"

@@ -3,11 +3,13 @@ import {
 } from "@/lib/occasions";
 import { staticOccasionCoverIfPresent } from "@/lib/occasionCovers";
 import { ConditionalLayoutWrapper } from "@/components/layout/ConditionalLayoutWrapper";
+import { getTodaysDailyCocktailCover } from "@/lib/cocktails.server";
+import { formatCocktailName } from "@/lib/formatters";
 import type { MegaMenuData } from "@/lib/megaMenu";
 
 export type { MegaMenuData } from "@/lib/megaMenu";
 
-function loadMegaMenuData(): MegaMenuData {
+async function loadMegaMenuData(): Promise<MegaMenuData> {
   const topLevel = getTopLevelOccasions();
   const occasionCovers = topLevel.map((occasion) => {
     const imageUrl =
@@ -31,6 +33,20 @@ function loadMegaMenuData(): MegaMenuData {
     topLevel.find((o) => o.staticCoverPath || staticOccasionCoverIfPresent(o.slug)) ||
     topLevel[0];
 
+  let dailyDrink: MegaMenuData["dailyDrink"] = null;
+  try {
+    const daily = await getTodaysDailyCocktailCover();
+    if (daily) {
+      dailyDrink = {
+        name: formatCocktailName(daily.name),
+        href: "/cocktail-of-the-day",
+        imageUrl: daily.imageUrl,
+      };
+    }
+  } catch (error) {
+    console.error("Failed to load drink of the day for mega menu:", error);
+  }
+
   return {
     occasionCovers,
     featuredCover: featuredOccasion
@@ -46,10 +62,11 @@ function loadMegaMenuData(): MegaMenuData {
           focusClass: featuredOccasion.coverFocusClass,
         }
       : null,
+    dailyDrink,
   };
 }
 
-export function SiteChrome({ children }: { children: React.ReactNode }) {
-  const megaMenu = loadMegaMenuData();
+export async function SiteChrome({ children }: { children: React.ReactNode }) {
+  const megaMenu = await loadMegaMenuData();
   return <ConditionalLayoutWrapper megaMenu={megaMenu}>{children}</ConditionalLayoutWrapper>;
 }

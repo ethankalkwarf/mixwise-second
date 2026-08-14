@@ -67,6 +67,15 @@ export default async function OccasionsPage() {
           <p className="text-forest max-w-xl text-base sm:text-lg leading-relaxed">
             Curated cocktail collections for summer patios, holiday tables, brunch, crowd-pleasing cocktails, and more — without digging through tags.
           </p>
+          <Link
+            href="/cocktails"
+            className="mt-6 inline-flex w-fit items-center text-sm font-semibold text-terracotta hover:text-forest transition-colors"
+          >
+            Or browse the full library
+            <span className="ml-1.5" aria-hidden>
+              →
+            </span>
+          </Link>
         </MainContainer>
       </section>
 
@@ -130,12 +139,17 @@ export default async function OccasionsPage() {
         ) : null}
 
         <div className="pt-8 border-t border-mist flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <p className="text-sm text-sage">Looking for something specific?</p>
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+              Full library
+            </p>
+            <p className="text-sm text-sage">Search, filter, and browse every MixWise recipe.</p>
+          </div>
           <Link
             href="/cocktails"
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-mist bg-white text-sm font-medium text-forest hover:border-terracotta/40 hover:text-terracotta transition-colors"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-mist bg-white text-sm font-semibold text-forest hover:border-terracotta/40 hover:text-terracotta transition-colors"
           >
-            Browse all recipes
+            Browse all recipes →
           </Link>
         </div>
       </MainContainer>

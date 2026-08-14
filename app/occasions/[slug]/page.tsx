@@ -85,6 +85,12 @@ export default async function OccasionDetailPage({ params }: PageProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/40 to-transparent" />
         <MainContainer className="relative py-12 sm:py-16">
           <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm">
+            <Link href="/cocktails" className="font-semibold text-forest hover:text-terracotta transition-colors">
+              All recipes
+            </Link>
+            <span className="text-sage" aria-hidden>
+              /
+            </span>
             <Link href="/occasions" className="font-semibold text-forest hover:text-terracotta transition-colors">
               Collections
             </Link>
@@ -113,6 +119,15 @@ export default async function OccasionDetailPage({ params }: PageProps) {
           <p className="text-charcoal/85 max-w-2xl leading-relaxed">{occasion.description}</p>
           <p className="mt-6 text-sm font-semibold text-forest">
             {matched.length} drink{matched.length === 1 ? "" : "s"}
+            <span className="mx-2 font-normal text-sage" aria-hidden>
+              ·
+            </span>
+            <Link
+              href="/cocktails"
+              className="font-semibold text-terracotta hover:text-forest transition-colors"
+            >
+              Browse the full library
+            </Link>
           </p>
         </MainContainer>
       </section>
@@ -231,6 +246,28 @@ export default async function OccasionDetailPage({ params }: PageProps) {
             </div>
           </section>
         ) : null}
+
+        <section className="border-t border-mist pt-10">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                Full library
+              </p>
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-forest">
+                Looking for something else?
+              </h2>
+              <p className="mt-1 text-sm text-sage max-w-xl">
+                Search, filter, and browse every MixWise recipe — not just this collection.
+              </p>
+            </div>
+            <Link
+              href="/cocktails"
+              className="inline-flex shrink-0 items-center justify-center rounded-xl border border-mist bg-white px-5 py-2.5 text-sm font-semibold text-forest hover:border-terracotta/40 hover:text-terracotta transition-colors"
+            >
+              Browse all recipes →
+            </Link>
+          </div>
+        </section>
       </MainContainer>
     </div>
   );
