@@ -23,6 +23,7 @@ export function EmailListCapture({
   const [status, setStatus] = useState<CaptureStatus>("idle");
   const [message, setMessage] = useState("");
   const [joinUrl, setJoinUrl] = useState("");
+  const [clearing, setClearing] = useState(false);
 
   const isDark = variant === "dark";
 
