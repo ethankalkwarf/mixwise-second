@@ -32,7 +32,8 @@ module.exports = {
         }
       },
       fontFamily: {
-        display: ["var(--font-dm-serif)", "Georgia", "serif"],
+        display: ["var(--font-dm-serif)", "ui-serif", "serif"],
+        serif: ["var(--font-dm-serif)", "ui-serif", "serif"],
         sans: ["var(--font-jost)", "system-ui", "sans-serif"],
         mono: ["var(--font-space-mono)", "monospace"],
       },

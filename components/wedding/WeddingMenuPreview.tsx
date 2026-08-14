@@ -79,7 +79,9 @@ export function WeddingMenuPreview({ menuData }: WeddingMenuPreviewProps) {
         width: "210mm", // A4 width
         minHeight: "297mm", // A4 height
         padding: "20mm",
-        fontFamily: isClassic ? "serif" : "sans-serif",
+        fontFamily: isClassic
+          ? "var(--font-dm-serif), ui-serif, serif"
+          : "var(--font-jost), system-ui, sans-serif",
         boxSizing: "border-box",
       }}
     >

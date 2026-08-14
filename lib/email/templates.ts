@@ -15,7 +15,7 @@
  * - Stone: #D1DAD0 (borders)
  * 
  * Typography:
- * - Headings: DM Serif Display (fallback: Georgia, serif)
+ * - Headings: DM Serif Display (fallback: Palatino, Times New Roman, serif)
  * - Body: Jost (fallback: system-ui, sans-serif)
  */
 
@@ -29,7 +29,7 @@ export interface EmailTemplate {
  * Generate hidden preheader text for email preview
  * This text appears after the subject line in email clients
  */
-function getPreheaderHtml(previewText: string): string {
+export function getPreheaderHtml(previewText: string): string {
   // The whitespace characters prevent email clients from showing body content after the preview
   const whitespace = '&nbsp;'.repeat(100) + '&zwnj;'.repeat(50);
   
@@ -43,7 +43,13 @@ function getPreheaderHtml(previewText: string): string {
 }
 
 // Common CSS styles for all email templates
-const baseStyles = `
+export const EMAIL_SERIF =
+  "'DM Serif Display', Palatino, 'Palatino Linotype', 'Times New Roman', serif";
+
+export const baseStyles = `
+  <!--[if !mso]><!-->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <!--<![endif]-->
   <style>
     /* Reset and base */
     body, html {
@@ -99,7 +105,7 @@ const baseStyles = `
     }
     
     .logo {
-      font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+      font-family: ${EMAIL_SERIF};
       font-size: 36px;
       font-weight: 700;
       color: #FFFFFF;
@@ -119,7 +125,7 @@ const baseStyles = `
     }
     
     .greeting {
-      font-family: Georgia, 'Times New Roman', serif;
+      font-family: ${EMAIL_SERIF};
       font-size: 24px;
       color: #3A4D39;
       margin: 0 0 24px 0;
@@ -355,7 +361,7 @@ export function confirmEmailTemplate({
       <!-- Header -->
       <tr>
         <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+          <h1 class="logo" style="font-family: ${EMAIL_SERIF}; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
@@ -366,7 +372,7 @@ export function confirmEmailTemplate({
         <td class="email-content" style="padding: 48px 40px;">
           <div class="cocktail-icon" style="text-align: center; font-size: 48px; margin-bottom: 24px;">🍹</div>
           
-          <h2 class="greeting" style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
+          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
             Welcome to MixWise!
           </h2>
           
@@ -481,14 +487,14 @@ export function emailListWelcomeTemplate({
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
       <tr>
         <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+          <h1 class="logo" style="font-family: ${EMAIL_SERIF}; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
       </tr>
       <tr>
         <td class="email-content" style="padding: 48px 40px;">
-          <h2 class="greeting" style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
+          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
             You're on the list
           </h2>
           <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
@@ -587,7 +593,7 @@ export function finishAccountSetupTemplate({
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
       <tr>
         <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+          <h1 class="logo" style="font-family: ${EMAIL_SERIF}; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
@@ -595,7 +601,7 @@ export function finishAccountSetupTemplate({
       <tr>
         <td class="email-content" style="padding: 48px 40px;">
           <div style="text-align: center; font-size: 48px; margin-bottom: 24px;">🍸</div>
-          <h2 class="greeting" style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
+          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
             Your account is ready
           </h2>
           <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
@@ -701,7 +707,7 @@ export function resetPasswordTemplate({
       <!-- Header -->
       <tr>
         <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+          <h1 class="logo" style="font-family: ${EMAIL_SERIF}; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
@@ -712,7 +718,7 @@ export function resetPasswordTemplate({
         <td class="email-content" style="padding: 48px 40px;">
           <div class="cocktail-icon" style="text-align: center; font-size: 48px; margin-bottom: 24px;">🔐</div>
           
-          <h2 class="greeting" style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
+          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
             Reset Your Password
           </h2>
           
@@ -837,7 +843,7 @@ export function welcomeEmailTemplate({
       <!-- Header -->
       <tr>
         <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+          <h1 class="logo" style="font-family: ${EMAIL_SERIF}; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
@@ -848,7 +854,7 @@ export function welcomeEmailTemplate({
         <td class="email-content" style="padding: 48px 40px;">
           <div style="text-align: center; font-size: 48px; margin-bottom: 24px;">🎉</div>
           
-          <h2 class="greeting" style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
+          <h2 class="greeting" style="font-family: ${EMAIL_SERIF}; font-size: 24px; color: #3A4D39; margin: 0 0 24px 0; font-weight: 400; text-align: center;">
             Welcome, ${displayName}!
           </h2>
           
@@ -1047,7 +1053,7 @@ export function weeklyDigestTemplate({
       ` : ''}
       <div style="background-color: #3A4D39; padding: 24px; text-align: center;">
         <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #8A9A5B;">✨ Featured This Week</p>
-        <h3 style="margin: 0 0 12px 0; font-family: Georgia, serif; font-size: 28px; color: #FFFFFF;">${featuredCocktail.name}</h3>
+        <h3 style="margin: 0 0 12px 0; font-family: ${EMAIL_SERIF}; font-size: 28px; color: #FFFFFF;">${featuredCocktail.name}</h3>
         ${featuredCocktail.description ? `<p style="margin: 0 0 16px 0; font-size: 14px; color: #E6EBE4; line-height: 1.5;">${featuredCocktail.description}</p>` : ''}
         <a href="https://www.getmixwise.com/cocktails/${featuredCocktail.slug}" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;">View Recipe →</a>
       </div>
@@ -1079,7 +1085,7 @@ export function weeklyDigestTemplate({
       <!-- Header -->
       <tr>
         <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: Georgia, 'Times New Roman', serif; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
+          <h1 class="logo" style="font-family: ${EMAIL_SERIF}; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
             mixwise.
           </h1>
         </td>
@@ -1088,7 +1094,7 @@ export function weeklyDigestTemplate({
       <!-- Content -->
       <tr>
         <td class="email-content" style="padding: 48px 40px;">
-          <h2 style="font-family: Georgia, 'Times New Roman', serif; font-size: 24px; color: #3A4D39; margin: 0 0 8px 0; font-weight: 400;">
+          <h2 style="font-family: ${EMAIL_SERIF}; font-size: 24px; color: #3A4D39; margin: 0 0 8px 0; font-weight: 400;">
             Happy Thursday, ${displayName}! 🌿
           </h2>
           
@@ -1115,7 +1121,7 @@ export function weeklyDigestTemplate({
           <!-- Build Your Bar CTA for users with no ingredients -->
           <div style="background-color: #F9F7F2; background: linear-gradient(135deg, #F9F7F2 0%, #E6EBE4 100%); border-radius: 16px; padding: 32px 24px; margin-bottom: 24px; text-align: center; border: 1px solid #D1DAD0;">
             <p style="margin: 0 0 16px 0; font-size: 40px;">🍾</p>
-            <h3 style="margin: 0 0 12px 0; font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; color: #3A4D39;">Ready to discover what you can make?</h3>
+            <h3 style="margin: 0 0 12px 0; font-family: ${EMAIL_SERIF}; font-size: 22px; color: #3A4D39;">Ready to discover what you can make?</h3>
             <p style="margin: 0 0 20px 0; font-size: 15px; color: #5F6F5E; line-height: 1.6;">Tell us what's in your bar and we'll show you all the cocktails you can make right now — no shopping required!</p>
             <a href="https://www.getmixwise.com/mix" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 25px; font-size: 15px; font-weight: 600;">Build My Bar →</a>
           </div>
@@ -1243,7 +1249,7 @@ export function weddingRecommendationsTemplate({
                 <!-- Header -->
                 <tr>
                   <td style="background-color: #FFFFFF; padding: 40px 40px 24px 40px; border-bottom: 2px solid #BC5A45;">
-                    <h1 style="margin: 0; font-family: 'DM Serif Display', Georgia, serif; font-size: 28px; color: #3A4D39; line-height: 1.3;">
+                    <h1 style="margin: 0; font-family: ${EMAIL_SERIF}; font-size: 28px; color: #3A4D39; line-height: 1.3;">
                       Your Wedding Cocktail Recommendations
                     </h1>
                   </td>

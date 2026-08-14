@@ -34,7 +34,7 @@ export function MobileStyleFix() {
 
     // Ensure CSS variables are set
     if (!html.style.getPropertyValue('--font-dm-serif')) {
-      html.style.setProperty('--font-dm-serif', 'DM Serif Display, Georgia, serif');
+      html.style.setProperty('--font-dm-serif', 'DM Serif Display, ui-serif, serif');
     }
     if (!html.style.getPropertyValue('--font-jost')) {
       html.style.setProperty('--font-jost', 'Jost, system-ui, sans-serif');
