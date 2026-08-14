@@ -1,4 +1,4 @@
-import { SITE_CONFIG } from "@/lib/seo";
+import { MIXWISE_TOOL, SITE_CONFIG } from "@/lib/seo";
 
 const organizationId = `${SITE_CONFIG.url}/#organization`;
 const websiteId = `${SITE_CONFIG.url}/#website`;
@@ -185,7 +185,154 @@ export function OrganizationSchema() {
         publisher: { "@id": organizationId },
         inLanguage: "en-US",
       },
+      {
+        "@type": ["SoftwareApplication", "WebApplication"],
+        "@id": `${SITE_CONFIG.url}/mix#app`,
+        name: SITE_CONFIG.name,
+        url: `${SITE_CONFIG.url}/mix`,
+        applicationCategory: "LifestyleApplication",
+        operatingSystem: "Web",
+        description: MIXWISE_TOOL.oneLiner,
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
+        publisher: { "@id": organizationId },
+        featureList: [
+          "Match cocktails to ingredients you already have",
+          "See drinks that are one bottle away",
+          "Save a home bar, favorites, and shopping list",
+        ],
+      },
     ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+type IngredientTermSchemaProps = {
+  name: string;
+  description: string;
+  url: string;
+  image?: string | null;
+  faqs?: Array<{ question: string; answer: string }>;
+  cocktails?: Array<{ name: string; url: string }>;
+};
+
+export function IngredientTermSchema({
+  name,
+  description,
+  url,
+  image,
+  faqs = [],
+  cocktails = [],
+}: IngredientTermSchemaProps) {
+  const graph: Record<string, unknown>[] = [
+    {
+      "@type": "Article",
+      headline: `What is ${name}? Taste, history, and cocktails`,
+      description,
+      image: image || `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`,
+      author: organizationRef,
+      publisher: {
+        ...organizationRef,
+        logo: organizationLogo,
+      },
+      mainEntityOfPage: { "@type": "WebPage", "@id": url },
+      url,
+    },
+  ];
+
+  if (faqs.length > 0) {
+    graph.push({
+      "@type": "FAQPage",
+      mainEntity: faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: { "@type": "Answer", text: faq.answer },
+      })),
+    });
+  }
+
+  if (cocktails.length > 0) {
+    graph.push({
+      "@type": "ItemList",
+      name: `Cocktails with ${name}`,
+      numberOfItems: cocktails.length,
+      itemListElement: cocktails.slice(0, 20).map((cocktail, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: cocktail.name,
+        url: cocktail.url,
+      })),
+    });
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({ "@context": "https://schema.org", "@graph": graph }),
+      }}
+    />
+  );
+}
+
+export function SoftwareApplicationSchema() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": ["SoftwareApplication", "WebApplication"],
+    "@id": `${SITE_CONFIG.url}/mix#app`,
+    name: SITE_CONFIG.name,
+    url: `${SITE_CONFIG.url}/mix`,
+    applicationCategory: "LifestyleApplication",
+    operatingSystem: "Web",
+    description: MIXWISE_TOOL.oneLiner,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    publisher: organizationRef,
+    featureList: [
+      "Match cocktails to ingredients you already have",
+      "See drinks that are one bottle away",
+      "Save a home bar, favorites, and shopping list",
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+type FAQPageSchemaProps = {
+  faqs: Array<{ question: string; answer: string }>;
+};
+
+export function FAQPageSchema({ faqs }: FAQPageSchemaProps) {
+  if (faqs.length === 0) return null;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
   };
 
   return (

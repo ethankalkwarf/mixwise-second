@@ -1,5 +1,6 @@
 import { getCocktailBySlug, getCocktailsList, getTodaysDailyCocktailSlug } from "@/lib/cocktails.server";
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
+import { MixWiseToolCallout } from "@/components/seo/MixWiseToolCallout";
 import { SITE_CONFIG, generateCocktailMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import type { SanityCocktail } from "@/lib/sanityTypes";
@@ -405,6 +406,25 @@ export default async function CocktailDetailPage({ params }: PageProps) {
           tagLine={tagLine}
           imageUrl={imageUrl}
           similarRecipes={similarRecipes}
+        />
+        <MixWiseToolCallout
+          cocktailName={sanityCocktail.name}
+          ingredientNames={[
+            ...new Set(
+              matchedIngredients
+                .map((item) => item.name)
+                .filter((name): name is string => Boolean(name))
+            ),
+          ].slice(0, 6)}
+          mixHref={
+            matchedIngredients.some((item) => item.slug)
+              ? `/mix?have=${[...new Set(
+                  matchedIngredients
+                    .map((item) => item.slug)
+                    .filter((slug): slug is string => Boolean(slug))
+                )].join(",")}`
+              : "/mix"
+          }
         />
       </main>
     </>

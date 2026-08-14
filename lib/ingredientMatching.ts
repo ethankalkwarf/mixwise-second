@@ -6,6 +6,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './supabase/database.types';
 import { debugLog } from "@/lib/debugLog";
+import { slugifyIngredientName } from "@/lib/ingredientSlug";
 
 // Create a Supabase client for server-side operations
 function createServerSupabaseClient() {
@@ -25,6 +26,7 @@ export interface MatchedIngredient {
   name: string;
   category?: string;
   originalText: string;
+  slug?: string;
 }
 
 /**
@@ -113,6 +115,7 @@ export async function matchIngredientTextToIds(
       name: matched?.name || cleanedName,
       category: matched?.type,
       originalText: text,
+      slug: matched ? slugifyIngredientName(matched.name) : undefined,
     };
   });
 }

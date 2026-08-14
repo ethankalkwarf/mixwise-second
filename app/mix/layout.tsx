@@ -1,11 +1,17 @@
-import { generatePageMetadata } from "@/lib/seo";
+import { generatePageMetadata, MIXWISE_TOOL } from "@/lib/seo";
 
 export const metadata = generatePageMetadata({
-  title: "Mix",
-  description:
-    "Find cocktails you can make with ingredients you already have. Add what's in your cabinet and see what's ready to pour.",
+  title: MIXWISE_TOOL.title,
+  description: MIXWISE_TOOL.mixDescription,
   path: "/mix",
-  keywords: ["cocktail mixer", "what can I make", "home bar", "cocktail ingredients"],
+  keywords: [
+    "what can I make with ingredients I have",
+    "cocktail app",
+    "home bar",
+    "mix drinks from your cabinet",
+    "cocktail mixer",
+    "what can I make",
+  ],
 });
 
 export default function MixLayout({ children }: { children: React.ReactNode }) {

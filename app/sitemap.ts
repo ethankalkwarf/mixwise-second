@@ -6,6 +6,7 @@ import { OCCASIONS } from "@/lib/occasions";
 import { getAllTechniqueLearnEntries } from "@/lib/cocktailTechniqueGlossary";
 import { LEARN_GUIDES, LEARN_METHODS, LEARN_PATHS } from "@/lib/learnLibrary";
 import { isLearnPublic } from "@/lib/learnAccess";
+import { MAKE_WITH_COMBOS, canonicalMakeWithPath } from "@/lib/makeWith";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_CONFIG.url;
@@ -48,9 +49,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/occasions`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.85 },
     ...learnPages,
     { url: `${baseUrl}/mix`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
+    { url: `${baseUrl}/make-with`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
+    ...MAKE_WITH_COMBOS.map((combo) => ({
+      url: `${baseUrl}${canonicalMakeWithPath(combo)}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: combo.length >= 2 ? 0.75 : 0.55,
+    })),
     { url: `${baseUrl}/ingredients`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.7 },
-    { url: `${baseUrl}/wedding-menu`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
-    { url: `${baseUrl}/thirsty-thursday`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.6 },
     { url: `${baseUrl}/account-benefits`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },

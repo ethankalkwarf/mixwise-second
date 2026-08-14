@@ -20,6 +20,8 @@ export default function robots(): MetadataRoute.Robots {
     "/dashboard",
     "/dashboard/",
     "/shopping-list",
+    "/dev",
+    "/dev/",
   ];
   if (!isLearnPublic()) {
     disallow.push("/learn", "/learn/");
@@ -29,6 +31,46 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
+        allow: "/",
+        disallow,
+      },
+      {
+        userAgent: "GPTBot",
+        allow: "/",
+        disallow,
+      },
+      {
+        userAgent: "OAI-SearchBot",
+        allow: "/",
+        disallow,
+      },
+      {
+        userAgent: "ChatGPT-User",
+        allow: "/",
+        disallow,
+      },
+      {
+        userAgent: "ClaudeBot",
+        allow: "/",
+        disallow,
+      },
+      {
+        userAgent: "Claude-SearchBot",
+        allow: "/",
+        disallow,
+      },
+      {
+        userAgent: "PerplexityBot",
+        allow: "/",
+        disallow,
+      },
+      {
+        userAgent: "Google-Extended",
+        allow: "/",
+        disallow,
+      },
+      {
+        userAgent: "Applebot-Extended",
         allow: "/",
         disallow,
       },
