@@ -4,7 +4,8 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
-import { welcomeEmailTemplate } from "@/lib/email/templates";
+import { accountWelcomeDraftTemplate } from "@/lib/email/campaigns";
+import { loadCocktailsBySlug, toCampaignDrink } from "@/lib/email/campaign-runtime";
 import { buildUserOneClickUnsubscribeUrl, buildUserUnsubscribeUrl } from "@/lib/email/unsubscribe-urls";
 import { debugLog } from "@/lib/debugLog";
 
@@ -75,10 +76,13 @@ export async function sendWelcomeEmail(
     const oneClickUnsubscribe = buildUserOneClickUnsubscribeUrl(unsubscribeToken, "all");
     const name = displayName || userEmail.split("@")[0];
 
-    const emailTemplate = welcomeEmailTemplate({
+    const heroes = await loadCocktailsBySlug(["daiquiri"]);
+    const hero = heroes.get("daiquiri");
+    const emailTemplate = accountWelcomeDraftTemplate({
       displayName: name,
       userEmail,
       unsubscribeUrl,
+      hero: hero ? toCampaignDrink(hero) : undefined,
     });
 
     const resend = createResendClient();

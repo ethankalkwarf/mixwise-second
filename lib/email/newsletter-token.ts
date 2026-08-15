@@ -39,6 +39,16 @@ export function buildNewsletterUnsubscribeUrl(email: string, source: string, sit
   return `${siteUrl}/unsubscribe?${params.toString()}`;
 }
 
+export function buildListConvertUrl(email: string, source: string, siteUrl = getSiteUrl()): string {
+  const token = createNewsletterUnsubscribeToken(email, `convert:${source}`);
+  const params = new URLSearchParams({
+    email: email.trim().toLowerCase(),
+    source,
+    token,
+  });
+  return `${siteUrl}/join?${params.toString()}`;
+}
+
 export function buildNewsletterUnsubscribeApiUrl(email: string, source: string, siteUrl = getSiteUrl()): string {
   const token = createNewsletterUnsubscribeToken(email, source);
   const params = new URLSearchParams({

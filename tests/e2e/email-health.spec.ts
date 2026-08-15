@@ -17,8 +17,22 @@ test.describe("Email system health (no secrets)", () => {
     }
 
     const res = await request.get(`${base}/api/cron/weekly-digest`);
-    // Production should require CRON_SECRET → 401
     expect([401, 403]).toContain(res.status());
+  });
+
+  test("friday and lifecycle crons reject unauthenticated requests in production", async ({
+    request,
+  }) => {
+    const base = getBaseUrl();
+    if (base.includes("localhost")) {
+      test.skip();
+      return;
+    }
+
+    const friday = await request.get(`${base}/api/cron/friday-personalized`);
+    const lifecycle = await request.get(`${base}/api/cron/email-lifecycle`);
+    expect([401, 403]).toContain(friday.status());
+    expect([401, 403]).toContain(lifecycle.status());
   });
 
   test("send-welcome is not publicly callable without session", async ({

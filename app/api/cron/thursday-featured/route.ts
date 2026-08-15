@@ -1,6 +1,6 @@
 /**
- * Thursday featured cron.
- * Path kept for the existing Vercel schedule: 0 21 * * 4
+ * Thursday featured send. Event weeks replace the regular Thursday cocktail.
+ * Also keeps /api/cron/weekly-digest working (same job, new templates).
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -11,7 +11,6 @@ export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
   if (!verifyInternalRequest(request)) {
-    console.error("[Weekly Digest] Unauthorized cron request");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -21,7 +20,7 @@ export async function GET(request: NextRequest) {
     const result = await runThursdayFeatured({ dryRun });
     return NextResponse.json({ success: true, dryRun, ...result });
   } catch (error) {
-    console.error("[Weekly Digest] Unexpected error:", error);
+    console.error("[Thursday featured] Failed:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

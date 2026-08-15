@@ -350,6 +350,41 @@ export interface Database {
           created_at?: string;
         };
       };
+      email_campaign_sends: {
+        Row: {
+          id: string;
+          campaign: string;
+          audience: "account" | "list";
+          recipient_email: string;
+          user_id: string | null;
+          send_key: string;
+          resend_id: string | null;
+          metadata: Json;
+          sent_at: string;
+        };
+        Insert: {
+          id?: string;
+          campaign: string;
+          audience: "account" | "list";
+          recipient_email: string;
+          user_id?: string | null;
+          send_key: string;
+          resend_id?: string | null;
+          metadata?: Json;
+          sent_at?: string;
+        };
+        Update: {
+          id?: string;
+          campaign?: string;
+          audience?: "account" | "list";
+          recipient_email?: string;
+          user_id?: string | null;
+          send_key?: string;
+          resend_id?: string | null;
+          metadata?: Json;
+          sent_at?: string;
+        };
+      };
       cocktails: {
         Row: {
           id: string;

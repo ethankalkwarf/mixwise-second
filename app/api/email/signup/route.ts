@@ -12,9 +12,9 @@ import { emailListWelcomeTemplate } from "@/lib/email/templates";
 import { sendSignupNotification } from "@/lib/email/signup-notification";
 import { persistEmailSignup, addToResendAudience, lookupMixwiseAccount } from "@/lib/email/subscribe-list";
 import {
+  buildListConvertUrl,
   buildNewsletterUnsubscribeUrl,
   buildNewsletterUnsubscribeApiUrl,
-  createNewsletterUnsubscribeToken,
 } from "@/lib/email/newsletter-token";
 import { getFeaturedCocktailForEmail, WELCOME_COCKTAIL_SLUG } from "@/lib/email/featured-cocktail";
 import { getSiteUrl } from "@/lib/site";
@@ -25,16 +25,6 @@ const ALLOWED_SOURCES = new Set(["homepage", "footer"]);
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function buildJoinUrl(email: string, source: string, siteUrl: string): string {
-  const token = createNewsletterUnsubscribeToken(email, `convert:${source}`);
-  const params = new URLSearchParams({
-    email: email.trim().toLowerCase(),
-    source,
-    token,
-  });
-  return `${siteUrl}/join?${params.toString()}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -92,7 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     const siteUrl = getSiteUrl(new URL(request.url));
-    const convertUrl = buildJoinUrl(trimmedEmail, source, siteUrl);
+    const convertUrl = buildListConvertUrl(trimmedEmail, source, siteUrl);
     const unsubscribeUrl = buildNewsletterUnsubscribeUrl(trimmedEmail, source, siteUrl);
     const listUnsubscribeUrl = buildNewsletterUnsubscribeApiUrl(
       trimmedEmail,

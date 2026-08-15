@@ -13,6 +13,7 @@ import {
   cocktailsUserCanMakeFromBar,
 } from "../lib/email/digest-matching";
 import { getWeekNumber } from "../lib/email/featured-cocktail";
+import { buildEmailDrafts, collectDraftImageSlugs } from "../lib/email/drafts";
 
 const TO = "ethankalkwarf@gmail.com";
 
@@ -81,6 +82,20 @@ async function main() {
   writeFileSync("tmp/email-proofs/confirmation.html", confirm.html);
   writeFileSync("tmp/email-proofs/password-reset.html", reset.html);
 
+  const catalogImages: Record<string, string> = {};
+  const wanted = new Set(collectDraftImageSlugs());
+  for (const cocktail of cocktails || []) {
+    if (wanted.has(cocktail.slug) && cocktail.image_url) {
+      catalogImages[cocktail.slug] = cocktail.image_url;
+    }
+  }
+  const campaignDrafts = buildEmailDrafts(catalogImages);
+  const draftFiles = campaignDrafts.map((draft) => {
+    const file = `tmp/email-proofs/${draft.slug}.html`;
+    writeFileSync(file, draft.html);
+    return file;
+  });
+
   console.log(
     JSON.stringify(
       {
@@ -91,6 +106,7 @@ async function main() {
           "tmp/email-proofs/weekly-digest.html",
           "tmp/email-proofs/confirmation.html",
           "tmp/email-proofs/password-reset.html",
+          ...draftFiles,
         ],
       },
       null,

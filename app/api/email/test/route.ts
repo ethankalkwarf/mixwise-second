@@ -20,6 +20,7 @@ import {
   emailListWelcomeTemplate,
 } from "@/lib/email/templates";
 import { weekendKickoffTemplate } from "@/lib/email/weekend-kickoff";
+import { buildEmailDrafts } from "@/lib/email/drafts";
 import { verifyEmailTestSecret } from "@/lib/email/internal-auth";
 import { debugLog } from "@/lib/debugLog";
 
@@ -194,10 +195,24 @@ export async function POST(request: NextRequest) {
         });
         break;
 
-      default:
-        return NextResponse.json({ 
-          error: "Invalid template. Use: confirmation, welcome, weekly-digest, weekly-digest-empty, password-reset, weekend-kickoff, email-list-welcome" 
-        }, { status: 400 });
+      default: {
+        const draft = buildEmailDrafts().find((item) => item.slug === template);
+        if (!draft) {
+          return NextResponse.json(
+            {
+              error:
+                "Invalid template. Use a draft slug (add-ingredients, friday-personalized, event-aug-20, …) or: confirmation, welcome, weekly-digest, weekly-digest-empty, password-reset, weekend-kickoff, email-list-welcome",
+            },
+            { status: 400 }
+          );
+        }
+        emailContent = {
+          subject: draft.subject,
+          html: draft.html,
+          text: draft.text,
+        };
+        break;
+      }
     }
 
     const { data, error } = await resend.emails.send({

@@ -1,15 +1,13 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { Navbar } from "./Navbar";
 import { SiteFooter } from "./SiteFooter";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { Capacitor } from "@capacitor/core";
 import type { MegaMenuData } from "@/lib/megaMenu";
-
-const NO_NAVBAR_PAGES = ["/thirsty-thursday"];
 
 function isCapacitorNative(): boolean {
   if (typeof window === "undefined") return false;
@@ -38,24 +36,25 @@ export function ConditionalLayoutWrapper({
   const pathname = usePathname();
   const [isNative, setIsNative] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const hideNavbar = NO_NAVBAR_PAGES.some(
-    (path) => pathname === path || pathname.startsWith(path + "/")
-  );
 
   useEffect(() => {
     setIsMounted(true);
     setIsNative(isCapacitorNative());
   }, []);
 
+  if (pathname.startsWith("/dev")) {
+    return <>{children}</>;
+  }
+
   if (!isMounted || !isNative) {
     return (
       <div className="min-h-screen flex flex-col">
-        {!hideNavbar && <Navbar megaMenu={megaMenu} />}
+        <Navbar megaMenu={megaMenu} />
         <main id="main-content" className="flex-1 flex flex-col" tabIndex={-1}>
           {children}
         </main>
         <SiteFooter />
-        {!hideNavbar && <MobileBottomNav />}
+        <MobileBottomNav />
       </div>
     );
   }
