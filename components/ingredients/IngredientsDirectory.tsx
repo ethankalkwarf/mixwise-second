@@ -35,41 +35,39 @@ export function IngredientsDirectory({ ingredients }: Props) {
   const jumpSections = LIBRARY_SECTIONS.filter((section) => groups[section.id].length > 0);
 
   return (
-    <div className="space-y-16 sm:space-y-20">
-      <div className="relative max-w-md">
-        <MagnifyingGlassIcon className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search Campari, agave, vermouth…"
-          className="w-full bg-transparent border-0 border-b border-mist pl-7 pr-2 py-2.5 text-charcoal placeholder:text-sage/60 focus:outline-none focus:border-forest/50"
-        />
-      </div>
+    <div className="space-y-10 sm:space-y-20">
+      <div className="sticky top-16 z-20 -mx-4 space-y-3 border-b border-mist/70 bg-cream/95 px-4 py-3 backdrop-blur-md lg:static lg:z-auto lg:mx-0 lg:space-y-6 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
+        <div className="relative max-w-md">
+          <MagnifyingGlassIcon className="absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-sage" />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search Campari, agave, vermouth…"
+            className="w-full border-0 border-b border-mist bg-transparent py-2.5 pl-7 pr-2 text-charcoal placeholder:text-sage/60 focus:border-forest/50 focus:outline-none"
+          />
+        </div>
 
-      {!isSearching && (
-        <nav className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm" aria-label="Library sections">
-          <a href="#working-bar" className="text-forest hover:text-terracotta transition-colors">
-            Working bar
-          </a>
-          {jumpSections.map((section) => (
-            <span key={section.id} className="contents">
-              <span className="text-mist" aria-hidden>
-                ·
-              </span>
-              <a href={`#${section.id}`} className="text-sage hover:text-terracotta transition-colors">
+        {!isSearching && (
+          <nav
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0"
+            aria-label="Library sections"
+          >
+            <JumpChip href="#working-bar">Working bar</JumpChip>
+            {jumpSections.map((section) => (
+              <JumpChip key={section.id} href={`#${section.id}`}>
                 {section.title}
-              </a>
-            </span>
-          ))}
-        </nav>
-      )}
+              </JumpChip>
+            ))}
+          </nav>
+        )}
+      </div>
 
       {filtered.length === 0 ? (
         <p className="text-sage">Nothing in the library matches that search.</p>
       ) : isSearching ? (
         <section>
-          <p className="text-sm text-sage mb-6">
+          <p className="mb-6 text-sm text-sage">
             {filtered.length} result{filtered.length === 1 ? "" : "s"}
           </p>
           <IngredientList items={filtered} />
@@ -77,19 +75,19 @@ export function IngredientsDirectory({ ingredients }: Props) {
       ) : (
         <>
           {staples.length > 0 && (
-            <section id="working-bar" className="scroll-mt-28">
+            <section id="working-bar" className="scroll-mt-36 lg:scroll-mt-28">
               <SectionHeader
                 title="A working bar"
                 dek="The bottles that unlock most of the library: a base spirit, vermouth, a bitter, citrus, sugar, and soda."
               />
-              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-8">
+              <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] snap-x snap-mandatory [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-x-4 sm:gap-y-8 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
                 {staples.map((ingredient) => (
                   <Link
                     key={ingredient.id}
                     href={`/ingredients/${ingredient.slug}`}
-                    className="group text-center"
+                    className="group w-[5.5rem] shrink-0 snap-start text-center sm:w-auto sm:shrink"
                   >
-                    <div className="relative mx-auto h-36 sm:h-44 w-full">
+                    <div className="relative mx-auto h-28 w-full sm:h-44">
                       {ingredient.imageUrl ? (
                         <Image
                           src={ingredient.imageUrl}
@@ -100,15 +98,15 @@ export function IngredientsDirectory({ ingredients }: Props) {
                           quality={85}
                         />
                       ) : (
-                        <div className="h-full flex items-end justify-center text-sage/40 text-xs">
+                        <div className="flex h-full items-end justify-center text-xs text-sage/40">
                           {ingredient.name}
                         </div>
                       )}
                     </div>
-                    <p className="mt-3 font-display text-base text-forest group-hover:text-terracotta transition-colors">
+                    <p className="mt-2 font-display text-sm text-forest sm:mt-3 sm:text-base">
                       {ingredient.name}
                     </p>
-                    <p className="text-xs text-sage mt-0.5 tabular-nums">
+                    <p className="mt-0.5 text-xs tabular-nums text-sage">
                       {ingredient.cocktailCount}
                     </p>
                   </Link>
@@ -121,7 +119,7 @@ export function IngredientsDirectory({ ingredients }: Props) {
             const items = groups[section.id];
             if (items.length === 0) return null;
             return (
-              <section key={section.id} id={section.id} className="scroll-mt-28">
+              <section key={section.id} id={section.id} className="scroll-mt-36 lg:scroll-mt-28">
                 <SectionHeader title={section.title} dek={section.dek} />
                 <IngredientList items={items} quiet={section.id === "also"} />
               </section>
@@ -133,13 +131,26 @@ export function IngredientsDirectory({ ingredients }: Props) {
   );
 }
 
+function JumpChip({ href, children }: { href: string; children: string }) {
+  return (
+    <a
+      href={href}
+      className="shrink-0 rounded-full border border-mist bg-white/70 px-3 py-1.5 text-sm text-forest active:border-terracotta/40 active:text-terracotta lg:bg-transparent lg:hover:text-terracotta"
+    >
+      {children}
+    </a>
+  );
+}
+
 function SectionHeader({ title, dek }: { title: string; dek: string }) {
   return (
-    <div className="mb-8 max-w-2xl">
-      <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-forest">
+    <div className="mb-5 max-w-2xl sm:mb-8">
+      <h2 className="font-display text-xl font-semibold tracking-tight text-forest sm:text-3xl">
         {title}
       </h2>
-      <p className="mt-2 text-sage leading-relaxed [text-wrap:pretty]">{dek}</p>
+      <p className="mt-1.5 text-sm leading-relaxed text-sage [text-wrap:pretty] sm:mt-2 sm:text-base">
+        {dek}
+      </p>
     </div>
   );
 }
@@ -152,12 +163,12 @@ function IngredientList({
   quiet?: boolean;
 }) {
   return (
-    <ul className="grid sm:grid-cols-2 gap-x-12 border-t border-mist">
+    <ul className="grid border-t border-mist sm:grid-cols-2 sm:gap-x-12">
       {items.map((ingredient) => (
         <li key={ingredient.id} className="border-b border-mist">
           <Link
             href={`/ingredients/${ingredient.slug}`}
-            className="group flex items-baseline justify-between gap-4 py-3.5"
+            className="group flex min-h-12 items-baseline justify-between gap-4 py-3.5"
           >
             <span
               className={[
@@ -167,7 +178,7 @@ function IngredientList({
             >
               {ingredient.name}
             </span>
-            <span className="text-sage/70 text-sm tabular-nums shrink-0">
+            <span className="shrink-0 text-sm tabular-nums text-sage/70">
               {ingredient.cocktailCount}
             </span>
           </Link>

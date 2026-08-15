@@ -81,7 +81,7 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
   return (
     <div>
       <section className="relative">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[22rem] overflow-hidden bg-cream">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[16rem] overflow-hidden bg-cream lg:h-[22rem]">
           {cover ? (
             <Image
               src={cover.src}
@@ -102,11 +102,11 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
         </div>
 
         <MainContainer className="relative h-auto lg:h-[22rem]">
-          <div className="grid lg:grid-cols-12 lg:items-stretch gap-6 h-full">
-            <div className="lg:col-span-7 order-2 lg:order-1 flex flex-col justify-end pt-6 pb-6 lg:pb-8">
+          <div className="grid h-full items-end gap-4 pt-5 pb-5 lg:grid-cols-12 lg:items-stretch lg:gap-6 lg:pt-0 lg:pb-8">
+            <div className="flex min-w-0 flex-col justify-end lg:col-span-7">
               <nav
                 aria-label="Breadcrumb"
-                className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-sm mb-4"
+                className="mb-3 flex items-center gap-1.5 text-sm lg:mb-4"
               >
                 <Link
                   href="/ingredients"
@@ -114,60 +114,74 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
                 >
                   Ingredients
                 </Link>
-                <ChevronRightIcon className="w-4 h-4 text-sage/70 shrink-0" />
+                <ChevronRightIcon className="hidden h-4 w-4 shrink-0 text-sage/70 sm:block" />
                 <Link
                   href={`/ingredients#${wayfinder.sectionId}`}
-                  className="text-sage hover:text-terracotta transition-colors"
+                  className="hidden text-sage hover:text-terracotta transition-colors sm:inline"
                 >
                   {wayfinder.sectionTitle}
                 </Link>
-                <ChevronRightIcon className="w-4 h-4 text-sage/70 shrink-0" />
-                <span className="text-charcoal font-medium">{ingredient.name}</span>
+                <ChevronRightIcon className="h-4 w-4 shrink-0 text-sage/70" />
+                <span className="truncate font-medium text-charcoal">{ingredient.name}</span>
               </nav>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1] font-display font-bold text-forest [text-wrap:balance]">
-                {headings.h1}
-              </h1>
-              <p className="mt-3 text-lg text-charcoal/80 leading-relaxed [text-wrap:pretty] max-w-xl">
+              <div className="flex items-end gap-4">
+                <h1 className="min-w-0 flex-1 font-display text-3xl font-bold leading-tight text-forest [text-wrap:balance] sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
+                  {headings.h1}
+                </h1>
+                <div className="relative h-28 w-20 shrink-0 lg:hidden">
+                  {ingredient.heroImageUrl ? (
+                    <Image
+                      src={ingredient.heroImageUrl}
+                      alt={ingredient.heroImageAlt}
+                      fill
+                      sizes="80px"
+                      className="object-contain object-bottom drop-shadow-lg mix-blend-multiply"
+                      quality={85}
+                    />
+                  ) : null}
+                </div>
+              </div>
+              <p className="mt-2 max-w-xl text-base leading-relaxed text-charcoal/80 [text-wrap:pretty] sm:mt-3 sm:text-lg">
                 {guide.dek}
               </p>
               {guide.alsoCalled && <p className="mt-2 text-sm text-sage/80">{guide.alsoCalled}</p>}
-              <div className="flex flex-wrap gap-2 text-xs text-sage mt-4">
+              <div className="mt-3 flex flex-wrap gap-2 text-xs text-sage sm:mt-4">
                 {guide.abv && (
-                  <span className="px-2.5 py-1 rounded-full bg-white/80 border border-mist backdrop-blur-sm">
+                  <span className="rounded-full border border-mist bg-white/80 px-2.5 py-1 backdrop-blur-sm">
                     {guide.abv} ABV
                   </span>
                 )}
                 {ingredient.cocktailCount > 0 ? (
                   <a
                     href="#cocktails"
-                    className="px-2.5 py-1 rounded-full bg-white/80 border border-mist backdrop-blur-sm hover:border-terracotta/40 hover:text-terracotta transition-colors"
+                    className="rounded-full border border-mist bg-white/80 px-2.5 py-1 backdrop-blur-sm transition-colors hover:border-terracotta/40 hover:text-terracotta"
                   >
                     Used in {ingredient.cocktailCount} cocktail{ingredient.cocktailCount === 1 ? "" : "s"}
                   </a>
                 ) : (
-                  <span className="px-2.5 py-1 rounded-full bg-white/80 border border-mist backdrop-blur-sm">
+                  <span className="rounded-full border border-mist bg-white/80 px-2.5 py-1 backdrop-blur-sm">
                     No matched cocktails yet
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="lg:col-span-5 order-1 lg:order-2 relative flex justify-center lg:block h-64 sm:h-72 lg:h-full overflow-visible">
-              <div className="relative w-48 h-64 sm:w-56 sm:h-72 lg:absolute lg:right-0 lg:top-6 lg:w-[20rem] lg:h-[28rem]">
+            <div className="relative hidden h-full overflow-visible lg:col-span-5 lg:block">
+              <div className="absolute right-0 top-6 h-[28rem] w-[20rem]">
                 <div className="absolute inset-x-2 bottom-0 top-12 bg-[radial-gradient(ellipse_at_bottom,_rgba(249,247,242,0.92)_30%,_transparent_70%)]" />
                 {ingredient.heroImageUrl ? (
                   <Image
                     src={ingredient.heroImageUrl}
                     alt={ingredient.heroImageAlt}
                     fill
-                    sizes="(max-width: 1024px) 240px, 320px"
+                    sizes="320px"
                     className="object-contain object-bottom drop-shadow-2xl mix-blend-multiply"
                     quality={90}
                     priority
                   />
                 ) : (
-                  <div className="w-full h-full flex items-end justify-center pb-8 text-sage text-xl font-display">
+                  <div className="flex h-full w-full items-end justify-center pb-8 font-display text-xl text-sage">
                     {ingredient.name}
                   </div>
                 )}
@@ -177,10 +191,10 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
         </MainContainer>
       </section>
 
-      <MainContainer className="pt-8 lg:pt-24 pb-16">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-14">
+      <MainContainer className="pt-4 pb-16 lg:pt-24">
+        <div className="grid gap-8 lg:grid-cols-12 lg:gap-14">
           <aside className="lg:col-span-4">
-            <div className="lg:sticky lg:top-24 space-y-4 max-w-sm">
+            <div className="max-w-sm space-y-4 lg:sticky lg:top-24">
               <IngredientActions
                 mixHref={mixHref}
                 ingredient={{
@@ -241,9 +255,9 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
                     <Link
                       key={cocktail.id}
                       href={`/cocktails/${cocktail.slug}`}
-                      className="group flex gap-4 p-3 bg-white border border-mist rounded-2xl hover:border-stone transition-colors"
+                      className="group flex gap-3 p-2.5 sm:gap-4 sm:p-3 bg-white border border-mist rounded-2xl hover:border-stone transition-colors"
                     >
-                      <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-cream shrink-0">
+                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-cream shrink-0">
                         {cocktail.imageUrl ? (
                           <Image
                             src={cocktail.imageUrl}

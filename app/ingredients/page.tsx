@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { WebPageSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
@@ -28,7 +27,7 @@ export default async function IngredientsPage() {
       />
 
       <div className="min-h-screen bg-cream">
-        <section className="relative min-h-[38vh] sm:min-h-[44vh] overflow-hidden">
+        <section className="relative min-h-[12rem] overflow-hidden sm:min-h-[44vh]">
           <Image
             src="/ingredients/origins/juniper.jpg"
             alt=""
@@ -41,23 +40,23 @@ export default async function IngredientsPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/90 to-cream/20" />
           <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/40 to-transparent" />
-          <MainContainer className="relative flex min-h-[38vh] sm:min-h-[44vh] flex-col justify-end pb-12 pt-24">
-            <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-terracotta font-bold mb-3">
+          <MainContainer className="relative flex flex-col justify-end pb-8 pt-16 sm:min-h-[44vh] sm:pb-12 sm:pt-24">
+            <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-terracotta font-bold mb-2 sm:mb-3">
               Cocktail ingredients
             </p>
-            <h1 className="font-display text-4xl sm:text-6xl font-semibold tracking-tight leading-tight text-forest mb-4 max-w-3xl [text-wrap:balance]">
+            <h1 className="font-display text-3xl sm:text-6xl font-semibold tracking-tight leading-tight text-forest mb-2 sm:mb-4 max-w-3xl [text-wrap:balance]">
               The bottles behind the drinks
             </h1>
-            <p className="text-sage max-w-xl text-base sm:text-lg leading-relaxed [text-wrap:pretty]">
+            <p className="text-sage max-w-xl text-sm sm:text-lg leading-relaxed [text-wrap:pretty]">
               What each spirit, aperitivo, and mixer actually is — and the MixWise recipes that use it.
             </p>
-            <p className="mt-4 text-sm text-sage/80">
+            <p className="mt-3 sm:mt-4 text-sm text-sage/80">
               {ingredients.length} guides
             </p>
           </MainContainer>
         </section>
 
-        <MainContainer className="py-10 sm:py-14">
+        <MainContainer className="py-6 sm:py-14">
           {ingredients.length > 0 ? (
             <IngredientsDirectory ingredients={ingredients} />
           ) : (

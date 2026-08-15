@@ -38,10 +38,10 @@ export function IngredientActions({ ingredient, mixHref }: IngredientActionsProp
   };
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:gap-3">
       <Link
         href={mixHref}
-        className="flex items-center justify-center w-full px-4 py-3 rounded-xl font-semibold bg-forest text-cream hover:bg-charcoal transition-colors"
+        className="col-span-2 flex min-h-12 items-center justify-center rounded-xl bg-forest px-4 py-3 text-center text-sm font-semibold text-cream hover:bg-charcoal sm:text-base lg:col-span-1"
       >
         Mix with {ingredient.name}
       </Link>
@@ -49,21 +49,21 @@ export function IngredientActions({ ingredient, mixHref }: IngredientActionsProp
       <button
         onClick={handleBarToggle}
         disabled={barLoading}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 ${
+        className={`flex min-h-12 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-50 sm:gap-2 sm:px-4 sm:text-base ${
           isInBar
-            ? "bg-forest/10 text-forest border border-forest/20 hover:bg-forest/15"
-            : "bg-terracotta hover:bg-terracotta-dark text-cream"
+            ? "border border-forest/20 bg-forest/10 text-forest hover:bg-forest/15"
+            : "bg-terracotta text-cream hover:bg-terracotta-dark"
         }`}
       >
         {isInBar ? (
           <>
-            <CheckCircleIcon className="w-5 h-5" />
+            <CheckCircleIcon className="h-5 w-5 shrink-0" />
             In my bar
           </>
         ) : (
           <>
-            <PlusCircleIcon className="w-5 h-5" />
-            Add to my bar
+            <PlusCircleIcon className="h-5 w-5 shrink-0" />
+            Add to bar
           </>
         )}
       </button>
@@ -71,14 +71,17 @@ export function IngredientActions({ ingredient, mixHref }: IngredientActionsProp
       <button
         onClick={handleAddToShoppingList}
         disabled={shoppingLoading || isInShoppingList}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-colors disabled:opacity-50 ${
+        className={`flex min-h-12 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-medium transition-colors disabled:opacity-50 sm:gap-2 sm:px-4 sm:text-base ${
           isInShoppingList
-            ? "bg-mist text-sage cursor-not-allowed"
-            : "bg-white border border-mist text-forest hover:border-stone"
+            ? "cursor-not-allowed bg-mist text-sage"
+            : "border border-mist bg-white text-forest hover:border-stone"
         }`}
       >
-        <ShoppingBagIcon className="w-5 h-5" />
-        {isInShoppingList ? "In shopping list" : "Add to shopping list"}
+        <ShoppingBagIcon className="h-5 w-5 shrink-0" />
+        <span className="lg:hidden">{isInShoppingList ? "In list" : "Shop"}</span>
+        <span className="hidden lg:inline">
+          {isInShoppingList ? "In shopping list" : "Add to shopping list"}
+        </span>
       </button>
     </div>
   );

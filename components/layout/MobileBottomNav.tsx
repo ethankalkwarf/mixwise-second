@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { HardNavLink } from "@/components/layout/HardNavLink";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -18,8 +18,6 @@ import {
 } from "@heroicons/react/24/solid";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
-import { CocktailSearch } from "@/components/search/CocktailSearch";
-import { getTopLevelOccasions } from "@/lib/occasions";
 import { isLearnPublic } from "@/lib/learnAccess";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
@@ -56,13 +54,15 @@ const TABS = [
   },
 ] as const;
 
+const SHEET_ROW =
+  "flex min-h-12 w-full items-center gap-2 px-4 text-[16px] font-medium text-charcoal active:bg-mist/70";
+
 export function MobileBottomNav() {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const { user, profile, isAuthenticated, isLoading, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
   const preferredAuthMode = usePreferredAuthMode();
-  const occasionLinks = getTopLevelOccasions();
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || null;
@@ -96,10 +96,7 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav
-        className="mw-tabbar lg:hidden"
-        aria-label="Mobile navigation"
-      >
+      <nav className="mw-tabbar lg:hidden" aria-label="Mobile navigation">
         {TABS.map((tab) => {
           const active = tab.match(pathname || "");
           const Icon = active ? tab.IconActive : tab.Icon;
@@ -147,222 +144,155 @@ export function MobileBottomNav() {
           className="mw-mobile-sheet__panel"
           role="dialog"
           aria-modal="true"
-          aria-label="Site menu"
+          aria-label="More"
         >
           <div className="mw-mobile-sheet__handle" aria-hidden />
-          <div className="mw-mobile-sheet__head">
-            <h2 className="mw-mobile-sheet__title">Menu</h2>
+          <div className="mb-3 flex items-center justify-between px-1">
+            <h2 className="font-display text-xl text-forest">More</h2>
             <button
               type="button"
-              className="mw-mobile-sheet__close"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-sage active:bg-mist/70"
               aria-label="Close menu"
               onClick={closeMore}
             >
-              &times;
+              <XMarkIcon className="h-5 w-5" aria-hidden />
             </button>
           </div>
 
-          <div className="px-1 pb-3">
-            {moreOpen ? (
-              <CocktailSearch variant="mobile" onClose={closeMore} />
+          <SheetGroup>
+            <SheetLink href="/cocktail-of-the-day" onClick={closeMore}>
+              Drink of the Day
+            </SheetLink>
+            <SheetLink href="/ingredients" onClick={closeMore}>
+              Ingredients
+            </SheetLink>
+            <SheetLink href="/occasions" onClick={closeMore}>
+              Collections
+            </SheetLink>
+            {isLearnPublic() ? (
+              <SheetLink href="/learn" onClick={closeMore}>
+                Learn
+              </SheetLink>
             ) : null}
-          </div>
+          </SheetGroup>
 
-            <div className="space-y-0.5">
-            <HardNavLink
-              href="/cocktail-of-the-day"
-              className="block px-3 py-3 rounded-xl hover:bg-mist/50 transition-colors"
-              onClick={closeMore}
-            >
-              <span className="block text-base font-medium text-charcoal">Drink of the Day</span>
-              <span className="block text-sm text-sage">Today’s recipe, worth making tonight</span>
-            </HardNavLink>
-            <HardNavLink
-              href="/mix"
-              className="block px-3 py-3 rounded-xl hover:bg-mist/50 transition-colors"
-              onClick={closeMore}
-            >
-              <span className="block text-base font-medium text-charcoal">What Can I Make?</span>
-              <span className="block text-sm text-sage">Match recipes to your cabinet</span>
-            </HardNavLink>
-            <HardNavLink
-              href="/cocktails"
-              className="block px-3 py-3 rounded-xl hover:bg-mist/50 transition-colors"
-              onClick={closeMore}
-            >
-              <span className="block text-base font-medium text-charcoal">Browse All Recipes</span>
-              <span className="block text-sm text-sage">The full library — search and filter</span>
-            </HardNavLink>
-            <HardNavLink
-              href="/ingredients"
-              className="block px-3 py-3 rounded-xl hover:bg-mist/50 transition-colors"
-              onClick={closeMore}
-            >
-              <span className="block text-base font-medium text-charcoal">Ingredient Guides</span>
-              <span className="block text-sm text-sage">What each bottle is, and what you can make</span>
-            </HardNavLink>
-
-            <div className="pt-1 pb-2">
-              <div className="flex items-center justify-between px-3 pb-1">
-                <p className="text-[10px] font-mono uppercase tracking-widest text-sage">
-                  By collection
-                </p>
-                <HardNavLink
-                  href="/occasions"
-                  className="mw-inline-term text-[11px] font-semibold text-terracotta"
-                  onClick={closeMore}
-                >
-                  View all
-                </HardNavLink>
-              </div>
-              {occasionLinks
-                .filter((occasion) => occasion.slug === "party")
-                .map((occasion) => (
-                  <HardNavLink
-                    key={occasion.slug}
-                    href={`/occasions/${occasion.slug}`}
-                    className="block mx-1 mb-1 px-3 py-3 rounded-xl bg-mist/50 text-charcoal"
-                    onClick={closeMore}
-                  >
-                    <span className="block text-base font-medium">
-                      {occasion.navName || occasion.name}
-                    </span>
-                    <span className="block text-sm text-sage">{occasion.headline}</span>
-                  </HardNavLink>
-                ))}
-              <div className="grid grid-cols-2 gap-0.5 px-1">
-                {occasionLinks
-                  .filter((occasion) => occasion.slug !== "party")
-                  .map((occasion) => (
-                    <HardNavLink
-                      key={occasion.slug}
-                      href={`/occasions/${occasion.slug}`}
-                      className="px-3 py-2.5 text-sm rounded-lg text-charcoal hover:text-terracotta hover:bg-mist/50"
-                      onClick={closeMore}
-                    >
-                      {occasion.navName || occasion.name}
-                    </HardNavLink>
-                  ))}
-              </div>
-              {isLearnPublic() && (
-                <HardNavLink
-                  href="/learn"
-                  className="block px-3 py-2 text-sm rounded-lg text-terracotta font-medium hover:bg-mist/50"
-                  onClick={closeMore}
-                >
-                  Learn mixology
-                </HardNavLink>
-              )}
-            </div>
-
-            <div className="border-t border-mist mt-4 pt-4">
-              {isLoading ? (
-                <div className="px-3 py-2">
-                  <div className="h-10 bg-mist rounded-xl animate-pulse" />
-                </div>
-              ) : isAuthenticated ? (
-                <>
-                  <div className="px-3 py-2 flex items-center gap-3">
-                    {avatarUrl ? (
-                      <Image
-                        src={avatarUrl}
-                        alt=""
-                        width={40}
-                        height={40}
-                        className="w-10 h-10 rounded-full object-cover border border-mist"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-terracotta/20 flex items-center justify-center text-terracotta font-semibold">
-                        {userInitial}
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-medium text-forest">{displayName}</p>
-                      <p className="text-xs text-sage">{user?.email}</p>
-                    </div>
-                  </div>
-                  <HardNavLink
-                    href="/dashboard"
-                    className="block px-3 py-3 text-base font-semibold text-terracotta hover:bg-terracotta/10 rounded-xl transition-colors"
-                    onClick={closeMore}
-                  >
-                    Dashboard
-                  </HardNavLink>
-                  <ShareBarButton
-                    variant="menu"
-                    className="flex w-full items-center gap-2 px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
-                    onShared={closeMore}
-                  />
-                  <HardNavLink
-                    href="/account"
-                    className="block px-3 py-3 text-base font-medium text-charcoal hover:text-terracotta hover:bg-mist/50 rounded-xl transition-colors"
-                    onClick={closeMore}
-                  >
-                    Account Settings
-                  </HardNavLink>
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="block w-full text-left px-3 py-3 text-base font-medium text-terracotta hover:bg-terracotta/10 rounded-xl transition-colors"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <div className="space-y-2 px-3 pb-1">
-                  {preferredAuthMode === "login" ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          openAuthDialog({ mode: "login" });
-                          closeMore();
-                        }}
-                        className="block w-full text-center px-4 py-3 text-base font-semibold bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark transition-colors"
-                      >
-                        Log In
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          openAuthDialog({ mode: "signup" });
-                          closeMore();
-                        }}
-                        className="block w-full text-center px-4 py-3 text-base font-medium text-charcoal hover:text-terracotta transition-colors"
-                      >
-                        Sign Up Free
-                      </button>
-                    </>
+          <div className="mt-3">
+            {isLoading ? (
+              <div className="h-12 animate-pulse rounded-2xl bg-mist" />
+            ) : isAuthenticated ? (
+              <SheetGroup>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  {avatarUrl ? (
+                    <Image
+                      src={avatarUrl}
+                      alt=""
+                      width={36}
+                      height={36}
+                      className="h-9 w-9 rounded-full border border-mist object-cover"
+                    />
                   ) : (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          openAuthDialog({ mode: "login" });
-                          closeMore();
-                        }}
-                        className="block w-full text-center px-4 py-3 text-base font-medium text-charcoal hover:text-terracotta transition-colors"
-                      >
-                        Log In
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          openAuthDialog({ mode: "signup" });
-                          closeMore();
-                        }}
-                        className="block w-full text-center px-4 py-3 text-base font-semibold bg-terracotta text-cream rounded-xl hover:bg-terracotta-dark transition-colors"
-                      >
-                        Sign Up Free
-                      </button>
-                    </>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-terracotta/20 text-sm font-semibold text-terracotta">
+                      {userInitial}
+                    </div>
                   )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-forest">{displayName}</p>
+                    <p className="truncate text-xs text-sage">{user?.email}</p>
+                  </div>
                 </div>
-              )}
-            </div>
+                <SheetLink href="/dashboard" onClick={closeMore}>
+                  Dashboard
+                </SheetLink>
+                <ShareBarButton
+                  variant="menu"
+                  className={SHEET_ROW}
+                  onShared={closeMore}
+                />
+                <SheetLink href="/account" onClick={closeMore}>
+                  Account
+                </SheetLink>
+                <button type="button" onClick={handleSignOut} className={SHEET_ROW}>
+                  Sign out
+                </button>
+              </SheetGroup>
+            ) : (
+              <div className="px-1 pt-1">
+                {preferredAuthMode === "login" ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openAuthDialog({ mode: "login" });
+                        closeMore();
+                      }}
+                      className="flex w-full items-center justify-center rounded-xl bg-terracotta px-4 py-3 text-base font-semibold text-cream !justify-center !text-center"
+                    >
+                      Log in
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openAuthDialog({ mode: "signup" });
+                        closeMore();
+                      }}
+                      className="mt-1 flex w-full items-center justify-center px-4 py-2.5 text-sm font-medium text-sage !justify-center !text-center"
+                    >
+                      Sign up free
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openAuthDialog({ mode: "signup" });
+                        closeMore();
+                      }}
+                      className="flex w-full items-center justify-center rounded-xl bg-terracotta px-4 py-3 text-base font-semibold text-cream !justify-center !text-center"
+                    >
+                      Sign up free
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openAuthDialog({ mode: "login" });
+                        closeMore();
+                      }}
+                      className="mt-1 flex w-full items-center justify-center px-4 py-2.5 text-sm font-medium text-sage !justify-center !text-center"
+                    >
+                      Log in
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </>
+  );
+}
+
+function SheetGroup({ children }: { children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-2xl bg-white/70 divide-y divide-mist/80">
+      {children}
+    </div>
+  );
+}
+
+function SheetLink({
+  href,
+  onClick,
+  children,
+}: {
+  href: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <HardNavLink href={href} className={SHEET_ROW} onClick={onClick}>
+      {children}
+    </HardNavLink>
   );
 }
