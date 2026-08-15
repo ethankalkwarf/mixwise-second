@@ -77,7 +77,7 @@ export default async function HomePage() {
           {/* Guest Experience Section */}
           <GuestExperienceSection />
 
-          {/* Email capture — lead list, not Thirsty Thursday */}
+          {/* Email capture */}
           <EmailCaptureSection />
 
           {/* Platform Section */}

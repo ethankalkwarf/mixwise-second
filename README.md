@@ -21,7 +21,6 @@ MixWise is a cocktail platform for better drinks at home: curated recipes, a mix
 - Mix tool: find drinks you can make with what you have
 - Favorites, ratings, and shopping list
 - User accounts (email/password and OAuth)
-- Wedding cocktail finder and Thirsty Thursday newsletter
 
 ## Getting started
 

@@ -68,6 +68,16 @@ const nextConfig = {
         destination: '/about',
         permanent: true,
       },
+      {
+        source: '/wedding-menu',
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: '/thirsty-thursday',
+        destination: '/',
+        permanent: false,
+      },
     ];
   },
   // Long-lived caches are for production hashed assets only.

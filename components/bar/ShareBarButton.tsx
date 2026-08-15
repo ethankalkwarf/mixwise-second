@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { ShareIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { ShareIcon, CheckIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
@@ -94,7 +94,7 @@ export function ShareBarButton({
         toast.success(
           isPublic ? "Bar link copied — send it to a friend." : "Your bar is public. Link copied!",
           5000,
-          { label: "Open bar", href: url.replace(origin, "") }
+          { label: "View public bar", href: url.replace(origin, "") }
         );
       }
 
@@ -185,9 +185,11 @@ export function ShareBarButton({
         <Link
           href={sharePath}
           prefetch={false}
-          className="inline-flex items-center px-3 py-2 text-sm font-medium text-forest bg-white border border-mist hover:border-stone rounded-2xl transition-all"
+          title="See your bar the way friends will"
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-forest bg-white border border-mist hover:border-stone rounded-2xl transition-all"
         >
-          Preview
+          <EyeIcon className="w-4 h-4" />
+          View public bar
         </Link>
       )}
     </div>
