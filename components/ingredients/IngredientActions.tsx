@@ -38,10 +38,10 @@ export function IngredientActions({ ingredient, mixHref }: IngredientActionsProp
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:gap-3">
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-1 md:gap-3">
       <Link
         href={mixHref}
-        className="col-span-2 flex min-h-12 items-center justify-center rounded-xl bg-forest px-4 py-3 text-center text-sm font-semibold text-cream hover:bg-charcoal sm:text-base lg:col-span-1"
+        className="col-span-2 flex min-h-12 items-center justify-center rounded-xl bg-forest px-4 py-3 text-center text-sm font-semibold text-cream hover:bg-charcoal sm:text-base md:col-span-1"
       >
         Mix with {ingredient.name}
       </Link>
@@ -78,8 +78,8 @@ export function IngredientActions({ ingredient, mixHref }: IngredientActionsProp
         }`}
       >
         <ShoppingBagIcon className="h-5 w-5 shrink-0" />
-        <span className="lg:hidden">{isInShoppingList ? "In list" : "Shop"}</span>
-        <span className="hidden lg:inline">
+        <span className="md:hidden">{isInShoppingList ? "In list" : "Shop"}</span>
+        <span className="hidden md:inline">
           {isInShoppingList ? "In shopping list" : "Add to shopping list"}
         </span>
       </button>

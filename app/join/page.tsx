@@ -25,17 +25,17 @@ function JoinContent() {
         </h1>
         <p className="mt-3 text-sage">Your bar, favorites, and weekly drinks live here.</p>
         <Link
-          href="/mix"
+          href="/dashboard"
           className="mt-8 inline-flex rounded-full bg-terracotta px-6 py-3 text-sm font-medium text-cream hover:bg-terracotta-dark"
         >
-          Open Mix
+          Go to your dashboard
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="grid items-start gap-12 lg:grid-cols-2">
+    <div className="grid items-start gap-12 md:grid-cols-2">
       <div>
         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
           {fromList ? "One last step" : "Free MixWise account"}

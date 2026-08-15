@@ -26,8 +26,8 @@ export function GuestExperienceSection() {
         </defs>
       </svg>
 
-      <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8">
-        <div className="relative z-10 lg:col-span-5 lg:pr-4 xl:pr-8">
+      <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 sm:px-6 md:grid-cols-12 md:gap-10 lg:px-8">
+        <div className="relative z-10 md:col-span-5 lg:pr-4 xl:pr-8">
           <h2 className="mb-5 [text-wrap:balance] font-display text-3xl font-bold leading-tight text-forest lg:text-5xl">
             Start with what&apos;s
             <br />
@@ -50,15 +50,15 @@ export function GuestExperienceSection() {
           </div>
         </div>
 
-        <div className="relative flex justify-center lg:col-span-7 lg:justify-end">
+        <div className="relative flex justify-center md:col-span-7 md:justify-end">
           {/* Soft mist disc — anchors the cut silhouette to the composition */}
           <div
             aria-hidden
-            className="absolute left-1/2 top-1/2 h-[76%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-mist lg:left-auto lg:right-[8%] lg:translate-x-0"
+            className="absolute left-1/2 top-1/2 h-[76%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-mist md:left-auto md:right-[8%] md:translate-x-0"
           />
 
           <div
-            className="relative w-full max-w-md sm:max-w-lg lg:mr-4 lg:max-w-xl xl:mr-8"
+            className="relative w-full max-w-md sm:max-w-lg md:mr-4 md:max-w-xl xl:mr-8"
             style={{ filter: "drop-shadow(0 24px 40px rgba(58, 77, 57, 0.14))" }}
           >
             <div

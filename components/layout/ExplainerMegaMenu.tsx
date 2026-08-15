@@ -15,6 +15,7 @@ type Props = {
   active: boolean;
   href: string;
   label: string;
+  compactLabel?: string;
   eyebrow: string;
   title: string;
   body: string;
@@ -30,6 +31,7 @@ export function ExplainerMegaMenu({
   active,
   href,
   label,
+  compactLabel,
   eyebrow,
   title,
   body,
@@ -46,6 +48,7 @@ export function ExplainerMegaMenu({
         <NavMegaTrigger
           href={href}
           label={label}
+          compactLabel={compactLabel}
           active={active}
           open={open}
           panelId={panelId}

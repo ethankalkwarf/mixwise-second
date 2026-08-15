@@ -23,19 +23,19 @@ export function Hero({
   }, []);
 
   return (
-    <section className="relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-charcoal lg:min-h-[88vh]">
+    <section className="relative isolate min-h-[min(100svh-4rem,34rem)] overflow-hidden bg-charcoal md:min-h-[70vh] lg:min-h-[88vh]">
       <Image
         src="/media/strainer-pour-poster.webp"
         alt=""
         fill
         priority
         sizes="100vw"
-        className="object-cover object-[center_28%] lg:object-center"
+        className="object-cover object-[center_28%] md:object-center"
         aria-hidden
       />
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover object-[center_28%] lg:object-center"
+        className="absolute inset-0 h-full w-full object-cover object-[center_28%] md:object-center"
         muted
         loop
         playsInline
@@ -47,12 +47,12 @@ export function Hero({
         <source src="/media/strainer-pour.mp4" type="video/mp4" />
       </video>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-charcoal from-[18%] via-charcoal/70 to-charcoal/25 lg:from-charcoal lg:via-charcoal/65 lg:to-charcoal/30" />
+      <div className="absolute inset-0 bg-gradient-to-t from-charcoal from-[18%] via-charcoal/70 to-charcoal/25 md:from-charcoal md:via-charcoal/65 md:to-charcoal/30" />
       <div className="absolute inset-0 bg-charcoal/25" />
 
-      <div className="relative z-10 flex min-h-[calc(100svh-4rem)] items-end justify-center lg:min-h-[88vh] lg:items-center">
-        <div className="mx-auto w-full max-w-5xl px-5 pb-[calc(var(--mw-tabbar-h)+env(safe-area-inset-bottom,0px)+1.25rem)] pt-8 text-left sm:px-6 lg:px-8 lg:pb-24 lg:pt-28 lg:text-center">
-          <h1 className="mb-4 [text-wrap:balance] text-[2.35rem] font-semibold leading-[1.12] tracking-tight text-cream sm:mb-6 sm:text-6xl sm:leading-[1.02] lg:text-8xl xl:text-[7.5rem]">
+      <div className="relative z-10 flex min-h-[min(100svh-4rem,34rem)] items-end justify-center md:min-h-[70vh] md:items-center lg:min-h-[88vh]">
+        <div className="mx-auto w-full max-w-5xl px-5 pb-[calc(var(--mw-tabbar-h)+env(safe-area-inset-bottom,0px)+1.25rem)] pt-8 text-left sm:px-6 md:px-8 md:pb-20 md:pt-16 md:text-center lg:pb-24 lg:pt-28">
+          <h1 className="mb-4 [text-wrap:balance] text-[2.35rem] font-semibold leading-[1.12] tracking-tight text-cream sm:mb-6 sm:text-5xl sm:leading-[1.08] md:text-6xl lg:text-8xl xl:text-[7.5rem]">
             Find your{" "}
             <span className="italic text-terracotta">
               next

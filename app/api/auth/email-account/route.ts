@@ -9,8 +9,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPasswordlessAccountFromEmail } from "@/lib/email/create-passwordless-account";
 import { debugLog } from "@/lib/debugLog";
+import { resolvePostAuthPath } from "@/lib/auth/return-to";
 
-const ALLOWED_SOURCES = new Set(["mix_save", "auth_dialog"]);
+const ALLOWED_SOURCES = new Set(["mix_save", "auth_dialog", "join_page"]);
 
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000;
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, source: rawSource } = body;
+    const { email, source: rawSource, nextPath: rawNextPath } = body;
 
     if (!email || typeof email !== "string") {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -67,6 +68,13 @@ export async function POST(request: NextRequest) {
       typeof rawSource === "string" && ALLOWED_SOURCES.has(rawSource)
         ? rawSource
         : "mix_save";
+
+    const nextPath =
+      typeof rawNextPath === "string"
+        ? resolvePostAuthPath(rawNextPath)
+        : source === "mix_save"
+          ? "/mix"
+          : "/dashboard";
 
     debugLog(`[Email Account] Intentional account for ${trimmedEmail} via ${source}`);
 
@@ -94,7 +102,7 @@ export async function POST(request: NextRequest) {
       email: trimmedEmail,
       source,
       requestUrl: new URL(request.url),
-      nextPath: "/mix",
+      nextPath,
       notify: true,
       sendMagicLinkEmail: true,
     });

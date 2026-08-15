@@ -22,15 +22,6 @@ export function HomePageWrapper({ featuredCocktails, allCocktails, children }: H
       try {
         if (window.Capacitor) {
           setIsNative(Capacitor.isNativePlatform());
-        } else {
-          // Fallback: check user agent for iOS/Android webview
-          const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
-          const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
-          const isAndroid = /android/i.test(ua);
-          // Only set native if we're in a webview (not Safari browser)
-          if ((isIOS || isAndroid) && !window.navigator.standalone && !document.referrer) {
-            setIsNative(true);
-          }
         }
       } catch (e) {
         console.error("Error checking native platform:", e);

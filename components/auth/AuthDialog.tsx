@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, Fragment, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon, EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useUser } from "./UserProvider";
@@ -9,6 +10,7 @@ import type { AuthDialogMode } from "./AuthDialogProvider";
 import { debugLog } from "@/lib/debugLog";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { markHasAccount } from "@/lib/auth/returning-user";
+import { currentReturnPath, rememberAuthReturnTo, resolvePostAuthPath } from "@/lib/auth/return-to";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -51,6 +53,7 @@ export function AuthDialog({
   onModeChange,
 }: AuthDialogProps) {
   const { signInWithGoogle, signInWithApple, signInWithPassword, signInWithEmail, resetPassword, isAuthenticated } = useUser();
+  const router = useRouter();
   const toast = useToast();
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -84,8 +87,13 @@ export function AuthDialog({
     if (isAuthenticated && isOpen) {
       onSuccess?.();
       onClose();
+      const here = currentReturnPath();
+      const dest = resolvePostAuthPath(here);
+      if (dest !== here) {
+        router.replace(dest);
+      }
     }
-  }, [isAuthenticated, isOpen, onClose, onSuccess]);
+  }, [isAuthenticated, isOpen, onClose, onSuccess, router]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -113,6 +121,7 @@ export function AuthDialog({
   }, [mode]);
 
   const handleGoogleSignIn = async () => {
+    rememberAuthReturnTo();
     setIsGoogleLoading(true);
     setError(null);
     try {
@@ -124,6 +133,7 @@ export function AuthDialog({
   };
 
   const handleAppleSignIn = async () => {
+    rememberAuthReturnTo();
     setIsAppleLoading(true);
     setError(null);
     try {
@@ -140,6 +150,7 @@ export function AuthDialog({
       return;
     }
 
+    rememberAuthReturnTo();
     setIsMagicLoading(true);
     setError(null);
 
@@ -151,6 +162,7 @@ export function AuthDialog({
         body: JSON.stringify({
           email: email.trim(),
           source: "auth_dialog",
+          nextPath: currentReturnPath(),
         }),
       });
       const data = await response.json();
@@ -207,6 +219,7 @@ export function AuthDialog({
           body: JSON.stringify({
             email: email.trim(),
             password: password.trim(),
+            nextPath: currentReturnPath(),
           }),
         });
 

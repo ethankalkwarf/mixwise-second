@@ -101,9 +101,9 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
           <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/25 to-transparent" />
         </div>
 
-        <MainContainer className="relative h-auto lg:h-[22rem]">
-          <div className="grid h-full items-end gap-4 pt-5 pb-5 lg:grid-cols-12 lg:items-stretch lg:gap-6 lg:pt-0 lg:pb-8">
-            <div className="flex min-w-0 flex-col justify-end lg:col-span-7">
+        <MainContainer className="relative h-auto md:h-[22rem]">
+          <div className="grid h-full items-end gap-4 pt-5 pb-5 md:grid-cols-12 md:items-stretch md:gap-6 md:pt-0 md:pb-8">
+            <div className="flex min-w-0 flex-col justify-end md:col-span-7">
               <nav
                 aria-label="Breadcrumb"
                 className="mb-3 flex items-center gap-1.5 text-sm lg:mb-4"
@@ -129,7 +129,7 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
                 <h1 className="min-w-0 flex-1 font-display text-3xl font-bold leading-tight text-forest [text-wrap:balance] sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
                   {headings.h1}
                 </h1>
-                <div className="relative h-28 w-20 shrink-0 lg:hidden">
+                <div className="relative h-28 w-20 shrink-0 md:hidden">
                   {ingredient.heroImageUrl ? (
                     <Image
                       src={ingredient.heroImageUrl}
@@ -167,7 +167,7 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
               </div>
             </div>
 
-            <div className="relative hidden h-full overflow-visible lg:col-span-5 lg:block">
+            <div className="relative hidden h-full overflow-visible md:col-span-5 md:block">
               <div className="absolute right-0 top-6 h-[28rem] w-[20rem]">
                 <div className="absolute inset-x-2 bottom-0 top-12 bg-[radial-gradient(ellipse_at_bottom,_rgba(249,247,242,0.92)_30%,_transparent_70%)]" />
                 {ingredient.heroImageUrl ? (
@@ -191,10 +191,10 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
         </MainContainer>
       </section>
 
-      <MainContainer className="pt-4 pb-16 lg:pt-24">
-        <div className="grid gap-8 lg:grid-cols-12 lg:gap-14">
-          <aside className="lg:col-span-4">
-            <div className="max-w-sm space-y-4 lg:sticky lg:top-24">
+      <MainContainer className="pt-4 pb-16 md:pt-24">
+        <div className="grid gap-8 md:grid-cols-12 md:gap-14">
+          <aside className="md:col-span-4">
+            <div className="max-w-sm space-y-4 md:sticky md:top-24">
               <IngredientActions
                 mixHref={mixHref}
                 ingredient={{
@@ -206,7 +206,7 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
             </div>
           </aside>
 
-          <div className="lg:col-span-8 space-y-10">
+          <div className="md:col-span-8 space-y-10">
             <Section heading={headings.what}>{guide.whatItIs}</Section>
             <Section heading={headings.taste}>{guide.tastingNotes}</Section>
             <Section heading={headings.history}>{guide.history}</Section>

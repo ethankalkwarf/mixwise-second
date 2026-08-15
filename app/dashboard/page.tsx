@@ -339,7 +339,7 @@ export default function DashboardPage() {
         <MainContainer>
           <div className="animate-pulse space-y-8">
             <div className="h-12 bg-mist rounded-2xl w-64" />
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-4">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="h-32 bg-mist rounded-3xl" />
               ))}
@@ -421,9 +421,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Bento Grid Layout */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           {/* Left Column - Primary Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="md:col-span-2 space-y-6">
             {/* What You Can Make - 100% matches */}
             <section className="card overflow-hidden">
               <div className="flex items-center justify-between p-6 border-b border-mist">

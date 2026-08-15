@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     email,
     source: `email_list_convert_${source}`,
     requestUrl: new URL(request.url),
-    nextPath: "/mix",
+    nextPath: "/dashboard",
     notify: true,
     sendMagicLinkEmail: false,
   });

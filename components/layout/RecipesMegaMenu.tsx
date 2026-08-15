@@ -53,6 +53,7 @@ export function RecipesMegaMenu({
         <NavMegaTrigger
           href="/cocktails"
           label="Browse All Recipes"
+          compactLabel="Recipes"
           active={active}
           open={open}
           panelId={panelId}
@@ -60,14 +61,14 @@ export function RecipesMegaMenu({
         />
       )}
     >
-      <div className="grid gap-8 py-7 lg:grid-cols-12 lg:items-stretch lg:gap-10 lg:py-8">
-        <div className="flex lg:col-span-4">
+      <div className="grid gap-8 py-7 md:grid-cols-12 md:items-stretch md:gap-10 md:py-8">
+        <div className="flex md:col-span-4">
           <Link
             href={featuredCover?.href || "/occasions"}
             onClick={controller.closeMenu}
             className="group flex w-full flex-col"
           >
-            <div className="relative aspect-[16/11] overflow-hidden bg-mist sm:aspect-[5/3] lg:aspect-auto lg:max-h-[240px] lg:min-h-0 lg:flex-1">
+            <div className="relative aspect-[16/11] overflow-hidden bg-mist sm:aspect-[5/3] md:aspect-auto md:max-h-[240px] md:min-h-0 md:flex-1">
               {featuredCover?.imageUrl ? (
                 <Image
                   src={featuredCover.imageUrl}
@@ -106,7 +107,7 @@ export function RecipesMegaMenu({
           </Link>
         </div>
 
-        <div className="flex flex-col justify-between gap-7 lg:col-span-8">
+        <div className="flex flex-col justify-between gap-7 md:col-span-8">
           <div>
             <div className="mb-6 grid gap-3 sm:grid-cols-2">
               <Link

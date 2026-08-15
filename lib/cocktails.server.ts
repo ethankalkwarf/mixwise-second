@@ -21,6 +21,7 @@ import { getDailyIndexFromCount, getCurrentLocalDateString } from "./dailyCockta
 import fs from "node:fs/promises";
 import path from "node:path";
 import { debugLog } from "@/lib/debugLog";
+import { extractIngredientName, matchIngredientName } from "@/lib/ingredientMatching";
 
 const COCKTAILS_CACHE_REVALIDATE_SECONDS = 300;
 
@@ -405,16 +406,13 @@ async function fetchCocktailsWithIngredients(): Promise<CocktailWithIngredientsR
       return [];
     }
 
-    // Exact lookup by normalized name + list for fuzzy fallback
+    // Exact lookup by normalized name; shared matcher handles close variants
     const ingredientByNormalizedName = new Map<string, { id: string; name: string }>();
-    const ingredientEntries: Array<{ id: string; name: string; lower: string }> = [];
     (ingredients || []).forEach((ing) => {
       if (!ing.name) return;
       const id = String(ing.id);
       const name = ing.name;
-      const lower = name.toLowerCase().trim();
-      ingredientByNormalizedName.set(lower, { id, name });
-      ingredientEntries.push({ id, name, lower });
+      ingredientByNormalizedName.set(name.toLowerCase().trim(), { id, name });
     });
 
     debugLog('[SERVER] Processing cocktails with JSON ingredients...');
@@ -440,45 +438,15 @@ async function fetchCocktailsWithIngredients(): Promise<CocktailWithIngredientsR
               return null;
             }
 
-            // Parse the ingredient name from the full text by removing measurement prefixes
-            let ingredientText = fullText.trim();
-
-            // Remove common measurement prefixes
-            ingredientText = ingredientText
-              .replace(/^\d+(\/\d+)?\s*(oz|cup|tbsp|tsp|dash|dashes|drop|drops|ml|cl|shot|jigger|part|parts|slice|slices|wheel|wheels|twist|twists|peel|peels|wedge|wedges|sprig|sprigs|leaf|leaves|piece|pieces)\s+/i, '')
-              .replace(/^\d+\s+/, '')
-              .trim();
-
+            const ingredientText = extractIngredientName(fullText);
             if (!ingredientText) {
               return null;
             }
 
-            const normalizedText = ingredientText.toLowerCase().trim();
-            let matchedIngredient = ingredientByNormalizedName.get(normalizedText) || null;
-
-            // Fuzzy fallback with variations (exact Map hit is the common path)
-            if (!matchedIngredient) {
-              const searchVariations = [
-                ingredientText,
-                ingredientText.replace(/^(sweet|dry|white|dark|aged|extra|fresh)\s+/i, ''),
-                ingredientText.replace(/\s+(juice|syrup|bitters|liqueur|vodka|gin|rum|whiskey|bourbon|scotch|tequila|brandy|cognac|wine|beer)$/i, ''),
-                ingredientText.split(/\s+/).slice(-2).join(' '),
-                ingredientText.split(/\s+/).slice(-1)[0]
-              ]
-                .map((v) => v.toLowerCase().trim())
-                .filter((v) => v && v.length > 2);
-
-              for (const variation of searchVariations) {
-                matchedIngredient =
-                  ingredientByNormalizedName.get(variation) ||
-                  ingredientEntries.find(
-                    (entry) =>
-                      entry.lower.includes(variation) || variation.includes(entry.lower)
-                  ) ||
-                  null;
-                if (matchedIngredient) break;
-              }
-            }
+            const matchedFromName = matchIngredientName(ingredientText, ingredientByNormalizedName);
+            const matchedIngredient = matchedFromName
+              ? { id: matchedFromName.id, name: matchedFromName.name }
+              : null;
 
             const ingredientId = matchedIngredient ? String(matchedIngredient.id) : 'unknown';
             const ingredientName = matchedIngredient ? matchedIngredient.name : fullText;

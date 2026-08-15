@@ -17,6 +17,7 @@ import {
   ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
 import type { MatchedIngredient } from "@/lib/ingredientMatching";
+import { findWholePhraseIndex } from "@/lib/ingredientMatching";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import Link from "next/link";
@@ -44,21 +45,9 @@ function RecipeIngredientLine({
     return <>• {text}</>;
   }
 
-  const lowerText = text.toLowerCase();
-  const lowerName = matched.name.toLowerCase();
-  const idx = lowerText.lastIndexOf(lowerName);
+  const idx = findWholePhraseIndex(text, matched.name);
   if (idx < 0) {
-    return (
-      <>
-        • {text}{" "}
-        <Link
-          href={`/ingredients/${matched.guideSlug}`}
-          className="mw-inline-term text-terracotta hover:underline"
-        >
-          {matched.name}
-        </Link>
-      </>
-    );
+    return <>• {text}</>;
   }
 
   return (
@@ -125,12 +114,10 @@ export function RecipeContent({
       
       // Verify that the matched ingredient name is related to the original ingredient text
       // This prevents incorrect matches from fuzzy matching
-      const isMatchValid = 
+      const isMatchValid =
         extractedNameLower === matchedNameLower ||
-        extractedNameLower.includes(matchedNameLower) ||
-        matchedNameLower.includes(extractedNameLower) ||
-        extractedName.startsWith(matched.name?.split(' ')[0] || '') ||
-        matched.name?.toLowerCase().startsWith(extractedName.split(' ')[0].toLowerCase() || '');
+        findWholePhraseIndex(extractedName, matched.name || "") >= 0 ||
+        findWholePhraseIndex(matched.name || "", extractedName) >= 0;
       
       if (isMatchValid) {
         validatedIngredients.push({
@@ -174,7 +161,7 @@ export function RecipeContent({
   return (
     <>
       {/* HERO SECTION */}
-      <section className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start mb-16">
+      <section className="flex flex-col md:flex-row gap-6 md:gap-8 lg:gap-10 items-start mb-16">
         {/* Text */}
         <div className="flex-1">
           {/* Status badges above title */}
@@ -316,7 +303,7 @@ export function RecipeContent({
         </div>
 
         {/* Image */}
-        <div className="w-full max-w-2xl lg:max-w-lg">
+        <div className="w-full max-w-2xl md:max-w-sm lg:max-w-lg">
           <div className="relative overflow-hidden rounded-xl border bg-black/5">
             <div className="aspect-[4/5] relative">
               {imageUrl ? (
@@ -355,10 +342,10 @@ export function RecipeContent({
       </section>
 
       {/* CONTENT GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
         {/* INGREDIENTS COLUMN */}
-        <div className="lg:col-span-5 space-y-8">
-          <div className="bg-white p-5 sm:p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 lg:sticky lg:top-24">
+        <div className="md:col-span-5 space-y-8">
+          <div className="bg-white p-5 sm:p-6 md:p-8 rounded-2xl shadow-soft border border-gray-100 md:sticky md:top-24">
             <h2 className="font-serif text-2xl font-bold text-gray-900 mb-4">Ingredients</h2>
             <div className="mb-6">
               <QuantitySelector
@@ -411,7 +398,7 @@ export function RecipeContent({
 
 
         {/* RIGHT COLUMN */}
-        <div className="lg:col-span-7 space-y-10">
+        <div className="md:col-span-7 space-y-10">
 
           {/* Best For */}
           {sanityCocktail.bestFor && sanityCocktail.bestFor.length > 0 && (

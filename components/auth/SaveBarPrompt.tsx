@@ -101,7 +101,7 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
   };
 
   return (
-    <div className="fixed bottom-24 left-4 right-4 z-40 rounded-2xl border-2 border-olive/40 bg-white/95 p-4 shadow-xl backdrop-blur-md lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-sm">
+    <div className="fixed bottom-24 left-4 right-4 z-40 rounded-2xl border-2 border-olive/40 bg-white/95 p-4 shadow-xl backdrop-blur-md md:bottom-4 md:left-auto md:right-4 md:max-w-sm">
       <div className="mb-3 flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-olive/30 bg-olive/20">
           <BookmarkIcon className="h-5 w-5 text-olive" />

@@ -12,6 +12,7 @@ import { confirmEmailTemplate } from "@/lib/email/templates";
 import { getAuthCallbackUrl } from "@/lib/site";
 import { buildSafeAuthUrl } from "@/lib/email/auth-links";
 import { debugLog } from "@/lib/debugLog";
+import { resolvePostAuthPath } from "@/lib/auth/return-to";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -89,7 +90,9 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = createAdminClient();
 
     // Generate signup confirmation link
-    const redirectTo = `${getAuthCallbackUrl(new URL(request.url))}?next=/mix`;
+    const redirectTo = `${getAuthCallbackUrl(new URL(request.url))}?next=${encodeURIComponent(
+      resolvePostAuthPath("/")
+    )}`;
 
     debugLog(`[Send Confirmation] Generating confirmation link with redirect: ${redirectTo}`);
 

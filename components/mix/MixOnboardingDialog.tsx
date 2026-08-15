@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import type { MixIngredient } from "@/lib/mixTypes";
 import { XMarkIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import { nameHasToken } from "@/lib/ingredientMatching";
 
 type OnboardingStep = {
   id: string;
@@ -149,7 +150,7 @@ export function MixOnboardingDialog({
     if (step?.waitForIngredient && selectedIds.length > 0) {
       const hasIngredient = selectedIds.some(id => {
         const ingredient = ingredients.find(i => i.id === id);
-        return ingredient?.name?.toLowerCase().includes(step.waitForIngredient!.toLowerCase());
+        return nameHasToken(ingredient?.name, step.waitForIngredient!);
       });
 
       if (hasIngredient) {

@@ -7,6 +7,7 @@ import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { formatIngredientCategory } from "@/lib/formatters";
 import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
+import { lookupIngredient } from "@/lib/ingredientMatching";
 
 type Props = {
   allIngredients: MixIngredient[];
@@ -84,20 +85,9 @@ export function MixCabinet({
 
   // Get popular ingredients that aren't already added
   const popularAvailable = useMemo(() => {
-    return POPULAR_INGREDIENTS.map(name => {
-      // First try exact match, then fallback to includes match
-      const exactMatch = allIngredients.find(i =>
-        i.name?.toLowerCase() === name.toLowerCase()
-      );
-      if (exactMatch && !ingredientIds.includes(exactMatch.id)) {
-        return exactMatch;
-      }
-
-      // Fallback to partial match
-      const partialMatch = allIngredients.find(i =>
-        i.name?.toLowerCase().includes(name.toLowerCase()) && i.name?.toLowerCase() !== name.toLowerCase()
-      );
-      return partialMatch && !ingredientIds.includes(partialMatch.id) ? partialMatch : null;
+    return POPULAR_INGREDIENTS.map((name) => {
+      const match = lookupIngredient(name, allIngredients);
+      return match && !ingredientIds.includes(match.id) ? match : null;
     }).filter(Boolean).slice(0, 8);
   }, [allIngredients, ingredientIds]);
 
@@ -531,7 +521,7 @@ export function MixCabinet({
                 // Most versatile additions for early users (high cocktail count)
                 'Lime Juice', 'Simple Syrup', 'Agave Syrup', 'Tonic Water'
               ].map((itemName) => {
-                const ingredient = allIngredients.find(i => i.name?.toLowerCase().includes(itemName.toLowerCase()));
+                const ingredient = lookupIngredient(itemName, allIngredients);
                 if (!ingredient || ingredientIds.includes(ingredient.id)) return null;
                 return (
                   <button

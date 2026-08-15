@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { debugLog } from "@/lib/debugLog";
 import { BrandLogo } from "@/components/common/BrandLogo";
+import { consumeAuthReturnTo, resolvePostAuthPath } from "@/lib/auth/return-to";
 
 // Rate limiting for auth requests to prevent 429 errors
 class AuthRateLimiter {
@@ -183,11 +184,6 @@ function AuthCallbackPageContent() {
     let cancelled = false;
     let failSafeTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const sanitizeNext = (value: string | null) => {
-      const next = value || "/";
-      return next.startsWith("/") ? next : "/";
-    };
-
     const withTimeout = async <T,>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> => {
       let timeoutId: ReturnType<typeof setTimeout> | null = null;
       const timeoutPromise = new Promise<T>((_, reject) => {
@@ -259,17 +255,12 @@ function AuthCallbackPageContent() {
       // This enables flows like: user tries "add to shopping list" while logged out → logs in with Google → returns to the recipe page.
       let storedReturnTo: string | null = null;
       try {
-        if (typeof window !== "undefined") {
-          storedReturnTo = sessionStorage.getItem("mixwise-auth-return-to");
-          if (storedReturnTo) {
-            sessionStorage.removeItem("mixwise-auth-return-to");
-          }
-        }
+        storedReturnTo = consumeAuthReturnTo();
       } catch {
         // ignore storage failures
       }
 
-      const next = sanitizeNext(searchParams.get("next") ?? storedReturnTo);
+      const next = resolvePostAuthPath(searchParams.get("next") ?? storedReturnTo);
       const code = searchParams.get("code");
 
       const hashParams = getHashParams();
@@ -314,12 +305,11 @@ function AuthCallbackPageContent() {
         // More aggressive timeout: 3 seconds instead of 12
         failSafeTimer = setTimeout(async () => {
           if (cancelled) return;
-          console.warn("[AuthCallbackPage] Failsafe timer triggered (3s) - redirecting to mix wizard anyway");
+          console.warn("[AuthCallbackPage] Failsafe timer triggered (3s) - redirecting anyway");
           scrubUrl();
           // Wait for auth to be ready with a shorter timeout (1s) since we're already at 3s timeout
           await waitForAuthReady(authReady, 1000);
-          // At this point, just go to mix wizard - Supabase will handle session validation
-          router.replace(next === "/" ? "/mix" : next);
+          router.replace(next);
         }, 3000);
 
         // If we already have a valid session cookie/session, just continue (avoids confusing "Sign-in failed")
@@ -337,9 +327,9 @@ function AuthCallbackPageContent() {
           );
           const user = data.user;
           if (user && !cancelled) {
-            debugLog("[AuthCallbackPage] Redirecting authenticated user to:", next === "/" ? "/mix" : next);
+            debugLog("[AuthCallbackPage] Redirecting authenticated user to:", next);
             await waitForAuthReady(authReady);
-            router.replace(next === "/" ? "/mix" : next);
+            router.replace(next);
             return;
           }
         }
@@ -410,10 +400,10 @@ function AuthCallbackPageContent() {
         // Remove sensitive tokens from the URL
         scrubUrl();
 
-        // If we have valid tokens, go straight to mix wizard without checking user
+        // If we have valid tokens, go to the intended page without extra DB checks
         // This prevents hanging on getUser() calls
         if ((accessToken && refreshToken) || code) {
-          const target = next === "/" ? "/mix" : next;
+          const target = next;
           debugLog("[AuthCallbackPage] Have valid tokens, redirecting directly to:", target);
           if (!cancelled) {
             debugLog("[AuthCallbackPage] Navigating to:", target);
@@ -448,22 +438,20 @@ function AuthCallbackPageContent() {
             return;
           }
           
-          // Legacy onboarding route - redirect to mix wizard instead
+          // Legacy onboarding route — send returning users to the dashboard
           if (!cancelled && next === "/onboarding") {
-            debugLog("[AuthCallbackPage] Legacy onboarding route detected, redirecting to mix wizard");
-            // Signal that email confirmation completed (for AuthDialog closure)
+            debugLog("[AuthCallbackPage] Legacy onboarding route detected, redirecting to dashboard");
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('mixwise:emailConfirmed', { detail: { success: true } }));
             }
-            // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
             await waitForAuthReady(authReady);
             await triggerPostAuthEmails(supabase);
-            router.replace("/mix");
+            router.replace("/dashboard");
             return;
           }
 
           // Check if user is new and automatically mark onboarding as completed
-          // New users will go directly to the mix wizard instead of preferences onboarding
+          // New users skip the old preferences onboarding form
           let isNewUser = false;
 
           try {
@@ -515,13 +503,13 @@ function AuthCallbackPageContent() {
               }
             }
           } catch {
-            // If anything goes wrong, continue to mix wizard anyway
-            console.warn("[AuthCallbackPage] Error checking user preferences, continuing to mix wizard");
+            // If anything goes wrong, continue to the intended destination
+            console.warn("[AuthCallbackPage] Error checking user preferences, continuing to destination");
           }
 
           if (!cancelled) {
-            // Always redirect to mix wizard for new users, or their intended destination
-            const target = isNewUser ? "/mix" : next;
+            // Home/join land on the dashboard; mix/recipe pages stay put
+            const target = resolvePostAuthPath(next, { isNewUser });
             debugLog("[AuthCallbackPage] Redirecting to:", target);
             // Signal that email confirmation completed (for AuthDialog closure)
             if (typeof window !== 'undefined') {
@@ -566,7 +554,7 @@ function AuthCallbackPageContent() {
             // Wait for auth to be ready before redirecting to ensure UserProvider has processed the session
             await waitForAuthReady(authReady);
             await triggerPostAuthEmails(supabase);
-            router.replace(next === "/" ? "/mix" : next);
+            router.replace(next);
             return;
           }
         } catch (recoveryErr) {

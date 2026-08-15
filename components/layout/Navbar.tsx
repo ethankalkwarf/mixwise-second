@@ -198,8 +198,8 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
               <BrandLogo size="md" variant="dark" />
             </div>
 
-            {/* Desktop Navigation - Centered */}
-            <div className={`hidden lg:flex items-center absolute left-1/2 -translate-x-1/2 ${isAuthenticated ? "gap-5" : "gap-6"}`}>
+            {/* Desktop + tablet navigation - Centered */}
+            <div className={`hidden md:flex items-center absolute left-1/2 -translate-x-1/2 ${isAuthenticated ? "gap-3 lg:gap-5" : "gap-4 lg:gap-6"}`}>
               {isAuthenticated && (
                 <HardNavLink
                   href="/dashboard"
@@ -219,6 +219,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                   active={isActive("/cocktail-of-the-day")}
                   href="/cocktail-of-the-day"
                   label="Drink of the Day"
+                  compactLabel="Daily"
                   eyebrow="Daily pour"
                   title={megaMenu?.dailyDrink?.name || "Drink of the Day"}
                   body="A new recipe every day — worth making tonight."
@@ -233,6 +234,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 active={isActive("/mix")}
                 href="/mix"
                 label="What Can I Make?"
+                compactLabel="Mix"
                 eyebrow="Your cabinet"
                 title="What can you make tonight?"
                 body={
@@ -257,7 +259,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
               {isAuthenticated && (
                 <HardNavLink
                   href="/dashboard"
-                  className={`lg:hidden text-sm font-semibold rounded-full px-3 py-1.5 transition-colors ${
+                  className={`md:hidden text-sm font-semibold rounded-full px-3 py-1.5 transition-colors ${
                     isActive("/dashboard")
                       ? "bg-terracotta text-cream"
                       : "bg-terracotta/10 text-terracotta hover:bg-terracotta/20"
@@ -284,7 +286,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 </kbd>
               </button>
 
-              <div className="hidden lg:flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-3">
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-mist animate-pulse" />
             ) : isAuthenticated ? (
@@ -312,7 +314,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                       {userInitial}
                     </div>
                   )}
-                  <span className="text-sm text-forest font-medium max-w-[100px] truncate">
+                  <span className="hidden lg:inline text-sm text-forest font-medium max-w-[100px] truncate">
                     {displayName}
                   </span>
                 </button>

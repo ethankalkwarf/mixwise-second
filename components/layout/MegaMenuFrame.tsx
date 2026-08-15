@@ -42,6 +42,7 @@ export function navMegaTriggerClass(active: boolean, open: boolean) {
 export function NavMegaTrigger({
   href,
   label,
+  compactLabel,
   active,
   open,
   panelId,
@@ -49,6 +50,7 @@ export function NavMegaTrigger({
 }: {
   href: string;
   label: string;
+  compactLabel?: string;
   active: boolean;
   open: boolean;
   panelId: string;
@@ -57,7 +59,14 @@ export function NavMegaTrigger({
   return (
     <div className="inline-flex items-center">
       <HardNavLink href={href} className={navMegaTriggerClass(active, open)}>
-        {label}
+        {compactLabel ? (
+          <>
+            <span className="lg:hidden">{compactLabel}</span>
+            <span className="hidden lg:inline">{label}</span>
+          </>
+        ) : (
+          label
+        )}
       </HardNavLink>
       <button
         type="button"

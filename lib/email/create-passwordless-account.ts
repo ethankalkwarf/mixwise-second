@@ -30,7 +30,7 @@ export async function createPasswordlessAccountFromEmail(options: {
     email,
     source,
     requestUrl,
-    nextPath = "/mix",
+    nextPath = "/dashboard",
     notify = true,
     sendMagicLinkEmail = true,
   } = options;

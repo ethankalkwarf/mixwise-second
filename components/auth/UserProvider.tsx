@@ -7,6 +7,7 @@ import type { Profile } from "@/lib/supabase/database.types";
 import { trackUserSignup } from "@/lib/analytics";
 import { debugLog } from "@/lib/debugLog";
 import { markHasAccount } from "@/lib/auth/returning-user";
+import { authCallbackUrlWithNext, rememberAuthReturnTo } from "@/lib/auth/return-to";
 
 /**
  * UserProvider - Single Source of Truth for Auth State
@@ -555,14 +556,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Get the correct redirect URL for auth
   const getAuthRedirectUrl = useCallback(() => {
+    rememberAuthReturnTo();
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-    if (siteUrl) {
-      return `${siteUrl}/auth/callback`;
-    }
-    if (typeof window !== "undefined") {
-      return `${window.location.origin}/auth/callback`;
-    }
-    return "/auth/callback";
+    const base = siteUrl
+      ? `${siteUrl}/auth/callback`
+      : typeof window !== "undefined"
+        ? `${window.location.origin}/auth/callback`
+        : "/auth/callback";
+    return authCallbackUrlWithNext(base);
   }, []);
 
   // Sign in with Google OAuth

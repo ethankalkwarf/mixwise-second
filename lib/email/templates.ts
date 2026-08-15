@@ -1036,8 +1036,8 @@ export function welcomeEmailTemplate({
           </table>
           
           <div class="button-wrapper" style="text-align: center; margin: 32px 0;">
-            <a href="https://www.getmixwise.com/mix" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
-              Start Mixing →
+            <a href="https://www.getmixwise.com/dashboard" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
+              Open your dashboard →
             </a>
           </div>
           
@@ -1088,7 +1088,7 @@ Heart the recipes you love and access them anytime from your dashboard.
 ✨ DAILY INSPIRATION
 Check out our Cocktail of the Day for fresh inspiration and expand your mixing repertoire.
 
-Get started: https://www.getmixwise.com/mix
+Get started: https://www.getmixwise.com/dashboard
 
 Have questions? Just reply to this email – we'd love to hear from you!
 

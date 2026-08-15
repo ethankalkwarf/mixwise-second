@@ -61,7 +61,7 @@ export function AuthPanel({
       const response = await fetch("/api/auth/email-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), source: "join_page" }),
+        body: JSON.stringify({ email: email.trim(), source: "join_page", nextPath: "/dashboard" }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -116,7 +116,7 @@ export function AuthPanel({
       }
 
       toast.success("You're in. MixWise will remember the cabinet.");
-      window.location.href = "/mix";
+      window.location.href = "/dashboard";
     } catch {
       setError("Could not finish setup. Try Google or Apple.");
       setEmailLoading(false);

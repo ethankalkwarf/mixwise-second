@@ -131,12 +131,7 @@ class CocktailIngredientBackfiller {
       return this.ingredientNameToId.get(normalizedName)!;
     }
 
-    // Try partial matches
-    for (const [name, id] of this.ingredientNameToId.entries()) {
-      if (name.includes(normalizedName) || normalizedName.includes(name)) {
-        return id;
-      }
-    }
+    // Do not substring-match names ("ginger ale" must not become gin).
 
     // Try fuzzy matching - remove common words
     const words = normalizedName.split(/\s+/);

@@ -32,6 +32,8 @@ export interface MatchedIngredient {
   guideSlug?: string;
 }
 
+type IngredientData = { id: string; name: string; type?: string };
+
 /**
  * Match ingredient text to database ingredient IDs
  * This function parses ingredient text (e.g., "1.5 oz amontillado sherry") 
@@ -96,7 +98,6 @@ export async function matchIngredientTextToIds(
   debugLog(`[ingredientMatching] Successfully loaded ${ingredients.length} ingredients from database`);
 
   // Build lookup maps
-  type IngredientData = { id: string; name: string; type?: string };
   const nameToIngredient = new Map<string, IngredientData>();
   (ingredients || []).forEach((ing) => {
     const name = ing?.name ?? null;
@@ -130,56 +131,142 @@ export async function matchIngredientTextToIds(
  * Examples: "1.5 oz amontillado sherry" → "amontillado sherry"
  *           "2 dashes orange bitters" → "orange bitters"
  */
-function extractIngredientName(fullText: string): string {
+export function extractIngredientName(fullText: string): string {
   return fullText
     .trim()
     // Remove amounts with units: "1.5 oz", "2 dashes", "1/2 cup", etc.
     .replace(/^\d+(\/\d+)?\.?\s*(oz|cup|cups|tbsp|tsp|dash|dashes|drop|drops|ml|cl|shot|jigger|part|parts|slice|slices|wheel|wheels|twist|twists|peel|peels|wedge|wedges|sprig|sprigs|leaf|leaves|piece|pieces)\s+/i, '')
     // Remove just numbers at the start: "2 orange twists" → "orange twists"
     .replace(/^\d+\s+/, '')
-    // Clean up extra whitespace
+    .replace(/\s+optional$/i, '')
     .trim();
 }
 
+const IGNORE_TOKENS = new Set([
+  "a",
+  "an",
+  "and",
+  "aged",
+  "blanco",
+  "bottled",
+  "dark",
+  "dry",
+  "extra",
+  "fresh",
+  "gold",
+  "golden",
+  "light",
+  "of",
+  "optional",
+  "or",
+  "reposado",
+  "silver",
+  "spiced",
+  "sweet",
+  "the",
+  "white",
+]);
+
+function tokenizeIngredient(value: string): string[] {
+  return value
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
+function isContiguousPhrase(haystack: string[], needle: string[]): boolean {
+  if (needle.length === 0 || needle.length > haystack.length) return false;
+  for (let i = 0; i <= haystack.length - needle.length; i++) {
+    if (needle.every((token, offset) => haystack[i + offset] === token)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function leftoverTokensAreIgnorable(query: string[], dbTokens: string[]): boolean {
+  const dbSet = new Set(dbTokens);
+  return query.filter((token) => !dbSet.has(token)).every((token) => IGNORE_TOKENS.has(token));
+}
+
 /**
- * Match cleaned ingredient name to database ingredient
+ * Match cleaned ingredient name to database ingredient.
+ * Uses whole-token phrases so "ginger ale" never matches "gin".
  */
-type IngredientData = { id: string; name: string; type?: string };
-function matchIngredientName(
+export function matchIngredientName(
   cleanedName: string,
   nameToIngredient: Map<string, IngredientData>
 ): IngredientData | null {
-  const lowerName = cleanedName.toLowerCase();
+  const queryTokens = tokenizeIngredient(cleanedName);
+  if (queryTokens.length === 0) return null;
 
-  // Try exact match first
-  const exactMatch = nameToIngredient.get(lowerName);
+  const exactMatch = nameToIngredient.get(queryTokens.join(" "));
   if (exactMatch) return exactMatch;
 
-  // Try partial matching
-  const searchVariations = [
-    cleanedName,
-    // Remove common prefixes
-    cleanedName.replace(/^(sweet|dry|white|dark|aged|extra|fresh)\s+/i, ''),
-    // Remove common suffixes
-    cleanedName.replace(/\s+(juice|syrup|bitters|liqueur|vodka|gin|rum|whiskey|bourbon|scotch|tequila|brandy|cognac|wine|beer)$/i, ''),
-    // Try last two words
-    cleanedName.split(/\s+/).slice(-2).join(' '),
-    // Try last word
-    cleanedName.split(/\s+/).slice(-1)[0],
-  ].filter(v => v && v.length > 2);
+  const stripped = queryTokens.filter((token) => !IGNORE_TOKENS.has(token));
+  if (stripped.length > 0 && stripped.length < queryTokens.length) {
+    const strippedMatch = nameToIngredient.get(stripped.join(" "));
+    if (strippedMatch) return strippedMatch;
+  }
 
-  for (const variation of searchVariations) {
-    for (const [dbName, ingredient] of Array.from(nameToIngredient.entries())) {
-      if (
-        dbName.includes(variation.toLowerCase()) ||
-        variation.toLowerCase().includes(dbName)
-      ) {
-        return ingredient;
-      }
+  let best: { ingredient: IngredientData; score: number } | null = null;
+
+  for (const [dbName, ingredient] of nameToIngredient.entries()) {
+    const dbTokens = tokenizeIngredient(dbName);
+    if (dbTokens.length === 0) continue;
+
+    const queryInDb = isContiguousPhrase(dbTokens, queryTokens);
+    const dbInQuery = isContiguousPhrase(queryTokens, dbTokens);
+    if (!queryInDb && !dbInQuery) continue;
+
+    if (
+      dbInQuery &&
+      !queryInDb &&
+      dbTokens.length < queryTokens.length &&
+      !leftoverTokensAreIgnorable(queryTokens, dbTokens)
+    ) {
+      continue;
+    }
+
+    const score = dbTokens.length * 100 + dbName.length;
+    if (!best || score > best.score) {
+      best = { ingredient, score };
     }
   }
 
-  return null;
+  return best?.ingredient ?? null;
+}
+
+export function findWholePhraseIndex(text: string, phrase: string): number {
+  if (!text || !phrase) return -1;
+  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = text.match(new RegExp(`(?<![A-Za-z0-9])${escaped}(?![A-Za-z0-9])`, "i"));
+  return match?.index ?? -1;
+}
+
+/** True if `token` is a whole word in the ingredient name ("gin" does not match "ginger ale"). */
+export function nameHasToken(name: string | null | undefined, token: string): boolean {
+  if (!name || !token) return false;
+  return tokenizeIngredient(name).includes(token.toLowerCase().trim());
+}
+
+/** Resolve a label like "Gin" or "Lime Juice" against a catalog without substring false hits. */
+export function lookupIngredient<T extends { id: string; name: string | null }>(
+  label: string,
+  ingredients: T[]
+): T | undefined {
+  const nameToIngredient = new Map<string, IngredientData>();
+  const byId = new Map<string, T>();
+  for (const ingredient of ingredients) {
+    if (!ingredient.name) continue;
+    nameToIngredient.set(ingredient.name.toLowerCase(), {
+      id: ingredient.id,
+      name: ingredient.name,
+    });
+    byId.set(ingredient.id, ingredient);
+  }
+  const matched = matchIngredientName(label, nameToIngredient);
+  return matched ? byId.get(matched.id) : undefined;
 }
 
 /**

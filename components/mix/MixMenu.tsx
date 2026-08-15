@@ -7,6 +7,7 @@ import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes"
 import { ArrowPathIcon, LightBulbIcon, PlusIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useShoppingList } from "@/hooks/useShoppingList";
+import { lookupIngredient, nameHasToken } from "@/lib/ingredientMatching";
 
 type Props = {
   inventoryIds: string[];
@@ -62,9 +63,9 @@ export function MixMenu({
     const suggestions = [];
 
     // Common substitutions based on what user has
-    const hasBourbon = selectedIngredients.some(i => i.name?.toLowerCase().includes('bourbon'));
-    const hasRye = selectedIngredients.some(i => i.name?.toLowerCase().includes('rye'));
-    const hasScotch = selectedIngredients.some(i => i.name?.toLowerCase().includes('scotch'));
+    const hasBourbon = selectedIngredients.some((i) => nameHasToken(i.name, "bourbon"));
+    const hasRye = selectedIngredients.some((i) => nameHasToken(i.name, "rye"));
+    const hasScotch = selectedIngredients.some((i) => nameHasToken(i.name, "scotch"));
 
     if (hasBourbon && !hasRye) {
       suggestions.push({
@@ -84,8 +85,8 @@ export function MixMenu({
       });
     }
 
-    const hasGin = selectedIngredients.some(i => i.name?.toLowerCase().includes('gin'));
-    const hasVodka = selectedIngredients.some(i => i.name?.toLowerCase().includes('vodka'));
+    const hasGin = selectedIngredients.some((i) => nameHasToken(i.name, "gin"));
+    const hasVodka = selectedIngredients.some((i) => nameHasToken(i.name, "vodka"));
 
     if (hasGin && !hasVodka) {
       suggestions.push({
@@ -100,10 +101,10 @@ export function MixMenu({
   }, [selectedIngredients]);
 
   return (
-    <MainContainer className="py-6 pb-24 lg:pb-6 overflow-x-hidden">
-      <div className="grid lg:grid-cols-[300px_minmax(0,1fr)] gap-8">
+    <MainContainer className="py-6 pb-24 md:pb-6 overflow-x-hidden">
+      <div className="grid md:grid-cols-[300px_minmax(0,1fr)] gap-8">
         {/* Left Sidebar - Your Bar */}
-        <aside className="lg:sticky lg:top-24 space-y-6 min-w-0">
+        <aside className="md:sticky md:top-24 space-y-6 min-w-0">
         <YourBarPanel
           selectedIngredients={selectedIngredients}
           onRemove={onRemoveIngredient}
@@ -283,7 +284,7 @@ export function MixMenu({
                   'Lime Juice', 'Simple Syrup', 'Agave Syrup', 'Club Soda',
                   'Tonic Water', 'Lemon Juice', 'Orange Juice', 'Cola'
                 ].map((itemName) => {
-                  const ingredient = allIngredients.find(i => i.name?.toLowerCase().includes(itemName.toLowerCase()));
+                  const ingredient = lookupIngredient(itemName, allIngredients);
                   if (!ingredient || inventoryIds.includes(ingredient.id)) return null;
                   return (
                     <button

@@ -70,8 +70,8 @@ export function AboutPageContent() {
       {/* 3. How it works — steps + hotel video beside */}
       <section className="bg-mist/40 py-20 lg:py-28">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-14">
-            <div className="lg:col-span-5">
+          <div className="grid items-start gap-12 md:grid-cols-12 md:gap-14">
+            <div className="md:col-span-5">
               <p className="mb-4 font-mono text-xs font-bold uppercase tracking-widest text-terracotta">
                 How it works
               </p>
@@ -93,7 +93,7 @@ export function AboutPageContent() {
               </ul>
             </div>
 
-            <div className="lg:col-span-7 lg:sticky lg:top-28">
+            <div className="md:col-span-7 md:sticky md:top-28">
               <AutoplayVideo
                 src="/media/hotel-cocktails.mp4"
                 poster="/media/hotel-cocktails-poster.webp"

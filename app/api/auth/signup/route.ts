@@ -20,6 +20,7 @@ import { getAuthCallbackUrl } from "@/lib/site";
 import { buildSafeAuthUrl } from "@/lib/email/auth-links";
 import { sendSignupNotification } from "@/lib/email/signup-notification";
 import { debugLog } from "@/lib/debugLog";
+import { resolvePostAuthPath } from "@/lib/auth/return-to";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { email, password, firstName, lastName } = body;
+    const { email, password, firstName, lastName, nextPath: rawNextPath } = body;
 
     // Validate email
     if (!email || typeof email !== "string") {
@@ -158,7 +159,9 @@ export async function POST(request: NextRequest) {
 
     // Generate signup confirmation link
     // This creates the user AND generates the confirmation link in one step
-    const redirectTo = `${getAuthCallbackUrl()}?next=/mix`;
+    const redirectTo = `${getAuthCallbackUrl()}?next=${encodeURIComponent(
+      resolvePostAuthPath(typeof rawNextPath === "string" ? rawNextPath : "/", { isNewUser: true })
+    )}`;
     debugLog(`[Signup API] Generating signup link with redirect: ${redirectTo}`);
 
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
