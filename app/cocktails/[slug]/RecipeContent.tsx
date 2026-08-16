@@ -17,7 +17,7 @@ import {
   ShoppingBagIcon,
 } from "@heroicons/react/24/outline";
 import type { MatchedIngredient } from "@/lib/ingredientMatching";
-import { findWholePhraseIndex } from "@/lib/ingredientMatching";
+import { extractIngredientName, findWholePhraseIndex } from "@/lib/ingredientMatching";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import Link from "next/link";
@@ -86,15 +86,6 @@ export function RecipeContent({
 
   const scaledIngredients = scaleIngredientLines(ingredients, quantity);
 
-  // Helper function to extract ingredient name from text (matches ingredientMatching.ts logic)
-  const extractIngredientNameFromText = (fullText: string): string => {
-    return fullText
-      .trim()
-      .replace(/^\d+(\/\d+)?\.?\s*(oz|cup|cups|tbsp|tsp|dash|dashes|drop|drops|ml|cl|shot|jigger|part|parts|slice|slices|wheel|wheels|twist|twists|peel|peels|wedge|wedges|sprig|sprigs|leaf|leaves|piece|pieces)\s+/i, '')
-      .replace(/^\d+\s+/, '')
-      .trim();
-  };
-
   // Use matched ingredients if available, but VALIDATE that they correspond to actual ingredients
   // This prevents non-recipe ingredients from appearing in the shopping list
   let shoppingListIngredients: Array<{ id: string; name: string; category?: string }>;
@@ -108,7 +99,7 @@ export function RecipeContent({
       const matched = matchedIngredients[i];
       
       // Extract the ingredient name from the original text
-      const extractedName = extractIngredientNameFromText(originalText);
+      const extractedName = extractIngredientName(originalText);
       const extractedNameLower = extractedName.toLowerCase();
       const matchedNameLower = (matched.name || '').toLowerCase();
       
@@ -127,7 +118,7 @@ export function RecipeContent({
         });
       } else {
         // Fallback to parsing the original ingredient text if match is invalid
-        const cleanedName = extractedName || originalText.replace(/^\d+(\/\d+|\.\d+)?\s*(oz|cup|cups|tbsp|tsp|ml|cl|dash|dashes|drop|drops|slice|slices|piece|pieces|sprig|sprigs|leaf|leaves|wheel|wheels|twist|twists|rim|rims|part|parts)\s+/i, '').replace(/^\d+(\/\d+|\.\d+)?\s+/, '').trim();
+        const cleanedName = extractedName || originalText;
         const ingredientId = cleanedName.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
         
         if (process.env.NODE_ENV === 'development') {
@@ -147,7 +138,7 @@ export function RecipeContent({
     // Fallback: Better ingredient name extraction
     shoppingListIngredients = ingredients.map((ing, index) => {
       const text = ing.text.trim();
-      const cleanedName = extractIngredientNameFromText(text);
+      const cleanedName = extractIngredientName(text);
       const ingredientId = cleanedName.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
 
       return {

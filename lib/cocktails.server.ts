@@ -449,13 +449,17 @@ async function fetchCocktailsWithIngredients(): Promise<CocktailWithIngredientsR
               : null;
 
             const ingredientId = matchedIngredient ? String(matchedIngredient.id) : 'unknown';
-            const ingredientName = matchedIngredient ? matchedIngredient.name : fullText;
+            const ingredientName = matchedIngredient ? matchedIngredient.name : ingredientText || fullText;
+            const textLooksOptional =
+              Boolean(ing.isOptional) ||
+              /\boptional\b/i.test(fullText) ||
+              /\boptional\b/i.test(ingredientText);
 
             return {
               id: ingredientId,
               name: ingredientName,
               amount: ing.amount || ing.measure || null,
-              isOptional: ing.isOptional || false,
+              isOptional: textLooksOptional,
               notes: ing.notes || null
             };
           }).filter(Boolean) as CocktailWithIngredientsRow["ingredientsWithIds"];
@@ -530,7 +534,7 @@ async function fetchCocktailsWithIngredients(): Promise<CocktailWithIngredientsR
 
 const getCachedCocktailsWithIngredients = unstable_cache(
   async () => fetchCocktailsWithIngredients(),
-  ["cocktails-with-ingredients"],
+  ["cocktails-with-ingredients-v2"],
   { revalidate: COCKTAILS_CACHE_REVALIDATE_SECONDS, tags: ["cocktails"] }
 );
 

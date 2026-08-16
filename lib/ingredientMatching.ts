@@ -126,19 +126,27 @@ export async function matchIngredientTextToIds(
   });
 }
 
+const MEASURE_UNITS =
+  "oz|cup|cups|tbsp|tsp|dash|dashes|drop|drops|ml|cl|shot|jigger|part|parts|slice|slices|wheel|wheels|twist|twists|peel|peels|wedge|wedges|sprig|sprigs|leaf|leaves|piece|pieces";
+
+/** Leading quantity: 2, 0.75, 1.5, 1/2, 1 1/2 */
+const LEADING_QUANTITY = String.raw`(?:\d+\s+)?\d+(?:\.\d+)?(?:\s*/\s*\d+(?:\.\d+)?)?`;
+
 /**
  * Extract ingredient name from full text (removes measurements)
  * Examples: "1.5 oz amontillado sherry" → "amontillado sherry"
  *           "2 dashes orange bitters" → "orange bitters"
+ *           "0.75 oz simple syrup" → "simple syrup"
  */
 export function extractIngredientName(fullText: string): string {
   return fullText
     .trim()
-    // Remove amounts with units: "1.5 oz", "2 dashes", "1/2 cup", etc.
-    .replace(/^\d+(\/\d+)?\.?\s*(oz|cup|cups|tbsp|tsp|dash|dashes|drop|drops|ml|cl|shot|jigger|part|parts|slice|slices|wheel|wheels|twist|twists|peel|peels|wedge|wedges|sprig|sprigs|leaf|leaves|piece|pieces)\s+/i, '')
-    // Remove just numbers at the start: "2 orange twists" → "orange twists"
-    .replace(/^\d+\s+/, '')
-    .replace(/\s+optional$/i, '')
+    // Remove amounts with units: "1.5 oz", "0.75 oz", "2 dashes", "1/2 cup", "1 1/2 oz"
+    .replace(new RegExp(`^${LEADING_QUANTITY}\\s*(?:${MEASURE_UNITS})\\s+`, "i"), "")
+    // Remove bare leading quantity: "2 orange twists" → "orange twists"
+    .replace(new RegExp(`^${LEADING_QUANTITY}\\s+`), "")
+    .replace(/^\s*optional\s+/i, "")
+    .replace(/\s+optional$/i, "")
     .trim();
 }
 
@@ -149,26 +157,44 @@ const IGNORE_TOKENS = new Set([
   "aged",
   "blanco",
   "bottled",
+  "cherry",
   "dark",
   "dry",
   "extra",
   "fresh",
   "gold",
   "golden",
+  "leaf",
+  "leaves",
   "light",
   "of",
   "optional",
   "or",
+  "peel",
   "reposado",
+  "rim",
   "silver",
   "spiced",
   "sweet",
   "the",
+  "twist",
+  "twists",
+  "wheel",
+  "wheels",
+  "whiskey",
+  "whisky",
   "white",
+  "whole",
+  "zest",
 ]);
 
+/** Fold accents so "Bénédictine" matches "Benedictine". */
+export function foldIngredientAccents(value: string): string {
+  return value.normalize("NFD").replace(/\p{M}/gu, "");
+}
+
 function tokenizeIngredient(value: string): string[] {
-  return value
+  return foldIngredientAccents(value)
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean);
@@ -200,12 +226,18 @@ export function matchIngredientName(
   const queryTokens = tokenizeIngredient(cleanedName);
   if (queryTokens.length === 0) return null;
 
-  const exactMatch = nameToIngredient.get(queryTokens.join(" "));
+  const foldedQuery = queryTokens.join(" ");
+  const exactMatch =
+    nameToIngredient.get(cleanedName.toLowerCase().trim()) ||
+    nameToIngredient.get(foldedQuery) ||
+    findByFoldedKey(nameToIngredient, foldedQuery);
   if (exactMatch) return exactMatch;
 
   const stripped = queryTokens.filter((token) => !IGNORE_TOKENS.has(token));
   if (stripped.length > 0 && stripped.length < queryTokens.length) {
-    const strippedMatch = nameToIngredient.get(stripped.join(" "));
+    const strippedKey = stripped.join(" ");
+    const strippedMatch =
+      nameToIngredient.get(strippedKey) || findByFoldedKey(nameToIngredient, strippedKey);
     if (strippedMatch) return strippedMatch;
   }
 
@@ -235,6 +267,18 @@ export function matchIngredientName(
   }
 
   return best?.ingredient ?? null;
+}
+
+function findByFoldedKey(
+  nameToIngredient: Map<string, IngredientData>,
+  foldedKey: string
+): IngredientData | null {
+  for (const [key, ingredient] of nameToIngredient.entries()) {
+    if (tokenizeIngredient(key).join(" ") === foldedKey) {
+      return ingredient;
+    }
+  }
+  return null;
 }
 
 export function findWholePhraseIndex(text: string, phrase: string): number {

@@ -35,8 +35,14 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
       continue;
     }
 
+    // Unmatched recipe lines are tagged id "unknown" during JSON→catalog mapping.
+    // They must not block "ready" — the user cannot add an ingredient that is not in the catalog.
     const requiredIngredients = cocktail.ingredients.filter(
-      (ing) => ing.id && !ing.isOptional && !staples.has(ing.id)
+      (ing) =>
+        ing.id &&
+        ing.id !== "unknown" &&
+        !ing.isOptional &&
+        !staples.has(ing.id)
     );
 
     if (requiredIngredients.length === 0) {

@@ -32,6 +32,12 @@ const db = catalog([
 
 assert.equal(extractIngredientName("4 oz ginger ale"), "ginger ale");
 assert.equal(extractIngredientName("2 dashes Angostura bitters optional"), "Angostura bitters");
+assert.equal(extractIngredientName("0.75 oz simple syrup"), "simple syrup");
+assert.equal(extractIngredientName("1.5 oz vodka"), "vodka");
+assert.equal(extractIngredientName("0.5 oz fresh lime juice"), "fresh lime juice");
+assert.equal(extractIngredientName("1/2 oz lime juice"), "lime juice");
+assert.equal(extractIngredientName("1 1/2 oz gin"), "gin");
+assert.equal(extractIngredientName("optional salt rim"), "salt rim");
 assert.equal(matchIngredientName("ginger ale", db)?.name, "Ginger ale");
 assert.notEqual(matchIngredientName("ginger ale", db)?.name, "Gin");
 assert.equal(matchIngredientName("ginger beer", db)?.name, "Ginger beer");
@@ -41,6 +47,9 @@ assert.equal(matchIngredientName("fresh lemon juice", db)?.name, "Lemon juice");
 assert.equal(matchIngredientName("orange bitters", db)?.name, "Orange bitters");
 assert.notEqual(matchIngredientName("orange bitters", db)?.name, "Orange juice");
 assert.equal(matchIngredientName("coffee liqueur", db)?.name, "Coffee liqueur");
+assert.equal(matchIngredientName("mint leaves", catalog(["Mint"]))?.name, "Mint");
+assert.equal(matchIngredientName("Scotch whisky", catalog(["Scotch"]))?.name, "Scotch");
+assert.equal(matchIngredientName("Bénédictine", catalog(["Benedictine"]))?.name, "Benedictine");
 
 const withoutGingerAle = catalog(["Gin", "Ginger beer", "Ale"]);
 assert.equal(matchIngredientName("ginger ale", withoutGingerAle), null);
