@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { getCocktailsListClient } from "@/lib/cocktails";
+import { searchCocktailsClient, loadCocktailSearchIndex } from "@/lib/search/loadCocktailSearchIndex.client";
 import type { CocktailListItem } from "@/lib/cocktailTypes";
 
 type CocktailSearchProps = {
@@ -16,31 +16,32 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [hasSearched, setHasSearched] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced search
+  // Debounced ranked search (typo-tolerant + synonym-aware)
   useEffect(() => {
     if (!searchQuery.trim()) {
       setResults([]);
       setShowResults(false);
+      setHasSearched(false);
       return;
     }
 
     const timeoutId = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const searchResults = await getCocktailsListClient({
-          search: searchQuery,
-          limit: 10,
-        });
+        const searchResults = await searchCocktailsClient(searchQuery, 10);
         setResults(searchResults);
-        setShowResults(searchResults.length > 0);
+        setShowResults(true);
+        setHasSearched(true);
         setSelectedIndex(-1);
       } catch (error) {
         console.error("Error searching cocktails:", error);
         setResults([]);
-        setShowResults(false);
+        setShowResults(true);
+        setHasSearched(true);
       } finally {
         setIsSearching(false);
       }
@@ -102,6 +103,7 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
     setSearchQuery("");
     setResults([]);
     setShowResults(false);
+    setHasSearched(false);
     inputRef.current?.focus();
   };
 
@@ -121,7 +123,8 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (results.length > 0) {
+            void loadCocktailSearchIndex();
+            if (results.length > 0 || hasSearched) {
               setShowResults(true);
             }
           }}
@@ -160,7 +163,7 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
                 }`}
                 style={{
                   animationDelay: `${index * 30}ms`,
-                  animationFillMode: 'both'
+                  animationFillMode: "both",
                 }}
               >
                 <div className="flex items-center gap-3">
@@ -186,8 +189,14 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
         </div>
       )}
 
+      {showResults && hasSearched && !isSearching && results.length === 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card p-4 text-center text-sage text-sm z-[60]">
+          No cocktails match “{searchQuery.trim()}”
+        </div>
+      )}
+
       {isSearching && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card p-4 text-center text-sage text-sm">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card p-4 text-center text-sage text-sm z-[60]">
           Searching...
         </div>
       )}

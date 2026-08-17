@@ -6,6 +6,7 @@
  */
 
 import { getSupabaseClient, createClient } from './supabase/client';
+import { extractCocktailIngredientNames } from './cocktailIngredientNames';
 import type {
   Cocktail,
   CocktailListItem,
@@ -45,6 +46,7 @@ export async function getCocktailBySlugClient(slug: string): Promise<Cocktail | 
  */
 export async function getCocktailsListClient(filters: CocktailFilters = {}): Promise<CocktailListItem[]> {
   const supabase = getSupabaseClient();
+  const ingredientSelect = filters.includeIngredients ? ",\n      ingredients" : "";
   let query = supabase
     .from('cocktails')
     .select(`
@@ -65,7 +67,7 @@ export async function getCocktailsListClient(filters: CocktailFilters = {}): Pro
       flavor_bitterness,
       flavor_aroma,
       flavor_texture,
-      created_at
+      created_at${ingredientSelect}
     `)
     .order('name');
 
@@ -90,8 +92,13 @@ export async function getCocktailsListClient(filters: CocktailFilters = {}): Pro
     query = query.overlaps('categories_all', filters.categories_all);
   }
 
+  // Prefer client-side ranked search (lib/search) over raw ILIKE when possible.
+  // Keep ILIKE for callers that still pass `search` without the shared index.
   if (filters.search) {
-    query = query.or(`name.ilike.%${filters.search}%,short_description.ilike.%${filters.search}%`);
+    const safe = filters.search.replace(/[%_,()]/g, " ").trim();
+    if (safe) {
+      query = query.or(`name.ilike.%${safe}%,short_description.ilike.%${safe}%`);
+    }
   }
 
   if (filters.limit) {
@@ -109,7 +116,35 @@ export async function getCocktailsListClient(filters: CocktailFilters = {}): Pro
     return [];
   }
 
-  return (data || []) as CocktailListItem[];
+  return (data || []).map((row) => {
+    const record = row as unknown as Record<string, unknown>;
+    const item: CocktailListItem = {
+      id: String(record.id),
+      slug: String(record.slug ?? ""),
+      name: String(record.name ?? ""),
+      short_description: (record.short_description as string | undefined) ?? undefined,
+      base_spirit: (record.base_spirit as string | undefined) ?? undefined,
+      category_primary: (record.category_primary as string | undefined) ?? undefined,
+      difficulty: (record.difficulty as string | undefined) ?? undefined,
+      tags: (record.tags as string[] | undefined) ?? undefined,
+      image_url: (record.image_url as string | undefined) ?? undefined,
+      image_alt: (record.image_alt as string | undefined) ?? undefined,
+      categories_all: (record.categories_all as string[] | undefined) ?? undefined,
+      flavor_strength: (record.flavor_strength as number | undefined) ?? undefined,
+      flavor_sweetness: (record.flavor_sweetness as number | undefined) ?? undefined,
+      flavor_tartness: (record.flavor_tartness as number | undefined) ?? undefined,
+      flavor_bitterness: (record.flavor_bitterness as number | undefined) ?? undefined,
+      flavor_aroma: (record.flavor_aroma as number | undefined) ?? undefined,
+      flavor_texture: (record.flavor_texture as number | undefined) ?? undefined,
+      created_at: (record.created_at as string | undefined) ?? undefined,
+    };
+
+    if (filters.includeIngredients) {
+      item.ingredientNames = extractCocktailIngredientNames(record.ingredients);
+    }
+
+    return item;
+  });
 }
 
 // =========================

@@ -86,6 +86,7 @@ export interface CocktailFilters {
   search?: string;
   limit?: number;
   offset?: number;
+  /** When true, include slim ingredientNames for client/directory search */
   includeIngredients?: boolean;
 }
 

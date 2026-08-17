@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { getCocktailsListClient } from "@/lib/cocktails";
+import { searchCocktailsClient } from "@/lib/search/loadCocktailSearchIndex.client";
 import type { CocktailListItem } from "@/lib/cocktailTypes";
 import type { WeddingMenuData, MenuTheme } from "./WeddingMenuGenerator";
 
@@ -32,10 +32,7 @@ export function WeddingMenuControls({ menuData, onUpdate }: WeddingMenuControlsP
     const timeoutId = setTimeout(async () => {
       setIsSearchingHis(true);
       try {
-        const results = await getCocktailsListClient({
-          search: hisSearch,
-          limit: 10,
-        });
+        const results = await searchCocktailsClient(hisSearch, 10);
         setHisResults(results);
         setShowHisResults(true);
       } catch (error) {
@@ -60,10 +57,7 @@ export function WeddingMenuControls({ menuData, onUpdate }: WeddingMenuControlsP
     const timeoutId = setTimeout(async () => {
       setIsSearchingHer(true);
       try {
-        const results = await getCocktailsListClient({
-          search: herSearch,
-          limit: 10,
-        });
+        const results = await searchCocktailsClient(herSearch, 10);
         setHerResults(results);
         setShowHerResults(true);
       } catch (error) {

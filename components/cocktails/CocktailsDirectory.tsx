@@ -9,6 +9,7 @@ import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
 import { HardNavLink } from "@/components/layout/HardNavLink";
+import { searchSanityCocktails } from "@/lib/search";
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
 
@@ -60,16 +61,6 @@ const BASE_SPIRITS = [
   { value: "cognac", label: "Cognac" },
   { value: "non-alcoholic", label: "Non-Alcoholic" },
 ];
-
-const KEYWORD_MAPPINGS: Record<string, (c: SanityCocktail) => boolean> = {
-  popular: (c) => c.isPopular === true,
-  featured: (c) => c.isPopular === true,
-  favorite: (c) => c.isFavorite === true,
-  favourites: (c) => c.isFavorite === true,
-  trending: (c) => c.isTrending === true,
-  hot: (c) => c.isTrending === true,
-  new: (c) => isNewCocktail(c.createdAt),
-};
 
 type Props = {
   cocktails: SanityCocktail[];
@@ -195,41 +186,9 @@ export function CocktailsDirectory({
   const filteredCocktails = useMemo(() => {
     let results = [...cocktails];
 
-    // Search filter with keyword support
+    // Ranked search: synonyms, token AND, fuzzy names, keyword intents
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const words = q.split(/\s+/);
-      
-      results = results.filter((c) => {
-        // Check for keyword matches first
-        for (const word of words) {
-          const keywordFilter = KEYWORD_MAPPINGS[word];
-          if (keywordFilter && keywordFilter(c)) {
-            return true;
-          }
-        }
-
-        // Match name
-        if (c.name.toLowerCase().includes(q)) return true;
-        // Match description
-        if (c.description?.toLowerCase().includes(q)) return true;
-        // Match ingredient names (slim directory payload)
-        if (c.ingredientNames?.some((name) => name.toLowerCase().includes(q))) return true;
-        if (c.ingredients?.some((ing) => ing.ingredient?.name?.toLowerCase().includes(q))) return true;
-        // Match primary spirit
-        if (c.primarySpirit?.toLowerCase().includes(q)) return true;
-        // Match tags
-        if (c.tags?.some((tag) => tag.toLowerCase().includes(q))) return true;
-        // Match drink categories
-        if (c.drinkCategories?.some((cat) => cat.toLowerCase().includes(q))) return true;
-        // Match category labels
-        if (c.drinkCategories?.some((cat) => {
-          const config = CATEGORY_CONFIG[cat];
-          return config?.label.toLowerCase().includes(q);
-        })) return true;
-        
-        return false;
-      });
+      results = searchSanityCocktails(results, searchQuery);
     }
 
     // Spirit filter (case-insensitive; Non-Alcoholic matches NA base spirits)
