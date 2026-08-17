@@ -35,8 +35,8 @@ export async function runFridayPersonalized(options?: {
 
   const results: Array<"sent" | "skipped" | "error"> = [];
   for (const user of accounts) {
-    const ready = drinksYouCanMake(user.ownedIngredientIds, index);
-    const almost = almostThereForBar(user.ownedIngredientIds, index, 8);
+    const ready = drinksYouCanMake(user.ownedIngredientIds, index, user.skippedCocktailIds);
+    const almost = almostThereForBar(user.ownedIngredientIds, index, 8, user.skippedCocktailIds);
     const unsub = accountUnsub(user.unsubscribeToken, "digest");
 
     if (!ready.length && !almost.length) {

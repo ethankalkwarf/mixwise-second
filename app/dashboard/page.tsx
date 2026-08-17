@@ -8,6 +8,7 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useShoppingList } from "@/hooks/useShoppingList";
@@ -25,6 +26,7 @@ import { RARITY_COLORS } from "@/lib/badges";
 import {
   BeakerIcon,
   HeartIcon,
+  HandThumbDownIcon,
   ClockIcon,
   TrophyIcon,
   ArrowRightIcon,
@@ -56,6 +58,7 @@ export default function DashboardPage() {
   const preferredAuthMode = usePreferredAuthMode();
   const { ingredientIds, isLoading: barLoading, removeIngredient } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
+  const { skips, skipIds, isLoading: skipsLoading, unskipCocktail } = useCocktailSkips();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const { addItems, isLoading: shoppingLoading, itemCount: shoppingCount } = useShoppingList();
 
@@ -149,6 +152,7 @@ export default function DashboardPage() {
           cocktails: allCocktails,
           ownedIngredientIds: ingredientIds,
           stapleIngredientIds: stapleIds,
+          excludeCocktailIds: skipIds,
         });
 
         if (process.env.NODE_ENV === "development") {
@@ -193,7 +197,7 @@ export default function DashboardPage() {
     }
 
     fetchRecommendations();
-  }, [isAuthenticated, ingredientIds, allCocktails, allIngredients]);
+  }, [isAuthenticated, ingredientIds, allCocktails, allIngredients, skipIds]);
 
   // Fetch image URLs from Sanity for favorites
   useEffect(() => {
@@ -746,6 +750,84 @@ export default function DashboardPage() {
                     ) : (
                       <p className="text-sage text-sm">
                         Save cocktails to favorites to see them here.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Skipped drinks */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-forest flex items-center gap-2">
+                      <HandThumbDownIcon className="w-5 h-5 text-terracotta" />
+                      Won&apos;t make again
+                    </h3>
+                  </div>
+                  <div className="min-h-[7rem] flex items-center">
+                    {skipsLoading ? (
+                      <div className="flex gap-4">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="flex-shrink-0 w-32">
+                            <div className="w-32 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
+                            <div className="h-4 bg-mist rounded animate-pulse" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : skips.length > 0 ? (
+                      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+                        {skips.slice(0, 8).map((skip) => {
+                          const storedImageUrl = skip.cocktail_image_url;
+                          const imageUrl =
+                            storedImageUrl && storedImageUrl.trim()
+                              ? storedImageUrl.trim()
+                              : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
+
+                          return (
+                            <div key={skip.id} className="flex-shrink-0 w-32 group">
+                              {skip.cocktail_slug ? (
+                                <Link href={`/cocktails/${skip.cocktail_slug}`}>
+                                  <Image
+                                    src={imageUrl}
+                                    alt={skip.cocktail_name || "Cocktail"}
+                                    width={128}
+                                    height={96}
+                                    className="w-32 h-24 rounded-2xl object-cover mb-2"
+                                  />
+                                  <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
+                                    {formatCocktailName(skip.cocktail_name || "Cocktail")}
+                                  </p>
+                                </Link>
+                              ) : (
+                                <>
+                                  <Image
+                                    src={imageUrl}
+                                    alt={skip.cocktail_name || "Cocktail"}
+                                    width={128}
+                                    height={96}
+                                    className="w-32 h-24 rounded-2xl object-cover mb-2"
+                                  />
+                                  <p className="text-sm text-forest truncate">
+                                    {formatCocktailName(skip.cocktail_name || "Cocktail")}
+                                  </p>
+                                </>
+                              )}
+                              {skip.notes ? (
+                                <p className="text-xs text-sage line-clamp-2 mt-1">{skip.notes}</p>
+                              ) : null}
+                              <button
+                                type="button"
+                                onClick={() => unskipCocktail(skip.cocktail_id)}
+                                className="mt-1 text-xs font-medium text-terracotta hover:text-terracotta-dark"
+                              >
+                                Restore
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sage text-sm">
+                        Skip a drink from any recipe page to hide it from Mix and emails.
                       </p>
                     )}
                   </div>

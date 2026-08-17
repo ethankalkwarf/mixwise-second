@@ -72,7 +72,7 @@ export async function runThursdayFeatured(options?: {
   const accountResults: Array<"sent" | "skipped" | "error"> = [];
   for (const user of accounts) {
     const unsub = accountUnsub(user.unsubscribeToken, "digest");
-    const canMake = drinksYouCanMake(user.ownedIngredientIds, matchIndex);
+    const canMake = drinksYouCanMake(user.ownedIngredientIds, matchIndex, user.skippedCocktailIds);
     const canMakeTonight = canMake.some((drink) => drink.slug === featured.slug);
     const template = thursdayFeaturedDraftTemplate({
       displayName: user.displayName,

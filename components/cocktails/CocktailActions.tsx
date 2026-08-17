@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { FavoriteButton } from "./FavoriteButton";
+import { SkipButton } from "./SkipButton";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
@@ -59,6 +60,16 @@ export function CocktailActions({ cocktail }: CocktailActionsProps) {
   return (
     <div className="flex items-center gap-2">
       <FavoriteButton
+        cocktail={{
+          id: cocktail.id,
+          name: cocktail.name,
+          slug: cocktail.slug,
+          imageUrl: cocktail.imageUrl,
+        }}
+        size="lg"
+        showLabel
+      />
+      <SkipButton
         cocktail={{
           id: cocktail.id,
           name: cocktail.name,

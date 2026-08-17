@@ -13,6 +13,7 @@ export type MixMatchParams = {
   ownedIngredientIds: string[];
   stapleIngredientIds?: string[];
   maxMissing?: number; // Maximum missing required ingredients for "almost there"
+  excludeCocktailIds?: Iterable<string>;
 };
 
 export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
@@ -20,17 +21,25 @@ export function getMixMatchGroups(params: MixMatchParams): MixMatchGroups {
     cocktails,
     ownedIngredientIds,
     stapleIngredientIds = [],
-    maxMissing = 2
+    maxMissing = 2,
+    excludeCocktailIds,
   } = params;
 
   const owned = new Set<string>(ownedIngredientIds);
   const staples = new Set<string>(stapleIngredientIds);
+  const excluded = excludeCocktailIds
+    ? new Set(Array.from(excludeCocktailIds, String))
+    : null;
 
   const ready: MixMatchResult[] = [];
   const almostThere: MixMatchResult[] = [];
   const far: MixMatchResult[] = [];
 
   for (const cocktail of cocktails) {
+    if (excluded?.has(cocktail.id)) {
+      continue;
+    }
+
     if (!cocktail.ingredients || cocktail.ingredients.length === 0) {
       continue;
     }

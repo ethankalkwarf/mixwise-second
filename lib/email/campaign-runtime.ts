@@ -51,6 +51,7 @@ export type AccountRecipient = {
   barNewestAt: string | null;
   ownedIngredientIds: string[];
   shoppingItems: string[];
+  skippedCocktailIds: string[];
 };
 
 export type ListRecipient = {
@@ -264,10 +265,18 @@ export async function loadMatchIndex(): Promise<MatchIndex> {
   return { byId, requiredByCocktail, ingredientNames };
 }
 
-export function drinksYouCanMake(ownedIds: string[], index: MatchIndex): ProgramCocktail[] {
+export function drinksYouCanMake(
+  ownedIds: string[],
+  index: MatchIndex,
+  excludeCocktailIds?: Iterable<string>
+): ProgramCocktail[] {
   const owned = new Set(ownedIds.map(String));
+  const excluded = excludeCocktailIds
+    ? new Set(Array.from(excludeCocktailIds, String))
+    : null;
   const ready: ProgramCocktail[] = [];
   for (const [cocktailId, required] of index.requiredByCocktail) {
+    if (excluded?.has(cocktailId)) continue;
     if (!required.length) continue;
     if (!required.every((id) => owned.has(id))) continue;
     const cocktail = index.byId.get(cocktailId);
@@ -279,12 +288,17 @@ export function drinksYouCanMake(ownedIds: string[], index: MatchIndex): Program
 export function almostThereForBar(
   ownedIds: string[],
   index: MatchIndex,
-  limit = 2
+  limit = 2,
+  excludeCocktailIds?: Iterable<string>
 ): AlmostThereDrink[] {
   const owned = new Set(ownedIds.map(String));
+  const excluded = excludeCocktailIds
+    ? new Set(Array.from(excludeCocktailIds, String))
+    : null;
   const byMissing = new Map<string, ProgramCocktail[]>();
 
   for (const [cocktailId, required] of index.requiredByCocktail) {
+    if (excluded?.has(cocktailId)) continue;
     const missing = required.filter((id) => !owned.has(id));
     if (missing.length !== 1) continue;
     const cocktail = index.byId.get(cocktailId);
@@ -375,6 +389,22 @@ export async function loadAccountRecipients(): Promise<AccountRecipient[]> {
     shoppingByUser.set(row.user_id, items);
   }
 
+  const { data: skipRows, error: skipError } = await supabase
+    .from("cocktail_skips")
+    .select("user_id, cocktail_id")
+    .in("user_id", userIds);
+
+  if (skipError) {
+    console.error("[Email program] cocktail_skips failed:", skipError);
+  }
+
+  const skipsByUser = new Map<string, string[]>();
+  for (const row of skipRows || []) {
+    const items = skipsByUser.get(row.user_id) || [];
+    items.push(String(row.cocktail_id));
+    skipsByUser.set(row.user_id, items);
+  }
+
   const lastSignIn = await loadLastSignInMap();
 
   const recipients: AccountRecipient[] = [];
@@ -407,6 +437,7 @@ export async function loadAccountRecipients(): Promise<AccountRecipient[]> {
       barNewestAt: bar?.newest || null,
       ownedIngredientIds: bar?.ids || [],
       shoppingItems: shoppingByUser.get(user.id) || [],
+      skippedCocktailIds: skipsByUser.get(user.id) || [],
     });
   }
 

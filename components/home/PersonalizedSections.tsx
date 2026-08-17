@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { getCocktailImageUrls } from "@/lib/cocktails.client";
@@ -36,6 +37,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
   const { isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, isLoading: barLoading, addIngredient } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
+  const { skipIds } = useCocktailSkips();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const [favoriteImageUrls, setFavoriteImageUrls] = useState<Map<string, string | null>>(new Map());
   const [recentImageUrls, setRecentImageUrls] = useState<Map<string, string | null>>(new Map());
@@ -54,6 +56,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
     const oneAway: Array<{ cocktail: MixCocktail; missingIngredient: { id: string; name: string } }> = [];
 
     allCocktails.forEach((cocktail) => {
+      if (skipIds.has(cocktail._id)) return;
       const requiredIngredients = cocktail.ingredients?.filter(i => i.ingredient) || [];
       if (requiredIngredients.length === 0) return;
 
@@ -78,7 +81,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       readyToMake: readyToMake.slice(0, 6),
       oneAway: oneAway.slice(0, 4),
     };
-  }, [allCocktails, ingredientIds]);
+  }, [allCocktails, ingredientIds, skipIds]);
 
   // Fetch image URLs from Sanity for favorites
   useEffect(() => {

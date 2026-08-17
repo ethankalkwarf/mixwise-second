@@ -8,6 +8,7 @@ import { getMixIngredients } from "@/lib/cocktails";
 import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import type { MixCocktail, MixMatchResult, MixIngredient } from "@/lib/mixTypes";
 import { debugLog } from "@/lib/debugLog";
+import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 
 interface CocktailsYouCanMakeProps {
   ingredientIds: string[];
@@ -32,6 +33,7 @@ export function CocktailsYouCanMake({
 }: CocktailsYouCanMakeProps) {
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [loading, setLoading] = useState(true);
+  const { skipIds } = useCocktailSkips();
 
   // Fetch ingredients to calculate staple IDs (same logic as mix wizard)
   useEffect(() => {
@@ -76,7 +78,8 @@ export function CocktailsYouCanMake({
     cocktails: allCocktails,
     ownedIngredientIds: ingredientIds,
     stapleIngredientIds,
-    maxMissing: 2
+    maxMissing: 2,
+    excludeCocktailIds: isPublicView ? undefined : skipIds,
   });
 
   // Debug logging (dev only)

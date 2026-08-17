@@ -14,13 +14,17 @@ export async function getSimilarRecipes(
   baseSpirit?: string | null,
   tags?: string[] | null,
   categories?: string[] | null,
-  limit = 6
+  limit = 6,
+  excludeCocktailIds?: Iterable<string>
 ): Promise<any[]> {
   const allCocktails = await getCocktailsList();
+  const excluded = new Set(
+    [currentCocktailId, ...(excludeCocktailIds ? Array.from(excludeCocktailIds, String) : [])]
+  );
 
-  // Filter out the current cocktail
+  // Filter out the current cocktail and any the viewer has skipped
   const otherCocktails = allCocktails.filter(
-    cocktail => cocktail.id !== currentCocktailId
+    (cocktail) => !excluded.has(cocktail.id)
   );
 
   const similarities: CocktailSimilarity[] = otherCocktails.map(cocktail => {

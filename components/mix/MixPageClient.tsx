@@ -11,6 +11,7 @@ import { getMixDataClient, getUserBarIngredientIdsClient } from "@/lib/cocktails
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
+import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 import { SaveBarPrompt } from "@/components/auth/SaveBarPrompt";
 import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
 import { HomeIcon, WrenchScrewdriverIcon, BookOpenIcon } from "@heroicons/react/24/outline";
@@ -59,6 +60,7 @@ function MixPageContent() {
   }, []);
 
   const { isAuthenticated, user } = useUser();
+  const { skipIds } = useCocktailSkips();
   const {
     ingredientIds,
     isLoading: barLoading,
@@ -321,8 +323,9 @@ function MixPageContent() {
       cocktails: cocktailsWithIngredients,
       ownedIngredientIds: ingredientIds,
       stapleIngredientIds: stapleIds,
+      excludeCocktailIds: skipIds,
     });
-  }, [allCocktails, allIngredients, ingredientIds, dataLoading, stapleIds]);
+  }, [allCocktails, allIngredients, ingredientIds, dataLoading, stapleIds, skipIds]);
 
   const matchCounts = useMemo(
     () => ({

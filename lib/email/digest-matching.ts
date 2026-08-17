@@ -40,13 +40,19 @@ export function buildCocktailIngredientMap(
 export function cocktailsUserCanMakeFromBar(
   cocktails: DigestCocktail[],
   ownedIngredientIds: string[],
-  ingredientsByCocktail: Map<string, string[]>
+  ingredientsByCocktail: Map<string, string[]>,
+  excludeCocktailIds?: Iterable<string>
 ): DigestCocktailCard[] {
   const owned = new Set(ownedIngredientIds.map(String));
+  const excluded = excludeCocktailIds
+    ? new Set(Array.from(excludeCocktailIds, String))
+    : null;
   const ready: DigestCocktailCard[] = [];
 
   for (const cocktail of cocktails) {
-    const required = ingredientsByCocktail.get(String(cocktail.id));
+    const cocktailId = String(cocktail.id);
+    if (excluded?.has(cocktailId)) continue;
+    const required = ingredientsByCocktail.get(cocktailId);
     if (!required?.length) continue;
 
     const hasAll = required.every((id) => owned.has(id));

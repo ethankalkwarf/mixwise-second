@@ -112,7 +112,7 @@ export async function runEmailLifecycle(options?: {
     ).length;
     const unsub = accountUnsub(user.unsubscribeToken, "digest");
     const ageDays = daysBetween(user.createdAt, now);
-    const ready = drinksYouCanMake(user.ownedIngredientIds, index);
+    const ready = drinksYouCanMake(user.ownedIngredientIds, index, user.skippedCocktailIds);
     const readyDrinks = ready.slice(0, 4).map(toCampaignDrink);
 
     const send = async (

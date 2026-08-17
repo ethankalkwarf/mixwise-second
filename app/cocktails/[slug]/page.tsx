@@ -8,8 +8,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { FlavorProfileCard } from "@/components/cocktails/FlavorProfileCard";
 import { BartendersNoteCard } from "@/components/cocktails/BartendersNoteCard";
-import { RecipeActions } from "@/components/cocktails/RecipeActions";
 import { getSimilarRecipes } from "@/lib/similarRecipes";
+import { getCurrentUserSkippedCocktailIds } from "@/lib/cocktailSkips.server";
 import { RecipeContent } from "./RecipeContent";
 import { DailyCocktailBanner } from "@/components/cocktails/DailyCocktailBanner";
 import { matchIngredientTextToIds } from "@/lib/ingredientMatching";
@@ -306,11 +306,15 @@ export default async function CocktailDetailPage({ params }: PageProps) {
   // Parallelize independent work: shopping-list match, similar recipes, daily slug
   const [matchedIngredients, rawSimilarRecipes, todaysDailySlug] = await Promise.all([
     matchIngredientTextToIds(ingredients.map((ing) => ing.text)),
-    getSimilarRecipes(
-      cocktail.id,
-      cocktail.base_spirit,
-      cocktail.tags,
-      cocktail.categories_all
+    getCurrentUserSkippedCocktailIds().then((skipIds) =>
+      getSimilarRecipes(
+        cocktail.id,
+        cocktail.base_spirit,
+        cocktail.tags,
+        cocktail.categories_all,
+        6,
+        skipIds
+      )
     ),
     getTodaysDailyCocktailSlug(),
   ]);

@@ -7,10 +7,12 @@ import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { getMixCocktailsClient, getMixIngredients } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import type { MixCocktail, MixIngredient } from "@/lib/mixTypes";
+import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 
 export function CocktailsReadyBadge() {
   const { isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, isLoading: barLoading } = useBarIngredients();
+  const { skipIds } = useCocktailSkips();
   const [cocktails, setCocktails] = useState<MixCocktail[]>([]);
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [cocktailsLoading, setCocktailsLoading] = useState(true);
@@ -64,10 +66,11 @@ export function CocktailsReadyBadge() {
       cocktails: validCocktails,
       ownedIngredientIds: ingredientIds,
       stapleIngredientIds: stapleIds,
+      excludeCocktailIds: skipIds,
     });
 
     return ready.length;
-  }, [cocktails, ingredientIds, stapleIds]);
+  }, [cocktails, ingredientIds, stapleIds, skipIds]);
 
   // Don't show if not authenticated or still loading or no bar
   if (authLoading || barLoading || cocktailsLoading) {
@@ -100,6 +103,7 @@ export function CocktailsReadyBadge() {
 export function CocktailsReadyBadgeCompact() {
   const { isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, isLoading: barLoading } = useBarIngredients();
+  const { skipIds } = useCocktailSkips();
   const [cocktails, setCocktails] = useState<MixCocktail[]>([]);
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [cocktailsLoading, setCocktailsLoading] = useState(true);
@@ -151,10 +155,11 @@ export function CocktailsReadyBadgeCompact() {
       cocktails: validCocktails,
       ownedIngredientIds: ingredientIds,
       stapleIngredientIds: stapleIds,
+      excludeCocktailIds: skipIds,
     });
 
     return ready.length;
-  }, [cocktails, ingredientIds, stapleIds]);
+  }, [cocktails, ingredientIds, stapleIds, skipIds]);
 
   if (authLoading || barLoading || cocktailsLoading || !isAuthenticated || ingredientIds.length === 0 || readyCount === 0) {
     return null;

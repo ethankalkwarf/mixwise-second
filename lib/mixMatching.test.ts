@@ -40,4 +40,13 @@ assert.equal(missingOne.ready.length, 0);
 assert.equal(missingOne.almostThere.length, 1);
 assert.deepEqual(missingOne.almostThere[0]?.missingIngredientNames, ["Triple Sec"]);
 
+const skipped = getMixMatchGroups({
+  cocktails: [margarita],
+  ownedIngredientIds: ["tequila", "lime", "triple-sec"],
+  stapleIngredientIds: ["ice"],
+  excludeCocktailIds: [margarita.id],
+});
+assert.equal(skipped.ready.length, 0);
+assert.equal(skipped.almostThere.length, 0);
+
 console.log("mixMatching tests passed");
