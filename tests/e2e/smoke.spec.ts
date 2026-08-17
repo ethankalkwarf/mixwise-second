@@ -17,10 +17,14 @@ test.describe('MixWise Smoke Tests', () => {
     await expect(page.locator('h1')).toBeVisible();
     await expect(page.locator('text=MixWise')).toBeVisible();
 
-    // Check navigation
-    await expect(page.locator('text=Browse Cocktail Recipes')).toBeVisible();
-    await expect(page.locator('text=Ingredient Guides')).toBeVisible();
-    await expect(page.locator('text=Open Mixology Wizard')).toBeVisible();
+    // Check footer columns
+    const footer = page.locator('footer');
+    await expect(footer.getByRole('heading', { name: 'Drink' })).toBeVisible();
+    await expect(footer.getByRole('heading', { name: 'Learn' })).toBeVisible();
+    await expect(footer.getByRole('heading', { name: 'About' })).toBeVisible();
+    await expect(footer.getByRole('link', { name: 'Cocktail Recipes' })).toBeVisible();
+    await expect(footer.getByRole('link', { name: 'Learn Mixology' })).toBeVisible();
+    await expect(footer.getByRole('link', { name: 'About MixWise' })).toBeVisible();
   });
 
   test('Cocktails page loads and shows content', async ({ page }) => {
@@ -79,14 +83,14 @@ test.describe('MixWise Smoke Tests', () => {
     await page.goto(BASE_URL);
 
     // Click cocktails link
-    await page.locator('text=Browse Cocktail Recipes').click();
+    await page.locator('footer').getByRole('link', { name: 'Cocktail Recipes' }).click();
     await expect(page.locator('text=Cocktail Recipes')).toBeVisible();
 
     // Go back to home
     await page.goto(BASE_URL);
 
     // Click mix link
-    await page.locator('text=Open Mixology Wizard').click();
+    await page.locator('footer').getByRole('link', { name: 'What Can I Make' }).click();
     await expect(page.locator('text=Your Bar').or(page.locator('text=What\'s in your bar'))).toBeVisible();
   });
 
