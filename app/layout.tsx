@@ -4,6 +4,7 @@ import { SupabaseProvider } from "./providers";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { MobileStyleFix } from "@/components/mobile/MobileStyleFix";
 import { OrganizationSchema } from "@/components/seo/JsonLd";
+import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
 import { SITE_CONFIG } from "@/lib/seo";
 
 import { DM_Serif_Display, Jost } from "next/font/google";
@@ -100,6 +101,7 @@ export default async function RootLayout({
             {children}
           </SiteChrome>
         </SupabaseProvider>
+        <MicrosoftClarity />
       </body>
     </html>
   );
