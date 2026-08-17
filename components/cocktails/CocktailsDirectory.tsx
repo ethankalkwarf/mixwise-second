@@ -22,7 +22,6 @@ interface FilterState {
   sortBy: SortOption;
   filterSpirit: string | null;
   filterGlass: string | null;
-  filterCategory: string | null;
   showFilters: boolean;
 }
 
@@ -85,7 +84,6 @@ export function CocktailsDirectory({
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [filterSpirit, setFilterSpirit] = useState<string | null>(initialSpirit);
   const [filterGlass, setFilterGlass] = useState<string | null>(null);
-  const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(Boolean(initialSpirit));
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -106,7 +104,6 @@ export function CocktailsDirectory({
         setSortBy(state.sortBy || "default");
         setFilterSpirit(state.filterSpirit);
         setFilterGlass(state.filterGlass);
-        setFilterCategory(state.filterCategory);
         setShowFilters(state.showFilters || false);
       }
     } catch (e) {
@@ -146,7 +143,6 @@ export function CocktailsDirectory({
       sortBy,
       filterSpirit,
       filterGlass,
-      filterCategory,
       showFilters,
     };
     try {
@@ -154,7 +150,7 @@ export function CocktailsDirectory({
     } catch (e) {
       console.error("Error saving filter state:", e);
     }
-  }, [isInitialized, searchQuery, sortBy, filterSpirit, filterGlass, filterCategory, showFilters]);
+  }, [isInitialized, searchQuery, sortBy, filterSpirit, filterGlass, showFilters]);
 
   // Save scroll position before navigating to a cocktail.
   // Do not preventDefault — intercepted client navigation was hanging the tab.
@@ -169,16 +165,13 @@ export function CocktailsDirectory({
   // Extract unique filter options from data
   const filterOptions = useMemo(() => {
     const glasses = new Set<string>();
-    const categories = new Set<string>();
 
     cocktails.forEach((c) => {
       if (c.glass) glasses.add(c.glass);
-      c.drinkCategories?.forEach((cat) => categories.add(cat));
     });
 
     return {
       glasses: Array.from(glasses).sort(),
-      categories: Array.from(categories).sort(),
     };
   }, [cocktails]);
 
@@ -209,11 +202,6 @@ export function CocktailsDirectory({
       results = results.filter((c) => c.glass === filterGlass);
     }
 
-    // Category filter
-    if (filterCategory) {
-      results = results.filter((c) => c.drinkCategories?.includes(filterCategory));
-    }
-
     // Sort
     switch (sortBy) {
       case "default":
@@ -240,19 +228,18 @@ export function CocktailsDirectory({
     }
 
     return results;
-  }, [cocktails, searchQuery, sortBy, filterSpirit, filterGlass, filterCategory]);
+  }, [cocktails, searchQuery, sortBy, filterSpirit, filterGlass]);
 
   const { visibleItems: visibleCocktails, hasMore, loadMoreRef } = useInfiniteVisibleCount(
     filteredCocktails,
     ITEMS_PER_PAGE
   );
 
-  const activeFilterCount = [filterSpirit, filterGlass, filterCategory].filter(Boolean).length;
+  const activeFilterCount = [filterSpirit, filterGlass].filter(Boolean).length;
 
   const clearFilters = () => {
     setFilterSpirit(null);
     setFilterGlass(null);
-    setFilterCategory(null);
   };
 
   // Quick filter chips for common searches
@@ -339,34 +326,6 @@ export function CocktailsDirectory({
               </button>
             );
           })}
-          
-          {/* Category chips */}
-          {filterOptions.categories.slice(0, 6).map((cat) => {
-            const config = CATEGORY_CONFIG[cat];
-            if (!config) return null;
-            const isActive = filterCategory === cat || searchQuery.toLowerCase() === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => {
-                  if (filterCategory === cat) {
-                    setFilterCategory(null);
-                  } else {
-                    setFilterCategory(cat);
-                    setSearchQuery("");
-                  }
-                }}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 active:scale-95 ${
-                  isActive
-                    ? `${config.color} shadow-sm scale-105`
-                    : "bg-white border-mist text-sage hover:border-stone hover:scale-105 hover:shadow-sm"
-                }`}
-              >
-                <span className={`transition-transform duration-200 ${isActive ? "scale-110" : ""}`}>{config.emoji}</span>
-                {config.label}
-              </button>
-            );
-          })}
         </div>
 
         {/* Filter Panel */}
@@ -384,7 +343,7 @@ export function CocktailsDirectory({
               )}
             </div>
 
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
               {/* Spirit Filter */}
               <div>
                 <label className="label-botanical">Base spirit</label>
@@ -416,26 +375,6 @@ export function CocktailsDirectory({
                       {glass.replace(/-/g, " ")}
                     </option>
                   ))}
-                </select>
-              </div>
-
-              {/* Category Filter */}
-              <div>
-                <label className="label-botanical">Category</label>
-                <select
-                  value={filterCategory || ""}
-                  onChange={(e) => setFilterCategory(e.target.value || null)}
-                  className="w-full bg-cream border border-mist rounded-xl px-3 py-2 text-sm text-forest focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20 focus:scale-[1.02] transition-all duration-200 cursor-pointer"
-                >
-                  <option value="">All Categories</option>
-                  {filterOptions.categories.map((cat) => {
-                    const config = CATEGORY_CONFIG[cat];
-                    return (
-                      <option key={cat} value={cat}>
-                        {config ? `${config.emoji} ${config.label}` : cat}
-                      </option>
-                    );
-                  })}
                 </select>
               </div>
             </div>
