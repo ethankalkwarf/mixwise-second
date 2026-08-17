@@ -460,68 +460,65 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Subscribe to auth state changes
+    // Subscribe to auth state changes.
+    // Do not make this callback async / do not return a Promise: supabase-js holds
+    // an auth lock until that Promise settles, which deadlocks getSession() and
+    // signInWithPassword() — local login then appears to hang until the 5s timeout.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (event, newSession) => {
         debugLog("[UserProvider] Auth state change:", event, newSession?.user?.email ?? "no user");
 
-        // Handle different auth events
-        switch (event) {
-          case "SIGNED_IN":
-          case "TOKEN_REFRESHED":
-            debugLog("[UserProvider] User signed in or token refreshed");
-            await updateAuthState(newSession);
-            break;
-
-          case "SIGNED_OUT":
-            if (mounted) {
-              debugLog("[UserProvider] User signed out");
-              // Clear profile cache on sign out
-              try {
-                if (userIdRef.current) {
-                  localStorage.removeItem(getProfileCacheKey(userIdRef.current));
-                }
-              } catch (err) {
-                console.warn("[UserProvider] Error clearing profile cache:", err);
-              }
-              userIdRef.current = null;
-              accessTokenRef.current = null;
-              setSession(null);
-              setUser(null);
-              setProfile(null);
-              setIsLoading(false);
-              initialCheckDone.current = false;
-              authCheckDone = false;
-            }
-            break;
-
-          case "INITIAL_SESSION":
-            // This fires when the subscription is set up and detects a session
-            // Could be from cookies, localStorage, or the Supabase client state
-            debugLog("[UserProvider] INITIAL_SESSION detected:", !!newSession?.user);
-            if (!authCheckDone) {
+        void (async () => {
+          switch (event) {
+            case "SIGNED_IN":
+            case "TOKEN_REFRESHED":
+              debugLog("[UserProvider] User signed in or token refreshed");
               await updateAuthState(newSession);
-            }
-            break;
+              break;
 
-          case "USER_UPDATED":
-            // User data was updated, refresh profile
-            if (newSession?.user && mounted) {
-              setUser(newSession.user);
-              const userProfile = await ensureProfileExistsRef.current(
-                newSession.user.id,
-                newSession.user.email || ""
-              );
+            case "SIGNED_OUT":
               if (mounted) {
-                setProfile(userProfile);
+                debugLog("[UserProvider] User signed out");
+                try {
+                  if (userIdRef.current) {
+                    localStorage.removeItem(getProfileCacheKey(userIdRef.current));
+                  }
+                } catch (err) {
+                  console.warn("[UserProvider] Error clearing profile cache:", err);
+                }
+                userIdRef.current = null;
+                accessTokenRef.current = null;
+                setSession(null);
+                setUser(null);
+                setProfile(null);
+                setIsLoading(false);
+                initialCheckDone.current = false;
+                authCheckDone = false;
               }
-            }
-            break;
+              break;
 
-          case "PASSWORD_RECOVERY":
-            // Handle password recovery if needed
-            break;
-        }
+            case "INITIAL_SESSION":
+              debugLog("[UserProvider] INITIAL_SESSION detected:", !!newSession?.user);
+              await updateAuthState(newSession);
+              break;
+
+            case "USER_UPDATED":
+              if (newSession?.user && mounted) {
+                setUser(newSession.user);
+                const userProfile = await ensureProfileExistsRef.current(
+                  newSession.user.id,
+                  newSession.user.email || ""
+                );
+                if (mounted) {
+                  setProfile(userProfile);
+                }
+              }
+              break;
+
+            case "PASSWORD_RECOVERY":
+              break;
+          }
+        })();
       }
     );
 

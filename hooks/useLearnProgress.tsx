@@ -42,6 +42,7 @@ type LearnProgressApi = {
   level: ReturnType<typeof learnLevelFromXp>;
   lessonsDone: number;
   lessonsTotal: number;
+  hasStarted: boolean;
   pathStats: Array<ReturnType<typeof pathProgress> & { path: (typeof LEARN_PATHS)[number] }>;
   continueHref: string | null;
   isComplete: (kind: LearnLessonKind, slug: string) => boolean;
@@ -335,6 +336,7 @@ function useLearnProgressState(): LearnProgressApi {
     level,
     lessonsDone,
     lessonsTotal,
+    hasStarted: rows.length > 0,
     pathStats,
     continueHref: continueHref(rows),
     isComplete,

@@ -16,6 +16,7 @@ function DashboardLearnCardInner() {
   const {
     isLoading,
     isAuthenticated,
+    hasStarted,
     level,
     lessonsDone,
     lessonsTotal,
@@ -24,6 +25,49 @@ function DashboardLearnCardInner() {
   } = useLearnProgress();
 
   if (!isAuthenticated) return null;
+
+  if (isLoading) {
+    return (
+      <section className="card overflow-hidden">
+        <div className="p-6 animate-pulse space-y-3">
+          <div className="h-6 bg-mist rounded-lg w-40" />
+          <div className="h-4 bg-mist rounded-lg w-full" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!hasStarted) {
+    return (
+      <section className="card overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-mist">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-terracotta/15 rounded-xl flex items-center justify-center">
+              <BookOpenIcon className="w-5 h-5 text-terracotta" />
+            </div>
+            <div>
+              <h2 className="text-xl font-display font-bold text-forest">Learn Mixology</h2>
+              <span className="text-sm text-sage">Optional, when you want it</span>
+            </div>
+          </div>
+        </div>
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-sage">
+            Optional lessons on technique, spirits, and tasting — start when you want.
+          </p>
+          <Link
+            href="/learn"
+            className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
+          >
+            <span className="text-forest group-hover:text-terracotta font-medium transition-colors">
+              Start a lesson
+            </span>
+            <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="card overflow-hidden">
@@ -35,9 +79,7 @@ function DashboardLearnCardInner() {
           <div>
             <h2 className="text-xl font-display font-bold text-forest">Learn Mixology</h2>
             <span className="text-sm text-sage block min-h-[1.25rem]">
-              {isLoading
-                ? "Loading..."
-                : `${level.name} · ${level.xp} XP · ${lessonsDone}/${lessonsTotal} lessons`}
+              {`${level.name} · ${level.xp} XP · ${lessonsDone}/${lessonsTotal} lessons`}
             </span>
           </div>
         </div>
@@ -95,7 +137,7 @@ function DashboardLearnCardInner() {
           className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
         >
           <span className="text-forest group-hover:text-terracotta font-medium transition-colors">
-            {lessonsDone === 0 ? "Start your first lesson" : "Continue learning"}
+            Continue learning
           </span>
           <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
         </Link>

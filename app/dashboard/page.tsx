@@ -2,8 +2,6 @@
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { getSupabaseClient } from "@/lib/supabase/client";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
@@ -18,27 +16,25 @@ import { DashboardLearnCard } from "@/components/learn/DashboardLearnCard";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { getMixDataClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
-import { createClient } from "@/lib/supabase/client";
 import { formatCocktailName } from "@/lib/formatters";
 import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import Image from "next/image";
 import type { MixIngredient } from "@/lib/mixTypes";
-import type { BadgeDefinition } from "@/lib/badges";
-import { RARITY_COLORS } from "@/lib/badges";
 import {
   BeakerIcon,
   HeartIcon,
   PencilSquareIcon,
-  HandThumbDownIcon,
   ClockIcon,
   TrophyIcon,
-  ArrowRightIcon,
   PlusCircleIcon,
   XMarkIcon,
   ShoppingBagIcon,
-  BookOpenIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { debugLog } from "@/lib/debugLog";
+
+const PLACEHOLDER_IMAGE =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
 
 interface RecommendedCocktail {
   _id: string;
@@ -49,21 +45,14 @@ interface RecommendedCocktail {
   matchScore?: number;
 }
 
-interface UserBadge {
-  badge_id: string;
-  earned_at: string;
-}
-
 export default function DashboardPage() {
-  const router = useRouter();
   const { user, profile, isAuthenticated, isLoading: authLoading } = useUser();
-  const supabase = getSupabaseClient();
   const { openAuthDialog } = useAuthDialog();
   const preferredAuthMode = usePreferredAuthMode();
   const { ingredientIds, isLoading: barLoading, removeIngredient } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
   const { skips, skipIds, isLoading: skipsLoading, unskipCocktail } = useCocktailSkips();
-  const { notes: cocktailNotes, isLoading: notesLoading, getNote } = useCocktailNotes();
+  const { notes: cocktailNotes, isLoading: notesLoading } = useCocktailNotes();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const { addItems, isLoading: shoppingLoading, itemCount: shoppingCount } = useShoppingList();
 
@@ -78,25 +67,16 @@ export default function DashboardPage() {
     missingIngredientNames: string[];
     missingIngredientIds: string[];
   }>>([]);
-  const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const [dataLoadError, setDataLoadError] = useState<string | null>(null);
   const [favoriteImageUrls, setFavoriteImageUrls] = useState<Map<string, string | null>>(new Map());
   const [recentImageUrls, setRecentImageUrls] = useState<Map<string, string | null>>(new Map());
+  const [skipsExpanded, setSkipsExpanded] = useState(false);
   const DASHBOARD_READY_LIMIT = 10;
 
-  // CRITICAL FIX: Refs to prevent duplicate data fetches and dialogs
   const hasFetchedMixData = useRef(false);
-  const hasFetchedBadges = useRef<string | null>(null);
   const hasShownAuthDialog = useRef(false);
 
-  // Onboarding is disabled - new users go directly to mix wizard
-  // This redirect is no longer needed since onboarding is marked as completed automatically
-
-  // Note: No conversion needed anymore - ingredientIds are already in canonical UUID format
-  // This is guaranteed by useBarIngredients which normalizes all IDs
-
-  // Show auth dialog if not authenticated - only once
   useEffect(() => {
     if (!authLoading && !isAuthenticated && !hasShownAuthDialog.current) {
       hasShownAuthDialog.current = true;
@@ -106,22 +86,18 @@ export default function DashboardPage() {
         subtitle: "Log in or create a free account to track your progress and get recommendations.",
       });
     }
-    // Reset the ref if user becomes authenticated (so dialog can show again if they log out)
     if (isAuthenticated) {
       hasShownAuthDialog.current = false;
     }
   }, [authLoading, isAuthenticated, openAuthDialog]);
 
-  // Fetch recommendations and cocktail data - only once
   useEffect(() => {
-    // Prevent duplicate fetches
     if (hasFetchedMixData.current) return;
     hasFetchedMixData.current = true;
-    
+
     async function fetchData() {
       try {
         setDataLoadError(null);
-        // Fetch ingredients and cocktails data (same as mix wizard)
         const { ingredients, cocktails } = await getMixDataClient();
         setAllIngredients(ingredients || []);
         setAllCocktails(cocktails || []);
@@ -129,7 +105,6 @@ export default function DashboardPage() {
         console.error("Error fetching mix data:", error);
         const errorMessage = error instanceof Error ? error.message : "Failed to load data";
         setDataLoadError(errorMessage);
-        // Still clear loading state so UI shows error instead of hanging
         setLoadingRecs(false);
       }
     }
@@ -137,7 +112,6 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  // Fetch recommendations using same logic as mix wizard
   useEffect(() => {
     async function fetchRecommendations() {
       if (!isAuthenticated || ingredientIds.length === 0 || allCocktails.length === 0 || allIngredients.length === 0) {
@@ -147,12 +121,10 @@ export default function DashboardPage() {
       }
 
       try {
-        // Calculate staple IDs (same logic as mix wizard)
         const dbStaples = allIngredients.filter((i) => i?.isStaple).map((i) => i?.id).filter(Boolean);
-        const manualStaples = ['ice', 'water']; // Only truly universal basics
+        const manualStaples = ['ice', 'water'];
         const stapleIds = [...new Set([...dbStaples, ...manualStaples])];
 
-        // Use same matching logic as mix wizard
         const result = getMixMatchGroups({
           cocktails: allCocktails,
           ownedIngredientIds: ingredientIds,
@@ -172,17 +144,14 @@ export default function DashboardPage() {
           });
         }
 
-        // Convert ready cocktails to expected format
         const formattedCocktails: RecommendedCocktail[] = result.ready.map(match => ({
           _id: match.cocktail.id,
           name: match.cocktail.name,
           slug: { current: match.cocktail.slug },
           externalImageUrl: match.cocktail.imageUrl || undefined,
           primarySpirit: match.cocktail.primarySpirit || undefined,
-          ingredientIds: match.cocktail.ingredients?.map(ing => ing.id) || []
         }));
 
-        // Convert almost-there cocktails (missing up to 2 required ingredients per mix engine default)
         const formattedAlmostThere = result.almostThere.map(match => ({
           _id: match.cocktail.id,
           name: match.cocktail.name,
@@ -204,7 +173,6 @@ export default function DashboardPage() {
     fetchRecommendations();
   }, [isAuthenticated, ingredientIds, allCocktails, allIngredients, skipIds]);
 
-  // Fetch image URLs from Sanity for favorites
   useEffect(() => {
     async function fetchFavoriteImages() {
       if (favorites.length === 0) {
@@ -226,7 +194,6 @@ export default function DashboardPage() {
     }
   }, [favorites, favsLoading]);
 
-  // Fetch image URLs from Sanity for recently viewed
   useEffect(() => {
     async function fetchRecentImages() {
       if (recentlyViewed.length === 0) {
@@ -248,59 +215,11 @@ export default function DashboardPage() {
     }
   }, [recentlyViewed, recentLoading]);
 
-  // Note: Ingredients are already fetched by getMixDataClient() above
-  // No need for duplicate fetch - this was causing race conditions and flickering
-
-  // Fallback ingredients
-  function getFallbackIngredients() {
-    return [
-      { id: 'whiskey', name: 'Whiskey', category: 'spirit' },
-      { id: 'vodka', name: 'Vodka', category: 'spirit' },
-      { id: 'gin', name: 'Gin', category: 'spirit' },
-      { id: 'rum', name: 'Rum', category: 'spirit' },
-      { id: 'tequila', name: 'Tequila', category: 'spirit' },
-      { id: 'lime-juice', name: 'Lime Juice', category: 'citrus' },
-      { id: 'lemon-juice', name: 'Lemon Juice', category: 'citrus' },
-      { id: 'simple-syrup', name: 'Simple Syrup', category: 'syrup' },
-      { id: 'bitters', name: 'Bitters', category: 'bitters' },
-    ];
-  }
-
-  // Fetch user badges - only once per user
-  useEffect(() => {
-    async function fetchBadges() {
-      if (!user) return;
-      
-      // Prevent duplicate fetches for same user
-      if (hasFetchedBadges.current === user.id) return;
-      hasFetchedBadges.current = user.id;
-
-      const { data, error } = await supabase
-        .from("user_badges")
-        .select("badge_id, earned_at")
-        .eq("user_id", user.id);
-
-      if (!error && data) {
-        setUserBadges(data);
-      }
-    }
-
-    fetchBadges();
-  }, [user?.id, supabase]);
-
-  // Separate loading states - don't block entire dashboard on bar/favorites loading
-  const isAuthLoading = authLoading;
-  const isContentLoading = barLoading || favsLoading || recentLoading;
-
-  // CRITICAL FIX: Generate greeting using useMemo to prevent re-computation
-  // Cache key now includes user ID to prevent showing wrong user's greeting
   const greeting = useMemo(() => {
-    // Wait for user data to be available
     if (!profile && !user) {
       return "Welcome back";
     }
 
-    // Get user's name
     let stableName = "Bartender";
     if (profile?.display_name) {
       stableName = profile.display_name;
@@ -335,14 +254,58 @@ export default function DashboardPage() {
       ];
       return greetings[greetingIndex];
     }
-  }, [profile?.display_name, user?.email]); // Only recompute when user identity changes
+  }, [profile?.display_name, user?.email]);
+
+  const rankedRecommendations = useMemo(() => {
+    const favoriteIds = new Set(favorites.map((fav) => String(fav.cocktail_id)));
+    return [...recommendations].sort((a, b) => {
+      const aFav = favoriteIds.has(String(a._id)) ? 0 : 1;
+      const bFav = favoriteIds.has(String(b._id)) ? 0 : 1;
+      return aFav - bFav;
+    });
+  }, [recommendations, favorites]);
+
+  const engineSubtitle = useMemo(() => {
+    if (barLoading || loadingRecs) {
+      return "See what you can make with what you have.";
+    }
+    if (ingredientIds.length === 0) {
+      return "Add what's in your bar to see what you can make.";
+    }
+    if (rankedRecommendations.length > 0) {
+      const drinkWord = rankedRecommendations.length === 1 ? "drink" : "drinks";
+      return `${rankedRecommendations.length} ${drinkWord} ready · ${ingredientIds.length} in your bar`;
+    }
+    return "Nothing's a full match yet — add a bottle or check Almost There.";
+  }, [barLoading, loadingRecs, ingredientIds.length, rankedRecommendations.length]);
 
   const handleRemoveFromInventory = useCallback(async (id: string) => {
     await removeIngredient(id);
   }, [removeIngredient]);
 
-  // Only show loading skeleton during initial auth check
-  if (isAuthLoading) {
+  const handleAddAllMissing = useCallback(async () => {
+    const ingredientMap = new Map<string, { id: string; name: string; category?: string }>();
+    almostThereCocktails.forEach((cocktail) => {
+      cocktail.missingIngredientIds.forEach((ingId) => {
+        if (!ingredientMap.has(ingId)) {
+          const ingredient = allIngredients.find((ing) => ing.id === ingId);
+          if (ingredient) {
+            ingredientMap.set(ingId, {
+              id: ingredient.id,
+              name: ingredient.name,
+              category: ingredient.category,
+            });
+          }
+        }
+      });
+    });
+    const uniqueIngredients = Array.from(ingredientMap.values());
+    if (uniqueIngredients.length > 0) {
+      await addItems(uniqueIngredients);
+    }
+  }, [almostThereCocktails, allIngredients, addItems]);
+
+  if (authLoading) {
     return (
       <div className="py-12 bg-cream min-h-screen">
         <MainContainer>
@@ -372,7 +335,7 @@ export default function DashboardPage() {
               Your Personal Dashboard
             </h1>
             <p className="text-sage mb-8 max-w-md mx-auto">
-              Sign in to track your bar inventory, favorites, notes, recommendations, and badges.
+              Sign in to see what you can make with your bar, plus favorites and notes.
             </p>
             <button
               onClick={() => openAuthDialog({ mode: preferredAuthMode })}
@@ -386,13 +349,11 @@ export default function DashboardPage() {
     );
   }
 
-  // Add error boundary for debugging
   try {
     return (
       <div className="py-8 sm:py-12 bg-cream min-h-screen">
         <MainContainer>
-          {/* Dynamic Header - Key is critical to prevent re-render flickering */}
-          <div 
+          <div
             key="dashboard-header"
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
           >
@@ -401,550 +362,375 @@ export default function DashboardPage() {
                 {greeting}
               </h1>
               <p className="text-sage mt-1">
-                Track your bar, favorites, notes, and progress
+                {engineSubtitle}
               </p>
             </div>
-          {ingredientIds.length > 0 && (
-            <ShareBarButton />
-          )}
-        </div>
+            {ingredientIds.length > 0 && (
+              <ShareBarButton />
+            )}
+          </div>
 
-        {/* Quick Actions */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <Link
-            href="/mix"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
-          >
-            <BeakerIcon className="w-4 h-4" />
-            Mix Wizard
-          </Link>
-          <Link
-            href="/learn"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
-          >
-            <BookOpenIcon className="w-4 h-4" />
-            Learn
-          </Link>
-          {shoppingCount > 0 && (
+          <div className="flex flex-wrap gap-3 mb-6">
             <Link
-              href="/shopping-list"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
+              href="/mix"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-terracotta text-cream font-bold rounded-2xl hover:bg-terracotta-dark transition-all text-sm shadow-lg shadow-terracotta/20"
             >
-              <ShoppingBagIcon className="w-4 h-4" />
-              Shopping List ({shoppingCount})
+              <BeakerIcon className="w-4 h-4" />
+              Mix Wizard
             </Link>
-          )}
-        </div>
+            {shoppingCount > 0 && (
+              <Link
+                href="/shopping-list"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
+              >
+                <ShoppingBagIcon className="w-4 h-4" />
+                Shopping List ({shoppingCount})
+              </Link>
+            )}
+          </div>
 
-        {/* Bento Grid Layout */}
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Left Column - Primary Content */}
-          <div className="md:col-span-2 space-y-6">
-            {/* What You Can Make - 100% matches */}
-            <section className="card overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-mist">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center">
-                    <BeakerIcon className="w-5 h-5 text-olive" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-display font-bold text-forest">
-                      What You Can Make
-                    </h2>
-                    <span className="text-sm text-sage block min-h-[1.25rem]">
-                      {loadingRecs ? "Loading..." : recommendations.length > 0 ? `${recommendations.length} cocktail${recommendations.length !== 1 ? "s" : ""} ready` : ""}
-                    </span>
-                  </div>
-                </div>
-                <Link
-                  href="/mix?step=menu"
-                  className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium"
-                >
-                  View all →
-                </Link>
-              </div>
-              <div className="p-6">
-                {dataLoadError ? (
-                  <div className="text-center py-8">
-                    <p className="text-terracotta mb-4">
-                      {dataLoadError}
-                    </p>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="inline-flex items-center gap-2 text-forest hover:text-terracotta font-medium"
-                    >
-                      Refresh Page
-                    </button>
-                  </div>
-                ) : loadingRecs ? (
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-24 bg-mist rounded-2xl animate-pulse" />
-                    ))}
-                  </div>
-                ) : recommendations.length > 0 ? (
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {recommendations.slice(0, DASHBOARD_READY_LIMIT).map((cocktail) => (
-                      <Link
-                        key={cocktail._id}
-                        href={`/cocktails/${cocktail.slug?.current}`}
-                        className="flex items-center gap-4 p-3 bg-cream hover:bg-mist rounded-2xl transition-all group"
-                      >
-                        <Image
-                          src={cocktail.externalImageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
-                          alt={cocktail.name}
-                          width={56}
-                          height={56}
-                          className="w-14 h-14 rounded-xl object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
-                            {formatCocktailName(cocktail.name)}
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-sage mb-4">
-                      Add ingredients to your bar to see cocktails you can make.
-                    </p>
-                    <Link
-                      href="/mix"
-                      className="inline-flex items-center gap-2 text-terracotta hover:text-terracotta-dark font-medium"
-                    >
-                      <PlusCircleIcon className="w-5 h-5" />
-                      Build Your Bar
-                    </Link>
-                  </div>
-                )}
-
-                {!loadingRecs && recommendations.length > DASHBOARD_READY_LIMIT && (
-                  <div className="mt-4 text-sm text-sage">
-                    Showing {DASHBOARD_READY_LIMIT} of {recommendations.length}.{" "}
-                    <Link
-                      href="/mix?step=menu"
-                      className="text-terracotta hover:text-terracotta-dark font-medium"
-                    >
-                      View all
-                    </Link>
-                    .
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* Almost There - Reserve space to prevent layout shift */}
-            {loadingRecs ? (
-              <div className="card overflow-hidden opacity-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="contents md:col-span-2 md:flex md:flex-col md:gap-6">
+              <section className="card overflow-hidden order-1 md:order-none">
                 <div className="flex items-center justify-between p-6 border-b border-mist">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-terracotta/20 rounded-xl flex items-center justify-center">
-                      <BeakerIcon className="w-5 h-5 text-terracotta" />
+                    <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center">
+                      <BeakerIcon className="w-5 h-5 text-olive" />
                     </div>
                     <div>
                       <h2 className="text-xl font-display font-bold text-forest">
-                        Almost There
-                      </h2>
-                      <span className="text-sm text-sage block min-h-[1.25rem]">Loading...</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="flex items-center gap-4 p-3 bg-cream rounded-2xl animate-pulse">
-                        <div className="w-14 h-14 bg-mist rounded-xl" />
-                        <div className="flex-1">
-                          <div className="h-4 bg-mist rounded mb-1" />
-                          <div className="h-3 bg-mist rounded w-3/4" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : almostThereCocktails.length > 0 ? (
-              <section className="card overflow-hidden">
-                <div className="flex items-center justify-between p-6 border-b border-mist">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-terracotta/20 rounded-xl flex items-center justify-center">
-                      <BeakerIcon className="w-5 h-5 text-terracotta" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-display font-bold text-forest">
-                        Almost There
+                        What You Can Make
                       </h2>
                       <span className="text-sm text-sage block min-h-[1.25rem]">
-                        {almostThereCocktails.length} cocktail{almostThereCocktails.length !== 1 ? "s" : ""} close to ready
+                        {loadingRecs ? "Loading..." : rankedRecommendations.length > 0 ? `${rankedRecommendations.length} cocktail${rankedRecommendations.length !== 1 ? "s" : ""} ready` : ""}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={async () => {
-                        // Collect all missing ingredients from all almost-there cocktails
-                        const allMissingIngredients: Array<{ id: string; name: string; category?: string }> = [];
-                        const ingredientMap = new Map<string, { id: string; name: string; category?: string }>();
-                        
-                        almostThereCocktails.forEach(cocktail => {
-                          cocktail.missingIngredientIds.forEach(ingId => {
-                            if (!ingredientMap.has(ingId)) {
-                              const ingredient = allIngredients.find(ing => ing.id === ingId);
-                              if (ingredient) {
-                                ingredientMap.set(ingId, {
-                                  id: ingredient.id,
-                                  name: ingredient.name,
-                                  category: ingredient.category,
-                                });
-                              }
-                            }
-                          });
-                        });
-                        
-                        const uniqueIngredients = Array.from(ingredientMap.values());
-                        if (uniqueIngredients.length > 0) {
-                          await addItems(uniqueIngredients);
-                        }
-                      }}
-                      disabled={shoppingLoading}
-                      className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium disabled:opacity-50"
-                    >
-                      Add all missing →
-                    </button>
-                    <Link
-                      href="/mix"
-                      className="text-sm text-sage hover:text-forest transition-colors font-medium"
-                    >
-                      Build bar →
-                    </Link>
-                  </div>
+                  <Link
+                    href="/mix?step=menu"
+                    className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium"
+                  >
+                    View all →
+                  </Link>
                 </div>
                 <div className="p-6">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {almostThereCocktails.slice(0, 6).map((cocktail) => {
-                      const missingIngredients = cocktail.missingIngredientIds
-                        .map(id => {
-                          const ing = allIngredients.find(i => i.id === id);
-                          return ing ? { id: ing.id, name: ing.name, category: ing.category } : null;
-                        })
-                        .filter(Boolean) as Array<{ id: string; name: string; category?: string }>;
-                      
-                      return (
-                        <div
+                  {dataLoadError ? (
+                    <div className="text-center py-8">
+                      <p className="text-terracotta mb-4">
+                        {dataLoadError}
+                      </p>
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="inline-flex items-center gap-2 text-forest hover:text-terracotta font-medium"
+                      >
+                        Refresh Page
+                      </button>
+                    </div>
+                  ) : loadingRecs ? (
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-24 bg-mist rounded-2xl animate-pulse" />
+                      ))}
+                    </div>
+                  ) : rankedRecommendations.length > 0 ? (
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {rankedRecommendations.slice(0, DASHBOARD_READY_LIMIT).map((cocktail) => (
+                        <Link
                           key={cocktail._id}
+                          href={`/cocktails/${cocktail.slug?.current}`}
                           className="flex items-center gap-4 p-3 bg-cream hover:bg-mist rounded-2xl transition-all group"
                         >
-                          <Link
-                            href={`/cocktails/${cocktail.slug?.current}`}
-                            className="flex items-center gap-4 flex-1 min-w-0"
-                          >
-                            <Image
-                              src={cocktail.externalImageUrl || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4="}
-                              alt={cocktail.name}
-                              width={56}
-                              height={56}
-                              className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
-                              onError={(e) => {
-                                e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
-                              }}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
-                                {formatCocktailName(cocktail.name)}
-                              </p>
-                              {cocktail.missingIngredientNames.length > 0 && (
-                                <p className="text-sm text-sage truncate">
-                                  Missing: {cocktail.missingIngredientNames.slice(0, 2).join(", ")}
-                                  {cocktail.missingIngredientNames.length > 2 ? "…" : ""}
-                                </p>
-                              )}
-                            </div>
-                          </Link>
-                          {missingIngredients.length > 0 && (
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                await addItems(missingIngredients);
-                              }}
-                              disabled={shoppingLoading}
-                              className="flex-shrink-0 px-3 py-1.5 text-xs font-medium bg-olive/10 hover:bg-olive/20 text-olive rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                              title="Add missing ingredients to shopping list"
-                            >
-                              Add to list
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                          <Image
+                            src={cocktail.externalImageUrl || PLACEHOLDER_IMAGE}
+                            alt={cocktail.name}
+                            width={56}
+                            height={56}
+                            className="w-14 h-14 rounded-xl object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = PLACEHOLDER_IMAGE;
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
+                              {formatCocktailName(cocktail.name)}
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-sage mb-4">
+                        Add ingredients to your bar to see cocktails you can make.
+                      </p>
+                      <Link
+                        href="/mix"
+                        className="inline-flex items-center gap-2 text-terracotta hover:text-terracotta-dark font-medium"
+                      >
+                        <PlusCircleIcon className="w-5 h-5" />
+                        Build Your Bar
+                      </Link>
+                    </div>
+                  )}
+
+                  {!loadingRecs && rankedRecommendations.length > DASHBOARD_READY_LIMIT && (
+                    <div className="mt-4 text-sm text-sage">
+                      Showing {DASHBOARD_READY_LIMIT} of {rankedRecommendations.length}.{" "}
+                      <Link
+                        href="/mix?step=menu"
+                        className="text-terracotta hover:text-terracotta-dark font-medium"
+                      >
+                        View all
+                      </Link>
+                      .
+                    </div>
+                  )}
                 </div>
               </section>
-            ) : null}
 
-            {/* Recent Activity - Favorites + Recently Viewed */}
-            <section className="card overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-mist">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-forest/10 rounded-xl flex items-center justify-center">
-                    <ClockIcon className="w-5 h-5 text-forest" />
-                  </div>
-                  <h2 className="text-xl font-display font-bold text-forest">
-                    Recent Activity
-                  </h2>
-                </div>
-              </div>
-              <div className="p-6 space-y-6">
-                {/* Favorites */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-forest flex items-center gap-2">
-                      <HeartIcon className="w-5 h-5 text-terracotta" />
-                      Favorites
-                    </h3>
-                    <Link
-                      href="/cocktails"
-                      className="text-sm text-terracotta hover:text-terracotta-dark font-medium"
-                    >
-                      Browse →
-                    </Link>
-                  </div>
-                  <div className="min-h-[7rem] flex items-center">
-                    {favsLoading ? (
-                      <div className="flex gap-4">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
-                          <div key={i} className="flex-shrink-0 w-32">
-                            <div className="w-32 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
-                            <div className="h-4 bg-mist rounded animate-pulse" />
-                          </div>
-                        ))}
+              {!loadingRecs && almostThereCocktails.length > 0 ? (
+                <section className="card overflow-hidden order-3 md:order-none">
+                  <div className="flex items-center justify-between p-6 border-b border-mist">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-terracotta/20 rounded-xl flex items-center justify-center">
+                        <BeakerIcon className="w-5 h-5 text-terracotta" />
                       </div>
-                    ) : favorites.length > 0 ? (
-                      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-                        {favorites.slice(0, 6).map((fav) => {
-                          // Try to get image URL from Supabase cocktails table first, fallback to stored URL, then placeholder
-                          // Handle both null and empty string cases
-                          const supabaseImageUrl = favoriteImageUrls.get(fav.cocktail_id);
-                          const storedImageUrl = fav.cocktail_image_url;
-                          const imageUrl = 
-                            (supabaseImageUrl && supabaseImageUrl.trim() && supabaseImageUrl.trim().length > 0 ? supabaseImageUrl.trim() : null) ||
-                            (storedImageUrl && storedImageUrl.trim() && storedImageUrl.trim().length > 0 ? storedImageUrl.trim() : null) ||
-                            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDEyOCA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
-                          
-                          return (
+                      <div>
+                        <h2 className="text-xl font-display font-bold text-forest">
+                          Almost There
+                        </h2>
+                        <span className="text-sm text-sage block min-h-[1.25rem]">
+                          {almostThereCocktails.length} cocktail{almostThereCocktails.length !== 1 ? "s" : ""} close to ready
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleAddAllMissing}
+                        disabled={shoppingLoading}
+                        className="text-sm text-terracotta hover:text-terracotta-dark transition-colors font-medium disabled:opacity-50"
+                      >
+                        Add all missing →
+                      </button>
+                      <Link
+                        href="/mix"
+                        className="text-sm text-sage hover:text-forest transition-colors font-medium"
+                      >
+                        Build bar →
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {almostThereCocktails.slice(0, 6).map((cocktail) => {
+                        const missingIngredients = cocktail.missingIngredientIds
+                          .map(id => {
+                            const ing = allIngredients.find(i => i.id === id);
+                            return ing ? { id: ing.id, name: ing.name, category: ing.category } : null;
+                          })
+                          .filter(Boolean) as Array<{ id: string; name: string; category?: string }>;
+
+                        return (
+                          <div
+                            key={cocktail._id}
+                            className="flex items-center gap-4 p-3 bg-cream hover:bg-mist rounded-2xl transition-all group"
+                          >
                             <Link
-                              key={fav.id}
-                              href={`/cocktails/${fav.cocktail_slug}`}
-                              className="flex-shrink-0 w-32 group"
+                              href={`/cocktails/${cocktail.slug?.current}`}
+                              className="flex items-center gap-4 flex-1 min-w-0"
                             >
                               <Image
-                                src={imageUrl}
-                                alt={fav.cocktail_name || "Cocktail"}
-                                width={128}
-                                height={96}
-                                className="w-32 h-24 rounded-2xl object-cover mb-2"
+                                src={cocktail.externalImageUrl || PLACEHOLDER_IMAGE}
+                                alt={cocktail.name}
+                                width={56}
+                                height={56}
+                                className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
                                 onError={(e) => {
-                                  e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
+                                  e.currentTarget.src = PLACEHOLDER_IMAGE;
                                 }}
                               />
-                              <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
-                                {formatCocktailName(fav.cocktail_name || "Cocktail")}
-                              </p>
-                              {/* Cache-busting comment: v2 */}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sage text-sm">
-                        Save cocktails to favorites to see them here.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Drink notes */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-forest flex items-center gap-2">
-                      <PencilSquareIcon className="w-5 h-5 text-forest" />
-                      Your notes
-                    </h3>
-                  </div>
-                  <div className="min-h-[7rem] flex items-center">
-                    {notesLoading ? (
-                      <div className="flex gap-4">
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="flex-shrink-0 w-40">
-                            <div className="w-40 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
-                            <div className="h-4 bg-mist rounded animate-pulse" />
-                          </div>
-                        ))}
-                      </div>
-                    ) : cocktailNotes.length > 0 ? (
-                      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-                        {cocktailNotes.slice(0, 8).map((note) => {
-                          const storedImageUrl = note.cocktail_image_url;
-                          const imageUrl =
-                            storedImageUrl && storedImageUrl.trim()
-                              ? storedImageUrl.trim()
-                              : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
-
-                          return (
-                            <div key={note.id} className="flex-shrink-0 w-40">
-                              {note.cocktail_slug ? (
-                                <Link href={`/cocktails/${note.cocktail_slug}`} className="group block">
-                                  <Image
-                                    src={imageUrl}
-                                    alt={note.cocktail_name || "Cocktail"}
-                                    width={160}
-                                    height={96}
-                                    className="w-40 h-24 rounded-2xl object-cover mb-2"
-                                  />
-                                  <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
-                                    {formatCocktailName(note.cocktail_name || "Cocktail")}
-                                  </p>
-                                </Link>
-                              ) : (
-                                <>
-                                  <Image
-                                    src={imageUrl}
-                                    alt={note.cocktail_name || "Cocktail"}
-                                    width={160}
-                                    height={96}
-                                    className="w-40 h-24 rounded-2xl object-cover mb-2"
-                                  />
-                                  <p className="text-sm text-forest truncate">
-                                    {formatCocktailName(note.cocktail_name || "Cocktail")}
-                                  </p>
-                                </>
-                              )}
-                              <p className="text-xs text-sage line-clamp-3 mt-1">{note.notes}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sage text-sm">
-                        Add a private note from any recipe page — what to change, who liked it, try it again.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Skipped drinks */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-forest flex items-center gap-2">
-                      <HandThumbDownIcon className="w-5 h-5 text-terracotta" />
-                      Won&apos;t make again
-                    </h3>
-                  </div>
-                  <div className="min-h-[7rem] flex items-center">
-                    {skipsLoading ? (
-                      <div className="flex gap-4">
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="flex-shrink-0 w-32">
-                            <div className="w-32 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
-                            <div className="h-4 bg-mist rounded animate-pulse" />
-                          </div>
-                        ))}
-                      </div>
-                    ) : skips.length > 0 ? (
-                      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-                        {skips.slice(0, 8).map((skip) => {
-                          const storedImageUrl = skip.cocktail_image_url;
-                          const imageUrl =
-                            storedImageUrl && storedImageUrl.trim()
-                              ? storedImageUrl.trim()
-                              : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
-
-                          return (
-                            <div key={skip.id} className="flex-shrink-0 w-32 group">
-                              {skip.cocktail_slug ? (
-                                <Link href={`/cocktails/${skip.cocktail_slug}`}>
-                                  <Image
-                                    src={imageUrl}
-                                    alt={skip.cocktail_name || "Cocktail"}
-                                    width={128}
-                                    height={96}
-                                    className="w-32 h-24 rounded-2xl object-cover mb-2"
-                                  />
-                                  <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
-                                    {formatCocktailName(skip.cocktail_name || "Cocktail")}
-                                  </p>
-                                </Link>
-                              ) : (
-                                <>
-                                  <Image
-                                    src={imageUrl}
-                                    alt={skip.cocktail_name || "Cocktail"}
-                                    width={128}
-                                    height={96}
-                                    className="w-32 h-24 rounded-2xl object-cover mb-2"
-                                  />
-                                  <p className="text-sm text-forest truncate">
-                                    {formatCocktailName(skip.cocktail_name || "Cocktail")}
-                                  </p>
-                                </>
-                              )}
-                              {getNote(skip.cocktail_id)?.notes ? (
-                                <p className="text-xs text-sage line-clamp-2 mt-1">
-                                  {getNote(skip.cocktail_id)?.notes}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-forest group-hover:text-terracotta truncate transition-colors">
+                                  {formatCocktailName(cocktail.name)}
                                 </p>
-                              ) : null}
+                                {cocktail.missingIngredientNames.length > 0 && (
+                                  <p className="text-sm text-sage truncate">
+                                    Missing: {cocktail.missingIngredientNames.slice(0, 2).join(", ")}
+                                    {cocktail.missingIngredientNames.length > 2 ? "…" : ""}
+                                  </p>
+                                )}
+                              </div>
+                            </Link>
+                            {missingIngredients.length > 0 && (
                               <button
-                                type="button"
-                                onClick={() => unskipCocktail(skip.cocktail_id)}
-                                className="mt-1 text-xs font-medium text-terracotta hover:text-terracotta-dark"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  await addItems(missingIngredients);
+                                }}
+                                disabled={shoppingLoading}
+                                className="flex-shrink-0 px-3 py-1.5 text-xs font-medium bg-olive/10 hover:bg-olive/20 text-olive rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                title="Add missing ingredients to shopping list"
                               >
-                                Restore
+                                Add to list
                               </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sage text-sm">
-                        Skip a drink from any recipe page to hide it from Mix and emails.
-                      </p>
-                    )}
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                </section>
+              ) : null}
 
-                {/* Recently Viewed */}
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-forest flex items-center gap-2">
-                      <ClockIcon className="w-5 h-5 text-sage" />
-                      Recently Viewed
-                    </h3>
+              <section className="card overflow-hidden order-4 md:order-none">
+                <div className="flex items-center justify-between p-6 border-b border-mist">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-terracotta/15 rounded-xl flex items-center justify-center">
+                      <HeartIcon className="w-5 h-5 text-terracotta" />
+                    </div>
+                    <h2 className="text-xl font-display font-bold text-forest">
+                      Favorites
+                    </h2>
                   </div>
-                  {recentLoading ? (
+                  <Link
+                    href="/cocktails"
+                    className="text-sm text-terracotta hover:text-terracotta-dark font-medium"
+                  >
+                    Browse →
+                  </Link>
+                </div>
+                <div className="p-6">
+                  {favsLoading ? (
                     <div className="flex gap-4">
-                      {[1, 2, 3].map((i) => (
+                      {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="flex-shrink-0 w-32">
                           <div className="w-32 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
                           <div className="h-4 bg-mist rounded animate-pulse" />
                         </div>
                       ))}
                     </div>
-                  ) : recentlyViewed.length > 0 ? (
+                  ) : favorites.length > 0 ? (
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+                      {favorites.slice(0, 6).map((fav) => {
+                        const supabaseImageUrl = favoriteImageUrls.get(fav.cocktail_id);
+                        const storedImageUrl = fav.cocktail_image_url;
+                        const imageUrl =
+                          (supabaseImageUrl && supabaseImageUrl.trim() ? supabaseImageUrl.trim() : null) ||
+                          (storedImageUrl && storedImageUrl.trim() ? storedImageUrl.trim() : null) ||
+                          PLACEHOLDER_IMAGE;
+
+                        return (
+                          <Link
+                            key={fav.id}
+                            href={`/cocktails/${fav.cocktail_slug}`}
+                            className="flex-shrink-0 w-32 group"
+                          >
+                            <Image
+                              src={imageUrl}
+                              alt={fav.cocktail_name || "Cocktail"}
+                              width={128}
+                              height={96}
+                              className="w-32 h-24 rounded-2xl object-cover mb-2"
+                              onError={(e) => {
+                                e.currentTarget.src = PLACEHOLDER_IMAGE;
+                              }}
+                            />
+                            <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
+                              {formatCocktailName(fav.cocktail_name || "Cocktail")}
+                            </p>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sage text-sm">
+                      Save cocktails you like to see them here.
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              {!notesLoading && cocktailNotes.length > 0 ? (
+                <section className="card overflow-hidden order-5 md:order-none">
+                  <div className="flex items-center justify-between p-6 border-b border-mist">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-forest/10 rounded-xl flex items-center justify-center">
+                        <PencilSquareIcon className="w-5 h-5 text-forest" />
+                      </div>
+                      <h2 className="text-xl font-display font-bold text-forest">
+                        Your notes
+                      </h2>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+                      {cocktailNotes.slice(0, 8).map((note) => {
+                        const storedImageUrl = note.cocktail_image_url;
+                        const imageUrl =
+                          storedImageUrl && storedImageUrl.trim()
+                            ? storedImageUrl.trim()
+                            : PLACEHOLDER_IMAGE;
+
+                        return (
+                          <div key={note.id} className="flex-shrink-0 w-40">
+                            {note.cocktail_slug ? (
+                              <Link href={`/cocktails/${note.cocktail_slug}`} className="group block">
+                                <Image
+                                  src={imageUrl}
+                                  alt={note.cocktail_name || "Cocktail"}
+                                  width={160}
+                                  height={96}
+                                  className="w-40 h-24 rounded-2xl object-cover mb-2"
+                                />
+                                <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
+                                  {formatCocktailName(note.cocktail_name || "Cocktail")}
+                                </p>
+                              </Link>
+                            ) : (
+                              <>
+                                <Image
+                                  src={imageUrl}
+                                  alt={note.cocktail_name || "Cocktail"}
+                                  width={160}
+                                  height={96}
+                                  className="w-40 h-24 rounded-2xl object-cover mb-2"
+                                />
+                                <p className="text-sm text-forest truncate">
+                                  {formatCocktailName(note.cocktail_name || "Cocktail")}
+                                </p>
+                              </>
+                            )}
+                            <p className="text-xs text-sage line-clamp-3 mt-1">{note.notes}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
+              {!recentLoading && recentlyViewed.length > 0 ? (
+                <section className="card overflow-hidden order-6 md:order-none">
+                  <div className="flex items-center justify-between p-6 border-b border-mist">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-forest/10 rounded-xl flex items-center justify-center">
+                        <ClockIcon className="w-5 h-5 text-sage" />
+                      </div>
+                      <h2 className="text-xl font-display font-bold text-forest">
+                        Recently Viewed
+                      </h2>
+                    </div>
+                  </div>
+                  <div className="p-6">
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
                       {recentlyViewed.slice(0, 6).map((item) => {
-                        // Try to get image URL from Supabase cocktails table first, fallback to stored URL, then placeholder
-                        // Handle both null and empty string cases
                         const supabaseImageUrl = recentImageUrls.get(item.cocktail_id);
                         const storedImageUrl = item.cocktail_image_url;
-                        const imageUrl = 
-                          (supabaseImageUrl && supabaseImageUrl.trim() && supabaseImageUrl.trim().length > 0 ? supabaseImageUrl.trim() : null) ||
-                          (storedImageUrl && storedImageUrl.trim() && storedImageUrl.trim().length > 0 ? storedImageUrl.trim() : null) ||
-                          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
-                        
+                        const imageUrl =
+                          (supabaseImageUrl && supabaseImageUrl.trim() ? supabaseImageUrl.trim() : null) ||
+                          (storedImageUrl && storedImageUrl.trim() ? storedImageUrl.trim() : null) ||
+                          PLACEHOLDER_IMAGE;
+
                         return (
                           <Link
                             key={item.id}
@@ -958,7 +744,7 @@ export default function DashboardPage() {
                               height={96}
                               className="w-32 h-24 rounded-2xl object-cover mb-2"
                               onError={(e) => {
-                                e.currentTarget.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjY0IiB5PSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
+                                e.currentTarget.src = PLACEHOLDER_IMAGE;
                               }}
                             />
                             <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
@@ -968,134 +754,143 @@ export default function DashboardPage() {
                         );
                       })}
                     </div>
+                  </div>
+                </section>
+              ) : null}
+            </div>
+
+            <div className="contents md:flex md:flex-col md:gap-6">
+              <section className="card overflow-hidden order-2 md:order-none">
+                <div className="flex items-center justify-between p-6 border-b border-mist">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center">
+                      <BeakerIcon className="w-5 h-5 text-olive" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-display font-bold text-forest">
+                        My Bar
+                      </h2>
+                      <span className="text-sm text-sage block min-h-[1.25rem]">
+                        {barLoading ? "Loading..." : `${ingredientIds.length} ingredient${ingredientIds.length !== 1 ? "s" : ""}`}
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    href="/mix"
+                    className="px-4 py-2 text-sm text-terracotta hover:text-terracotta-dark hover:bg-terracotta/10 rounded-xl transition-colors font-medium"
+                  >
+                    Add
+                  </Link>
+                </div>
+                <div className="p-6">
+                  {barLoading ? (
+                    <div className="space-y-2">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="flex items-center gap-3 p-3 bg-cream rounded-xl animate-pulse">
+                          <div className="w-8 h-8 bg-mist rounded-lg" />
+                          <div className="flex-1 h-4 bg-mist rounded" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : ingredientIds.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 bg-mist rounded-full flex items-center justify-center mx-auto mb-4">
+                        <BeakerIcon className="w-8 h-8 text-sage" />
+                      </div>
+                      <p className="text-sage mb-4">Your bar is empty.</p>
+                      <Link
+                        href="/mix"
+                        className="text-terracotta hover:text-terracotta-dark font-medium"
+                      >
+                        Add your first ingredient →
+                      </Link>
+                    </div>
                   ) : (
-                    <p className="text-sage text-sm">
-                      Start exploring cocktails to build your history.
-                    </p>
+                    <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-thin">
+                      {ingredientIds.map((id) => {
+                        const ingredient = allIngredients.find(i => String(i.id) === String(id));
+
+                        if (process.env.NODE_ENV === 'development') {
+                          debugLog(`[DASHBOARD] Looking for ingredient ID ${id} (type: ${typeof id})`);
+                          debugLog(`[DASHBOARD] Found ingredient:`, ingredient ? `${ingredient.name} (${ingredient.id})` : 'NOT FOUND');
+                        }
+
+                        return (
+                          <div
+                            key={id}
+                            className="flex items-center justify-between px-4 py-3 bg-cream rounded-xl text-sm group"
+                          >
+                            <span className="text-forest">
+                              {ingredient?.name || id}
+                            </span>
+                            <button
+                              onClick={() => handleRemoveFromInventory(id)}
+                              className="text-sage hover:text-terracotta opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                              <XMarkIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
+              </section>
+
+              <div className="order-7 md:order-none">
+                <DashboardLearnCard />
               </div>
-            </section>
-          </div>
 
-          {/* Right Column - My Bar Sidebar */}
-          <div className="space-y-6">
-            <DashboardLearnCard />
-
-            {/* My Bar */}
-            <section className="card overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b border-mist">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-olive/20 rounded-xl flex items-center justify-center">
-                    <BeakerIcon className="w-5 h-5 text-olive" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-display font-bold text-forest">
-                      My Bar
-                    </h2>
-                    <span className="text-sm text-sage block min-h-[1.25rem]">
-                      {barLoading ? "Loading..." : `${ingredientIds.length} ingredient${ingredientIds.length !== 1 ? "s" : ""}`}
-                    </span>
-                  </div>
-                </div>
-                <Link
-                  href="/mix"
-                  className="px-4 py-2 text-sm text-terracotta hover:text-terracotta-dark hover:bg-terracotta/10 rounded-xl transition-colors font-medium"
-                >
-                  Add
-                </Link>
-              </div>
-              <div className="p-6">
-                {barLoading ? (
-                  <div className="space-y-2">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 bg-cream rounded-xl animate-pulse">
-                        <div className="w-8 h-8 bg-mist rounded-lg" />
-                        <div className="flex-1 h-4 bg-mist rounded" />
-                      </div>
-                    ))}
-                  </div>
-                ) : ingredientIds.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-mist rounded-full flex items-center justify-center mx-auto mb-4">
-                      <BeakerIcon className="w-8 h-8 text-sage" />
-                    </div>
-                    <p className="text-sage mb-4">Your bar is empty.</p>
-                    <Link
-                      href="/mix"
-                      className="text-terracotta hover:text-terracotta-dark font-medium"
-                    >
-                      Add your first ingredient →
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-thin">
-                    {ingredientIds.map((id) => {
-                      // Find the ingredient object for display
-                      // Convert both IDs to strings for comparison
-                      const ingredient = allIngredients.find(i => String(i.id) === String(id));
-
-                      // Debug logging
-                      if (process.env.NODE_ENV === 'development') {
-                        debugLog(`[DASHBOARD] Looking for ingredient ID ${id} (type: ${typeof id})`);
-                        debugLog(`[DASHBOARD] Found ingredient:`, ingredient ? `${ingredient.name} (${ingredient.id})` : 'NOT FOUND');
-                        debugLog(`[DASHBOARD] allIngredients sample:`, allIngredients.slice(0, 3).map(i => `${i.name} (${i.id})`));
-                      }
-
-                      return (
-                        <div
-                          key={id}
-                          className="flex items-center justify-between px-4 py-3 bg-cream rounded-xl text-sm group"
+              {!skipsLoading && skips.length > 0 ? (
+                <div className="order-8 md:order-none px-1">
+                  <button
+                    type="button"
+                    onClick={() => setSkipsExpanded((open) => !open)}
+                    className="flex items-center gap-1 text-sm text-sage hover:text-forest transition-colors"
+                    aria-expanded={skipsExpanded}
+                  >
+                    {skips.length} drink{skips.length !== 1 ? "s" : ""} hidden from Mix
+                    <ChevronDownIcon
+                      className={`w-4 h-4 transition-transform ${skipsExpanded ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {skipsExpanded ? (
+                    <ul className="mt-3 space-y-2">
+                      {skips.map((skip) => (
+                        <li
+                          key={skip.id}
+                          className="flex items-center justify-between gap-3 text-sm"
                         >
-                          <span className="text-forest">
-                            {ingredient?.name || id}
-                          </span>
+                          {skip.cocktail_slug ? (
+                            <Link
+                              href={`/cocktails/${skip.cocktail_slug}`}
+                              className="text-forest hover:text-terracotta truncate"
+                            >
+                              {formatCocktailName(skip.cocktail_name || "Cocktail")}
+                            </Link>
+                          ) : (
+                            <span className="text-forest truncate">
+                              {formatCocktailName(skip.cocktail_name || "Cocktail")}
+                            </span>
+                          )}
                           <button
-                            onClick={() => handleRemoveFromInventory(id)}
-                            className="text-sage hover:text-terracotta opacity-0 group-hover:opacity-100 transition-all"
+                            type="button"
+                            onClick={() => unskipCocktail(skip.cocktail_id)}
+                            className="shrink-0 text-xs font-medium text-terracotta hover:text-terracotta-dark"
                           >
-                            <XMarkIcon className="w-4 h-4" />
+                            Restore
                           </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* Quick Actions */}
-            <section className="card p-6">
-              <h3 className="text-lg font-display font-bold text-forest mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Link
-                  href="/mix"
-                  className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
-                >
-                  <span className="text-forest group-hover:text-terracotta transition-colors">Edit My Bar</span>
-                  <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
-                </Link>
-                <Link
-                  href="/cocktails"
-                  className="flex items-center justify-between p-3 bg-cream hover:bg-mist rounded-xl transition-colors group"
-                >
-                  <span className="text-forest group-hover:text-terracotta transition-colors">Browse Cocktails</span>
-                  <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-terracotta transition-colors" />
-                </Link>
-                {ingredientIds.length > 0 && (
-                  <ShareBarButton
-                    variant="menu"
-                    className="flex w-full items-center justify-between p-3 bg-olive/15 hover:bg-olive/25 rounded-xl transition-colors text-sm font-medium text-olive"
-                    showPreview={false}
-                  />
-                )}
-              </div>
-            </section>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           </div>
-        </div>
-      </MainContainer>
-    </div>
-  );
+        </MainContainer>
+      </div>
+    );
   } catch (error) {
     console.error('Dashboard error:', error);
     return (
@@ -1122,74 +917,4 @@ export default function DashboardPage() {
       </div>
     );
   }
-}
-
-// Stat Card Component
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  href,
-  color,
-}: {
-  icon: typeof BeakerIcon;
-  label: string;
-  value: number;
-  href: string;
-  color: "olive" | "terracotta" | "forest" | "sage";
-}) {
-  const colorClasses = {
-    olive: "text-olive bg-olive/10",
-    terracotta: "text-terracotta bg-terracotta/10",
-    forest: "text-forest bg-forest/10",
-    sage: "text-sage bg-sage/10",
-  };
-
-  return (
-    <Link
-      href={href}
-      className="card card-hover p-6"
-    >
-      <div className={`inline-flex p-2 rounded-xl ${colorClasses[color]} mb-3`}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <p className="text-3xl font-bold text-forest">{value}</p>
-      <p className="text-sm text-sage">{label}</p>
-    </Link>
-  );
-}
-
-// Badge Card Component
-function BadgeCard({ badge, locked }: { badge: BadgeDefinition & { locked?: boolean; earnedAt?: string }, locked: boolean }) {
-  return (
-    <div className={`relative group flex flex-col items-center p-3 bg-cream rounded-xl text-center transition-all ${
-      locked ? "opacity-60" : ""
-    }`}>
-      <div
-        className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-          locked ? "from-sage to-stone" : RARITY_COLORS[badge.rarity]
-        } flex items-center justify-center text-2xl mb-2`}
-      >
-        {badge.icon}
-      </div>
-      <p className={`text-xs font-medium line-clamp-2 ${locked ? "text-sage" : "text-forest"}`}>
-        {badge.name}
-      </p>
-      {locked && (
-        <div className="absolute inset-0 bg-white/5 rounded-xl flex items-center justify-center pointer-events-none">
-          <div className="text-sage text-xs">🔒</div>
-        </div>
-      )}
-
-      {/* Custom Tooltip */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2
-                      opacity-0 group-hover:opacity-100
-                      bg-forest text-cream text-xs font-medium
-                      px-2 py-1 rounded-lg shadow-lg
-                      whitespace-nowrap pointer-events-none
-                      transition-opacity duration-200 z-50">
-        {badge.criteria}
-      </div>
-    </div>
-  );
 }
