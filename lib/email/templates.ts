@@ -393,6 +393,7 @@ export function confirmEmailTemplate({
           <div class="info-box" style="background-color: #F9F7F2; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #E6EBE4;">
             <p style="margin: 0 0 8px 0; font-size: 14px; color: #3A4D39;">✦ <strong>Personalized recommendations</strong> based on your taste</p>
             <p style="margin: 0 0 8px 0; font-size: 14px; color: #3A4D39;">✦ <strong>Save your favorite recipes</strong> for easy access</p>
+            <p style="margin: 0 0 8px 0; font-size: 14px; color: #3A4D39;">✦ <strong>Private notes and skips</strong> so MixWise remembers what you actually like</p>
             <p style="margin: 0; font-size: 14px; color: #3A4D39;">✦ <strong>Build your home bar inventory</strong> and see what you can make</p>
           </div>
           
@@ -448,6 +449,7 @@ You're just one step away from discovering your next favorite cocktail.
 Confirm your email to unlock:
 ✦ Personalized recommendations based on your taste
 ✦ Save your favorite recipes for easy access
+✦ Private notes and skips so MixWise remembers what you actually like
 ✦ Build your home bar inventory and see what you can make
 
 Click this link to confirm your email:
@@ -723,7 +725,7 @@ export function finishAccountSetupTemplate({
             Your account is ready
           </h2>
           <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 20px 0; line-height: 1.65;">
-            Thanks for joining MixWise. Click below to open your account — you can save your bar, favorites, and shopping list across devices.
+            Thanks for joining MixWise. Click below to open your account — you can save your bar, favorites, tasting notes, and shopping list across devices.
           </p>
           <div class="info-box" style="background-color: #F9F7F2; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #E6EBE4;">
             <p style="margin: 0 0 8px 0; font-size: 14px; color: #3A4D39;">✦ No password needed to get started</p>

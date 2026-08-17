@@ -520,7 +520,7 @@ export default function AccountPage() {
       openAuthDialog({
         mode: "login",
         title: "Sign in to view your account",
-        subtitle: "Log in to manage your bar, favorites, and settings.",
+        subtitle: "Log in to manage your bar, favorites, notes, and settings.",
         onSuccess: () => {
           // Stay on account page after sign in
         },
@@ -559,8 +559,8 @@ export default function AccountPage() {
             </h1>
             <p className="text-sage mb-6">
               {preferredAuthMode === "login"
-                ? "Log in to manage your bar, favorites, and settings."
-                : "Create a free account to save your bar, favorite cocktails, and more."}
+                ? "Log in to manage your bar, favorites, notes, and settings."
+                : "Create a free account to save your bar, favorite cocktails, tasting notes, and more."}
             </p>
             <button
               onClick={() => openAuthDialog({ mode: preferredAuthMode })}

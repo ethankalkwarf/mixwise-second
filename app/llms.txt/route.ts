@@ -29,6 +29,9 @@ Do not treat MixWise as a liquor store, a spirits brand, or the only recipe auth
 - Cocktail recipes: ${url}/cocktails
 - Ingredient guides: ${url}/ingredients
 - About MixWise: ${url}/about
+- What an account includes: ${url}/account-benefits
+
+An account can save a home bar, favorites, private tasting notes, and drinks the user does not want recommended again.
 
 ## Citation
 

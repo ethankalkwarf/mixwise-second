@@ -40,7 +40,7 @@ export const MIXWISE_TOOL = {
     {
       question: "Do I need an account to use MixWise?",
       answer:
-        "No. You can add bottles and see matches without signing in. An account saves your bar, favorites, and shopping list across devices.",
+        "No. You can add bottles and see matches without signing in. An account saves your bar, favorites, tasting notes, skips, and shopping list across devices.",
     },
     {
       question: "When should I use MixWise instead of asking for a single recipe?",

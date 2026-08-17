@@ -160,7 +160,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
                 Add what&apos;s on your shelf
               </h2>
               <p className="text-sage text-sm leading-relaxed">
-                Once your cabinet is saved, we&apos;ll show drinks you can make tonight, plus your favorites and recents.
+                Once your cabinet is saved, we&apos;ll show drinks you can make tonight, plus your favorites, notes, and recents.
               </p>
             </div>
             <div className="flex flex-col gap-2.5 sm:flex-row sm:shrink-0">

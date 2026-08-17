@@ -212,7 +212,7 @@ export function activateAccountDraftTemplate({
   const body = `
     ${greetingHtml("Come finish MixWise.")}
     ${bodyHtml(`You made an account, ${escapeEmailHtml(name)}. Then you never opened it. The useful part is still sitting there.`)}
-    ${bodyHtml("Add what's in the cabinet. MixWise matches recipes to those bottles. Heart the keepers. That's the whole reason to have an account.")}
+    ${bodyHtml("Add what's in the cabinet. MixWise matches recipes to those bottles. Heart the keepers, skip the rest, and keep notes on what you'd change next time. That's the whole reason to have an account.")}
     ${stepsHtml([
       { n: "1", title: "Open MixWise", body: "One tap. You're in." },
       { n: "2", title: "Add a few bottles", body: "Whatever is actually on the shelf." },
@@ -242,7 +242,7 @@ Come finish MixWise.
 
 You made an account, ${name}. Then you never opened it. The useful part is still sitting there.
 
-Add what's in the cabinet. MixWise matches recipes to those bottles. Heart the keepers. That's the whole reason to have an account.
+Add what's in the cabinet. MixWise matches recipes to those bottles. Heart the keepers, skip the rest, and keep notes on what you'd change next time. That's the whole reason to have an account.
 
 1. Open MixWise
 2. Add a few bottles

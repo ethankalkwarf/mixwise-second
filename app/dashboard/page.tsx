@@ -370,7 +370,7 @@ export default function DashboardPage() {
               Your Personal Dashboard
             </h1>
             <p className="text-sage mb-8 max-w-md mx-auto">
-              Sign in to track your bar inventory, favorites, recommendations, and badges.
+              Sign in to track your bar inventory, favorites, notes, recommendations, and badges.
             </p>
             <button
               onClick={() => openAuthDialog({ mode: preferredAuthMode })}
@@ -399,7 +399,7 @@ export default function DashboardPage() {
                 {greeting}
               </h1>
               <p className="text-sage mt-1">
-                Track your bar, favorites, and progress
+                Track your bar, favorites, notes, and progress
               </p>
             </div>
           {ingredientIds.length > 0 && (

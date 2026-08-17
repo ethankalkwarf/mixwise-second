@@ -15,7 +15,7 @@ const STEPS = [
   },
   {
     title: "Pour with confidence",
-    body: "Save favorites, build a shopping list, and treat home bartending like a craft — not a scavenger hunt.",
+    body: "Save favorites, jot tasting notes, skip drinks you won\u2019t remake, and treat home bartending like a craft \u2014 not a scavenger hunt.",
   },
 ];
 
@@ -42,8 +42,8 @@ export function AboutPageContent() {
               <span className="font-medium">kept&nbsp;simple</span>
             </h1>
             <p className="max-w-md [text-wrap:pretty] text-lg leading-relaxed text-mist">
-              One place for the recipes you want, the bottles you have, and the
-              confidence to pour something good&nbsp;tonight.
+              One place for the recipes you want, the bottles you have, and a
+              memory of what you&apos;d actually pour again.
             </p>
           </div>
         </div>

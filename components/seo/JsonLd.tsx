@@ -202,7 +202,8 @@ export function OrganizationSchema() {
         featureList: [
           "Match cocktails to ingredients you already have",
           "See drinks that are one bottle away",
-          "Save a home bar, favorites, and shopping list",
+          "Save a home bar, favorites, tasting notes, and shopping list",
+          "Skip drinks you won't make again",
         ],
       },
     ],
@@ -303,7 +304,8 @@ export function SoftwareApplicationSchema() {
     featureList: [
       "Match cocktails to ingredients you already have",
       "See drinks that are one bottle away",
-      "Save a home bar, favorites, and shopping list",
+      "Save a home bar, favorites, tasting notes, and shopping list",
+      "Skip drinks you won't make again",
     ],
   };
 

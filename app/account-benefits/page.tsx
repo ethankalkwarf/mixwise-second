@@ -8,10 +8,10 @@ import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import {
   BeakerIcon,
   HeartIcon,
+  PencilSquareIcon,
   SparklesIcon,
   TrophyIcon,
   ShareIcon,
-  UserGroupIcon,
   CheckCircleIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
@@ -30,6 +30,14 @@ const BENEFITS = [
     description: "Build your personal collection of go-to recipes. Access them anytime from your dashboard.",
     color: "text-terracotta",
     bgColor: "bg-terracotta/10",
+  },
+  {
+    icon: PencilSquareIcon,
+    title: "Tasting notes and skips",
+    description:
+      "Write private notes on any recipe. Skip drinks you won't remake so Mix and emails stop suggesting them.",
+    color: "text-forest",
+    bgColor: "bg-forest/10",
   },
   {
     icon: SparklesIcon,
@@ -52,13 +60,6 @@ const BENEFITS = [
     color: "text-olive",
     bgColor: "bg-olive/10",
   },
-  {
-    icon: UserGroupIcon,
-    title: "Community recipes (coming soon)",
-    description: "Discover and share recipes with the MixWise community. Rate and review cocktails from fellow enthusiasts.",
-    color: "text-forest",
-    bgColor: "bg-forest/10",
-  },
 ];
 
 export default function AccountBenefitsPage() {
@@ -77,8 +78,8 @@ export default function AccountBenefitsPage() {
           </h1>
 
           <p className="text-base sm:text-lg text-sage max-w-2xl mx-auto mb-8">
-            Start using MixWise with our current free features today. Save your bar, get personalized recommendations,
-            track your progress, and unlock achievements.
+            Start using MixWise with our current free features today. Save your bar, keep tasting notes,
+            skip drinks you won&apos;t remake, and get personalized recommendations.
           </p>
 
           {isAuthenticated ? (
@@ -130,6 +131,8 @@ export default function AccountBenefitsPage() {
             {[
               "Unlimited bar inventory",
               "Unlimited favorites",
+              "Private tasting notes",
+              "Skip drinks you won't remake",
               "Personalized recommendations",
               "Progress tracking",
               "Achievement badges",

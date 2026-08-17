@@ -25,6 +25,13 @@ const FEATURES = [
     label: "Ingredient guides",
     accent: "text-olive",
   },
+  {
+    title: "Your taste",
+    body: "Heart the keepers, skip drinks you won\u2019t remake, and leave private notes so MixWise remembers what you actually like.",
+    href: "/account-benefits",
+    label: "See what\u2019s included",
+    accent: "text-terracotta",
+  },
 ] as const;
 
 export function PlatformSection() {
@@ -55,7 +62,7 @@ export function PlatformSection() {
           <div className="mx-auto h-1 w-20 rounded-full bg-terracotta md:mx-0" />
         </div>
 
-        <div className="mb-16 grid gap-12 md:mb-20 md:grid-cols-3 md:gap-10 lg:gap-14">
+        <div className="mb-16 grid gap-12 md:mb-20 md:grid-cols-2 lg:grid-cols-4 md:gap-10 lg:gap-10">
           {FEATURES.map((feature, index) => (
             <div
               key={feature.title}

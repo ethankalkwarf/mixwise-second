@@ -417,10 +417,10 @@ export function AuthDialog({
                       </Dialog.Title>
                       <p className="text-sage text-sm">
                         {subtitle || (mode === "login"
-                          ? "Sign in to access your saved cocktails, bar inventory, and more."
+                          ? "Sign in to access your saved cocktails, notes, bar inventory, and more."
                           : mode === "reset"
                           ? "Enter your email address and we'll send you a link to reset your password."
-                          : "Save your bar, favorite cocktails, and get personalized recommendations.")}
+                          : "Save your bar, favorite cocktails, tasting notes, and get personalized recommendations.")}
                       </p>
                     </div>
 

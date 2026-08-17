@@ -36,8 +36,8 @@ export function GuestExperienceSection() {
             </span>
           </h2>
           <p className="mb-8 max-w-md [text-wrap:pretty] text-lg leading-relaxed text-sage">
-            See what you can make&nbsp;tonight, pick up a new technique, and keep
-            a running list of drinks worth&nbsp;repeating.
+            See what you can make&nbsp;tonight, skip what you won&apos;t remake, and keep
+            notes on drinks worth&nbsp;repeating.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <JoinCtaButton className="inline-flex items-center justify-center rounded-full bg-terracotta px-8 py-3 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark" />

@@ -2,7 +2,7 @@ import { generatePageMetadata } from "@/lib/seo";
 
 export const metadata = generatePageMetadata({
   title: "Dashboard",
-  description: "Your MixWise bar, favorites, and cocktail recommendations.",
+  description: "Your MixWise bar, favorites, tasting notes, and cocktail recommendations.",
   path: "/dashboard",
   noIndex: true,
 });

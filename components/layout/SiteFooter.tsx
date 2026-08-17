@@ -46,8 +46,8 @@ export function SiteFooter() {
               <BrandLogo variant="light" size="lg" />
             </div>
             <p className="text-stone text-sm leading-relaxed max-w-sm mb-6">
-              A home bar, made easier. Discover recipes, learn techniques,
-              and find drinks you can make with what you have.
+              A home bar, made easier. Discover recipes, mix with what you have,
+              keep tasting notes, and skip drinks you won&apos;t remake.
             </p>
             {isAuthenticated ? (
               <div className="flex flex-wrap gap-3">

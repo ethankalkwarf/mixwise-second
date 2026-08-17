@@ -23,7 +23,7 @@ function JoinContent() {
         <h1 className="font-display text-3xl font-bold text-forest sm:text-4xl">
           You&apos;re already in.
         </h1>
-        <p className="mt-3 text-sage">Your bar, favorites, and weekly drinks live here.</p>
+        <p className="mt-3 text-sage">Your bar, favorites, notes, and weekly drinks live here.</p>
         <Link
           href="/dashboard"
           className="mt-8 inline-flex rounded-full bg-terracotta px-6 py-3 text-sm font-medium text-cream hover:bg-terracotta-dark"
@@ -45,7 +45,7 @@ function JoinContent() {
         </h1>
         <p className="mt-4 max-w-md text-base leading-relaxed text-sage">
           {fromList
-            ? "Set a password. MixWise keeps the cabinet, the keepers, and the bottles you're missing."
+            ? "Set a password. MixWise keeps the cabinet, the keepers, your notes, and the bottles you're missing."
             : "Add what's in the cabinet once. MixWise matches every recipe to the bottles you already have."}
         </p>
         {error && (

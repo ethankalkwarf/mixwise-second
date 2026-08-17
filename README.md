@@ -2,7 +2,7 @@
 
 **A smarter way to make cocktails at home.**
 
-MixWise is a cocktail platform for better drinks at home: curated recipes, a mix-from-your-bar tool, and accounts for favorites, shopping lists, and a shareable bar.
+MixWise is a cocktail platform for better drinks at home: curated recipes, a mix-from-your-bar tool, and accounts for favorites, tasting notes, skips, shopping lists, and a shareable bar.
 
 **Live site:** [https://www.getmixwise.com](https://www.getmixwise.com)
 

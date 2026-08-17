@@ -65,12 +65,12 @@ export function preferredAuthCopy(mode: PreferredAuthMode = getPreferredAuthMode
   if (mode === "login") {
     return {
       title: "Welcome back to MixWise",
-      subtitle: "Sign in to access your saved cocktails, bar inventory, and more.",
+      subtitle: "Sign in to access your saved cocktails, notes, bar inventory, and more.",
     };
   }
   return {
     title: "Create your free MixWise account",
-    subtitle: "Save your bar, favorite cocktails, and get personalized recommendations.",
+    subtitle: "Save your bar, favorite cocktails, tasting notes, and get personalized recommendations.",
   };
 }
 
