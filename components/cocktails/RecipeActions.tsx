@@ -2,8 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { FavoriteButton } from "./FavoriteButton";
+import { NoteButton } from "./NoteButton";
 import { SkipButton } from "./SkipButton";
 import { ShareButtons } from "./ShareButtons";
+import { useCocktailNotes } from "@/hooks/useCocktailNotes";
 import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 import { useRecordCocktailView } from "@/hooks/useRecentlyViewed";
 import { useUser } from "@/components/auth/UserProvider";
@@ -24,9 +26,10 @@ interface RecipeActionsProps {
 export function RecipeActions({ cocktail }: RecipeActionsProps) {
   const recordView = useRecordCocktailView();
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
-  const { isSkipped, getSkip } = useCocktailSkips();
+  const { isSkipped } = useCocktailSkips();
+  const { getNote } = useCocktailNotes();
   const skipped = isSkipped(cocktail.id);
-  const skipNote = getSkip(cocktail.id)?.notes;
+  const note = getNote(cocktail.id)?.notes;
   const supabase = getSupabaseClient();
   const checkedBadgesFor = useRef<string | null>(null);
   const shareUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/cocktails/${cocktail.slug}`;
@@ -81,6 +84,17 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
           showLabel={false}
           className="flex-shrink-0"
         />
+        <NoteButton
+          cocktail={{
+            id: cocktail.id,
+            name: cocktail.name,
+            slug: cocktail.slug,
+            imageUrl: cocktail.image_url ?? undefined,
+          }}
+          size="lg"
+          showLabel={false}
+          className="flex-shrink-0"
+        />
         <SkipButton
           cocktail={{
             id: cocktail.id,
@@ -99,11 +113,18 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
           description={`Learn how to make a ${cocktail.name} cocktail with ingredients and instructions.`}
         />
       </div>
-      {skipped ? (
-        <p className="text-sm text-sage">
-          Hidden from your recommendations.
-          {skipNote ? ` Note: ${skipNote}` : ""}
-        </p>
+      {skipped || note ? (
+        <div className="space-y-1">
+          {skipped ? (
+            <p className="text-sm text-sage">Hidden from your recommendations.</p>
+          ) : null}
+          {note ? (
+            <p className="text-sm text-forest/80">
+              <span className="font-medium text-forest">Your note: </span>
+              {note}
+            </p>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

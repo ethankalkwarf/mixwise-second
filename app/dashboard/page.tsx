@@ -9,6 +9,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCocktailSkips } from "@/hooks/useCocktailSkips";
+import { useCocktailNotes } from "@/hooks/useCocktailNotes";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useShoppingList } from "@/hooks/useShoppingList";
@@ -26,6 +27,7 @@ import { RARITY_COLORS } from "@/lib/badges";
 import {
   BeakerIcon,
   HeartIcon,
+  PencilSquareIcon,
   HandThumbDownIcon,
   ClockIcon,
   TrophyIcon,
@@ -59,6 +61,7 @@ export default function DashboardPage() {
   const { ingredientIds, isLoading: barLoading, removeIngredient } = useBarIngredients();
   const { favorites, isLoading: favsLoading } = useFavorites();
   const { skips, skipIds, isLoading: skipsLoading, unskipCocktail } = useCocktailSkips();
+  const { notes: cocktailNotes, isLoading: notesLoading, getNote } = useCocktailNotes();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const { addItems, isLoading: shoppingLoading, itemCount: shoppingCount } = useShoppingList();
 
@@ -755,6 +758,75 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
+                {/* Drink notes */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-forest flex items-center gap-2">
+                      <PencilSquareIcon className="w-5 h-5 text-forest" />
+                      Your notes
+                    </h3>
+                  </div>
+                  <div className="min-h-[7rem] flex items-center">
+                    {notesLoading ? (
+                      <div className="flex gap-4">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="flex-shrink-0 w-40">
+                            <div className="w-40 h-24 bg-mist rounded-2xl mb-2 animate-pulse" />
+                            <div className="h-4 bg-mist rounded animate-pulse" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : cocktailNotes.length > 0 ? (
+                      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+                        {cocktailNotes.slice(0, 8).map((note) => {
+                          const storedImageUrl = note.cocktail_image_url;
+                          const imageUrl =
+                            storedImageUrl && storedImageUrl.trim()
+                              ? storedImageUrl.trim()
+                              : "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9Ijk2IiB2aWV3Qm94PSIwIDAgMTI4IDk2IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSI5NiIgZmlsbD0iI0U2RUI0NCIvPgo8dGV4dCB4PSI2NCIgeT0iNDgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzVGNkY1RiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+44Gjwpc8L3RleHQ+Cjwvc3ZnPg==";
+
+                          return (
+                            <div key={note.id} className="flex-shrink-0 w-40">
+                              {note.cocktail_slug ? (
+                                <Link href={`/cocktails/${note.cocktail_slug}`} className="group block">
+                                  <Image
+                                    src={imageUrl}
+                                    alt={note.cocktail_name || "Cocktail"}
+                                    width={160}
+                                    height={96}
+                                    className="w-40 h-24 rounded-2xl object-cover mb-2"
+                                  />
+                                  <p className="text-sm text-forest group-hover:text-terracotta truncate transition-colors">
+                                    {formatCocktailName(note.cocktail_name || "Cocktail")}
+                                  </p>
+                                </Link>
+                              ) : (
+                                <>
+                                  <Image
+                                    src={imageUrl}
+                                    alt={note.cocktail_name || "Cocktail"}
+                                    width={160}
+                                    height={96}
+                                    className="w-40 h-24 rounded-2xl object-cover mb-2"
+                                  />
+                                  <p className="text-sm text-forest truncate">
+                                    {formatCocktailName(note.cocktail_name || "Cocktail")}
+                                  </p>
+                                </>
+                              )}
+                              <p className="text-xs text-sage line-clamp-3 mt-1">{note.notes}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sage text-sm">
+                        Add a private note from any recipe page — what to change, who liked it, try it again.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 {/* Skipped drinks */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -811,8 +883,10 @@ export default function DashboardPage() {
                                   </p>
                                 </>
                               )}
-                              {skip.notes ? (
-                                <p className="text-xs text-sage line-clamp-2 mt-1">{skip.notes}</p>
+                              {getNote(skip.cocktail_id)?.notes ? (
+                                <p className="text-xs text-sage line-clamp-2 mt-1">
+                                  {getNote(skip.cocktail_id)?.notes}
+                                </p>
                               ) : null}
                               <button
                                 type="button"

@@ -20,9 +20,8 @@ interface UseCocktailSkipsResult {
   isLoading: boolean;
   isSkipped: (cocktailId: string) => boolean;
   getSkip: (cocktailId: string) => CocktailSkip | undefined;
-  skipCocktail: (cocktail: SkipCocktailInput, notes?: string | null) => Promise<boolean>;
+  skipCocktail: (cocktail: SkipCocktailInput) => Promise<boolean>;
   unskipCocktail: (cocktailId: string) => Promise<boolean>;
-  updateSkipNotes: (cocktailId: string, notes: string) => Promise<boolean>;
   refresh: () => Promise<void>;
 }
 
@@ -102,37 +101,31 @@ export function useCocktailSkips(): UseCocktailSkipsResult {
     openAuthDialog({
       title: "Skip drinks you won't make",
       subtitle:
-        "Log in or create a free account to hide drinks from Mix and keep private notes.",
+        "Log in or create a free account to hide drinks from Mix and recommendations.",
     });
     return false;
   }, [isAuthenticated, user, openAuthDialog]);
 
   const skipCocktail = useCallback(
-    async (cocktail: SkipCocktailInput, notes?: string | null) => {
+    async (cocktail: SkipCocktailInput) => {
       if (!requireAuth() || !user) return false;
 
-      const trimmedNotes = notes?.trim() || null;
       const now = new Date().toISOString();
       const existing = skips.find((skip) => skip.cocktail_id === cocktail.id);
+      if (existing) return true;
 
-      const optimistic: CocktailSkip = existing
-        ? { ...existing, notes: trimmedNotes, updated_at: now }
-        : {
-            id: -Date.now(),
-            user_id: user.id,
-            cocktail_id: cocktail.id,
-            cocktail_name: cocktail.name,
-            cocktail_slug: cocktail.slug || null,
-            cocktail_image_url: cocktail.imageUrl || null,
-            notes: trimmedNotes,
-            created_at: now,
-            updated_at: now,
-          };
+      const optimistic: CocktailSkip = {
+        id: -Date.now(),
+        user_id: user.id,
+        cocktail_id: cocktail.id,
+        cocktail_name: cocktail.name,
+        cocktail_slug: cocktail.slug || null,
+        cocktail_image_url: cocktail.imageUrl || null,
+        created_at: now,
+        updated_at: now,
+      };
 
-      setSkips((prev) => [
-        optimistic,
-        ...prev.filter((skip) => skip.cocktail_id !== cocktail.id),
-      ]);
+      setSkips((prev) => [optimistic, ...prev]);
 
       const { data, error } = await supabase
         .from("cocktail_skips")
@@ -143,7 +136,6 @@ export function useCocktailSkips(): UseCocktailSkipsResult {
             cocktail_name: cocktail.name,
             cocktail_slug: cocktail.slug,
             cocktail_image_url: cocktail.imageUrl,
-            notes: trimmedNotes,
             updated_at: now,
           },
           { onConflict: "user_id,cocktail_id" }
@@ -166,11 +158,7 @@ export function useCocktailSkips(): UseCocktailSkipsResult {
         ]);
       }
 
-      if (!existing) {
-        toast.info("Won't recommend this again");
-      } else {
-        toast.success("Note saved");
-      }
+      toast.info("Won't recommend this again");
       return true;
     },
     [requireAuth, user, skips, supabase, toast, loadSkips]
@@ -202,41 +190,6 @@ export function useCocktailSkips(): UseCocktailSkipsResult {
     [requireAuth, user, skips, supabase, toast]
   );
 
-  const updateSkipNotes = useCallback(
-    async (cocktailId: string, notes: string) => {
-      if (!requireAuth() || !user) return false;
-
-      const trimmedNotes = notes.trim() || null;
-      const now = new Date().toISOString();
-
-      setSkips((prev) =>
-        prev.map((skip) =>
-          skip.cocktail_id === cocktailId
-            ? { ...skip, notes: trimmedNotes, updated_at: now }
-            : skip
-        )
-      );
-
-      const { error } = await supabase
-        .from("cocktail_skips")
-        .update({ notes: trimmedNotes, updated_at: now })
-        .eq("user_id", user.id)
-        .eq("cocktail_id", cocktailId);
-
-      if (error) {
-        console.error("Error updating skip notes:", error);
-        toast.error("Failed to save note");
-        lastFetchedUserId.current = null;
-        await loadSkips(user.id);
-        return false;
-      }
-
-      toast.success("Note saved");
-      return true;
-    },
-    [requireAuth, user, supabase, toast, loadSkips]
-  );
-
   const refresh = useCallback(async () => {
     if (!isAuthenticated || !user) return;
     lastFetchedUserId.current = null;
@@ -253,7 +206,6 @@ export function useCocktailSkips(): UseCocktailSkipsResult {
     getSkip,
     skipCocktail,
     unskipCocktail,
-    updateSkipNotes,
     refresh,
   };
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { HandThumbDownIcon } from "@heroicons/react/24/outline";
-import { HandThumbDownIcon as HandThumbDownSolidIcon } from "@heroicons/react/24/solid";
-import { useCocktailSkips } from "@/hooks/useCocktailSkips";
+import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { PencilSquareIcon as PencilSquareSolidIcon } from "@heroicons/react/24/solid";
+import { useCocktailNotes } from "@/hooks/useCocktailNotes";
 import { useUser } from "@/components/auth/UserProvider";
-import { SkipDrinkDialog } from "./SkipDrinkDialog";
+import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { CocktailNoteDialog } from "./CocktailNoteDialog";
 
-interface SkipButtonProps {
+interface NoteButtonProps {
   cocktail: {
     id: string;
     name: string;
@@ -19,16 +20,18 @@ interface SkipButtonProps {
   className?: string;
 }
 
-export function SkipButton({
+export function NoteButton({
   cocktail,
   size = "md",
   showLabel = false,
   className = "",
-}: SkipButtonProps) {
+}: NoteButtonProps) {
   const { isAuthenticated } = useUser();
-  const { isSkipped, isLoading, skipCocktail, unskipCocktail } = useCocktailSkips();
+  const { openAuthDialog } = useAuthDialog();
+  const { isLoading, getNote, saveNote, deleteNote } = useCocktailNotes();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const skipped = isSkipped(cocktail.id);
+  const existing = getNote(cocktail.id);
+  const hasNote = Boolean(existing?.notes);
 
   const sizeClasses = {
     sm: "p-1.5",
@@ -46,7 +49,11 @@ export function SkipButton({
     e.preventDefault();
     e.stopPropagation();
     if (!isAuthenticated) {
-      await skipCocktail(cocktail);
+      openAuthDialog({
+        title: "Save notes on drinks",
+        subtitle:
+          "Log in or create a free account to keep private tasting notes on any cocktail.",
+      });
       return;
     }
     setDialogOpen(true);
@@ -68,44 +75,44 @@ export function SkipButton({
           ${sizeClasses[size]}
           ${className}
           group flex items-center gap-2 rounded-lg transition-all
-          ${skipped
-            ? "text-terracotta hover:text-terracotta-dark"
-            : "text-slate-400 hover:text-terracotta"
+          ${hasNote
+            ? "text-forest hover:text-olive"
+            : "text-slate-400 hover:text-forest"
           }
-          hover:bg-terracotta/10
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta/50
+          hover:bg-forest/10
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/40
         `}
         aria-label={
-          skipped
-            ? `Edit skip for ${cocktail.name}`
-            : `Skip ${cocktail.name} so it won't be recommended`
+          hasNote
+            ? `Edit your note on ${cocktail.name}`
+            : `Add a note on ${cocktail.name}`
         }
-        aria-pressed={skipped}
+        aria-pressed={hasNote}
       >
-        {skipped ? (
-          <HandThumbDownSolidIcon className={iconSizes[size]} />
+        {hasNote ? (
+          <PencilSquareSolidIcon className={iconSizes[size]} />
         ) : (
-          <HandThumbDownIcon className={iconSizes[size]} />
+          <PencilSquareIcon className={iconSizes[size]} />
         )}
         {showLabel && (
           <span className="text-sm font-medium">
-            {skipped ? "Skipped" : "Skip"}
+            {hasNote ? "Note" : "Add note"}
           </span>
         )}
       </button>
 
-      <SkipDrinkDialog
+      <CocktailNoteDialog
         isOpen={dialogOpen}
         cocktailName={cocktail.name}
-        isSkipped={skipped && isAuthenticated}
+        initialNotes={existing?.notes}
         onClose={() => setDialogOpen(false)}
-        onSkip={async () => {
-          await skipCocktail(cocktail);
+        onSave={async (notes) => {
+          await saveNote(cocktail, notes);
         }}
-        onRestore={
-          skipped
+        onDelete={
+          hasNote
             ? async () => {
-                await unskipCocktail(cocktail.id);
+                await deleteNote(cocktail.id);
               }
             : undefined
         }

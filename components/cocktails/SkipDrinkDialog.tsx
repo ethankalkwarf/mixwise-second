@@ -6,35 +6,28 @@ import { XMarkIcon, HandThumbDownIcon } from "@heroicons/react/24/outline";
 type Props = {
   isOpen: boolean;
   cocktailName: string;
-  initialNotes?: string | null;
   isSkipped: boolean;
   onClose: () => void;
-  onSkip: (notes: string) => Promise<void> | void;
+  onSkip: () => Promise<void> | void;
   onRestore?: () => Promise<void> | void;
 };
 
 export function SkipDrinkDialog({
   isOpen,
   cocktailName,
-  initialNotes,
   isSkipped,
   onClose,
   onSkip,
   onRestore,
 }: Props) {
-  const [notes, setNotes] = useState(initialNotes || "");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) setNotes(initialNotes || "");
-  }, [isOpen, initialNotes]);
 
   if (!isOpen) return null;
 
   const handleSkip = async () => {
     setSaving(true);
     try {
-      await onSkip(notes);
+      await onSkip();
       onClose();
     } finally {
       setSaving(false);
@@ -87,24 +80,9 @@ export function SkipDrinkDialog({
           </div>
           <p className="text-sage leading-relaxed">
             {isSkipped
-              ? `We'll keep ${cocktailName} off Mix and your recommendations. Add a private note if you want.`
+              ? `We'll keep ${cocktailName} off Mix and your recommendations. Restore it anytime.`
               : `We'll hide ${cocktailName} from Mix, your dashboard, and emails. You can undo this anytime.`}
           </p>
-        </div>
-
-        <div className="p-6">
-          <label htmlFor="skip-notes" className="block text-sm font-medium text-forest mb-2">
-            Private note <span className="text-sage font-normal">(optional)</span>
-          </label>
-          <textarea
-            id="skip-notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            maxLength={500}
-            placeholder="Too sweet, no egg whites, already tried it..."
-            className="w-full rounded-2xl border border-mist bg-cream/40 px-4 py-3 text-forest placeholder:text-sage/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta/40"
-          />
         </div>
 
         <div className="p-6 border-t border-mist bg-mist/30 flex flex-col-reverse sm:flex-row gap-3">
@@ -112,26 +90,28 @@ export function SkipDrinkDialog({
             <button
               onClick={handleRestore}
               disabled={saving}
-              className="flex-1 px-4 py-3 text-sage font-medium rounded-2xl border border-mist bg-white hover:bg-mist transition-all disabled:opacity-60"
+              className="flex-1 px-4 py-3 bg-terracotta text-cream font-bold rounded-2xl hover:bg-terracotta-dark transition-all shadow-lg shadow-terracotta/20 disabled:opacity-60"
             >
               Restore
             </button>
           ) : (
-            <button
-              onClick={onClose}
-              disabled={saving}
-              className="flex-1 px-4 py-3 text-sage font-medium rounded-2xl border border-mist bg-white hover:bg-mist transition-all disabled:opacity-60"
-            >
-              Cancel
-            </button>
+            <>
+              <button
+                onClick={onClose}
+                disabled={saving}
+                className="flex-1 px-4 py-3 text-sage font-medium rounded-2xl border border-mist bg-white hover:bg-mist transition-all disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSkip}
+                disabled={saving}
+                className="flex-1 px-4 py-3 bg-terracotta text-cream font-bold rounded-2xl hover:bg-terracotta-dark transition-all shadow-lg shadow-terracotta/20 disabled:opacity-60"
+              >
+                Skip this drink
+              </button>
+            </>
           )}
-          <button
-            onClick={handleSkip}
-            disabled={saving}
-            className="flex-1 px-4 py-3 bg-terracotta text-cream font-bold rounded-2xl hover:bg-terracotta-dark transition-all shadow-lg shadow-terracotta/20 disabled:opacity-60"
-          >
-            {isSkipped ? "Save note" : "Skip this drink"}
-          </button>
         </div>
       </div>
     </div>

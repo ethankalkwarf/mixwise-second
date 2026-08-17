@@ -120,7 +120,6 @@ export interface Database {
           cocktail_name: string | null;
           cocktail_slug: string | null;
           cocktail_image_url: string | null;
-          notes: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -131,7 +130,6 @@ export interface Database {
           cocktail_name?: string | null;
           cocktail_slug?: string | null;
           cocktail_image_url?: string | null;
-          notes?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -142,7 +140,41 @@ export interface Database {
           cocktail_name?: string | null;
           cocktail_slug?: string | null;
           cocktail_image_url?: string | null;
-          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      cocktail_notes: {
+        Row: {
+          id: number;
+          user_id: string;
+          cocktail_id: string;
+          cocktail_name: string | null;
+          cocktail_slug: string | null;
+          cocktail_image_url: string | null;
+          notes: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          cocktail_id: string;
+          cocktail_name?: string | null;
+          cocktail_slug?: string | null;
+          cocktail_image_url?: string | null;
+          notes: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          cocktail_id?: string;
+          cocktail_name?: string | null;
+          cocktail_slug?: string | null;
+          cocktail_image_url?: string | null;
+          notes?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -637,6 +669,10 @@ export type FavoriteInsert = Database["public"]["Tables"]["favorites"]["Insert"]
 export type CocktailSkip = Database["public"]["Tables"]["cocktail_skips"]["Row"];
 export type CocktailSkipInsert = Database["public"]["Tables"]["cocktail_skips"]["Insert"];
 export type CocktailSkipUpdate = Database["public"]["Tables"]["cocktail_skips"]["Update"];
+
+export type CocktailNote = Database["public"]["Tables"]["cocktail_notes"]["Row"];
+export type CocktailNoteInsert = Database["public"]["Tables"]["cocktail_notes"]["Insert"];
+export type CocktailNoteUpdate = Database["public"]["Tables"]["cocktail_notes"]["Update"];
 
 export type RecentlyViewed = Database["public"]["Tables"]["recently_viewed_cocktails"]["Row"];
 export type RecentlyViewedInsert = Database["public"]["Tables"]["recently_viewed_cocktails"]["Insert"];
