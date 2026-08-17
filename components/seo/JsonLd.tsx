@@ -345,6 +345,47 @@ export function FAQPageSchema({ faqs }: FAQPageSchemaProps) {
   );
 }
 
+type CollectionPageSchemaProps = {
+  name: string;
+  description: string;
+  url: string;
+  items: Array<{ name: string; url: string }>;
+};
+
+export function CollectionPageSchema({ name, description, url, items }: CollectionPageSchemaProps) {
+  const listed = items.slice(0, 40);
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    description,
+    url,
+    isPartOf: {
+      "@type": "WebSite",
+      "@id": websiteId,
+      name: SITE_CONFIG.name,
+      url: SITE_CONFIG.url,
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: items.length,
+      itemListElement: listed.map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: item.name,
+        url: item.url,
+      })),
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 export function BreadcrumbSchema({
   items,
 }: {

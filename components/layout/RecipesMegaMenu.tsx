@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { isLearnPublic } from "@/lib/learnAccess";
 import {
   NavMegaShell,
   NavMegaTrigger,
@@ -109,7 +110,7 @@ export function RecipesMegaMenu({
 
         <div className="flex flex-col justify-between gap-7 md:col-span-8">
           <div>
-            <div className="mb-6">
+            <div className="mb-6 space-y-3">
               <Link
                 href="/cocktails"
                 onClick={controller.closeMenu}
@@ -130,6 +131,28 @@ export function RecipesMegaMenu({
                   </span>
                 </span>
               </Link>
+              {isLearnPublic() ? (
+                <Link
+                  href="/learn"
+                  onClick={controller.closeMenu}
+                  className="flex items-center justify-between gap-4 rounded-xl border border-mist bg-white px-4 py-3.5 transition-colors hover:border-terracotta/40 hover:bg-mist/40"
+                >
+                  <span>
+                    <span className="mb-0.5 block font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+                      Education
+                    </span>
+                    <span className="block text-[15px] font-semibold tracking-tight text-charcoal">
+                      Learn mixology
+                    </span>
+                  </span>
+                  <span className="inline-flex shrink-0 items-center text-sm font-semibold text-forest">
+                    Learn
+                    <span className="ml-1.5" aria-hidden>
+                      →
+                    </span>
+                  </span>
+                </Link>
+              ) : null}
             </div>
 
             <div className="mb-3 flex items-end justify-between border-b border-mist pb-2.5">

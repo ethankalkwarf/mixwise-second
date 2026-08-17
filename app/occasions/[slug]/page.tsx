@@ -18,7 +18,8 @@ import {
   pickOccasionCover,
   type OccasionCocktail,
 } from "@/lib/occasions";
-import { generatePageMetadata } from "@/lib/seo";
+import { CollectionPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
+import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 
 export const revalidate = 300;
@@ -62,9 +63,29 @@ export default async function OccasionDetailPage({ params }: PageProps) {
   const children = getChildOccasions(occasion);
   const siblings = getSiblingOccasions(occasion);
   const related = getRelatedOccasions(occasion, 4);
+  const pageUrl = `${SITE_CONFIG.url}/occasions/${occasion.slug}`;
 
   return (
     <div className="min-h-screen bg-cream">
+      <CollectionPageSchema
+        name={`${occasion.name} Cocktail Recipes`}
+        description={occasion.description}
+        url={pageUrl}
+        items={matched.map((c) => ({
+          name: c.name,
+          url: `${SITE_CONFIG.url}/cocktails/${c.slug}`,
+        }))}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", url: SITE_CONFIG.url },
+          { name: "Collections", url: `${SITE_CONFIG.url}/occasions` },
+          ...(parent
+            ? [{ name: parent.name, url: `${SITE_CONFIG.url}/occasions/${parent.slug}` }]
+            : []),
+          { name: occasion.name, url: pageUrl },
+        ]}
+      />
       <section className="relative min-h-[36vh] overflow-hidden">
         {heroUrl ? (
           <Image

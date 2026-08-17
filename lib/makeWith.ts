@@ -22,13 +22,14 @@ const SLUG_ALIASES: Record<string, string> = {
   "orange-liqueur": "triple-sec",
   whiskey: "whiskey",
   whisky: "whiskey",
+  rye: "rye-whiskey",
+  cranberry: "cranberry-juice",
+  pineapple: "pineapple-juice",
+  ginger: "ginger-beer",
+  cola: "cola",
 };
 
-/**
- * High-intent cabinets for sitemap + /make-with index.
- * Slugs are canonical catalog slugs; URLs are sorted alphabetically.
- */
-export const MAKE_WITH_COMBOS: string[][] = [
+const MAKE_WITH_COMBOS_RAW: string[][] = [
   ["gin", "lime-juice"],
   ["gin", "lemon-juice"],
   ["gin", "tonic-water"],
@@ -49,7 +50,127 @@ export const MAKE_WITH_COMBOS: string[][] = [
   ["tequila"],
   ["bourbon"],
   ["vodka"],
+  ["rum"],
+  ["mezcal"],
+  ["whiskey"],
+  ["rye-whiskey"],
+  ["scotch"],
+  ["cognac"],
+  ["champagne"],
+  ["aperol"],
+  ["vodka", "orange-juice"],
+  ["vodka", "cranberry-juice"],
+  ["vodka", "ginger-beer"],
+  ["vodka", "espresso"],
+  ["gin", "ginger-beer"],
+  ["gin", "soda-water"],
+  ["gin", "grapefruit-juice"],
+  ["gin", "campari"],
+  ["rum", "ginger-beer"],
+  ["rum", "cola"],
+  ["rum", "pineapple-juice"],
+  ["white-rum", "mint"],
+  ["tequila", "grapefruit-juice"],
+  ["tequila", "soda-water"],
+  ["mezcal", "grapefruit-juice"],
+  ["bourbon", "ginger-beer"],
+  ["bourbon", "sweet-vermouth"],
+  ["rye-whiskey", "sweet-vermouth"],
+  ["whiskey", "lemon-juice"],
+  ["whiskey", "ginger-beer"],
+  ["campari", "soda-water"],
+  ["champagne", "orange-juice"],
+  ["amaretto", "lemon-juice"],
+  ["pisco", "lime-juice"],
+  ["cognac", "lemon-juice"],
+  ["white-rum", "lime-juice", "mint"],
+  ["vodka", "lime-juice", "ginger-beer"],
+  ["vodka", "triple-sec", "cranberry-juice"],
+  ["gin", "lemon-juice", "soda-water"],
+  ["gin", "lemon-juice", "simple-syrup"],
+  ["rye-whiskey", "sweet-vermouth", "angostura-bitters"],
+  ["tequila", "grapefruit-juice", "soda-water"],
+  ["tequila", "lime-juice", "agave-syrup"],
+  ["bourbon", "sweet-vermouth", "angostura-bitters"],
+  ["vodka", "coffee-liqueur", "espresso"],
 ];
+
+function uniqueMakeWithCombos(combos: string[][]): string[][] {
+  const seen = new Set<string>();
+  const out: string[][] = [];
+  for (const combo of combos) {
+    const key = [...new Set(combo.map((s) => s.toLowerCase()).filter(Boolean))].sort().join("/");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(combo);
+  }
+  return out;
+}
+
+/**
+ * High-intent cabinets for sitemap + /make-with index.
+ * Slugs are canonical catalog slugs; URLs are sorted alphabetically.
+ */
+export const MAKE_WITH_COMBOS: string[][] = uniqueMakeWithCombos(MAKE_WITH_COMBOS_RAW);
+
+const MAKE_WITH_GROUP_ORDER = [
+  "gin",
+  "vodka",
+  "rum",
+  "white-rum",
+  "tequila",
+  "mezcal",
+  "bourbon",
+  "whiskey",
+  "rye-whiskey",
+  "cognac",
+  "pisco",
+  "amaretto",
+  "aperol",
+  "campari",
+  "champagne",
+] as const;
+
+const MAKE_WITH_GROUP_LABELS: Record<string, string> = {
+  gin: "Gin",
+  vodka: "Vodka",
+  rum: "Rum",
+  "white-rum": "White rum",
+  tequila: "Tequila",
+  mezcal: "Mezcal",
+  bourbon: "Bourbon",
+  whiskey: "Whiskey",
+  "rye-whiskey": "Rye",
+  cognac: "Cognac",
+  pisco: "Pisco",
+  amaretto: "Amaretto",
+  aperol: "Aperol",
+  campari: "Campari",
+  champagne: "Sparkling",
+};
+
+export type MakeWithIndexGroup = {
+  heading: string;
+  combos: string[][];
+};
+
+/** Two-or-more bottle combos grouped for the /make-with index. */
+export function makeWithIndexGroups(): MakeWithIndexGroup[] {
+  const multi = MAKE_WITH_COMBOS.filter((combo) => combo.length >= 2);
+  const buckets = new Map<string, string[][]>();
+
+  for (const combo of multi) {
+    const key = MAKE_WITH_GROUP_ORDER.find((slug) => combo.includes(slug)) || "more";
+    const list = buckets.get(key) || [];
+    list.push(combo);
+    buckets.set(key, list);
+  }
+
+  return MAKE_WITH_GROUP_ORDER.filter((slug) => buckets.has(slug)).map((slug) => ({
+    heading: MAKE_WITH_GROUP_LABELS[slug] || slug,
+    combos: buckets.get(slug) || [],
+  }));
+}
 
 export function canonicalMakeWithPath(slugs: string[]): string {
   const unique = [...new Set(slugs.map((s) => s.toLowerCase()).filter(Boolean))].sort();

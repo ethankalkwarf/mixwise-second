@@ -13,7 +13,8 @@ import {
   getNextLearnGuide,
 } from "@/lib/learnLibrary";
 import { getGuideChecks } from "@/lib/learnChecks";
-import { generatePageMetadata } from "@/lib/seo";
+import { ArticleSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
+import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -49,6 +50,20 @@ export default async function LearnGuidePage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-cream">
+      <ArticleSchema
+        title={guide.title}
+        description={guide.summary}
+        image={`${SITE_CONFIG.url}${guide.coverImage}`}
+        publishedAt="2026-03-01T00:00:00.000Z"
+        url={`${SITE_CONFIG.url}/learn/guides/${slug}`}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", url: SITE_CONFIG.url },
+          { name: "Learn Mixology", url: `${SITE_CONFIG.url}/learn` },
+          { name: guide.title, url: `${SITE_CONFIG.url}/learn/guides/${slug}` },
+        ]}
+      />
       <LearnHero
         imageSrc={guide.coverImage}
         imageAlt={guide.coverAlt}

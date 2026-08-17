@@ -12,6 +12,7 @@ const FOOTER_LINKS = {
     { label: "Browse Cocktail Recipes", href: "/cocktails" },
     { label: "Ingredient Guides", href: "/ingredients" },
     { label: "Open Mixology Wizard", href: "/mix" },
+    { label: "What Can I Make", href: "/make-with" },
   ],
   learn: [
     { label: "Learn Mixology", href: "/learn", learnOnly: true },

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { BreadcrumbSchema, WebPageSchema } from "@/components/seo/JsonLd";
 import { LearnHero } from "@/components/learn/LearnHero";
 import { LearnLibraryClient } from "@/components/learn/LearnLibraryClient";
-import { generatePageMetadata } from "@/lib/seo";
+import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 import { LEARN_PATHS } from "@/lib/learnLibrary";
 
 export const metadata = generatePageMetadata({
@@ -10,6 +11,12 @@ export const metadata = generatePageMetadata({
   description:
     "Training library for home mixologists — learning paths, guides, core methods, techniques, and smart swaps.",
   path: "/learn",
+  keywords: [
+    "learn mixology",
+    "home bartending guide",
+    "cocktail techniques",
+    "how to shake a cocktail",
+  ],
 });
 
 export default function LearnPage() {
@@ -17,6 +24,17 @@ export default function LearnPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <WebPageSchema
+        title="Learn Mixology"
+        description="Training library for home mixologists — learning paths, guides, core methods, techniques, and smart swaps."
+        url={`${SITE_CONFIG.url}/learn`}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", url: SITE_CONFIG.url },
+          { name: "Learn Mixology", url: `${SITE_CONFIG.url}/learn` },
+        ]}
+      />
       <LearnHero
         imageSrc="/media/bartender-home.webp"
         imageAlt="Home bartender preparing a cocktail"

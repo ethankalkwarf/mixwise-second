@@ -11,7 +11,8 @@ import {
   type OccasionCocktail,
 } from "@/lib/occasions";
 import { staticOccasionCoverIfPresent } from "@/lib/occasionCovers";
-import { generatePageMetadata } from "@/lib/seo";
+import { CollectionPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
+import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 
 export const revalidate = 300;
@@ -19,7 +20,7 @@ export const revalidate = 300;
 export const metadata = generatePageMetadata({
   title: "Cocktail Collections by Season & Style",
   description:
-    "Browse MixWise cocktail collections — summer, fall, holidays, classics, hot drinks, punch, brunch, tiki, and more.",
+    "Browse MixWise cocktail collections — summer, winter, holidays, sours, highballs, frozen, tropical, brunch, tiki, and more.",
   path: "/occasions",
 });
 
@@ -39,6 +40,21 @@ export default async function OccasionsPage() {
 
   return (
     <div className="min-h-screen bg-cream">
+      <CollectionPageSchema
+        name="Cocktail Collections by Season & Style"
+        description="Curated MixWise cocktail collections for seasons, holidays, and drink styles."
+        url={`${SITE_CONFIG.url}/occasions`}
+        items={topLevel.map((occasion) => ({
+          name: occasion.name,
+          url: `${SITE_CONFIG.url}/occasions/${occasion.slug}`,
+        }))}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", url: SITE_CONFIG.url },
+          { name: "Collections", url: `${SITE_CONFIG.url}/occasions` },
+        ]}
+      />
       <section className="relative min-h-[42vh] sm:min-h-[48vh] overflow-hidden">
         {heroUrl ? (
           <Image
@@ -65,7 +81,7 @@ export default async function OccasionsPage() {
             Collections for every season
           </h1>
           <p className="text-forest max-w-xl text-base sm:text-lg leading-relaxed">
-            Curated cocktail collections for summer patios, holiday tables, brunch, crowd-pleasing cocktails, and more — without digging through tags.
+            Curated cocktail collections for summer patios, winter nights, holiday tables, sours, highballs, and more — without digging through tags.
           </p>
           <Link
             href="/cocktails"
