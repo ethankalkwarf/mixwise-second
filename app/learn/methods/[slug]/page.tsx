@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MainContainer } from "@/components/layout/MainContainer";
@@ -7,11 +6,12 @@ import { LearnLessonArticle } from "@/components/learn/LearnLessonArticle";
 import { LearnPracticeCocktails } from "@/components/learn/LearnPracticeCocktails";
 import { LearnJoinCta } from "@/components/learn/LearnJoinCta";
 import { LearnChecks } from "@/components/learn/LearnChecks";
+import { LearnProgressControls } from "@/components/learn/LearnProgressControls";
 import { LearnContentGate } from "@/components/learn/LearnContentGate";
 import { LEARN_METHODS, getLearnGuide, getLearnMethod } from "@/lib/learnLibrary";
 import { getMethodLessonLayers } from "@/lib/learnMethodsContent";
 import { getMethodChecks } from "@/lib/learnChecks";
-import { getTechniqueTermBySlug } from "@/lib/cocktailTechniqueGlossary";
+import { getTechniqueTermBySlug, formatTechniqueLabel } from "@/lib/cocktailTechniqueGlossary";
 import { generatePageMetadata } from "@/lib/seo";
 
 type PageProps = {
@@ -46,21 +46,6 @@ export default async function LearnMethodPage({ params }: PageProps) {
   const checks = getMethodChecks(slug);
   const layers = getMethodLessonLayers(method);
 
-  const midFigure = (
-    <figure className="relative -mx-4 sm:mx-0 overflow-hidden rounded-2xl aspect-[16/10] bg-mist">
-      <Image
-        src={method.coverImage}
-        alt={method.coverAlt}
-        fill
-        sizes="(max-width: 768px) 100vw, 672px"
-        className="object-cover"
-      />
-      <figcaption className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-forest/80 to-transparent px-5 py-4">
-        <p className="text-[13px] font-medium !text-cream/95 tracking-wide">{method.cue}</p>
-      </figcaption>
-    </figure>
-  );
-
   return (
     <div className="min-h-screen bg-cream">
       <LearnHero
@@ -72,18 +57,18 @@ export default async function LearnMethodPage({ params }: PageProps) {
         backHref="/learn"
       />
 
-      <MainContainer className="py-10 sm:py-14 max-w-2xl">
+      <MainContainer className="py-10 sm:py-14 max-w-3xl">
         <LearnContentGate gateId={`method:${slug}`} teaserLabel="Keep learning this method">
           <LearnLessonArticle
             layers={layers}
-            midFigure={midFigure}
             afterCore={
               <>
-                <LearnChecks checks={checks} title="Quick check" />
+                <LearnChecks checks={checks} kind="method" slug={slug} />
                 <LearnPracticeCocktails
-                  slugs={method.practiceSlugs}
+                  drinks={method.practice}
                   heading={`Practice ${method.label.toLowerCase()}`}
                 />
+                <LearnProgressControls kind="method" slug={slug} />
               </>
             }
           />
@@ -115,8 +100,8 @@ export default async function LearnMethodPage({ params }: PageProps) {
                       href={term.learnPath || "/learn"}
                       className="group flex items-baseline justify-between gap-4 py-3 border-b border-mist/80"
                     >
-                      <span className="font-display text-2xl !text-charcoal capitalize group-hover:text-terracotta transition-colors tracking-tight">
-                        {term.label}
+                      <span className="font-display text-2xl !text-charcoal group-hover:text-terracotta transition-colors tracking-tight">
+                        {formatTechniqueLabel(term.label)}
                       </span>
                       <span className="text-[13px] !text-charcoal/50 shrink-0">Technique</span>
                     </Link>

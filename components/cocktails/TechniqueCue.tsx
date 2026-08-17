@@ -24,7 +24,11 @@ export function TechniqueCue({ technique }: TechniqueCueProps) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")}`;
 
-  const learnHref = learnMethod ? `/learn/methods/${learnMethod.slug}` : "/learn";
+  const learnHref = learnMethod
+    ? learnMethod.listedInLibrary === false
+      ? `/learn/techniques/${learnMethod.slug}`
+      : `/learn/methods/${learnMethod.slug}`
+    : "/learn";
 
   return (
     <div className="mb-5">

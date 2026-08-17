@@ -267,6 +267,47 @@ export async function awardSharingBadge(
 }
 
 /**
+ * Checks and awards badges based on Learn completions.
+ */
+export async function checkLearnBadges(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  completedLessonCount: number,
+  completedGuides: number,
+  totalGuides: number,
+  completedPathSlugs: string[]
+): Promise<BadgeCheckResult> {
+  const awarded: BadgeDefinition[] = [];
+  const alreadyHad: BadgeDefinition[] = [];
+  const existingBadges = await getUserBadges(supabase, userId);
+  const existingBadgeIds = new Set(existingBadges.map((b) => b.badge_id));
+
+  const maybeAward = async (id: keyof typeof BADGES, earned: boolean) => {
+    const badge = BADGES[id];
+    if (!badge) return;
+    if (!earned) return;
+    if (existingBadgeIds.has(badge.id)) {
+      alreadyHad.push(badge);
+      return;
+    }
+    if (await awardBadge(supabase, userId, badge.id)) {
+      awarded.push(badge);
+      existingBadgeIds.add(badge.id);
+    }
+  };
+
+  await maybeAward("first_lesson", completedLessonCount >= 1);
+  await maybeAward("curious_student", completedLessonCount >= 5);
+  await maybeAward("path_first_month", completedPathSlugs.includes("first-month-home"));
+  await maybeAward("path_sours", completedPathSlugs.includes("sours-mastery"));
+  await maybeAward("path_agave", completedPathSlugs.includes("agave-deep-dive"));
+  await maybeAward("learn_scholar", totalGuides > 0 && completedGuides >= totalGuides);
+
+  await checkMetaBadges(supabase, userId, awarded);
+  return { awarded, alreadyHad };
+}
+
+/**
  * Checks and awards meta-badges (mixologist, master_mixologist)
  */
 async function checkMetaBadges(

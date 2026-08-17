@@ -4,20 +4,23 @@ import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 import { getPracticeCocktails } from "@/lib/learnPractice.server";
+import type { LearnPracticeDrink } from "@/lib/learnTypes";
 
 type Props = {
-  slugs: string[];
+  drinks: LearnPracticeDrink[];
   heading?: string;
   subcopy?: string;
 };
 
 export async function LearnPracticeCocktails({
-  slugs,
+  drinks,
   heading = "Practice these",
-  subcopy = "Make one of these with the lesson still in mind — repetition beats another paragraph.",
+  subcopy = "Read the drill, then make the drink once focusing on that cue — repetition beats another paragraph.",
 }: Props) {
-  const cocktails = await getPracticeCocktails(slugs);
+  const cocktails = await getPracticeCocktails(drinks.map((d) => d.slug));
   if (cocktails.length === 0) return null;
+
+  const noticeBySlug = new Map(drinks.map((d) => [d.slug, d.notice]));
 
   return (
     <section className="space-y-6">
@@ -34,6 +37,7 @@ export async function LearnPracticeCocktails({
       <div className="grid gap-4 sm:grid-cols-2">
         {cocktails.map((cocktail) => {
           const imageUrl = cocktail.image_url || undefined;
+          const notice = noticeBySlug.get(cocktail.slug);
           return (
             <Link
               key={cocktail.id}
@@ -70,9 +74,9 @@ export async function LearnPracticeCocktails({
                 <h3 className="font-display font-bold text-lg text-forest leading-tight group-hover:text-terracotta transition-colors">
                   {formatCocktailName(cocktail.name)}
                 </h3>
-                {cocktail.short_description && (
-                  <p className="text-xs text-sage line-clamp-2 mt-1">{cocktail.short_description}</p>
-                )}
+                <p className="text-xs text-sage mt-1 leading-relaxed line-clamp-3">
+                  {notice || cocktail.short_description}
+                </p>
               </div>
             </Link>
           );

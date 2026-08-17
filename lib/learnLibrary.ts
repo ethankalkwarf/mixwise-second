@@ -10,15 +10,16 @@ export {
   getNextLearnGuide,
 } from "@/lib/learnGuides";
 
-import type { LearnSection } from "@/lib/learnTypes";
+import type { LearnPracticeDrink, LearnSection } from "@/lib/learnTypes";
 import type { LearnGuide } from "@/lib/learnGuides";
 import { LEARN_GUIDES, getLearnGuide } from "@/lib/learnGuides";
+import { getTechniqueTermBySlug, formatTechniqueLabel } from "@/lib/cocktailTechniqueGlossary";
 
 export type LearnPathStep =
-  | { type: "guide"; slug: string }
-  | { type: "method"; slug: string }
-  | { type: "technique"; slug: string }
-  | { type: "swaps" };
+  | { type: "guide"; slug: string; why?: string }
+  | { type: "method"; slug: string; why?: string }
+  | { type: "technique"; slug: string; why?: string }
+  | { type: "swaps"; why?: string };
 
 export type LearnPath = {
   slug: string;
@@ -40,11 +41,13 @@ export type LearnMethod = {
   /** Keys that map from cocktail.technique / METHOD_TIPS */
   techniqueKeys: string[];
   sections: LearnSection[];
-  practiceSlugs: string[];
+  practice: LearnPracticeDrink[];
   relatedTechniqueSlugs: string[];
   relatedGuideSlug?: string;
   coverImage: string;
   coverAlt: string;
+  /** When false, hide from the Methods browse tab (canonical lesson is the technique page). */
+  listedInLibrary?: boolean;
 };
 
 export const LEARN_METHODS: LearnMethod[] = [
@@ -57,7 +60,28 @@ export const LEARN_METHODS: LearnMethod[] = [
     techniqueKeys: ["shake", "shaken"],
     coverImage: "/learn/method-shake.webp",
     coverAlt: "Hands shaking a condensed cocktail tin at home",
-    practiceSlugs: ["daiquiri", "whiskey-sour", "margarita", "clover-club"],
+    practice: [
+      {
+        slug: "daiquiri",
+        notice:
+          "Shake until the tin hurts. Make one at ~8 seconds and one at ~15 — taste warmth versus water, then lock in the painfully-cold cue.",
+      },
+      {
+        slug: "whiskey-sour",
+        notice:
+          "Citrus plus optional egg. If you add white, dry-shake first; the wet shake is what chills. Foam should sit, not scum.",
+      },
+      {
+        slug: "margarita",
+        notice:
+          "Hard shake, fine-strain if it’s up. If it tastes dull, check the lime before the tequila.",
+      },
+      {
+        slug: "clover-club",
+        notice:
+          "Raspberry and egg want a vigorous shake. Thin pink liquid means the foam stage was rushed.",
+      },
+    ],
     relatedTechniqueSlugs: ["dry-shake", "fine-strain"],
     relatedGuideSlug: "shake-vs-stir",
     sections: [
@@ -70,6 +94,7 @@ export const LEARN_METHODS: LearnMethod[] = [
       },
       {
         heading: "How to do it",
+        figure: "shake-how",
         body: [
           "Fill the tin with ice, seal hard, and shake vigorously for about 10–15 seconds. Aim for a loud, even rattle — not a gentle rock.",
           "Strain promptly. If the recipe is served up, fine-strain to catch chips and pulp.",
@@ -93,7 +118,28 @@ export const LEARN_METHODS: LearnMethod[] = [
     techniqueKeys: ["stir", "stirred"],
     coverImage: "/learn/method-stir.webp",
     coverAlt: "Barspoon stirring a clear cocktail in a mixing glass",
-    practiceSlugs: ["manhattan", "martini", "negroni", "boulevardier"],
+    practice: [
+      {
+        slug: "manhattan",
+        notice:
+          "Pack the mixing glass. Stir until the whiskey heat drops and the drink feels slightly softened — not thin. If it’s dusty, suspect the vermouth.",
+      },
+      {
+        slug: "martini",
+        notice:
+          "Smooth circles, spoon on the glass. You want jewel-clear, dense, and cold. Cloudiness means you churned air (or shook it).",
+      },
+      {
+        slug: "negroni",
+        notice:
+          "Equal parts still need dilution. Stir until it’s refreshing, not hot-candy bitter. Express orange on top.",
+      },
+      {
+        slug: "boulevardier",
+        notice:
+          "Same stir as a Negroni, whiskey instead of gin. Taste for cold and silk before you strain.",
+      },
+    ],
     relatedTechniqueSlugs: ["express", "rinse"],
     relatedGuideSlug: "shake-vs-stir",
     sections: [
@@ -106,6 +152,7 @@ export const LEARN_METHODS: LearnMethod[] = [
       },
       {
         heading: "How to do it",
+        figure: "stir-how",
         body: [
           "Pack a mixing glass with ice, pour ingredients, and stir with a barspoon in smooth circles for 20–30 seconds. Keep the spoon against the glass so you don’t churn air in.",
           "Strain into a chilled glass. Express citrus oils over the top when the recipe calls for it.",
@@ -129,7 +176,28 @@ export const LEARN_METHODS: LearnMethod[] = [
     techniqueKeys: ["build", "built"],
     coverImage: "/learn/method-build.webp",
     coverAlt: "Soda poured into a tall highball glass packed with ice",
-    practiceSlugs: ["gin-and-tonic", "paloma", "dark-n-stormy", "americano"],
+    practice: [
+      {
+        slug: "gin-and-tonic",
+        notice:
+          "Ice first, gin, fridge-cold tonic last, brief stir. If it’s dull in a minute, you under-iced or the tonic was warm.",
+      },
+      {
+        slug: "paloma",
+        notice:
+          "Keep grapefruit and soda cold. Lengthener last — don’t stir the bubbles out.",
+      },
+      {
+        slug: "dark-n-stormy",
+        notice:
+          "Ginger beer last over packed ice. A long stir knocks spice and fizz together.",
+      },
+      {
+        slug: "americano",
+        notice:
+          "Campari, vermouth, cold soda. Dusty bitterness is usually tired vermouth, not the build.",
+      },
+    ],
     relatedTechniqueSlugs: ["build", "muddle"],
     relatedGuideSlug: "home-bar-fundamentals",
     sections: [
@@ -142,6 +210,7 @@ export const LEARN_METHODS: LearnMethod[] = [
       },
       {
         heading: "How to do it",
+        figure: "build-order",
         body: [
           "Add ice first (or spirit first if the recipe prefers), then modifiers, then the lengthener last so carbonation stays bright. A brief stir is enough.",
         ],
@@ -164,7 +233,23 @@ export const LEARN_METHODS: LearnMethod[] = [
     techniqueKeys: ["blend", "blended"],
     coverImage: "/learn/method-blend.webp",
     coverAlt: "Blender with crushed ice making a frozen cocktail",
-    practiceSlugs: ["pina-colada", "frozen-margarita", "strawberry-daiquiri"],
+    practice: [
+      {
+        slug: "pina-colada",
+        notice:
+          "Ice is the body. It should mound on a spoon, not pour like juice. Serve immediately before it weeps.",
+      },
+      {
+        slug: "frozen-margarita",
+        notice:
+          "Pulse, then blend smooth. Taste sweetness cold — frozen drinks read sweeter; don’t chase with extra syrup until you sip.",
+      },
+      {
+        slug: "strawberry-daiquiri",
+        notice:
+          "Fruit plus ice. If herbs or leaves are in the spec, don’t obliterate them into bitterness unless you want a puree.",
+      },
+    ],
     relatedTechniqueSlugs: ["fine-strain"],
     sections: [
       {
@@ -174,12 +259,20 @@ export const LEARN_METHODS: LearnMethod[] = [
           "Blend for frozen drinks — Piña Coladas, frozen Margaritas, and similar. Texture is the point.",
         ],
       },
-      {
-        heading: "How to do it",
-        body: [
-          "Use crushed or small cubes so the blender doesn’t struggle. Pulse to start, then blend until smooth. Serve immediately before it separates.",
-        ],
-      },
+        {
+          heading: "How to do it",
+          figure: "ice-types",
+          body: [
+            "Use crushed or small cubes so the blender doesn’t struggle. Pulse to start, then blend until smooth. Serve immediately before it separates.",
+          ],
+        },
+        {
+          heading: "Common mistakes",
+          kind: "mistakes",
+          body: [
+            "Too little ice makes soup; too much mutes flavor under freeze. Letting a pitcher sit separates the drink. Obliterating mint or herbs turns a frozen cocktail grassy unless the recipe wants a puree.",
+          ],
+        },
     ],
   },
   {
@@ -191,7 +284,19 @@ export const LEARN_METHODS: LearnMethod[] = [
     techniqueKeys: ["layer", "layered"],
     coverImage: "/learn/method-layer.webp",
     coverAlt: "Layered cocktail with distinct color bands in a cordial glass",
-    practiceSlugs: ["new-york-sour", "black-and-tan"],
+    listedInLibrary: false,
+    practice: [
+      {
+        slug: "new-york-sour",
+        notice:
+          "Shake the sour, let the foam settle a beat, then slow-pour wine over a spoon. First sips should alternate citrus and tannin.",
+      },
+      {
+        slug: "black-and-tan",
+        notice:
+          "Heavier beer last, slowly over a spoon. A fast pour is just brown beer.",
+      },
+    ],
     relatedTechniqueSlugs: ["float", "layer"],
     sections: [
       {
@@ -201,12 +306,20 @@ export const LEARN_METHODS: LearnMethod[] = [
           "Layer for visual drama and staged sipping — floats on sours, pousse-cafés, and cream-topped builds.",
         ],
       },
-      {
-        heading: "How to do it",
-        body: [
-          "Pour the densest liquid first. Rest a barspoon on the surface and pour the next liquid slowly over the back of the spoon so it spreads instead of plunging.",
-        ],
-      },
+        {
+          heading: "How to do it",
+          figure: "layer-density",
+          body: [
+            "Pour the densest liquid first. Rest a barspoon on the surface and pour the next liquid slowly over the back of the spoon so it spreads instead of plunging.",
+          ],
+        },
+        {
+          heading: "Common mistakes",
+          kind: "mistakes",
+          body: [
+            "Fast pours pierce layers. Wrong density order (light first) collapses the stack. Waiting too long before serving lets diffusion blur the bands you just built.",
+          ],
+        },
     ],
   },
   {
@@ -218,7 +331,19 @@ export const LEARN_METHODS: LearnMethod[] = [
     techniqueKeys: ["swizzle"],
     coverImage: "/learn/technique-swizzle.webp",
     coverAlt: "Swizzle stick spinning crushed ice in a frosted tall glass",
-    practiceSlugs: ["queens-park-swizzle", "chartreuse-swizzle"],
+    listedInLibrary: false,
+    practice: [
+      {
+        slug: "queens-park-swizzle",
+        notice:
+          "Pack crushed ice, spin until the glass frosts, top with more ice. Cubes will not frost the same way.",
+      },
+      {
+        slug: "chartreuse-swizzle",
+        notice:
+          "Stop when the outside is opaque with frost. Hot means too short; watery means the ice was already wet.",
+      },
+    ],
     relatedTechniqueSlugs: ["swizzle", "muddle"],
     sections: [
       {
@@ -228,12 +353,20 @@ export const LEARN_METHODS: LearnMethod[] = [
           "Swizzle crushed-ice drinks that want rapid chill without shaking out the ice texture — classic Caribbean and tiki builds.",
         ],
       },
-      {
-        heading: "How to do it",
-        body: [
-          "Pack the glass with crushed ice, add ingredients, then spin a swizzle stick or barspoon between your palms until the glass frosts. Top with more ice if needed.",
-        ],
-      },
+        {
+          heading: "How to do it",
+          figure: "ice-types",
+          body: [
+            "Pack the glass with crushed ice, add ingredients, then spin a swizzle stick or barspoon between your palms until the glass frosts. Top with more ice if needed.",
+          ],
+        },
+        {
+          heading: "Common mistakes",
+          kind: "mistakes",
+          body: [
+            "Cubes won’t frost the glass — crush or crack them first. Undissolved sugar sits at the bottom if you didn’t use syrup. Stopping before the glass frosts leaves the drink hot in the middle.",
+          ],
+        },
     ],
   },
   {
@@ -245,7 +378,29 @@ export const LEARN_METHODS: LearnMethod[] = [
     techniqueKeys: ["muddle", "muddled"],
     coverImage: "/learn/technique-muddle.webp",
     coverAlt: "Wooden muddler pressing mint in a glass",
-    practiceSlugs: ["mojito", "whiskey-smash", "caipirinha", "gin-basil-smash"],
+    listedInLibrary: false,
+    practice: [
+      {
+        slug: "mojito",
+        notice:
+          "Press the mint a few times in syrup — don’t shred. Make a second one gentler if the first smells like lawn.",
+      },
+      {
+        slug: "whiskey-smash",
+        notice:
+          "Lemon needs juice; mint still wants a press, not a puree. Taste the build before you shake.",
+      },
+      {
+        slug: "caipirinha",
+        notice:
+          "Lime wedges and sugar need a thorough muddle. Under-muddling leaves this one thin — the opposite of mint.",
+      },
+      {
+        slug: "gin-basil-smash",
+        notice:
+          "Basil bruises into perfume quickly. If the drink is khaki-green and bitter, you pulverized the leaves.",
+      },
+    ],
     relatedTechniqueSlugs: ["muddle", "build"],
     relatedGuideSlug: "garnish-with-intent",
     sections: [
@@ -258,6 +413,7 @@ export const LEARN_METHODS: LearnMethod[] = [
       },
       {
         heading: "How to do it",
+        figure: "muddle-press",
         body: [
           "Use a muddler or the back of a spoon. Press firmly but briefly. For mint, a few presses wake the oils; shredding releases bitter chlorophyll.",
         ],
@@ -278,48 +434,111 @@ export const LEARN_PATHS: LearnPath[] = [
     slug: "first-month-home",
     title: "Your first month at home",
     eyebrow: "Beginner path",
-    summary: "Stock a small kit, learn shake vs stir, then taste for balance — four stops that unlock most of the catalog.",
-    estimatedMinutes: 35,
+    summary:
+      "Stock a small kit, learn the sour and old-fashioned templates, shake a Daiquiri, stir a Manhattan or Negroni, then taste for balance.",
+    estimatedMinutes: 50,
     coverImage: "/media/kitchen-shelf.webp",
     coverAlt: "Home bar starter kit",
     steps: [
-      { type: "guide", slug: "home-bar-fundamentals" },
-      { type: "method", slug: "shake" },
-      { type: "method", slug: "stir" },
-      { type: "guide", slug: "shake-vs-stir" },
-      { type: "guide", slug: "balance-and-taste" },
+      {
+        type: "guide",
+        slug: "home-bar-fundamentals",
+        why: "A short kit, ice you trust, and fresh citrus — before you buy another novelty bottle.",
+      },
+      {
+        type: "guide",
+        slug: "cocktail-templates",
+        why: "Sour, old fashioned, highball, equal parts. Stay inside a family when you improvise.",
+      },
+      {
+        type: "method",
+        slug: "shake",
+        why: "Make a Daiquiri until the tin hurts. That’s the move behind most citrus drinks.",
+      },
+      {
+        type: "method",
+        slug: "stir",
+        why: "Then a Manhattan or Negroni — clear, cold, and slightly softened, not watery.",
+      },
+      {
+        type: "guide",
+        slug: "balance-and-taste",
+        why: "Name the imbalance (sweet, sour, hot, thin) and fix the smallest lever.",
+      },
     ],
   },
   {
     slug: "sours-mastery",
     title: "Sours mastery",
     eyebrow: "Technique path",
-    summary: "Own the sour template — shake technique, dry shake foam, and palate fixes that make citrus drinks sing.",
-    estimatedMinutes: 28,
-    coverImage: "/learn/shake-vs-stir.webp",
-    coverAlt: "Shaken cocktail preparation at home",
+    summary:
+      "Own the 2:1:1 skeleton, a hard shake, egg-white foam, a clean coupe, and the fixes for thin, sweet, or lifeless citrus drinks.",
+    estimatedMinutes: 40,
+    coverImage: "/learn/cocktail-templates.webp",
+    coverAlt: "Three template drinks: a sour, an old fashioned, and a highball",
     steps: [
-      { type: "guide", slug: "shake-vs-stir" },
-      { type: "method", slug: "shake" },
-      { type: "technique", slug: "dry-shake" },
-      { type: "technique", slug: "fine-strain" },
-      { type: "guide", slug: "balance-and-taste" },
+      {
+        type: "guide",
+        slug: "cocktail-templates",
+        why: "Start with the sour template so every tweak has a name.",
+      },
+      {
+        type: "method",
+        slug: "shake",
+        why: "Chill, dilute, and aerate — stop when the tin is painfully cold.",
+      },
+      {
+        type: "technique",
+        slug: "dry-shake",
+        why: "Foam first, then ice. Skip this and egg sours come out warm and thin-capped.",
+      },
+      {
+        type: "technique",
+        slug: "fine-strain",
+        why: "Hawthorne plus mesh so chips don’t keep watering a drink served up.",
+      },
+      {
+        type: "guide",
+        slug: "balance-and-taste",
+        why: "Too sweet, too thin, no foam — diagnose in the glass, don’t rewrite the recipe.",
+      },
     ],
   },
   {
     slug: "agave-deep-dive",
     title: "Agave deep dive",
     eyebrow: "Spirits path",
-    summary: "Choose the right tequila or mezcal, garnish with intent, then practice on Margaritas and Palomas.",
-    estimatedMinutes: 30,
+    summary:
+      "Choose blanco or mezcal, shake a Margarita, express citrus, then build a Paloma — garnish with intent, not extra fruit.",
+    estimatedMinutes: 40,
     coverImage: "/learn/spirit-primer-agave.webp",
     coverAlt: "Agave fields for tequila and mezcal",
     steps: [
-      { type: "guide", slug: "spirit-primer-agave" },
-      { type: "guide", slug: "garnish-with-intent" },
-      { type: "method", slug: "shake" },
-      { type: "technique", slug: "express" },
-      { type: "swaps" },
+      {
+        type: "guide",
+        slug: "spirit-primer-agave",
+        why: "Blanco for brightness, oak when you want softness, mezcal when you want smoke — 100% agave.",
+      },
+      {
+        type: "method",
+        slug: "shake",
+        why: "A Margarita is a sour. Hard shake, fresh lime, stop when the tin hurts.",
+      },
+      {
+        type: "technique",
+        slug: "express",
+        why: "Lime or grapefruit oil on the surface beats another wedge in the glass.",
+      },
+      {
+        type: "method",
+        slug: "build",
+        why: "A Paloma is a highball: packed ice, cold lengthener last, brief stir.",
+      },
+      {
+        type: "guide",
+        slug: "garnish-with-intent",
+        why: "Salt, peel, or nothing — match the aroma to the drink, don’t clutter it.",
+      },
     ],
   },
 ];
@@ -334,6 +553,11 @@ export function getLearnMethodByTechniqueKey(technique: string | null | undefine
 export function getLearnMethod(slug: string): LearnMethod | undefined {
   return LEARN_METHODS.find((m) => m.slug === slug);
 }
+
+/** Methods shown in the Learn library browse tab (techniques own the overlapping moves). */
+export const LEARN_LIBRARY_METHODS: LearnMethod[] = LEARN_METHODS.filter(
+  (m) => m.listedInLibrary !== false
+);
 
 export function getLearnPath(slug: string): LearnPath | undefined {
   return LEARN_PATHS.find((p) => p.slug === slug);
@@ -359,8 +583,10 @@ export function pathStepLabel(step: LearnPathStep): string {
       return getLearnGuide(step.slug)?.title ?? step.slug;
     case "method":
       return getLearnMethod(step.slug)?.label ?? step.slug;
-    case "technique":
-      return step.slug.replace(/-/g, " ");
+    case "technique": {
+      const raw = getTechniqueTermBySlug(step.slug)?.label ?? step.slug;
+      return formatTechniqueLabel(raw);
+    }
     case "swaps":
       return "Smart swaps";
   }
@@ -392,7 +618,7 @@ export function pathStepMedia(step: LearnPathStep): {
       const g = getLearnGuide(step.slug);
       return {
         title: g?.title ?? step.slug,
-        blurb: g?.summary ?? "",
+        blurb: step.why ?? g?.summary ?? "",
         kind: g?.eyebrow ?? "Guide",
         image: g?.coverImage ?? "/media/kitchen-shelf.webp",
         imageAlt: g?.coverAlt ?? g?.title ?? "Guide",
@@ -403,7 +629,7 @@ export function pathStepMedia(step: LearnPathStep): {
       const m = getLearnMethod(step.slug);
       return {
         title: m?.label ?? step.slug,
-        blurb: m?.summary ?? m?.tip ?? "",
+        blurb: step.why ?? m?.summary ?? m?.tip ?? "",
         kind: "Core method",
         image: m?.coverImage ?? "/learn/method-shake.webp",
         imageAlt: m?.coverAlt ?? m?.label ?? "Method",
@@ -412,6 +638,7 @@ export function pathStepMedia(step: LearnPathStep): {
     }
     case "technique": {
       const cover = TECHNIQUE_STEP_COVERS[step.slug];
+      const term = getTechniqueTermBySlug(step.slug);
       const blurbs: Record<string, string> = {
         "dry-shake": "Shake without ice first to build foam — then chill with a wet shake.",
         "fine-strain": "Hawthorne plus fine mesh — catch chips and pulp for drinks served up.",
@@ -424,8 +651,8 @@ export function pathStepMedia(step: LearnPathStep): {
         build: "Made in the glass you’ll drink from.",
       };
       return {
-        title: step.slug.replace(/-/g, " "),
-        blurb: blurbs[step.slug] ?? "A focused technique deep-dive — short, practical, then practice on a recipe.",
+        title: formatTechniqueLabel(term?.label ?? step.slug),
+        blurb: step.why ?? blurbs[step.slug] ?? "A focused technique — then practice on a recipe.",
         kind: "Technique",
         image: cover?.src ?? "/learn/method-shake.webp",
         imageAlt: cover?.alt ?? step.slug,
@@ -435,7 +662,7 @@ export function pathStepMedia(step: LearnPathStep): {
     case "swaps":
       return {
         title: "Smart swaps",
-        blurb: "Bottle substitutions when you’re mid-shop or mid-mix.",
+        blurb: step.why ?? "Bottle substitutions when you’re mid-shop or mid-mix.",
         kind: "Reference",
         image: "/media/kitchen-shelf.webp",
         imageAlt: "Bar bottles on a shelf",

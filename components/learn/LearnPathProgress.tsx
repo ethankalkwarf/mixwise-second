@@ -1,15 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import type { LearnPathStep } from "@/lib/learnLibrary";
 
-const storageKey = (pathSlug: string, userId: string) =>
-  `mixwise-learn-path:${userId}:${pathSlug}`;
-
 type Props = {
-  pathSlug: string;
   steps: LearnPathStep[];
   done?: boolean[];
 };
@@ -72,37 +67,4 @@ export function LearnPathProgress({ steps, done: controlledDone }: Props) {
       )}
     </div>
   );
-}
-
-export function useLearnPathDone(pathSlug: string, stepCount: number) {
-  const { user, isAuthenticated } = useUser();
-  const [done, setDone] = useState<boolean[]>(() => Array(stepCount).fill(false));
-
-  useEffect(() => {
-    if (!isAuthenticated || !user?.id) return;
-    try {
-      const raw = localStorage.getItem(storageKey(pathSlug, user.id));
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as boolean[];
-      if (Array.isArray(parsed) && parsed.length === stepCount) setDone(parsed);
-    } catch {
-      /* ignore */
-    }
-  }, [isAuthenticated, user?.id, pathSlug, stepCount]);
-
-  const toggle = useCallback(
-    (index: number) => {
-      setDone((prev) => {
-        const next = [...prev];
-        next[index] = !next[index];
-        if (user?.id) {
-          localStorage.setItem(storageKey(pathSlug, user.id), JSON.stringify(next));
-        }
-        return next;
-      });
-    },
-    [pathSlug, user?.id]
-  );
-
-  return { done, toggle, isAuthenticated };
 }

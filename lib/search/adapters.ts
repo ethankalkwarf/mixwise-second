@@ -6,11 +6,12 @@ import { slugifyIngredientName } from "@/lib/ingredientSlug";
 import { getIngredientGuide } from "@/lib/ingredientContent";
 import {
   LEARN_GUIDES,
-  LEARN_METHODS,
+  LEARN_LIBRARY_METHODS,
   type LearnGuide,
   type LearnMethod,
 } from "@/lib/learnLibrary";
-import { getAllTechniqueLearnEntries } from "@/lib/cocktailTechniqueGlossary";
+import { getAllTechniqueLearnEntries, formatTechniqueLabel } from "@/lib/cocktailTechniqueGlossary";
+import { getTechniqueLessonLayers } from "@/lib/learnTechniques";
 import type { CocktailSearchDocument } from "./scoreCocktail";
 
 export function cocktailListItemToSearchDocument(
@@ -132,16 +133,21 @@ export function learnMethodToSearchDocument(
 export function learnTechniqueToSearchDocument(
   technique: ReturnType<typeof getAllTechniqueLearnEntries>[number]
 ): CocktailSearchDocument & { learn: LearnSearchItem } {
+  const layers = getTechniqueLessonLayers(technique.slug);
   return {
     id: `technique:${technique.slug}`,
-    name: technique.label,
-    description: technique.explanation,
+    name: formatTechniqueLabel(technique.label),
+    description: layers?.bigIdea ?? technique.explanation,
     tags: technique.patterns,
-    aliases: technique.why ? [technique.why] : [],
+    aliases: [
+      technique.explanation,
+      ...(technique.why ? [technique.why] : []),
+      ...(layers?.keyTakeaways ?? []),
+    ],
     learn: {
       id: technique.slug,
       kind: "technique",
-      title: technique.label,
+      title: formatTechniqueLabel(technique.label),
       summary: technique.explanation,
       href: technique.learnPath || `/learn/techniques/${technique.slug}`,
     },
@@ -153,7 +159,7 @@ export function buildLearnSearchCorpus(): Array<
 > {
   return [
     ...LEARN_GUIDES.map(learnGuideToSearchDocument),
-    ...LEARN_METHODS.map(learnMethodToSearchDocument),
+    ...LEARN_LIBRARY_METHODS.map(learnMethodToSearchDocument),
     ...getAllTechniqueLearnEntries().map(learnTechniqueToSearchDocument),
   ];
 }

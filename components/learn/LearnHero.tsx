@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { MainContainer } from "@/components/layout/MainContainer";
 
 type Props = {
@@ -7,7 +8,7 @@ type Props = {
   imageAlt: string;
   eyebrow: string;
   title: string;
-  summary?: string;
+  summary?: ReactNode;
   backHref?: string;
   backLabel?: string;
   /** Shorter hero for secondary pages */
@@ -52,7 +53,7 @@ export function LearnHero({
 
       <MainContainer
         className={`relative z-10 ${compact ? "py-10 sm:py-12" : "py-12 sm:py-16"} ${
-          backHref ? "max-w-3xl" : ""
+          backHref ? "max-w-3xl" : "max-w-5xl"
         }`}
       >
         {backHref ? (

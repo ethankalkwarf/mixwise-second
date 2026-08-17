@@ -7,6 +7,14 @@ export type LearnSection = {
   heading: string;
   body: string[];
   kind?: "default" | "rule" | "mistakes" | "tip";
+  /** Inline teaching diagram rendered under the heading */
+  figure?: string;
+};
+
+/** A catalog drink used as a drill, with the sensory cue to practice. */
+export type LearnPracticeDrink = {
+  slug: string;
+  notice: string;
 };
 
 export type LearnSource = {

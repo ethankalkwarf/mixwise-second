@@ -4,6 +4,7 @@ import { LearnHero } from "@/components/learn/LearnHero";
 import { LearnLessonArticle } from "@/components/learn/LearnLessonArticle";
 import { LearnPracticeCocktails } from "@/components/learn/LearnPracticeCocktails";
 import { LearnChecks } from "@/components/learn/LearnChecks";
+import { LearnProgressControls } from "@/components/learn/LearnProgressControls";
 import { LearnContentGate } from "@/components/learn/LearnContentGate";
 import { LearnLessonFooter } from "@/components/learn/LearnLessonFooter";
 import {
@@ -73,14 +74,15 @@ export default async function LearnGuidePage({ params }: PageProps) {
         backHref="/learn"
       />
 
-      <MainContainer className="py-10 sm:py-14 max-w-2xl space-y-14">
+      <MainContainer className="py-10 sm:py-14 max-w-3xl space-y-14">
         <LearnContentGate gateId={`guide:${slug}`} teaserLabel="Keep reading this lesson">
           <LearnLessonArticle
             layers={guide}
             afterCore={
               <>
-                <LearnChecks checks={checks} title="Did it stick?" />
-                <LearnPracticeCocktails slugs={guide.practiceSlugs} />
+                <LearnChecks checks={checks} kind="guide" slug={slug} />
+                <LearnPracticeCocktails drinks={guide.practice} />
+                <LearnProgressControls kind="guide" slug={slug} />
               </>
             }
           />

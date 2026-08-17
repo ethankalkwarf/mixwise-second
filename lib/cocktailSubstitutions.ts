@@ -3,6 +3,8 @@
  * Matched against ingredient line text (case-insensitive).
  */
 
+export type SwapGroupId = "spirits" | "liqueurs" | "citrus-sweet" | "lengtheners";
+
 export type SubstitutionTip = {
   id: string;
   /** Shown as the thing in the recipe */
@@ -11,7 +13,15 @@ export type SubstitutionTip = {
   use: string;
   note?: string;
   patterns: string[];
+  group: SwapGroupId;
 };
+
+export const SWAP_GROUPS: { id: SwapGroupId; title: string; blurb: string }[] = [
+  { id: "spirits", title: "Spirits", blurb: "Same family, a different accent." },
+  { id: "liqueurs", title: "Liqueurs & bitters", blurb: "Keep the role; watch sweetness." },
+  { id: "citrus-sweet", title: "Citrus & sweeteners", blurb: "Balance lives here." },
+  { id: "lengtheners", title: "Foam & fizz", blurb: "Texture and the long drink." },
+];
 
 export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
   {
@@ -20,6 +30,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Triple sec or another dry orange liqueur",
     note: "Stay with a drier orange liqueur so the drink doesn’t turn candy-sweet.",
     patterns: ["cointreau", "triple sec", "orange liqueur"],
+    group: "liqueurs",
   },
   {
     id: "bourbon-rye",
@@ -27,6 +38,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Rye whiskey",
     note: "Rye runs drier and spicier; great in Manhattans and many whiskey sours.",
     patterns: ["bourbon"],
+    group: "spirits",
   },
   {
     id: "rye-bourbon",
@@ -34,6 +46,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Bourbon",
     note: "Bourbon is a little sweeter and softer if rye feels sharp.",
     patterns: ["rye whiskey", "rye"],
+    group: "spirits",
   },
   {
     id: "mezcal-tequila",
@@ -41,6 +54,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Reposado or blanco tequila",
     note: "You lose smoke; start with a splash of mezcal if you only have tequila.",
     patterns: ["mezcal"],
+    group: "spirits",
   },
   {
     id: "simple-agave",
@@ -48,6 +62,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Agave syrup (use a touch less)",
     note: "Agave is sweeter by volume — start around ¾ of the simple measure.",
     patterns: ["simple syrup"],
+    group: "citrus-sweet",
   },
   {
     id: "fresh-citrus",
@@ -55,6 +70,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Don’t swap bottled juice if you can help it",
     note: "Bottled lemon/lime flattens sours. If you must, cut sweetness slightly.",
     patterns: ["fresh lemon", "fresh lime", "lemon juice", "lime juice"],
+    group: "citrus-sweet",
   },
   {
     id: "egg-white-aquafaba",
@@ -62,6 +78,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Aquafaba (chickpea water)",
     note: "About ¾ oz aquafaba replaces one egg white for foam.",
     patterns: ["egg white"],
+    group: "lengtheners",
   },
   {
     id: "campari-aperitivo",
@@ -69,6 +86,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Another red bitter aperitivo (Aperol is sweeter/lighter)",
     note: "Aperol makes a softer, sweeter drink — not a 1:1 flavor match.",
     patterns: ["campari"],
+    group: "liqueurs",
   },
   {
     id: "prosecco-sparkling",
@@ -76,6 +94,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Any dry sparkling wine",
     note: "Keep it brut/extra-dry so spritzes don’t turn sugary.",
     patterns: ["prosecco", "champagne", "sparkling wine"],
+    group: "lengtheners",
   },
   {
     id: "ginger-beer",
@@ -83,6 +102,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
     use: "Spicy ginger beer over ginger ale",
     note: "Ginger ale is sweeter and milder — fine in a pinch, less bite.",
     patterns: ["ginger beer"],
+    group: "lengtheners",
   },
 ];
 

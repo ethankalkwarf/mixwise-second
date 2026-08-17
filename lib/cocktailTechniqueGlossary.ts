@@ -213,6 +213,17 @@ export function getTechniqueTermBySlug(slug: string): GlossaryTerm | undefined {
   return TECHNIQUE_TERMS.find((term) => techniqueSlugFromLearnPath(term.learnPath) === slug);
 }
 
+/** Display title for technique names stored in lowercase ("dry shake" → "Dry Shake"). */
+export function formatTechniqueLabel(label: string): string {
+  return label
+    .trim()
+    .replace(/-/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
 export function getAllTechniqueLearnEntries(): Array<GlossaryTerm & { slug: string }> {
   return TECHNIQUE_TERMS.map((term) => {
     const slug = techniqueSlugFromLearnPath(term.learnPath);

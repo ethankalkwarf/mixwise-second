@@ -1,4 +1,5 @@
 import type { LearnSection } from "@/lib/learnTypes";
+import { LearnFigure } from "@/components/learn/LearnFigure";
 
 /** Shared Learn lesson type scale — keep every section on the same steps. */
 export const LEARN_LABEL =
@@ -6,6 +7,9 @@ export const LEARN_LABEL =
 export const LEARN_HEADING =
   "font-display text-2xl font-bold !text-charcoal mb-4 tracking-tight";
 export const LEARN_BODY = "text-[17px] !text-charcoal/85 leading-[1.7]";
+/** Multi-line thesis / deck — Jost, not the display serif. */
+export const LEARN_LEDE =
+  "font-sans text-[1.2rem] sm:text-[1.3rem] font-medium !text-charcoal leading-[1.55]";
 
 /**
  * Editorial lesson sections with one consistent type hierarchy.
@@ -18,6 +22,11 @@ export function LearnSectionBlock({ section }: { section: LearnSection }) {
     return (
       <article>
         <h2 className={LEARN_HEADING}>{section.heading}</h2>
+        {section.figure ? (
+          <div className="my-8">
+            <LearnFigure id={section.figure} />
+          </div>
+        ) : null}
         <ul className="space-y-3">
           {section.body.flatMap((para) =>
             para
@@ -42,6 +51,11 @@ export function LearnSectionBlock({ section }: { section: LearnSection }) {
     <article className={kind === "rule" ? "border-l border-terracotta/50 pl-5 sm:pl-6" : undefined}>
       {label && <p className={LEARN_LABEL}>{label}</p>}
       <h2 className={LEARN_HEADING}>{section.heading}</h2>
+      {section.figure ? (
+        <div className="my-8">
+          <LearnFigure id={section.figure} />
+        </div>
+      ) : null}
       <div className="space-y-4">
         {section.body.map((para) => (
           <p key={para.slice(0, 48)} className={LEARN_BODY}>

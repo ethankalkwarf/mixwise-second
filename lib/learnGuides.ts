@@ -2,7 +2,7 @@
  * Enriched Learn guides — layered lessons (big idea → core → deep dive → sources).
  */
 
-import type { LearnSection, LearnSource } from "@/lib/learnTypes";
+import type { LearnPracticeDrink, LearnSection, LearnSource } from "@/lib/learnTypes";
 
 export type LearnGuide = {
   slug: string;
@@ -14,7 +14,7 @@ export type LearnGuide = {
   coverImage: string;
   coverAlt: string;
   accentClass: string;
-  practiceSlugs: string[];
+  practice: LearnPracticeDrink[];
   bigIdea: string;
   keyTakeaways: string[];
   sections: LearnSection[];
@@ -34,7 +34,28 @@ export const LEARN_GUIDES: LearnGuide[] = [
     coverImage: "/media/kitchen-shelf.webp",
     coverAlt: "Home bar bottles and glassware on a kitchen shelf",
     accentClass: "from-olive/30 via-cream to-cream",
-    practiceSlugs: ["gin-and-tonic", "old-fashioned", "margarita", "negroni"],
+    practice: [
+      {
+        slug: "gin-and-tonic",
+        notice:
+          "Pack the glass with ice and use fridge-cold tonic. If it tastes thin in two minutes, you under-iced it.",
+      },
+      {
+        slug: "old-fashioned",
+        notice:
+          "Measure the sugar and bitters. Taste before the garnish — you want whiskey, not candy.",
+      },
+      {
+        slug: "margarita",
+        notice:
+          "Squeeze the lime to order. If it tastes dull, the citrus is the first suspect — not the tequila.",
+      },
+      {
+        slug: "negroni",
+        notice:
+          "Equal parts, stirred cold. If it tastes dusty or sharp, check the vermouth date.",
+      },
+    ],
     bigIdea:
       "A small, intentional kit — tools that measure and chill, ice you trust, fresh citrus, and a short bottle list — outperforms a crowded cart of half-used novelty bottles.",
     keyTakeaways: [
@@ -48,6 +69,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       {
         heading: "Build a small kit that works hard",
         kind: "rule",
+        figure: "home-kit",
         body: [
           "You do not need a full bar cart to make serious drinks. A shaker (or jar with a tight lid), a strainer, a jigger or measuring spoons, a barspoon, and a peeler cover nearly every classic technique on MixWise.",
           "Add a fine mesh strainer when you start serving drinks “up” (no ice in the glass). That second strain keeps ice chips and pulp out of coupes and Nick & Noras.",
@@ -67,23 +89,24 @@ export const LEARN_GUIDES: LearnGuide[] = [
           "If a recipe tastes dull, check citrus before you blame the spirit. Underripe fruit and old juice are the usual culprits.",
         ],
       },
-      {
-        heading: "A starter bottle list",
-        kind: "tip",
-        body: [
-          "One solid gin, one vodka, one blanco tequila, one whiskey you like neat, and a versatile rum cover a surprising amount of the catalog.",
-          "Then add sweet vermouth, dry vermouth (keep refrigerated), a dry orange liqueur, and Angostura bitters. That set unlocks Manhattans, Martinis, Margaritas, Negronis (with Campari), and dozens of variations.",
-        ],
-      },
-    ],
+        {
+          heading: "A starter bottle list",
+          kind: "tip",
+          body: [
+            "One solid gin, one vodka, one blanco tequila, one whiskey you like neat, and a versatile rum cover a surprising amount of the catalog.",
+            "Then add sweet vermouth, dry vermouth (keep refrigerated), a dry orange liqueur, and Angostura bitters. That set unlocks Manhattans, Martinis, Margaritas, Negronis (with Campari), and dozens of variations.",
+            "Think in templates, not viral recipes: a sour (spirit + citrus + sweet), a highball (spirit + cold lengthener), and an old fashioned (spirit + sugar + bitters) will teach you more than a seventh liqueur.",
+          ],
+        },
+        {
+          heading: "Why measuring beats freestyle early",
+          body: [
+            "Embury’s classic ratios and DeGroff’s bar math both assume precision: a half-ounce swing in citrus or syrup can flip a sour from bright to flabby. Until your eye and pour are calibrated, a jigger is not pedantry — it is how you learn what “balanced” feels like.",
+            "Once you can taste a 2:1:1 Daiquiri and know it is right, free-pouring becomes a controlled choice, not a guess. Build muscle memory on measured drinks first.",
+          ],
+        },
+      ],
     deepDive: [
-      {
-        heading: "Why measuring beats freestyle early",
-        body: [
-          "Embury’s classic ratios and DeGroff’s bar math both assume precision: a half-ounce swing in citrus or syrup can flip a sour from bright to flabby. Until your eye and pour are calibrated, a jigger is not pedantry — it is how you learn what “balanced” feels like.",
-          "Once you can taste a 2:1:1 Daiquiri and know it is right, free-pouring becomes a controlled choice, not a guess. Build muscle memory on measured drinks first.",
-        ],
-      },
       {
         heading: "Ice surface area and dilution",
         kind: "tip",
@@ -119,6 +142,217 @@ export const LEARN_GUIDES: LearnGuide[] = [
     ],
   },
   {
+    slug: "cocktail-templates",
+    title: "Cocktail templates",
+    eyebrow: "Structure",
+    summary:
+      "Most drinks are families, not one-offs. Learn three skeletons — plus equal parts — and improvisation stops being a guess.",
+    readingMinutes: 11,
+    topics: ["templates", "sour", "old-fashioned", "highball", "ratios", "beginner"],
+    coverImage: "/learn/cocktail-templates.webp",
+    coverAlt: "Three template drinks on a kitchen counter: a sour in a coupe, an old fashioned on a rock, and a highball",
+    accentClass: "from-terracotta/15 via-cream to-olive/20",
+    practice: [
+      {
+        slug: "daiquiri",
+        notice:
+          "Taste the 2:1:1 skeleton (rum, lime, syrup). If it’s flabby, the lime is tired or the syrup heavy — don’t add more rum first.",
+      },
+      {
+        slug: "old-fashioned",
+        notice:
+          "Spirit, sugar, bitters, ice. Stir until the heat drops. The drink should still taste like whiskey.",
+      },
+      {
+        slug: "gin-and-tonic",
+        notice:
+          "Ice first, gin, cold tonic last. A brief stir. If it dies in a minute, you under-iced or used warm tonic.",
+      },
+      {
+        slug: "negroni",
+        notice:
+          "Equal parts still need a stir. If bitterness is harsh, the vermouth is often older than the Campari.",
+      },
+    ],
+    bigIdea:
+      "Stay inside a template first — sour, old fashioned, highball, or equal parts — then change one variable. Creativity lands on a balanced base, not a pile of bottles.",
+    keyTakeaways: [
+      "A sour is spirit + citrus + sweet. 2:1:1 (Daiquiri) is the home default; drier specs exist once you can taste it.",
+      "An old fashioned is spirit + sugar + bitters + dilution. The whiskey should still be the point.",
+      "A highball is spirit + a cold lengthener. Ice volume and fridge-cold bubbles matter more than the garnish.",
+      "Equal parts (Negroni family) still need stirring and fresh vermouth — “equal” is not “skip the method.”",
+      "When you invent, name the family first. Then change one thing.",
+    ],
+    sections: [
+      {
+        heading: "Name the family before you pour",
+        kind: "rule",
+        figure: "templates",
+        body: [
+          "If the drink has citrus, you are in sour territory. If it’s a spirit seasoned with sugar and bitters, it’s an old fashioned. If a cold soda, tonic, or ginger beer does the stretching, it’s a highball. If three modifiers share the glass in equal ounces, you’re in Negroni country.",
+          "That name tells you the method (usually shake / stir / build), what “balanced” means, and which lever to touch when it tastes wrong.",
+        ],
+      },
+      {
+        heading: "The sour skeleton",
+        body: [
+          "Spirit, citrus, and sweetener. A Daiquiri at 2 oz rum / 1 oz lime / 1 oz syrup (or a tighter 2:¾:¾) is the fastest way to calibrate your palate. Embury’s older, drier 8:2:1 is a destination, not a first pour — you need to know what 2:1:1 tastes like before you start subtracting sugar.",
+          "Egg white, fruit, and liqueurs are decorations on this frame. Fix sweet/sour before you add another modifier.",
+        ],
+      },
+      {
+        heading: "Old fashioned and highball",
+        body: [
+          "Old fashioned: a little sugar, a few dashes of bitters, a lot of spirit, and enough stir to take the ethanol heat off. If it tastes like candy, you oversweetened; if it burns, you under-diluted.",
+          "Highball: packed ice, measured spirit, fridge-cold lengthener last, brief stir. The “recipe” is mostly temperature and bubbles. A Paloma, G&T, and Dark ’n Stormy are the same job in different bottles.",
+        ],
+      },
+      {
+        heading: "Change one variable",
+        kind: "tip",
+        body: [
+          "Swap the spirit in a Daiquiri and you still have a sour. Swap the lengthener in a highball and you still have a highball. Change spirit, citrus, and sweetener at once and you can’t tell what worked.",
+          "MixWise’s catalog is easier to shop once you think this way: gin + citrus + sweet covers a family; gin + vermouth + Campari covers another.",
+        ],
+      },
+    ],
+    deepDive: [
+      {
+        heading: "Embury, 2:1:1, and why both can be right",
+        body: [
+          "David Embury argued for a very dry sour — a lot of spirit, a little citrus, less sugar still. Modern bars often serve something closer to 2:1:1 or 2:¾:¾ because today’s palates (and today’s citrus) expect more brightness. Neither is dogma. The point is to pick a skeleton, taste it, and know which direction you moved.",
+        ],
+      },
+      {
+        heading: "Equal parts are a template too",
+        kind: "tip",
+        body: [
+          "Negroni, Boulevardier, Last Word, Paper Plane: the ounces match so the method and the modifiers do the talking. They still need dilution (stir or shake, depending on citrus) and fresh bottles. “Equal parts” is a recipe shape, not an excuse to skip ice.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "David A. Embury, The Fine Art of Mixing Drinks",
+        note: "The sour as a skeleton and the argument for knowing your ratios.",
+      },
+      {
+        label: "Dale DeGroff, The Craft of the Cocktail",
+        note: "Classic templates from a working-bar perspective.",
+      },
+      {
+        label: "Jim Meehan, Meehan's Bartender Manual",
+        note: "Families of drinks and how bartenders think in structures.",
+      },
+    ],
+  },
+  {
+    slug: "ice-and-dilution",
+    title: "Ice and dilution",
+    eyebrow: "Ingredients",
+    summary:
+      "Cold is heat leaving the drink; dilution is melt. Ice size, hardness, and contact time control both — more than the brand of spirit for most home cocktails.",
+    readingMinutes: 10,
+    topics: ["ice", "dilution", "temperature", "technique"],
+    coverImage: "/learn/ice-and-dilution.webp",
+    coverAlt: "Mixing glass packed with hard ice cubes and a barspoon on a kitchen counter",
+    accentClass: "from-forest/20 via-cream to-olive/15",
+    practice: [
+      {
+        slug: "manhattan",
+        notice:
+          "Hard cubes, full mixing glass. Taste at 20 seconds and at 30. You want the burn gone without the drink tasting thin.",
+      },
+      {
+        slug: "daiquiri",
+        notice:
+          "Pack the tin. Stop when it hurts to hold. Extra shaking after that is mostly water.",
+      },
+      {
+        slug: "gin-and-tonic",
+        notice:
+          "Fill the glass with ice, then tonic. Sparse ice is why highballs die in two minutes.",
+      },
+      {
+        slug: "queens-park-swizzle",
+        notice:
+          "Crushed ice only. The frost on the glass is the cue you’ve diluted in place.",
+      },
+    ],
+    bigIdea:
+      "Ice is an ingredient: large hard cubes chill stirred drinks with less water; smaller or cracked ice dumps chill (and melt) faster in a shake; crushed ice is a texture, not a default.",
+    keyTakeaways: [
+      "Cold is transfer; dilution is melt. You want both, on purpose, in the right amount.",
+      "Pack the tin or mixing glass — sparse ice melts too fast and never gets the drink cold.",
+      "Soft freezer ice over-dilutes stirred drinks before they’re cold; use harder cubes or taste sooner.",
+      "Once a shaker tin is painfully cold, extra time is mostly water.",
+      "Crushed ice is for swizzles, juleps, and some tiki builds — not every highball.",
+    ],
+    sections: [
+      {
+        heading: "Treat ice like juice",
+        kind: "rule",
+        body: [
+          "You wouldn’t use week-old lime without noticing. Wet, hollow freezer cubes are the same kind of ingredient failure. They dump water before they dump cold, which is why home Manhattans taste thin and home Daiquiris taste weak even when the bottles are good.",
+          "Clearer, denser cubes have less surface area for their volume, so stirred drinks can get cold without turning into whiskey-flavored water.",
+        ],
+      },
+      {
+        heading: "Match the ice to the method",
+        figure: "ice-types",
+        body: [
+          "Stirred spirit-forward drinks want large, hard cubes and a full mixing glass. Shaken sours want enough ice that the tin is packed — smaller or cracked cubes are fine because you want fast chill in 10–15 seconds.",
+          "Built highballs want the glass packed so the drink stays cold while you sip. Crushed ice belongs in swizzles and juleps, where the texture is the point and the frost on the glass is your timer.",
+        ],
+      },
+      {
+        heading: "Taste, don’t worship the clock",
+        kind: "tip",
+        body: [
+          "Dave Arnold’s chill curves show that most useful cooling happens early. After the tin frosts and hurts to hold, you are mostly adding water. Soft home ice reaches that over-dilution point faster than bar ice — shorten the shake if the drink tastes thin.",
+          "For stirred drinks, taste: hot alcohol means keep going; watery means you overshot. Note your ice and your time so the next round isn’t a guess.",
+        ],
+      },
+      {
+        heading: "Common mistakes",
+        kind: "mistakes",
+        body: [
+          "A half-empty shaker. Warm soda over two cubes. Stirring for a full minute on wet ice. Using crushed ice in a Martini. Leaving a blender drink to “rest.” All of these are dilution mistakes dressed up as technique.",
+        ],
+      },
+    ],
+    deepDive: [
+      {
+        heading: "Surface area is the hidden spec",
+        body: [
+          "Melt rate tracks surface area. One big rock in a rocks glass keeps an Old Fashioned drinkable. The same ounces of pebble ice would wash it out. In a shake, high surface area is useful — you want the drink cold now, then out of the tin.",
+          "If your freezer only makes brittle cubes, crack them for the shaker and save the best-looking ones for stirring — or buy a bag of denser ice for Manhattan night.",
+        ],
+      },
+      {
+        heading: "Dilution is the fourth ingredient",
+        kind: "tip",
+        body: [
+          "Embury called it “weak”: water, soda, wine. A drink that tastes hot is often under-weakened, not over-proofed. A drink that tastes thin is over-weakened. Map the ice to that job instead of treating water as an accident.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Dave Arnold, Liquid Intelligence",
+        note: "Chill curves, dilution, and why the painful-tin cue beats a stopwatch.",
+      },
+      {
+        label: "Jeffrey Morgenthaler, The Bar Book",
+        note: "Practical ice guidance for working bars that translates at home.",
+      },
+      {
+        label: "David A. Embury, The Fine Art of Mixing Drinks",
+        note: "“Weak” as a structural part of the drink, not a flaw.",
+      },
+    ],
+  },
+  {
     slug: "shake-vs-stir",
     title: "When to shake vs stir",
     eyebrow: "Core technique",
@@ -129,7 +363,28 @@ export const LEARN_GUIDES: LearnGuide[] = [
     coverImage: "/learn/shake-vs-stir.webp",
     coverAlt: "Home bartender with a cocktail shaker, jigger, and lime on a wooden counter",
     accentClass: "from-forest/20 via-cream to-olive/15",
-    practiceSlugs: ["daiquiri", "whiskey-sour", "manhattan", "martini"],
+    practice: [
+      {
+        slug: "daiquiri",
+        notice:
+          "This is the shake. Stop when the tin hurts. If you stir it “to be fancy,” it will taste dense and less bright.",
+      },
+      {
+        slug: "whiskey-sour",
+        notice:
+          "Citrus and egg want a shake (often dry, then wet). Stirring leaves the egg under-emulsified and the drink less lively.",
+      },
+      {
+        slug: "manhattan",
+        notice:
+          "All spirits. Stir for clarity and silk. Shaking it won’t ruin it — it will cloud it and add more water than the template wants.",
+      },
+      {
+        slug: "martini",
+        notice:
+          "Same rule as the Manhattan. Taste cold and dense, not frothy. Express lemon after you strain.",
+      },
+    ],
     bigIdea:
       "Shake to integrate and aerate cloudy or acidic mixes; stir to chill all-spirit drinks while preserving clarity and denser texture — time and ice control dilution either way.",
     keyTakeaways: [
@@ -143,6 +398,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       {
         heading: "The rule of thumb",
         kind: "rule",
+        figure: "shake-or-stir",
         body: [
           "Shake drinks that include citrus, egg, dairy, or anything cloudy you want fully integrated. Stir drinks that are all spirits and liqueurs — Manhattans, Martinis, Negronis — when you want clarity and a silky texture.",
           "Shaking adds air and more dilution; stirring keeps the drink denser and clearer. Neither is “fancier.” Match the method to the ingredients.",
@@ -155,23 +411,23 @@ export const LEARN_GUIDES: LearnGuide[] = [
           "Stir 20–30 seconds with plenty of ice, tasting if you are unsure. You want the drink cold and slightly softened, not watery.",
         ],
       },
-      {
-        heading: "Common mistakes",
-        kind: "mistakes",
-        body: [
-          "Shaking a Martini will not ruin it, but it will look cloudy and taste more diluted. Stirring a Whiskey Sour will leave egg white under-emulsified and the drink less lively.",
-          "Always use enough ice. A half-empty shaker or mixing glass melts ice too fast and warms the drink unevenly.",
-        ],
-      },
-    ],
+        {
+          heading: "Common mistakes",
+          kind: "mistakes",
+          body: [
+            "Shaking a Martini will not ruin it, but it will look cloudy and taste more diluted. Stirring a Whiskey Sour will leave egg white under-emulsified and the drink less lively.",
+            "Always use enough ice. A half-empty shaker or mixing glass melts ice too fast and warms the drink unevenly.",
+          ],
+        },
+        {
+          heading: "What shaking actually does",
+          body: [
+            "A hard shake is simultaneous heat exchange, dilution, and aeration. Tiny air bubbles lighten mouthfeel and help emulsify citrus oils, egg proteins, and cream. That is why a Daiquiri tastes brighter shaken than stirred — not only colder.",
+            "Most of the useful cooling happens early. After the tin is painfully cold, extra shaking mostly adds water. Stop when the outside frosts and your hands hurt — that sensory cue beats a stopwatch with soft home ice.",
+          ],
+        },
+      ],
     deepDive: [
-      {
-        heading: "What shaking actually does",
-        body: [
-          "A hard shake is simultaneous heat exchange, dilution, and aeration. Tiny air bubbles lighten mouthfeel and help emulsify citrus oils, egg proteins, and cream. That is why a Daiquiri tastes brighter shaken than stirred — not only colder.",
-          "Dave Arnold’s work on chill curves shows that most of the useful cooling happens early; after the tin is painfully cold, extra shaking mostly adds water. Stop when the outside frosts and your hands hurt — that sensory cue beats a stopwatch with soft home ice.",
-        ],
-      },
       {
         heading: "Stirring for clarity and density",
         kind: "tip",
@@ -218,7 +474,28 @@ export const LEARN_GUIDES: LearnGuide[] = [
     coverImage: "/learn/balance-and-taste.webp",
     coverAlt: "Overhead flat lay of citrus, spirits, and ice while slicing lime for cocktails",
     accentClass: "from-terracotta/15 via-cream to-olive/20",
-    practiceSlugs: ["margarita", "whiskey-sour", "tom-collins", "negroni"],
+    practice: [
+      {
+        slug: "margarita",
+        notice:
+          "Too sweet? Add citrus (and check it’s fresh). Too hot? A longer shake or a splash more lime — not another ounce of tequila first.",
+      },
+      {
+        slug: "whiskey-sour",
+        notice:
+          "Taste temperature, then bright vs sweet. Fix with drops and barspoons, then re-taste. Don’t rewrite the whole pour.",
+      },
+      {
+        slug: "tom-collins",
+        notice:
+          "A sour with length. If it’s flat, the soda died or the lemon is tired — not “the recipe.”",
+      },
+      {
+        slug: "negroni",
+        notice:
+          "Bitter should be framed, not buried. If it’s dusty-sharp, check vermouth before you add syrup.",
+      },
+    ],
     bigIdea:
       "Balance is a conversation among strong (spirit), sour (acid), sweet (sugar), and weak (dilution or length) — taste in that order, then fix the smallest lever first.",
     keyTakeaways: [
@@ -245,22 +522,23 @@ export const LEARN_GUIDES: LearnGuide[] = [
           "Too flat: check freshness of citrus and carbonation. Too bitter: a touch of sweetness or orange oil can round edges without hiding the bitter character entirely.",
         ],
       },
-      {
-        heading: "Trust structure, then tweak",
-        body: [
-          "Classic templates exist because they work: sour (spirit + citrus + sweet), highball (spirit + lengthener), old fashioned (spirit + sugar + bitters).",
-          "When improvising, stay inside a template first. Wild creativity is easier after the drink already balances.",
-        ],
-      },
-    ],
+        {
+          heading: "Trust structure, then tweak",
+          body: [
+            "Classic templates exist because they work: sour (spirit + citrus + sweet), highball (spirit + lengthener), old fashioned (spirit + sugar + bitters).",
+            "When improvising, stay inside a template first. Wild creativity is easier after the drink already balances.",
+          ],
+        },
+        {
+          heading: "Embury’s four parts in practice",
+          figure: "four-parts",
+          body: [
+            "David Embury framed cocktails as strong, sour, sweet, and weak. “Weak” is dilution, soda, wine, or water — the softening agent. A drink that tastes hot is often under-diluted, not over-proofed; a drink that tastes thin is over-weakened.",
+            "Map every tweak to one of the four. Adding syrup without acid tips sweet; adding citrus without sugar tips sour. Name the imbalance before you reach for the bottle.",
+          ],
+        },
+      ],
     deepDive: [
-      {
-        heading: "Embury’s four parts in practice",
-        body: [
-          "David Embury framed cocktails as strong, sour, sweet, and weak. “Weak” is dilution, soda, wine, or water — the softening agent. A drink that tastes hot is often under-diluted, not over-proofed; a drink that tastes thin is over-weakened.",
-          "Map every tweak to one of the four. Adding syrup without acid tips sweet; adding citrus without sugar tips sour. Name the imbalance before you reach for the bottle.",
-        ],
-      },
       {
         heading: "Acid type and perceived sweetness",
         kind: "tip",
@@ -307,7 +585,28 @@ export const LEARN_GUIDES: LearnGuide[] = [
     coverImage: "/learn/garnish-with-intent.webp",
     coverAlt: "Hand placing a grapefruit wedge garnish on a rocks cocktail",
     accentClass: "from-olive/25 via-cream to-terracotta/10",
-    practiceSlugs: ["old-fashioned", "mojito", "martini", "gin-gin-mule"],
+    practice: [
+      {
+        slug: "old-fashioned",
+        notice:
+          "Express orange over the surface, then wipe the rim. Smell before you sip — the oil should hit first.",
+      },
+      {
+        slug: "mojito",
+        notice:
+          "Slap the mint for the garnish. Don’t shred it into the muddle. If it smells like lawn, you overdid the leaves in the glass.",
+      },
+      {
+        slug: "martini",
+        notice:
+          "A thin lemon peel, pith side down. If it tastes pithy, the cut was too thick.",
+      },
+      {
+        slug: "gin-gin-mule",
+        notice:
+          "Mint should perfume the first sip. Place it so the drinker’s nose hits the sprig.",
+      },
+    ],
     bigIdea:
       "Garnish is the first aroma the guest gets — citrus oils, slapped herbs, or deliberate absence — and it should match the drink’s flavor architecture, not just look pretty.",
     keyTakeaways: [
@@ -321,6 +620,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       {
         heading: "Citrus peels are perfume",
         kind: "rule",
+        figure: "express-peel",
         body: [
           "Express a peel over the drink so oils hit the surface, then optionally wipe the rim. That aroma hit is often more important than the twist sitting in the glass.",
           "Avoid thick pithy peels when you can — bitter white pith muddies a Martini or Old Fashioned.",
@@ -384,6 +684,116 @@ export const LEARN_GUIDES: LearnGuide[] = [
     ],
   },
   {
+    slug: "vermouth-and-modifiers",
+    title: "Vermouth, wine & modifiers",
+    eyebrow: "Bottles",
+    summary:
+      "The silent reason home Manhattans and Negronis taste dusty — how to buy, fridge, and season with vermouth, aperitivi, and bitters.",
+    readingMinutes: 11,
+    topics: ["vermouth", "bitters", "campari", "modifiers", "oxidation"],
+    coverImage: "/learn/vermouth-and-modifiers.webp",
+    coverAlt: "Vermouth and modifier bottles stored cold on a refrigerator shelf",
+    accentClass: "from-olive/25 via-cream to-terracotta/10",
+    practice: [
+      {
+        slug: "manhattan",
+        notice:
+          "If it tastes flat, nutty-stale, or dusty, the vermouth is the suspect — not the whiskey. Open a fresher bottle and stir again.",
+      },
+      {
+        slug: "negroni",
+        notice:
+          "Equal parts. Harsh, dusty bitterness is often oxidized sweet vermouth. Campari is stable; the wine is not.",
+      },
+      {
+        slug: "martini",
+        notice:
+          "Dry vermouth belongs in the fridge. A “dry” Martini with tired vermouth just tastes like cold gin and dust.",
+      },
+      {
+        slug: "americano",
+        notice:
+          "Campari, vermouth, cold soda. The build is simple so the vermouth has nowhere to hide.",
+      },
+    ],
+    bigIdea:
+      "Vermouth is fortified wine — it oxidizes. Refrigerate after opening, finish it in weeks, and treat bitters and bitter aperitivi as seasoning, not as bottles that last forever in flavor.",
+    keyTakeaways: [
+      "Sweet, dry, and blanc vermouth are different modifiers, not a flavor slider on one bottle.",
+      "Fridge after opening. Counter vermouth is why last month’s Manhattan tasted stale.",
+      "Campari and most bitters are more stable; the wine in the drink is the perishable part.",
+      "Aperol is not stealth Campari — sweeter, lighter, less bitter. Taste and adjust.",
+      "Bitters are salt and spice: dashes, not ounces, unless the recipe is a bitter build.",
+    ],
+    sections: [
+      {
+        heading: "Wine that thinks it’s a spirit",
+        kind: "rule",
+        figure: "vermouth-care",
+        body: [
+          "Vermouth is aromatized, fortified wine. The fortification helps it last longer than a table white, not forever. Oxygen and heat dull the herbs and leave a nutty, stale edge that reads as “this cocktail is bad” when the whiskey was fine.",
+          "Buy a bottle you will finish in a few weeks of actual mixing. Split a 375 ml if Manhattans are a sometimes drink. Refrigerate the moment you open it.",
+        ],
+      },
+      {
+        heading: "Sweet, dry, blanc — pick the job",
+        body: [
+          "Sweet (rosso) vermouth is the Manhattan and Negroni partner — caramel, spice, bitter-sweet herbs. Dry vermouth is the Martini’s whisper of wine and botanicals. Blanc/bianco sits in between: sweeter than dry, paler than rosso, useful in modern gin drinks.",
+          "They are not interchangeable by the ounce. Swapping dry into a Manhattan makes a different, leaner drink; swapping sweet into a Martini makes a wet, clumsy one.",
+        ],
+      },
+      {
+        heading: "Bitter modifiers and bitters",
+        kind: "tip",
+        body: [
+          "Campari, other red bitter aperitivi, and amari are closer to liqueurs than to wine — they keep. They still aren’t 1:1 with each other. Aperol in a Negroni is a softer, sweeter cousin; don’t expect Campari’s grip.",
+          "Aromatic bitters (Angostura and friends) are seasoning. A few dashes frame whiskey and vermouth. Dumping a tablespoon in an Old Fashioned is a different recipe, not a louder version of the same one.",
+        ],
+      },
+      {
+        heading: "Common mistakes",
+        kind: "mistakes",
+        body: [
+          "Vermouth on a warm cart for six months. Using the same bottle for Martinis and Manhattans because “it’s vermouth.” Fixing a dusty Negroni with more sugar instead of a fresher rosso. Measuring bitters like a liqueur.",
+        ],
+      },
+    ],
+    deepDive: [
+      {
+        heading: "How long is “fresh enough”?",
+        body: [
+          "There is no single date stamp, but working bartenders treat opened vermouth as a perishable measured in weeks, not seasons. If it smells like leftover white wine and walnuts instead of herbs and fruit, it’s done. Write the open date on the label.",
+          "Unopened bottles still fade slowly. Don’t hoard a “good” vermouth for years before cracking it for one Manhattan.",
+        ],
+      },
+      {
+        heading: "Orange liqueur is a modifier too",
+        kind: "tip",
+        body: [
+          "A dry orange liqueur (Cointreau-style) is structural in a Margarita — it’s the sweet side of a sour, plus aroma. A cheap, syrupy triple sec shifts the template toward candy. Stay dry unless you taste and cut the syrup elsewhere.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Adam Ford, Vermouth: The Revival of the Spirit that Created America's Cocktail Culture",
+        note: "Category history and why vermouth belongs in the fridge.",
+      },
+      {
+        label: "Jim Meehan, Meehan's Bartender Manual",
+        note: "Modifier selection and service standards for wine-based bottles.",
+      },
+      {
+        label: "Dale DeGroff, The Craft of the Cocktail",
+        note: "Manhattan/Martini construction when the vermouth is actually alive.",
+      },
+      {
+        label: "Jeffrey Morgenthaler, The Bar Book",
+        note: "Practical notes on syrups, citrus, and the bottles that season a drink.",
+      },
+    ],
+  },
+  {
     slug: "spirit-primer-agave",
     title: "Agave primer: tequila & mezcal",
     eyebrow: "Spirits",
@@ -394,7 +804,28 @@ export const LEARN_GUIDES: LearnGuide[] = [
     coverImage: "/learn/spirit-primer-agave.webp",
     coverAlt: "Blue agave field in Jalisco with mountains beyond",
     accentClass: "from-terracotta/20 via-cream to-olive/15",
-    practiceSlugs: ["margarita", "paloma", "mezcal-margarita", "tommy-s-margarita"],
+    practice: [
+      {
+        slug: "margarita",
+        notice:
+          "Blanco 100% agave, fresh lime. If it tastes oaky-dessert, you used a reposado or añejo that wants a different template.",
+      },
+      {
+        slug: "paloma",
+        notice:
+          "A highball: packed ice, cold grapefruit lengthener last. Blanco still fits; loud mezcal can take over.",
+      },
+      {
+        slug: "mezcal-margarita",
+        notice:
+          "Start with Espadín. If smoke buries the lime, split with blanco tequila instead of pouring more citrus.",
+      },
+      {
+        slug: "tommy-s-margarita",
+        notice:
+          "Tequila, lime, agave syrup — no orange liqueur. This is the blanco-purity test. Mixto will taste flat here.",
+      },
+    ],
     bigIdea:
       "Agave spirits are defined by plant, process, and aging — choose blanco for brightness, oak-aged tequila for softness and spice, and mezcal for smoke and earth, always preferring 100% agave.",
     keyTakeaways: [
@@ -408,6 +839,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       {
         heading: "Categories that matter at home",
         kind: "rule",
+        figure: "agave-ages",
         body: [
           "Blanco (unaged or briefly rested) keeps bright agave and pepper — ideal for Margaritas and highballs. Reposado softens with light oak. Añejo leans dessert-spice and works in Old Fashioned builds.",
           "Mezcal adds smoke and earth. Espadín is the approachable workhorse; louder mezcals can dominate equal-parts drinks.",
@@ -417,7 +849,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
         heading: "100% agave only",
         kind: "mistakes",
         body: [
-          "Mixto tequilas (with added sugars) taste flatter and hangover-prone in cocktails. Look for “100% agave” on the label.",
+          "Mixto tequilas (up to 49% of fermentable sugars from sources other than agave) taste flatter and sweeter in cocktails. Look for “100% agave” on the label.",
         ],
       },
       {
@@ -431,7 +863,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       {
         heading: "Tequila aging categories, usefully",
         body: [
-          "Under CRT rules of thumb: blanco is unaged or rested briefly in neutral vessels; reposado sees oak for a short stretch (think months, not years); añejo longer still; extra añejo even more. Oak adds vanilla, caramel, and spice while rounding raw pepper — it also mutes some fresh agave snap.",
+          "Mexican CRT categories, usefully: blanco is unaged or aged less than two months (often in stainless or neutral oak); reposado ages in oak from two months up to a year; añejo from one to three years; extra añejo longer than three. Oak adds vanilla, caramel, and spice while rounding raw pepper — it also mutes some fresh agave snap.",
           "Tommy’s-style Margaritas (tequila, lime, agave syrup) showcase blanco purity. A reposado Margarita tastes rounder and dessert-adjacent; an añejo “Margarita” often wants less citrus sweetness and more Old Fashioned thinking.",
         ],
       },
@@ -482,7 +914,28 @@ export const LEARN_GUIDES: LearnGuide[] = [
     coverImage: "/learn/zero-proof-mindset.webp",
     coverAlt: "Composed coupe cocktail with mint garnish on a wooden table",
     accentClass: "from-olive/30 via-cream to-forest/10",
-    practiceSlugs: ["virgin-mojito", "shirley-temple", "zero-proof-margarita", "arnold-palmer"],
+    practice: [
+      {
+        slug: "virgin-mojito",
+        notice:
+          "Mint, lime, sugar, bubbles — a complete highball without proof. Ice, glass, and garnish should match the alcoholic version.",
+      },
+      {
+        slug: "zero-proof-margarita",
+        notice:
+          "Acid + sweet + texture. If it tastes like limeade, it’s missing bitter, spice, or salt — not “more juice.”",
+      },
+      {
+        slug: "shirley-temple",
+        notice:
+          "Treat it as a composed soda: ice, measured syrup, citrus if you add it, cold lengthener. Not a splash of grenadine in warm ginger ale.",
+      },
+      {
+        slug: "arnold-palmer",
+        notice:
+          "Tea tannin is the grip ethanol isn’t providing. Balance lemon and sweetener as if it were a sour with a lengthener.",
+      },
+    ],
     bigIdea:
       "Zero-proof drinks work when they keep cocktail architecture — acid, sweet, bitter or spice, texture, and length — and are served with the same care as anything with proof.",
     keyTakeaways: [
@@ -496,6 +949,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       {
         heading: "Use the same architecture",
         kind: "rule",
+        figure: "na-architecture",
         body: [
           "A good zero-proof drink still needs structure: acidity, sweetness, bitterness or spice, and a satisfying texture. Ginger beer, hibiscus, coffee, tea, and citrus are your friends.",
           "Non-alcoholic spirits help when you want botanical weight, but they are optional. Many excellent NA drinks are built from pantry staples.",

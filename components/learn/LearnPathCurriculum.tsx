@@ -8,8 +8,10 @@ import {
   type LearnPath,
   type LearnPathStep,
 } from "@/lib/learnLibrary";
-import { LearnPathProgress, useLearnPathDone } from "@/components/learn/LearnPathProgress";
+import { LearnPathProgress } from "@/components/learn/LearnPathProgress";
 import { LearnJoinCta } from "@/components/learn/LearnJoinCta";
+import { useLearnProgress } from "@/hooks/useLearnProgress";
+import { isStepComplete, stepLessonRef } from "@/lib/learnProgress";
 
 type Props = {
   path: LearnPath;
@@ -20,11 +22,22 @@ type Props = {
  * Whole tiles are clickable (stretched link); media is pointer-events-none.
  */
 export function LearnPathCurriculum({ path }: Props) {
-  const { done, toggle, isAuthenticated } = useLearnPathDone(path.slug, path.steps.length);
+  const { completed, isAuthenticated, completeLesson, uncompleteLesson } = useLearnProgress();
+  const done = path.steps.map((step) => isStepComplete(step, completed));
+
+  const toggle = async (index: number) => {
+    const ref = stepLessonRef(path.steps[index]);
+    if (!ref || ref.kind === "path") return;
+    if (done[index]) {
+      await uncompleteLesson(ref.kind, ref.slug);
+    } else {
+      await completeLesson(ref.kind, ref.slug);
+    }
+  };
 
   return (
     <div className="space-y-10">
-      <LearnPathProgress pathSlug={path.slug} steps={path.steps} done={done} />
+      <LearnPathProgress steps={path.steps} done={done} />
 
       <div className="space-y-5">
         {path.steps.map((step, index) => (

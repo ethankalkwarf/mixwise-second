@@ -9,7 +9,7 @@ import { LEARN_PATHS } from "@/lib/learnLibrary";
 export const metadata = generatePageMetadata({
   title: "Learn Mixology",
   description:
-    "Training library for home mixologists — learning paths, guides, core methods, techniques, and smart swaps.",
+    "Mixology courses plus a library of guides, methods, techniques, and swaps.",
   path: "/learn",
   keywords: [
     "learn mixology",
@@ -26,7 +26,7 @@ export default function LearnPage() {
     <div className="min-h-screen bg-cream">
       <WebPageSchema
         title="Learn Mixology"
-        description="Training library for home mixologists — learning paths, guides, core methods, techniques, and smart swaps."
+        description="Mixology courses plus a library of guides, methods, techniques, and swaps."
         url={`${SITE_CONFIG.url}/learn`}
       />
       <BreadcrumbSchema
@@ -40,25 +40,25 @@ export default function LearnPage() {
         imageAlt="Home bartender preparing a cocktail"
         eyebrow="Education"
         title="Learn to make better drinks"
-        summary="Follow a short path, then look up methods and techniques when you need them — training, not a glossary dump."
+        summary="Practical mixology for the home bar — templates, methods, and the small habits that change a drink."
       >
         <div className="flex flex-wrap gap-3">
           <Link
             href={`/learn/paths/${starter.slug}`}
             className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
           >
-            Start: {starter.title} →
+            Start the beginner course →
           </Link>
           <a
-            href="#library"
+            href="#lessons"
             className="inline-flex items-center justify-center rounded-full border border-forest/20 bg-white/80 px-6 py-3 text-sm font-semibold text-forest hover:border-terracotta/40 transition-colors"
           >
-            Browse library
+            Browse lessons
           </a>
         </div>
       </LearnHero>
 
-      <MainContainer className="py-10 sm:py-14">
+      <MainContainer className="py-10 sm:py-14 max-w-5xl">
         <div id="library">
           <LearnLibraryClient />
         </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import type { LearnLessonLayers, LearnSource } from "@/lib/learnTypes";
-import { LearnSectionBlock, LEARN_LABEL, LEARN_HEADING, LEARN_BODY } from "@/components/learn/LearnSectionBlock";
+import { LearnSectionBlock, LEARN_LABEL, LEARN_HEADING, LEARN_BODY, LEARN_LEDE } from "@/components/learn/LearnSectionBlock";
 
 type Props = {
   layers: LearnLessonLayers;
@@ -28,9 +28,7 @@ export function LearnLessonArticle({ layers, midFigure, afterCore }: Props) {
       <header className="space-y-8">
         <div>
           <p className={LEARN_LABEL}>The big idea</p>
-          <p className="font-display text-2xl sm:text-[1.75rem] !text-charcoal leading-snug tracking-tight">
-            {layers.bigIdea}
-          </p>
+          <p className={LEARN_LEDE}>{layers.bigIdea}</p>
         </div>
 
         <div>
@@ -113,35 +111,30 @@ export function LearnLessonArticle({ layers, midFigure, afterCore }: Props) {
 
 function LearnSourcesList({ sources }: { sources: LearnSource[] }) {
   return (
-    <section className="border-t border-mist pt-10">
-      <p className={LEARN_LABEL}>Sources & further reading</p>
-      <h2 className={LEARN_HEADING}>Cited and recommended</h2>
-      <ol className="space-y-5">
+    <aside className="border-t border-mist pt-8">
+      <p className={LEARN_LABEL}>Cited and recommended</p>
+      <ol className="space-y-2.5">
         {sources.map((source, index) => (
-          <li key={source.label} className="flex gap-4">
-            <span className="font-display text-lg !text-terracotta shrink-0 w-6 tabular-nums pt-0.5">
-              {index + 1}.
-            </span>
-            <div>
+          <li key={source.label} className="flex gap-2.5 text-[13px] leading-relaxed !text-charcoal/65">
+            <span className="shrink-0 w-4 tabular-nums !text-charcoal/40">{index + 1}.</span>
+            <span>
               {source.href ? (
                 <a
                   href={source.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`${LEARN_BODY} !text-charcoal underline decoration-terracotta/30 underline-offset-4 hover:decoration-terracotta`}
+                  className="underline decoration-terracotta/25 underline-offset-2 hover:decoration-terracotta !text-charcoal/75"
                 >
                   {source.label}
                 </a>
               ) : (
-                <p className={LEARN_BODY}>{source.label}</p>
+                source.label
               )}
-              {source.note && (
-                <p className="text-[15px] !text-charcoal/60 leading-relaxed mt-1">{source.note}</p>
-              )}
-            </div>
+              {source.note ? <span className="!text-charcoal/50"> — {source.note}</span> : null}
+            </span>
           </li>
         ))}
       </ol>
-    </section>
+    </aside>
   );
 }

@@ -176,6 +176,62 @@ export const BADGES: Record<string, BadgeDefinition> = {
     rarity: "common",
     criteria: "Share your public bar link",
   },
+
+  // Learn badges
+  first_lesson: {
+    id: "first_lesson",
+    name: "First Lesson",
+    description: "Completed your first MixWise Learn lesson",
+    icon: "📖",
+    category: "mastery",
+    rarity: "common",
+    criteria: "Complete 1 Learn lesson",
+  },
+  curious_student: {
+    id: "curious_student",
+    name: "Curious Student",
+    description: "Finished five Learn lessons",
+    icon: "🍋",
+    category: "mastery",
+    rarity: "uncommon",
+    criteria: "Complete 5 Learn lessons",
+  },
+  path_first_month: {
+    id: "path_first_month",
+    name: "First Month In",
+    description: "Finished the First month at home path",
+    icon: "🏡",
+    category: "mastery",
+    rarity: "uncommon",
+    criteria: "Complete the beginner Learn path",
+  },
+  path_sours: {
+    id: "path_sours",
+    name: "Sour Hand",
+    description: "Finished the Sours mastery path",
+    icon: "🍸",
+    category: "mastery",
+    rarity: "uncommon",
+    criteria: "Complete the Sours mastery path",
+  },
+  path_agave: {
+    id: "path_agave",
+    name: "Agave Hand",
+    description: "Finished the Agave deep dive path",
+    icon: "🌵",
+    category: "mastery",
+    rarity: "uncommon",
+    criteria: "Complete the Agave deep dive path",
+  },
+  learn_scholar: {
+    id: "learn_scholar",
+    name: "Learn Scholar",
+    description: "Completed every MixWise Learn guide",
+    icon: "🎓",
+    category: "mastery",
+    rarity: "rare",
+    criteria: "Complete all Learn guides",
+  },
 };
 
 export const BADGE_LIST = Object.values(BADGES);

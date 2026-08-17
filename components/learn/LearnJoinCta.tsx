@@ -25,7 +25,7 @@ export function LearnJoinCta() {
             Unlock the rest of Learn
           </h2>
           <p className="text-sm text-charcoal/70 leading-relaxed">
-            Full lessons, learning checks, practice recipes, and path progress — free with an account.
+            Full lessons, learning checks, practice recipes, saved XP, and path progress — free with an account.
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5 shrink-0">

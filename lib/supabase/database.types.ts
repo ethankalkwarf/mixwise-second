@@ -330,6 +330,47 @@ export interface Database {
           updated_at?: string;
         };
       };
+      learn_progress: {
+        Row: {
+          id: string;
+          user_id: string;
+          lesson_kind: "guide" | "method" | "technique" | "path";
+          lesson_slug: string;
+          status: "started" | "completed";
+          xp: number;
+          checks_correct: number;
+          checks_total: number;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          lesson_kind: "guide" | "method" | "technique" | "path";
+          lesson_slug: string;
+          status?: "started" | "completed";
+          xp?: number;
+          checks_correct?: number;
+          checks_total?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          lesson_kind?: "guide" | "method" | "technique" | "path";
+          lesson_slug?: string;
+          status?: "started" | "completed";
+          xp?: number;
+          checks_correct?: number;
+          checks_total?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       user_badges: {
         Row: {
           id: string;
@@ -693,6 +734,10 @@ export type UserPreferencesUpdate = Database["public"]["Tables"]["user_preferenc
 
 export type UserBadge = Database["public"]["Tables"]["user_badges"]["Row"];
 export type UserBadgeInsert = Database["public"]["Tables"]["user_badges"]["Insert"];
+
+export type LearnProgressRow = Database["public"]["Tables"]["learn_progress"]["Row"];
+export type LearnProgressInsert = Database["public"]["Tables"]["learn_progress"]["Insert"];
+export type LearnProgressUpdate = Database["public"]["Tables"]["learn_progress"]["Update"];
 
 export type EmailSignup = Database["public"]["Tables"]["email_signups"]["Row"];
 export type EmailSignupInsert = Database["public"]["Tables"]["email_signups"]["Insert"];

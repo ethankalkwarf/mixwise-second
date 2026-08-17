@@ -1,39 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import type { LearnCheck } from "@/lib/learnChecks";
+import { useLearnProgress } from "@/hooks/useLearnProgress";
+import type { LearnLessonKind } from "@/lib/learnProgress";
+import { LEARN_LABEL } from "@/components/learn/LearnSectionBlock";
 
 type Props = {
   checks: LearnCheck[];
-  title?: string;
+  kind?: Exclude<LearnLessonKind, "path">;
+  slug?: string;
 };
 
-export function LearnChecks({ checks, title = "Quick check" }: Props) {
+export function LearnChecks({ checks, kind, slug }: Props) {
+  const { completeLesson, isAuthenticated, isComplete } = useLearnProgress();
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const saved = useRef(false);
+
+  const allAnswered = checks.length > 0 && checks.every((check) => answers[check.id] !== undefined);
+
+  useEffect(() => {
+    if (!kind || !slug || !isAuthenticated || !allAnswered || saved.current) return;
+    if (isComplete(kind, slug)) return;
+    saved.current = true;
+    const correct = checks.filter((check) => answers[check.id] === check.correctIndex).length;
+    void completeLesson(kind, slug, { correct, total: checks.length });
+  }, [allAnswered, answers, checks, completeLesson, isAuthenticated, isComplete, kind, slug]);
+
   if (checks.length === 0) return null;
 
   return (
-    <section className="space-y-6">
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-terracotta mb-3">
-          Learning check
-        </p>
-        <h2 className="font-display text-2xl font-bold !text-charcoal tracking-tight">{title}</h2>
-        <p className="text-[17px] !text-charcoal/70 leading-[1.7] mt-2">
-          No grade — just lock in what you read.
-        </p>
-      </div>
+    <section className="space-y-5">
+      <p className={LEARN_LABEL}>Quick check</p>
       <div className="space-y-4">
         {checks.map((check) => (
-          <CheckCard key={check.id} check={check} />
+          <CheckCard
+            key={check.id}
+            check={check}
+            selected={answers[check.id] ?? null}
+            onSelect={(index) =>
+              setAnswers((prev) =>
+                prev[check.id] !== undefined ? prev : { ...prev, [check.id]: index }
+              )
+            }
+          />
         ))}
       </div>
     </section>
   );
 }
 
-function CheckCard({ check }: { check: LearnCheck }) {
-  const [selected, setSelected] = useState<number | null>(null);
+function CheckCard({
+  check,
+  selected,
+  onSelect,
+}: {
+  check: LearnCheck;
+  selected: number | null;
+  onSelect: (index: number) => void;
+}) {
   const revealed = selected !== null;
   const correct = revealed && selected === check.correctIndex;
 
@@ -63,7 +89,7 @@ function CheckCard({ check }: { check: LearnCheck }) {
               <button
                 type="button"
                 disabled={revealed}
-                onClick={() => setSelected(index)}
+                onClick={() => onSelect(index)}
                 className={`w-full text-left rounded-xl border px-4 py-3 text-sm leading-relaxed transition-colors ${styles}`}
               >
                 {option}

@@ -14,6 +14,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
+import { DashboardLearnCard } from "@/components/learn/DashboardLearnCard";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { getMixDataClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
@@ -35,6 +36,7 @@ import {
   PlusCircleIcon,
   XMarkIcon,
   ShoppingBagIcon,
+  BookOpenIcon,
 } from "@heroicons/react/24/outline";
 import { debugLog } from "@/lib/debugLog";
 
@@ -415,6 +417,13 @@ export default function DashboardPage() {
           >
             <BeakerIcon className="w-4 h-4" />
             Mix Wizard
+          </Link>
+          <Link
+            href="/learn"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-mist hover:border-stone text-forest rounded-2xl transition-all text-sm font-medium shadow-soft"
+          >
+            <BookOpenIcon className="w-4 h-4" />
+            Learn
           </Link>
           {shoppingCount > 0 && (
             <Link
@@ -971,6 +980,8 @@ export default function DashboardPage() {
 
           {/* Right Column - My Bar Sidebar */}
           <div className="space-y-6">
+            <DashboardLearnCard />
+
             {/* My Bar */}
             <section className="card overflow-hidden">
               <div className="flex items-center justify-between p-6 border-b border-mist">
