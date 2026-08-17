@@ -534,7 +534,7 @@ async function fetchCocktailsWithIngredients(): Promise<CocktailWithIngredientsR
 
 const getCachedCocktailsWithIngredients = unstable_cache(
   async () => fetchCocktailsWithIngredients(),
-  ["cocktails-with-ingredients-v2"],
+  ["cocktails-with-ingredients-v3"],
   { revalidate: COCKTAILS_CACHE_REVALIDATE_SECONDS, tags: ["cocktails"] }
 );
 

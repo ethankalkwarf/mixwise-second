@@ -164,6 +164,7 @@ const IGNORE_TOKENS = new Set([
   "fresh",
   "gold",
   "golden",
+  "heavy",
   "leaf",
   "leaves",
   "light",

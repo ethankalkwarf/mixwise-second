@@ -50,6 +50,8 @@ assert.equal(matchIngredientName("coffee liqueur", db)?.name, "Coffee liqueur");
 assert.equal(matchIngredientName("mint leaves", catalog(["Mint"]))?.name, "Mint");
 assert.equal(matchIngredientName("Scotch whisky", catalog(["Scotch"]))?.name, "Scotch");
 assert.equal(matchIngredientName("Bénédictine", catalog(["Benedictine"]))?.name, "Benedictine");
+assert.equal(matchIngredientName("heavy cream", catalog(["Cream", "Whipped Cream"]))?.name, "Cream");
+assert.equal(matchIngredientName("cream", catalog(["Cream", "Whipped Cream", "Heavy Cream"]))?.name, "Cream");
 
 const withoutGingerAle = catalog(["Gin", "Ginger beer", "Ale"]);
 assert.equal(matchIngredientName("ginger ale", withoutGingerAle), null);
