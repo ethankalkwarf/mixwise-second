@@ -16,6 +16,7 @@ import {
 } from "@/lib/email/newsletter-token";
 import { debugLog } from "@/lib/debugLog";
 import { getSiteUrl } from "@/lib/site";
+import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 
 export type CampaignSlug =
   | "thursday-featured"
@@ -182,7 +183,7 @@ export async function loadCocktailsBySlug(slugs: string[]): Promise<Map<string, 
       slug: row.slug,
       name: row.name,
       blurb: row.short_description || undefined,
-      imageUrl: row.image_url || undefined,
+      imageUrl: toPublicDeliveryUrl(row.image_url, "email"),
       imageAlt: row.image_alt || row.name,
     });
   }
@@ -206,7 +207,7 @@ export async function loadMatchIndex(): Promise<MatchIndex> {
       slug: row.slug,
       name: row.name,
       blurb: row.short_description || undefined,
-      imageUrl: row.image_url || undefined,
+      imageUrl: toPublicDeliveryUrl(row.image_url, "email"),
       imageAlt: row.image_alt || row.name,
     });
   }

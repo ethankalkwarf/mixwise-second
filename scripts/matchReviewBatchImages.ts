@@ -6,6 +6,7 @@
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
+import { cocktailBlobPath, publishStorageObjectToBlob } from './lib/catalogMedia';
 
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
 
@@ -129,15 +130,22 @@ async function main() {
       continue;
     }
 
-    const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(file);
-    console.log(`${apply ? 'SET' : 'WOULD SET'}`, cocktail.slug, '->', file);
+    console.log(`${apply ? 'SET' : 'WOULD SET'}`, cocktail.slug, '->', file, '=> blob');
     if (apply) {
-      const { error: upErr } = await sb
-        .from('cocktails')
-        .update({ image_url: urlData.publicUrl })
-        .eq('id', cocktail.id);
-      if (upErr) console.error(upErr.message);
-      else matched++;
+      try {
+        const published = await publishStorageObjectToBlob(sb, {
+          storagePath: file,
+          blobPath: cocktailBlobPath(cocktail.slug),
+        });
+        const { error: upErr } = await sb
+          .from('cocktails')
+          .update({ image_url: published.url })
+          .eq('id', cocktail.id);
+        if (upErr) console.error(upErr.message);
+        else matched++;
+      } catch (err) {
+        console.error(cocktail.slug, (err as Error).message);
+      }
     } else {
       matched++;
     }

@@ -47,6 +47,8 @@ const nextConfig = {
     // Optimize image loading performance
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Keep optimized images warm so Vercel hits Supabase Storage less often
+    minimumCacheTTL: 2678400, // 31 days
     // Enable WebP and AVIF formats for better compression
     formats: ['image/webp', 'image/avif'],
     // Next 16 defaults to [75] only; unlisted qualities spam huge warnings

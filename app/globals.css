@@ -135,6 +135,33 @@ body {
   .animate-pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
+
+  @keyframes nf-drip {
+    0% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+    18% {
+      opacity: 0.55;
+    }
+    100% {
+      transform: translateY(52px);
+      opacity: 0;
+    }
+  }
+
+  .nf-drip {
+    animation: nf-drip 2.8s ease-in infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nf-drip {
+      animation: none;
+      opacity: 0;
+    }
+  }
 }
 
 @layer components {

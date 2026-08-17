@@ -14,6 +14,7 @@ import * as dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { slugifyIngredientName } from "../lib/ingredientSlug";
 import { upgradeIngredientImageUrl } from "../lib/ingredientImages";
+import { ingredientBlobPath, publishWebpToBlob } from "./lib/catalogMedia";
 
 dotenv.config({ path: ".env.local" });
 
@@ -132,10 +133,16 @@ async function main() {
         upsert: true,
       });
       if (upError) {
-        console.log(`warn  ${row.name} upload failed (${upError.message}); using CocktailDB URL`);
+        console.log(`warn  ${row.name} archive upload failed (${upError.message})`);
       } else {
-        publicUrl = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
         uploaded += 1;
+      }
+
+      try {
+        const published = await publishWebpToBlob(ingredientBlobPath(slug), resolved.png);
+        publicUrl = published.url;
+      } catch (err) {
+        console.log(`warn  ${row.name} blob publish failed (${(err as Error).message}); keeping source URL`);
       }
 
       const { error: updError } = await supabase.from("ingredients").update({ image_url: publicUrl }).eq("id", row.id);

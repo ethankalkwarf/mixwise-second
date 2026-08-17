@@ -4,6 +4,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatCocktailName } from "@/lib/formatters";
+import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 
 export const WELCOME_COCKTAIL_SLUG = "income-tax";
 export const WELCOME_COCKTAIL_SLUGS = [WELCOME_COCKTAIL_SLUG] as const;
@@ -102,7 +103,7 @@ export async function getFeaturedCocktailForEmail(options?: {
       name: formatCocktailName(selected.name),
       slug: selected.slug,
       description: selected.short_description || undefined,
-      imageUrl: selected.image_url || undefined,
+      imageUrl: toPublicDeliveryUrl(selected.image_url, "email"),
       ingredients: formatIngredients(selected.ingredients),
       instructions: formatInstructions(selected.instructions),
     };

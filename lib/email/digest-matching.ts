@@ -3,6 +3,8 @@
  * Recipe links live in cocktail_ingredients_uuid (UUID cocktail_id + numeric ingredient_id).
  */
 
+import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
+
 export type DigestCocktail = {
   id: number | string;
   slug: string;
@@ -61,7 +63,7 @@ export function cocktailsUserCanMakeFromBar(
     ready.push({
       name: cocktail.name,
       slug: cocktail.slug,
-      imageUrl: cocktail.image_url || undefined,
+      imageUrl: toPublicDeliveryUrl(cocktail.image_url, "emailThumb"),
     });
   }
 

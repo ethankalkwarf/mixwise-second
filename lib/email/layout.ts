@@ -9,6 +9,7 @@ import {
   escapeEmailHtml,
   getPreheaderHtml,
 } from "@/lib/email/templates";
+import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 
 export const MIXWISE_EMAIL_SITE = "https://www.getmixwise.com";
 
@@ -199,9 +200,10 @@ export function forestHeroHtml({
   ctaLabel?: string;
 }): string {
   const safeHref = escapeEmailHtml(href);
-  const img = imageUrl
+  const deliveryUrl = toPublicDeliveryUrl(imageUrl, "email");
+  const img = deliveryUrl
     ? `<a href="${safeHref}" style="display:block;text-decoration:none;line-height:0;">
-        <img src="${escapeEmailHtml(imageUrl)}" alt="${escapeEmailHtml(imageAlt || name)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;" />
+        <img src="${escapeEmailHtml(deliveryUrl)}" alt="${escapeEmailHtml(imageAlt || name)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;" />
       </a>`
     : "";
 
@@ -241,11 +243,12 @@ export function creamDrinkHtml({
   imageAlt?: string;
 }): string {
   const safeHref = escapeEmailHtml(href);
-  const img = imageUrl
+  const deliveryUrl = toPublicDeliveryUrl(imageUrl, "email");
+  const img = deliveryUrl
     ? `<tr>
         <td style="padding: 0;">
           <a href="${safeHref}" style="display:block;text-decoration:none;line-height:0;">
-            <img src="${escapeEmailHtml(imageUrl)}" alt="${escapeEmailHtml(imageAlt || name)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;" />
+            <img src="${escapeEmailHtml(deliveryUrl)}" alt="${escapeEmailHtml(imageAlt || name)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;" />
           </a>
         </td>
       </tr>`
@@ -291,10 +294,11 @@ export function thumbRowHtml({
   imageAlt?: string;
 }): string {
   const safeHref = escapeEmailHtml(href);
-  const thumb = imageUrl
+  const deliveryUrl = toPublicDeliveryUrl(imageUrl, "emailThumb");
+  const thumb = deliveryUrl
     ? `<td width="72" valign="middle" style="width: 72px; padding-right: 14px;">
               <a href="${safeHref}" style="display: block; text-decoration: none;">
-                <img src="${escapeEmailHtml(imageUrl)}" alt="${escapeEmailHtml(imageAlt || name)}" width="72" height="72" style="display: block; width: 72px; height: 72px; object-fit: cover; border-radius: 12px; border: 0;" />
+                <img src="${escapeEmailHtml(deliveryUrl)}" alt="${escapeEmailHtml(imageAlt || name)}" width="72" height="72" style="display: block; width: 72px; height: 72px; object-fit: cover; border-radius: 12px; border: 0;" />
               </a>
             </td>`
     : "";

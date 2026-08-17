@@ -1,10 +1,12 @@
 /**
  * Weekend re-engagement campaign.
  * Same drinks for every recipient. Header/footer match the weekly digest.
- * Cocktail photos use catalog `image_url` values, the same source as weekly emails.
+ * Defaults use email-sized JPEGs on Vercel Blob. Catalog overrides that still
+ * point at Supabase Storage are rewritten through MixWise image delivery.
  */
 
 import { EMAIL_SERIF, baseStyles, getPreheaderHtml, type EmailTemplate } from "@/lib/email/templates";
+import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 
 export const WEEKEND_KICKOFF_TEMPLATE_ALIAS = "weekend-kickoff";
 export const WEEKEND_KICKOFF_SUBJECT = "The weekend called. It wants a spritz.";
@@ -133,7 +135,7 @@ export function applyCatalogImages(
   const next = structuredClone(content);
   const assign = (slug: string, setter: (url: string) => void) => {
     const url = imageBySlug.get(slug);
-    if (url) setter(url);
+    if (url) setter(toPublicDeliveryUrl(url, "email") || url);
   };
   assign("limoncello-spritz", (url) => {
     next.hero.imageUrl = url;
@@ -254,9 +256,10 @@ function catalogImage(opts: {
   imageAlt: string;
   href: string;
 }): string {
+  const deliveryUrl = toPublicDeliveryUrl(opts.imageUrl, "email") || opts.imageUrl;
   return `
       <a href="${attr(opts.mode, opts.urlKey, opts.href)}" style="display:block;text-decoration:none;line-height:0;">
-        <img src="${attr(opts.mode, opts.imageKey, opts.imageUrl)}" alt="${attr(opts.mode, opts.altKey, opts.imageAlt)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;" />
+        <img src="${attr(opts.mode, opts.imageKey, deliveryUrl)}" alt="${attr(opts.mode, opts.altKey, opts.imageAlt)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;" />
       </a>
   `;
 }
@@ -361,6 +364,7 @@ function extraRow(opts: {
   altKey: string;
 }): string {
   const { mode, extra } = opts;
+  const deliveryUrl = toPublicDeliveryUrl(extra.imageUrl, "emailThumb") || extra.imageUrl;
   return `
     <tr>
       <td style="padding: 12px 16px; background-color: #F9F7F2; border-radius: 12px;">
@@ -368,7 +372,7 @@ function extraRow(opts: {
           <tr>
             <td width="72" valign="middle" style="width: 72px; padding-right: 14px;">
               <a href="${attr(mode, opts.urlKey, extra.url)}" style="display: block; text-decoration: none;">
-                <img src="${attr(mode, opts.imageKey, extra.imageUrl)}" alt="${attr(mode, opts.altKey, extra.imageAlt)}" width="72" height="72" style="display: block; width: 72px; height: 72px; object-fit: cover; border-radius: 12px; border: 0;" />
+                <img src="${attr(mode, opts.imageKey, deliveryUrl)}" alt="${attr(mode, opts.altKey, extra.imageAlt)}" width="72" height="72" style="display: block; width: 72px; height: 72px; object-fit: cover; border-radius: 12px; border: 0;" />
               </a>
             </td>
             <td valign="middle">

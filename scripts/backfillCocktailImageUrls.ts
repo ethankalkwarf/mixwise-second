@@ -5,6 +5,9 @@
  *
  * Updates cocktails.image_url with public URLs from Supabase Storage bucket 'cocktail-images-fullsize'
  *
+ * Prefer scripts/migrateCatalogImagesToBlob.ts — that publishes WebPs to Vercel Blob
+ * instead of hotlinking Storage.
+ *
  * Usage:
  *   npx tsx scripts/backfillCocktailImageUrls.ts --dry-run
  *   npx tsx scripts/backfillCocktailImageUrls.ts --apply
@@ -137,10 +140,14 @@ async function main() {
   }
 
   if (apply) {
-    console.log('🚨 APPLY MODE: This will update the database!');
-  } else {
-    console.log('🔍 DRY RUN MODE: No changes will be made');
+    console.error(
+      'This script writes public Supabase Storage URLs and is retired.\n' +
+        'Use: npx tsx scripts/migrateCatalogImagesToBlob.ts --apply'
+    );
+    process.exit(1);
   }
+
+  console.log('🔍 DRY RUN MODE: No changes will be made');
 
   if (overwrite) {
     console.log('⚠️ OVERWRITE MODE: Will update existing image_url values');

@@ -2,6 +2,7 @@ import { getCocktailBySlug, getCocktailsList, getTodaysDailyCocktailSlug } from 
 import { BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { MixWiseToolCallout } from "@/components/seo/MixWiseToolCallout";
 import { SITE_CONFIG, generateCocktailMetadata } from "@/lib/seo";
+import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 import { notFound } from "next/navigation";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { Metadata } from "next";
@@ -327,7 +328,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
   const recipeSchema = generateRecipeSchema({
     name: sanityCocktail.name,
     description: sanityCocktail.description,
-    imageUrl,
+    imageUrl: toPublicDeliveryUrl(imageUrl, "schema") || imageUrl,
     ingredients: ingredients.map((i) => i.text),
     instructionSteps,
     keywords: [...tags, ...asStringArray(sanityCocktail.bestFor)].filter(Boolean),

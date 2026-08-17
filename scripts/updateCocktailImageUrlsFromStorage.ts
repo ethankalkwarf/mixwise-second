@@ -4,7 +4,7 @@
  * Update cocktail image URLs from Supabase Storage
  * 
  * Matches cocktails by slug to files in the 'cocktail-images-fullsize' bucket
- * and updates the image_url field with public URLs.
+ * and publishes a public WebP to Vercel Blob (image_url). Masters stay in Storage.
  * 
  * Usage:
  *   npx tsx scripts/updateCocktailImageUrlsFromStorage.ts --dry-run
@@ -15,6 +15,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { parseArgs } from 'node:util';
 import * as dotenv from 'dotenv';
+import {
+  cocktailBlobPath,
+  isVercelBlobUrl,
+  publishStorageObjectToBlob,
+} from './lib/catalogMedia';
 
 dotenv.config({ path: '.env.local' });
 
@@ -225,8 +230,8 @@ async function main() {
   const alreadyHasUrl: Cocktail[] = [];
   
   for (const cocktail of cocktails) {
-    // Skip if already has a Supabase storage URL
-    if (cocktail.image_url && cocktail.image_url.includes('supabase.co/storage')) {
+    // Skip if already on the public CDN
+    if (isVercelBlobUrl(cocktail.image_url)) {
       alreadyHasUrl.push(cocktail);
       continue;
     }
@@ -238,20 +243,10 @@ async function main() {
       continue;
     }
     
-    // Generate public URL
-    const { data: publicUrlData } = supabase.storage
-      .from(BUCKET_NAME)
-      .getPublicUrl(match.name);
-    
-    if (!publicUrlData?.publicUrl) {
-      noMatch.push(cocktail);
-      continue;
-    }
-    
     updates.push({
       cocktail,
       file: match,
-      newUrl: publicUrlData.publicUrl
+      newUrl: `(blob) ${cocktailBlobPath(cocktail.slug)}`
     });
   }
   
@@ -294,7 +289,20 @@ async function main() {
     let successCount = 0;
     let errorCount = 0;
     
-    for (const { cocktail, newUrl } of updates) {
+    for (const { cocktail, file } of updates) {
+      let newUrl: string;
+      try {
+        const published = await publishStorageObjectToBlob(supabase, {
+          storagePath: file.name,
+          blobPath: cocktailBlobPath(cocktail.slug),
+        });
+        newUrl = published.url;
+      } catch (err) {
+        console.error(`❌ Error publishing ${cocktail.slug}: ${(err as Error).message}`);
+        errorCount++;
+        continue;
+      }
+
       const { error } = await supabase
         .from('cocktails')
         .update({ image_url: newUrl })

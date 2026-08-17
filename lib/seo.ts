@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 
 export const SITE_CONFIG = {
   name: "MixWise",
@@ -95,7 +96,8 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
     : `${SITE_CONFIG.name} - ${SITE_CONFIG.tagline}`;
 
   const url = `${SITE_CONFIG.url}${path}`;
-  const imageUrl = ogImage ? absoluteUrl(ogImage) : absoluteUrl(SITE_CONFIG.ogImage);
+  const resolvedOg = ogImage ? absoluteUrl(ogImage) : absoluteUrl(SITE_CONFIG.ogImage);
+  const imageUrl = toPublicDeliveryUrl(resolvedOg, "og") || resolvedOg;
 
   const metadata: Metadata = {
     description,

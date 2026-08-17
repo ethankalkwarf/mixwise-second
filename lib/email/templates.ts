@@ -20,6 +20,7 @@
  */
 
 import { ACCOUNT_BENEFITS } from "@/lib/accountBenefits";
+import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 
 export interface EmailTemplate {
   subject: string;
@@ -501,7 +502,7 @@ export function emailListWelcomeTemplate({
     ? escapeEmailHtml(featuredCocktail.description)
     : "";
   const cocktailImage = featuredCocktail?.imageUrl
-    ? escapeEmailHtml(featuredCocktail.imageUrl)
+    ? escapeEmailHtml(toPublicDeliveryUrl(featuredCocktail.imageUrl, "email") || "")
     : "";
 
   const subject = featuredCocktail
@@ -1168,7 +1169,7 @@ export function weeklyDigestTemplate({
     <div style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); border-radius: 16px; overflow: hidden; margin: 24px 0;">
       ${featuredCocktail.imageUrl ? `
       <div style="width: 100%; height: 200px; overflow: hidden;">
-        <img src="${featuredCocktail.imageUrl}" alt="${featuredCocktail.name}" width="560" height="200" style="width: 100%; height: 200px; object-fit: cover; display: block;" />
+        <img src="${escapeEmailHtml(toPublicDeliveryUrl(featuredCocktail.imageUrl, "email") || "")}" alt="${escapeEmailHtml(featuredCocktail.name)}" width="560" height="200" style="width: 100%; height: 200px; object-fit: cover; display: block;" />
       </div>
       ` : ''}
       <div style="background-color: #3A4D39; padding: 24px; text-align: center;">

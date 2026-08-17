@@ -143,18 +143,22 @@ This keeps generated images accurate even for obscure cocktails.
 
 ## Filename / storage convention
 
-Upload to Supabase Storage bucket `cocktail-images-fullsize` as:
+Upload the **master** to the private Supabase Storage bucket `cocktail-images-fullsize` as:
 
 - Preferred: `{Cocktail Name}.png` or `{Cocktail Name}.webp`
 - Also accepted: `{Cocktail Name} Cocktail.png`
 
-Then wire `cocktails.image_url` via:
+Public delivery is a ~1200w WebP on Vercel Blob (`catalog/cocktails/{slug}.webp`). Wire `cocktails.image_url` to that Blob URL, not a Storage public URL:
 
 ```bash
-npx tsx scripts/matchReviewBatchImages.ts --apply
-# or
 npx tsx scripts/updateCocktailImageUrlsFromStorage.ts --apply
+# or migrate everything already on Storage:
+npx tsx scripts/migrateCatalogImagesToBlob.ts --apply
+npx tsx scripts/migrateCatalogImagesToBlob.ts --apply --ingredients
+npx tsx scripts/migrateCatalogImagesToBlob.ts --make-private
 ```
+
+Requires `BLOB_READ_WRITE_TOKEN` in `.env.local`.
 
 ## Prompt filler script
 

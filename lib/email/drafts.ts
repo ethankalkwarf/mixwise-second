@@ -19,6 +19,7 @@ import {
   winBackDraftTemplate,
   type CampaignDrink,
 } from "@/lib/email/campaigns";
+import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 
 const EMAIL_IMG =
   "https://ehexkpoxir62prtp.public.blob.vercel-storage.com/email/weekend-kickoff";
@@ -111,7 +112,11 @@ export function collectDraftImageSlugs(): string[] {
 export function buildEmailDrafts(
   catalogImages: Record<string, string> = {}
 ): EmailDraft[] {
-  const images = { ...DRAFT_FALLBACK_IMAGES, ...catalogImages };
+  const rewrittenCatalog: Record<string, string> = {};
+  for (const [slug, url] of Object.entries(catalogImages)) {
+    rewrittenCatalog[slug] = toPublicDeliveryUrl(url, "email") || url;
+  }
+  const images = { ...DRAFT_FALLBACK_IMAGES, ...rewrittenCatalog };
 
   const d = {
     limoncello: drink(

@@ -38,6 +38,14 @@ const isDryRun = !isApplyMode;
 const limitIndex = args.indexOf('--limit');
 const limit = limitIndex !== -1 && args[limitIndex + 1] ? parseInt(args[limitIndex + 1]) : null;
 
+if (isApplyMode) {
+  console.error(
+    'This script writes public Supabase Storage URLs and is retired.\n' +
+      'Use: npx tsx scripts/migrateCatalogImagesToBlob.ts --apply'
+  );
+  process.exit(1);
+}
+
 console.log(`🔄 MixWise Image URL Backfill Script`);
 console.log(`Mode: ${isApplyMode ? 'APPLY (will update database)' : 'DRY RUN (safe)'}`);
 if (limit) console.log(`Limit: ${limit} cocktails`);
