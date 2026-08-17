@@ -23,6 +23,7 @@ import {
 } from "@/lib/learnLibrary";
 import { getAllTechniqueLearnEntries } from "@/lib/cocktailTechniqueGlossary";
 import { SUBSTITUTION_TIPS } from "@/lib/cocktailSubstitutions";
+import { normalizeSearchText, searchLearnItems } from "@/lib/search";
 
 type BrowseTab = "guides" | "methods" | "techniques" | "swaps";
 
@@ -160,8 +161,7 @@ export function LearnLibraryClient() {
   const otherPaths = LEARN_PATHS.slice(1);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) {
+    if (!query.trim()) {
       return {
         guides: LEARN_GUIDES,
         methods: LEARN_METHODS,
@@ -169,24 +169,25 @@ export function LearnLibraryClient() {
         swaps: SUBSTITUTION_TIPS,
       };
     }
+
+    const learnHits = searchLearnItems(query, { limit: 50 });
+    const guideSlugs = new Set(
+      learnHits.filter((h) => h.kind === "guide").map((h) => h.id)
+    );
+    const methodSlugs = new Set(
+      learnHits.filter((h) => h.kind === "method").map((h) => h.id)
+    );
+    const techniqueSlugs = new Set(
+      learnHits.filter((h) => h.kind === "technique").map((h) => h.id)
+    );
+
+    const q = normalizeSearchText(query);
     return {
-      guides: LEARN_GUIDES.filter((g) =>
-        [g.title, g.summary, g.eyebrow, ...g.topics].join(" ").toLowerCase().includes(q)
-      ),
-      methods: LEARN_METHODS.filter(
-        (m) =>
-          m.label.toLowerCase().includes(q) ||
-          m.summary.toLowerCase().includes(q) ||
-          m.tip.toLowerCase().includes(q)
-      ),
-      techniques: techniques.filter(
-        (t) =>
-          t.label.toLowerCase().includes(q) ||
-          t.explanation.toLowerCase().includes(q) ||
-          (t.why || "").toLowerCase().includes(q)
-      ),
+      guides: LEARN_GUIDES.filter((g) => guideSlugs.has(g.slug)),
+      methods: LEARN_METHODS.filter((m) => methodSlugs.has(m.slug)),
+      techniques: techniques.filter((t) => techniqueSlugs.has(t.slug)),
       swaps: SUBSTITUTION_TIPS.filter((tip) =>
-        [tip.have, tip.use, tip.note || ""].join(" ").toLowerCase().includes(q)
+        normalizeSearchText([tip.have, tip.use, tip.note || ""].join(" ")).includes(q)
       ),
     };
   }, [query, techniques]);

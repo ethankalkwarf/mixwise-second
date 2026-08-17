@@ -10,6 +10,7 @@ import {
   groupIngredients,
   workingBarIngredients,
 } from "@/lib/ingredientTaxonomy";
+import { searchDirectoryIngredients } from "@/lib/search";
 
 type Props = {
   ingredients: DirectoryIngredient[];
@@ -19,14 +20,8 @@ export function IngredientsDirectory({ ingredients }: Props) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return ingredients;
-    return ingredients.filter(
-      (item) =>
-        item.name.toLowerCase().includes(q) ||
-        item.type.toLowerCase().includes(q) ||
-        (item.dek && item.dek.toLowerCase().includes(q))
-    );
+    if (!query.trim()) return ingredients;
+    return searchDirectoryIngredients(ingredients, query);
   }, [ingredients, query]);
 
   const groups = useMemo(() => groupIngredients(filtered), [filtered]);

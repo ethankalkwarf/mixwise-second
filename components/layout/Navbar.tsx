@@ -271,7 +271,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
               <button
                 onClick={() => setDesktopSearchOpen(!desktopSearchOpen)}
                 className="flex items-center gap-2 px-2.5 py-1.5 text-sm font-medium text-sage hover:text-forest border border-mist/70 rounded-md hover:border-mist hover:bg-mist/40 active:scale-[0.98] transition-all duration-200"
-                aria-label="Search cocktails (Cmd+K or Ctrl+K)"
+                aria-label="Search MixWise (Cmd+K or Ctrl+K)"
                 aria-expanded={desktopSearchOpen}
               >
                 <MagnifyingGlassIcon className="w-4 h-4" />

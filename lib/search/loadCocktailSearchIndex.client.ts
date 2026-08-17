@@ -2,7 +2,7 @@
 
 import { getCocktailsListClient } from "@/lib/cocktails";
 import type { CocktailListItem } from "@/lib/cocktailTypes";
-import { searchCocktailListItems } from "@/lib/search";
+import { searchCocktailListItems, searchOmnibarCatalog, type OmnibarResult } from "@/lib/search";
 
 let indexCache: CocktailListItem[] | null = null;
 let indexPromise: Promise<CocktailListItem[]> | null = null;
@@ -24,7 +24,7 @@ export async function loadCocktailSearchIndex(): Promise<CocktailListItem[]> {
   return indexPromise;
 }
 
-/** Ranked cocktail search for Cmd+K / wedding pickers. */
+/** Ranked cocktail search for wedding pickers. */
 export async function searchCocktailsClient(
   query: string,
   limit = 10
@@ -33,4 +33,23 @@ export async function searchCocktailsClient(
   if (!trimmed) return [];
   const index = await loadCocktailSearchIndex();
   return searchCocktailListItems(index, trimmed, { limit });
+}
+
+/** Grouped omnibar search for Cmd+K. */
+export async function searchOmnibarClient(query: string): Promise<OmnibarResult> {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return {
+      intent: {
+        raw: "",
+        matchQuery: "",
+        preferLearn: false,
+      },
+      cocktails: [],
+      ingredients: [],
+      learn: [],
+    };
+  }
+  const index = await loadCocktailSearchIndex();
+  return searchOmnibarCatalog(index, trimmed);
 }

@@ -1,5 +1,16 @@
 import type { CocktailListItem } from "@/lib/cocktailTypes";
 import type { SanityCocktail } from "@/lib/sanityTypes";
+import type { DirectoryIngredient } from "@/lib/ingredientTypes";
+import type { MixIngredient } from "@/lib/mixTypes";
+import { slugifyIngredientName } from "@/lib/ingredientSlug";
+import { getIngredientGuide } from "@/lib/ingredientContent";
+import {
+  LEARN_GUIDES,
+  LEARN_METHODS,
+  type LearnGuide,
+  type LearnMethod,
+} from "@/lib/learnLibrary";
+import { getAllTechniqueLearnEntries } from "@/lib/cocktailTechniqueGlossary";
 import type { CocktailSearchDocument } from "./scoreCocktail";
 
 export function cocktailListItemToSearchDocument(
@@ -42,4 +53,107 @@ export function sanityCocktailToSearchDocument(
     isTrending: cocktail.isTrending,
     cocktail,
   };
+}
+
+export function mixIngredientToSearchDocument(
+  ingredient: MixIngredient
+): CocktailSearchDocument & { ingredient: MixIngredient } {
+  const guide = getIngredientGuide(slugifyIngredientName(ingredient.name));
+  return {
+    id: ingredient.id,
+    name: ingredient.name,
+    description: null,
+    tags: ingredient.category ? [ingredient.category] : [],
+    aliases: [...(guide?.aliases || []), ...(guide?.matchNames || [])],
+    ingredient,
+  };
+}
+
+export function directoryIngredientToSearchDocument(
+  ingredient: DirectoryIngredient
+): CocktailSearchDocument & { ingredient: DirectoryIngredient } {
+  const guide = getIngredientGuide(ingredient.slug);
+  return {
+    id: ingredient.id,
+    name: ingredient.name,
+    description: ingredient.dek,
+    tags: [ingredient.type],
+    aliases: [...(guide?.aliases || []), ...(guide?.matchNames || [])],
+    ingredient,
+  };
+}
+
+export type LearnSearchItem = {
+  id: string;
+  kind: "guide" | "method" | "technique";
+  title: string;
+  summary: string;
+  href: string;
+};
+
+export function learnGuideToSearchDocument(
+  guide: LearnGuide
+): CocktailSearchDocument & { learn: LearnSearchItem } {
+  return {
+    id: `guide:${guide.slug}`,
+    name: guide.title,
+    description: guide.summary,
+    tags: guide.topics,
+    aliases: [guide.eyebrow, ...guide.keyTakeaways.slice(0, 3)],
+    learn: {
+      id: guide.slug,
+      kind: "guide",
+      title: guide.title,
+      summary: guide.summary,
+      href: `/learn/guides/${guide.slug}`,
+    },
+  };
+}
+
+export function learnMethodToSearchDocument(
+  method: LearnMethod
+): CocktailSearchDocument & { learn: LearnSearchItem } {
+  return {
+    id: `method:${method.slug}`,
+    name: method.label,
+    description: method.summary,
+    tags: method.techniqueKeys,
+    aliases: [method.cue, method.tip],
+    learn: {
+      id: method.slug,
+      kind: "method",
+      title: method.label,
+      summary: method.summary,
+      href: `/learn/methods/${method.slug}`,
+    },
+  };
+}
+
+export function learnTechniqueToSearchDocument(
+  technique: ReturnType<typeof getAllTechniqueLearnEntries>[number]
+): CocktailSearchDocument & { learn: LearnSearchItem } {
+  return {
+    id: `technique:${technique.slug}`,
+    name: technique.label,
+    description: technique.explanation,
+    tags: technique.patterns,
+    aliases: technique.why ? [technique.why] : [],
+    learn: {
+      id: technique.slug,
+      kind: "technique",
+      title: technique.label,
+      summary: technique.explanation,
+      href: technique.learnPath || `/learn/techniques/${technique.slug}`,
+    },
+  };
+}
+
+export function buildLearnSearchCorpus(): Array<
+  CocktailSearchDocument & { learn: LearnSearchItem }
+> {
+  return [
+    ...LEARN_GUIDES.map(learnGuideToSearchDocument),
+    ...LEARN_METHODS.map(learnMethodToSearchDocument),
+    ...getAllTechniqueLearnEntries().map(learnTechniqueToSearchDocument),
+  ];
 }

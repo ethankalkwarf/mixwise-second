@@ -1,18 +1,90 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { searchCocktailsClient, loadCocktailSearchIndex } from "@/lib/search/loadCocktailSearchIndex.client";
-import type { CocktailListItem } from "@/lib/cocktailTypes";
+import {
+  loadCocktailSearchIndex,
+  searchOmnibarClient,
+} from "@/lib/search/loadCocktailSearchIndex.client";
+import type { OmnibarResult } from "@/lib/search";
 
 type CocktailSearchProps = {
   variant?: "desktop" | "mobile";
   onClose?: () => void;
 };
 
+type FlatResult =
+  | { kind: "header"; label: string }
+  | { kind: "chip"; href: string; label: string }
+  | { kind: "cocktail"; href: string; id: string; title: string; subtitle?: string; imageUrl?: string }
+  | { kind: "ingredient"; href: string; id: string; title: string; subtitle?: string }
+  | { kind: "learn"; href: string; id: string; title: string; subtitle?: string; learnKind: string };
+
+function flattenOmnibar(result: OmnibarResult): FlatResult[] {
+  const rows: FlatResult[] = [];
+
+  if (result.intent.chipLabel && result.intent.chipHref) {
+    rows.push({
+      kind: "chip",
+      href: result.intent.chipHref,
+      label: result.intent.chipLabel,
+    });
+  }
+
+  const preferLearn = result.intent.preferLearn;
+  const sections: Array<"learn" | "cocktails" | "ingredients"> = preferLearn
+    ? ["learn", "cocktails", "ingredients"]
+    : ["cocktails", "ingredients", "learn"];
+
+  for (const section of sections) {
+    if (section === "cocktails" && result.cocktails.length > 0) {
+      rows.push({ kind: "header", label: "Cocktails" });
+      for (const cocktail of result.cocktails) {
+        rows.push({
+          kind: "cocktail",
+          id: cocktail.id,
+          href: `/cocktails/${cocktail.slug}`,
+          title: cocktail.name,
+          subtitle: cocktail.short_description,
+          imageUrl: cocktail.image_url,
+        });
+      }
+    } else if (section === "ingredients" && result.ingredients.length > 0) {
+      rows.push({ kind: "header", label: "Ingredients" });
+      for (const ingredient of result.ingredients) {
+        rows.push({
+          kind: "ingredient",
+          id: ingredient.id,
+          href: ingredient.href,
+          title: ingredient.name,
+          subtitle: ingredient.summary,
+        });
+      }
+    } else if (section === "learn" && result.learn.length > 0) {
+      rows.push({ kind: "header", label: "Learn" });
+      for (const item of result.learn) {
+        rows.push({
+          kind: "learn",
+          id: `${item.kind}:${item.id}`,
+          href: item.href,
+          title: item.title,
+          subtitle: item.summary,
+          learnKind: item.kind,
+        });
+      }
+    }
+  }
+
+  return rows;
+}
+
+function selectableResults(rows: FlatResult[]): FlatResult[] {
+  return rows.filter((row) => row.kind !== "header");
+}
+
 export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [results, setResults] = useState<CocktailListItem[]>([]);
+  const [omnibar, setOmnibar] = useState<OmnibarResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -20,10 +92,15 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced ranked search (typo-tolerant + synonym-aware)
+  const flatResults = useMemo(
+    () => (omnibar ? flattenOmnibar(omnibar) : []),
+    [omnibar]
+  );
+  const selectable = useMemo(() => selectableResults(flatResults), [flatResults]);
+
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setResults([]);
+      setOmnibar(null);
       setShowResults(false);
       setHasSearched(false);
       return;
@@ -32,14 +109,14 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
     const timeoutId = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const searchResults = await searchCocktailsClient(searchQuery, 10);
-        setResults(searchResults);
+        const searchResults = await searchOmnibarClient(searchQuery);
+        setOmnibar(searchResults);
         setShowResults(true);
         setHasSearched(true);
         setSelectedIndex(-1);
       } catch (error) {
-        console.error("Error searching cocktails:", error);
-        setResults([]);
+        console.error("Error searching catalog:", error);
+        setOmnibar(null);
         setShowResults(true);
         setHasSearched(true);
       } finally {
@@ -50,8 +127,6 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Auto-focus only in the desktop overlay. Focusing the More-sheet field
-  // immediately opens the iOS keyboard and covers the rest of the menu.
   useEffect(() => {
     if (variant !== "desktop" || !inputRef.current) return;
 
@@ -62,8 +137,13 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
     return () => clearTimeout(timer);
   }, [variant]);
 
+  const navigateTo = (href: string) => {
+    window.location.assign(href);
+    onClose?.();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showResults || results.length === 0) {
+    if (!showResults || selectable.length === 0) {
       if (e.key === "Escape" && onClose) {
         onClose();
       }
@@ -73,7 +153,7 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : prev));
+        setSelectedIndex((prev) => (prev < selectable.length - 1 ? prev + 1 : prev));
         break;
       case "ArrowUp":
         e.preventDefault();
@@ -81,27 +161,22 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
         break;
       case "Enter":
         e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < results.length) {
-          handleResultClick(results[selectedIndex]);
+        if (selectedIndex >= 0 && selectedIndex < selectable.length) {
+          const row = selectable[selectedIndex];
+          if (row.kind !== "header") navigateTo(row.href);
         }
         break;
       case "Escape":
         e.preventDefault();
         setShowResults(false);
-        if (onClose) {
-          onClose();
-        }
+        onClose?.();
         break;
     }
   };
 
-  const handleResultClick = (cocktail: CocktailListItem) => {
-    window.location.assign(`/cocktails/${cocktail.slug}`);
-  };
-
   const handleClear = () => {
     setSearchQuery("");
-    setResults([]);
+    setOmnibar(null);
     setShowResults(false);
     setHasSearched(false);
     inputRef.current?.focus();
@@ -111,6 +186,11 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
     variant === "desktop"
       ? "w-full pl-10 pr-10 py-2.5 text-sm border border-mist rounded-xl bg-white text-forest placeholder:text-sage focus:outline-none focus:ring-2 focus:ring-terracotta focus:border-transparent focus:scale-[1.02] transition-all duration-200 shadow-lg shadow-terracotta/10"
       : "w-full pl-10 pr-10 py-2.5 text-sm border border-mist rounded-xl bg-white text-forest placeholder:text-sage focus:outline-none focus:ring-2 focus:ring-terracotta focus:border-transparent focus:scale-[1.02] transition-all duration-200";
+
+  const selectedHref =
+    selectedIndex >= 0 && selectedIndex < selectable.length && selectable[selectedIndex].kind !== "header"
+      ? selectable[selectedIndex].href
+      : null;
 
   return (
     <div ref={searchRef} className="relative">
@@ -124,13 +204,17 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
           onKeyDown={handleKeyDown}
           onFocus={() => {
             void loadCocktailSearchIndex();
-            if (results.length > 0 || hasSearched) {
+            if (flatResults.length > 0 || hasSearched) {
               setShowResults(true);
             }
           }}
-          placeholder={variant === "desktop" ? "Search cocktails..." : "Search..."}
+          placeholder={
+            variant === "desktop"
+              ? "Search cocktails, ingredients, learn…"
+              : "Search MixWise…"
+          }
           className={inputClassName}
-          aria-label="Search cocktails"
+          aria-label="Search MixWise"
           aria-expanded={showResults}
           aria-haspopup="listbox"
           role="combobox"
@@ -146,52 +230,82 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
         )}
       </div>
 
-      {showResults && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card overflow-hidden z-[60] max-h-[min(24rem,45svh)] overflow-y-auto animate-fade-in">
+      {showResults && flatResults.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card overflow-hidden z-[60] max-h-[min(28rem,55svh)] overflow-y-auto animate-fade-in">
           <ul role="listbox" className="py-2">
-            {results.map((cocktail, index) => (
-              <li
-                key={cocktail.id}
-                role="option"
-                aria-selected={index === selectedIndex}
-                onClick={() => handleResultClick(cocktail)}
-                onMouseEnter={() => setSelectedIndex(index)}
-                className={`px-4 py-3 cursor-pointer transition-all duration-200 ${
-                  index === selectedIndex
-                    ? "bg-terracotta/10 text-terracotta scale-[1.02]"
-                    : "text-charcoal hover:bg-mist/50 hover:scale-[1.01]"
-                }`}
-                style={{
-                  animationDelay: `${index * 30}ms`,
-                  animationFillMode: "both",
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  {cocktail.image_url && (
-                    <img
-                      src={cocktail.image_url}
-                      alt={cocktail.image_alt || cocktail.name}
-                      className="w-12 h-12 rounded-lg object-cover"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{cocktail.name}</div>
-                    {cocktail.short_description && (
-                      <div className="text-xs text-sage truncate mt-0.5">
-                        {cocktail.short_description}
+            {flatResults.map((row) => {
+              if (row.kind === "header") {
+                return (
+                  <li key={`header-${row.label}`}>
+                    <div className="px-4 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-sage">
+                      {row.label}
+                    </div>
+                  </li>
+                );
+              }
+
+              const isSelected = selectedHref === row.href;
+              return (
+                <li key={`${row.kind}-${"id" in row ? row.id : row.label}`}>
+                  <div
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => navigateTo(row.href)}
+                    onMouseEnter={() => {
+                      const idx = selectable.findIndex(
+                        (item) => item.kind !== "header" && item.href === row.href
+                      );
+                      if (idx >= 0) setSelectedIndex(idx);
+                    }}
+                    className={`px-4 py-2.5 cursor-pointer transition-all duration-200 ${
+                      isSelected
+                        ? "bg-terracotta/10 text-terracotta"
+                        : "text-charcoal hover:bg-mist/50"
+                    }`}
+                  >
+                    {row.kind === "chip" ? (
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <span className="inline-flex rounded-full bg-forest/10 px-2.5 py-1 text-forest">
+                          {row.label}
+                        </span>
+                        <span className="text-xs text-sage">Browse all</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        {row.kind === "cocktail" && row.imageUrl ? (
+                          <img
+                            src={row.imageUrl}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-mist/80 flex items-center justify-center text-xs font-medium text-sage shrink-0">
+                            {row.kind === "ingredient"
+                              ? "In"
+                              : row.kind === "learn"
+                                ? "Ln"
+                                : "Ck"}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{row.title}</div>
+                          {row.subtitle && (
+                            <div className="text-xs text-sage truncate mt-0.5">{row.subtitle}</div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
 
-      {showResults && hasSearched && !isSearching && results.length === 0 && (
+      {showResults && hasSearched && !isSearching && selectable.length === 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-mist rounded-xl shadow-card p-4 text-center text-sage text-sm z-[60]">
-          No cocktails match “{searchQuery.trim()}”
+          Nothing matches “{searchQuery.trim()}”
         </div>
       )}
 

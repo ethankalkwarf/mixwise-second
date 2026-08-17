@@ -8,6 +8,7 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { formatIngredientCategory } from "@/lib/formatters";
 import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
 import { lookupIngredient } from "@/lib/ingredientMatching";
+import { searchMixIngredients } from "@/lib/search";
 
 type Props = {
   allIngredients: MixIngredient[];
@@ -21,26 +22,26 @@ type Props = {
     canMake: number;
     almostThere: number;
   };
-  onStepChange: (step: 'cabinet' | 'mixer' | 'menu') => void;
+  onStepChange: (step: "cabinet" | "mixer" | "menu") => void;
 };
 
 const POPULAR_INGREDIENTS = [
-  // Prioritize basic spirits first to maximize cocktails quickly
-  "Vodka", "Tequila", "Gin", "Whiskey", // Basic spirits - unlock many cocktails
-  // Then essential mixers and juices
-  "Lime Juice", "Lemon Juice", "Simple Syrup", "Agave Syrup", // Essential mixers/juices
-  "Tonic Water", "Club Soda", "Rum", "Angostura Bitters", // Additional versatile ingredients
-  "Dry Vermouth", "Sweet Vermouth", "Triple Sec" // Specialized ingredients
+  "Vodka",
+  "Tequila",
+  "Gin",
+  "Whiskey",
+  "Lime Juice",
+  "Lemon Juice",
+  "Simple Syrup",
+  "Agave Syrup",
+  "Tonic Water",
+  "Club Soda",
+  "Rum",
+  "Angostura Bitters",
+  "Dry Vermouth",
+  "Sweet Vermouth",
+  "Triple Sec",
 ];
-
-// Normalize string for accent-insensitive comparison
-function normalizeForSearch(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD') // Normalize Form Decomposed - separates base characters from diacritics
-    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (accents)
-    .trim();
-}
 
 export function MixCabinet({
   allIngredients,
@@ -67,16 +68,14 @@ export function MixCabinet({
       filtered = filtered.filter((i) => (i.category || "Garnish") === selectedCategory);
     }
 
-    // Apply search filter (accent-insensitive)
+    // Ranked search: accents, synonyms, fuzzy names
     if (searchQuery.trim()) {
-      const normalizedQuery = normalizeForSearch(searchQuery);
-      filtered = filtered.filter((i) => {
-        const normalizedName = normalizeForSearch(i.name || '');
-        return normalizedName.includes(normalizedQuery);
-      });
+      filtered = searchMixIngredients(filtered, searchQuery);
+    } else {
+      filtered = filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     }
 
-    return filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    return filtered;
   }, [allIngredients, selectedCategory, stapleIds, searchQuery]);
 
   const { visibleItems: visibleIngredients, hasMore, loadMoreRef } = useInfiniteVisibleCount(
