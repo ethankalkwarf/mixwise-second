@@ -91,8 +91,8 @@ export const OCCASIONS: OccasionDefinition[] = [
     matchTokens: ["fall", "autumn"],
     coverSlugs: ["apple-cider-old-fashioned", "maple-old-fashioned", "spiced-pear-cocktail", "stone-fence"],
     staticCoverPath: "/occasions/fall.jpg",
-    // Portrait whiskey shot — keep the glass (lower third) in the crop
-    coverFocusClass: "object-[center_82%]",
+    // Glass sits high in the landscape crop — keep it above the card overlay
+    coverFocusClass: "object-[center_28%]",
   },
   {
     slug: "holidays",
