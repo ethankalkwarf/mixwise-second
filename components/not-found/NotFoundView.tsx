@@ -22,17 +22,14 @@ export function NotFoundView({ suggestion }: { suggestion: DailySuggestion | nul
 
   return (
     <section className="relative isolate flex min-h-[calc(100svh-4rem)] flex-col overflow-hidden bg-charcoal">
-      <Image
-        src="/media/three-cocktails-dark.webp"
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover object-center"
+      <div
         aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse at 18% 12%, rgba(188,90,69,0.16), transparent 42%), radial-gradient(ellipse at 88% 78%, rgba(138,154,91,0.14), transparent 46%)",
+        }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/65 to-charcoal/30" />
-      <div className="absolute inset-0 bg-gradient-to-r from-charcoal/75 via-charcoal/20 to-transparent" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
         <p className="sr-only">Page not found</p>
@@ -65,7 +62,7 @@ export function NotFoundView({ suggestion }: { suggestion: DailySuggestion | nul
             </p>
 
             <aside
-              className="mt-6 max-w-sm rounded-2xl border border-cream/15 bg-charcoal/50 p-4 backdrop-blur-sm sm:p-5"
+              className="mt-6 max-w-sm rounded-2xl border border-cream/15 bg-cream/[0.06] p-4 sm:p-5"
               aria-label="A recipe for a missing page"
             >
               <p className="font-display text-xl text-cream">The 404</p>
