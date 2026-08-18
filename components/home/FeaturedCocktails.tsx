@@ -24,12 +24,24 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4 lg:gap-8 xl:grid-cols-5 2xl:grid-cols-6">
-          {cocktails.map((cocktail, index) => (
+        {/* Mobile/tablet: horizontal scroll avoids a lone card on the last row */}
+        <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 scrollbar-thin lg:hidden">
+          {cocktails.map((cocktail) => (
             <FeaturedCocktailCard
               key={cocktail._id}
               cocktail={cocktail}
-              isOffset={index % 2 === 1}
+              layout="scroll"
+            />
+          ))}
+        </div>
+
+        {/* Desktop: even 5-column grid */}
+        <div className="hidden gap-8 lg:grid lg:grid-cols-5">
+          {cocktails.map((cocktail) => (
+            <FeaturedCocktailCard
+              key={`desktop-${cocktail._id}`}
+              cocktail={cocktail}
+              layout="grid"
             />
           ))}
         </div>
@@ -49,10 +61,10 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
 
 interface FeaturedCocktailCardProps {
   cocktail: SanityCocktail & { ingredientCount?: number };
-  isOffset: boolean;
+  layout: "scroll" | "grid";
 }
 
-function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps) {
+function FeaturedCocktailCard({ cocktail, layout }: FeaturedCocktailCardProps) {
   const imageUrl =
     getImageUrl(cocktail.image, {
       width: 800,
@@ -65,21 +77,26 @@ function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps)
     <Link
       href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
       className={`group relative flex flex-col overflow-hidden rounded-2xl border border-mist bg-white transition-transform duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta ${
-        isOffset ? "lg:mt-8" : ""
+        layout === "scroll"
+          ? "w-44 flex-shrink-0 sm:w-52"
+          : "h-full"
       }`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-mist">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-mist">
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt={cocktail.name}
-            width={800}
-            height={600}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             placeholder="blur"
             blurDataURL={COCKTAIL_BLUR_DATA_URL}
             quality={90}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes={
+              layout === "scroll"
+                ? "(max-width: 1024px) 208px, 20vw"
+                : "(max-width: 1280px) 20vw, 15vw"
+            }
           />
         ) : (
           <div className="h-full w-full bg-mist" />
@@ -92,7 +109,7 @@ function FeaturedCocktailCard({ cocktail, isOffset }: FeaturedCocktailCardProps)
       </div>
 
       <div className="flex-1 p-3 sm:p-4">
-        <h3 className="line-clamp-2 font-display text-sm font-bold text-forest transition-colors group-hover:text-terracotta sm:text-base">
+        <h3 className="line-clamp-2 min-h-[2.5rem] font-display text-sm font-bold leading-snug text-forest transition-colors group-hover:text-terracotta sm:min-h-[2.75rem] sm:text-base">
           {cocktail.name}
         </h3>
 
