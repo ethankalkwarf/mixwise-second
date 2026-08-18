@@ -85,6 +85,7 @@ export default function AccountPage() {
   const [emailSubscribed, setEmailSubscribed] = useState(true);
   const [emailPrefsLoading, setEmailPrefsLoading] = useState(true);
   const [emailPrefsSaving, setEmailPrefsSaving] = useState(false);
+  const [emailPrefsError, setEmailPrefsError] = useState<string | null>(null);
   
   // Fetch ingredient names from Sanity for fallback lookup
   const [ingredientNames, setIngredientNames] = useState<Map<string, string>>(new Map());
@@ -138,22 +139,31 @@ export default function AccountPage() {
   // Fetch email preferences
   useEffect(() => {
     async function fetchEmailPrefs() {
-      if (!user) return;
-      
+      if (!user) {
+        setEmailPrefsLoading(false);
+        return;
+      }
+
+      setEmailPrefsLoading(true);
+      setEmailPrefsError(null);
+
       try {
         const response = await fetch("/api/email-preferences");
         if (response.ok) {
           const data = await response.json();
           setEmailSubscribed(data.preferences?.email_subscribed ?? true);
+        } else {
+          setEmailPrefsError("Couldn't load email preferences. You can try again below.");
         }
       } catch (err) {
         console.error("Failed to fetch email preferences:", err);
+        setEmailPrefsError("Couldn't load email preferences. You can try again below.");
       } finally {
         setEmailPrefsLoading(false);
       }
     }
 
-    fetchEmailPrefs();
+    void fetchEmailPrefs();
   }, [user]);
 
   // Update profile names - try direct client first, fallback to API route
@@ -901,7 +911,29 @@ export default function AccountPage() {
             
             {emailPrefsLoading ? (
               <div className="space-y-4">
-                <div className="h-16 bg-mist/50 rounded-xl animate-pulse" />
+                <div className="h-16 bg-mist/50 rounded-xl animate-pulse border border-mist" />
+              </div>
+            ) : emailPrefsError ? (
+              <div className="space-y-4">
+                <p className="text-sm text-sage">{emailPrefsError}</p>
+                <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
+                  <div>
+                    <h3 className="font-semibold text-forest">MixWise emails</h3>
+                    <p className="text-sm text-sage">
+                      Welcome tips, weekly cocktail inspiration, and other updates from us
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={emailSubscribed}
+                      onChange={(e) => updateEmailPref(e.target.checked)}
+                      disabled={emailPrefsSaving}
+                    />
+                    <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>
+                  </label>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
