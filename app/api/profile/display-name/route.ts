@@ -4,6 +4,21 @@ import { debugLog } from "@/lib/debugLog";
 
 export const dynamic = "force-dynamic";
 
+const NAME_MAX_LENGTH = 100;
+
+function normalizeName(value: unknown): string | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value !== "string") {
+    throw new Error("INVALID_TYPE");
+  }
+  const trimmed = value.trim();
+  if (trimmed.length > NAME_MAX_LENGTH) {
+    throw new Error("TOO_LONG");
+  }
+  return trimmed || null;
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const supabase = await createServerClient();
@@ -19,82 +34,90 @@ export async function PUT(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-    } catch (parseError) {
+    } catch {
       return NextResponse.json(
         { error: "Invalid JSON in request body" },
         { status: 400 }
       );
     }
-    
-    const { display_name } = body;
 
-    // Display name is optional, but if provided, validate it
-    if (display_name !== undefined && display_name !== null) {
-      if (typeof display_name !== 'string') {
+    const updatePayload: {
+      display_name?: string | null;
+      first_name?: string | null;
+      last_name?: string | null;
+    } = {};
+
+    try {
+      if ("display_name" in body) {
+        updatePayload.display_name = normalizeName(body.display_name);
+      }
+      if ("first_name" in body) {
+        updatePayload.first_name = normalizeName(body.first_name);
+      }
+      if ("last_name" in body) {
+        updatePayload.last_name = normalizeName(body.last_name);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message === "INVALID_TYPE") {
         return NextResponse.json(
-          { error: "Display name must be a string" },
+          { error: "Name fields must be strings" },
           { status: 400 }
         );
       }
-
-      const trimmedName = display_name.trim();
-      
-      // Optional: Add length validation
-      if (trimmedName.length > 100) {
+      if (err instanceof Error && err.message === "TOO_LONG") {
         return NextResponse.json(
-          { error: "Display name must be 100 characters or less" },
+          { error: `Names must be ${NAME_MAX_LENGTH} characters or less` },
           { status: 400 }
         );
       }
+      throw err;
     }
 
-    // Update display name (can be null to clear it)
-    const newDisplayName = display_name === '' ? null : display_name?.trim() || null;
-    
-    // Try to update and get the result back
+    if (Object.keys(updatePayload).length === 0) {
+      return NextResponse.json(
+        { error: "No profile fields provided" },
+        { status: 400 }
+      );
+    }
+
     const { data: updatedData, error: updateError } = await supabase
-      .from('profiles')
-      .update({ display_name: newDisplayName })
-      .eq('id', user.id)
-      .select('display_name')
+      .from("profiles")
+      .update(updatePayload)
+      .eq("id", user.id)
+      .select("display_name, first_name, last_name")
       .single();
 
     if (updateError) {
-      console.error('Error updating display name:', updateError);
-      console.error('Error details:', JSON.stringify(updateError, null, 2));
+      console.error("Error updating profile names:", updateError);
       return NextResponse.json(
-        { error: updateError.message || "Failed to update display name" },
+        { error: updateError.message || "Failed to update profile" },
         { status: 500 }
       );
     }
 
-    // If we got data back, the update succeeded
     if (updatedData) {
-      debugLog('✅ Display name update succeeded:', { 
-        userId: user.id, 
-        display_name: updatedData.display_name 
+      debugLog("Profile name update succeeded:", {
+        userId: user.id,
+        ...updatedData,
       });
 
-      return NextResponse.json({ 
-        success: true, 
-        display_name: updatedData.display_name || null
+      return NextResponse.json({
+        success: true,
+        display_name: updatedData.display_name,
+        first_name: updatedData.first_name,
+        last_name: updatedData.last_name,
       });
     }
 
-    // If no error but also no data, the update might have succeeded but we can't verify
-    // Return success anyway since there was no error
-    console.warn('Update completed with no error but no data returned');
-    return NextResponse.json({ 
-      success: true, 
-      display_name: newDisplayName
+    return NextResponse.json({
+      success: true,
+      ...updatePayload,
     });
-
   } catch (error) {
-    console.error('Display name API error:', error);
+    console.error("Profile name API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
-

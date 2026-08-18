@@ -11,8 +11,15 @@ import type { Database } from "@/lib/supabase/database.types";
 
 type EmailPreferencesUpdate = Database["public"]["Tables"]["email_preferences"]["Update"];
 
+function unsubscribePayload(): EmailPreferencesUpdate {
+  return {
+    marketing_emails: false,
+    unsubscribed_at: new Date().toISOString(),
+  };
+}
+
 /**
- * GET - One-click unsubscribe from all emails or a specific category
+ * GET - One-click unsubscribe from marketing emails
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -43,25 +50,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let updateData: EmailPreferencesUpdate = {};
-
-    if (type === "all") {
-      updateData = {
-        welcome_emails: false,
-        weekly_digest: false,
-        recommendations: false,
-        product_updates: false,
-        unsubscribed_all_at: new Date().toISOString(),
-      };
-    } else if (type === "digest") {
-      updateData = { weekly_digest: false };
-    } else if (type === "recommendations") {
-      updateData = { recommendations: false };
-    } else if (type === "updates") {
-      updateData = { product_updates: false };
-    } else if (type === "welcome") {
-      updateData = { welcome_emails: false };
-    }
+    // All unsubscribe link types map to the single marketing subscription.
+    const updateData = unsubscribePayload();
 
     const { error: updateError } = await supabaseAdmin
       .from("email_preferences")
@@ -89,7 +79,7 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST - Update specific email preferences
+ * POST - Update email subscription preference
  */
 export async function POST(request: NextRequest) {
   try {
@@ -118,19 +108,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validFields = ["welcome_emails", "weekly_digest"] as const;
-    const updateData: EmailPreferencesUpdate = {};
+    let subscribed: boolean | undefined;
 
-    for (const field of validFields) {
-      if (typeof preferences?.[field] === "boolean") {
-        updateData[field] = preferences[field];
-      }
+    if (typeof preferences?.email_subscribed === "boolean") {
+      subscribed = preferences.email_subscribed;
     }
 
-    const isResubscribing = Object.values(updateData).some((v) => v === true);
-    if (isResubscribing) {
-      updateData.unsubscribed_all_at = null;
+    if (subscribed === undefined) {
+      return NextResponse.json(
+        { error: "No valid preferences provided" },
+        { status: 400 }
+      );
     }
+
+    const updateData: EmailPreferencesUpdate = {
+      marketing_emails: subscribed,
+      unsubscribed_at: subscribed ? null : new Date().toISOString(),
+    };
 
     const { error: updateError } = await supabaseAdmin
       .from("email_preferences")

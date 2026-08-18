@@ -27,7 +27,7 @@ export async function runFridayPersonalized(options?: {
   const sendKey = utcDateKey(now);
   const siteUrl = getSiteUrl();
   const accounts = (await loadAccountRecipients()).filter(
-    (user) => user.weeklyDigest && user.barCount > 0
+    (user) => user.marketingEmails && user.barCount > 0
   );
   const index = await loadMatchIndex();
 

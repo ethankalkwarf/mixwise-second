@@ -27,6 +27,8 @@ export interface Database {
           id: string;
           email: string | null;
           display_name: string | null;
+          first_name: string | null;
+          last_name: string | null;
           avatar_url: string | null;
           role: "free" | "paid" | "admin";
           preferences: Json;
@@ -39,6 +41,8 @@ export interface Database {
           id: string;
           email?: string | null;
           display_name?: string | null;
+          first_name?: string | null;
+          last_name?: string | null;
           avatar_url?: string | null;
           role?: "free" | "paid" | "admin";
           preferences?: Json;
@@ -51,6 +55,8 @@ export interface Database {
           id?: string;
           email?: string | null;
           display_name?: string | null;
+          first_name?: string | null;
+          last_name?: string | null;
           avatar_url?: string | null;
           role?: "free" | "paid" | "admin";
           preferences?: Json;
@@ -398,13 +404,10 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          welcome_emails: boolean;
-          weekly_digest: boolean;
-          recommendations: boolean;
-          product_updates: boolean;
+          marketing_emails: boolean;
           welcome_email_sent_at: string | null;
           last_digest_sent_at: string | null;
-          unsubscribed_all_at: string | null;
+          unsubscribed_at: string | null;
           unsubscribe_token: string;
           created_at: string;
           updated_at: string;
@@ -412,13 +415,10 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          welcome_emails?: boolean;
-          weekly_digest?: boolean;
-          recommendations?: boolean;
-          product_updates?: boolean;
+          marketing_emails?: boolean;
           welcome_email_sent_at?: string | null;
           last_digest_sent_at?: string | null;
-          unsubscribed_all_at?: string | null;
+          unsubscribed_at?: string | null;
           unsubscribe_token?: string;
           created_at?: string;
           updated_at?: string;
@@ -426,13 +426,10 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
-          welcome_emails?: boolean;
-          weekly_digest?: boolean;
-          recommendations?: boolean;
-          product_updates?: boolean;
+          marketing_emails?: boolean;
           welcome_email_sent_at?: string | null;
           last_digest_sent_at?: string | null;
-          unsubscribed_all_at?: string | null;
+          unsubscribed_at?: string | null;
           unsubscribe_token?: string;
           created_at?: string;
           updated_at?: string;

@@ -85,11 +85,11 @@ export async function GET(request: NextRequest) {
       if (!emailPrefs) {
         issues.push("⚠️ No email_preferences row - will receive emails by default (opt-in)");
       } else {
-        if (emailPrefs.weekly_digest === false) {
-          issues.push("❌ User has weekly_digest = false - opted out");
+        if (emailPrefs.marketing_emails === false) {
+          issues.push("❌ User has marketing_emails = false - opted out");
         }
-        if (emailPrefs.unsubscribed_all_at) {
-          issues.push(`❌ User unsubscribed from all emails at ${emailPrefs.unsubscribed_all_at}`);
+        if (emailPrefs.unsubscribed_at) {
+          issues.push(`❌ User unsubscribed from marketing emails at ${emailPrefs.unsubscribed_at}`);
         }
       }
 
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
       // Get email preferences
       const { data: allPrefs } = await supabase
         .from("email_preferences")
-        .select("user_id, weekly_digest, unsubscribed_all_at, last_digest_sent_at");
+        .select("user_id, marketing_emails, unsubscribed_at, last_digest_sent_at");
 
       // Get profiles with NULL email
       const { data: nullEmailProfiles } = await supabase
@@ -141,10 +141,8 @@ export async function GET(request: NextRequest) {
       for (const profile of profiles || []) {
         const prefs = prefsMap.get(profile.id);
         
-        if (prefs?.unsubscribed_all_at) {
-          wouldNotReceive.push({ email: profile.email, reason: "unsubscribed_all" });
-        } else if (prefs?.weekly_digest === false) {
-          wouldNotReceive.push({ email: profile.email, reason: "weekly_digest=false" });
+        if (prefs?.marketing_emails === false) {
+          wouldNotReceive.push({ email: profile.email, reason: "marketing_emails=false" });
         } else {
           wouldReceive.push(profile.email);
         }

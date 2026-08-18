@@ -60,7 +60,7 @@ export async function runThursdayFeatured(options?: {
     label: issue?.featuredLabel || "Tonight",
   };
 
-  const accounts = (await loadAccountRecipients()).filter((user) => user.weeklyDigest);
+  const accounts = (await loadAccountRecipients()).filter((user) => user.marketingEmails);
   const accountEmails = new Set(accounts.map((user) => user.email));
   const list = await loadListRecipients(accountEmails);
   const matchIndex = await loadMatchIndex();

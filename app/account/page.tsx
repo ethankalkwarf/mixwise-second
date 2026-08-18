@@ -26,6 +26,7 @@ import {
 import { debugLog } from "@/lib/debugLog";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
+import { NativeAccountExtras } from "@/components/mobile/NativeAccountExtras";
 
 export const dynamic = "force-dynamic";
 
@@ -74,15 +75,14 @@ export default function AccountPage() {
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   
-  // Display name state
+  // Profile name state
   const [displayNameInput, setDisplayNameInput] = useState('');
-  const [displayNameSaving, setDisplayNameSaving] = useState(false);
+  const [firstNameInput, setFirstNameInput] = useState('');
+  const [lastNameInput, setLastNameInput] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
   
-  // Email preferences state (only emails we actually send)
-  const [emailPrefs, setEmailPrefs] = useState({
-    weekly_digest: true,
-    welcome_emails: true,
-  });
+  // Email preferences state — single marketing subscription toggle
+  const [emailSubscribed, setEmailSubscribed] = useState(true);
   const [emailPrefsLoading, setEmailPrefsLoading] = useState(true);
   const [emailPrefsSaving, setEmailPrefsSaving] = useState(false);
   
@@ -122,12 +122,18 @@ export default function AccountPage() {
     fetchBadges();
   }, [user]);
 
-  // Initialize display name input when profile loads
+  // Initialize profile name inputs when profile loads
   useEffect(() => {
     if (profile?.display_name !== undefined) {
       setDisplayNameInput(profile.display_name || '');
     }
-  }, [profile?.display_name]);
+    if (profile?.first_name !== undefined) {
+      setFirstNameInput(profile.first_name || '');
+    }
+    if (profile?.last_name !== undefined) {
+      setLastNameInput(profile.last_name || '');
+    }
+  }, [profile?.display_name, profile?.first_name, profile?.last_name]);
 
   // Fetch email preferences
   useEffect(() => {
@@ -138,10 +144,7 @@ export default function AccountPage() {
         const response = await fetch("/api/email-preferences");
         if (response.ok) {
           const data = await response.json();
-          setEmailPrefs({
-            weekly_digest: data.preferences?.weekly_digest ?? true,
-            welcome_emails: data.preferences?.welcome_emails ?? true,
-          });
+          setEmailSubscribed(data.preferences?.email_subscribed ?? true);
         }
       } catch (err) {
         console.error("Failed to fetch email preferences:", err);
@@ -153,181 +156,155 @@ export default function AccountPage() {
     fetchEmailPrefs();
   }, [user]);
 
-  // Update display name - try direct client first, fallback to API route
-  const handleUpdateDisplayName = useCallback(async () => {
+  // Update profile names - try direct client first, fallback to API route
+  const handleUpdateProfile = useCallback(async () => {
     if (!user) {
-      toast.error("You must be signed in to update your display name");
+      toast.error("You must be signed in to update your profile");
       return;
     }
 
-    setDisplayNameSaving(true);
-    const trimmedName = displayNameInput.trim();
+    setProfileSaving(true);
+    const trimmedDisplayName = displayNameInput.trim();
+    const trimmedFirstName = firstNameInput.trim();
+    const trimmedLastName = lastNameInput.trim();
     let updateSucceeded = false;
 
-    // Try direct Supabase client first (faster, works when bot protection isn't active)
+    const profileUpdate = {
+      display_name: trimmedDisplayName || null,
+      first_name: trimmedFirstName || null,
+      last_name: trimmedLastName || null,
+    };
+
     if (supabase) {
       try {
-        debugLog("Attempting direct Supabase update:", { userId: user.id, displayName: trimmedName });
+        debugLog("Attempting direct Supabase profile update:", { userId: user.id, ...profileUpdate });
         
         const { data, error } = await supabase
           .from("profiles")
-          .update({ display_name: trimmedName || null })
+          .update(profileUpdate)
           .eq("id", user.id)
-          .select()
+          .select("display_name, first_name, last_name")
           .single();
 
         if (!error && data) {
-          // Update succeeded - use the returned data
-          debugLog("✅ Direct update succeeded:", data);
+          debugLog("✅ Direct profile update succeeded:", data);
           updateSucceeded = true;
           
-          // CRITICAL: Clear localStorage cache to force fresh fetch
           try {
             const cacheKey = `mixwise_profile_${user.id}`;
             localStorage.removeItem(cacheKey);
-            debugLog("Cleared profile cache after update");
           } catch (cacheErr) {
             console.warn("Failed to clear cache:", cacheErr);
           }
           
-          // Update local state immediately with the returned data
-          const returnedDisplayName = data?.display_name || '';
-          setDisplayNameInput(returnedDisplayName);
-          toast.success("Display name updated");
+          setDisplayNameInput(data.display_name || '');
+          setFirstNameInput(data.first_name || '');
+          setLastNameInput(data.last_name || '');
+          toast.success("Profile updated");
           
-          // Force a fresh profile fetch (bypass cache)
           refreshProfile().catch(err => {
             console.warn("Profile refresh failed (non-critical, update succeeded):", err);
-            // Silently fail - update succeeded, UI is already updated
           });
-          setDisplayNameSaving(false);
+          setProfileSaving(false);
           return;
         }
 
-        // If we get a network error, try API route as fallback
         if (error.message?.includes("Failed to fetch") || error.code === 'PGRST301') {
           debugLog("Direct update failed with network error, trying API route fallback");
-          // Fall through to API route attempt
         } else {
-          // Other errors (permissions, etc.) - show error and stop
           console.error("Direct update error:", error);
-          toast.error(error.message || "Failed to update display name");
-          setDisplayNameSaving(false);
+          toast.error(error.message || "Failed to update profile");
+          setProfileSaving(false);
           return;
         }
       } catch (err: any) {
-        // Network errors - try API route fallback
         if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
           debugLog("Direct update exception, trying API route fallback:", err);
-          // Fall through to API route attempt
         } else {
           console.error("Direct update exception:", err);
-          toast.error("Failed to update display name. Please try again.");
-          setDisplayNameSaving(false);
+          toast.error("Failed to update profile. Please try again.");
+          setProfileSaving(false);
           return;
         }
       }
     }
 
-    // Fallback: Use API route (more reliable when bot protection is active)
     try {
-      debugLog("Using API route fallback for display name update");
-      
       const response = await fetch('/api/profile/display-name', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ display_name: trimmedName || '' }),
+        body: JSON.stringify({
+          display_name: trimmedDisplayName || '',
+          first_name: trimmedFirstName || '',
+          last_name: trimmedLastName || '',
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         console.error("API route error:", errorData);
-        toast.error(errorData.error || "Failed to update display name");
-        setDisplayNameSaving(false);
+        toast.error(errorData.error || "Failed to update profile");
+        setProfileSaving(false);
         return;
       }
 
       const data = await response.json();
       
-      // Check if update succeeded
       if (data?.success || data?.display_name !== undefined) {
-        debugLog("✅ API route update succeeded:", data);
+        debugLog("✅ API route profile update succeeded:", data);
         updateSucceeded = true;
         
-        // CRITICAL: Clear localStorage cache to force fresh fetch
         try {
           const cacheKey = `mixwise_profile_${user.id}`;
           localStorage.removeItem(cacheKey);
-          debugLog("Cleared profile cache after API update");
         } catch (cacheErr) {
           console.warn("Failed to clear cache:", cacheErr);
         }
         
-        // Update local state immediately with the returned data
-        const returnedDisplayName = data?.display_name || '';
-        setDisplayNameInput(returnedDisplayName);
-        toast.success("Display name updated");
+        setDisplayNameInput(data?.display_name || '');
+        setFirstNameInput(data?.first_name || '');
+        setLastNameInput(data?.last_name || '');
+        toast.success("Profile updated");
         
-        // Force a fresh profile fetch (bypass cache)
         refreshProfile().catch(err => {
           console.warn("Profile refresh failed (non-critical):", err);
-          // Don't show error - the update succeeded, UI is already updated
         });
-        setDisplayNameSaving(false);
-        return;
-      } else {
-        console.error("❌ API route returned but no success flag:", data);
-        toast.error(data?.error || "Update may have failed. Please refresh and try again.");
-        setDisplayNameSaving(false);
+        setProfileSaving(false);
         return;
       }
+
+      toast.error(data?.error || "Failed to update profile. Please try again.");
+      setProfileSaving(false);
     } catch (err: any) {
-      console.error("❌ API route exception:", err);
-      console.error("Error type:", err?.constructor?.name);
-      console.error("Error message:", err?.message);
-      console.error("Update succeeded flag:", updateSucceeded);
-      
-      // Only show error if update didn't succeed
       if (!updateSucceeded) {
-        if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
-          // Both direct client and API route failed - this is a real network issue
-          toast.error("Network error. Please check your connection and try again. If the problem persists, refresh the page.");
-        } else {
-          toast.error(err?.message || "Failed to update display name. Please try again.");
-        }
-      } else {
-        // Update succeeded but something else failed - don't show error
-        debugLog("Update succeeded, ignoring error from catch block");
+        toast.error(err?.message || "Failed to update profile. Please try again.");
       }
-    } finally {
-      setDisplayNameSaving(false);
+      setProfileSaving(false);
     }
-  }, [user, displayNameInput, supabase, toast, refreshProfile]);
+  }, [user, displayNameInput, firstNameInput, lastNameInput, supabase, toast, refreshProfile]);
 
   // Update email preference
-  const updateEmailPref = async (key: keyof typeof emailPrefs, value: boolean) => {
+  const updateEmailPref = async (subscribed: boolean) => {
     setEmailPrefsSaving(true);
-    const newPrefs = { ...emailPrefs, [key]: value };
-    setEmailPrefs(newPrefs);
+    setEmailSubscribed(subscribed);
 
     try {
       const response = await fetch("/api/email-preferences", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPrefs),
+        body: JSON.stringify({ email_subscribed: subscribed }),
       });
 
       if (response.ok) {
         toast.success("Email preferences updated");
       } else {
-        // Revert on error
-        setEmailPrefs(emailPrefs);
+        setEmailSubscribed(!subscribed);
         toast.error("Failed to update preferences");
       }
-    } catch (err) {
-      setEmailPrefs(emailPrefs);
+    } catch {
+      setEmailSubscribed(!subscribed);
       toast.error("Failed to update preferences");
     } finally {
       setEmailPrefsSaving(false);
@@ -624,6 +601,30 @@ export default function AccountPage() {
                 <p className="text-sage mb-4">{email}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
+                    <label htmlFor="firstName" className="label-botanical">First Name</label>
+                    <input
+                      id="firstName"
+                      type="text"
+                      value={firstNameInput}
+                      onChange={(e) => setFirstNameInput(e.target.value)}
+                      className="input-botanical"
+                      placeholder="Optional"
+                      disabled={profileSaving}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="lastName" className="label-botanical">Last Name</label>
+                    <input
+                      id="lastName"
+                      type="text"
+                      value={lastNameInput}
+                      onChange={(e) => setLastNameInput(e.target.value)}
+                      className="input-botanical"
+                      placeholder="Optional"
+                      disabled={profileSaving}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
                     <label htmlFor="displayName" className="label-botanical">Display Name</label>
                     <input
                       id="displayName"
@@ -631,17 +632,17 @@ export default function AccountPage() {
                       value={displayNameInput}
                       onChange={(e) => setDisplayNameInput(e.target.value)}
                       className="input-botanical"
-                      placeholder="Enter your display name"
-                      disabled={displayNameSaving}
+                      placeholder="How your name appears in the app"
+                      disabled={profileSaving}
                     />
                   </div>
-                  <div className="flex items-end">
+                  <div className="sm:col-span-2 flex items-end">
                     <button 
-                      onClick={handleUpdateDisplayName}
-                      disabled={displayNameSaving}
+                      onClick={handleUpdateProfile}
+                      disabled={profileSaving}
                       className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {displayNameSaving ? 'Saving...' : 'Save Changes'}
+                      {profileSaving ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
                 </div>
@@ -887,6 +888,8 @@ export default function AccountPage() {
           </section>
 
           {/* Email Preferences */}
+          <NativeAccountExtras />
+
           <section className="section-botanical">
             <div className="flex items-center gap-3 mb-6">
               <EnvelopeIcon className="w-6 h-6 text-olive" />
@@ -898,46 +901,23 @@ export default function AccountPage() {
             
             {emailPrefsLoading ? (
               <div className="space-y-4">
-                {[1, 2].map((i) => (
-                  <div key={i} className="h-16 bg-mist/50 rounded-xl animate-pulse" />
-                ))}
+                <div className="h-16 bg-mist/50 rounded-xl animate-pulse" />
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Weekly Digest */}
                 <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
                   <div>
-                    <h3 className="font-semibold text-forest">Weekly Digest</h3>
+                    <h3 className="font-semibold text-forest">MixWise emails</h3>
                     <p className="text-sm text-sage">
-                      Cocktails you can make, featured recipes, and inspiration every Thursday at 5pm ET
+                      Welcome tips, weekly cocktail inspiration, and other updates from us
                     </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       className="sr-only peer"
-                      checked={emailPrefs.weekly_digest}
-                      onChange={(e) => updateEmailPref("weekly_digest", e.target.checked)}
-                      disabled={emailPrefsSaving}
-                    />
-                    <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>
-                  </label>
-                </div>
-
-                {/* Welcome emails */}
-                <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
-                  <div>
-                    <h3 className="font-semibold text-forest">Welcome Email</h3>
-                    <p className="text-sm text-sage">
-                      One-time tips when you join MixWise (already sent for most accounts)
-                    </p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={emailPrefs.welcome_emails}
-                      onChange={(e) => updateEmailPref("welcome_emails", e.target.checked)}
+                      checked={emailSubscribed}
+                      onChange={(e) => updateEmailPref(e.target.checked)}
                       disabled={emailPrefsSaving}
                     />
                     <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>

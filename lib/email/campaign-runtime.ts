@@ -46,7 +46,7 @@ export type AccountRecipient = {
   createdAt: string;
   lastSignInAt: string | null;
   unsubscribeToken: string;
-  weeklyDigest: boolean;
+  marketingEmails: boolean;
   barCount: number;
   barOldestAt: string | null;
   barNewestAt: string | null;
@@ -343,7 +343,7 @@ export async function loadAccountRecipients(): Promise<AccountRecipient[]> {
 
   const { data: prefsRows, error: prefsError } = await supabase
     .from("email_preferences")
-    .select("user_id, weekly_digest, unsubscribe_token, unsubscribed_all_at, welcome_emails")
+    .select("user_id, marketing_emails, unsubscribe_token, unsubscribed_at")
     .in("user_id", userIds);
 
   if (prefsError) {
@@ -411,7 +411,7 @@ export async function loadAccountRecipients(): Promise<AccountRecipient[]> {
   const recipients: AccountRecipient[] = [];
   for (const user of users) {
     const prefs = prefsByUser.get(user.id);
-    if (prefs?.unsubscribed_all_at) continue;
+    if (prefs?.marketing_emails === false) continue;
 
     let unsubscribeToken = prefs?.unsubscribe_token;
     if (!unsubscribeToken) {
@@ -432,7 +432,7 @@ export async function loadAccountRecipients(): Promise<AccountRecipient[]> {
       createdAt: user.created_at,
       lastSignInAt: lastSignIn.get(user.id) || null,
       unsubscribeToken,
-      weeklyDigest: prefs?.weekly_digest !== false,
+      marketingEmails: prefs?.marketing_emails ?? true,
       barCount: bar?.ids.length || 0,
       barOldestAt: bar?.oldest || null,
       barNewestAt: bar?.newest || null,

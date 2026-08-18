@@ -35,7 +35,7 @@ export async function sendWelcomeEmail(
 
     const { data: emailPrefs, error: prefsError } = await supabaseAdmin
       .from("email_preferences")
-      .select("welcome_email_sent_at, welcome_emails, unsubscribe_token, unsubscribed_all_at")
+      .select("welcome_email_sent_at, marketing_emails, unsubscribe_token, unsubscribed_at")
       .eq("user_id", userId)
       .single();
 
@@ -47,7 +47,7 @@ export async function sendWelcomeEmail(
       return { success: true, alreadySent: true };
     }
 
-    if (emailPrefs?.unsubscribed_all_at || emailPrefs?.welcome_emails === false) {
+    if (emailPrefs?.marketing_emails === false) {
       return { success: true, optedOut: true };
     }
 

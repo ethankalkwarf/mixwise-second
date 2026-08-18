@@ -9,8 +9,8 @@ SELECT
   p.id,
   p.email as profile_email,
   p.display_name,
-  ep.weekly_digest,
-  ep.unsubscribed_all_at,
+  ep.marketing_emails,
+  ep.unsubscribed_at,
   ep.last_digest_sent_at,
   ep.unsubscribe_token
 FROM public.profiles p
@@ -44,7 +44,7 @@ SELECT
   p.email as profile_email,
   p.display_name,
   p.created_at as profile_created,
-  ep.weekly_digest,
+  ep.marketing_emails,
   ep.last_digest_sent_at,
   ep.unsubscribe_token IS NOT NULL as has_token
 FROM public.profiles p

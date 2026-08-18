@@ -5,11 +5,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BrandLogo } from "@/components/common/BrandLogo";
 
-interface EmailPreferences {
-  welcome_emails: boolean;
-  weekly_digest: boolean;
-}
-
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -18,10 +13,7 @@ function UnsubscribeContent() {
   const source = searchParams.get("source");
   const isNewsletter = Boolean(email && source && token);
 
-  const [preferences, setPreferences] = useState<EmailPreferences>({
-    welcome_emails: true,
-    weekly_digest: true,
-  });
+  const [emailSubscribed, setEmailSubscribed] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -44,6 +36,7 @@ function UnsubscribeContent() {
           if (response.ok) {
             setDidInitialUnsubscribe(true);
             setUnsubscribedAll(true);
+            setEmailSubscribed(false);
             setMessage({
               type: "success",
               text: "You've been unsubscribed from this MixWise mailing list.",
@@ -64,26 +57,12 @@ function UnsubscribeContent() {
 
         if (response.ok) {
           setDidInitialUnsubscribe(true);
-          if (unsubscribeType === "all") {
-            setUnsubscribedAll(true);
-            setPreferences({ welcome_emails: false, weekly_digest: false });
-            setMessage({
-              type: "success",
-              text: "You've been unsubscribed from all MixWise emails.",
-            });
-          } else if (unsubscribeType === "digest") {
-            setPreferences((p) => ({ ...p, weekly_digest: false }));
-            setMessage({
-              type: "success",
-              text: "You've been unsubscribed from the weekly digest.",
-            });
-          } else {
-            setPreferences((p) => ({ ...p, welcome_emails: false }));
-            setMessage({
-              type: "success",
-              text: "You've been unsubscribed from welcome emails.",
-            });
-          }
+          setEmailSubscribed(false);
+          setUnsubscribedAll(true);
+          setMessage({
+            type: "success",
+            text: "You've been unsubscribed from MixWise emails.",
+          });
         } else {
           setMessage({ type: "error", text: data.error || "Failed to unsubscribe" });
         }
@@ -107,7 +86,7 @@ function UnsubscribeContent() {
 
       if (response.ok) {
         setUnsubscribedAll(true);
-        setPreferences({ welcome_emails: false, weekly_digest: false });
+        setEmailSubscribed(false);
         setMessage({
           type: "success",
           text: "You've been unsubscribed from all MixWise emails.",
@@ -122,10 +101,6 @@ function UnsubscribeContent() {
     }
   };
 
-  const handlePreferenceChange = (key: keyof EmailPreferences) => {
-    setPreferences((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
   const handleSavePreferences = async () => {
     if (!token) return;
 
@@ -134,14 +109,19 @@ function UnsubscribeContent() {
       const response = await fetch("/api/email/unsubscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, preferences }),
+        body: JSON.stringify({ token, preferences: { email_subscribed: emailSubscribed } }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: "success", text: "Your email preferences have been updated." });
-        setUnsubscribedAll(false);
+        setMessage({
+          type: "success",
+          text: emailSubscribed
+            ? "You're subscribed to MixWise emails again."
+            : "Your email preferences have been updated.",
+        });
+        setUnsubscribedAll(!emailSubscribed);
       } else {
         setMessage({ type: "error", text: data.error || "Failed to update preferences" });
       }
@@ -200,9 +180,30 @@ function UnsubscribeContent() {
         ) : unsubscribedAll ? (
           <div className="text-center py-4">
             <p className="text-forest mb-6">
-              You&apos;ve been unsubscribed from all marketing emails. You may still receive
+              You&apos;ve been unsubscribed from MixWise emails. You may still receive
               essential account emails (like password resets).
             </p>
+            <label className="flex items-start gap-4 p-4 rounded-2xl bg-cream/50 border border-mist cursor-pointer hover:border-stone transition-colors text-left mb-6">
+              <input
+                type="checkbox"
+                checked={emailSubscribed}
+                onChange={(e) => setEmailSubscribed(e.target.checked)}
+                className="mt-1 w-5 h-5 rounded border-stone text-terracotta focus:ring-terracotta"
+              />
+              <div>
+                <p className="font-semibold text-forest">MixWise emails</p>
+                <p className="text-sm text-sage">
+                  Welcome tips, weekly cocktail inspiration, and other updates from us
+                </p>
+              </div>
+            </label>
+            <button
+              onClick={handleSavePreferences}
+              disabled={isSaving || !emailSubscribed}
+              className="w-full bg-terracotta text-cream py-3 rounded-2xl font-semibold hover:bg-terracotta-dark transition-colors disabled:opacity-50 mb-4"
+            >
+              {isSaving ? "Saving…" : "Resubscribe"}
+            </button>
             <Link href="/account" className="text-terracotta font-semibold hover:underline">
               Manage preferences in your account →
             </Link>
@@ -210,18 +211,20 @@ function UnsubscribeContent() {
         ) : (
           <>
             <div className="space-y-4 mb-8">
-              <PreferenceToggle
-                label="Weekly digest"
-                description="Thursday cocktail inspiration based on your bar — weekend-ready at 5pm ET"
-                checked={preferences.weekly_digest}
-                onChange={() => handlePreferenceChange("weekly_digest")}
-              />
-              <PreferenceToggle
-                label="Welcome emails"
-                description="One-time tips when you join MixWise"
-                checked={preferences.welcome_emails}
-                onChange={() => handlePreferenceChange("welcome_emails")}
-              />
+              <label className="flex items-start gap-4 p-4 rounded-2xl bg-cream/50 border border-mist cursor-pointer hover:border-stone transition-colors">
+                <input
+                  type="checkbox"
+                  checked={emailSubscribed}
+                  onChange={(e) => setEmailSubscribed(e.target.checked)}
+                  className="mt-1 w-5 h-5 rounded border-stone text-terracotta focus:ring-terracotta"
+                />
+                <div>
+                  <p className="font-semibold text-forest">MixWise emails</p>
+                  <p className="text-sm text-sage">
+                    Welcome tips, weekly cocktail inspiration, and other updates from us
+                  </p>
+                </div>
+              </label>
             </div>
 
             <div className="flex flex-col gap-3">
@@ -243,33 +246,6 @@ function UnsubscribeContent() {
         )}
       </div>
     </div>
-  );
-}
-
-function PreferenceToggle({
-  label,
-  description,
-  checked,
-  onChange,
-}: {
-  label: string;
-  description: string;
-  checked: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <label className="flex items-start gap-4 p-4 rounded-2xl bg-cream/50 border border-mist cursor-pointer hover:border-stone transition-colors">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="mt-1 w-5 h-5 rounded border-stone text-terracotta focus:ring-terracotta"
-      />
-      <div>
-        <p className="font-semibold text-forest">{label}</p>
-        <p className="text-sm text-sage">{description}</p>
-      </div>
-    </label>
   );
 }
 

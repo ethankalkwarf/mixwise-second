@@ -104,7 +104,7 @@ export async function runEmailLifecycle(options?: {
   };
 
   for (const user of accounts) {
-    if (!user.weeklyDigest) continue;
+    if (!user.marketingEmails) continue;
 
     const recent = await recentCampaignsForEmail(user.email, weekStart);
     const marketingThisWeek = [...recent].filter(

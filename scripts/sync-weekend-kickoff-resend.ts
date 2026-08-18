@@ -146,7 +146,7 @@ async function main() {
     const userIds = (profiles || []).map((row) => row.id);
     const { data: prefs } = await supabase
       .from("email_preferences")
-      .select("user_id, weekly_digest, unsubscribed_all_at")
+      .select("user_id, marketing_emails, unsubscribed_at")
       .in("user_id", userIds);
 
     const prefsByUser = new Map((prefs || []).map((row) => [row.user_id, row]));
@@ -155,7 +155,7 @@ async function main() {
       const email = profile.email?.trim().toLowerCase();
       if (!email) continue;
       const pref = prefsByUser.get(profile.id);
-      if (pref?.unsubscribed_all_at) continue;
+      if (pref?.marketing_emails === false) continue;
 
       const firstName = firstNameFromDisplayName(profile.display_name, email);
       const created = await resend.contacts.create({
