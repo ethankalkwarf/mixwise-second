@@ -64,6 +64,30 @@ function Section({ heading, children }: { heading: string; children: ReactNode }
   );
 }
 
+function MetaPill({
+  children,
+  href,
+}: {
+  children: ReactNode;
+  href?: string;
+}) {
+  const className =
+    "ingredient-meta-pill inline-flex items-center rounded-full border border-mist bg-white/80 px-3 py-1.5 text-xs leading-snug text-sage backdrop-blur-sm";
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        className={`${className} transition-colors hover:border-terracotta/40 hover:text-terracotta`}
+      >
+        {children}
+      </a>
+    );
+  }
+
+  return <span className={className}>{children}</span>;
+}
+
 export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
   const mixHref = `/mix?have=${encodeURIComponent(ingredient.slug)}`;
   const browseHref = cocktailBrowseHref(ingredient);
@@ -146,23 +170,14 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
                 {guide.dek}
               </p>
               {guide.alsoCalled && <p className="mt-2 text-sm text-sage/80">{guide.alsoCalled}</p>}
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-sage sm:mt-4">
-                {guide.abv && (
-                  <span className="rounded-full border border-mist bg-white/80 px-2.5 py-1 backdrop-blur-sm">
-                    {guide.abv} ABV
-                  </span>
-                )}
+              <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4">
+                {guide.abv ? <MetaPill>{guide.abv} ABV</MetaPill> : null}
                 {ingredient.cocktailCount > 0 ? (
-                  <a
-                    href="#cocktails"
-                    className="rounded-full border border-mist bg-white/80 px-2.5 py-1 backdrop-blur-sm transition-colors hover:border-terracotta/40 hover:text-terracotta"
-                  >
+                  <MetaPill href="#cocktails">
                     Used in {ingredient.cocktailCount} cocktail{ingredient.cocktailCount === 1 ? "" : "s"}
-                  </a>
+                  </MetaPill>
                 ) : (
-                  <span className="rounded-full border border-mist bg-white/80 px-2.5 py-1 backdrop-blur-sm">
-                    No matched cocktails yet
-                  </span>
+                  <MetaPill>No matched cocktails yet</MetaPill>
                 )}
               </div>
             </div>
