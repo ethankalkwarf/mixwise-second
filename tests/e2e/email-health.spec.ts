@@ -57,6 +57,27 @@ test.describe("Email system health (no secrets)", () => {
     expect(res.status()).not.toBe(200);
   });
 
+  test("email image proxy returns jpeg for catalog webp", async ({
+    request,
+  }) => {
+    const base = getBaseUrl();
+    const source =
+      "https://ehexkpoxir62prtp.public.blob.vercel-storage.com/catalog/cocktails/daiquiri.webp";
+    const res = await request.get(
+      `${base}/api/email-image?url=${encodeURIComponent(source)}&w=640&q=75`
+    );
+    if (base.includes("localhost") && (res.status() === 404 || res.status() === 500)) {
+      test.skip();
+      return;
+    }
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("image/jpeg");
+    const body = await res.body();
+    expect(body.byteLength).toBeGreaterThan(1000);
+    expect(body[0]).toBe(0xff);
+    expect(body[1]).toBe(0xd8);
+  });
+
   test("email test endpoint is not open on production", async ({ request }) => {
     const base = getBaseUrl();
     if (base.includes("localhost")) {
