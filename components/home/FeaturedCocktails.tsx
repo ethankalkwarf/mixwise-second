@@ -14,7 +14,7 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
   return (
     <section className="bg-cream py-16 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-12 max-w-xl text-center sm:mx-auto lg:mb-14">
+        <div className="mb-10 max-w-xl text-center sm:mx-auto lg:mb-12">
           <h2 className="mb-3 [text-wrap:balance] font-display text-3xl font-bold text-forest sm:text-4xl">
             Featured recipes
           </h2>
@@ -24,29 +24,31 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
           </p>
         </div>
 
-        {/* Mobile/tablet: horizontal scroll avoids a lone card on the last row */}
-        <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 scrollbar-thin lg:hidden">
+        {/* Phone: swipeable row so five cards never leave one hanging */}
+        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-1 scrollbar-thin sm:hidden">
           {cocktails.map((cocktail) => (
             <FeaturedCocktailCard
               key={cocktail._id}
               cocktail={cocktail}
-              layout="scroll"
+              className="w-[min(68vw,11.5rem)] flex-shrink-0 snap-start"
+              imageSizes="68vw"
             />
           ))}
         </div>
 
-        {/* Desktop: even 5-column grid */}
-        <div className="hidden gap-8 lg:grid lg:grid-cols-5">
+        {/* Tablet: flex wrap centers a short last row; desktop: five-column grid */}
+        <div className="hidden sm:flex sm:flex-wrap sm:justify-center sm:gap-5 lg:grid lg:grid-cols-5 lg:gap-6">
           {cocktails.map((cocktail) => (
             <FeaturedCocktailCard
               key={`desktop-${cocktail._id}`}
               cocktail={cocktail}
-              layout="grid"
+              className="w-[calc(33.333%-0.85rem)] lg:w-auto"
+              imageSizes="(max-width: 1280px) 20vw, 15vw"
             />
           ))}
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-10 text-center lg:mt-12">
           <Link
             href="/cocktails"
             className="inline-flex items-center justify-center rounded-full bg-forest px-7 py-3 text-sm font-medium text-cream transition-colors hover:bg-charcoal"
@@ -61,10 +63,15 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
 
 interface FeaturedCocktailCardProps {
   cocktail: SanityCocktail & { ingredientCount?: number };
-  layout: "scroll" | "grid";
+  className?: string;
+  imageSizes: string;
 }
 
-function FeaturedCocktailCard({ cocktail, layout }: FeaturedCocktailCardProps) {
+function FeaturedCocktailCard({
+  cocktail,
+  className = "",
+  imageSizes,
+}: FeaturedCocktailCardProps) {
   const imageUrl =
     getImageUrl(cocktail.image, {
       width: 800,
@@ -76,11 +83,7 @@ function FeaturedCocktailCard({ cocktail, layout }: FeaturedCocktailCardProps) {
   return (
     <Link
       href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-mist bg-white transition-transform duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta ${
-        layout === "scroll"
-          ? "w-44 flex-shrink-0 sm:w-52"
-          : "h-full"
-      }`}
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border border-mist bg-white transition-transform duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta ${className}`}
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-mist">
         {imageUrl ? (
@@ -92,11 +95,7 @@ function FeaturedCocktailCard({ cocktail, layout }: FeaturedCocktailCardProps) {
             placeholder="blur"
             blurDataURL={COCKTAIL_BLUR_DATA_URL}
             quality={90}
-            sizes={
-              layout === "scroll"
-                ? "(max-width: 1024px) 208px, 20vw"
-                : "(max-width: 1280px) 20vw, 15vw"
-            }
+            sizes={imageSizes}
           />
         ) : (
           <div className="h-full w-full bg-mist" />
@@ -108,13 +107,13 @@ function FeaturedCocktailCard({ cocktail, layout }: FeaturedCocktailCardProps) {
         )}
       </div>
 
-      <div className="flex-1 p-3 sm:p-4">
-        <h3 className="line-clamp-2 min-h-[2.5rem] font-display text-sm font-bold leading-snug text-forest transition-colors group-hover:text-terracotta sm:min-h-[2.75rem] sm:text-base">
+      <div className="p-3 sm:p-3.5">
+        <h3 className="line-clamp-2 font-display text-sm font-bold leading-tight text-forest transition-colors group-hover:text-terracotta sm:text-base">
           {cocktail.name}
         </h3>
 
         {cocktail.primarySpirit ? (
-          <p className="mt-1 text-xs font-medium uppercase tracking-wide text-sage">
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-sage sm:text-xs">
             {cocktail.primarySpirit}
           </p>
         ) : null}
