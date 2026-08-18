@@ -220,41 +220,39 @@ export default function DashboardPage() {
       return "Welcome back";
     }
 
-    let stableName = "Bartender";
-    if (profile?.display_name) {
-      stableName = profile.display_name;
-    } else if (user?.email) {
-      stableName = user.email.split("@")[0];
-    }
+    const greetingName =
+      profile?.first_name?.trim() ||
+      profile?.display_name?.trim() ||
+      user?.email?.split("@")[0] ||
+      "Bartender";
 
-    const firstName = stableName.split(" ")[0];
     const hour = new Date().getHours();
-    const nameHash = firstName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
+    const nameHash = greetingName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
     const greetingIndex = nameHash % 3;
 
     if (hour < 12) {
       const greetings = [
-        `Good morning, ${firstName}. Ready to start shaking things up?`,
-        `Morning, ${firstName}. The bar is open, metaphorically.`,
-        `Rise and shine, ${firstName}. Time to mix something great.`,
+        `Good morning, ${greetingName}. Ready to start shaking things up?`,
+        `Morning, ${greetingName}. The bar is open, metaphorically.`,
+        `Rise and shine, ${greetingName}. Time to mix something great.`,
       ];
       return greetings[greetingIndex];
     } else if (hour < 18) {
       const greetings = [
-        `Good afternoon, ${firstName}. Feeling inspired?`,
-        `Hey ${firstName}, it's cocktail o'clock somewhere.`,
-        `Afternoon, ${firstName}. Your bar awaits.`,
+        `Good afternoon, ${greetingName}. Feeling inspired?`,
+        `Hey ${greetingName}, it's cocktail o'clock somewhere.`,
+        `Afternoon, ${greetingName}. Your bar awaits.`,
       ];
       return greetings[greetingIndex];
     } else {
       const greetings = [
-        `Good evening, ${firstName}. Let's make something smooth.`,
-        `Evening, ${firstName}. Perfect time for a drink.`,
-        `Welcome back, ${firstName}. What's on the menu tonight?`,
+        `Good evening, ${greetingName}. Let's make something smooth.`,
+        `Evening, ${greetingName}. Perfect time for a drink.`,
+        `Welcome back, ${greetingName}. What's on the menu tonight?`,
       ];
       return greetings[greetingIndex];
     }
-  }, [profile?.display_name, user?.email]);
+  }, [profile?.first_name, profile?.display_name, user?.email]);
 
   const rankedRecommendations = useMemo(() => {
     const favoriteIds = new Set(favorites.map((fav) => String(fav.cocktail_id)));
