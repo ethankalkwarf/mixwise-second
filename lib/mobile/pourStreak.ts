@@ -1,0 +1,81 @@
+"use client";
+
+const POUR_DATES_KEY = "mixwise-pour-dates";
+export const POUR_STREAK_EVENT = "mixwise:pour-streak";
+
+function canUseStorage(): boolean {
+  return typeof window !== "undefined";
+}
+
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function loadPourDates(): string[] {
+  if (!canUseStorage()) return [];
+  try {
+    const raw = localStorage.getItem(POUR_DATES_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((d) => typeof d === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePourDates(dates: string[]): void {
+  if (!canUseStorage()) return;
+  try {
+    localStorage.setItem(POUR_DATES_KEY, JSON.stringify(dates.slice(-60)));
+  } catch {
+    /* ignore */
+  }
+}
+
+function computeStreak(sortedUniqueDates: string[]): number {
+  if (sortedUniqueDates.length === 0) return 0;
+  const today = todayKey();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = yesterday.toISOString().slice(0, 10);
+
+  const latest = sortedUniqueDates[sortedUniqueDates.length - 1]!;
+  if (latest !== today && latest !== yesterdayKey) return 0;
+
+  let streak = 1;
+  for (let i = sortedUniqueDates.length - 2; i >= 0; i--) {
+    const current = new Date(`${sortedUniqueDates[i + 1]}T12:00:00`);
+    const prev = new Date(`${sortedUniqueDates[i]}T12:00:00`);
+    const diffDays = Math.round((current.getTime() - prev.getTime()) / 86400000);
+    if (diffDays === 1) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+export function getPourStreak(): number {
+  const dates = [...new Set(loadPourDates())].sort();
+  return computeStreak(dates);
+}
+
+/** Record that the user made a drink today. Returns updated streak. */
+export function markDrinkMade(_slug: string): { streak: number; isNewToday: boolean } {
+  const today = todayKey();
+  const dates = [...new Set(loadPourDates())].sort();
+  const isNewToday = !dates.includes(today);
+  if (isNewToday) {
+    dates.push(today);
+    savePourDates(dates);
+  }
+  const streak = computeStreak(dates);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(POUR_STREAK_EVENT, { detail: { streak } }));
+  }
+  return { streak, isNewToday };
+}
+
+export function madeDrinkToday(): boolean {
+  return loadPourDates().includes(todayKey());
+}

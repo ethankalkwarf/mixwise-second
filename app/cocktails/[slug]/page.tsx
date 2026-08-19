@@ -360,6 +360,7 @@ export default async function CocktailDetailPage({ params }: PageProps) {
     image_alt: cocktail.image_alt,
     categories_all: cocktail.categories_all,
     notes: cocktail.notes,
+    created_at: cocktail.created_at,
     metadata_json: cocktail.metadata_json ? {
       is_community_favorite: cocktail.metadata_json.is_community_favorite,
       is_mixwise_original: cocktail.metadata_json.is_mixwise_original,
@@ -390,10 +391,12 @@ export default async function CocktailDetailPage({ params }: PageProps) {
       {/* MAIN PAGE WRAPPER */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12">
         {/* Cocktail of the Day Banner */}
-        <DailyCocktailBanner isInitiallyDaily={isDailyCocktailBanner} />
+        <div data-web-recipe-chrome>
+          <DailyCocktailBanner isInitiallyDaily={isDailyCocktailBanner} />
+        </div>
 
         {/* Back Link */}
-        <div className="mb-8">
+        <div className="mb-8" data-web-recipe-chrome>
           <a
             href="/cocktails"
             className="inline-flex items-center gap-2 text-sage hover:text-forest transition-colors"
@@ -412,25 +415,27 @@ export default async function CocktailDetailPage({ params }: PageProps) {
           imageUrl={imageUrl}
           similarRecipes={similarRecipes}
         />
-        <MixWiseToolCallout
-          cocktailName={sanityCocktail.name}
-          ingredientNames={[
-            ...new Set(
-              matchedIngredients
-                .map((item) => item.name)
-                .filter((name): name is string => Boolean(name))
-            ),
-          ].slice(0, 6)}
-          mixHref={
-            matchedIngredients.some((item) => item.slug)
-              ? `/mix?have=${[...new Set(
-                  matchedIngredients
-                    .map((item) => item.slug)
-                    .filter((slug): slug is string => Boolean(slug))
-                )].join(",")}`
-              : "/mix"
-          }
-        />
+        <div data-web-recipe-chrome>
+          <MixWiseToolCallout
+            cocktailName={sanityCocktail.name}
+            ingredientNames={[
+              ...new Set(
+                matchedIngredients
+                  .map((item) => item.name)
+                  .filter((name): name is string => Boolean(name))
+              ),
+            ].slice(0, 6)}
+            mixHref={
+              matchedIngredients.some((item) => item.slug)
+                ? `/mix?have=${[...new Set(
+                    matchedIngredients
+                      .map((item) => item.slug)
+                      .filter((slug): slug is string => Boolean(slug))
+                  )].join(",")}`
+                : "/mix"
+            }
+          />
+        </div>
       </main>
     </>
   );

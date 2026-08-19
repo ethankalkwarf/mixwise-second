@@ -9,6 +9,7 @@ import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { awardSharingBadge } from "@/lib/badgeEngine";
+import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 import { getBarSharePath, getBarShareUrl } from "@/lib/barShare";
 
 type ShareBarVariant = "cta" | "menu" | "inline";
@@ -98,7 +99,11 @@ export function ShareBarButton({
         );
       }
 
-      await awardSharingBadge(supabase, user.id, "bar");
+      const result = await awardSharingBadge(supabase, user.id, "bar");
+      result.awarded.forEach((badge) => {
+        toast.success(`${badge.icon} ${badge.name} unlocked`);
+      });
+      if (result.awarded.length > 0) notifyBadgesUpdated();
       onShared?.();
     } catch (err) {
       console.error("Error sharing bar:", err);
@@ -122,9 +127,9 @@ export function ShareBarButton({
   if (authLoading || (isAuthenticated && preferencesLoading)) {
     if (variant === "menu") {
       return (
-        <span className={className ?? "flex items-center gap-2 px-4 py-2.5 text-sm text-sage"}>
-          <ShareIcon className="w-4 h-4" />
-          Share My Bar
+        <span className={className ?? "native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm text-sage"}>
+          <ShareIcon className="h-5 w-5 flex-shrink-0" />
+          <span className="min-w-0 flex-1 font-medium">Share My Bar</span>
         </span>
       );
     }
@@ -145,10 +150,13 @@ export function ShareBarButton({
         type="button"
         onClick={handleShare}
         disabled={busy}
-        className={className ?? "flex w-full items-center gap-2 px-4 py-2.5 text-sm text-charcoal hover:bg-mist/50 hover:text-terracotta disabled:opacity-50"}
+        className={
+          className ??
+          "native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-medium text-forest hover:bg-mist/50 hover:text-terracotta disabled:opacity-50"
+        }
       >
-        <Icon className="w-4 h-4" />
-        {busy ? "Sharing..." : label}
+        <Icon className="h-5 w-5 flex-shrink-0 text-sage" />
+        <span className="min-w-0 flex-1">{busy ? "Sharing..." : label}</span>
       </button>
     );
   }

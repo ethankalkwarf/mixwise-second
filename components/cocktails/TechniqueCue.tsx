@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getMethodTip } from "@/lib/cocktailTechniqueGlossary";
 import { getLearnMethodByTechniqueKey } from "@/lib/learnLibrary";
 import { isLearnPublic } from "@/lib/learnAccess";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
 
 interface TechniqueCueProps {
   technique?: string | null;
@@ -17,6 +18,7 @@ export function TechniqueCue({ technique }: TechniqueCueProps) {
   const method = getMethodTip(technique);
   const learnMethod = getLearnMethodByTechniqueKey(technique);
   const [open, setOpen] = useState(false);
+  const nativeShell = useNativeShell();
 
   if (!method) return null;
 
@@ -64,7 +66,7 @@ export function TechniqueCue({ technique }: TechniqueCueProps) {
           <p className="text-sm leading-relaxed text-muted-foreground">
             {method.summary} {method.tip}
           </p>
-          {isLearnPublic() && (
+          {isLearnPublic() && !nativeShell && (
             <a
               href={learnHref}
               className="inline-block text-xs font-medium text-terracotta hover:underline"

@@ -198,8 +198,8 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
               <BrandLogo size="md" variant="dark" />
             </div>
 
-            {/* Desktop + tablet navigation - Centered */}
-            <div className={`hidden md:flex items-center absolute left-1/2 -translate-x-1/2 ${isAuthenticated ? "gap-3 lg:gap-5" : "gap-4 lg:gap-6"}`}>
+            {/* Desktop navigation — shown at lg+; tablet uses bottom tab bar */}
+            <div className={`hidden lg:flex items-center absolute left-1/2 -translate-x-1/2 ${isAuthenticated ? "gap-3 xl:gap-5" : "gap-4 xl:gap-6"}`}>
               {isAuthenticated && (
                 <HardNavLink
                   href="/dashboard"
@@ -254,20 +254,8 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
               />
             </div>
 
-            {/* Search + Actions — search stays available on mobile; auth is desktop-only (in More sheet) */}
-            <div className="flex items-center gap-3 sm:gap-4">
-              {isAuthenticated && (
-                <HardNavLink
-                  href="/dashboard"
-                  className={`md:hidden text-sm font-semibold rounded-full px-3 py-1.5 transition-colors ${
-                    isActive("/dashboard")
-                      ? "bg-terracotta text-cream"
-                      : "bg-terracotta/10 text-terracotta hover:bg-terracotta/20"
-                  }`}
-                >
-                  Dashboard
-                </HardNavLink>
-              )}
+            {/* Search + auth — on phone/tablet, primary nav lives in the bottom tab bar */}
+            <div className="flex items-center gap-2.5 sm:gap-3 md:gap-4">
               <button
                 onClick={() => setDesktopSearchOpen(!desktopSearchOpen)}
                 className="flex items-center gap-2 px-2.5 py-1.5 text-sm font-medium text-sage hover:text-forest border border-mist/70 rounded-md hover:border-mist hover:bg-mist/40 active:scale-[0.98] transition-all duration-200"
@@ -275,7 +263,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 aria-expanded={desktopSearchOpen}
               >
                 <MagnifyingGlassIcon className="w-4 h-4" />
-                <span className="hidden lg:inline">Search</span>
+                <span className="hidden md:inline">Search</span>
                 <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-sage/80 bg-mist/40 border border-mist/40 rounded">
                   <span>
                     {megaMounted && /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)
@@ -286,7 +274,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 </kbd>
               </button>
 
-              <div className="hidden md:flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-2 lg:gap-3">
             {isLoading ? (
               <div className="w-8 h-8 rounded-full bg-mist animate-pulse" />
             ) : isAuthenticated ? (

@@ -1,11 +1,34 @@
 /** @type {import('next').NextConfig} */
+
+const { networkInterfaces } = require("os");
+
+function getLocalIp() {
+  const nets = networkInterfaces();
+  for (const iface of Object.values(nets)) {
+    if (!iface) continue;
+    for (const net of iface) {
+      if (net.family === "IPv4" && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return "127.0.0.1";
+}
+
 const nextConfig = {
+  // Capacitor iOS simulator loads the dev server by LAN IP.
+  allowedDevOrigins: [getLocalIp(), "localhost", "127.0.0.1"],
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'cdn.sanity.io',
         pathname: '/images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ehexkpoxir62prtp.public.blob.vercel-storage.com',
+        pathname: '/**',
       },
       {
         protocol: 'https',
@@ -79,6 +102,11 @@ const nextConfig = {
         source: '/thirsty-thursday',
         destination: '/',
         permanent: false,
+      },
+      {
+        source: '/cocktails/bronx-cocktail',
+        destination: '/cocktails/bronx',
+        permanent: true,
       },
     ];
   },

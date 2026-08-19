@@ -1,3 +1,4 @@
+import "server-only";
 import { existsSync } from "fs";
 import path from "path";
 

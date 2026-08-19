@@ -5,53 +5,38 @@ interface PullToRefreshIndicatorProps {
   isRefreshing: boolean;
 }
 
-/**
- * PullToRefreshIndicator
- * 
- * Visual indicator for pull-to-refresh gesture.
- * Shows at top of scrollable content.
- */
+/** Spinner that lives in the gap opened by pulling the page down. */
 export function PullToRefreshIndicator({
   distance,
   isRefreshing,
 }: PullToRefreshIndicatorProps) {
-  if (distance === 0 && !isRefreshing) return null;
+  if (distance <= 0 && !isRefreshing) return null;
 
-  const opacity = Math.min(1, distance / 80);
-  const rotation = Math.min(180, (distance / 80) * 180);
+  const progress = Math.min(1, distance / 56);
+  const opacity = isRefreshing ? 1 : Math.min(1, (distance - 8) / 28);
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 flex items-center justify-center z-40 pointer-events-none"
+      className="flex items-center justify-center"
       style={{
+        height: 56,
+        marginTop: -56,
         opacity,
-        transform: `translateY(${Math.min(distance, 80)}px)`,
-        paddingTop: "env(safe-area-inset-top, 0px)",
+        pointerEvents: "none",
       }}
+      aria-hidden
     >
       <div
-        className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md shadow-black/10"
         style={{
-          transform: `rotate(${isRefreshing ? 0 : rotation}deg)`,
+          transform: isRefreshing ? undefined : `scale(${0.72 + progress * 0.28}) rotate(${progress * 180}deg)`,
         }}
       >
-        {isRefreshing ? (
-          <div className="w-5 h-5 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
-        ) : (
-          <svg
-            className="w-5 h-5 text-terracotta"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
-          </svg>
-        )}
+        <div
+          className={`h-4 w-4 rounded-full border-2 border-terracotta border-t-transparent ${
+            isRefreshing ? "animate-spin" : ""
+          }`}
+        />
       </div>
     </div>
   );

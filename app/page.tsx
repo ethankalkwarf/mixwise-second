@@ -8,6 +8,9 @@ import { FeaturedCocktailsWrapper } from "@/components/home/FeaturedCocktailsWra
 import { GuestExperienceSection } from "@/components/home/GuestExperienceSection";
 import { EmailCaptureSection } from "@/components/home/EmailCaptureSection";
 import { HomePageWrapper } from "@/components/mobile/HomePageWrapper";
+import { isNativeAppRequest } from "@/lib/mobile/serverNative";
+import { buildOccasionCoverMap } from "@/lib/mobile/collectionCovers";
+import { HOME_COLLECTION_STACK_SLUGS } from "@/lib/mobile/collectionShortcuts";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
 export const revalidate = 60;
@@ -39,6 +42,25 @@ function mapSupabaseToSanityForHome(cocktails: any[]): SanityCocktail[] {
 }
 
 export default async function HomePage() {
+  const native = await isNativeAppRequest();
+
+  if (native) {
+    const catalog = await getCocktailsList();
+    const occasionCovers = buildOccasionCoverMap(HOME_COLLECTION_STACK_SLUGS, catalog);
+    const withImages = catalog.filter((c) => c.image_url);
+    const preview = mapSupabaseToSanityForHome(withImages.slice(0, 24));
+
+    return (
+      <HomePageWrapper
+        featuredCocktails={preview.slice(0, 6)}
+        allCocktails={preview}
+        occasionCovers={occasionCovers}
+      >
+        <div data-web-home aria-hidden className="hidden" />
+      </HomePageWrapper>
+    );
+  }
+
   const allCocktailsList = await getCocktailsList({ limit: 50 });
 
   // Convert to Sanity format for compatibility
@@ -59,30 +81,22 @@ export default async function HomePage() {
       />
 
       <HomePageWrapper featuredCocktails={featuredCocktails} allCocktails={allCocktails}>
-        {/* Web design */}
-        <>
+        <div data-web-home>
           <Hero />
 
-          {/* Personalized Sections for Logged-in Users - Only render if user is authenticated */}
           <PersonalizedSections
             allCocktails={allCocktails}
             featuredCocktails={featuredCocktails}
           />
 
-          {/* Featured Cocktails */}
           {featuredCocktails.length > 0 && (
             <FeaturedCocktailsWrapper cocktails={featuredCocktails} />
           )}
 
-          {/* Guest Experience Section */}
           <GuestExperienceSection />
-
-          {/* Email capture */}
           <EmailCaptureSection />
-
-          {/* Platform Section */}
           <PlatformSection />
-        </>
+        </div>
       </HomePageWrapper>
     </>
   );

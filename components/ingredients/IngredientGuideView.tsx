@@ -11,6 +11,7 @@ import { ingredientHeadings } from "@/lib/ingredientContent";
 import { getIngredientOriginCover } from "@/lib/ingredientHeroes";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { MixWiseToolCallout } from "@/components/seo/MixWiseToolCallout";
+import { NativeIngredientHero } from "@/components/mobile/NativeIngredientHero";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 
 type Props = {
@@ -103,8 +104,20 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
   const remaining = Math.max(0, ingredient.cocktails.length - preview.length);
 
   return (
-    <div>
-      <section className="relative">
+    <div data-native-ingredient-detail>
+      <NativeIngredientHero
+        title={headings.h1}
+        name={ingredient.name}
+        sectionTitle={wayfinder.sectionTitle}
+        description={guide.dek}
+        alsoCalled={guide.alsoCalled}
+        heroImageUrl={ingredient.heroImageUrl}
+        heroImageAlt={ingredient.heroImageAlt}
+        abv={guide.abv}
+        cocktailCount={ingredient.cocktailCount}
+      />
+
+      <section className="relative" data-web-ingredient-chrome>
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[16rem] overflow-hidden bg-cream lg:h-[22rem]">
           {cover ? (
             <Image
@@ -206,7 +219,7 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
         </MainContainer>
       </section>
 
-      <MainContainer className="pt-4 pb-16 md:pt-24">
+      <MainContainer className="pt-4 pb-16 md:pt-24 native-ingredient-detail__body">
         <div className="grid gap-8 md:grid-cols-12 md:gap-14">
           <aside className="md:col-span-4">
             <div className="max-w-sm space-y-4 md:sticky md:top-24">

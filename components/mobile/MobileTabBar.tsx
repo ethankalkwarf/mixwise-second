@@ -1,129 +1,74 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Capacitor } from "@capacitor/core";
-import {
-  MagnifyingGlassIcon,
-  BookmarkIcon,
-  ShoppingBagIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/outline";
-import {
-  MagnifyingGlassIcon as MagnifyingGlassIconSolid,
-  BookmarkIcon as BookmarkIconSolid,
-  ShoppingBagIcon as ShoppingBagIconSolid,
-  SparklesIcon as SparklesIconSolid,
-} from "@heroicons/react/24/solid";
-
-interface TabItem {
-  id: string;
-  label: string;
-  path: string;
-  icon: React.ComponentType<{ className?: string }>;
-  iconSolid: React.ComponentType<{ className?: string }>;
-}
-
-// Streamlined 3-tab navigation for focused, guided experience
-const tabs: TabItem[] = [
-  {
-    id: "discover",
-    label: "Discover",
-    path: "/cocktails",
-    icon: MagnifyingGlassIcon,
-    iconSolid: MagnifyingGlassIconSolid,
-  },
-  {
-    id: "mix",
-    label: "Mix",
-    path: "/mix",
-    icon: ShoppingBagIcon,
-    iconSolid: ShoppingBagIconSolid,
-  },
-  {
-    id: "saved",
-    label: "Saved",
-    path: "/saved",
-    icon: BookmarkIcon,
-    iconSolid: BookmarkIconSolid,
-  },
-];
+import { activeMobileTab, MIXWISE_FOCUS_SEARCH, MOBILE_TABS } from "@/lib/mobile/navConfig";
+import { navigateInApp } from "@/lib/mobile/navigate";
 
 export function MobileTabBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [isNative, setIsNative] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const activeTab = activeMobileTab(pathname);
 
   useEffect(() => {
-    setIsMounted(true);
-    if (typeof window !== "undefined" && window.Capacitor) {
-      try {
-        setIsNative(Capacitor.isNativePlatform());
-      } catch (e) {
-        console.error("Error checking native platform in MobileTabBar:", e);
-        setIsNative(false);
+    const timer = window.setTimeout(() => {
+      for (const tab of MOBILE_TABS) {
+        if (tab.path) router.prefetch(tab.path);
       }
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [router]);
+
+  const handlePress = (tab: (typeof MOBILE_TABS)[number]) => {
+    if (tab.id === "search" && pathname === "/cocktails") {
+      window.dispatchEvent(new Event(MIXWISE_FOCUS_SEARCH));
+      return;
     }
-  }, []);
-
-  // Only show on native platforms after mount
-  if (!isMounted || !isNative) {
-    return null;
-  }
-
-  const handleTabPress = (path: string) => {
-    router.push(path);
+    if (tab.path) {
+      navigateInApp(router, tab.path);
+    }
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-2xl border-t border-white/50 safe-area-bottom shadow-2xl shadow-black/10">
-      <div className="flex items-center justify-around h-20 px-4" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        {tabs.map((tab) => {
-          const isActive = pathname === tab.path || 
-            (tab.path !== "/" && pathname.startsWith(tab.path));
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-[100] border-t border-mist/80 bg-cream shadow-[0_-8px_32px_rgba(44,54,40,0.1)]"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+    >
+      <div className="flex h-[4.25rem] items-stretch px-1">
+        {MOBILE_TABS.map((tab) => {
+          const isActive = tab.id === activeTab;
           const Icon = isActive ? tab.iconSolid : tab.icon;
 
           return (
             <button
               key={tab.id}
-              onClick={() => handleTabPress(tab.path)}
-              className={`
-                group relative flex flex-col items-center justify-center flex-1 h-full
-                transition-all duration-300
-              `}
+              type="button"
+              onClick={() => handlePress(tab)}
+              className="group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5"
               aria-label={tab.label}
+              aria-current={isActive ? "page" : undefined}
             >
-              {/* Active indicator */}
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-terracotta to-terracotta-dark rounded-b-full" />
+                <span className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-terracotta" />
               )}
-              
-              {/* Icon container with modern styling */}
-              <div className={`
-                relative w-12 h-12 rounded-2xl flex items-center justify-center mb-1
-                transition-all duration-300
-                ${isActive 
-                  ? "bg-terracotta/10 scale-110" 
-                  : "bg-transparent group-active:bg-mist/50 group-active:scale-105"
-                }
-              `}>
-                <Icon className={`
-                  w-7 h-7 transition-all duration-300
-                  ${isActive 
-                    ? "text-terracotta scale-110" 
-                    : "text-sage group-active:text-terracotta"
-                  }
-                `} />
-              </div>
-              
-              <span className={`
-                text-xs font-semibold transition-all duration-300
-                ${isActive 
-                  ? "text-terracotta" 
-                  : "text-sage group-active:text-terracotta"
-                }
-              `}>
+              <span
+                className={`flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-200 ${
+                  isActive
+                    ? "bg-terracotta/12 scale-105"
+                    : "group-active:bg-mist/60 group-active:scale-95"
+                }`}
+              >
+                <Icon
+                  className={`h-[1.35rem] w-[1.35rem] transition-colors ${
+                    isActive ? "text-terracotta" : "text-sage"
+                  }`}
+                />
+              </span>
+              <span
+                className={`text-[10px] font-semibold leading-none transition-colors ${
+                  isActive ? "text-terracotta" : "text-forest/70"
+                }`}
+              >
                 {tab.label}
               </span>
             </button>

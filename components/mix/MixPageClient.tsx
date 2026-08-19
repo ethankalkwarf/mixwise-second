@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
 import { ClearBarConfirmDialog } from "@/components/mix/ClearBarConfirmDialog";
 import { MixCabinet } from "@/components/mix/MixCabinet";
 import { MixMixer } from "@/components/mix/MixMixer";
 import { MixMenu } from "@/components/mix/MixMenu";
-import { getMixDataClient, getUserBarIngredientIdsClient } from "@/lib/cocktails";
+import { getMixCocktailsClient, getMixIngredients } from "@/lib/cocktails";
+import { NativeMixView } from "@/components/mobile/NativeMixView";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
+import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { getPreferredAuthMode, preferredAuthCopy } from "@/lib/auth/returning-user";
+import { navigateInApp } from "@/lib/mobile/navigate";
 import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 import { SaveBarPrompt } from "@/components/auth/SaveBarPrompt";
 import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
@@ -30,6 +35,7 @@ function MixPageContent() {
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<MixCocktail[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [cocktailsLoading, setCocktailsLoading] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [promptDismissed, setPromptDismissed] = useState(false);
@@ -43,23 +49,20 @@ function MixPageContent() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Safe native platform detection (prevents SSR errors and hydration mismatches)
+  const nativeShell = useNativeShell();
   const [isNative, setIsNative] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    if (typeof window !== "undefined" && window.Capacitor) {
-      try {
-        const cap = (window as unknown as { Capacitor?: { isNativePlatform: () => boolean } }).Capacitor;
-        setIsNative(cap?.isNativePlatform?.() ?? false);
-      } catch (e) {
-        console.error("Error checking native platform in MixPage:", e);
-        setIsNative(false);
-      }
-    }
-  }, []);
+    setIsNative(nativeShell);
+  }, [nativeShell]);
 
-  const { isAuthenticated, user } = useUser();
+  const { isAuthenticated, isLoading: authLoading } = useUser();
+  const { openAuthDialog, closeAuthDialog, isOpen: authDialogOpen } = useAuthDialog();
+  const router = useRouter();
+  const skippedMixAuth = useRef(false);
+  const openedMixGate = useRef(false);
   const { skipIds } = useCocktailSkips();
   const {
     ingredientIds,
@@ -110,129 +113,116 @@ function MixPageContent() {
     return [...new Set([...dbStaples, ...manualStaples])];
   }, [allIngredients]);
 
-  // Load data from Supabase (with fallback for development)
+  // Ingredients first so the cabinet can render; cocktails fill in behind it.
   useEffect(() => {
+    let cancelled = false;
+
+    function validCocktails(cocktails: MixCocktail[]) {
+      return cocktails.filter(
+        (cocktail) =>
+          cocktail &&
+          Array.isArray(cocktail.ingredients) &&
+          cocktail.ingredients.length > 0
+      );
+    }
+
     async function loadData() {
-        try {
-        const { ingredients, cocktails } = await getMixDataClient();
-
-        // Guard: Filter out cocktails with missing or empty ingredients arrays
-
-        // Track excluded cocktails for diagnostics
-        const excludedByReason: {
-          nullIngredients: typeof cocktails;
-          emptyIngredients: typeof cocktails;
-          notArray: typeof cocktails;
-        } = {
-          nullIngredients: [],
-          emptyIngredients: [],
-          notArray: [],
-        };
-
-        const validCocktails = cocktails.filter(cocktail => {
-          const isValid = cocktail &&
-                         cocktail.ingredients &&
-                         Array.isArray(cocktail.ingredients) &&
-                         cocktail.ingredients.length > 0;
-
-          if (!isValid) {
-            // Categorize the reason for exclusion
-            if (!cocktail.ingredients) {
-              excludedByReason.nullIngredients.push(cocktail);
-            } else if (!Array.isArray(cocktail.ingredients)) {
-              excludedByReason.notArray.push(cocktail);
-            } else if (cocktail.ingredients.length === 0) {
-              excludedByReason.emptyIngredients.push(cocktail);
-            }
-          }
-
-          return isValid;
-        });
-
-
-        // Development-only warning for excluded cocktails with detailed breakdown
-        if (process.env.NODE_ENV === 'development') {
-          const excludedCount = cocktails.length - validCocktails.length;
-          if (excludedCount > 0) {
-            console.warn(`
-╔════════════════════════════════════════╗
-║    COCKTAIL DATA QUALITY REPORT        ║
-╠════════════════════════════════════════╣
-║ Total cocktails loaded: ${cocktails.length}
-║ Valid cocktails: ${validCocktails.length} (${((validCocktails.length / cocktails.length) * 100).toFixed(1)}%)
-║ EXCLUDED: ${excludedCount} (${((excludedCount / cocktails.length) * 100).toFixed(1)}%)
-╠════════════════════════════════════════╣
-║ Excluded cocktails breakdown:
-║   • Null/undefined ingredients: ${excludedByReason.nullIngredients.length}
-║   • Empty ingredient array: ${excludedByReason.emptyIngredients.length}
-║   • Not an array (invalid type): ${excludedByReason.notArray.length}
-╚════════════════════════════════════════╝
-            `);
-
-          }
-        }
-
+      try {
+        const ingredients = await getMixIngredients();
+        if (cancelled) return;
         setAllIngredients(ingredients || []);
-        setAllCocktails(validCocktails || []);
-      } catch (error) {
-        console.error('Failed to load data from Supabase:', error);
-        debugLog('Using mock data for development...');
-
-        // Mock data for development when API is unavailable
-        const mockIngredients: MixIngredient[] = [
-          { id: 'vodka', name: 'Vodka', category: 'Spirit', isStaple: false },
-          { id: 'gin', name: 'Gin', category: 'Spirit', isStaple: false },
-          { id: 'rum', name: 'Rum', category: 'Spirit', isStaple: false },
-          { id: 'tequila', name: 'Tequila', category: 'Spirit', isStaple: false },
-          { id: 'lime-juice', name: 'Lime Juice', category: 'Citrus', isStaple: false },
-          { id: 'simple-syrup', name: 'Simple Syrup', category: 'Syrup', isStaple: false },
-          { id: 'tonic-water', name: 'Tonic Water', category: 'Mixer', isStaple: false },
-          { id: 'angostura-bitters', name: 'Angostura Bitters', category: 'Bitters', isStaple: false },
-        ];
-
-        const mockCocktails: MixCocktail[] = [
-          {
-            id: 'vodka-tonic',
-            name: 'Vodka Tonic',
-            slug: 'vodka-tonic',
-            ingredients: [
-              { id: 'vodka', name: 'Vodka', amount: '2 oz', isOptional: false },
-              { id: 'tonic-water', name: 'Tonic Water', amount: '4 oz', isOptional: false },
-              { id: 'lime-juice', name: 'Lime Juice', amount: '0.5 oz', isOptional: true },
-            ],
-            primarySpirit: 'Vodka',
-            isPopular: true,
-          },
-          {
-            id: 'gin-tonic',
-            name: 'Gin & Tonic',
-            slug: 'gin-tonic',
-            ingredients: [
-              { id: 'gin', name: 'Gin', amount: '2 oz', isOptional: false },
-              { id: 'tonic-water', name: 'Tonic Water', amount: '4 oz', isOptional: false },
-              { id: 'lime-juice', name: 'Lime Juice', amount: '0.5 oz', isOptional: true },
-            ],
-            primarySpirit: 'Gin',
-            isPopular: true,
-          },
-        ];
-
-        setAllIngredients(mockIngredients);
-        setAllCocktails(mockCocktails);
-        // Don't set dataError for mock data - allow the UI to work
-      } finally {
         setDataLoading(false);
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Failed to load ingredients:", error);
+        setAllIngredients([
+          { id: "vodka", name: "Vodka", category: "Spirit", isStaple: false },
+          { id: "gin", name: "Gin", category: "Spirit", isStaple: false },
+          { id: "rum", name: "Rum", category: "Spirit", isStaple: false },
+          { id: "tequila", name: "Tequila", category: "Spirit", isStaple: false },
+          { id: "lime-juice", name: "Lime Juice", category: "Citrus", isStaple: false },
+          { id: "simple-syrup", name: "Simple Syrup", category: "Syrup", isStaple: false },
+          { id: "tonic-water", name: "Tonic Water", category: "Mixer", isStaple: false },
+          { id: "angostura-bitters", name: "Angostura Bitters", category: "Bitters", isStaple: false },
+        ]);
+        setDataLoading(false);
+      }
+
+      try {
+        const cocktails = await getMixCocktailsClient();
+        if (cancelled) return;
+        setAllCocktails(validCocktails(cocktails || []));
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Failed to load cocktails:", error);
+        debugLog("Cabinet is available; cocktail matching will retry on refresh.");
+      } finally {
+        if (!cancelled) {
+          setCocktailsLoading(false);
+        }
       }
     }
 
     loadData();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
 
 
 
 
-  // Show save prompt for anonymous users after threshold
+  // Native Mix: blur the cabinet behind a signup-first dialog. No X / backdrop dismiss.
+  useEffect(() => {
+    if (!nativeShell || authLoading || isAuthenticated) return;
+    if (skippedMixAuth.current || authDialogOpen) return;
+
+    const mode = getPreferredAuthMode();
+    const copy = preferredAuthCopy(mode);
+    openAuthDialog({
+      mode,
+      dismissible: false,
+      title: mode === "login" ? "Sign in to mix" : copy.title,
+      subtitle:
+        mode === "login"
+          ? "Your cabinet is right behind this. Sign in to save bottles and see what you can pour."
+          : "Your cabinet is right behind this. Create a free account to stock bottles, unlock drinks, and keep them on this phone.",
+      escapeLabel: "Browse recipes instead",
+      onEscape: () => {
+        skippedMixAuth.current = true;
+        openedMixGate.current = false;
+        navigateInApp(router, "/cocktails");
+      },
+    });
+    openedMixGate.current = true;
+  }, [
+    nativeShell,
+    authLoading,
+    isAuthenticated,
+    authDialogOpen,
+    openAuthDialog,
+    router,
+  ]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      skippedMixAuth.current = false;
+      openedMixGate.current = false;
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!nativeShell) return;
+    return () => {
+      if (openedMixGate.current) {
+        openedMixGate.current = false;
+        closeAuthDialog(true);
+      }
+    };
+  }, [nativeShell, closeAuthDialog]);
+
+  // Show save prompt for anonymous users after threshold (web Mix only — native uses the gate above)
   useEffect(() => {
     if (
       !isAuthenticated &&
@@ -308,7 +298,7 @@ function MixPageContent() {
   // Get match counts for display - only run when all data is loaded and stable
   const mixMatches: MixMatchGroups = useMemo(() => {
     const empty: MixMatchGroups = { ready: [], almostThere: [], far: [], makeNow: [] };
-    if (dataLoading || !allCocktails?.length || !allIngredients?.length || !ingredientIds) {
+    if (!allCocktails?.length || !allIngredients?.length || !ingredientIds) {
       return empty;
     }
 
@@ -325,7 +315,7 @@ function MixPageContent() {
       stapleIngredientIds: stapleIds,
       excludeCocktailIds: skipIds,
     });
-  }, [allCocktails, allIngredients, ingredientIds, dataLoading, stapleIds, skipIds]);
+  }, [allCocktails, allIngredients, ingredientIds, stapleIds, skipIds]);
 
   const matchCounts = useMemo(
     () => ({
@@ -335,7 +325,20 @@ function MixPageContent() {
     [mixMatches]
   );
 
-  if (dataLoading || barLoading) {
+  const goToMenu = useCallback(() => {
+    if (isNative || nativeShell) {
+      setCurrentStep("menu");
+      return;
+    }
+    setCurrentStep("mixer");
+    setIsProcessing(true);
+    setTimeout(() => {
+      setIsProcessing(false);
+      setCurrentStep("menu");
+    }, 2000);
+  }, [isNative, nativeShell]);
+
+  if (dataLoading && allIngredients.length === 0) {
     return <MixSkeleton />;
   }
 
@@ -359,6 +362,35 @@ function MixPageContent() {
     );
   }
 
+  if (nativeShell) {
+    const shelfParam = searchParams?.get("shelf") === "1";
+    const menuParam = searchParams?.get("step") === "menu";
+
+    return (
+      <div className={`px-4 pb-4 pt-4 ${authDialogOpen && !isAuthenticated ? "pointer-events-none select-none" : ""}`}>
+        <NativeMixView
+          allIngredients={allIngredients}
+          ingredientIds={ingredientIds}
+          selectedIngredients={selectedIngredients}
+          stapleIds={stapleIds}
+          matchCounts={matchCounts}
+          mixMatches={mixMatches}
+          cocktailsLoading={cocktailsLoading}
+          barLoading={barLoading}
+          initialPane={shelfParam ? "shelf" : menuParam ? "tonight" : undefined}
+          onAddIngredient={handleAddToInventory}
+          onRemoveIngredient={handleRemoveFromInventory}
+          onClearAll={handleClearAll}
+        />
+        <ClearBarConfirmDialog
+          isOpen={showClearConfirm}
+          onConfirm={handleConfirmClear}
+          onCancel={handleCancelClear}
+        />
+      </div>
+    );
+  }
+
   // Render content based on current step
   const renderStepContent = () => {
     switch (currentStep) {
@@ -374,6 +406,7 @@ function MixPageContent() {
             onRemoveIngredient={handleRemoveFromInventory}
             matchCounts={matchCounts}
             onStepChange={setCurrentStep}
+            compact={isNative}
           />
         );
       case 'mixer':
@@ -409,58 +442,98 @@ function MixPageContent() {
     <div className="pb-24 overflow-x-hidden">
       <MainContainer className="mb-10">
         <div className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 min-w-0">
-            {ingredientIds.length === 0 && (
-              <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-                <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                  currentStep === 'cabinet'
-                    ? 'bg-terracotta text-white'
-                    : 'bg-mist text-sage'
-                }`}>
-                  Step 1
-                </div>
-                <div className="text-sage">→</div>
-                <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                  currentStep === 'mixer'
-                    ? 'bg-olive text-white'
-                    : 'bg-mist text-sage'
-                }`}>
-                  Step 2
-                </div>
-                <div className="text-sage">→</div>
-                <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                  currentStep === 'menu'
-                    ? 'bg-forest text-white'
-                    : 'bg-mist text-sage'
-                }`}>
-                  Step 3
-                </div>
+          {isNative ? (
+            <div className="min-w-0">
+              <h1 className="font-display text-2xl font-bold text-forest">
+                {currentStep === "menu" ? "Your menu" : "Your cabinet"}
+              </h1>
+              <p className="mt-1 text-[15px] leading-relaxed text-sage">
+                {currentStep === "menu"
+                  ? cocktailsLoading
+                    ? "Matching drinks to your bottles…"
+                    : "Drinks you can pour with what's in your cabinet."
+                  : "Tap every bottle you have. Then see what you can pour."}
+              </p>
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep("cabinet")}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                    currentStep === "cabinet"
+                      ? "bg-terracotta text-cream"
+                      : "bg-white text-sage"
+                  }`}
+                >
+                  Cabinet
+                </button>
+                <button
+                  type="button"
+                  onClick={goToMenu}
+                  disabled={ingredientIds.length === 0}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                    currentStep === "menu"
+                      ? "bg-terracotta text-cream"
+                      : "bg-white text-sage"
+                  } ${ingredientIds.length === 0 ? "opacity-40" : ""}`}
+                >
+                  Menu
+                </button>
               </div>
-            )}
-          </div>
-          <p className="text-sage max-w-2xl text-lg leading-relaxed">
-            {currentStep === 'cabinet' && "Start by adding ingredients from your cabinet. The more you add, the more cocktails you'll unlock!"}
-            {currentStep === 'mixer' && "Finding the perfect cocktails for your ingredients..."}
-            {currentStep === 'menu' && "Explore your personalized cocktail menu with recipes you can make right now!"}
-          </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 min-w-0">
+                {ingredientIds.length === 0 && (
+                  <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                      currentStep === 'cabinet'
+                        ? 'bg-terracotta text-white'
+                        : 'bg-mist text-sage'
+                    }`}>
+                      Step 1
+                    </div>
+                    <div className="text-sage">→</div>
+                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                      currentStep === 'mixer'
+                        ? 'bg-olive text-white'
+                        : 'bg-mist text-sage'
+                    }`}>
+                      Step 2
+                    </div>
+                    <div className="text-sage">→</div>
+                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                      currentStep === 'menu'
+                        ? 'bg-forest text-white'
+                        : 'bg-mist text-sage'
+                    }`}>
+                      Step 3
+                    </div>
+                  </div>
+                )}
+              </div>
+              <p className="text-sage max-w-2xl text-lg leading-relaxed">
+                {currentStep === 'cabinet' && "Start by adding ingredients from your cabinet. The more you add, the more cocktails you'll unlock!"}
+                {currentStep === 'mixer' && "Finding the perfect cocktails for your ingredients..."}
+                {currentStep === 'menu' && "Explore your personalized cocktail menu with recipes you can make right now!"}
+              </p>
+            </>
+          )}
         </div>
 
         {/* Progress Actions */}
         {ingredientIds.length > 0 && currentStep !== 'menu' && (
           <div className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start mb-6 min-w-0">
-            {/* Ready to Mix Button */}
             <button
-              onClick={() => {
-                setCurrentStep('mixer');
-                setIsProcessing(true);
-                setTimeout(() => {
-                  setIsProcessing(false);
-                  setCurrentStep('menu');
-                }, 2000);
-              }}
+              onClick={goToMenu}
               className="w-full sm:w-auto max-w-full px-6 sm:px-8 py-4 bg-terracotta text-cream rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:bg-terracotta-dark transition-all sm:hover:scale-[1.02] flex items-center justify-center gap-2 text-center"
             >
-              <span className="min-w-0">🎉 Ready to Mix! See Your Cocktails →</span>
+              <span className="min-w-0">
+                {cocktailsLoading && matchCounts.canMake === 0
+                  ? "Matching drinks…"
+                  : isNative
+                    ? "See what I can make →"
+                    : "🎉 Ready to Mix! See Your Cocktails →"}
+              </span>
             </button>
 
             {/* Cocktail Counter */}
@@ -505,12 +578,7 @@ function MixPageContent() {
             <button
               onClick={() => {
                 if (ingredientIds.length > 0) {
-                  setCurrentStep('mixer');
-                  setIsProcessing(true);
-                  setTimeout(() => {
-                    setIsProcessing(false);
-                    setCurrentStep('menu');
-                  }, 2000);
+                  goToMenu();
                 }
               }}
               className={`flex flex-col items-center py-3 px-2 transition-colors relative ${

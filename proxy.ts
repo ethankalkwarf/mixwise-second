@@ -7,6 +7,28 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PROTECTED_ROUTES = ["/account"];
+const NATIVE_COOKIE = "mixwise_app";
+
+function isNativeAppRequest(request: NextRequest): boolean {
+  const ua = request.headers.get("user-agent") ?? "";
+  return (
+    /MixWiseNative|Capacitor/i.test(ua) ||
+    request.nextUrl.searchParams.get("mixwise_app") === "1"
+  );
+}
+
+function withNativeCookie(request: NextRequest, response: NextResponse): NextResponse {
+  if (!isNativeAppRequest(request) || request.cookies.get(NATIVE_COOKIE)) {
+    return response;
+  }
+  response.cookies.set(NATIVE_COOKIE, "1", {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+    secure: request.nextUrl.protocol === "https:",
+  });
+  return response;
+}
 
 function hasSupabaseAuthCookie(request: NextRequest): boolean {
   return request.cookies
@@ -21,7 +43,7 @@ export async function proxy(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return supabaseResponse;
+    return withNativeCookie(request, supabaseResponse);
   }
 
   const pathname = request.nextUrl.pathname;
@@ -31,7 +53,7 @@ export async function proxy(request: NextRequest) {
 
   // Public pages with no session cookie: skip getUser() entirely.
   if (!isProtectedRoute && !hasSupabaseAuthCookie(request)) {
-    return supabaseResponse;
+    return withNativeCookie(request, supabaseResponse);
   }
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -56,10 +78,10 @@ export async function proxy(request: NextRequest) {
   if (isProtectedRoute && !user) {
     const redirectUrl = new URL("/", request.url);
     redirectUrl.searchParams.set("redirect", request.nextUrl.pathname);
-    return NextResponse.redirect(redirectUrl);
+    return withNativeCookie(request, NextResponse.redirect(redirectUrl));
   }
 
-  return supabaseResponse;
+  return withNativeCookie(request, supabaseResponse);
 }
 
 export const config = {

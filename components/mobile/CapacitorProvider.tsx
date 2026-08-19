@@ -2,83 +2,97 @@
 
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
+import { Keyboard, KeyboardStyle } from "@capacitor/keyboard";
+import { SplashScreen } from "@capacitor/splash-screen";
+import { StatusBar, Style } from "@capacitor/status-bar";
 import { debugLog } from "@/lib/debugLog";
-// All Capacitor plugins temporarily disabled due to Swift API compatibility issues with Capacitor 8.0.0
-// Plugins will be re-enabled once compatible versions are available
-// import { StatusBar, Style } from "@capacitor/status-bar";
-// import { SplashScreen } from "@capacitor/splash-screen";
-// import { Share } from "@capacitor/share";
-// import { App } from "@capacitor/app";
-// import { Keyboard } from "@capacitor/keyboard";
-// import { Network } from "@capacitor/network";
-// import { initializeNotifications } from "@/lib/mobile/notifications";
+import { initializeNotifications, registerNotificationDeepLinks, refreshDailyNotificationIfNeeded } from "@/lib/mobile/notifications";
+import { registerNativeOAuthListener } from "@/lib/mobile/nativeOAuth";
+import { prefetchNativeCatalog } from "@/lib/mobile/prefetchNativeData";
+import { requestInAppNavigation } from "@/lib/mobile/deepLinks";
 
 /**
  * CapacitorProvider
- * 
+ *
  * Initializes Capacitor native plugins for mobile apps.
  * Only runs on native platforms (iOS/Android), not in web browser.
  */
 export function CapacitorProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Only initialize on native platforms
     if (!Capacitor.isNativePlatform()) {
       return;
     }
 
+    let unregisterOAuth = () => {};
+    let unregisterNotifications = () => {};
+    let backButtonHandle: { remove: () => void } | null = null;
+    let appStateHandle: { remove: () => void } | null = null;
+
     const initializeCapacitor = async () => {
       try {
-        // Temporarily disabled due to Swift API compatibility issues
-        // Configure Status Bar
-        // if (Capacitor.getPlatform() === 'ios') {
-        //   await StatusBar.setStyle({ style: Style.Dark });
-        //   await StatusBar.setBackgroundColor({ color: '#F9F7F2' });
-        // }
+        if (Capacitor.getPlatform() === "ios") {
+          await StatusBar.setOverlaysWebView({ overlay: true });
+          await StatusBar.setStyle({ style: Style.Dark });
+        }
 
-        // Hide Splash Screen after app is ready
-        // await SplashScreen.hide();
+        // Keep the splash up until the first paint, then hide. Auto-hide on a
+        // timer left a white WebView while Next was still loading.
+        const hideSplash = () => {
+          void SplashScreen.hide().catch(() => {});
+        };
+        requestAnimationFrame(() => requestAnimationFrame(hideSplash));
+        window.setTimeout(hideSplash, 2800);
 
-        // All plugin functionality temporarily disabled due to Swift API compatibility issues
-        // Configure Keyboard
-        // Keyboard.setAccessoryBarVisible({ isVisible: true });
-        // Keyboard.setResizeMode({ mode: 'native' });
-        // Keyboard.setScroll({ isDisabled: false });
-        // Keyboard.setStyle({ style: 'light' });
+        await Keyboard.setAccessoryBarVisible({ isVisible: true });
+        await Keyboard.setStyle({ style: KeyboardStyle.Light });
 
-        // Listen for app state changes
-        // App.addListener('appStateChange', ({ isActive }) => {
-        //   debugLog('[Capacitor] App state changed. Is active:', isActive);
-        // });
+        appStateHandle = await App.addListener("appStateChange", ({ isActive }) => {
+          debugLog("[Capacitor] App state changed. Is active:", isActive);
+          if (isActive) {
+            void refreshDailyNotificationIfNeeded();
+          }
+        });
 
-        // Listen for app URL open (deep linking)
-        // App.addListener('appUrlOpen', ({ url }) => {
-        //   debugLog('[Capacitor] App opened with URL:', url);
-        // });
+        unregisterOAuth = registerNativeOAuthListener();
 
-        // Listen for back button (Android)
-        // App.addListener('backButton', ({ canGoBack }) => {
-        //   if (canGoBack) {
-        //     window.history.back();
-        //   } else {
-        //     App.exitApp();
-        //   }
-        // });
+        backButtonHandle = await App.addListener("backButton", ({ canGoBack }) => {
+          if (canGoBack) {
+            window.history.back();
+          }
+        });
 
-        // Monitor network status
-        // Network.addListener('networkStatusChange', (status) => {
-        //   debugLog('[Capacitor] Network status changed:', status);
-        // });
+        await initializeNotifications();
+        unregisterNotifications = registerNotificationDeepLinks();
 
-        // Initialize notifications
-        // await initializeNotifications();
+        prefetchNativeCatalog();
 
-        debugLog('[Capacitor] Native plugins initialized');
+        const launch = await App.getLaunchUrl();
+        if (launch?.url) {
+          try {
+            const path = new URL(launch.url).pathname;
+            if (path.startsWith("/")) {
+              requestInAppNavigation(path);
+            }
+          } catch {
+            /* ignore malformed launch URLs */
+          }
+        }
+
+        debugLog("[Capacitor] Native plugins initialized");
       } catch (error) {
-        console.error('[Capacitor] Error initializing plugins:', error);
+        console.error("[Capacitor] Error initializing plugins:", error);
       }
     };
 
-    initializeCapacitor();
+    void initializeCapacitor();
+
+    return () => {
+      unregisterOAuth();
+      unregisterNotifications();
+      backButtonHandle?.remove();
+      appStateHandle?.remove();
+    };
   }, []);
 
   return <>{children}</>;

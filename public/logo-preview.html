@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MixWise wordmark</title>
+    <style>
+      :root {
+        --cream: #f9f7f2;
+        --forest: #3a4d39;
+        --sage: #5f6f5e;
+        --terracotta: #bc5a45;
+        --mist: #e6ebe4;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--forest);
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        padding: 4rem 1.5rem;
+      }
+      .wrap { max-width: 56rem; margin: 0 auto; }
+      .eyebrow {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--terracotta);
+        margin: 0 0 0.75rem;
+      }
+      h1 {
+        font-family: ui-serif, Georgia, serif;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.1;
+        margin: 0 0 1rem;
+      }
+      .lede {
+        font-size: 1.125rem;
+        color: var(--sage);
+        max-width: 36rem;
+        margin: 0 0 3rem;
+        line-height: 1.5;
+      }
+      .grid { display: grid; gap: 1.5rem; }
+      @media (min-width: 768px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+      figure {
+        margin: 0;
+        background: #fff;
+        border: 1px solid var(--mist);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+      }
+      figure.pick {
+        border-color: rgba(188, 90, 69, 0.35);
+        box-shadow: 0 0 0 1px rgba(188, 90, 69, 0.1), 0 4px 20px -2px rgba(0, 0, 0, 0.06);
+      }
+      figcaption {
+        font-size: 0.7rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--sage);
+        margin-bottom: 2rem;
+      }
+      figure.pick figcaption { color: var(--terracotta); }
+      .logo-slot {
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      figure img, .panel img {
+        display: block;
+        width: 100%;
+        object-fit: contain;
+      }
+      .logo-slot img { height: 4.5rem; }
+      figure p {
+        margin: 2rem 0 0;
+        font-size: 0.9rem;
+        color: var(--sage);
+        line-height: 1.45;
+      }
+      .old-wordmark {
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 700;
+        font-size: 2.75rem;
+        color: var(--forest);
+        letter-spacing: -0.02em;
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid var(--mist);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin: 2rem 0;
+      }
+      .panel h2 {
+        font-family: ui-serif, Georgia, serif;
+        font-size: 1.5rem;
+        margin: 0 0 0.5rem;
+      }
+      .panel .note {
+        color: var(--sage);
+        font-size: 0.9rem;
+        margin: 0 0 1.5rem;
+        max-width: 36rem;
+      }
+      .panel img { max-height: 16rem; border-radius: 1rem; }
+      .icons { display: flex; align-items: flex-end; gap: 1.5rem; }
+      .icons img:first-child {
+        width: 7rem;
+        height: 7rem;
+        border-radius: 1.75rem;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="eyebrow">Identity</p>
+      <h1>MixWise wordmark</h1>
+      <p class="lede">
+        Current production mark versus the new concept: x–w ligature, mint leaf on
+        <em>wise</em>, bare first <em>i</em>.
+      </p>
+
+      <div class="grid two">
+        <figure>
+          <figcaption>Old — in production</figcaption>
+          <div class="logo-slot">
+            <img src="/brand/mixwise-wordmark-forest.svg" alt="Current mixwise. wordmark" style="height: 2.25rem; width: auto;" />
+          </div>
+          <p>Georgia-derived mixwise. Wordmark only. No custom lettering, no garnish.</p>
+        </figure>
+        <figure class="pick">
+          <figcaption>New — concept</figcaption>
+          <div class="logo-slot">
+            <img src="/brand/concepts/wordmark-dotless-forest.png" alt="New mixwise wordmark" />
+          </div>
+          <p>Ligature joins mix and wise. Leaf is the only tittle. First i is a bare stem.</p>
+        </figure>
+      </div>
+
+      <div class="panel">
+        <h2>The two i’s</h2>
+        <p class="note">mix has no dot. wise carries the mint garnish. One skyline.</p>
+        <img src="/brand/concepts/wordmark-dotless-detail.png" alt="Detail of the new wordmark" />
+      </div>
+
+      <div class="panel">
+        <h2>App icon</h2>
+        <p class="note">Wordmark and icon stay separate. MW for the home screen.</p>
+        <div class="icons">
+          <img src="/brand/concepts/mark-mw.png" alt="MW app icon" />
+          <img src="/brand/concepts/mark-mw.png" alt="" width="48" height="48" style="width:48px;height:48px;border-radius:8px" />
+          <img src="/brand/concepts/mark-mw.png" alt="" width="32" height="32" style="width:32px;height:32px;border-radius:6px" />
+          <img src="/brand/concepts/mark-mw.png" alt="" width="16" height="16" style="width:16px;height:16px;border-radius:4px" />
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

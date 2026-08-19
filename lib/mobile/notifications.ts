@@ -1,24 +1,102 @@
 /**
  * Local Notifications Service
- * 
- * Handles scheduling and managing local notifications for drink of the day.
- * Allows users to set custom notification time (defaults to 5pm).
+ *
+ * Schedules daily Drink of the Day reminders with varied copy tied to today's recipe.
  */
 
-import { Capacitor } from '@capacitor/core';
-import { LocalNotifications } from '@capacitor/local-notifications';
-import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from "@capacitor/core";
+import { LocalNotifications } from "@capacitor/local-notifications";
+import { Preferences } from "@capacitor/preferences";
 import { debugLog } from "@/lib/debugLog";
+import { requestInAppNavigation } from "@/lib/mobile/deepLinks";
+import {
+  buildDailyNotificationCopy,
+  type CabinetNotificationContext,
+  type DailyDrinkContext,
+} from "@/lib/mobile/dailyNotificationCopy";
+import { getCurrentLocalDateString } from "@/lib/dailyCocktail";
+import { getMixCocktailsClient } from "@/lib/cocktails";
+import { getMixMatchGroups } from "@/lib/mixMatching";
 
-const NOTIFICATION_ID = 1001; // Fixed ID for drink of the day notification
-const PREFERENCE_KEY = 'drinkNotificationTime';
-const NOTIFICATION_ENABLED_KEY = 'drinkNotificationEnabled';
-const DEFAULT_HOUR = 17; // 5pm
+const BAR_STORAGE_KEY = "mixwise-bar-inventory";
+
+const NOTIFICATION_ID = 1001;
+const PREFERENCE_KEY = "drinkNotificationTime";
+const NOTIFICATION_ENABLED_KEY = "drinkNotificationEnabled";
+const LAST_SCHEDULED_DATE_KEY = "drinkNotificationScheduledDate";
+const DEFAULT_HOUR = 17;
 const DEFAULT_MINUTE = 0;
 
 export interface NotificationTime {
-  hour: number; // 0-23
-  minute: number; // 0-59
+  hour: number;
+  minute: number;
+}
+
+async function getCabinetContext(drink: DailyDrinkContext): Promise<CabinetNotificationContext> {
+  if (typeof window === "undefined") return {};
+
+  let barIds: string[] = [];
+  try {
+    const raw = localStorage.getItem(BAR_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) barIds = parsed.map(String);
+    }
+  } catch {
+    return {};
+  }
+
+  if (barIds.length === 0) return {};
+
+  try {
+    const cocktails = await getMixCocktailsClient();
+    if (!cocktails.length) return { cabinetReadyCount: 0 };
+
+    const { ready } = getMixMatchGroups({
+      cocktails,
+      ownedIngredientIds: barIds,
+      stapleIngredientIds: ["ice", "water"],
+    });
+
+    return {
+      cabinetReadyCount: ready.length,
+      canMakeTonight: ready.some((match) => match.cocktail.slug === drink.slug),
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function fetchTodaysDailyDrink(): Promise<DailyDrinkContext | null> {
+  try {
+    const res = await fetch("/api/daily-cocktail", { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as DailyDrinkContext;
+    if (!data?.slug || !data?.name) return null;
+    return data;
+  } catch (error) {
+    console.error("[Notifications] Failed to fetch daily cocktail:", error);
+    return null;
+  }
+}
+
+async function getLastScheduledDate(): Promise<string | null> {
+  if (!Capacitor.isNativePlatform()) return null;
+  try {
+    const { value } = await Preferences.get({ key: LAST_SCHEDULED_DATE_KEY });
+    return value || null;
+  } catch {
+    return null;
+  }
+}
+
+async function setLastScheduledDate(dateKey: string): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    await Preferences.set({ key: LAST_SCHEDULED_DATE_KEY, value: dateKey });
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
@@ -31,9 +109,9 @@ export async function requestNotificationPermissions(): Promise<boolean> {
 
   try {
     const result = await LocalNotifications.requestPermissions();
-    return result.display === 'granted';
+    return result.display === "granted";
   } catch (error) {
-    console.error('[Notifications] Error requesting permissions:', error);
+    console.error("[Notifications] Error requesting permissions:", error);
     return false;
   }
 }
@@ -42,13 +120,13 @@ export async function requestNotificationPermissions(): Promise<boolean> {
  * Check if notifications are enabled
  */
 export async function isNotificationEnabled(): Promise<boolean> {
-  if (typeof window === 'undefined' || !window.localStorage) {
+  if (typeof window === "undefined" || !window.localStorage) {
     return false;
   }
 
   try {
     const value = localStorage.getItem(NOTIFICATION_ENABLED_KEY);
-    return value === 'true';
+    return value === "true";
   } catch (error) {
     return false;
   }
@@ -58,23 +136,21 @@ export async function isNotificationEnabled(): Promise<boolean> {
  * Set notification enabled/disabled
  */
 export async function setNotificationEnabled(enabled: boolean): Promise<void> {
-  if (typeof window === 'undefined' || !window.localStorage) {
+  if (typeof window === "undefined" || !window.localStorage) {
     return;
   }
 
   try {
-    localStorage.setItem(NOTIFICATION_ENABLED_KEY, enabled ? 'true' : 'false');
-    
+    localStorage.setItem(NOTIFICATION_ENABLED_KEY, enabled ? "true" : "false");
+
     if (!enabled) {
-      // Cancel notifications when disabled
       await cancelDrinkNotification();
     } else {
-      // Schedule when enabled
       const time = await getNotificationTime();
       await scheduleDrinkNotification(time.hour, time.minute);
     }
   } catch (error) {
-    console.error('[Notifications] Error setting enabled:', error);
+    console.error("[Notifications] Error setting enabled:", error);
   }
 }
 
@@ -83,7 +159,6 @@ export async function setNotificationEnabled(enabled: boolean): Promise<void> {
  */
 export async function getNotificationTime(): Promise<NotificationTime> {
   try {
-    // Try Capacitor Preferences first (native storage)
     if (Capacitor.isNativePlatform()) {
       const { value } = await Preferences.get({ key: PREFERENCE_KEY });
       if (value) {
@@ -91,18 +166,16 @@ export async function getNotificationTime(): Promise<NotificationTime> {
       }
     }
 
-    // Fall back to localStorage
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (typeof window !== "undefined" && window.localStorage) {
       const stored = localStorage.getItem(PREFERENCE_KEY);
       if (stored) {
         return JSON.parse(stored);
       }
     }
 
-    // Default to 5pm
     return { hour: DEFAULT_HOUR, minute: DEFAULT_MINUTE };
   } catch (error) {
-    console.error('[Notifications] Error getting notification time:', error);
+    console.error("[Notifications] Error getting notification time:", error);
     return { hour: DEFAULT_HOUR, minute: DEFAULT_MINUTE };
   }
 }
@@ -114,23 +187,20 @@ export async function setNotificationTime(time: NotificationTime): Promise<void>
   try {
     const timeStr = JSON.stringify(time);
 
-    // Save to Capacitor Preferences (native storage)
     if (Capacitor.isNativePlatform()) {
       await Preferences.set({ key: PREFERENCE_KEY, value: timeStr });
     }
 
-    // Also save to localStorage as backup
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (typeof window !== "undefined" && window.localStorage) {
       localStorage.setItem(PREFERENCE_KEY, timeStr);
     }
 
-    // Schedule notification with new time
     const enabled = await isNotificationEnabled();
     if (enabled) {
       await scheduleDrinkNotification(time.hour, time.minute);
     }
   } catch (error) {
-    console.error('[Notifications] Error setting notification time:', error);
+    console.error("[Notifications] Error setting notification time:", error);
   }
 }
 
@@ -144,81 +214,121 @@ export async function cancelDrinkNotification(): Promise<void> {
 
   try {
     await LocalNotifications.cancel({
-      notifications: [{ id: NOTIFICATION_ID }]
+      notifications: [{ id: NOTIFICATION_ID }],
     });
-    debugLog('[Notifications] Cancelled drink notification');
+    debugLog("[Notifications] Cancelled drink notification");
   } catch (error) {
-    console.error('[Notifications] Error cancelling notification:', error);
+    console.error("[Notifications] Error cancelling notification:", error);
   }
 }
 
 /**
- * Schedule daily drink of the day notification
+ * Schedule daily drink of the day notification with today's recipe + varied copy.
  */
 export async function scheduleDrinkNotification(hour: number, minute: number): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
-    console.warn('[Notifications] Not native platform, skipping scheduling');
+    console.warn("[Notifications] Not native platform, skipping scheduling");
     return;
   }
 
   try {
-    // Check permissions first
     const hasPermission = await requestNotificationPermissions();
     if (!hasPermission) {
-      console.warn('[Notifications] Permission not granted');
+      console.warn("[Notifications] Permission not granted");
       return;
     }
 
-    // Cancel existing notification
+    const drink = await fetchTodaysDailyDrink();
+    const dateKey = drink?.dateKey || getCurrentLocalDateString();
+    const cabinet = drink ? await getCabinetContext(drink) : undefined;
+    const copy = drink
+      ? buildDailyNotificationCopy(drink, cabinet)
+      : {
+          title: "Drink of the Day",
+          body: "Open MixWise to see today's featured cocktail.",
+        };
+
     await cancelDrinkNotification();
 
-    // Schedule new notification
     await LocalNotifications.schedule({
       notifications: [
         {
           id: NOTIFICATION_ID,
-          title: 'Drink of the Day 🍹',
-          body: 'Check out today\'s featured cocktail!',
+          title: copy.title,
+          body: copy.body,
           schedule: {
             on: { hour, minute },
-            every: 'day',
-            allowWhileIdle: true, // iOS will use best effort
+            every: "day",
+            allowWhileIdle: true,
           },
-          sound: 'default',
+          sound: "default",
           attachments: undefined,
-          actionTypeId: '',
+          actionTypeId: "",
           extra: {
-            type: 'drink_of_the_day',
+            type: "drink_of_the_day",
+            slug: drink?.slug,
           },
         },
       ],
     });
 
-    debugLog(`[Notifications] Scheduled daily notification for ${hour}:${minute.toString().padStart(2, '0')}`);
+    await setLastScheduledDate(dateKey);
+    debugLog(
+      `[Notifications] Scheduled daily notification for ${hour}:${minute.toString().padStart(2, "0")} — ${copy.title}`
+    );
   } catch (error) {
-    console.error('[Notifications] Error scheduling notification:', error);
+    console.error("[Notifications] Error scheduling notification:", error);
   }
+}
+
+/**
+ * Re-schedule when the app opens or returns to foreground (refreshes copy for the new day).
+ */
+export async function refreshDailyNotificationIfNeeded(force = false): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+
+  const enabled = await isNotificationEnabled();
+  if (!enabled) return;
+
+  const today = getCurrentLocalDateString();
+  const lastScheduled = await getLastScheduledDate();
+  if (!force && lastScheduled === today) {
+    return;
+  }
+
+  const time = await getNotificationTime();
+  await scheduleDrinkNotification(time.hour, time.minute);
 }
 
 /**
  * Initialize notifications on app startup
  */
 export async function initializeNotifications(): Promise<void> {
+  await refreshDailyNotificationIfNeeded(true);
+}
+
+/**
+ * Register tap handlers for scheduled local notifications.
+ */
+export function registerNotificationDeepLinks(): () => void {
   if (!Capacitor.isNativePlatform()) {
-    return;
+    return () => {};
   }
 
-  try {
-    const enabled = await isNotificationEnabled();
-    if (!enabled) {
-      return;
+  let removeListener: (() => void) | undefined;
+
+  void LocalNotifications.addListener("localNotificationActionPerformed", (event) => {
+    const type = event.notification.extra?.type;
+    if (type === "drink_of_the_day") {
+      requestInAppNavigation("/cocktail-of-the-day");
     }
+  }).then((handle) => {
+    removeListener = () => handle.remove();
+  });
 
-    const time = await getNotificationTime();
-    await scheduleDrinkNotification(time.hour, time.minute);
-  } catch (error) {
-    console.error('[Notifications] Error initializing notifications:', error);
-  }
+  return () => {
+    removeListener?.();
+  };
 }
 
 /**
@@ -232,7 +342,7 @@ export async function getPendingNotifications() {
   try {
     return await LocalNotifications.getPending();
   } catch (error) {
-    console.error('[Notifications] Error getting pending notifications:', error);
+    console.error("[Notifications] Error getting pending notifications:", error);
     return { notifications: [] };
   }
 }

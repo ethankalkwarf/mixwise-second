@@ -45,5 +45,31 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>MixWise uses Face ID to lock the app when you return from the background.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>MixWise uses motion so you can shake your phone to pick a random cocktail.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>MixWise connects to your development server on the local network while testing.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.getmixwise.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.getmixwise.app</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

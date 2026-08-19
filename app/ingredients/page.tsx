@@ -3,6 +3,7 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { WebPageSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 import { IngredientsDirectory } from "@/components/ingredients/IngredientsDirectory";
+import { NativeIngredientsIntro } from "@/components/mobile/NativeIngredientsIntro";
 import { getIngredientsDirectory } from "@/lib/ingredients.server";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 
@@ -26,8 +27,11 @@ export default async function IngredientsPage() {
         url={`${SITE_CONFIG.url}/ingredients`}
       />
 
-      <div className="min-h-screen bg-cream">
-        <section className="relative min-h-[12rem] overflow-hidden sm:min-h-[44vh]">
+      <div className="min-h-screen bg-cream" data-native-ingredients-page>
+        <section
+          data-web-ingredients-chrome
+          className="relative min-h-[12rem] overflow-hidden sm:min-h-[44vh]"
+        >
           <Image
             src="/ingredients/origins/juniper.jpg"
             alt=""
@@ -56,7 +60,8 @@ export default async function IngredientsPage() {
           </MainContainer>
         </section>
 
-        <MainContainer className="py-6 sm:py-14">
+        <MainContainer className="py-6 sm:py-14 native-ingredients__main">
+          <NativeIngredientsIntro count={ingredients.length} />
           {ingredients.length > 0 ? (
             <IngredientsDirectory ingredients={ingredients} />
           ) : (

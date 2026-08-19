@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { getCocktailsList } from "@/lib/cocktails.server";
-import { getCocktailsRandomizationSeed, seededRandom } from "@/lib/randomization";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { CocktailsDirectory } from "@/components/cocktails/CocktailsDirectory";
 import { generatePageMetadata } from "@/lib/seo";
+import { isNativeAppRequest } from "@/lib/mobile/serverNative";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 import type { CocktailListItem } from "@/lib/cocktailTypes";
 
@@ -14,28 +15,6 @@ export const metadata = generatePageMetadata({
   description: "Browse handcrafted cocktail recipes with ingredients, instructions, and photos.",
   path: "/cocktails",
 });
-
-// Deterministic shuffle using Fisher-Yates algorithm with seeded randomness
-function deterministicShuffle<T>(array: T[], seed: string): T[] {
-  try {
-    const shuffled = [...array];
-
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      // Generate a seeded random index between 0 and i
-      const randomValue = seededRandom(seed + i.toString(), 'shuffle');
-      const j = Math.floor(randomValue * (i + 1));
-
-      // Swap elements
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-
-    return shuffled;
-  } catch (error) {
-    console.warn('Error in deterministicShuffle, returning original array:', error);
-    // Return original array if shuffle fails
-    return [...array];
-  }
-}
 
 function mapCocktailListToSanity(cocktails: CocktailListItem[]): SanityCocktail[] {
   return cocktails.map((cocktail) => ({
@@ -61,27 +40,28 @@ function mapCocktailListToSanity(cocktails: CocktailListItem[]): SanityCocktail[
 export default async function CocktailsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ spirit?: string; filter?: string; q?: string; ingredient?: string }>;
+  searchParams?: Promise<{ spirit?: string; filter?: string; q?: string; ingredient?: string; browse?: string }>;
 }) {
   const params = (await searchParams) || {};
   const initialSpirit = params.spirit?.toLowerCase() || null;
   const initialFilter = params.filter?.toLowerCase() || null;
   const initialQuery = (params.ingredient || params.q || "").trim();
+  const browse = params.browse?.toLowerCase();
+  const initialBrowse =
+    browse === "collections" || browse === "recipes" ? browse : null;
 
-  // UTC-day seed keeps shuffle stable without cookies() (so ISR can work)
-  const randomizationSeed = getCocktailsRandomizationSeed();
+  const native = await isNativeAppRequest();
 
-  const cocktails = await getCocktailsList({ includeIngredients: true });
+  const cocktails = await getCocktailsList({
+    includeIngredients: !native,
+  });
   const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);
 
-  // Apply deterministic randomization when no filters are applied
-  const randomizedCocktails = deterministicShuffle(sanityCocktails, randomizationSeed);
-
   return (
-    <div className="py-10 bg-cream min-h-screen">
+    <div className="py-10 bg-cream min-h-screen" data-native-recipes-page>
       <MainContainer>
         {/* Header */}
-        <div className="mb-10">
+        <div data-web-recipes-chrome className="mb-10">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-forest mb-4">
             Cocktail Recipes
           </h1>
@@ -113,12 +93,15 @@ export default async function CocktailsPage({
 
         {/* Cocktail Directory with Search, Filters, and Grid */}
         {cocktails.length > 0 && (
-          <CocktailsDirectory
-            cocktails={randomizedCocktails}
-            initialSpirit={initialSpirit}
-            initialFilter={initialFilter}
-            initialQuery={initialQuery || null}
-          />
+          <Suspense fallback={null}>
+            <CocktailsDirectory
+              cocktails={sanityCocktails}
+              initialSpirit={initialSpirit}
+              initialFilter={initialFilter}
+              initialQuery={initialQuery || null}
+              initialBrowse={initialBrowse}
+            />
+          </Suspense>
         )}
       </MainContainer>
     </div>

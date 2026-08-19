@@ -22,6 +22,8 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import Link from "next/link";
 import { isLearnPublic } from "@/lib/learnAccess";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
+import { NativeRecipeView } from "@/components/mobile/NativeRecipeView";
 
 interface RecipeContentProps {
   cocktail: any;
@@ -78,6 +80,7 @@ export function RecipeContent({
   const { isAuthenticated, isLoading: authLoading } = useUser();
   const { openAuthDialog } = useAuthDialog();
   const [mounted, setMounted] = useState(false);
+  const nativeShell = useNativeShell();
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -147,6 +150,22 @@ export function RecipeContent({
         category: 'cocktail',
       };
     });
+  }
+
+  if (nativeShell) {
+    return (
+      <NativeRecipeView
+        cocktail={cocktail}
+        name={sanityCocktail.name}
+        ingredients={ingredients}
+        matchedIngredients={matchedIngredients}
+        instructionSteps={instructionSteps}
+        imageUrl={imageUrl}
+        similarRecipes={similarRecipes}
+        shoppingListIngredients={shoppingListIngredients}
+        bestFor={sanityCocktail.bestFor}
+      />
+    );
   }
 
   return (

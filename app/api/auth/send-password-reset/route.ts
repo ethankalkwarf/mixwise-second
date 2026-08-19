@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = createAdminClient();
 
     // Generate password recovery link
-    const redirectTo = getPasswordResetUrl();
+    const redirectTo = getPasswordResetUrl(new URL(request.url));
 
     debugLog(`[Send Password Reset] Generating recovery link with redirect: ${redirectTo}`);
 

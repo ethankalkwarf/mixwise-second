@@ -1,9 +1,19 @@
+"use client";
+
 import Script from "next/script";
+import { useEffect, useState } from "react";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 const CLARITY_PROJECT_ID = "y3wl76en7f";
 
 export function MicrosoftClarity() {
-  if (process.env.NODE_ENV !== "production") {
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    setEnabled(process.env.NODE_ENV === "production" && !isNativeApp());
+  }, []);
+
+  if (!enabled) {
     return null;
   }
 

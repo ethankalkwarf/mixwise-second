@@ -13,43 +13,42 @@ import {
 } from "@/lib/mobile/notifications";
 
 export function NotificationSettings() {
+  const [isNative, setIsNative] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [time, setTime] = useState<NotificationTime>({ hour: 17, minute: 0 });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Only show on native platforms
-  if (!Capacitor.isNativePlatform()) {
-    return null;
-  }
-
-  // Load preferences on mount
   useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
+
+  useEffect(() => {
+    if (!isNative) return;
+
     const loadPreferences = async () => {
       try {
         const isEnabled = await isNotificationEnabled();
         const notificationTime = await getNotificationTime();
-
         setEnabled(isEnabled);
         setTime(notificationTime);
       } catch (error) {
-        console.error('[NotificationSettings] Error loading preferences:', error);
+        console.error("[NotificationSettings] Error loading preferences:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadPreferences();
-  }, []);
+    void loadPreferences();
+  }, [isNative]);
 
   const handleToggle = async () => {
     const newEnabled = !enabled;
 
-    // Request permissions if enabling
     if (newEnabled) {
       const hasPermission = await requestNotificationPermissions();
       if (!hasPermission) {
-        alert('Please enable notifications in Settings to receive daily cocktail notifications.');
+        alert("Please enable notifications in Settings to receive daily cocktail notifications.");
         return;
       }
     }
@@ -59,7 +58,7 @@ export function NotificationSettings() {
       await setNotificationEnabled(newEnabled);
       setEnabled(newEnabled);
     } catch (error) {
-      console.error('[NotificationSettings] Error toggling notifications:', error);
+      console.error("[NotificationSettings] Error toggling notifications:", error);
     } finally {
       setSaving(false);
     }
@@ -72,7 +71,7 @@ export function NotificationSettings() {
     try {
       await setNotificationTime(newTime);
     } catch (error) {
-      console.error('[NotificationSettings] Error setting notification time:', error);
+      console.error("[NotificationSettings] Error setting notification time:", error);
     } finally {
       setSaving(false);
     }
@@ -80,10 +79,14 @@ export function NotificationSettings() {
 
   const formatTime = (hour: number, minute: number): string => {
     const h = hour % 12 || 12;
-    const m = minute.toString().padStart(2, '0');
-    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const m = minute.toString().padStart(2, "0");
+    const ampm = hour >= 12 ? "PM" : "AM";
     return `${h}:${m} ${ampm}`;
   };
+
+  if (!isNative) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -105,7 +108,7 @@ export function NotificationSettings() {
         <BellIcon className="w-6 h-6 text-sage" />
         <div className="flex-1">
           <h3 className="font-semibold text-forest">Daily Cocktail Notifications</h3>
-          <p className="text-sm text-sage">Get notified of the drink of the day</p>
+          <p className="text-sm text-sage">Daily reminder with today&apos;s featured recipe</p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
           <input
@@ -129,10 +132,10 @@ export function NotificationSettings() {
             <div className="flex items-center gap-2">
               <input
                 type="time"
-                value={`${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`}
+                value={`${time.hour.toString().padStart(2, "0")}:${time.minute.toString().padStart(2, "0")}`}
                 onChange={(e) => {
-                  const [hour, minute] = e.target.value.split(':').map(Number);
-                  handleTimeChange({ hour, minute });
+                  const [hour, minute] = e.target.value.split(":").map(Number);
+                  void handleTimeChange({ hour, minute });
                 }}
                 disabled={saving}
                 className="input-botanical w-40"

@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import type { MixIngredient } from "@/lib/mixTypes";
-import { PlusIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { formatIngredientCategory } from "@/lib/formatters";
@@ -23,6 +28,8 @@ type Props = {
     almostThere: number;
   };
   onStepChange: (step: "cabinet" | "mixer" | "menu") => void;
+  /** Tighter layout for the native app shell */
+  compact?: boolean;
 };
 
 const POPULAR_INGREDIENTS = [
@@ -53,6 +60,7 @@ export function MixCabinet({
   onRemoveIngredient,
   matchCounts,
   onStepChange,
+  compact = false,
 }: Props) {
   const [addedIngredient, setAddedIngredient] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -180,8 +188,21 @@ export function MixCabinet({
     { key: "Syrup", label: "Syrups", icon: "🍯", color: "bg-olive/30 border-olive/40" },
   ];
 
+  const categoryBlurb: Record<string, string> = {
+    Spirit: "Base spirits for your cocktails",
+    Liqueur: "Sweet and flavored spirits",
+    Amaro: "Italian herbal liqueurs",
+    "Wine & Beer": "Wines and beers",
+    Mixer: "Non-alcoholic mixers",
+    Citrus: "Fresh citrus juices",
+    Bitters: "Aromatic bitters and tinctures",
+    Syrup: "Sweet syrups and cordials",
+  };
+
   return (
-    <MainContainer className="py-6 pb-24 lg:pb-6 overflow-x-hidden">
+    <MainContainer
+      className={`py-6 pb-24 lg:pb-6 overflow-x-hidden ${compact ? "max-w-lg px-4" : ""}`}
+    >
 
       {/* Popular Ingredients Quick Add */}
       {popularAvailable.length > 0 && (
@@ -337,11 +358,32 @@ export function MixCabinet({
 
           {/* Show categories when not searching */}
           {!searchQuery && (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={compact ? "space-y-2" : "grid grid-cols-2 lg:grid-cols-3 gap-4"}>
             {categories.map((category) => {
               const count = allIngredients.filter(i =>
                 (i.category || "Garnish") === category.key && !stapleIds.includes(i.id)
               ).length;
+
+              if (compact) {
+                return (
+                  <button
+                    key={category.key}
+                    onClick={() => onSelectCategory(category.key)}
+                    className="flex w-full items-center gap-3 rounded-2xl border border-mist bg-white p-4 text-left active:scale-[0.98] transition-transform"
+                  >
+                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-mist/40 text-2xl">
+                      {category.icon}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-display font-bold text-forest">{category.label}</div>
+                      <p className="text-xs text-sage line-clamp-2">
+                        {count} ingredients · {categoryBlurb[category.key]}
+                      </p>
+                    </div>
+                    <ChevronRightIcon className="h-5 w-5 flex-shrink-0 text-sage/60" />
+                  </button>
+                );
+              }
 
               return (
                 <button
@@ -361,14 +403,7 @@ export function MixCabinet({
                     </div>
                   </div>
                   <p className="text-sm text-sage leading-tight mb-2">
-                    {category.key === "Spirit" && "Base spirits for your cocktails"}
-                    {category.key === "Liqueur" && "Sweet and flavored spirits"}
-                    {category.key === "Amaro" && "Italian herbal liqueurs"}
-                    {category.key === "Wine & Beer" && "Wines and beers"}
-                    {category.key === "Mixer" && "Non-alcoholic mixers"}
-                    {category.key === "Citrus" && "Fresh citrus juices"}
-                    {category.key === "Bitters" && "Aromatic bitters and tinctures"}
-                    {category.key === "Syrup" && "Sweet syrups and cordials"}
+                    {categoryBlurb[category.key]}
                   </p>
                   <div className="text-xs text-terracotta font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                     Tap to explore →

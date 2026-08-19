@@ -8,6 +8,9 @@ import { trackUserSignup } from "@/lib/analytics";
 import { debugLog } from "@/lib/debugLog";
 import { markHasAccount } from "@/lib/auth/returning-user";
 import { authCallbackUrlWithNext, rememberAuthReturnTo } from "@/lib/auth/return-to";
+import { getNativeOAuthRedirectUrl } from "@/lib/mobile/authRedirect";
+import { isNativeApp } from "@/lib/mobile/platform";
+import { openNativeOAuthProvider } from "@/lib/mobile/nativeOAuth";
 
 /**
  * UserProvider - Single Source of Truth for Auth State
@@ -554,52 +557,55 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Get the correct redirect URL for auth
   const getAuthRedirectUrl = useCallback(() => {
     rememberAuthReturnTo();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-    const base = siteUrl
-      ? `${siteUrl}/auth/callback`
-      : typeof window !== "undefined"
-        ? `${window.location.origin}/auth/callback`
-        : "/auth/callback";
+    const nativeOAuth = getNativeOAuthRedirectUrl();
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_SITE_URL || "";
+    const base = nativeOAuth ?? (origin ? `${origin}/auth/callback` : "/auth/callback");
     return authCallbackUrlWithNext(base);
   }, []);
 
+  const signInWithOAuthProvider = useCallback(
+    async (provider: "google" | "apple") => {
+      const redirectUrl = getAuthRedirectUrl();
+      const useNativeFlow = isNativeApp();
+
+      debugLog(`[UserProvider] Starting ${provider} OAuth`, {
+        redirect: redirectUrl,
+        native: useNativeFlow,
+      });
+
+      const { data, error: signInError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: useNativeFlow,
+        },
+      });
+
+      if (signInError) {
+        console.error(`[UserProvider] ${provider} sign-in error:`, signInError);
+        setError(signInError);
+        throw signInError;
+      }
+
+      if (useNativeFlow && data?.url) {
+        await openNativeOAuthProvider(data.url);
+      }
+    },
+    [supabase, getAuthRedirectUrl]
+  );
+
   // Sign in with Google OAuth
   const signInWithGoogle = useCallback(async () => {
-    const redirectUrl = getAuthRedirectUrl();
-    debugLog("[UserProvider] Starting Google OAuth, redirect:", redirectUrl);
-    
-    const { error: signInError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: redirectUrl,
-      },
-    });
-    
-    if (signInError) {
-      console.error("[UserProvider] Google sign-in error:", signInError);
-      setError(signInError);
-      throw signInError;
-    }
-  }, [supabase, getAuthRedirectUrl]);
+    await signInWithOAuthProvider("google");
+  }, [signInWithOAuthProvider]);
 
   // Sign in with Apple OAuth
   const signInWithApple = useCallback(async () => {
-    const redirectUrl = getAuthRedirectUrl();
-    debugLog("[UserProvider] Starting Apple OAuth, redirect:", redirectUrl);
-    
-    const { error: signInError } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: {
-        redirectTo: redirectUrl,
-      },
-    });
-    
-    if (signInError) {
-      console.error("[UserProvider] Apple sign-in error:", signInError);
-      setError(signInError);
-      throw signInError;
-    }
-  }, [supabase, getAuthRedirectUrl]);
+    await signInWithOAuthProvider("apple");
+  }, [signInWithOAuthProvider]);
 
   // Sign up with email and password
   const signUpWithEmail = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {

@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
-import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { formatCocktailName } from "@/lib/formatters";
 import {
   HeartIcon,
@@ -16,71 +15,257 @@ import {
   ArrowRightIcon,
   Cog6ToothIcon,
   TrophyIcon,
+  ArrowLeftIcon,
+  ArrowRightOnRectangleIcon,
+  QuestionMarkCircleIcon,
+  BeakerIcon,
+  BookOpenIcon,
+  CalendarDaysIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
+import { NotificationSettings } from "@/components/mobile/NotificationSettings";
+import { BiometricSettings } from "@/components/mobile/BiometricSettings";
+import { OfflineDataSettings } from "@/components/mobile/OfflineDataSettings";
+import { PullToRefreshContainer } from "@/components/mobile/PullToRefreshContainer";
+import { refreshNativeShellData } from "@/lib/mobile/refreshNativeData";
+import { AppLink } from "@/components/mobile/AppLink";
+import { ShareBarButton } from "@/components/bar/ShareBarButton";
+import { useUser } from "@/components/auth/UserProvider";
+import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
+import { usePreferredAuthMode } from "@/lib/auth/returning-user";
+import { replayNativeIntro } from "@/lib/mobile/nativeIntro";
+import { navigateInApp } from "@/lib/mobile/navigate";
+import { NativeNamePrompt, currentGivenName } from "@/components/mobile/NativeNamePrompt";
+import { TabBarSettings } from "@/components/mobile/TabBarSettings";
 
 export function SavedPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[50vh] bg-cream" />}>
+      <SavedPageContent />
+    </Suspense>
+  );
+}
+
+function SavedPageContent() {
+  const searchParams = useSearchParams();
   const { favorites, isLoading: favsLoading } = useFavorites();
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const { ingredientIds } = useBarIngredients();
-  const [activeTab, setActiveTab] = useState<'favorites' | 'recent' | 'bar' | 'profile'>('favorites');
+  const { profile, user, isAuthenticated } = useUser();
+  const { openAuthDialog } = useAuthDialog();
+  const preferredAuthMode = usePreferredAuthMode();
+  const [activeTab, setActiveTab] = useState<"favorites" | "recent" | "bar">("favorites");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "favorites" || tab === "recent" || tab === "bar") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const givenName = currentGivenName({
+    firstName: profile?.first_name,
+    displayName: profile?.display_name,
+    email: user?.email,
+  });
 
   const tabs = [
-    { id: 'favorites' as const, label: 'Favorites', icon: HeartIcon, count: favorites.length },
-    { id: 'recent' as const, label: 'Recent', icon: ClockIcon, count: recentlyViewed.length },
-    { id: 'bar' as const, label: 'My Bar', icon: ShoppingBagIcon, count: ingredientIds.length },
-    { id: 'profile' as const, label: 'Profile', icon: UserCircleIcon },
+    { id: "favorites" as const, label: "Favorites", icon: HeartIcon, count: favorites.length },
+    { id: "recent" as const, label: "Recent", icon: ClockIcon, count: recentlyViewed.length },
+    { id: "bar" as const, label: "My Bar", icon: ShoppingBagIcon, count: ingredientIds.length },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-cream via-cream to-mist/30 pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-white/50">
+    <PullToRefreshContainer
+      className="bg-gradient-to-b from-cream via-cream to-mist/30 pb-8"
+      onRefresh={async () => {
+        await refreshNativeShellData();
+      }}
+    >
+      <div
+        className="sticky z-10 bg-white/80 backdrop-blur-xl border-b border-white/50"
+        style={{ top: "env(safe-area-inset-top, 0px)" }}
+      >
         <div className="px-4 pt-4 pb-2">
-          <h1 className="text-2xl font-display font-bold text-forest mb-4">Saved</h1>
-          
-          {/* Tab Navigation */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
+          {settingsOpen ? (
+            <div className="mb-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-mist/70 text-forest"
+                aria-label="Back"
+              >
+                <ArrowLeftIcon className="h-5 w-5" />
+              </button>
+              <h1 className="font-display text-2xl font-bold text-forest">Settings</h1>
+            </div>
+          ) : (
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+                  You
+                </p>
+                <h1 className="mt-1 font-display text-2xl font-bold text-forest">
+                  {givenName ? `Hi, ${givenName}` : activeTab === "favorites" ? "Favorites" : activeTab === "recent" ? "Recent" : "My Bar"}
+                </h1>
+                <p className="text-sm text-sage">
+                  {activeTab === "favorites"
+                    ? "Recipes you've saved"
+                    : activeTab === "recent"
+                      ? "Drinks you've opened"
+                      : "Bottles in your cabinet"}
+                </p>
+              </div>
+              {isAuthenticated ? (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    flex items-center gap-2 px-4 py-2 rounded-2xl font-semibold text-sm whitespace-nowrap
-                    transition-all duration-300
-                    ${isActive
-                      ? 'bg-terracotta text-cream shadow-lg shadow-terracotta/30'
-                      : 'bg-white/50 text-sage hover:bg-mist/50'
-                    }
-                  `}
+                  type="button"
+                  onClick={() => setSettingsOpen(true)}
+                  className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-sm font-semibold text-forest shadow-sm"
+                  aria-label="Account settings"
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                  {tab.count !== undefined && tab.count > 0 && (
-                    <span className={`
-                      px-1.5 py-0.5 rounded-full text-[10px] font-bold
-                      ${isActive ? 'bg-cream/20 text-cream' : 'bg-terracotta/10 text-terracotta'}
-                    `}>
-                      {tab.count}
-                    </span>
-                  )}
+                  <Cog6ToothIcon className="h-4 w-4" />
+                  Settings
                 </button>
-              );
-            })}
-          </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openAuthDialog({ mode: preferredAuthMode })}
+                  className="flex flex-shrink-0 items-center rounded-full bg-terracotta px-3.5 py-2 text-sm font-bold text-cream shadow-sm"
+                >
+                  Join
+                </button>
+              )}
+            </div>
+          )}
+
+          {!settingsOpen ? (
+            <div className="flex gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide -mx-4 px-4">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-2xl font-semibold text-sm whitespace-nowrap
+                      transition-all duration-300
+                      ${
+                        isActive
+                          ? "bg-terracotta text-cream shadow-lg shadow-terracotta/30"
+                          : "bg-white/50 text-sage"
+                      }
+                    `}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{tab.label}</span>
+                    {tab.count > 0 && (
+                      <span
+                        className={`
+                      px-1.5 py-0.5 rounded-full text-[10px] font-bold
+                      ${isActive ? "bg-cream/20 text-cream" : "bg-terracotta/10 text-terracotta"}
+                    `}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       </div>
 
-      {/* Content */}
       <div className="px-4 pt-6">
-        {activeTab === 'favorites' && <FavoritesTab favorites={favorites} loading={favsLoading} />}
-        {activeTab === 'recent' && <RecentTab recent={recentlyViewed} loading={recentLoading} />}
-        {activeTab === 'bar' && <BarTab ingredientIds={ingredientIds} />}
-        {activeTab === 'profile' && <ProfileTab />}
+        {settingsOpen ? (
+          <SettingsScreen />
+        ) : (
+          <>
+            <NativeNamePrompt />
+
+            <div className="mb-6">
+              {activeTab === "favorites" && <FavoritesTab favorites={favorites} loading={favsLoading} />}
+              {activeTab === "recent" && <RecentTab recent={recentlyViewed} loading={recentLoading} />}
+              {activeTab === "bar" && <BarTab ingredientIds={ingredientIds} />}
+            </div>
+
+            <section className="mb-6 mt-6">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+                Explore
+              </p>
+              <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+                <ExploreRow
+                  href="/learn"
+                  icon={BookOpenIcon}
+                  label="Learn"
+                  description="Guides, methods, and courses"
+                />
+                <ExploreRow
+                  href="/badges"
+                  icon={TrophyIcon}
+                  label="Badges"
+                  description="See what you've earned"
+                />
+                <ExploreRow
+                  href="/cocktail-of-the-day"
+                  icon={SparklesIcon}
+                  label="Drink of the Day"
+                  description="Today's featured pour"
+                />
+                <ExploreRow
+                  href="/cocktails?browse=collections"
+                  icon={CalendarDaysIcon}
+                  label="Collections"
+                  description="Seasons, holidays, and styles"
+                />
+                <ExploreRow
+                  href="/ingredients"
+                  icon={BeakerIcon}
+                  label="Ingredients"
+                  description="Guides and bottle picks"
+                />
+                <ExploreRow
+                  href="/shopping-list"
+                  icon={ShoppingBagIcon}
+                  label="Shopping list"
+                  description="What to pick up next"
+                />
+              </div>
+            </section>
+          </>
+        )}
       </div>
-    </div>
+    </PullToRefreshContainer>
+  );
+}
+
+function ExploreRow({
+  href,
+  icon: Icon,
+  label,
+  description,
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  description: string;
+}) {
+  return (
+    <AppLink
+      href={href}
+      className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left first:border-t-0"
+    >
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-cream text-forest">
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold text-forest">{label}</span>
+        <span className="block text-xs text-sage">{description}</span>
+      </span>
+      <ArrowRightIcon className="h-4 w-4 flex-shrink-0 text-sage" />
+    </AppLink>
   );
 }
 
@@ -95,12 +280,12 @@ function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boole
         <HeartIcon className="w-16 h-16 text-sage/30 mx-auto mb-4" />
         <h3 className="text-lg font-display font-bold text-forest mb-2">No favorites yet</h3>
         <p className="text-sm text-sage mb-6">Start exploring and save cocktails you love</p>
-        <Link
+        <AppLink
           href="/cocktails"
           className="inline-flex items-center gap-2 bg-terracotta text-cream px-6 py-3 rounded-2xl font-bold text-sm shadow-lg"
         >
           Discover Cocktails <ArrowRightIcon className="w-4 h-4" />
-        </Link>
+        </AppLink>
       </div>
     );
   }
@@ -108,7 +293,7 @@ function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boole
   return (
     <div className="space-y-3">
       {favorites.map((fav) => (
-        <Link
+        <AppLink
           key={fav.cocktail_id}
           href={`/cocktails/${fav.cocktail_slug || fav.cocktail_id}`}
           className="flex gap-3 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-md p-3 active:scale-[0.98] transition-all"
@@ -134,7 +319,7 @@ function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boole
             <p className="text-xs text-sage">Saved favorite</p>
           </div>
           <ArrowRightIcon className="w-5 h-5 text-sage flex-shrink-0 self-center" />
-        </Link>
+        </AppLink>
       ))}
     </div>
   );
@@ -158,7 +343,7 @@ function RecentTab({ recent, loading }: { recent: any[]; loading: boolean }) {
   return (
     <div className="space-y-3">
       {recent.map((item) => (
-        <Link
+        <AppLink
           key={item.cocktail_id}
           href={`/cocktails/${item.cocktail_slug || item.cocktail_id}`}
           className="flex gap-3 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-md p-3 active:scale-[0.98] transition-all"
@@ -184,7 +369,7 @@ function RecentTab({ recent, loading }: { recent: any[]; loading: boolean }) {
             <p className="text-xs text-sage">Recently viewed</p>
           </div>
           <ArrowRightIcon className="w-5 h-5 text-sage flex-shrink-0 self-center" />
-        </Link>
+        </AppLink>
       ))}
     </div>
   );
@@ -199,12 +384,12 @@ function BarTab({ ingredientIds }: { ingredientIds: string[] }) {
             <h3 className="text-lg font-display font-bold text-forest mb-1">Your Bar</h3>
             <p className="text-sm text-sage">{ingredientIds.length} ingredients</p>
           </div>
-          <Link
-            href="/mix"
+          <AppLink
+            href="/mix?shelf=1"
             className="px-4 py-2 bg-terracotta text-cream rounded-xl font-semibold text-sm shadow-lg"
           >
             Manage
-          </Link>
+          </AppLink>
         </div>
       </div>
       
@@ -213,48 +398,111 @@ function BarTab({ ingredientIds }: { ingredientIds: string[] }) {
           <ShoppingBagIcon className="w-16 h-16 text-sage/30 mx-auto mb-4" />
           <h3 className="text-lg font-display font-bold text-forest mb-2">No ingredients yet</h3>
           <p className="text-sm text-sage mb-6">Add ingredients to discover cocktails</p>
-          <Link
+          <AppLink
             href="/mix"
             className="inline-flex items-center gap-2 bg-terracotta text-cream px-6 py-3 rounded-2xl font-bold text-sm shadow-lg"
           >
             Build Your Bar <ArrowRightIcon className="w-4 h-4" />
-          </Link>
+          </AppLink>
         </div>
       )}
     </div>
   );
 }
 
-function ProfileTab() {
+function SettingsScreen() {
+  const router = useRouter();
+  const { user, profile, isAuthenticated, isLoading, signOut } = useUser();
+  const { openAuthDialog } = useAuthDialog();
+  const preferredAuthMode = usePreferredAuthMode();
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "Guest";
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigateInApp(router, "/");
+  };
+
+  if (isLoading) {
+    return <div className="h-40 animate-pulse rounded-3xl bg-mist/60" />;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-3xl bg-white p-5 text-center shadow-sm">
+          <p className="font-display text-lg font-bold text-forest">Save your bar</p>
+          <p className="mt-1 text-sm text-sage">
+            Sign in to sync favorites, bottles, and settings across devices.
+          </p>
+          <button
+            type="button"
+            onClick={() => openAuthDialog({ mode: preferredAuthMode })}
+            className="mt-4 w-full rounded-2xl bg-terracotta py-3.5 text-sm font-bold text-cream"
+          >
+            {preferredAuthMode === "login" ? "Log in" : "Create free account"}
+          </button>
+        </div>
+        <NotificationSettings />
+        <BiometricSettings />
+        <OfflineDataSettings />
+        <TabBarSettings />
+        <button
+          type="button"
+          onClick={() => replayNativeIntro()}
+          className="native-menu-row flex w-full items-center gap-3 rounded-3xl bg-white px-4 py-4 text-left shadow-sm"
+        >
+          <QuestionMarkCircleIcon className="h-5 w-5 flex-shrink-0 text-sage" />
+          <span className="min-w-0 flex-1 font-medium text-forest">How MixWise works</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <Link
-        href="/account"
-        className="flex items-center gap-4 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-md p-4 active:scale-[0.98] transition-all"
-      >
-        <div className="w-12 h-12 rounded-2xl bg-terracotta/10 flex items-center justify-center">
-          <UserCircleIcon className="w-6 h-6 text-terracotta" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-display font-bold text-base text-forest">Account Settings</h3>
-          <p className="text-xs text-sage">Profile, preferences, and more</p>
-        </div>
-        <ArrowRightIcon className="w-5 h-5 text-sage" />
-      </Link>
+      <div className="rounded-3xl bg-white px-4 py-4 shadow-sm">
+        <p className="font-display text-lg font-bold text-forest">{displayName}</p>
+        <p className="truncate text-sm text-sage">{user?.email}</p>
+      </div>
 
-      <Link
-        href="/dashboard"
-        className="flex items-center gap-4 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-md p-4 active:scale-[0.98] transition-all"
-      >
-        <div className="w-12 h-12 rounded-2xl bg-olive/10 flex items-center justify-center">
-          <TrophyIcon className="w-6 h-6 text-olive" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-display font-bold text-base text-forest">Badges & Achievements</h3>
-          <p className="text-xs text-sage">View your progress and badges</p>
-        </div>
-        <ArrowRightIcon className="w-5 h-5 text-sage" />
-      </Link>
+      <NotificationSettings />
+      <BiometricSettings />
+      <OfflineDataSettings />
+      <TabBarSettings />
+
+      <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+        <AppLink href="/account" className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left">
+          <UserCircleIcon className="h-5 w-5 flex-shrink-0 text-sage" />
+          <span className="min-w-0 flex-1 font-medium text-forest">Account</span>
+          <ArrowRightIcon className="h-4 w-4 text-sage" />
+        </AppLink>
+        <AppLink href="/badges" className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left">
+          <TrophyIcon className="h-5 w-5 flex-shrink-0 text-sage" />
+          <span className="min-w-0 flex-1 font-medium text-forest">Badges</span>
+          <ArrowRightIcon className="h-4 w-4 text-sage" />
+        </AppLink>
+        <ShareBarButton
+          variant="menu"
+          className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left text-[15px] font-medium text-forest"
+        />
+        <button
+          type="button"
+          onClick={() => replayNativeIntro()}
+          className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left"
+        >
+          <QuestionMarkCircleIcon className="h-5 w-5 flex-shrink-0 text-sage" />
+          <span className="min-w-0 flex-1 font-medium text-forest">How MixWise works</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left"
+        >
+          <ArrowRightOnRectangleIcon className="h-5 w-5 flex-shrink-0 text-terracotta" />
+          <span className="min-w-0 flex-1 font-medium text-terracotta">Sign out</span>
+        </button>
+      </div>
     </div>
   );
 }
+

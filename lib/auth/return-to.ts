@@ -1,3 +1,5 @@
+import { isNativeApp } from "@/lib/mobile/platform";
+
 const RETURN_TO_KEY = "mixwise-auth-return-to";
 
 const AUTH_PREFIXES = ["/auth/", "/reset-password"];
@@ -51,15 +53,27 @@ export function resolvePostAuthPath(
   const path = isSafeReturnPath(next) ? next : "/";
   const pathname = path.split("?")[0] || path;
 
-  if (pathname === "/onboarding") return "/dashboard";
+  if (pathname === "/onboarding") {
+    return typeof window !== "undefined" && isNativeApp() ? "/" : "/dashboard";
+  }
   if (!GENERIC_LANDING.has(pathname)) return path;
+  if (typeof window !== "undefined" && isNativeApp()) return "/";
   return "/dashboard";
 }
 
 export function authCallbackUrlWithNext(baseCallback: string, nextPath?: string | null): string {
+  const next = resolvePostAuthPath(nextPath ?? currentReturnPath());
+
+  // Custom app scheme (Capacitor OAuth deep link)
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(baseCallback) && !baseCallback.startsWith("http")) {
+    const url = new URL(baseCallback);
+    url.searchParams.set("next", next);
+    return url.toString();
+  }
+
   const origin =
     typeof window !== "undefined" ? window.location.origin : "https://www.getmixwise.com";
   const url = new URL(baseCallback, origin);
-  url.searchParams.set("next", resolvePostAuthPath(nextPath ?? currentReturnPath()));
+  url.searchParams.set("next", next);
   return url.toString();
 }

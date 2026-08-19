@@ -8,13 +8,14 @@
  *
  *   npx tsx scripts/syncCocktailDbIngredientImages.ts --dry-run
  *   npx tsx scripts/syncCocktailDbIngredientImages.ts --apply
+ *   npx tsx scripts/syncCocktailDbIngredientImages.ts --apply --overwrite-blob
  */
 
 import * as dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { slugifyIngredientName } from "../lib/ingredientSlug";
 import { upgradeIngredientImageUrl } from "../lib/ingredientImages";
-import { ingredientBlobPath, publishWebpToBlob } from "./lib/catalogMedia";
+import { ingredientBlobPath, isVercelBlobUrl, publishWebpToBlob } from "./lib/catalogMedia";
 
 dotenv.config({ path: ".env.local" });
 
@@ -22,6 +23,7 @@ const API = "https://www.thecocktaildb.com/api/json/v1/1";
 const BUCKET = "cocktail-images-fullsize";
 const PREFIX = "ingredients";
 const apply = process.argv.includes("--apply");
+const overwriteBlob = process.argv.includes("--overwrite-blob");
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "",
@@ -30,14 +32,14 @@ const supabase = createClient(
 
 type DbIngredient = { id: number | string; name: string; image_url: string | null };
 
-/** Known CocktailDB catalog names that differ from MixWise labels. */
+/** Known CocktailDB catalog names that differ from MixWise labels.
+ *  Do not map simple/sugar syrup — CocktailDB's "Sugar Syrup" asset is a bag of sugar.
+ */
 const NAME_ALIASES: Record<string, string> = {
   scotch: "Blended Scotch",
   "baileys irish cream": "Baileys irish cream",
   "light rum": "Light rum",
   "white rum": "Light rum",
-  "sugar syrup": "Sugar Syrup",
-  "simple syrup": "Sugar Syrup",
   "honey syrup": "Honey syrup",
   "fresh lemon juice": "Lemon juice",
   "lemon juice": "Lemon juice",
@@ -109,6 +111,11 @@ async function main() {
   let skipped = 0;
 
   for (const row of rows as DbIngredient[]) {
+    if (isVercelBlobUrl(row.image_url) && !overwriteBlob) {
+      skipped += 1;
+      continue;
+    }
+
     const ours = normalize(row.name);
     const catalogName = NAME_ALIASES[ours] || catalogByNorm.get(ours) || null;
 

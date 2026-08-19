@@ -11,16 +11,47 @@
  * @param requestUrl - Optional URL object from request (for server-side usage)
  * @returns The canonical site URL
  */
+function isLocalOrPrivateHostname(hostname: string): boolean {
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "0.0.0.0" ||
+    hostname === "::1" ||
+    hostname.endsWith(".local")
+  ) {
+    return true;
+  }
+  if (/^10\./.test(hostname) || /^192\.168\./.test(hostname)) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)) return true;
+  return false;
+}
+
+function originFromRequest(requestUrl: URL): string {
+  const hostname = requestUrl.hostname;
+  if (hostname === "0.0.0.0" || hostname === "127.0.0.1" || hostname === "::1") {
+    return `${requestUrl.protocol}//localhost${requestUrl.port ? `:${requestUrl.port}` : ""}`;
+  }
+  return requestUrl.origin;
+}
+
 export function getCanonicalSiteUrl(requestUrl?: URL): string {
-  // Always use the configured site URL if available
+  // Local/LAN requests must not inherit NEXT_PUBLIC_SITE_URL (production).
+  // Otherwise password-reset and confirm emails bounce to getmixwise.com.
+  if (requestUrl && isLocalOrPrivateHostname(requestUrl.hostname)) {
+    return originFromRequest(requestUrl);
+  }
+
+  if (requestUrl && process.env.NODE_ENV !== "production") {
+    return originFromRequest(requestUrl);
+  }
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (siteUrl) {
     return siteUrl;
   }
 
-  // Fallback to request URL origin for server-side requests
   if (requestUrl) {
-    return requestUrl.origin;
+    return originFromRequest(requestUrl);
   }
 
   // Final fallback for client-side usage

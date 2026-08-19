@@ -94,9 +94,14 @@ export function MobileBottomNav() {
     closeMore();
   };
 
+  // Mix uses its own 3-step bottom nav — avoid stacking two tab bars.
+  if (pathname.startsWith("/mix")) {
+    return null;
+  }
+
   return (
     <>
-      <nav className="mw-tabbar md:hidden" aria-label="Mobile navigation">
+      <nav className="mw-tabbar lg:hidden" aria-label="Mobile navigation">
         {TABS.map((tab) => {
           const active = tab.match(pathname || "");
           const Icon = active ? tab.IconActive : tab.Icon;
@@ -130,7 +135,7 @@ export function MobileBottomNav() {
 
       <div
         id="mw-mobile-sheet"
-        className={`mw-mobile-sheet md:hidden${moreOpen ? " is-open" : ""}`}
+        className={`mw-mobile-sheet lg:hidden${moreOpen ? " is-open" : ""}`}
         hidden={!moreOpen}
       >
         <button

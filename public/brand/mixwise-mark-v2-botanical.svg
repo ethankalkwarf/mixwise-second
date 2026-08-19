@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MixWise">
+  <title>MixWise</title>
+  <rect width="512" height="512" rx="112" fill="#3A4D39"/>
+  <path d="M142 352 C142 250 196 168 256 132 C276 196 276 268 256 328 C220 344 162 336 142 352 Z" fill="#8A9A5B"/>
+  <path d="M370 352 C370 250 316 168 256 132 C236 196 236 268 256 328 C292 344 350 336 370 352 Z" fill="#A8B87A"/>
+  <circle cx="256" cy="156" r="34" fill="#BC5A45"/>
+  <path d="M256 132 L256 180 M236 156 L276 156" fill="none" stroke="#F9F7F2" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+</svg>

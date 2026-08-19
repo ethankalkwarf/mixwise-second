@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, StarIcon, HeartIcon, FireIcon } from "@heroicons/react/20/solid";
 import type { SanityCocktail } from "@/lib/sanityTypes";
@@ -10,6 +11,23 @@ import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCockta
 import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
 import { HardNavLink } from "@/components/layout/HardNavLink";
 import { searchSanityCocktails } from "@/lib/search";
+import { NativePageHero } from "@/components/mobile/NativePageHero";
+import {
+  NativeBrowseTabs,
+  NativeCollectionsGrid,
+  NativeSpiritFilters,
+  type NativeBrowseTab,
+} from "@/components/mobile/NativeSearchBrowse";
+import { PullToRefreshContainer } from "@/components/mobile/PullToRefreshContainer";
+import { refreshNativeShellData } from "@/lib/mobile/refreshNativeData";
+import {
+  deterministicShuffle,
+  getBrowseRefreshSeed,
+  getCocktailsRandomizationSeed,
+} from "@/lib/randomization";
+import { NativeDrinkTile } from "@/components/mobile/NativeDrinkTile";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
+import { MIXWISE_FOCUS_SEARCH } from "@/lib/mobile/navConfig";
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
 
@@ -66,6 +84,7 @@ type Props = {
   initialSpirit?: string | null;
   initialFilter?: string | null;
   initialQuery?: string | null;
+  initialBrowse?: NativeBrowseTab | null;
 };
 
 // Number of items to load per batch
@@ -76,7 +95,10 @@ export function CocktailsDirectory({
   initialSpirit = null,
   initialFilter = null,
   initialQuery = null,
+  initialBrowse = null,
 }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   // Initialize state from sessionStorage if available
   const [searchQuery, setSearchQuery] = useState(
     initialQuery || (initialFilter === "new" ? "new" : "")
@@ -85,7 +107,29 @@ export function CocktailsDirectory({
   const [filterSpirit, setFilterSpirit] = useState<string | null>(initialSpirit);
   const [filterGlass, setFilterGlass] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(Boolean(initialSpirit));
+  const [browseTab, setBrowseTab] = useState<NativeBrowseTab>(
+    initialBrowse === "recipes" || initialBrowse === "collections"
+      ? initialBrowse
+      : "collections"
+  );
+  const [browseSeed, setBrowseSeed] = useState(() => getCocktailsRandomizationSeed());
   const [isInitialized, setIsInitialized] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const focusSearch = () => {
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener(MIXWISE_FOCUS_SEARCH, focusSearch);
+    return () => window.removeEventListener(MIXWISE_FOCUS_SEARCH, focusSearch);
+  }, []);
+
+  useEffect(() => {
+    const browse = searchParams.get("browse");
+    if (browse === "collections" || browse === "recipes") {
+      setBrowseTab(browse);
+    }
+  }, [searchParams]);
 
   // Restore filter state from sessionStorage on mount (URL params win)
   useEffect(() => {
@@ -175,11 +219,26 @@ export function CocktailsDirectory({
     };
   }, [cocktails]);
 
+  const nativeShell = useNativeShell();
+
+  const catalogOrder = useMemo(() => {
+    if (sortBy === "default") {
+      return deterministicShuffle(cocktails, browseSeed);
+    }
+    return cocktails;
+  }, [cocktails, browseSeed, sortBy]);
+
+  const handleBrowseRefresh = useCallback(async () => {
+    await refreshNativeShellData();
+    if (!searchQuery.trim()) {
+      setBrowseSeed(getBrowseRefreshSeed());
+    }
+  }, [searchQuery]);
+
   // Filter and sort cocktails
   const filteredCocktails = useMemo(() => {
-    let results = [...cocktails];
+    let results = [...catalogOrder];
 
-    // Ranked search: synonyms, token AND, fuzzy names, keyword intents
     if (searchQuery.trim()) {
       results = searchSanityCocktails(results, searchQuery);
     }
@@ -228,7 +287,7 @@ export function CocktailsDirectory({
     }
 
     return results;
-  }, [cocktails, searchQuery, sortBy, filterSpirit, filterGlass]);
+  }, [catalogOrder, searchQuery, sortBy, filterSpirit, filterGlass]);
 
   const { visibleItems: visibleCocktails, hasMore, loadMoreRef } = useInfiniteVisibleCount(
     filteredCocktails,
@@ -249,7 +308,118 @@ export function CocktailsDirectory({
     { label: "Trending", query: "trending", icon: FireIcon },
   ];
 
+  if (nativeShell) {
+    const browsing = !searchQuery.trim();
+    const showRecipes = !browsing || browseTab === "recipes";
+
+    return (
+      <PullToRefreshContainer onRefresh={handleBrowseRefresh}>
+        <div className="-mx-4 px-4 pt-4">
+          <NativePageHero
+            eyebrow="Browse"
+            title="Search"
+            description="Collections, spirits, and every recipe in the book."
+          />
+          <div className="relative mb-4">
+            <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sage" />
+            <input
+              ref={searchInputRef}
+              type="search"
+              placeholder="Drinks, spirits, ingredients"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-2xl border-0 bg-white py-3.5 pl-11 pr-10 text-base text-forest shadow-sm placeholder:text-sage"
+            />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sage"
+                aria-label="Clear search"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            ) : null}
+          </div>
+
+          {browsing ? (
+            <NativeBrowseTabs tab={browseTab} onTab={setBrowseTab} />
+          ) : null}
+
+          {showRecipes ? (
+            <>
+              <NativeSpiritFilters
+                spirits={BASE_SPIRITS}
+                filterSpirit={filterSpirit}
+                onFilterSpirit={setFilterSpirit}
+              />
+
+              <p className="mb-3 text-xs text-sage">
+                {filteredCocktails.length} recipe{filteredCocktails.length === 1 ? "" : "s"}
+              </p>
+
+              {filteredCocktails.length === 0 ? (
+                <div className="rounded-3xl bg-white px-5 py-12 text-center">
+                  <p className="font-display text-lg font-bold text-forest">No matches</p>
+                  <p className="mt-1 text-sm text-sage">Try a different spirit or search.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      clearFilters();
+                    }}
+                    className="mt-4 text-sm font-semibold text-terracotta"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="native-recipe-grid"
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+                      columnGap: 12,
+                      rowGap: 20,
+                    }}
+                  >
+                    {visibleCocktails.map((cocktail) => {
+                      const imageUrl =
+                        getImageUrl(cocktail.image, { width: 700, height: 900, quality: 80 }) ||
+                        cocktail.externalImageUrl;
+                      const slug = cocktail.slug?.current || cocktail._id;
+                      return (
+                        <NativeDrinkTile
+                          key={cocktail._id}
+                          href={`/cocktails/${slug}`}
+                          name={cocktail.name}
+                          spirit={cocktail.primarySpirit}
+                          imageUrl={imageUrl}
+                          createdAt={cocktail.createdAt}
+                          onNavigate={handleCocktailClick}
+                        />
+                      );
+                    })}
+                  </div>
+                  {hasMore && (
+                    <div ref={loadMoreRef} className="flex justify-center py-8">
+                      <div className="spinner" />
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          ) : (
+            <NativeCollectionsGrid shuffleSeed={browseSeed} />
+          )}
+        </div>
+      </PullToRefreshContainer>
+    );
+  }
+
   return (
+    <PullToRefreshContainer onRefresh={handleBrowseRefresh}>
     <div>
       {/* Search and Filters Bar */}
       <div className="mb-8 space-y-4">
@@ -452,6 +622,7 @@ export function CocktailsDirectory({
         </>
       )}
     </div>
+    </PullToRefreshContainer>
   );
 }
 

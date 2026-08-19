@@ -9,6 +9,11 @@ export function getCocktailsRandomizationSeed(date: Date = new Date()): string {
   return `cocktails-${year}-${month}-${day}`;
 }
 
+/** Fresh seed for pull-to-refresh — new browse order on each pull. */
+export function getBrowseRefreshSeed(): string {
+  return `cocktails-refresh-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 export function seededRandom(seed: string, input: string): number {
   try {
     const combined = (seed || "default-seed") + (input || "default-input");
@@ -25,5 +30,22 @@ export function seededRandom(seed: string, input: string): number {
     return Math.max(0, Math.min(1, result || 0.5));
   } catch {
     return Math.random();
+  }
+}
+
+/** Fisher–Yates shuffle with a stable seed (same seed → same order). */
+export function deterministicShuffle<T>(array: T[], seed: string): T[] {
+  try {
+    const shuffled = [...array];
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const randomValue = seededRandom(seed + i.toString(), "shuffle");
+      const j = Math.floor(randomValue * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return shuffled;
+  } catch {
+    return [...array];
   }
 }

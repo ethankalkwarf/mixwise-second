@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MixWise">
+  <title>MixWise</title>
+  <rect width="512" height="512" rx="112" fill="#3A4D39"/>
+  <g fill="#F9F7F2">
+    <path d="M96 368 V152 h42 l78 132 78-132 h42 v216 h-48 V230 L216 368 h-20 L118 230 v138 z"/>
+    <path d="M318 368 L360 152 h48 L448 368 h-50 l-8-48 h-64 l-8 48 z M348 274 h46 l-22-122 z"/>
+  </g>
+</svg>

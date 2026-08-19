@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import type { DirectoryIngredient } from "@/lib/ingredientTypes";
 import {
@@ -11,6 +10,7 @@ import {
   workingBarIngredients,
 } from "@/lib/ingredientTaxonomy";
 import { searchDirectoryIngredients } from "@/lib/search";
+import { WorkingBarTile } from "@/components/ingredients/WorkingBarTile";
 
 type Props = {
   ingredients: DirectoryIngredient[];
@@ -75,36 +75,9 @@ export function IngredientsDirectory({ ingredients }: Props) {
                 title="A working bar"
                 dek="The bottles that unlock most of the library: a base spirit, vermouth, a bitter, citrus, sugar, and soda."
               />
-              <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] snap-x snap-mandatory [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-x-4 sm:gap-y-8 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
+              <div className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-8 lg:grid-cols-6">
                 {staples.map((ingredient) => (
-                  <Link
-                    key={ingredient.id}
-                    href={`/ingredients/${ingredient.slug}`}
-                    className="group w-[5.5rem] shrink-0 snap-start text-center sm:w-auto sm:shrink"
-                  >
-                    <div className="relative mx-auto h-28 w-full sm:h-44">
-                      {ingredient.imageUrl ? (
-                        <Image
-                          src={ingredient.imageUrl}
-                          alt=""
-                          fill
-                          sizes="140px"
-                          className="object-contain object-bottom mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
-                          quality={85}
-                        />
-                      ) : (
-                        <div className="flex h-full items-end justify-center text-xs text-sage/40">
-                          {ingredient.name}
-                        </div>
-                      )}
-                    </div>
-                    <p className="mt-2 font-display text-sm text-forest sm:mt-3 sm:text-base">
-                      {ingredient.name}
-                    </p>
-                    <p className="mt-0.5 text-xs tabular-nums text-sage">
-                      {ingredient.cocktailCount}
-                    </p>
-                  </Link>
+                  <WorkingBarTile key={ingredient.id} ingredient={ingredient} />
                 ))}
               </div>
             </section>

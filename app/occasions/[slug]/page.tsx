@@ -21,6 +21,7 @@ import {
 import { CollectionPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
+import { NativeCollectionHero } from "@/components/mobile/NativeCollectionHero";
 
 export const revalidate = 300;
 
@@ -66,7 +67,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
   const pageUrl = `${SITE_CONFIG.url}/occasions/${occasion.slug}`;
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-cream" data-native-collections-page data-native-collection-detail>
       <CollectionPageSchema
         name={`${occasion.name} Cocktail Recipes`}
         description={occasion.description}
@@ -86,7 +87,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
           { name: occasion.name, url: pageUrl },
         ]}
       />
-      <section className="relative min-h-[36vh] overflow-hidden">
+      <section data-web-collections-chrome className="relative min-h-[36vh] overflow-hidden">
         {heroUrl ? (
           <Image
             src={heroUrl}
@@ -153,7 +154,17 @@ export default async function OccasionDetailPage({ params }: PageProps) {
         </MainContainer>
       </section>
 
-      <MainContainer className="py-10 sm:py-12 space-y-14">
+      <NativeCollectionHero
+        name={occasion.name}
+        headline={occasion.headline}
+        description={occasion.description}
+        imageUrl={heroUrl}
+        count={matched.length}
+        parentName={parent?.name}
+        parentSlug={parent?.slug}
+      />
+
+      <MainContainer className="py-10 sm:py-12 space-y-14 native-collection-detail__main">
         {children.length > 0 ? (
           <section>
             <div className="mb-5">
@@ -176,9 +187,9 @@ export default async function OccasionDetailPage({ params }: PageProps) {
           </section>
         ) : null}
 
-        <section>
+        <section data-native-collection-drinks>
           {children.length > 0 ? (
-            <div className="mb-5">
+            <div className="mb-5" data-web-collections-chrome>
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                 Full collection
               </p>
@@ -268,7 +279,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
           </section>
         ) : null}
 
-        <section className="border-t border-mist pt-10">
+        <section className="border-t border-mist pt-10" data-web-collections-chrome>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">

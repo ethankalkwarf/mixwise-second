@@ -36,13 +36,13 @@ export function FeaturedCocktails({ cocktails }: FeaturedCocktailsProps) {
           ))}
         </div>
 
-        {/* Tablet: flex wrap centers a short last row; desktop: five-column grid */}
+        {/* Tablet: 2-up then 3-up; desktop: five-column grid */}
         <div className="hidden sm:flex sm:flex-wrap sm:justify-center sm:gap-5 lg:grid lg:grid-cols-5 lg:gap-6">
           {cocktails.map((cocktail) => (
             <FeaturedCocktailCard
               key={`desktop-${cocktail._id}`}
               cocktail={cocktail}
-              className="w-[calc(33.333%-0.85rem)] lg:w-auto"
+              className="w-[calc(50%-0.625rem)] md:w-[calc(33.333%-0.85rem)] lg:w-auto"
               imageSizes="(max-width: 1280px) 20vw, 15vw"
             />
           ))}

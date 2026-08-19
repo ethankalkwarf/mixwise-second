@@ -11,6 +11,7 @@ import { debugLog } from "@/lib/debugLog";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { markHasAccount } from "@/lib/auth/returning-user";
 import { currentReturnPath, rememberAuthReturnTo, resolvePostAuthPath } from "@/lib/auth/return-to";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -33,13 +34,16 @@ function AppleIcon({ className }: { className?: string }) {
 
 interface AuthDialogProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (force?: boolean) => void;
   mode?: AuthDialogMode;
   title?: string;
   subtitle?: string;
   initialEmail?: string;
   onSuccess?: () => void;
   onModeChange?: (mode: AuthDialogMode) => void;
+  dismissible?: boolean;
+  escapeLabel?: string;
+  onEscape?: () => void;
 }
 
 export function AuthDialog({
@@ -51,10 +55,14 @@ export function AuthDialog({
   initialEmail = "",
   onSuccess,
   onModeChange,
+  dismissible = true,
+  escapeLabel,
+  onEscape,
 }: AuthDialogProps) {
   const { signInWithGoogle, signInWithApple, signInWithPassword, signInWithEmail, resetPassword, isAuthenticated } = useUser();
   const router = useRouter();
   const toast = useToast();
+  const nativeShell = useNativeShell();
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -65,7 +73,7 @@ export function AuthDialog({
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [showPasswordFields, setShowPasswordFields] = useState(true);
 
   const defaultTitle = mode === "login"
     ? "Welcome back to MixWise"
@@ -86,7 +94,7 @@ export function AuthDialog({
   useEffect(() => {
     if (isAuthenticated && isOpen) {
       onSuccess?.();
-      onClose();
+      onClose(true);
       const here = currentReturnPath();
       const dest = resolvePostAuthPath(here);
       if (dest !== here) {
@@ -103,7 +111,7 @@ export function AuthDialog({
       if (customEvent.detail?.success) {
         debugLog("[AuthDialog] Email confirmation detected, closing dialog");
         onSuccess?.();
-        onClose();
+        onClose(true);
       }
     };
 
@@ -113,9 +121,8 @@ export function AuthDialog({
     };
   }, [isOpen, onClose, onSuccess]);
 
-  // Reset password-path UI when switching modes — lead with magic link for signup & login
   useEffect(() => {
-    setShowPasswordFields(false);
+    setShowPasswordFields(true);
     setError(null);
     setPassword("");
   }, [mode]);
@@ -295,20 +302,38 @@ export function AuthDialog({
     }
   };
 
-  const handleClose = () => {
+  const resetForm = () => {
     setEmail("");
     setPassword("");
     setEmailSent(false);
     setMagicLinkSent(false);
     setSignupSuccess(false);
-    setShowPasswordFields(false);
+    setShowPasswordFields(true);
     setError(null);
+  };
+
+  const handleClose = () => {
+    if (!dismissible) return;
+    resetForm();
     onClose();
   };
 
+  const handleEscape = () => {
+    resetForm();
+    onEscape?.();
+    onClose(true);
+  };
+
+  const showEscape = Boolean(escapeLabel) && !signupSuccess && !magicLinkSent && !emailSent;
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={handleClose} data-auth-dialog>
+      <Dialog
+        as="div"
+        className={nativeShell ? "relative z-[90]" : "relative z-[100]"}
+        onClose={dismissible ? handleClose : () => {}}
+        data-auth-dialog
+      >
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -318,28 +343,38 @@ export function AuthDialog({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-forest/30 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-forest/35 backdrop-blur-md" aria-hidden />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div
+            className={
+              nativeShell
+                ? "flex min-h-full items-center justify-center px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.75rem+env(safe-area-inset-bottom))]"
+                : "flex min-h-full items-center justify-center p-4 text-center"
+            }
+          >
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
               leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-white border border-mist p-6 sm:p-8 text-left align-middle shadow-card-hover transition-all">
-                <button
-                  onClick={handleClose}
-                  className="absolute top-4 right-4 p-2 rounded-xl text-sage hover:text-forest hover:bg-mist transition-colors"
-                  aria-label="Close dialog"
-                >
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
+              <Dialog.Panel
+                className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white border border-mist p-6 sm:p-8 text-left align-middle shadow-card-hover"
+              >
+                {dismissible && (
+                  <button
+                    onClick={handleClose}
+                    className="absolute top-4 right-4 p-2 rounded-xl text-sage hover:text-forest hover:bg-mist transition-colors"
+                    aria-label="Close dialog"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                  </button>
+                )}
 
                 {signupSuccess ? (
                   <div className="text-center py-6">
@@ -410,7 +445,7 @@ export function AuthDialog({
                   <>
                     <div className="text-center mb-6">
                       <div className="mb-4 flex justify-center">
-                        <BrandLogo size="lg" variant="dark" linked={false} />
+                        <BrandLogo size="lg" variant="dark" linked={false} render="img" />
                       </div>
                       <Dialog.Title className="text-xl font-display font-bold text-forest mb-2">
                         {displayTitle}
@@ -476,17 +511,77 @@ export function AuthDialog({
                     <form onSubmit={handleEmailAuth}>
                       <label className="label-botanical">Email Address</label>
                       <div className="relative mb-4">
-                        <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
+                        <EnvelopeIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage pointer-events-none" />
                         <input
                           type="email"
+                          name="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="Enter your email"
-                          className="input-botanical pl-11"
+                          className="input-botanical pl-11 text-base"
                           required
                           autoComplete="email"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          inputMode="email"
+                          enterKeyHint="next"
                         />
                       </div>
+
+                      {mode !== "reset" && showPasswordFields && (
+                        <>
+                          <label className="label-botanical">Password</label>
+                          <div className="relative mb-4">
+                            <input
+                              type="password"
+                              name={mode === "signup" ? "new-password" : "password"}
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              placeholder={mode === "signup" ? "Create a password (8+ characters)" : "Enter your password"}
+                              className="input-botanical text-base"
+                              required
+                              minLength={8}
+                              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                              autoCapitalize="none"
+                              autoCorrect="off"
+                              spellCheck={false}
+                              enterKeyHint="done"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={
+                              anyLoading ||
+                              !email.trim() ||
+                              (mode === "signup" && (!isEmailValid || !password.trim())) ||
+                              (mode === "login" && !password.trim())
+                            }
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isEmailLoading ? (
+                              <div className="spinner border-cream/30 border-t-cream" />
+                            ) : mode === "signup" ? (
+                              "Create Account"
+                            ) : (
+                              "Log In"
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowPasswordFields(false);
+                              setPassword("");
+                              setError(null);
+                            }}
+                            className="w-full mt-3 text-sm text-sage hover:text-forest transition-colors py-1"
+                          >
+                            Email me a sign-in link instead
+                          </button>
+                        </>
+                      )}
 
                       {mode !== "reset" && !showPasswordFields && (
                         <div className="space-y-3">
@@ -507,66 +602,23 @@ export function AuthDialog({
                             onClick={() => setShowPasswordFields(true)}
                             className="w-full text-sm text-sage hover:text-forest transition-colors py-1"
                           >
-                            {mode === "signup" ? "Prefer a password instead?" : "Sign in with password"}
+                            Use a password instead
                           </button>
                         </div>
                       )}
 
-                      {(mode === "reset" || showPasswordFields) && (
-                        <>
-                          {(mode === "login" || mode === "signup") && (
-                            <>
-                              <label className="label-botanical">Password</label>
-                              <div className="relative mb-4">
-                                <input
-                                  type="password"
-                                  value={password}
-                                  onChange={(e) => setPassword(e.target.value)}
-                                  placeholder={mode === "signup" ? "Create a password (8+ characters)" : "Enter your password"}
-                                  className="input-botanical"
-                                  required
-                                  minLength={8}
-                                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                                />
-                              </div>
-                            </>
+                      {mode === "reset" && (
+                        <button
+                          type="submit"
+                          disabled={anyLoading || !email.trim()}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isEmailLoading ? (
+                            <div className="spinner border-cream/30 border-t-cream" />
+                          ) : (
+                            "Send Reset Link"
                           )}
-
-                          <button
-                            type="submit"
-                            disabled={
-                              anyLoading ||
-                              !email.trim() ||
-                              (mode === "signup" && (!isEmailValid || !password.trim())) ||
-                              (mode === "login" && !password.trim())
-                            }
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-2xl transition-all shadow-lg shadow-terracotta/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isEmailLoading ? (
-                              <div className="spinner border-cream/30 border-t-cream" />
-                            ) : mode === "signup" ? (
-                              "Create Account"
-                            ) : mode === "reset" ? (
-                              "Send Reset Link"
-                            ) : (
-                              "Log In"
-                            )}
-                          </button>
-
-                          {mode !== "reset" && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setShowPasswordFields(false);
-                                setPassword("");
-                                setError(null);
-                              }}
-                              className="w-full mt-3 text-sm text-sage hover:text-forest transition-colors py-1"
-                            >
-                              Use email link instead
-                            </button>
-                          )}
-                        </>
+                        </button>
                       )}
                     </form>
 
@@ -640,6 +692,16 @@ export function AuthDialog({
                         Privacy Policy
                       </a>.
                     </p>
+
+                    {showEscape ? (
+                      <button
+                        type="button"
+                        onClick={handleEscape}
+                        className="mt-5 w-full py-3 text-sm font-medium text-sage hover:text-forest transition-colors"
+                      >
+                        {escapeLabel}
+                      </button>
+                    ) : null}
                   </>
                 )}
               </Dialog.Panel>

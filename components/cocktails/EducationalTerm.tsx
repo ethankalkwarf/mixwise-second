@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
 import type { GlossaryTerm } from "@/lib/cocktailTechniqueGlossary";
 
 interface EducationalTermProps {
@@ -22,7 +23,9 @@ type PanelPos = {
 };
 
 function tabBarOffset(): number {
-  if (typeof window === "undefined" || window.innerWidth >= 1024) return 16;
+  if (typeof window === "undefined") return 16;
+  if (document.documentElement.classList.contains("native-app")) return 88;
+  if (window.innerWidth >= 1024) return 16;
   return 80;
 }
 
@@ -58,6 +61,7 @@ function computePosition(trigger: DOMRect, panelHeight: number): PanelPos {
  * learnPath is reserved for a future education library — not linked yet.
  */
 export function EducationalTerm({ term, children }: EducationalTermProps) {
+  const nativeShell = useNativeShell();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [pos, setPos] = useState<PanelPos | null>(null);
@@ -150,7 +154,7 @@ export function EducationalTerm({ term, children }: EducationalTermProps) {
               {term.why && (
                 <span className="mt-1.5 block text-cream/75">{term.why}</span>
               )}
-              {term.learnPath && (
+              {term.learnPath && !nativeShell && (
                 <a
                   href={term.learnPath}
                   className="mw-inline-term mt-2 inline-block text-[11px] font-semibold uppercase tracking-wide text-olive hover:text-cream"

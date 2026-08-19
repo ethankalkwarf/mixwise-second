@@ -32,6 +32,8 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { debugLog } from "@/lib/debugLog";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
+import { getHomeHeroHeadline, greetingFirstName } from "@/lib/homeHeroHeadline";
 
 const PLACEHOLDER_IMAGE =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
@@ -73,6 +75,7 @@ export default function DashboardPage() {
   const [recentImageUrls, setRecentImageUrls] = useState<Map<string, string | null>>(new Map());
   const [skipsExpanded, setSkipsExpanded] = useState(false);
   const DASHBOARD_READY_LIMIT = 10;
+  const nativeShell = useNativeShell();
 
   const hasFetchedMixData = useRef(false);
   const hasShownAuthDialog = useRef(false);
@@ -216,43 +219,16 @@ export default function DashboardPage() {
   }, [recentlyViewed, recentLoading]);
 
   const greeting = useMemo(() => {
-    if (!profile && !user) {
-      return "Welcome back";
-    }
+    const firstName = isAuthenticated
+      ? greetingFirstName({
+          firstName: profile?.first_name,
+          displayName: profile?.display_name,
+          email: user?.email,
+        })
+      : null;
 
-    const greetingName =
-      profile?.first_name?.trim() ||
-      profile?.display_name?.trim() ||
-      user?.email?.split("@")[0] ||
-      "Bartender";
-
-    const hour = new Date().getHours();
-    const nameHash = greetingName.split('').reduce((hash, char) => hash + char.charCodeAt(0), 0);
-    const greetingIndex = nameHash % 3;
-
-    if (hour < 12) {
-      const greetings = [
-        `Good morning, ${greetingName}. Ready to start shaking things up?`,
-        `Morning, ${greetingName}. The bar is open, metaphorically.`,
-        `Rise and shine, ${greetingName}. Time to mix something great.`,
-      ];
-      return greetings[greetingIndex];
-    } else if (hour < 18) {
-      const greetings = [
-        `Good afternoon, ${greetingName}. Feeling inspired?`,
-        `Hey ${greetingName}, it's cocktail o'clock somewhere.`,
-        `Afternoon, ${greetingName}. Your bar awaits.`,
-      ];
-      return greetings[greetingIndex];
-    } else {
-      const greetings = [
-        `Good evening, ${greetingName}. Let's make something smooth.`,
-        `Evening, ${greetingName}. Perfect time for a drink.`,
-        `Welcome back, ${greetingName}. What's on the menu tonight?`,
-      ];
-      return greetings[greetingIndex];
-    }
-  }, [profile?.first_name, profile?.display_name, user?.email]);
+    return getHomeHeroHeadline({ firstName });
+  }, [isAuthenticated, profile?.first_name, profile?.display_name, user?.email]);
 
   const rankedRecommendations = useMemo(() => {
     const favoriteIds = new Set(favorites.map((fav) => String(fav.cocktail_id)));
@@ -349,11 +325,11 @@ export default function DashboardPage() {
 
   try {
     return (
-      <div className="py-8 sm:py-12 bg-cream min-h-screen">
+      <div className={`${nativeShell ? "py-4" : "py-8 sm:py-12"} bg-cream min-h-screen`} data-native-dashboard={nativeShell ? "" : undefined}>
         <MainContainer>
           <div
             key="dashboard-header"
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6"
           >
             <div>
               <h1 className="text-3xl font-display font-bold text-forest">
@@ -836,7 +812,7 @@ export default function DashboardPage() {
               </section>
 
               <div className="order-7 md:order-none">
-                <DashboardLearnCard />
+                {nativeShell ? null : <DashboardLearnCard />}
               </div>
 
               {!skipsLoading && skips.length > 0 ? (

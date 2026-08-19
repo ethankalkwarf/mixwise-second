@@ -4,8 +4,7 @@ import { useState } from "react";
 import { ShareIcon, LinkIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/components/ui/toast";
 import { Capacitor } from "@capacitor/core";
-// Temporarily disabled - plugin has Swift API errors
-// import { Share } from "@capacitor/share";
+import { Share } from "@capacitor/share";
 
 // Twitter X Icon
 function XIcon({ className }: { className?: string }) {
@@ -34,6 +33,7 @@ interface ShareButtonsProps {
 export function ShareButtons({ url, title, description }: ShareButtonsProps) {
   const toast = useToast();
   const [copied, setCopied] = useState(false);
+  const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
 
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
@@ -56,23 +56,21 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
   };
 
   const handleNativeShare = async () => {
-    // Temporarily disabled - plugin has Swift API errors
-    // Use Capacitor Share plugin on native platforms for better iOS integration
-    // if (Capacitor.isNativePlatform()) {
-    //   try {
-    //     await Share.share({
-    //       title,
-    //       text: description || title,
-    //       url,
-    //       dialogTitle: `Share ${title}`,
-    //     });
-    //   } catch (err) {
-    //     if ((err as Error).name !== "AbortError") {
-    //       toast.error("Failed to share");
-    //     }
-    //   }
-    //   return;
-    // }
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Share.share({
+          title,
+          text: description || title,
+          url,
+          dialogTitle: `Share ${title}`,
+        });
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          toast.error("Failed to share");
+        }
+      }
+      return;
+    }
 
     // Fall back to Web Share API for web browsers
     if (navigator.share) {
@@ -97,7 +95,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       {/* Native share (mobile) */}
-      {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+      {(isNative || (typeof navigator !== "undefined" && typeof navigator.share === "function")) && (
         <button
           onClick={handleNativeShare}
           className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors"
@@ -107,27 +105,31 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
         </button>
       )}
 
-      {/* Twitter/X */}
-      <a
-        href={shareLinks.twitter}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors"
-        aria-label="Share on X (Twitter)"
-      >
-        <XIcon className="w-5 h-5" />
-      </a>
+      {!isNative && (
+        <>
+          {/* Twitter/X */}
+          <a
+            href={shareLinks.twitter}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors"
+            aria-label="Share on X (Twitter)"
+          >
+            <XIcon className="w-5 h-5" />
+          </a>
 
-      {/* Facebook */}
-      <a
-        href={shareLinks.facebook}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors"
-        aria-label="Share on Facebook"
-      >
-        <FacebookIcon className="w-5 h-5" />
-      </a>
+          {/* Facebook */}
+          <a
+            href={shareLinks.facebook}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors"
+            aria-label="Share on Facebook"
+          >
+            <FacebookIcon className="w-5 h-5" />
+          </a>
+        </>
+      )}
 
       {/* Copy Link */}
       <button

@@ -78,6 +78,8 @@ function scrubUrl() {
   url.searchParams.delete("code");
   url.searchParams.delete("next");
   url.searchParams.delete("type");
+  url.searchParams.delete("token_hash");
+  url.searchParams.delete("token");
   url.searchParams.delete("access_token");
   url.searchParams.delete("refresh_token");
   url.hash = "";
@@ -262,6 +264,8 @@ function AuthCallbackPageContent() {
 
       const next = resolvePostAuthPath(searchParams.get("next") ?? storedReturnTo);
       const code = searchParams.get("code");
+      const tokenHash = searchParams.get("token_hash");
+      const otpType = searchParams.get("type");
 
       const hashParams = getHashParams();
       
@@ -295,6 +299,7 @@ function AuthCallbackPageContent() {
       
       debugLog("[AuthCallbackPage] Callback params:", {
         hasCode: !!code,
+        hasTokenHash: !!tokenHash,
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
         next,
@@ -334,8 +339,28 @@ function AuthCallbackPageContent() {
           }
         }
 
-        // Establish session (supports both PKCE code flow and implicit hash token flow)
-        if (code) {
+        // Establish session (supports email token_hash, PKCE code, and implicit hash tokens)
+        if (tokenHash) {
+          debugLog("[AuthCallbackPage] Verifying email token hash...");
+          const { error: otpError } = await withRetry(
+            () =>
+              withTimeout(
+                supabase.auth.verifyOtp({
+                  token_hash: tokenHash,
+                  type: (otpType === "signup" || otpType === "magiclink" || otpType === "invite" || otpType === "email_change" || otpType === "recovery"
+                    ? otpType
+                    : "magiclink"),
+                }),
+                10000,
+                "verifyOtp"
+              ),
+            1,
+            1000,
+            "email token verify"
+          );
+          if (otpError) throw otpError;
+          debugLog("[AuthCallbackPage] Email token verified");
+        } else if (code) {
           debugLog("[AuthCallbackPage] Exchanging code for session...");
           try {
             const { error: exchangeError } = await withRetry(
@@ -402,7 +427,7 @@ function AuthCallbackPageContent() {
 
         // If we have valid tokens, go to the intended page without extra DB checks
         // This prevents hanging on getUser() calls
-        if ((accessToken && refreshToken) || code) {
+        if ((accessToken && refreshToken) || code || tokenHash) {
           const target = next;
           debugLog("[AuthCallbackPage] Have valid tokens, redirecting directly to:", target);
           if (!cancelled) {

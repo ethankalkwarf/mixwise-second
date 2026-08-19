@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
@@ -23,6 +23,7 @@ function ResetPasswordPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const sessionEstablished = useRef(false);
 
   function getHashParams(): URLSearchParams {
     if (typeof window === "undefined") return new URLSearchParams();
@@ -36,6 +37,8 @@ function ResetPasswordPageContent() {
     const url = new URL(window.location.href);
     url.searchParams.delete("code");
     url.searchParams.delete("type");
+    url.searchParams.delete("token_hash");
+    url.searchParams.delete("token");
     url.searchParams.delete("access_token");
     url.searchParams.delete("refresh_token");
     url.hash = "";
@@ -49,10 +52,32 @@ function ResetPasswordPageContent() {
   useEffect(() => {
     let cancelled = false;
 
+    const markReady = () => {
+      sessionEstablished.current = true;
+      if (!cancelled) {
+        setError(null);
+        setSessionReady(true);
+      }
+      scrubUrl();
+    };
+
+    const fail = (message: string) => {
+      if (!cancelled && !sessionEstablished.current) {
+        setError(message);
+      }
+    };
+
     const run = async () => {
-      setError(null);
+      if (sessionEstablished.current) return;
+
+      const { data: existing } = await supabase.auth.getSession();
+      if (existing.session) {
+        markReady();
+        return;
+      }
 
       const code = searchParams.get("code");
+      const tokenHash = searchParams.get("token_hash");
       const qsAccessToken = searchParams.get("access_token");
       const qsRefreshToken = searchParams.get("refresh_token");
       const qsType = searchParams.get("type");
@@ -63,20 +88,33 @@ function ResetPasswordPageContent() {
       const hashType = hashParams.get("type");
 
       try {
-        // Preferred flow: exchange code for session (PKCE)
+        if (tokenHash) {
+          const { error: otpError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: (qsType === "recovery" || qsType === "signup" || qsType === "magiclink" || qsType === "invite" || qsType === "email_change"
+              ? qsType
+              : "recovery"),
+          });
+          if (otpError) {
+            console.error("[ResetPassword] verifyOtp error:", otpError);
+            fail("Invalid or expired password reset link. Please request a new one.");
+            return;
+          }
+          markReady();
+          return;
+        }
+
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
             console.error("[ResetPassword] exchangeCodeForSession error:", exchangeError);
-            if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+            fail("Invalid or expired password reset link. Please request a new one.");
             return;
           }
-          if (!cancelled) setSessionReady(true);
-          scrubUrl();
+          markReady();
           return;
         }
 
-        // Fallback: implicit flow tokens in querystring
         if (qsAccessToken && qsRefreshToken && (!qsType || qsType === "recovery")) {
           const { error: setSessionError } = await supabase.auth.setSession({
             access_token: qsAccessToken,
@@ -84,15 +122,13 @@ function ResetPasswordPageContent() {
           });
           if (setSessionError) {
             console.error("[ResetPassword] setSession error (query tokens):", setSessionError);
-            if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+            fail("Invalid or expired password reset link. Please request a new one.");
             return;
           }
-          if (!cancelled) setSessionReady(true);
-          scrubUrl();
+          markReady();
           return;
         }
 
-        // Fallback: implicit flow tokens in hash fragment
         if (hashAccessToken && hashRefreshToken && (!hashType || hashType === "recovery")) {
           const { error: setSessionError } = await supabase.auth.setSession({
             access_token: hashAccessToken,
@@ -100,18 +136,17 @@ function ResetPasswordPageContent() {
           });
           if (setSessionError) {
             console.error("[ResetPassword] setSession error (hash tokens):", setSessionError);
-            if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+            fail("Invalid or expired password reset link. Please request a new one.");
             return;
           }
-          if (!cancelled) setSessionReady(true);
-          scrubUrl();
+          markReady();
           return;
         }
 
-        if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+        fail("Invalid or expired password reset link. Please request a new one.");
       } catch (err) {
         console.error("[ResetPassword] Unexpected error establishing session:", err);
-        if (!cancelled) setError("Invalid or expired password reset link. Please request a new one.");
+        fail("Invalid or expired password reset link. Please request a new one.");
       }
     };
 
@@ -234,7 +269,7 @@ function ResetPasswordPageContent() {
               className="input-botanical"
               required
               minLength={8}
-              disabled={isLoading || !sessionReady || !!error}
+              disabled={isLoading || !sessionReady}
             />
             <p className="text-xs text-sage mt-1">
               Must be at least 8 characters long
@@ -251,13 +286,13 @@ function ResetPasswordPageContent() {
               className="input-botanical"
               required
               minLength={8}
-              disabled={isLoading || !sessionReady || !!error}
+              disabled={isLoading || !sessionReady}
             />
           </div>
 
           <Button
             type="submit"
-            disabled={isLoading || !sessionReady || !!error || !password.trim() || !confirmPassword.trim()}
+            disabled={isLoading || !sessionReady || !password.trim() || !confirmPassword.trim()}
             className="w-full"
           >
             {isLoading ? "Updating Password..." : "Update Password"}

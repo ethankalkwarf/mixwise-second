@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MixWise">
+  <title>MixWise</title>
+  <rect width="512" height="512" rx="112" fill="#3A4D39"/>
+  <g fill="#F9F7F2">
+    <!-- x: thick down-right stroke -->
+    <path d="M118 162h46l108 156v42h-46L118 204z"/>
+    <!-- x: thick down-left stroke -->
+    <path d="M236 162h46L174 360h-46l2-42z"/>
+    <!-- ligature arch from x into first w stem -->
+    <path d="M236 162c52-48 108-28 124 28l-38 18c-8-28-36-38-62-28z"/>
+    <!-- w: left stem + first peak -->
+    <path d="M322 188h40l18 88 22-88h40L410 360h-44l-18-96-18 96h-44z"/>
+  </g>
+  <circle cx="428" cy="348" r="16" fill="#BC5A45"/>
+</svg>

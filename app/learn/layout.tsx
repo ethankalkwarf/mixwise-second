@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { isLearnPublic } from "@/lib/learnAccess";
 import { LearnProgressBoundary } from "@/components/learn/LearnProgressBoundary";
+import { NativeLearnRedirect } from "@/components/mobile/NativeLearnRedirect";
 
 export const metadata: Metadata = isLearnPublic()
   ? {}
@@ -12,5 +13,9 @@ export const metadata: Metadata = isLearnPublic()
     };
 
 export default function LearnLayout({ children }: { children: React.ReactNode }) {
-  return <LearnProgressBoundary>{children}</LearnProgressBoundary>;
+  return (
+    <LearnProgressBoundary>
+      <NativeLearnRedirect>{children}</NativeLearnRedirect>
+    </LearnProgressBoundary>
+  );
 }

@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { SupabaseProvider } from "./providers";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { MobileStyleFix } from "@/components/mobile/MobileStyleFix";
+import { NativeSkipLink } from "@/components/mobile/NativeSkipLink";
 import { OrganizationSchema } from "@/components/seo/JsonLd";
 import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
 import { SITE_CONFIG } from "@/lib/seo";
@@ -76,6 +77,7 @@ export const viewport: Viewport = {
   themeColor: "#F9F7F2",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({
@@ -88,12 +90,41 @@ export default async function RootLayout({
     <html lang="en" className={`${dmSerifDisplay.variable} ${jost.variable}`}>
       <head>
         <OrganizationSchema />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function () {
+  function markNative() {
+    document.documentElement.classList.add("native-app");
+    try { sessionStorage.setItem("mixwise_native", "1"); } catch (e) {}
+  }
+  function detect() {
+    try { if (sessionStorage.getItem("mixwise_native") === "1") return true; } catch (e) {}
+    try { if (document.cookie.indexOf("mixwise_app=1") !== -1) return true; } catch (e) {}
+    try { if (new URLSearchParams(location.search).get("mixwise_app") === "1") return true; } catch (e) {}
+    var w = window;
+    var ua = navigator.userAgent || "";
+    if (w.webkit && w.webkit.messageHandlers && w.webkit.messageHandlers.bridge) return true;
+    if (w.androidBridge) return true;
+    if (/Capacitor|MixWiseNative/i.test(ua)) return true;
+    if (location.protocol === "capacitor:") return true;
+    try { if (w.Capacitor && w.Capacitor.getPlatform && w.Capacitor.getPlatform() !== "web") return true; } catch (e) {}
+    return false;
+  }
+  if (detect()) { markNative(); return; }
+  var attempts = 0;
+  var timer = setInterval(function () {
+    attempts++;
+    if (detect()) { markNative(); clearInterval(timer); }
+    else if (attempts >= 20) clearInterval(timer);
+  }, 100);
+})();
+            `.trim(),
+          }}
+        />
       </head>
       <body className="bg-cream text-charcoal font-sans antialiased" suppressHydrationWarning>
-        {/* Skip to main content link for accessibility */}
-        <a href="#main-content" className="skip-link">
-          Skip to main content
-        </a>
+        <NativeSkipLink />
         
         <SupabaseProvider>
           <MobileStyleFix />

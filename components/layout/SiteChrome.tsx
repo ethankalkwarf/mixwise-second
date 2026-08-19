@@ -5,6 +5,7 @@ import { staticOccasionCoverIfPresent } from "@/lib/occasionCovers";
 import { ConditionalLayoutWrapper } from "@/components/layout/ConditionalLayoutWrapper";
 import { getTodaysDailyCocktailCover } from "@/lib/cocktails.server";
 import { formatCocktailName } from "@/lib/formatters";
+import { isNativeAppRequest } from "@/lib/mobile/serverNative";
 import type { MegaMenuData } from "@/lib/megaMenu";
 
 export type { MegaMenuData } from "@/lib/megaMenu";
@@ -67,6 +68,7 @@ async function loadMegaMenuData(): Promise<MegaMenuData> {
 }
 
 export async function SiteChrome({ children }: { children: React.ReactNode }) {
-  const megaMenu = await loadMegaMenuData();
+  const native = await isNativeAppRequest();
+  const megaMenu = native ? undefined : await loadMegaMenuData();
   return <ConditionalLayoutWrapper megaMenu={megaMenu}>{children}</ConditionalLayoutWrapper>;
 }

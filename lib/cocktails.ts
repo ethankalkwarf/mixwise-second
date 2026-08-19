@@ -151,10 +151,42 @@ export async function getCocktailsListClient(filters: CocktailFilters = {}): Pro
 // MIX LOGIC HELPERS
 // =========================
 
+let mixIngredientsCache: MixIngredient[] | null = null;
+let mixIngredientsInflight: Promise<MixIngredient[]> | null = null;
+let mixCocktailsCache: MixCocktail[] | null = null;
+let mixCocktailsInflight: Promise<MixCocktail[]> | null = null;
+
+/** Clear in-memory mix caches (pull-to-refresh, sign-out). */
+export function invalidateMixClientCaches(): void {
+  mixIngredientsCache = null;
+  mixIngredientsInflight = null;
+  mixCocktailsCache = null;
+  mixCocktailsInflight = null;
+}
+
 /**
- * Fetch ingredients for mix logic (client-side)
+ * Fetch ingredients for mix logic (client-side).
+ * Cached for the session so Home can prefetch and Mix can paint immediately.
  */
 export async function getMixIngredients(): Promise<MixIngredient[]> {
+  if (mixIngredientsCache && mixIngredientsCache.length > 0) {
+    return mixIngredientsCache;
+  }
+  if (mixIngredientsInflight) return mixIngredientsInflight;
+
+  mixIngredientsInflight = loadMixIngredients()
+    .then((result) => {
+      mixIngredientsCache = result;
+      return result;
+    })
+    .finally(() => {
+      mixIngredientsInflight = null;
+    });
+
+  return mixIngredientsInflight;
+}
+
+async function loadMixIngredients(): Promise<MixIngredient[]> {
   const supabase = getSupabaseClient();
 
   try {
@@ -248,10 +280,28 @@ type MixCocktailRow = {
  * Fetch cocktails for mix logic (client-side)
  */
 export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
+  if (mixCocktailsCache && mixCocktailsCache.length > 0) {
+    return mixCocktailsCache;
+  }
+  if (mixCocktailsInflight) return mixCocktailsInflight;
+
+  mixCocktailsInflight = loadMixCocktails()
+    .then((result) => {
+      mixCocktailsCache = result;
+      return result;
+    })
+    .finally(() => {
+      mixCocktailsInflight = null;
+    });
+
+  return mixCocktailsInflight;
+}
+
+async function loadMixCocktails(): Promise<MixCocktail[]> {
   try {
     const cocktailsWithIngredients = await getCocktailsWithIngredientsClient();
 
-    return cocktailsWithIngredients.map((cocktail) => ({
+    const mapped = cocktailsWithIngredients.map((cocktail) => ({
       id: cocktail.id,
       name: cocktail.name,
       slug: cocktail.slug,
@@ -261,8 +311,19 @@ export async function getMixCocktailsClient(): Promise<MixCocktail[]> {
       createdAt: cocktail.createdAt ?? undefined,
       ingredients: cocktail.ingredients,
     }));
+
+    const { syncOfflineCatalog } = await import("@/lib/mobile/offlineSync");
+    void syncOfflineCatalog(mapped);
+
+    return mapped;
   } catch (error) {
-    console.error('Error in getMixCocktailsClient:', error);
+    console.error("Error in getMixCocktailsClient:", error);
+    const { getOfflineCatalog } = await import("@/lib/mobile/offlineSync");
+    const offline = await getOfflineCatalog();
+    if (offline.length > 0) {
+      console.warn("[Mix] Serving offline catalog fallback");
+      return offline;
+    }
     throw error;
   }
 }
@@ -332,10 +393,23 @@ export async function getCocktailsWithIngredientsClient(): Promise<Array<{
   ingredients: Array<{ id: string; name: string; isOptional?: boolean }>;
 }>> {
   try {
-    // Skip client-side entirely and go straight to server-side API
     return await getCocktailsWithIngredientsServerSide();
   } catch (error) {
-    console.error('Error in getCocktailsWithIngredientsClient:', error);
+    console.error("Error in getCocktailsWithIngredientsClient:", error);
+    const { getOfflineCatalog } = await import("@/lib/mobile/offlineSync");
+    const offline = await getOfflineCatalog();
+    if (offline.length > 0) {
+      return offline.map((cocktail) => ({
+        id: cocktail.id,
+        name: cocktail.name,
+        slug: cocktail.slug,
+        imageUrl: cocktail.imageUrl ?? null,
+        primarySpirit: cocktail.primarySpirit ?? null,
+        isPopular: cocktail.isPopular ?? false,
+        createdAt: cocktail.createdAt ?? null,
+        ingredients: cocktail.ingredients ?? [],
+      }));
+    }
     throw error;
   }
 }

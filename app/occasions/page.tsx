@@ -1,19 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
-import { OccasionCard } from "@/components/occasions/OccasionCard";
+import {
+  CollectionsGrid,
+  NativeCollectionsSectionHeader,
+} from "@/components/occasions/CollectionsGrid";
 import { getCocktailsList } from "@/lib/cocktails.server";
 import {
   countCocktailsByOccasion,
   getChildOccasions,
   getOccasionCovers,
   getTopLevelOccasions,
+  toOccasionDisplay,
   type OccasionCocktail,
 } from "@/lib/occasions";
 import { staticOccasionCoverIfPresent } from "@/lib/occasionCovers";
+import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { CollectionPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
-import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
+import { NativeCollectionsIntro } from "@/components/mobile/NativeCollectionsIntro";
 
 export const revalidate = 300;
 
@@ -39,7 +44,7 @@ export default async function OccasionsPage() {
   const heroAlt = heroCocktail?.image_alt || heroCocktail?.name || "Seasonal cocktail collections";
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-cream" data-native-collections-page>
       <CollectionPageSchema
         name="Cocktail Collections by Season & Style"
         description="Curated MixWise cocktail collections for seasons, holidays, and drink styles."
@@ -55,7 +60,7 @@ export default async function OccasionsPage() {
           { name: "Collections", url: `${SITE_CONFIG.url}/occasions` },
         ]}
       />
-      <section className="relative min-h-[42vh] sm:min-h-[48vh] overflow-hidden">
+      <section data-web-collections-chrome className="relative min-h-[42vh] sm:min-h-[48vh] overflow-hidden">
         {heroUrl ? (
           <Image
             src={heroUrl}
@@ -96,8 +101,10 @@ export default async function OccasionsPage() {
       </section>
 
       <MainContainer className="py-10 sm:py-12 space-y-14">
+        <NativeCollectionsIntro />
+        <NativeCollectionsSectionHeader title="Seasons & styles" />
         <section>
-          <div className="mb-6 flex items-end justify-between gap-4">
+          <div data-web-collections-chrome className="mb-6 flex items-end justify-between gap-4">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                 Collections
@@ -107,29 +114,26 @@ export default async function OccasionsPage() {
               </h2>
             </div>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {primary.map((occasion) => (
-              <OccasionCard
-                key={occasion.slug}
-                occasion={occasion}
-                count={counts[occasion.slug] || 0}
-                cover={covers[occasion.slug]}
-              />
-            ))}
-          </div>
+          <CollectionsGrid
+            items={primary.map((occasion) => ({
+              occasion: toOccasionDisplay(occasion),
+              count: counts[occasion.slug] || 0,
+              cover: covers[occasion.slug],
+            }))}
+          />
         </section>
 
         {holidayHub && holidayChildren.length > 0 ? (
           <section>
             <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
+                <p data-web-collections-chrome className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
                   Nested collections
                 </p>
                 <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-forest">
                   Holiday cocktails
                 </h2>
-                <p className="mt-1 text-sm text-sage max-w-xl">
+                <p data-web-collections-chrome className="mt-1 text-sm text-sage max-w-xl">
                   Start with a holiday, then keep going — each page leads to sibling celebrations and related seasons.
                 </p>
               </div>
@@ -140,21 +144,25 @@ export default async function OccasionsPage() {
                 All holidays →
               </Link>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              {holidayChildren.map((occasion) => (
-                <OccasionCard
-                  key={occasion.slug}
-                  occasion={occasion}
-                  count={counts[occasion.slug] || 0}
-                  cover={covers[occasion.slug]}
-                  compact
-                />
-              ))}
-            </div>
+            <NativeCollectionsSectionHeader
+              title="Holiday cocktails"
+              dek="Seasonal celebrations and hosting picks."
+              href={`/occasions/${holidayHub.slug}`}
+              linkLabel="All holidays"
+            />
+            <CollectionsGrid
+              compactGrid
+              items={holidayChildren.map((occasion) => ({
+                occasion: toOccasionDisplay(occasion),
+                count: counts[occasion.slug] || 0,
+                cover: covers[occasion.slug],
+                compact: true,
+              }))}
+            />
           </section>
         ) : null}
 
-        <div className="pt-8 border-t border-mist flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div data-web-collections-chrome className="pt-8 border-t border-mist flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1">
               Full library

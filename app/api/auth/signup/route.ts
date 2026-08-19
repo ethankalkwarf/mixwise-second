@@ -159,7 +159,8 @@ export async function POST(request: NextRequest) {
 
     // Generate signup confirmation link
     // This creates the user AND generates the confirmation link in one step
-    const redirectTo = `${getAuthCallbackUrl()}?next=${encodeURIComponent(
+    const requestUrl = new URL(request.url);
+    const redirectTo = `${getAuthCallbackUrl(requestUrl)}?next=${encodeURIComponent(
       resolvePostAuthPath(typeof rawNextPath === "string" ? rawNextPath : "/", { isNewUser: true })
     )}`;
     debugLog(`[Signup API] Generating signup link with redirect: ${redirectTo}`);

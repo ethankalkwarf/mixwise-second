@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="1427px"
+  height="298px"
+  viewBox="0 0 1427 298">
+  <title>mixwise v7</title>
+  <g id="wordmark-text">
+    <image x="0" y="0" width="1427" height="298" preserveAspectRatio="none"
+      xlink:href="mixwise-wordmark-v7-text-forest.png"
+      href="mixwise-wordmark-v7-text-forest.png" />
+  </g>
+  <g id="lime-period">
+    <image x="1328" y="191" width="90" height="92" preserveAspectRatio="none"
+      xlink:href="mixwise-lime-period-v7.png"
+      href="mixwise-lime-period-v7.png" />
+  </g>
+</svg>

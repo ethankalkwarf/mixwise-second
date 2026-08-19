@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { AuthDialog } from "./AuthDialog";
 import {
   getLastAuthEmail,
@@ -18,7 +18,7 @@ interface AuthDialogContextType {
   openLoginDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
   openSignupDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
   openResetDialog: (options?: Omit<AuthDialogOptions, "mode">) => void;
-  closeAuthDialog: () => void;
+  closeAuthDialog: (force?: boolean) => void;
 }
 
 interface AuthDialogOptions {
@@ -27,6 +27,11 @@ interface AuthDialogOptions {
   subtitle?: string;
   initialEmail?: string;
   onSuccess?: () => void;
+  /** When false, hide close control and block backdrop / escape dismiss. Default true. */
+  dismissible?: boolean;
+  /** Explicit leave action when the dialog is not trivially dismissible (e.g. Mix gate). */
+  escapeLabel?: string;
+  onEscape?: () => void;
 }
 
 const AuthDialogContext = createContext<AuthDialogContextType | undefined>(undefined);
@@ -34,12 +39,16 @@ const AuthDialogContext = createContext<AuthDialogContextType | undefined>(undef
 export function AuthDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<AuthDialogOptions>({});
+  const dismissibleRef = useRef(true);
 
   const openAuthDialog = useCallback((opts?: AuthDialogOptions) => {
     const mode = opts?.mode ?? getPreferredAuthMode();
+    const dismissible = opts?.dismissible !== false;
+    dismissibleRef.current = dismissible;
     setOptions({
       ...opts,
       mode,
+      dismissible,
       initialEmail: opts?.initialEmail || getLastAuthEmail() || undefined,
     });
     setIsOpen(true);
@@ -77,7 +86,8 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
     setIsOpen(true);
   }, []);
 
-  const closeAuthDialog = useCallback(() => {
+  const closeAuthDialog = useCallback((force?: boolean) => {
+    if (!force && !dismissibleRef.current) return;
     setIsOpen(false);
     setOptions({});
   }, []);
@@ -108,6 +118,9 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
         initialEmail={options.initialEmail}
         onSuccess={options.onSuccess}
         onModeChange={setMode}
+        dismissible={options.dismissible !== false}
+        escapeLabel={options.escapeLabel}
+        onEscape={options.onEscape}
       />
     </AuthDialogContext.Provider>
   );

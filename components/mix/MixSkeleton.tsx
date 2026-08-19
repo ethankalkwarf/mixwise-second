@@ -3,9 +3,13 @@
 export function MixSkeleton() {
   return (
     <div className="py-10 bg-cream min-h-screen" aria-busy="true" aria-label="Loading Mix tool">
+      <div className="native-mix-skeleton-header max-w-7xl mx-auto px-4 sm:px-6 mb-6">
+        <div className="skeleton h-8 w-40 rounded-2xl mb-2" />
+        <div className="skeleton h-4 w-64 rounded-2xl" />
+      </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-10">
         {/* Page Header Skeleton */}
-        <div className="mb-6">
+        <div className="mb-6 mix-skeleton-web-header">
           <div className="flex items-center gap-3 mb-4">
             <div className="skeleton h-12 w-64 rounded-2xl" />
             <div className="skeleton h-8 w-12 rounded-full" />
@@ -21,8 +25,8 @@ export function MixSkeleton() {
       {/* Main Content Skeleton */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="space-y-8">
-          {/* Step Navigation Skeleton */}
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-mist z-50">
+          {/* Step Navigation Skeleton — hidden in the native app (uses the 5-tab bar) */}
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-mist z-40 mix-skeleton-web-tabs">
             <div className="grid grid-cols-3 py-safe">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex flex-col items-center py-3 px-2">
@@ -78,7 +82,7 @@ export function MixSkeleton() {
             </div>
 
             {/* Step 3: Results Section */}
-            <div className="space-y-8">
+            <div className="space-y-8 mix-skeleton-results">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="skeleton h-8 w-48 rounded-2xl mb-2" />

@@ -29,6 +29,14 @@ export type OccasionDefinition = {
   navName?: string;
 };
 
+/** Serializable occasion fields for client components (no matchExtra). */
+export type OccasionDisplay = Omit<OccasionDefinition, "matchExtra">;
+
+export function toOccasionDisplay(occasion: OccasionDefinition): OccasionDisplay {
+  const { matchExtra: _matchExtra, ...display } = occasion;
+  return display;
+}
+
 function tokenBag(c: OccasionCocktail): Set<string> {
   const bag = new Set<string>();
   for (const value of [...(c.categories_all || []), ...(c.tags || [])]) {

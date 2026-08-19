@@ -1,41 +1,60 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from '@capacitor/cli';
+import { KeyboardResize, KeyboardStyle } from '@capacitor/keyboard';
+import { networkInterfaces } from 'os';
+
+/** Detect LAN IP so the iOS Simulator can reach the Next.js dev server. */
+function getLocalIp(): string {
+  const nets = networkInterfaces();
+  for (const iface of Object.values(nets)) {
+    if (!iface) continue;
+    for (const net of iface) {
+      if (net.family === 'IPv4' && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return '127.0.0.1';
+}
+
+const isProduction = process.env.CAPACITOR_ENV === 'production';
+const devPort = process.env.CAPACITOR_DEV_PORT ?? '3000';
+const devHost = `http://${getLocalIp()}:${devPort}`;
 
 const config: CapacitorConfig = {
   appId: 'com.getmixwise.app',
   appName: 'MixWise',
-  webDir: 'out', // Next.js static export output directory
-  server: {
-    // Development mode: point to Next.js dev server
-    // Use IP address instead of localhost for iOS Simulator compatibility
-    // For production builds, comment out url/cleartext to use local files
-    url: 'http://192.168.86.26:3003',
-    cleartext: true, // Allow HTTP in development
-    
-    // For production, API calls go to Vercel deployment
-    androidScheme: 'https',
-    iosScheme: 'https',
-  },
+  // Bundled fallback — production builds load from server.url instead.
+  webDir: 'out',
+  server: isProduction
+    ? {
+        url: 'https://www.getmixwise.com/?mixwise_app=1',
+        cleartext: false,
+      }
+    : {
+        url: `${devHost}/?mixwise_app=1`,
+        cleartext: true,
+      },
   plugins: {
-    // Temporarily disabled due to Swift API compatibility issues
-    // Will re-enable once plugins are updated
-    // SplashScreen: {
-    //   launchShowDuration: 2000,
-    //   launchAutoHide: true,
-    //   backgroundColor: '#F9F7F2',
-    //   androidSplashResourceName: 'splash',
-    //   androidScaleType: 'CENTER_CROP',
-    //   showSpinner: false,
-    //   iosSpinnerStyle: 'small',
-    //   spinnerColor: '#999999',
-    // },
-    // StatusBar: {
-    //   style: 'dark',
-    //   backgroundColor: '#F9F7F2',
-    // },
+    SplashScreen: {
+      launchShowDuration: 0,
+      launchAutoHide: false,
+      backgroundColor: '#F9F7F2',
+      showSpinner: false,
+    },
+    StatusBar: {
+      style: 'DARK',
+      overlaysWebView: true,
+    },
+    Keyboard: {
+      resize: KeyboardResize.Native,
+      style: KeyboardStyle.Light,
+    },
   },
   ios: {
-    contentInset: 'automatic',
+    contentInset: 'never',
     scrollEnabled: true,
+    allowsLinkPreview: true,
+    appendUserAgent: 'MixWiseNative',
   },
 };
 

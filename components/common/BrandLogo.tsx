@@ -12,8 +12,8 @@ interface BrandLogoProps {
   /** When false, render the mark only (e.g. inside a headline). Default true. */
   linked?: boolean;
   /**
-   * `inline` — SVG with currentColor (crisp, inherits CSS color).
-   * `img` — static SVG asset from /public/brand (fixed fill per variant).
+   * `inline` — SVG with currentColor (historical Georgia wordmark).
+   * `img` — static PNG wordmark from /public/brand (fixed fill per variant).
    */
   render?: "inline" | "img";
   href?: string;
@@ -33,10 +33,18 @@ const VARIANT_COLOR: Record<BrandLogoVariant, string> = {
 };
 
 const VARIANT_ASSET: Record<BrandLogoVariant, string> = {
-  light: "/brand/mixwise-wordmark-cream.svg",
-  dark: "/brand/mixwise-wordmark-forest.svg",
-  olive: "/brand/mixwise-wordmark-olive.svg",
+  light: "/brand/mixwise-wordmark-v7-cream.png",
+  dark: "/brand/mixwise-wordmark-v7-forest.png",
+  olive: "/brand/mixwise-wordmark-v7-olive.png",
 };
+
+const TEXT_ASSET: Record<BrandLogoVariant, string> = {
+  light: "/brand/mixwise-wordmark-v7-text-cream.png",
+  dark: "/brand/mixwise-wordmark-v7-text-forest.png",
+  olive: "/brand/mixwise-wordmark-v7-text-olive.png",
+};
+
+const LIME_ASSET = "/brand/mixwise-lime-period-v7.png";
 
 /** Path outline of lowercase “mixwise.” wordmark (historical Georgia Bold drawing). */
 const WORDMARK_PATH =
@@ -71,24 +79,59 @@ export function BrandLogo({
   size = "md",
   className = "",
   linked = true,
-  render = "inline",
+  render = "img",
   href = "/",
 }: BrandLogoProps) {
   const sizeClass = SIZE_CLASSES[size];
   const colorClass = VARIANT_COLOR[variant];
 
+  // Creative hover treatment: cross-fade the logo fill style.
+  // (The wordmark is a baked-in PNG, so we swap entire images rather than editing pixels.)
+  const hoverVariant: BrandLogoVariant =
+    variant === "dark" ? "olive" : variant === "light" ? "olive" : "dark";
+
   const mark =
     render === "img" ? (
       // Static asset with baked-in fill (forest / cream / olive)
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={VARIANT_ASSET[variant]}
-        alt="mixwise."
-        className={`block w-auto ${sizeClass}`}
-        width={224}
-        height={59}
-        decoding="async"
-      />
+      <span className="relative inline-flex items-center">
+        {/* base text (no lime) */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={TEXT_ASSET[variant]}
+          alt="mixwise."
+          className={`block w-auto ${sizeClass} transition-opacity duration-200 group-hover:opacity-0`}
+          width={1427}
+          height={298}
+          decoding="async"
+        />
+
+        {hoverVariant !== variant && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={TEXT_ASSET[hoverVariant]}
+            alt="mixwise."
+            className={`absolute left-0 top-0 block w-auto ${sizeClass} opacity-0 transition-opacity duration-200 group-hover:opacity-100`}
+            width={1427}
+            height={298}
+            decoding="async"
+          />
+        )}
+
+        {/* lime overlay (animated on hover) */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={LIME_ASSET}
+          alt=""
+          aria-hidden="true"
+          className="brandlogo-lime pointer-events-none will-change-transform"
+          style={{
+            left: "92.74702179432611%",
+            top: "61.00670749881922%",
+            width: "6.937631394533988%",
+            height: "33.959731543624165%",
+          }}
+        />
+      </span>
     ) : (
       <WordmarkMark className={`${sizeClass} ${colorClass}`} />
     );
@@ -100,10 +143,31 @@ export function BrandLogo({
   return (
     <HardNavLink
       href={href}
-      className={`inline-flex items-center hover:opacity-80 transition-opacity ${className}`}
+      className={`group inline-flex items-center hover:opacity-90 transition-opacity hover:drop-shadow-[0_0_12px_rgba(58,77,57,0.25)] ${className}`}
       aria-label={href === "/dashboard" ? "MixWise Dashboard" : "MixWise Home"}
     >
       {mark}
+
+      <style jsx>{`
+        @keyframes limeWiggle {
+          0% {
+            transform: translate(0%, 0%) rotate(0deg);
+          }
+          35% {
+            transform: translate(0%, -3%) rotate(16deg);
+          }
+          70% {
+            transform: translate(0%, -2%) rotate(-12deg);
+          }
+          100% {
+            transform: translate(0%, 0%) rotate(0deg);
+          }
+        }
+
+        .group:hover .brandlogo-lime {
+          animation: limeWiggle 650ms ease-in-out both;
+        }
+      `}</style>
     </HardNavLink>
   );
 }

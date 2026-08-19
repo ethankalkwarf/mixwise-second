@@ -6,6 +6,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
 import { checkBarBadges } from "@/lib/badgeEngine";
+import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 import { buildNameToIdMap, buildIdToNameMap, normalizeToCanonicalMultiple } from "@/lib/ingredientId";
 import type { BarIngredient } from "@/lib/supabase/database.types";
 import { debugLog } from "@/lib/debugLog";
@@ -613,7 +614,11 @@ export function useBarIngredients(): UseBarIngredientsResult {
 
           // Check for badge unlocks
           try {
-            await checkBarBadges(supabase, user.id, newIds.length);
+            const result = await checkBarBadges(supabase, user.id, newIds.length);
+            result.awarded.forEach((badge) => {
+              toast.success(`${badge.icon} ${badge.name} unlocked`);
+            });
+            if (result.awarded.length > 0) notifyBadgesUpdated();
           } catch (badgeError) {
             console.error(`[useBarIngredients] Error checking bar badges:`, badgeError);
           }
