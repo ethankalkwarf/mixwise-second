@@ -1,7 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { isNativeApp } from "@/lib/mobile/platform";
 
-/** Deep-link target registered in Supabase redirect URLs and Info.plist. */
+/** Deep-link target registered in Info.plist — ASWebAuthenticationSession catches this. */
 export const NATIVE_OAUTH_CALLBACK = "com.getmixwise.app://auth/callback";
 
 /** Path on the current origin that bounces OAuth codes into the app scheme. */
@@ -32,22 +32,27 @@ function isCapacitorNativeRuntime(): boolean {
 /** True when OAuth must leave the WebView (in-app browser + deep link). */
 export function shouldUseNativeOAuthFlow(): boolean {
   if (typeof window === "undefined") return false;
-  return isCapacitorNativeRuntime() || isNativeApp();
+  // Require a real Capacitor runtime — sticky web cookies must not trigger
+  // custom-scheme OAuth (which strands mobile Safari on the bridge page).
+  return isCapacitorNativeRuntime();
 }
 
 /**
- * OAuth redirect for Capacitor.
+ * Supabase redirectTo for Capacitor OAuth.
  *
- * Prefer the custom scheme so ASWebAuthenticationSession can catch the
- * callback and dismiss the auth sheet automatically. The https bridge at
- * `/auth/native-callback` remains as a fallback if Supabase rejects the
- * scheme (not allowlisted) or an older Browser-based flow is used.
+ * Always use the HTTPS bridge (allowlisted in Supabase). The bridge page
+ * immediately deep-links to {@link NATIVE_OAUTH_CALLBACK}, which
+ * ASWebAuthenticationSession / the app URL handler catch and dismiss.
+ *
+ * Sending the custom scheme straight to Supabase often fails the allowlist
+ * check and falls back to Site URL — leaving the user stuck in Safari on the
+ * marketing site (often /mix).
  */
 export function getNativeOAuthRedirectUrl(): string | null {
   if (typeof window === "undefined") return null;
   if (!shouldUseNativeOAuthFlow()) return null;
 
-  return NATIVE_OAUTH_CALLBACK;
+  return `${window.location.origin}${NATIVE_OAUTH_BRIDGE_PATH}`;
 }
 
 /**

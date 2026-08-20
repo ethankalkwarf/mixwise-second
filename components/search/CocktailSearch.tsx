@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import {
   loadCocktailSearchIndex,
   searchOmnibarClient,
 } from "@/lib/search/loadCocktailSearchIndex.client";
 import type { OmnibarResult } from "@/lib/search";
+import { navigateInApp } from "@/lib/mobile/navigate";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 type CocktailSearchProps = {
   variant?: "desktop" | "mobile";
@@ -83,6 +86,7 @@ function selectableResults(rows: FlatResult[]): FlatResult[] {
 }
 
 export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [omnibar, setOmnibar] = useState<OmnibarResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -138,7 +142,15 @@ export function CocktailSearch({ variant = "desktop", onClose }: CocktailSearchP
   }, [variant]);
 
   const navigateTo = (href: string) => {
-    window.location.assign(href);
+    if (href.startsWith("/") && !href.startsWith("//")) {
+      if (isNativeApp()) {
+        navigateInApp(router, href);
+      } else {
+        router.push(href);
+      }
+    } else {
+      window.location.assign(href);
+    }
     onClose?.();
   };
 

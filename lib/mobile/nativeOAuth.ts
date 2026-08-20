@@ -2,7 +2,6 @@ import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { createClient } from "@/lib/supabase/client";
-import { isSafeReturnPath, consumeAuthReturnTo, resolvePostAuthPath } from "@/lib/auth/return-to";
 import { debugLog } from "@/lib/debugLog";
 import {
   isNativeOAuthCallbackUrl,
@@ -14,31 +13,36 @@ let oauthBrowserOpen = false;
 let oauthExchangeInFlight: string | null = null;
 
 async function dismissOAuthBrowser(): Promise<void> {
-  if (!oauthBrowserOpen) {
-    try {
-      await Browser.close();
-    } catch {
-      // nothing open
-    }
-    return;
+  // Prefer closing Capgo's secure session if it is still visible, then the
+  // Capacitor Browser fallback (SFSafariViewController) which does not
+  // auto-dismiss on custom-scheme redirects.
+  try {
+    const { InAppBrowser } = await import("@capgo/capacitor-inappbrowser");
+    await InAppBrowser.close().catch(() => {});
+  } catch {
+    // Plugin may be unavailable
   }
 
-  oauthBrowserOpen = false;
   try {
     await Browser.close();
   } catch {
-    // Browser may already be dismissed
+    // nothing open
   }
+  oauthBrowserOpen = false;
+
   // SFSafariViewController sometimes needs a beat after the deep link.
   window.setTimeout(() => {
     void Browser.close().catch(() => {});
   }, 150);
+  window.setTimeout(() => {
+    void Browser.close().catch(() => {});
+  }, 600);
 }
 
 /**
  * Opens the provider OAuth URL with ASWebAuthenticationSession (iOS) so the
- * sheet auto-dismisses when the custom-scheme redirect fires. Falls back to
- * Capacitor Browser if the secure session API is unavailable.
+ * sheet auto-dismisses when the custom-scheme deep link fires (after the
+ * HTTPS bridge bounces). Falls back to Capacitor Browser only as a last resort.
  */
 export async function openNativeOAuthProvider(url: string): Promise<void> {
   if (Capacitor.isNativePlatform()) {
@@ -46,6 +50,7 @@ export async function openNativeOAuthProvider(url: string): Promise<void> {
       // Dynamic import — a hard dependency can blank the WebView if the
       // native plugin isn't linked yet (needs a fresh cap sync / rebuild).
       const { InAppBrowser } = await import("@capgo/capacitor-inappbrowser");
+      // Watch for the app scheme — the HTTPS bridge page redirects there.
       const { redirectedUri } = await InAppBrowser.openSecureWindow({
         authEndpoint: url,
         redirectUri: NATIVE_OAUTH_CALLBACK,
@@ -98,7 +103,6 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
   const params = collectOAuthParams(url);
   const code = params.get("code");
   const oauthError = params.get("error");
-  const next = params.get("next");
 
   if (oauthError) {
     console.error(
@@ -106,17 +110,23 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
       oauthError,
       params.get("error_description")
     );
-    return true;
+    throw Object.assign(
+      new Error(params.get("error_description") || "Sign-in failed. Please try again."),
+      { code: "OAUTH_PROVIDER_ERROR" as const }
+    );
   }
 
   if (!code) {
     console.warn("[NativeOAuth] Callback missing code");
-    return true;
+    throw Object.assign(new Error("Sign-in didn’t finish. Please try again."), {
+      code: "OAUTH_MISSING_CODE" as const,
+    });
   }
 
   // openSecureWindow + appUrlOpen can both deliver the same callback.
   if (oauthExchangeInFlight === code) {
     debugLog("[NativeOAuth] Ignoring duplicate callback for code");
+    await dismissOAuthBrowser();
     return true;
   }
   oauthExchangeInFlight = code;
@@ -127,17 +137,23 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
   if (error) {
     oauthExchangeInFlight = null;
     console.error("[NativeOAuth] exchangeCodeForSession failed:", error);
-    return true;
+    throw Object.assign(new Error("Couldn’t complete sign-in. Please try again."), {
+      code: "OAUTH_EXCHANGE_FAILED" as const,
+    });
   }
 
   if (typeof window === "undefined") {
     return true;
   }
 
-  const remembered = consumeAuthReturnTo();
-  const path = resolvePostAuthPath(isSafeReturnPath(next) ? next : remembered);
-  const target = new URL(path, window.location.origin);
-  target.searchParams.set("mixwise_app", "1");
+  // Ensure any leftover Safari / in-app browser sheet is gone before we navigate.
+  await dismissOAuthBrowser();
+
+  // Always greet on Home after native OAuth — ignore remembered /mix return-to.
+  const target = new URL("/", window.location.origin);
+  if (Capacitor.isNativePlatform()) {
+    target.searchParams.set("mixwise_app", "1");
+  }
   debugLog("[NativeOAuth] Session established, navigating to", target.toString());
   window.location.href = target.toString();
   return true;
@@ -151,12 +167,30 @@ export function registerNativeOAuthListener(): () => void {
 
   const urlHandle = App.addListener("appUrlOpen", ({ url }) => {
     debugLog("[NativeOAuth] appUrlOpen:", url);
-    void handleNativeOAuthCallback(url).then((handled) => {
-      if (handled) return;
-      if (url.startsWith("http")) {
-        window.location.href = url;
-      }
-    });
+    void handleNativeOAuthCallback(url)
+      .then((handled) => {
+        if (handled) {
+          void dismissOAuthBrowser();
+          return;
+        }
+        if (url.startsWith("http")) {
+          window.location.href = url;
+        }
+      })
+      .catch((error) => {
+        console.error("[NativeOAuth] appUrlOpen handler failed:", error);
+        void dismissOAuthBrowser();
+        window.dispatchEvent(
+          new CustomEvent("mixwise:oauthError", {
+            detail: {
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Couldn’t complete sign-in. Please try again.",
+            },
+          })
+        );
+      });
   });
 
   // If the secure session falls back to Browser, dismiss it when we regain focus.

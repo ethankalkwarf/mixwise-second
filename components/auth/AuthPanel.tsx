@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { EnvelopeIcon, CheckCircleIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
+import { consumeAuthReturnTo, resolvePostAuthPath } from "@/lib/auth/return-to";
+import { navigateInApp } from "@/lib/mobile/navigate";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -37,6 +41,7 @@ export function AuthPanel({
   const { signInWithGoogle, signInWithApple, signInWithPassword } = useUser();
   const { openLoginDialog } = useAuthDialog();
   const toast = useToast();
+  const router = useRouter();
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -116,7 +121,12 @@ export function AuthPanel({
       }
 
       toast.success("You're in. MixWise will remember the cabinet.");
-      window.location.href = "/dashboard";
+      const next = resolvePostAuthPath(consumeAuthReturnTo());
+      if (isNativeApp()) {
+        navigateInApp(router, next);
+      } else {
+        router.push(next);
+      }
     } catch {
       setError("Could not finish setup. Try Google or Apple.");
       setEmailLoading(false);
@@ -248,9 +258,14 @@ export function AuthPanel({
             try {
               await signInWithGoogle();
             } catch (err) {
-              setGoogleLoading(false);
               if ((err as { code?: string } | null)?.code === "OAUTH_CANCELLED") return;
-              setError("Google sign-in failed. Try email instead.");
+              setError(
+                err instanceof Error && err.message
+                  ? err.message
+                  : "Google sign-in failed. Try email instead."
+              );
+            } finally {
+              setGoogleLoading(false);
             }
           }}
           disabled={busy}
@@ -266,9 +281,14 @@ export function AuthPanel({
             try {
               await signInWithApple();
             } catch (err) {
-              setAppleLoading(false);
               if ((err as { code?: string } | null)?.code === "OAUTH_CANCELLED") return;
-              setError("Apple sign-in failed. Try email instead.");
+              setError(
+                err instanceof Error && err.message
+                  ? err.message
+                  : "Apple sign-in failed. Try email instead."
+              );
+            } finally {
+              setAppleLoading(false);
             }
           }}
           disabled={busy}

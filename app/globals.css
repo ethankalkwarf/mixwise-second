@@ -2229,18 +2229,17 @@ html.native-app .input-botanical {
 .native-home-hero__logo {
   position: relative;
   z-index: 2;
-  max-width: 7.25rem;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
 }
 
-.native-home-hero__logo img,
-.native-home-hero__logo svg {
-  display: block !important;
-  position: static !important;
-  inset: auto !important;
-  width: auto !important;
-  height: 1.35rem !important;
-  max-width: 7.25rem !important;
-  object-fit: contain !important;
+.native-home-hero__logo img {
+  display: block;
+  width: auto;
+  height: 1.35rem;
+  max-width: none;
+  object-fit: contain;
 }
 
 .native-home-hero__shade {
@@ -3374,9 +3373,18 @@ html.native-app body {
     min-height: 44px;
     font-size: 16px; /* Prevents iOS zoom on focus */
   }
-  /* Full-width menu rows — avoid inline-flex touch rule collapsing links side-by-side */
+  /* Full-width menu rows — horizontal icon | copy | chevron (not column). */
   a.native-menu-row,
-  button.native-menu-row,
+  button.native-menu-row {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    min-width: 0;
+  }
+
+  /* Card links stack by default; opt into row with .flex-row */
   a.native-card-link,
   button.native-card-link {
     display: flex;
@@ -3816,4 +3824,26 @@ button, a, [role="button"] {
 .native-card {
   @apply bg-white rounded-2xl shadow-sm;
   border: 1px solid rgba(230, 235, 228, 0.5); /* mist with opacity */
+}
+
+/* Native first-run intro — full-bleed cinematic welcome */
+.native-intro-media {
+  animation: native-intro- ken 18s ease-in-out infinite alternate;
+  transform-origin: center 30%;
+  will-change: transform;
+}
+
+@keyframes native-intro-ken {
+  from {
+    transform: scale(1.04);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .native-intro-media {
+    animation: none;
+  }
 }

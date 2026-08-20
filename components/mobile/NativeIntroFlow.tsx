@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/common/BrandLogo";
@@ -16,7 +16,7 @@ import {
 import { NativeNamePrompt } from "@/components/mobile/NativeNamePrompt";
 import { profileNeedsGivenName } from "@/lib/homeHeroHeadline";
 import { getTabBarConfig, MOBILE_TAB_DESTINATIONS, type MobileTabId } from "@/lib/mobile/tabBarConfig";
-import { SparklesIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { trackNativeIntroStep } from "@/lib/analytics";
 
 type IntroPhase = "loading" | "intro" | "ready";
@@ -29,7 +29,7 @@ function TabBarPreview({ active }: { active: string }) {
   const bar = getTabBarConfig();
   return (
     <div
-      className="mx-auto flex w-full max-w-sm items-stretch rounded-2xl border border-mist/80 bg-white/90 p-1 shadow-lg shadow-charcoal/10"
+      className="mx-auto flex w-full max-w-sm items-stretch rounded-2xl border border-white/15 bg-white/10 p-1.5 backdrop-blur-md"
       aria-hidden
     >
       {bar.map((tabId) => {
@@ -39,13 +39,13 @@ function TabBarPreview({ active }: { active: string }) {
         return (
           <div
             key={tabId}
-            className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl py-2 transition-all ${
-              isActive ? "bg-terracotta/12 scale-[1.02]" : "opacity-45"
+            className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl py-2.5 transition-all duration-500 ${
+              isActive ? "bg-cream scale-[1.04] shadow-lg shadow-charcoal/30" : "opacity-50"
             }`}
           >
-            <Icon className={`h-5 w-5 ${isActive ? "text-terracotta" : "text-sage"}`} />
+            <Icon className={`h-5 w-5 ${isActive ? "text-terracotta" : "text-cream/70"}`} />
             <span
-              className={`text-[9px] font-semibold ${isActive ? "text-terracotta" : "text-sage"}`}
+              className={`text-[9px] font-semibold ${isActive ? "text-forest" : "text-cream/70"}`}
             >
               {tab.label}
             </span>
@@ -58,16 +58,58 @@ function TabBarPreview({ active }: { active: string }) {
 
 function ProgressDots({ total, current }: { total: number; current: number }) {
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className="flex items-center justify-center gap-2" aria-hidden>
       {Array.from({ length: total }, (_, i) => (
         <span
           key={i}
-          className={`h-1.5 rounded-full transition-all duration-300 ${
-            i === current ? "w-6 bg-terracotta" : i < current ? "w-1.5 bg-terracotta/40" : "w-1.5 bg-mist"
+          className={`h-1.5 rounded-full transition-all duration-500 ${
+            i === current
+              ? "w-7 bg-cream"
+              : i < current
+                ? "w-1.5 bg-cream/50"
+                : "w-1.5 bg-cream/25"
           }`}
         />
       ))}
     </div>
+  );
+}
+
+function IntroAmbientVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    video.play().catch(() => {});
+  }, []);
+
+  return (
+    <>
+      <Image
+        src="/media/strainer-pour-poster.webp"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="native-intro-media object-cover object-[center_28%]"
+        aria-hidden
+      />
+      <video
+        ref={videoRef}
+        className="native-intro-media absolute inset-0 h-full w-full object-cover object-[center_28%]"
+        muted
+        loop
+        playsInline
+        autoPlay
+        preload="metadata"
+        poster="/media/strainer-pour-poster.webp"
+        aria-hidden
+      >
+        <source src="/media/strainer-pour.mp4" type="video/mp4" />
+      </video>
+    </>
   );
 }
 
@@ -77,13 +119,12 @@ const INTRO_SLIDES = [
     kicker: "Welcome",
     title: "Your home bar,\nin your pocket.",
     body: "Discover cocktails you can actually make — with the bottles you already have.",
-    hero: true as const,
   },
   {
     id: "mix",
     kicker: "Mix",
     title: "Stock your cabinet.",
-    body: "Tap the bottles you own. MixWise instantly shows every drink you can pour — and what one bottle away unlocks next.",
+    body: "Tap the bottles you own. MixWise shows every drink you can pour — and what one bottle unlocks next.",
   },
 ] as const;
 
@@ -100,10 +141,12 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
   const [phase, setPhase] = useState<IntroPhase>("loading");
   const [step, setStep] = useState(0);
   const [isReplay, setIsReplay] = useState(false);
+  const [entered, setEntered] = useState(false);
 
   const totalSteps = INTRO_SLIDES.length;
   const lastIntro = step === INTRO_SLIDES.length - 1;
   const slide = INTRO_SLIDES[step] ?? null;
+  const isWelcome = slide?.id === "welcome";
 
   const enterApp = useCallback(
     (path?: string) => {
@@ -162,6 +205,16 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
     return () => window.removeEventListener(NATIVE_INTRO_EVENT, handleReplay);
   }, [native]);
 
+  useEffect(() => {
+    if (phase !== "intro") {
+      setEntered(false);
+      return;
+    }
+    setEntered(false);
+    const id = window.requestAnimationFrame(() => setEntered(true));
+    return () => window.cancelAnimationFrame(id);
+  }, [phase, step]);
+
   const goNext = () => {
     void trackNativeIntroStep("step", { step, is_replay: isReplay });
     if (isReplay && lastIntro) {
@@ -170,14 +223,14 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
       return;
     }
     if (!lastIntro && step === 0 && !isReplay) {
-      enterApp("/mix");
+      enterApp("/");
       return;
     }
     if (!lastIntro) {
       setStep((s) => s + 1);
       return;
     }
-    enterApp("/mix");
+    enterApp("/");
   };
 
   if (!native || (phase === "ready" && !isReplay)) {
@@ -186,7 +239,7 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
 
   if (phase === "loading") {
     return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center px-6">
+      <div className="flex min-h-[70vh] flex-col items-center justify-center bg-cream px-6">
         <BrandLogo variant="dark" size="lg" linked={false} />
         <p className="mt-6 text-sm text-sage">Opening your bar…</p>
       </div>
@@ -194,152 +247,154 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[90] flex flex-col bg-gradient-to-b from-cream via-cream to-mist/30"
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-    >
-      {/* Welcome hero slide */}
-      {slide?.id === "welcome" && (
-        <div className="relative mx-5 mt-4 overflow-hidden rounded-[1.75rem] bg-charcoal shadow-xl shadow-charcoal/20">
-          <div className="relative h-52">
-            <Image
-              src="/media/strainer-pour-poster.webp"
-              alt=""
-              fill
-              priority
-              className="object-cover object-[center_30%]"
-              aria-hidden
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/50 to-charcoal/20" />
-            <div className="absolute inset-0 flex flex-col justify-between p-5">
-              <BrandLogo variant="light" size="lg" linked={false} />
-              <p className="text-sm text-cream/80">Cocktails, matched to your cabinet</p>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="native-intro fixed inset-0 z-[90] overflow-hidden bg-charcoal">
+      <div className="absolute inset-0">
+        <IntroAmbientVideo />
+        <div
+          className={`absolute inset-0 transition-opacity duration-700 ${
+            isWelcome
+              ? "bg-gradient-to-t from-charcoal via-charcoal/55 to-charcoal/25"
+              : "bg-gradient-to-t from-charcoal via-charcoal/70 to-charcoal/45"
+          }`}
+        />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-charcoal/50 to-transparent" />
+      </div>
 
-      {/* Feature slides — tab preview */}
-      {slide && slide.id !== "welcome" && (
-        <div className="flex flex-1 flex-col justify-end px-5 pt-6">
-          <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-terracotta/10">
-            <SparklesIcon className="h-7 w-7 text-terracotta" />
-          </div>
-          <div className="mb-auto rounded-[1.75rem] border border-mist/60 bg-white/80 p-5 shadow-sm">
-            <TabBarPreview active={slide.id as MobileTabId} />
-            <p className="mt-4 text-center text-xs text-sage">
-              Tap bottles · see your menu
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Copy block for intro slides */}
-      {slide && (
-        <div className="px-6 pb-4 pt-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-terracotta">
-            {slide.kicker}
-          </p>
-          <h2 className="mt-2 whitespace-pre-line font-display text-[1.65rem] font-bold leading-tight text-forest">
-            {slide.title}
-          </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-sage">{slide.body}</p>
-        </div>
-      )}
-
-      {/* Footer controls */}
       <div
-        className="mt-auto px-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] pt-4"
+        className="relative flex h-full flex-col"
+        style={{
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
       >
-        <ProgressDots total={totalSteps} current={step} />
+        <div
+          className={`native-intro__brand px-6 pt-5 transition-all duration-700 ${
+            entered ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"
+          }`}
+        >
+          <BrandLogo variant="light" size="lg" linked={false} />
+        </div>
 
-        <div className="mt-5 space-y-2">
-          <button
-            type="button"
-            onClick={goNext}
-            className="w-full rounded-2xl bg-terracotta py-3.5 text-sm font-bold text-cream shadow-lg shadow-terracotta/20 active:scale-[0.98] transition-transform"
-          >
-            {isReplay && lastIntro
-              ? "Done"
-              : step === 0 && !isReplay
-                ? "Get started"
-                : lastIntro
-                  ? "Start exploring"
-                  : "Next"}
-          </button>
-          {!isReplay && step === 0 && (
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="w-full py-2.5 text-sm font-medium text-sage"
+        <div className="flex min-h-0 flex-1 flex-col justify-end px-6 pb-2 pt-8">
+          {!isWelcome && slide && (
+            <div
+              className={`mb-8 transition-all delay-100 duration-700 ${
+                entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              }`}
             >
-              How it works
-            </button>
-          )}
-          {!isReplay && step === 1 && (
-            <button
-              type="button"
-              onClick={() => enterApp("/mix")}
-              className="w-full py-2.5 text-sm font-medium text-sage"
-            >
-              Skip
-            </button>
-          )}
-          {!isReplay && lastIntro && (
-            <div className="mt-1 space-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  enterApp("/");
-                  openAuthDialog({
-                    mode: hasLikelyAccount() ? "login" : "signup",
-                    dismissible: true,
-                    title: hasLikelyAccount() ? "Welcome back" : "Create your free account",
-                    subtitle: hasLikelyAccount()
-                      ? "Sign in to restore your cabinet and favorites."
-                      : "Save your bar and favorites so nothing is lost on this phone.",
-                  });
-                }}
-                className="w-full rounded-2xl bg-forest py-3.5 text-sm font-bold text-cream"
-              >
-                {hasLikelyAccount() ? "Log in" : "Create free account"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  enterApp("/");
-                  openAuthDialog({
-                    mode: hasLikelyAccount() ? "signup" : "login",
-                    dismissible: true,
-                    title: hasLikelyAccount() ? "Create another account" : "Welcome back",
-                    subtitle: hasLikelyAccount()
-                      ? "Start fresh with a new MixWise account."
-                      : "Sign in to restore your cabinet and favorites.",
-                  });
-                }}
-                className="w-full py-2.5 text-sm font-medium text-sage"
-              >
-                {hasLikelyAccount() ? "Create a new account" : "I already have an account"}
-              </button>
+              <TabBarPreview active={slide.id as MobileTabId} />
+              <p className="mt-4 text-center text-xs font-medium tracking-wide text-cream/65">
+                Tap bottles · see your menu
+              </p>
             </div>
           )}
-          {isReplay && (
-            <button
-              type="button"
-              onClick={() => {
-                setIsReplay(false);
-                setPhase("ready");
-              }}
-              className="w-full py-2.5 text-sm font-medium text-sage"
+
+          {slide && (
+            <div
+              key={slide.id}
+              className={`native-intro__copy max-w-md transition-all delay-150 duration-700 ${
+                entered ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
+              }`}
             >
-              Close
-            </button>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-terracotta">
+                {slide.kicker}
+              </p>
+              <h1 className="mt-3 whitespace-pre-line font-display text-[2.05rem] font-bold leading-[1.08] text-cream sm:text-[2.25rem]">
+                {slide.title}
+              </h1>
+              <p className="mt-3 max-w-[20rem] text-[15px] leading-relaxed text-cream/78">
+                {slide.body}
+              </p>
+            </div>
           )}
         </div>
 
-        <p className="mt-4 text-center text-[11px] text-sage/80">
-          Step {step + 1} of {totalSteps}
-        </p>
+        <div
+          className={`native-intro__footer px-6 pb-5 pt-5 transition-all delay-250 duration-700 ${
+            entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+          }`}
+        >
+          <ProgressDots total={totalSteps} current={step} />
+
+          <div className="mt-5 space-y-2">
+            <button
+              type="button"
+              onClick={goNext}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-terracotta py-3.5 text-sm font-bold text-cream shadow-lg shadow-terracotta/35 active:scale-[0.98] transition-transform"
+            >
+              {isReplay && lastIntro
+                ? "Done"
+                : step === 0 && !isReplay
+                  ? "Get started"
+                  : lastIntro
+                    ? "Start exploring"
+                    : "Next"}
+              {!(isReplay && lastIntro) && <ArrowRightIcon className="h-4 w-4" aria-hidden />}
+            </button>
+
+            {!isReplay && step === 0 && (
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="w-full py-2.5 text-sm font-medium text-cream/70 transition-colors active:text-cream"
+              >
+                How it works
+              </button>
+            )}
+
+            {!isReplay && lastIntro && (
+              <div className="mt-1 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    enterApp("/");
+                    openAuthDialog({
+                      mode: hasLikelyAccount() ? "login" : "signup",
+                      dismissible: true,
+                      title: hasLikelyAccount() ? "Welcome back" : "Create your free account",
+                      subtitle: hasLikelyAccount()
+                        ? "Sign in to restore your cabinet and favorites."
+                        : "Save your bar and favorites so nothing is lost on this phone.",
+                    });
+                  }}
+                  className="w-full rounded-2xl bg-cream py-3.5 text-sm font-bold text-forest"
+                >
+                  {hasLikelyAccount() ? "Log in" : "Create free account"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    enterApp("/");
+                    openAuthDialog({
+                      mode: hasLikelyAccount() ? "signup" : "login",
+                      dismissible: true,
+                      title: hasLikelyAccount() ? "Create another account" : "Welcome back",
+                      subtitle: hasLikelyAccount()
+                        ? "Start fresh with a new MixWise account."
+                        : "Sign in to restore your cabinet and favorites.",
+                    });
+                  }}
+                  className="w-full py-2.5 text-sm font-medium text-cream/70"
+                >
+                  {hasLikelyAccount() ? "Create a new account" : "I already have an account"}
+                </button>
+              </div>
+            )}
+
+            {isReplay && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsReplay(false);
+                  setPhase("ready");
+                }}
+                className="w-full py-2.5 text-sm font-medium text-cream/70"
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

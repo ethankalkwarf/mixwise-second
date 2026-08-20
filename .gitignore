@@ -18,8 +18,11 @@ data/emails-sent-*.csv
 ios/App/Pods/
 ios/App/build/
 ios/App/DerivedData/
+/build/
 tmp/
 .vercel
+# Local secrets (service account keys — never commit)
+secrets/
 # Local image review dumps (large; not needed for builds)
 data/image-review*/
 data/review-batch-*.csv

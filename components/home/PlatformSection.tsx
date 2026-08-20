@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AutoplayVideo } from "@/components/media/AutoplayVideo";
+import { useUser } from "@/components/auth/UserProvider";
 
 const FEATURES = [
   {
@@ -35,6 +36,13 @@ const FEATURES = [
 ] as const;
 
 export function PlatformSection() {
+  const { isAuthenticated } = useUser();
+
+  // Logged-in home already has personal drink rails — skip this marketing block.
+  if (isAuthenticated) {
+    return null;
+  }
+
   return (
     <section className="relative bg-charcoal py-24 text-cream lg:py-36">
       {/* Wave overlaps the charcoal edge so no cream hairline shows under the troughs */}

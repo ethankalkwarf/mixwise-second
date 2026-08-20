@@ -5,11 +5,11 @@ import { BrandLogo } from "@/components/common/BrandLogo";
 import { NATIVE_OAUTH_CALLBACK } from "@/lib/mobile/authRedirect";
 
 /**
- * HTTPS bridge for Capacitor OAuth (fallback).
+ * HTTPS bridge for Capacitor OAuth.
  *
- * Prefer ASWebAuthenticationSession with the custom scheme directly. This
- * page still exists for older builds / allowlist mishaps: when landed here,
- * we hand the PKCE code to the app via deep link.
+ * Supabase redirects here (allowlisted https URL). We immediately bounce the
+ * PKCE code into the app scheme so ASWebAuthenticationSession / the app can
+ * finish sign-in and dismiss the auth sheet.
  */
 export default function NativeOAuthCallbackPage() {
   const [failed, setFailed] = useState(false);
@@ -24,6 +24,8 @@ export default function NativeOAuthCallbackPage() {
     const target = new URL(NATIVE_OAUTH_CALLBACK);
     for (const source of [search, hash]) {
       source.forEach((value, key) => {
+        // Never carry a web return-to into the app — native OAuth always lands on Home.
+        if (key === "next") return;
         if (value) target.searchParams.set(key, value);
       });
     }
@@ -44,11 +46,18 @@ export default function NativeOAuthCallbackPage() {
       return;
     }
 
+    // Immediate handoff — try twice in case the first navigation is swallowed.
     window.location.replace(deepLink);
+    const retry = window.setTimeout(() => {
+      window.location.href = deepLink;
+    }, 400);
 
     // If iOS doesn't hand off, show a manual escape hatch with the code intact.
-    const timer = window.setTimeout(() => setFailed(true), 2500);
-    return () => window.clearTimeout(timer);
+    const timer = window.setTimeout(() => setFailed(true), 2000);
+    return () => {
+      window.clearTimeout(retry);
+      window.clearTimeout(timer);
+    };
   }, [deepLink]);
 
   return (

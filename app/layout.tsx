@@ -98,24 +98,33 @@ export default async function RootLayout({
     document.documentElement.classList.add("native-app");
     try { sessionStorage.setItem("mixwise_native", "1"); } catch (e) {}
   }
-  function detect() {
-    try { if (sessionStorage.getItem("mixwise_native") === "1") return true; } catch (e) {}
-    try { if (document.cookie.indexOf("mixwise_app=1") !== -1) return true; } catch (e) {}
-    try { if (new URLSearchParams(location.search).get("mixwise_app") === "1") return true; } catch (e) {}
+  function clearStale() {
+    document.documentElement.classList.remove("native-app");
+    try { sessionStorage.removeItem("mixwise_native"); } catch (e) {}
+    try { document.cookie = "mixwise_app=; Max-Age=0; path=/; SameSite=Lax"; } catch (e) {}
+  }
+  function hardNative() {
     var w = window;
     var ua = navigator.userAgent || "";
     if (w.webkit && w.webkit.messageHandlers && w.webkit.messageHandlers.bridge) return true;
     if (w.androidBridge) return true;
     if (/Capacitor|MixWiseNative/i.test(ua)) return true;
     if (location.protocol === "capacitor:") return true;
+    try { if (w.Capacitor && w.Capacitor.isNativePlatform && w.Capacitor.isNativePlatform()) return true; } catch (e) {}
     try { if (w.Capacitor && w.Capacitor.getPlatform && w.Capacitor.getPlatform() !== "web") return true; } catch (e) {}
+    return false;
+  }
+  function detect() {
+    if (hardNative()) return true;
+    // Cookie / query / session alone = polluted mobile Safari after OAuth.
+    clearStale();
     return false;
   }
   if (detect()) { markNative(); return; }
   var attempts = 0;
   var timer = setInterval(function () {
     attempts++;
-    if (detect()) { markNative(); clearInterval(timer); }
+    if (hardNative()) { markNative(); clearInterval(timer); }
     else if (attempts >= 20) clearInterval(timer);
   }, 100);
 })();

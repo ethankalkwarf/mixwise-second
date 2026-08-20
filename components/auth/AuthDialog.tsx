@@ -166,6 +166,7 @@ export function AuthDialog({
       onClose(true);
       const here = currentReturnPath();
       const dest = resolvePostAuthPath(here);
+      // Native Google/Apple often returns while still on /mix — always honor dest.
       if (dest !== here) {
         router.replace(dest);
       }
@@ -184,9 +185,18 @@ export function AuthDialog({
       }
     };
 
+    const handleOAuthError = (event: Event) => {
+      const customEvent = event as CustomEvent<{ message?: string }>;
+      setIsGoogleLoading(false);
+      setIsAppleLoading(false);
+      setError(customEvent.detail?.message || "Couldn’t complete sign-in. Please try again.");
+    };
+
     window.addEventListener("mixwise:emailConfirmed", handleEmailConfirmed);
+    window.addEventListener("mixwise:oauthError", handleOAuthError);
     return () => {
       window.removeEventListener("mixwise:emailConfirmed", handleEmailConfirmed);
+      window.removeEventListener("mixwise:oauthError", handleOAuthError);
     };
   }, [isOpen, onClose, onSuccess]);
 
@@ -197,9 +207,14 @@ export function AuthDialog({
     try {
       await signInWithGoogle();
     } catch (err) {
-      setIsGoogleLoading(false);
       if ((err as { code?: string } | null)?.code === "OAUTH_CANCELLED") return;
-      setError("Failed to sign in with Google. Please try again.");
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to sign in with Google. Please try again."
+      );
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -210,9 +225,14 @@ export function AuthDialog({
     try {
       await signInWithApple();
     } catch (err) {
-      setIsAppleLoading(false);
       if ((err as { code?: string } | null)?.code === "OAUTH_CANCELLED") return;
-      setError("Failed to sign in with Apple. Please try again.");
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to sign in with Apple. Please try again."
+      );
+    } finally {
+      setIsAppleLoading(false);
     }
   };
 

@@ -4,6 +4,8 @@ const RETURN_TO_KEY = "mixwise-auth-return-to";
 
 const AUTH_PREFIXES = ["/auth/", "/reset-password"];
 const GENERIC_LANDING = new Set(["/", "/join"]);
+/** Native app: treat Mix as a soft landing so sign-in greets on Home. */
+const NATIVE_SOFT_LANDING = new Set(["/", "/join", "/mix", "/saved"]);
 
 /** Same-origin path only. Reject protocol-relative and auth callback URLs. */
 export function isSafeReturnPath(path: string | null | undefined): path is string {
@@ -21,7 +23,11 @@ export function rememberAuthReturnTo(path?: string): void {
   if (typeof window === "undefined") return;
   const value = path ?? currentReturnPath();
   try {
-    if (isSafeReturnPath(value) && !GENERIC_LANDING.has(value.split("?")[0] || value)) {
+    const pathname = value.split("?")[0] || value;
+    const soft =
+      GENERIC_LANDING.has(pathname) ||
+      (isNativeApp() && NATIVE_SOFT_LANDING.has(pathname));
+    if (isSafeReturnPath(value) && !soft) {
       sessionStorage.setItem(RETURN_TO_KEY, value);
     } else {
       sessionStorage.removeItem(RETURN_TO_KEY);
@@ -44,7 +50,8 @@ export function consumeAuthReturnTo(): string | null {
 
 /**
  * Where to send someone after login.
- * Recipe/mix/etc. stay put. Home/join fall through to the dashboard.
+ * Recipe pages stay put. Home/join (and native Mix/You) fall through to the
+ * native home or web dashboard.
  */
 export function resolvePostAuthPath(
   next: string | null | undefined,
@@ -52,12 +59,25 @@ export function resolvePostAuthPath(
 ): string {
   const path = isSafeReturnPath(next) ? next : "/";
   const pathname = path.split("?")[0] || path;
+  const native = typeof window !== "undefined" && isNativeApp();
 
   if (pathname === "/onboarding") {
-    return typeof window !== "undefined" && isNativeApp() ? "/" : "/dashboard";
+    return native ? "/" : "/dashboard";
+  }
+  // Native app: always greet on Home unless returning to a specific content page.
+  if (native) {
+    if (NATIVE_SOFT_LANDING.has(pathname)) return "/";
+    if (
+      pathname.startsWith("/cocktails/") ||
+      pathname.startsWith("/learn/") ||
+      pathname.startsWith("/ingredients/") ||
+      pathname.startsWith("/account")
+    ) {
+      return path;
+    }
+    return "/";
   }
   if (!GENERIC_LANDING.has(pathname)) return path;
-  if (typeof window !== "undefined" && isNativeApp()) return "/";
   return "/dashboard";
 }
 

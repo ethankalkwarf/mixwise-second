@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, Suspense } from "react";
+import { ReactNode, Suspense, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { MobileTabBar } from "./MobileTabBar";
 import { MobileAppProvider } from "./MobileAppProvider";
@@ -10,6 +10,7 @@ import { NativeSignupNudge } from "./NativeSignupNudge";
 import { OfflineBanner } from "./OfflineBanner";
 import { NativeNavigationBridge } from "./NativeNavigationBridge";
 import { BiometricGate } from "./BiometricGate";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -21,6 +22,18 @@ interface MobileLayoutProps {
 export function MobileLayout({ children }: MobileLayoutProps) {
   const pathname = usePathname();
   const bleedTop = pathname === "/" || pathname === "/saved";
+
+  // forceNative can SSR this shell from the cookie before the head script runs —
+  // ensure html.native-app (and session flag) are set for AppLink / CSS hides.
+  useEffect(() => {
+    void isNativeApp();
+    document.documentElement.classList.add("native-app");
+    try {
+      sessionStorage.setItem("mixwise_native", "1");
+    } catch {
+      // private mode
+    }
+  }, []);
 
   return (
     <MobileAppProvider>

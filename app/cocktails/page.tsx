@@ -63,19 +63,23 @@ export default async function CocktailsPage({
       data-native-recipes-page
     >
       <MainContainer>
-        {/* Header */}
-        <div data-web-recipes-chrome className="mb-10">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-forest mb-4">
-            Cocktail Recipes
-          </h1>
-          <p className="text-sage max-w-2xl">
-            Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each recipe includes detailed ingredients and instructions.             Looking up a bottle? See the{" "}
-            <Link href="/ingredients" className="text-terracotta hover:underline">
-              ingredient guides
-            </Link>
-            .
-          </p>
-        </div>
+        {/* Web-only marketing header — native Search tab uses NativePageHero instead. */}
+        {!native ? (
+          <div data-web-recipes-chrome className="mb-10">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-forest mb-4">
+              Cocktail Recipes
+            </h1>
+            <p className="text-sage max-w-2xl">
+              Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each
+              recipe includes detailed ingredients and instructions. Looking up a bottle? See
+              the{" "}
+              <Link href="/ingredients" className="text-terracotta hover:underline">
+                ingredient guides
+              </Link>
+              .
+            </p>
+          </div>
+        ) : null}
 
         {/* Empty State */}
         {cocktails.length === 0 && (
@@ -86,9 +90,9 @@ export default async function CocktailsPage({
             </h2>
             <p className="text-sage max-w-md">
               We&apos;re restocking the back bar. Check back soon, or try the{" "}
-              <a href="/mix" className="text-terracotta hover:underline">
+              <Link href="/mix" className="text-terracotta hover:underline">
                 mix tool
-              </a>{" "}
+              </Link>{" "}
               with what you have at home.
             </p>
           </div>

@@ -140,9 +140,9 @@ function SavedPageContent() {
                 <button
                   type="button"
                   onClick={() => openAuthDialog({ mode: preferredAuthMode })}
-                  className="flex flex-shrink-0 items-center rounded-full bg-terracotta px-3.5 py-2 text-sm font-bold text-cream shadow-sm"
+                  className="flex-shrink-0 rounded-full bg-terracotta px-3.5 py-2 text-sm font-bold text-cream shadow-sm"
                 >
-                  Join
+                  Log in or join
                 </button>
               )}
             </div>

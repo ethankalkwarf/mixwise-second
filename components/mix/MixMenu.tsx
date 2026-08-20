@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { MixResultsPanel } from "./MixResultsPanel";
 import { YourBarPanel } from "./YourBarPanel";
 import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
@@ -8,6 +9,8 @@ import { ArrowPathIcon, LightBulbIcon, PlusIcon, ShoppingBagIcon } from "@heroic
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { lookupIngredient, nameHasToken } from "@/lib/ingredientMatching";
+import { navigateInApp } from "@/lib/mobile/navigate";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 type Props = {
   inventoryIds: string[];
@@ -35,9 +38,17 @@ export function MixMenu({
   onRemoveIngredient,
   onClearAll,
 }: Props) {
+  const router = useRouter();
   const [showAllRecipes, setShowAllRecipes] = useState(false);
   const { addItem, isLoading: shoppingLoading } = useShoppingList();
 
+  const go = (href: string) => {
+    if (isNativeApp()) {
+      navigateInApp(router, href);
+    } else {
+      router.push(href);
+    }
+  };
   const almostThereCocktails = useMemo(() => {
     return matchGroups.almostThere
       .filter((match) => match.missingIngredientIds.length === 1)
@@ -138,7 +149,7 @@ export function MixMenu({
               </button>
 
               <button
-                onClick={() => window.location.href = '/mix'}
+                onClick={() => go("/mix")}
                 className="w-full text-left p-3 rounded-xl border border-mist hover:border-olive/30 hover:bg-olive/5 transition-all group"
               >
                 <div className="flex items-center justify-between gap-2 min-w-0">
@@ -156,7 +167,7 @@ export function MixMenu({
 
               {randomSuggestion && (
                 <button
-                  onClick={() => window.location.href = `/cocktails/${randomSuggestion.slug}`}
+                  onClick={() => go(`/cocktails/${randomSuggestion.slug}`)}
                   className="w-full text-left p-3 rounded-xl border border-mist hover:border-terracotta/30 hover:bg-terracotta/5 transition-all group"
                 >
                   <div className="flex items-center justify-between gap-2 min-w-0">

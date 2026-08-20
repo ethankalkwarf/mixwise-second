@@ -83,18 +83,22 @@ Add these redirect URLs in Supabase **Authentication → URL Configuration → R
 ```
 com.getmixwise.app://auth/callback
 https://www.getmixwise.com/auth/native-callback
+https://getmixwise.com/auth/native-callback
 https://mixwise-testflight.vercel.app/auth/native-callback
 ```
 
-Without them, Supabase rejects the OAuth callback (or falls back to Site URL) and Google/Apple login opens the website instead of the app.
+Native Google/Apple sign-in uses the **HTTPS bridge** (`/auth/native-callback`) as `redirectTo` so Supabase always accepts it. That page immediately deep-links into `com.getmixwise.app://auth/callback`, which dismisses the auth sheet.
+
+Without the bridge URL allowlisted, Supabase falls back to Site URL and Google login opens the website instead of returning to the app.
 
 ### How native OAuth works
 
 1. App opens Google/Apple via `ASWebAuthenticationSession` (`@capgo/capacitor-inappbrowser` `openSecureWindow`)
-2. Supabase redirects to `com.getmixwise.app://auth/callback?code=…`
-3. The auth sheet dismisses automatically; the app exchanges the code and stores the session in the WebView
+2. Supabase redirects to `https://www.getmixwise.com/auth/native-callback?code=…`
+3. The bridge page deep-links to `com.getmixwise.app://auth/callback?code=…`
+4. The auth sheet dismisses; the app exchanges the code and opens **Home**
 
-Fallback (older Browser flow / allowlist mishap): Supabase can still land on `https://<origin>/auth/native-callback?code=…`, which deep-links into the app.
+Fallback (if `openSecureWindow` is unavailable): Capacitor Browser opens the same HTTPS bridge, then the deep link returns to the app and the browser is closed.
 
 Email magic links still use the web callback (`https://www.getmixwise.com/auth/callback` or your LAN URL in dev).
 

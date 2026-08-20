@@ -1,16 +1,17 @@
 import { Capacitor } from "@capacitor/core";
 
 const STORAGE_KEY = "mixwise_native";
+const COOKIE_NAME = "mixwise_app";
 
 type NativeWindow = Window & {
-  Capacitor?: { isNativePlatform?: () => boolean };
+  Capacitor?: { isNativePlatform?: () => boolean; getPlatform?: () => string };
   androidBridge?: unknown;
   webkit?: { messageHandlers?: { bridge?: unknown } };
 };
 
 function hasNativeCookie(): boolean {
   if (typeof document === "undefined") return false;
-  return document.cookie.split(";").some((part) => part.trim().startsWith("mixwise_app=1"));
+  return document.cookie.split(";").some((part) => part.trim().startsWith(`${COOKIE_NAME}=1`));
 }
 
 function hasNativeQueryParam(): boolean {
@@ -33,6 +34,46 @@ function hasNativeUserAgent(): boolean {
   return /Capacitor|MixWiseNative/i.test(navigator.userAgent || "");
 }
 
+function isCapacitorRuntime(): boolean {
+  try {
+    if (Capacitor.isNativePlatform()) return true;
+  } catch {
+    // Capacitor may not be initialized yet
+  }
+  try {
+    const platform = Capacitor.getPlatform();
+    if (platform === "ios" || platform === "android") return true;
+  } catch {
+    // ignore
+  }
+  const win = window as NativeWindow;
+  try {
+    if (win.Capacitor?.isNativePlatform?.()) return true;
+  } catch {
+    // ignore
+  }
+  try {
+    const platform = win.Capacitor?.getPlatform?.();
+    if (platform === "ios" || platform === "android") return true;
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
+function clearStaleNativeSignals(): void {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // private mode
+  }
+  if (typeof document !== "undefined") {
+    document.documentElement.classList.remove("native-app");
+    // Expire the cookie so SSR / future visits stay on the web chrome.
+    document.cookie = `${COOKIE_NAME}=; Max-Age=0; path=/; SameSite=Lax`;
+  }
+}
+
 function storedNativeFlag(): boolean {
   try {
     return sessionStorage.getItem(STORAGE_KEY) === "1";
@@ -52,66 +93,47 @@ function persistNativeFlag(): void {
   }
 }
 
+/**
+ * Hard evidence we are inside the Capacitor shell (not a polluted Safari tab).
+ * Cookie / ?mixwise_app alone are not enough — those leak onto mobile web after OAuth.
+ */
+function hasHardNativeSignal(): boolean {
+  if (typeof window === "undefined") return false;
+
+  if (isCapacitorRuntime()) return true;
+  if (hasNativeBridge()) return true;
+  if (hasNativeUserAgent()) return true;
+
+  const href = window.location.href;
+  return (
+    window.location.protocol === "capacitor:" ||
+    href.includes("capacitor://") ||
+    href.includes("ionic://")
+  );
+}
+
 /** True when running inside the Capacitor iOS/Android shell. */
 export function isNativeApp(): boolean {
   if (typeof window === "undefined") return false;
 
-  if (storedNativeFlag()) return true;
+  const hard = hasHardNativeSignal();
 
-  if (hasNativeCookie()) {
-    persistNativeFlag();
-    return true;
-  }
-
-  if (hasNativeQueryParam()) {
-    persistNativeFlag();
-    return true;
-  }
-
-  if (typeof document !== "undefined" && document.documentElement.classList.contains("native-app")) {
-    persistNativeFlag();
-    return true;
-  }
-
-  try {
-    const platform = Capacitor.getPlatform();
-    if (platform === "ios" || platform === "android") {
-      persistNativeFlag();
-      return true;
+  // Cookie / query / session flags without a real native runtime = stale web pollution.
+  if (!hard) {
+    if (
+      storedNativeFlag() ||
+      hasNativeCookie() ||
+      hasNativeQueryParam() ||
+      (typeof document !== "undefined" &&
+        document.documentElement.classList.contains("native-app"))
+    ) {
+      clearStaleNativeSignals();
     }
-  } catch {
-    // Capacitor may not be initialized yet
+    return false;
   }
 
-  try {
-    if (Capacitor.isNativePlatform()) {
-      persistNativeFlag();
-      return true;
-    }
-  } catch {
-    // Capacitor may not be initialized on web
-  }
-
-  const win = window as NativeWindow;
-  try {
-    if (win.Capacitor?.isNativePlatform?.()) {
-      persistNativeFlag();
-      return true;
-    }
-  } catch {
-    // ignore
-  }
-
-  const href = window.location.href;
-  const native =
-    hasNativeBridge() ||
-    hasNativeUserAgent() ||
-    window.location.protocol === "capacitor:" ||
-    href.includes("capacitor://") ||
-    href.includes("ionic://");
-
-  if (native) persistNativeFlag();
-  return native;
+  persistNativeFlag();
+  return true;
 }
 
 export function nativePlatform(): "ios" | "android" | "web" {

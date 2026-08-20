@@ -574,8 +574,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const getAuthRedirectUrl = useCallback(() => {
     rememberAuthReturnTo();
     const nativeOAuth = getNativeOAuthRedirectUrl();
-    // Native OAuth: exact allowlisted custom scheme — do not append ?next=
-    // (Supabase Site URL fallback sends users to the marketing site in Safari).
+    // Native OAuth: HTTPS bridge only — exact allowlisted path, no ?next=
+    // (appending query params can fail Supabase allowlist matching).
     if (nativeOAuth) return nativeOAuth;
 
     const origin =

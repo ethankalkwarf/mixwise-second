@@ -9,18 +9,32 @@ import { NextResponse, type NextRequest } from "next/server";
 const PROTECTED_ROUTES = ["/account"];
 const NATIVE_COOKIE = "mixwise_app";
 
-function isNativeAppRequest(request: NextRequest): boolean {
+/** True only for the Capacitor WebView UA — never from ?mixwise_app alone. */
+function hasNativeUserAgent(request: NextRequest): boolean {
   const ua = request.headers.get("user-agent") ?? "";
-  return (
-    /MixWiseNative|Capacitor/i.test(ua) ||
-    request.nextUrl.searchParams.get("mixwise_app") === "1"
-  );
+  return /MixWiseNative|Capacitor/i.test(ua);
 }
 
 function withNativeCookie(request: NextRequest, response: NextResponse): NextResponse {
-  if (!isNativeAppRequest(request) || request.cookies.get(NATIVE_COOKIE)) {
+  const nativeUa = hasNativeUserAgent(request);
+  const hasCookie = Boolean(request.cookies.get(NATIVE_COOKIE));
+
+  // Stale cookie from a prior OAuth/Safari leak must not force the app shell on
+  // the public mobile website.
+  if (!nativeUa && hasCookie) {
+    response.cookies.set(NATIVE_COOKIE, "", {
+      path: "/",
+      maxAge: 0,
+      sameSite: "lax",
+      secure: request.nextUrl.protocol === "https:",
+    });
     return response;
   }
+
+  if (!nativeUa || hasCookie) {
+    return response;
+  }
+
   response.cookies.set(NATIVE_COOKIE, "1", {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,

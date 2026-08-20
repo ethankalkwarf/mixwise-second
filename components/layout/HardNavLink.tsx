@@ -3,16 +3,12 @@
 import type { AnchorHTMLAttributes, ReactNode, MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { navigateInApp } from "@/lib/mobile/navigate";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 type Props = {
   href: string;
   children: ReactNode;
 } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href">;
-
-function isCapacitorShell(): boolean {
-  if (typeof document === "undefined") return false;
-  return document.documentElement.classList.contains("native-app");
-}
 
 /**
  * Full-document navigation on web. Client router navigation in the native shell
@@ -26,7 +22,7 @@ export function HardNavLink({ href, children, onClick, ...props }: Props) {
     if (event.defaultPrevented) return;
     if (!href.startsWith("/") || href.startsWith("//")) return;
 
-    if (isCapacitorShell()) {
+    if (isNativeApp()) {
       event.preventDefault();
       event.stopPropagation();
       navigateInApp(router, href);

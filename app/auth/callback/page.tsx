@@ -449,6 +449,21 @@ function AuthCallbackPageContent() {
 
         if (user) {
           debugLog("[AuthCallbackPage] User authenticated:", user.id);
+          // Native app: never dump OAuth into the Mix wizard — greet on Home.
+          const nativeShell =
+            typeof navigator !== "undefined" &&
+            /MixWiseNative|Capacitor/i.test(navigator.userAgent || "");
+          if (!cancelled && nativeShell) {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("mixwise:emailConfirmed", { detail: { success: true } })
+              );
+            }
+            await waitForAuthReady(authReady);
+            await triggerPostAuthEmails(supabase);
+            router.replace("/");
+            return;
+          }
           // If the caller explicitly asked for mix wizard, don't block on DB checks — go immediately.
           if (!cancelled && next === "/mix") {
             debugLog("[AuthCallbackPage] Explicit mix wizard request, redirecting immediately");

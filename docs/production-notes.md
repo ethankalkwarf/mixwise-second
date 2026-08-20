@@ -73,15 +73,19 @@ NEXT_PUBLIC_SANITY_DATASET=production
 
 In Supabase Dashboard → Authentication → URL Configuration:
 
-**Site URL**: `https://getmixwise.com`
+**Site URL**: `https://www.getmixwise.com`
 
 **Redirect URLs** (add all of these):
-- `https://getmixwise.com/auth/callback` (production)
+- `https://www.getmixwise.com/auth/callback` (web)
+- `https://getmixwise.com/auth/callback` (apex web)
+- `https://www.getmixwise.com/auth/native-callback` (iOS app OAuth bridge — required)
+- `https://getmixwise.com/auth/native-callback` (apex bridge)
+- `com.getmixwise.app://auth/callback` (iOS deep link)
 - `http://localhost:3000/auth/callback` (development)
 
 In Supabase Dashboard → Authentication → Providers:
-- **Google**: Ensure redirect URL is `https://getmixwise.com/auth/callback`
-- **Apple**: Ensure redirect URL is `https://getmixwise.com/auth/callback` (if enabled)
+- **Google**: Authorized redirect is Supabase’s callback; app return uses the Redirect URLs above
+- **Apple**: Same — include the native-callback + custom scheme URLs above
 
 ## Vercel Domain Configuration
 
