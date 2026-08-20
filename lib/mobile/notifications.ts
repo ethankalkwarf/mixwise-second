@@ -1,7 +1,8 @@
 /**
  * Local Notifications Service
  *
- * Schedules daily Drink of the Day reminders with varied copy tied to today's recipe.
+ * Pre-schedules Drink of the Day reminders for the next 30 days with copy
+ * tied to each day's locked recipe (same source as the website).
  */
 
 import { Capacitor } from "@capacitor/core";
@@ -20,7 +21,8 @@ import { getMixMatchGroups } from "@/lib/mixMatching";
 
 const BAR_STORAGE_KEY = "mixwise-bar-inventory";
 
-const NOTIFICATION_ID = 1001;
+const NOTIFICATION_ID_BASE = 1001;
+const FORECAST_DAYS = 30;
 const PREFERENCE_KEY = "drinkNotificationTime";
 const NOTIFICATION_ENABLED_KEY = "drinkNotificationEnabled";
 const LAST_SCHEDULED_DATE_KEY = "drinkNotificationScheduledDate";
@@ -31,6 +33,8 @@ export interface NotificationTime {
   hour: number;
   minute: number;
 }
+
+type DailyForecastItem = DailyDrinkContext & { dateKey: string };
 
 async function getCabinetContext(drink: DailyDrinkContext): Promise<CabinetNotificationContext> {
   if (typeof window === "undefined") return {};
@@ -67,16 +71,16 @@ async function getCabinetContext(drink: DailyDrinkContext): Promise<CabinetNotif
   }
 }
 
-async function fetchTodaysDailyDrink(): Promise<DailyDrinkContext | null> {
+async function fetchDailyForecast(days = FORECAST_DAYS): Promise<DailyForecastItem[]> {
   try {
-    const res = await fetch("/api/daily-cocktail", { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = (await res.json()) as DailyDrinkContext;
-    if (!data?.slug || !data?.name) return null;
-    return data;
+    const res = await fetch(`/api/daily-cocktail?days=${days}`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { items?: DailyForecastItem[] };
+    if (!Array.isArray(data.items)) return [];
+    return data.items.filter((item) => item?.slug && item?.name && item?.dateKey);
   } catch (error) {
-    console.error("[Notifications] Failed to fetch daily cocktail:", error);
-    return null;
+    console.error("[Notifications] Failed to fetch daily cocktail forecast:", error);
+    return [];
   }
 }
 
@@ -97,6 +101,19 @@ async function setLastScheduledDate(dateKey: string): Promise<void> {
   } catch {
     /* ignore */
   }
+}
+
+function notificationIds(): Array<{ id: number }> {
+  return Array.from({ length: FORECAST_DAYS }, (_, i) => ({ id: NOTIFICATION_ID_BASE + i }));
+}
+
+function scheduleDateForDay(dateKey: string, hour: number, minute: number): Date | null {
+  const parts = dateKey.split("-").map((part) => Number.parseInt(part, 10));
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return null;
+  const [year, month, day] = parts as [number, number, number];
+  const at = new Date(year, month - 1, day, hour, minute, 0, 0);
+  if (Number.isNaN(at.getTime())) return null;
+  return at;
 }
 
 /**
@@ -205,7 +222,7 @@ export async function setNotificationTime(time: NotificationTime): Promise<void>
 }
 
 /**
- * Cancel existing drink of the day notification
+ * Cancel existing drink of the day notifications
  */
 export async function cancelDrinkNotification(): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
@@ -214,16 +231,16 @@ export async function cancelDrinkNotification(): Promise<void> {
 
   try {
     await LocalNotifications.cancel({
-      notifications: [{ id: NOTIFICATION_ID }],
+      notifications: notificationIds(),
     });
-    debugLog("[Notifications] Cancelled drink notification");
+    debugLog("[Notifications] Cancelled drink notifications");
   } catch (error) {
     console.error("[Notifications] Error cancelling notification:", error);
   }
 }
 
 /**
- * Schedule daily drink of the day notification with today's recipe + varied copy.
+ * Pre-schedule the next 30 days of Drink of the Day notifications.
  */
 export async function scheduleDrinkNotification(hour: number, minute: number): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
@@ -238,43 +255,80 @@ export async function scheduleDrinkNotification(hour: number, minute: number): P
       return;
     }
 
-    const drink = await fetchTodaysDailyDrink();
-    const dateKey = drink?.dateKey || getCurrentLocalDateString();
-    const cabinet = drink ? await getCabinetContext(drink) : undefined;
-    const copy = drink
-      ? buildDailyNotificationCopy(drink, cabinet)
-      : {
-          title: "Drink of the Day",
-          body: "Open MixWise to see today's featured cocktail.",
-        };
+    const forecast = await fetchDailyForecast(FORECAST_DAYS);
+    const today = getCurrentLocalDateString();
+    const now = new Date();
 
     await cancelDrinkNotification();
 
-    await LocalNotifications.schedule({
-      notifications: [
+    if (!forecast.length) {
+      const fallbackAt = scheduleDateForDay(today, hour, minute);
+      if (fallbackAt && fallbackAt.getTime() > now.getTime()) {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: NOTIFICATION_ID_BASE,
+              title: "Drink of the Day",
+              body: "Open MixWise to see today's featured cocktail.",
+              schedule: {
+                at: fallbackAt,
+                allowWhileIdle: true,
+              },
+              sound: "default",
+              attachments: undefined,
+              actionTypeId: "",
+              extra: {
+                type: "drink_of_the_day",
+              },
+            },
+          ],
+        });
+      }
+      await setLastScheduledDate(today);
+      debugLog("[Notifications] Scheduled fallback daily notification");
+      return;
+    }
+
+    const todayDrink = forecast.find((item) => item.dateKey === today) || forecast[0];
+    const cabinet = todayDrink ? await getCabinetContext(todayDrink) : undefined;
+
+    const notifications = forecast.flatMap((drink, index) => {
+      const at = scheduleDateForDay(drink.dateKey, hour, minute);
+      if (!at || at.getTime() <= now.getTime()) return [];
+
+      const isToday = drink.dateKey === today;
+      const copy = buildDailyNotificationCopy(drink, isToday ? cabinet : undefined);
+
+      return [
         {
-          id: NOTIFICATION_ID,
+          id: NOTIFICATION_ID_BASE + index,
           title: copy.title,
           body: copy.body,
           schedule: {
-            on: { hour, minute },
-            every: "day",
+            at,
             allowWhileIdle: true,
           },
-          sound: "default",
+          sound: "default" as const,
           attachments: undefined,
           actionTypeId: "",
           extra: {
             type: "drink_of_the_day",
-            slug: drink?.slug,
+            slug: drink.slug,
+            dateKey: drink.dateKey,
           },
         },
-      ],
+      ];
     });
 
-    await setLastScheduledDate(dateKey);
+    if (notifications.length) {
+      await LocalNotifications.schedule({ notifications });
+    }
+
+    await setLastScheduledDate(today);
     debugLog(
-      `[Notifications] Scheduled daily notification for ${hour}:${minute.toString().padStart(2, "0")} — ${copy.title}`
+      `[Notifications] Scheduled ${notifications.length} drink notifications at ${hour}:${minute
+        .toString()
+        .padStart(2, "0")}`
     );
   } catch (error) {
     console.error("[Notifications] Error scheduling notification:", error);
@@ -282,7 +336,7 @@ export async function scheduleDrinkNotification(hour: number, minute: number): P
 }
 
 /**
- * Re-schedule when the app opens or returns to foreground (refreshes copy for the new day).
+ * Re-schedule when the app opens or returns to foreground (refreshes the 30-day window).
  */
 export async function refreshDailyNotificationIfNeeded(force = false): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;

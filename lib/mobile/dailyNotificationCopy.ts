@@ -57,8 +57,8 @@ const VARIANTS: Variant[] = [
   },
   {
     match: (ctx) => utcDay(ctx.dateKey || "") === 2,
-    title: () => "Tuesday pour",
-    body: (ctx) => `No reason needed — today's pick is a ${displayName(ctx)}.`,
+    title: () => "No reason needed",
+    body: (ctx) => `Pour a ${displayName(ctx)} tonight.`,
   },
   {
     match: (ctx) => utcDay(ctx.dateKey || "") === 3,
@@ -69,6 +69,11 @@ const VARIANTS: Variant[] = [
     match: (ctx) => utcDay(ctx.dateKey || "") === 4,
     title: () => "Almost Friday",
     body: (ctx) => `Pre-game with a ${displayName(ctx)}. You've got this.`,
+  },
+  {
+    match: (ctx) => utcDay(ctx.dateKey || "") === 4,
+    title: () => "Thirsty Thursday",
+    body: (ctx) => `Thursday calls for a ${displayName(ctx)}.`,
   },
   {
     match: (ctx) => utcDay(ctx.dateKey || "") === 5,

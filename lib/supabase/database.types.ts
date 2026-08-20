@@ -560,6 +560,23 @@ export interface Database {
           created_at?: string;
         };
       };
+      daily_cocktail_calendar: {
+        Row: {
+          date_key: string;
+          slug: string;
+          created_at: string;
+        };
+        Insert: {
+          date_key: string;
+          slug: string;
+          created_at?: string;
+        };
+        Update: {
+          date_key?: string;
+          slug?: string;
+          created_at?: string;
+        };
+      };
       cocktails: {
         Row: {
           id: string;

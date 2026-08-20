@@ -17,9 +17,8 @@ import type {
   MixIngredient,
   MixCocktailIngredient
 } from './mixTypes';
-import { getDailyIndexFromCount, getCurrentLocalDateString } from "./dailyCocktail";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { getCurrentLocalDateString } from "./dailyCocktail";
+import { resolveDailyCocktailSlug } from "./dailyCocktailCalendar.server";
 import { debugLog } from "@/lib/debugLog";
 import { extractCocktailIngredientNames } from "@/lib/cocktailIngredientNames";
 import { extractIngredientName, matchIngredientName } from "@/lib/ingredientMatching";
@@ -526,69 +525,9 @@ export async function getCocktailCount(): Promise<number> {
 }
 
 async function fetchTodaysDailyCocktailSlug(dateKey: string): Promise<string | null> {
-  try {
-    const supabase = createServerSupabaseClient();
-
-    // Fetch ONLY slugs (lightweight) and pick deterministically.
-    // This avoids relying on PostgREST count semantics (which can vary under RLS).
-    const { data, error } = await supabase
-      .from("cocktails")
-      .select("slug")
-      .not("slug", "is", null)
-      .neq("slug", "")
-      .order("slug", { ascending: true })
-      .limit(5000);
-
-    if (error) {
-      console.error("getTodaysDailyCocktailSlug query error:", error);
-      // fall through to file-based fallback
-    }
-
-    const slugs = (data || [])
-      .map((r: any) => (r?.slug ? String(r.slug) : ""))
-      .filter(Boolean);
-
-    if (slugs.length > 0) {
-      // dateKey keeps the cache partition stable for the UTC day
-      const index = getDailyIndexFromCount(slugs.length, new Date(`${dateKey}T00:00:00.000Z`));
-      return slugs[index] || null;
-    }
-
-    // Fallback: use the checked-in dataset to select a daily slug.
-    // This ensures Cocktail of the Day still works even if Supabase keys/RLS break in prod.
-    try {
-      const filePath = path.join(process.cwd(), "cocktails.enriched.ndjson");
-      const raw = await fs.readFile(filePath, "utf8");
-      const fileSlugs = raw
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => {
-          try {
-            const obj = JSON.parse(line);
-            // Skip hidden cocktails if present
-            if (obj?.hidden === true) return null;
-            const s = obj?.slug?.current;
-            return s ? String(s) : null;
-          } catch {
-            return null;
-          }
-        })
-        .filter((s): s is string => !!s);
-
-      const unique = Array.from(new Set(fileSlugs)).sort();
-      if (unique.length === 0) return null;
-
-      const index = getDailyIndexFromCount(unique.length, new Date(`${dateKey}T00:00:00.000Z`));
-      return unique[index] || null;
-    } catch (fallbackError) {
-      console.error("getTodaysDailyCocktailSlug file fallback failed:", fallbackError);
-      return null;
-    }
-  } catch (e) {
-    console.error("getTodaysDailyCocktailSlug failed:", e);
-    return null;
-  }
+  // Locked calendar row wins; missing days are computed then persisted so catalog
+  // growth cannot reshuffle already-assigned (or pre-scheduled) dates.
+  return resolveDailyCocktailSlug(dateKey);
 }
 
 const getCachedTodaysDailyCocktailSlug = unstable_cache(
@@ -598,11 +537,8 @@ const getCachedTodaysDailyCocktailSlug = unstable_cache(
 );
 
 /**
- * Get today's cocktail slug deterministically (server-side).
- * Uses UTC date string hashing so all users see the same cocktail each day.
- *
- * Uses the server Supabase client (service role when available, anon fallback),
- * so this works consistently in production where the cocktails table may not be publicly countable.
+ * Get today's cocktail slug (server-side).
+ * Backed by daily_cocktail_calendar so the pick stays stable as the catalog grows.
  */
 export const getTodaysDailyCocktailSlug = cache(async (): Promise<string | null> => {
   const dateKey = getCurrentLocalDateString();
