@@ -8,6 +8,8 @@ import {
   getLastAuthEmail,
   usePreferredAuthMode,
 } from "@/lib/auth/returning-user";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
+import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -37,6 +39,8 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
   const toast = useToast();
   const preferredMode = usePreferredAuthMode();
   const isReturning = preferredMode === "login";
+  const nativeShell = useNativeShell();
+  const { openAuthDialog } = useAuthDialog();
   const [email, setEmail] = useState(getLastAuthEmail);
   const [loading, setLoading] = useState<"google" | "apple" | "email" | null>(null);
   const [sent, setSent] = useState(false);
@@ -114,9 +118,13 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
               ? isReturning
                 ? "Check your email for a sign-in link."
                 : "Check your email for a link to open your account."
-              : isReturning
-                ? "Welcome back — sign in to keep this cabinet synced."
-                : "Google, Apple, or email — then you can add a password anytime."}
+              : nativeShell
+                ? isReturning
+                  ? "Welcome back — Google or Apple keeps this cabinet synced."
+                  : "Google or Apple — then your bar stays with you."
+                : isReturning
+                  ? "Welcome back — sign in to keep this cabinet synced."
+                  : "Google, Apple, or email — then you can add a password anytime."}
           </p>
         </div>
         <button
@@ -156,28 +164,41 @@ export function SaveBarPrompt({ onDismiss }: SaveBarPromptProps) {
             </button>
           </div>
 
-          <form onSubmit={handleEmailSave} className="flex gap-2">
-            <label className="sr-only" htmlFor="save-bar-email">
-              Email
-            </label>
-            <input
-              id="save-bar-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@email.com"
-              className="input-botanical min-w-0 flex-1 !py-2 !text-sm"
-              autoComplete="email"
-              disabled={loading !== null}
-            />
+          {!nativeShell ? (
+            <form onSubmit={handleEmailSave} className="flex gap-2">
+              <label className="sr-only" htmlFor="save-bar-email">
+                Email
+              </label>
+              <input
+                id="save-bar-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                className="input-botanical min-w-0 flex-1 !py-2 !text-sm"
+                autoComplete="email"
+                disabled={loading !== null}
+              />
+              <button
+                type="submit"
+                disabled={loading !== null || !isEmailValid}
+                className="shrink-0 rounded-xl bg-terracotta px-3 py-2 text-sm font-bold text-cream transition-colors hover:bg-terracotta-dark disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading === "email" ? "…" : isReturning ? "Sign in" : "Save"}
+              </button>
+            </form>
+          ) : (
             <button
-              type="submit"
-              disabled={loading !== null || !isEmailValid}
-              className="shrink-0 rounded-xl bg-terracotta px-3 py-2 text-sm font-bold text-cream transition-colors hover:bg-terracotta-dark disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+              onClick={() => {
+                onDismiss();
+                openAuthDialog({ mode: preferredMode });
+              }}
+              className="w-full rounded-xl border border-mist px-3 py-2 text-sm font-medium text-sage hover:bg-mist/50 hover:text-forest"
             >
-              {loading === "email" ? "…" : isReturning ? "Sign in" : "Save"}
+              Email &amp; password instead
             </button>
-          </form>
+          )}
         </>
       )}
 

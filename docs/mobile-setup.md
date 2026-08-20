@@ -100,7 +100,10 @@ Without the bridge URL allowlisted, Supabase falls back to Site URL and Google l
 
 Fallback (if `openSecureWindow` is unavailable): Capacitor Browser opens the same HTTPS bridge, then the deep link returns to the app and the browser is closed.
 
-Email magic links still use the web callback (`https://www.getmixwise.com/auth/callback` or your LAN URL in dev).
+Email magic links use the web callback (`https://www.getmixwise.com/auth/callback` or your LAN URL in
+dev). The native app **hides** magic-link CTAs (Auth dialog, join panel, save-bar prompt) because those
+links open Safari and cannot return the session to the WebView — native sign-in is Google, Apple, or
+email + password.
 
 ## Supabase auth (dev web callback)
 

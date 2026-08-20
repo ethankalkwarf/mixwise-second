@@ -90,7 +90,8 @@ export function AuthDialog({
   /** Require a real TLD (2+ letters) so `user@gmail.c` does not unlock the password step. */
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email.trim());
   const showCredentialStep = mode !== "reset" && isEmailValid && emailSettled;
-  const showPasswordFields = showCredentialStep && preferPassword;
+  // Native app: password only — magic links open Safari and never return the session.
+  const showPasswordFields = showCredentialStep && (preferPassword || nativeShell);
   const anyLoading = isEmailLoading || isMagicLoading || isGoogleLoading || isAppleLoading;
 
   useEffect(() => {
@@ -105,6 +106,10 @@ export function AuthDialog({
     setPassword("");
     setEmailSettled(false);
   }, [mode]);
+
+  useEffect(() => {
+    if (nativeShell) setPreferPassword(true);
+  }, [nativeShell, isOpen]);
 
   // Wait until the address stops changing so mid-typing (.com) does not pop the password field.
   useEffect(() => {
@@ -716,21 +721,27 @@ export function AuthDialog({
                             )}
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPreferPassword(false);
-                              setPassword("");
-                              setError(null);
-                            }}
-                            className="w-full mt-3 text-sm text-sage hover:text-forest transition-colors py-1"
-                          >
-                            Email me a sign-in link instead
-                          </button>
+                          {!nativeShell ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPreferPassword(false);
+                                setPassword("");
+                                setError(null);
+                              }}
+                              className="w-full mt-3 text-sm text-sage hover:text-forest transition-colors py-1"
+                            >
+                              Email me a sign-in link instead
+                            </button>
+                          ) : (
+                            <p className="mt-3 text-center text-xs text-sage">
+                              Prefer Google or Apple above — email links open outside the app.
+                            </p>
+                          )}
                         </>
                       )}
 
-                      {mode !== "reset" && showCredentialStep && !preferPassword && (
+                      {mode !== "reset" && showCredentialStep && !preferPassword && !nativeShell && (
                         <div className="space-y-3">
                           <button
                             type="button"
@@ -755,7 +766,11 @@ export function AuthDialog({
                       )}
 
                       {mode !== "reset" && !showCredentialStep ? (
-                        <p className="text-sm text-sage">Enter your email to continue with a password or a sign-in link.</p>
+                        <p className="text-sm text-sage">
+                          {nativeShell
+                            ? "Enter your email and password, or use Google / Apple above."
+                            : "Enter your email to continue with a password or a sign-in link."}
+                        </p>
                       ) : null}
                       {mode === "reset" && (
                         <button

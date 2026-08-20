@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { consumeAuthReturnTo, resolvePostAuthPath } from "@/lib/auth/return-to";
 import { navigateInApp } from "@/lib/mobile/navigate";
 import { isNativeApp } from "@/lib/mobile/platform";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -42,6 +43,7 @@ export function AuthPanel({
   const { openLoginDialog } = useAuthDialog();
   const toast = useToast();
   const router = useRouter();
+  const nativeShell = useNativeShell();
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -153,7 +155,9 @@ export function AuthPanel({
       <p className="mt-2 text-sm text-sage">
         {fromList
           ? "Set a password and MixWise will remember the cabinet."
-          : "Google, Apple, or a link to your inbox. Takes about a minute."}
+          : nativeShell
+            ? "Google or Apple — takes about a minute."
+            : "Google, Apple, or a link to your inbox. Takes about a minute."}
       </p>
 
       {error && (
@@ -299,7 +303,7 @@ export function AuthPanel({
         </button>
       </div>
 
-      {!fromList && (
+      {!fromList && !nativeShell && (
         <>
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -329,6 +333,12 @@ export function AuthPanel({
             {emailLoading ? "Sending…" : "Email me a sign-in link"}
           </button>
         </>
+      )}
+
+      {!fromList && nativeShell && (
+        <p className="mt-6 text-center text-xs text-sage">
+          Email sign-in links open Safari and won&apos;t return you to the app — use Google or Apple.
+        </p>
       )}
     </div>
   );

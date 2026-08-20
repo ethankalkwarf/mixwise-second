@@ -200,7 +200,7 @@ function SavedPageContent() {
             <div className="mb-6">
               {activeTab === "favorites" && <FavoritesTab favorites={favorites} loading={favsLoading} />}
               {activeTab === "recent" && <RecentTab recent={recentlyViewed} loading={recentLoading} />}
-              {activeTab === "bar" && <BarTab ingredientIds={ingredientIds} />}
+              {activeTab === "bar" && <BarTab />}
             </div>
 
             <section className="mb-6 mt-6">
@@ -393,14 +393,22 @@ function RecentTab({ recent, loading }: { recent: any[]; loading: boolean }) {
   );
 }
 
-function BarTab({ ingredientIds }: { ingredientIds: string[] }) {
+function BarTab() {
+  const { ingredients, ingredientIds, isLoading, removeIngredient } = useBarIngredients();
+
+  if (isLoading) {
+    return <div className="text-center py-12 text-sage">Loading...</div>;
+  }
+
   return (
     <div>
       <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/50 shadow-md p-6 mb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-1">
           <div>
             <h3 className="text-lg font-display font-bold text-forest mb-1">Your Bar</h3>
-            <p className="text-sm text-sage">{ingredientIds.length} ingredients</p>
+            <p className="text-sm text-sage">
+              {ingredientIds.length} {ingredientIds.length === 1 ? "bottle" : "bottles"}
+            </p>
           </div>
           <AppLink
             href="/mix?shelf=1"
@@ -410,8 +418,8 @@ function BarTab({ ingredientIds }: { ingredientIds: string[] }) {
           </AppLink>
         </div>
       </div>
-      
-      {ingredientIds.length === 0 && (
+
+      {ingredientIds.length === 0 ? (
         <div className="text-center py-12">
           <ShoppingBagIcon className="w-16 h-16 text-sage/30 mx-auto mb-4" />
           <h3 className="text-lg font-display font-bold text-forest mb-2">No ingredients yet</h3>
@@ -423,6 +431,29 @@ function BarTab({ ingredientIds }: { ingredientIds: string[] }) {
             Build Your Bar <ArrowRightIcon className="w-4 h-4" />
           </AppLink>
         </div>
+      ) : (
+        <ul className="overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-md divide-y divide-mist/70">
+          {[...ingredients]
+            .sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
+            .map((item) => (
+            <li key={item.id} className="flex items-center gap-3 px-4 py-3.5">
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-cream text-forest">
+                <BeakerIcon className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1 font-medium text-forest truncate">
+                {item.name || "Ingredient"}
+              </span>
+              <button
+                type="button"
+                onClick={() => void removeIngredient(item.id)}
+                className="flex-shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-sage hover:bg-mist hover:text-terracotta"
+                aria-label={`Remove ${item.name || "ingredient"}`}
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

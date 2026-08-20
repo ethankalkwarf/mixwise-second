@@ -570,14 +570,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
-  // Get the correct redirect URL for auth
-  const getAuthRedirectUrl = useCallback(() => {
+  /** WebView / browser callback for email magic links & signup confirmation. */
+  const getEmailAuthRedirectUrl = useCallback(() => {
     rememberAuthReturnTo();
-    const nativeOAuth = getNativeOAuthRedirectUrl();
-    // Native OAuth: HTTPS bridge only — exact allowlisted path, no ?next=
-    // (appending query params can fail Supabase allowlist matching).
-    if (nativeOAuth) return nativeOAuth;
-
     const origin =
       typeof window !== "undefined"
         ? window.location.origin
@@ -586,9 +581,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return authCallbackUrlWithNext(base);
   }, []);
 
+  /** OAuth-only: native uses HTTPS bridge; web uses /auth/callback with next. */
+  const getOAuthRedirectUrl = useCallback(() => {
+    rememberAuthReturnTo();
+    const nativeOAuth = getNativeOAuthRedirectUrl();
+    // Native OAuth: HTTPS bridge only — exact allowlisted path, no ?next=
+    // (appending query params can fail Supabase allowlist matching).
+    if (nativeOAuth) return nativeOAuth;
+    return getEmailAuthRedirectUrl();
+  }, [getEmailAuthRedirectUrl]);
+
   const signInWithOAuthProvider = useCallback(
     async (provider: "google" | "apple") => {
-      const redirectUrl = getAuthRedirectUrl();
+      const redirectUrl = getOAuthRedirectUrl();
       const useNativeFlow = shouldUseNativeOAuthFlow();
 
       debugLog(`[UserProvider] Starting ${provider} OAuth`, {
@@ -614,7 +619,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         await openNativeOAuthProvider(data.url);
       }
     },
-    [supabase, getAuthRedirectUrl]
+    [supabase, getOAuthRedirectUrl]
   );
 
   // Sign in with Google OAuth
@@ -629,7 +634,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Sign up with email and password
   const signUpWithEmail = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {
-    const redirectUrl = getAuthRedirectUrl();
+    // Never use the native OAuth bridge — confirmation links must open /auth/callback.
+    const redirectUrl = getEmailAuthRedirectUrl();
 
     const { error: signUpError } = await supabase.auth.signUp({
       email,
@@ -645,11 +651,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     return {};
-  }, [supabase, getAuthRedirectUrl]);
+  }, [supabase, getEmailAuthRedirectUrl]);
 
-  // Sign in with email (magic link) - kept for backwards compatibility
+  // Sign in with email (magic link) — web only; native UI hides this path.
   const signInWithEmail = useCallback(async (email: string): Promise<{ error?: string }> => {
-    const redirectUrl = getAuthRedirectUrl();
+    const redirectUrl = getEmailAuthRedirectUrl();
 
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
@@ -664,7 +670,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     return {};
-  }, [supabase, getAuthRedirectUrl]);
+  }, [supabase, getEmailAuthRedirectUrl]);
 
   // Sign in with email and password
   const signInWithPassword = useCallback(async (email: string, password: string): Promise<{ error?: string }> => {
