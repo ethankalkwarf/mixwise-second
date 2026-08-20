@@ -55,6 +55,7 @@ export default async function HomePage() {
         featuredCocktails={preview.slice(0, 6)}
         allCocktails={preview}
         occasionCovers={occasionCovers}
+        forceNative
       >
         <div data-web-home aria-hidden className="hidden" />
       </HomePageWrapper>

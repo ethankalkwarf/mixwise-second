@@ -70,5 +70,9 @@ async function loadMegaMenuData(): Promise<MegaMenuData> {
 export async function SiteChrome({ children }: { children: React.ReactNode }) {
   const native = await isNativeAppRequest();
   const megaMenu = native ? undefined : await loadMegaMenuData();
-  return <ConditionalLayoutWrapper megaMenu={megaMenu}>{children}</ConditionalLayoutWrapper>;
+  return (
+    <ConditionalLayoutWrapper megaMenu={megaMenu} forceNative={native}>
+      {children}
+    </ConditionalLayoutWrapper>
+  );
 }

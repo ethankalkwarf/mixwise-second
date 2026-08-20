@@ -9,6 +9,8 @@ interface HomePageWrapperProps {
   allCocktails: SanityCocktail[];
   occasionCovers?: Record<string, string | null>;
   children: React.ReactNode;
+  /** Server already detected the Capacitor shell — avoid SSR→client white flash. */
+  forceNative?: boolean;
 }
 
 export function HomePageWrapper({
@@ -16,10 +18,11 @@ export function HomePageWrapper({
   allCocktails,
   occasionCovers,
   children,
+  forceNative = false,
 }: HomePageWrapperProps) {
   const nativeShell = useNativeShell();
 
-  if (nativeShell) {
+  if (forceNative || nativeShell) {
     return (
       <MobileHomePage
         featuredCocktails={featuredCocktails}

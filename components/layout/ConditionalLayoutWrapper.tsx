@@ -12,18 +12,22 @@ import type { ReactNode } from "react";
 export function ConditionalLayoutWrapper({
   children,
   megaMenu,
+  /** Server already detected Capacitor — render MobileLayout on SSR too. */
+  forceNative = false,
 }: {
   children: ReactNode;
   megaMenu?: MegaMenuData;
+  forceNative?: boolean;
 }) {
   const pathname = usePathname();
   const nativeShell = useNativeShell();
+  const isNative = forceNative || nativeShell;
 
   if (pathname.startsWith("/dev") || pathname.startsWith("/brand-preview")) {
     return <>{children}</>;
   }
 
-  if (nativeShell) {
+  if (isNative) {
     return <MobileLayout>{children}</MobileLayout>;
   }
 
