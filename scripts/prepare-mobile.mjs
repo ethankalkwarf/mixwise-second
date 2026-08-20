@@ -11,7 +11,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "out");
 const indexPath = join(outDir, "index.html");
 const iconSrc = join(root, "public", "icon-512.png");
-const wordmarkSrc = join(root, "public", "brand", "mixwise-wordmark-forest.svg");
+/** Text wordmark only — no lime period overlay. */
+const wordmarkSrc = join(root, "public", "brand", "mixwise-wordmark-v7-text-forest.png");
+const wordmarkFallback = join(root, "public", "brand", "mixwise-wordmark-forest.svg");
 const iconDest = join(
   root,
   "ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
@@ -49,7 +51,11 @@ async function refreshBrandingAssets() {
     { name: "splash-2732x2732.png", size: 2732 },
   ];
 
-  const splashMarkSrc = existsSync(wordmarkSrc) ? wordmarkSrc : iconSrc;
+  const splashMarkSrc = existsSync(wordmarkSrc)
+    ? wordmarkSrc
+    : existsSync(wordmarkFallback)
+      ? wordmarkFallback
+      : iconSrc;
 
   for (const { name, size } of splashSizes) {
     const markWidth = Math.round(size * 0.42);
@@ -73,7 +79,7 @@ async function refreshBrandingAssets() {
     writeFileSync(join(splashDir, name), splash);
   }
 
-  console.log("Updated iOS splash screens (cream + production mixwise. wordmark)");
+  console.log("Updated iOS splash screens (cream + mixwise wordmark, no lime)");
 }
 
 await refreshBrandingAssets();

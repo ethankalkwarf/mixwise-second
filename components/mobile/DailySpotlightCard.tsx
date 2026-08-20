@@ -35,7 +35,7 @@ export function DailySpotlightCard({ className = "mb-9", compact = false }: Prop
     <AppLink
       href="/cocktail-of-the-day"
       className={[
-        "native-card-link group flex w-full items-center gap-4 overflow-hidden rounded-[1.75rem]",
+        "native-card-link group flex flex-row w-full items-center gap-4 overflow-hidden rounded-[1.75rem]",
         "bg-gradient-to-br from-forest via-forest to-charcoal p-4 text-left text-cream shadow-sm",
         "active:scale-[0.98] transition-transform",
         className,

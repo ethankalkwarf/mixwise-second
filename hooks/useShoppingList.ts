@@ -5,6 +5,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
 import { formatIngredientCategory } from "@/lib/formatters";
 import { isValidUuid } from "@/lib/ingredientId";
+import { trackShoppingItemAdded } from "@/lib/analytics";
 
 const LOCAL_STORAGE_KEY = "mixwise-shopping-list";
 
@@ -118,6 +119,11 @@ export function useShoppingList() {
         if (response.ok) {
           // Update state optimistically (like clearAll does)
           setItems(prev => [newItem, ...prev]);
+          void trackShoppingItemAdded({
+            ingredient_name: ingredient.name,
+            from: "shopping_list",
+            guest: false,
+          });
           toast.success(`Added ${ingredient.name} to your list`, 5000, {
             label: "View list",
             href: "/shopping-list"
@@ -134,6 +140,11 @@ export function useShoppingList() {
       const updated = [newItem, ...items];
       setItems(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+      void trackShoppingItemAdded({
+        ingredient_name: ingredient.name,
+        from: "shopping_list",
+        guest: true,
+      });
       toast.success(`Added ${ingredient.name} to your list`, 5000, {
         label: "View list",
         href: "/shopping-list"

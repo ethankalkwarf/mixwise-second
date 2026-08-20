@@ -1,5 +1,7 @@
 import type { LearnSection } from "@/lib/learnTypes";
-import { LearnFigure } from "@/components/learn/LearnFigure";
+import { LearnFigure, hasLearnPhotoFigure } from "@/components/learn/LearnFigure";
+import { LearnStepDeck } from "@/components/learn/LearnStepDeck";
+import { deckUsesFigure, resolveStepDeck } from "@/lib/learnStepDecks";
 
 /** Shared Learn lesson type scale — keep every section on the same steps. */
 export const LEARN_LABEL =
@@ -11,20 +13,43 @@ export const LEARN_BODY = "text-[17px] !text-charcoal/85 leading-[1.7]";
 export const LEARN_LEDE =
   "font-sans text-[1.2rem] sm:text-[1.3rem] font-medium !text-charcoal leading-[1.55]";
 
+type SectionBlockProps = {
+  section: LearnSection;
+  /** Technique slug — enables step deck for “How to do it” on technique lessons. */
+  techniqueSlug?: string;
+};
+
 /**
- * Editorial lesson sections with one consistent type hierarchy.
+ * One heading → content. No “The rule” / figure kickers stacked under section titles.
  */
-export function LearnSectionBlock({ section }: { section: LearnSection }) {
+export function LearnSectionBlock({ section, techniqueSlug }: SectionBlockProps) {
   const kind = section.kind ?? "default";
-  const label = kind === "rule" ? "The rule" : kind === "tip" ? "Tip" : null;
+  const photoFigure = Boolean(section.figure && hasLearnPhotoFigure(section.figure));
+  // Prefer real photos over text step-cards when both exist for a figure id.
+  const stepDeck = photoFigure ? null : resolveStepDeck(section, { techniqueSlug });
+  const showFigure =
+    Boolean(section.figure) && !stepDeck?.steps.length && (!deckUsesFigure(section) || photoFigure);
+  const usesDeck = Boolean(stepDeck);
+  const footerNotes =
+    usesDeck &&
+    section.body.length > 0 &&
+    (deckUsesFigure(section) || (techniqueSlug && section.heading === "How to do it"))
+      ? section.body
+      : undefined;
+
+  /** Prefer the deck’s concrete title over generic “How to do it”. */
+  const heading =
+    usesDeck && section.heading === "How to do it" && stepDeck?.title
+      ? stepDeck.title
+      : section.heading;
 
   if (kind === "mistakes") {
     return (
-      <article>
+      <article className="learn-lesson-section-block">
         <h2 className={LEARN_HEADING}>{section.heading}</h2>
-        {section.figure ? (
-          <div className="my-8">
-            <LearnFigure id={section.figure} />
+        {showFigure ? (
+          <div className="my-6">
+            <LearnFigure id={section.figure!} embedded />
           </div>
         ) : null}
         <ul className="space-y-3">
@@ -48,21 +73,34 @@ export function LearnSectionBlock({ section }: { section: LearnSection }) {
   }
 
   return (
-    <article className={kind === "rule" ? "border-l border-terracotta/50 pl-5 sm:pl-6" : undefined}>
-      {label && <p className={LEARN_LABEL}>{label}</p>}
-      <h2 className={LEARN_HEADING}>{section.heading}</h2>
-      {section.figure ? (
-        <div className="my-8">
-          <LearnFigure id={section.figure} />
+    <article className="learn-lesson-section-block">
+      <h2 className={LEARN_HEADING}>{heading}</h2>
+
+      {stepDeck ? (
+        <div className="my-5">
+          <LearnStepDeck
+            kicker={stepDeck.kicker}
+            title={stepDeck.title}
+            steps={stepDeck.steps}
+            footerNotes={footerNotes}
+            showHeader={false}
+          />
+        </div>
+      ) : showFigure ? (
+        <div className="my-6">
+          <LearnFigure id={section.figure!} embedded />
         </div>
       ) : null}
-      <div className="space-y-4">
-        {section.body.map((para) => (
-          <p key={para.slice(0, 48)} className={LEARN_BODY}>
-            {para}
-          </p>
-        ))}
-      </div>
+
+      {!usesDeck ? (
+        <div className="space-y-4">
+          {section.body.map((para) => (
+            <p key={para.slice(0, 48)} className={LEARN_BODY}>
+              {para}
+            </p>
+          ))}
+        </div>
+      ) : null}
     </article>
   );
 }

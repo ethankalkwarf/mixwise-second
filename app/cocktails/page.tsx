@@ -58,7 +58,10 @@ export default async function CocktailsPage({
   const sanityCocktails: SanityCocktail[] = mapCocktailListToSanity(cocktails);
 
   return (
-    <div className="py-10 bg-cream min-h-screen" data-native-recipes-page>
+    <div
+      className={`bg-cream min-h-screen ${native ? "pb-8" : "py-10"}`}
+      data-native-recipes-page
+    >
       <MainContainer>
         {/* Header */}
         <div data-web-recipes-chrome className="mb-10">

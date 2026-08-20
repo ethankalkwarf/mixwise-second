@@ -11,6 +11,7 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { awardSharingBadge } from "@/lib/badgeEngine";
 import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 import { getBarSharePath, getBarShareUrl } from "@/lib/barShare";
+import { trackContentShared } from "@/lib/analytics";
 
 type ShareBarVariant = "cta" | "menu" | "inline";
 
@@ -44,6 +45,7 @@ export function ShareBarButton({
 
     if (!isAuthenticated || !user) {
       openPreferredAuthDialog({
+        gate: "share_bar",
         title: "Share your bar",
         subtitle: "Sign in to send friends a link to what you can mix.",
       });
@@ -81,6 +83,7 @@ export function ShareBarButton({
         try {
           await navigator.share(sharePayload);
           usedNativeShare = true;
+          void trackContentShared("bar", "native_share", { path: sharePath });
         } catch (err) {
           if ((err as Error).name === "AbortError") {
             return;
@@ -92,6 +95,7 @@ export function ShareBarButton({
         await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        void trackContentShared("bar", "copy_link", { path: sharePath });
         toast.success(
           isPublic ? "Bar link copied — send it to a friend." : "Your bar is public. Link copied!",
           5000,

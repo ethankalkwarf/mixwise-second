@@ -17,6 +17,7 @@ import { NativeNamePrompt } from "@/components/mobile/NativeNamePrompt";
 import { profileNeedsGivenName } from "@/lib/homeHeroHeadline";
 import { getTabBarConfig, MOBILE_TAB_DESTINATIONS, type MobileTabId } from "@/lib/mobile/tabBarConfig";
 import { SparklesIcon } from "@heroicons/react/24/outline";
+import { trackNativeIntroStep } from "@/lib/analytics";
 
 type IntroPhase = "loading" | "intro" | "ready";
 
@@ -106,12 +107,13 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
 
   const enterApp = useCallback(
     (path?: string) => {
+      void trackNativeIntroStep("complete", { path: path || "/", is_replay: isReplay });
       markNativeIntroComplete();
       setIsReplay(false);
       setPhase("ready");
       if (path) router.push(path);
     },
-    [router]
+    [router, isReplay]
   );
 
   const resolvePhase = useCallback(() => {
@@ -140,6 +142,7 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
     }
 
     setPhase("intro");
+    void trackNativeIntroStep("shown");
   }, [native, isLoading, isAuthenticated, isReplay]);
 
   useEffect(() => {
@@ -160,6 +163,7 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
   }, [native]);
 
   const goNext = () => {
+    void trackNativeIntroStep("step", { step, is_replay: isReplay });
     if (isReplay && lastIntro) {
       setIsReplay(false);
       setPhase("ready");
@@ -282,21 +286,42 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
             </button>
           )}
           {!isReplay && lastIntro && (
-            <button
-              type="button"
-              onClick={() => {
-                enterApp("/");
-                openAuthDialog({
-                  mode: hasLikelyAccount() ? "login" : "login",
-                  dismissible: true,
-                  title: "Welcome back",
-                  subtitle: "Sign in to restore your cabinet and favorites.",
-                });
-              }}
-              className="w-full py-2.5 text-sm font-medium text-sage"
-            >
-              I already have an account
-            </button>
+            <div className="mt-1 space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  enterApp("/");
+                  openAuthDialog({
+                    mode: hasLikelyAccount() ? "login" : "signup",
+                    dismissible: true,
+                    title: hasLikelyAccount() ? "Welcome back" : "Create your free account",
+                    subtitle: hasLikelyAccount()
+                      ? "Sign in to restore your cabinet and favorites."
+                      : "Save your bar and favorites so nothing is lost on this phone.",
+                  });
+                }}
+                className="w-full rounded-2xl bg-forest py-3.5 text-sm font-bold text-cream"
+              >
+                {hasLikelyAccount() ? "Log in" : "Create free account"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  enterApp("/");
+                  openAuthDialog({
+                    mode: hasLikelyAccount() ? "signup" : "login",
+                    dismissible: true,
+                    title: hasLikelyAccount() ? "Create another account" : "Welcome back",
+                    subtitle: hasLikelyAccount()
+                      ? "Start fresh with a new MixWise account."
+                      : "Sign in to restore your cabinet and favorites.",
+                  });
+                }}
+                className="w-full py-2.5 text-sm font-medium text-sage"
+              >
+                {hasLikelyAccount() ? "Create a new account" : "I already have an account"}
+              </button>
+            </div>
           )}
           {isReplay && (
             <button

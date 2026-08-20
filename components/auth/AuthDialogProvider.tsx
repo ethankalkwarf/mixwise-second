@@ -7,6 +7,7 @@ import {
   getPreferredAuthMode,
   preferredAuthCopy,
 } from "@/lib/auth/returning-user";
+import { trackAuthGateShown } from "@/lib/analytics";
 
 export type AuthDialogMode = "signup" | "login" | "reset";
 
@@ -32,9 +33,19 @@ interface AuthDialogOptions {
   /** Explicit leave action when the dialog is not trivially dismissible (e.g. Mix gate). */
   escapeLabel?: string;
   onEscape?: () => void;
+  /** Analytics gate id, e.g. mix_gate, favorite, learn_gate, nav. */
+  gate?: string;
 }
 
 const AuthDialogContext = createContext<AuthDialogContextType | undefined>(undefined);
+
+function trackGate(opts?: AuthDialogOptions, fallbackGate?: string) {
+  const gate = opts?.gate || fallbackGate || opts?.mode || "auth_dialog";
+  void trackAuthGateShown(gate, {
+    mode: opts?.mode,
+    dismissible: opts?.dismissible !== false,
+  });
+}
 
 export function AuthDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,6 +56,7 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
     const mode = opts?.mode ?? getPreferredAuthMode();
     const dismissible = opts?.dismissible !== false;
     dismissibleRef.current = dismissible;
+    trackGate({ ...opts, mode }, opts?.gate || "auth_dialog");
     setOptions({
       ...opts,
       mode,
@@ -57,6 +69,7 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
   const openPreferredAuthDialog = useCallback((opts?: Omit<AuthDialogOptions, "mode">) => {
     const mode = getPreferredAuthMode();
     const copy = preferredAuthCopy(mode);
+    trackGate({ ...opts, mode }, opts?.gate || "preferred_auth");
     setOptions({
       title: copy.title,
       subtitle: copy.subtitle,
@@ -68,6 +81,7 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const openLoginDialog = useCallback((opts?: Omit<AuthDialogOptions, "mode">) => {
+    trackGate({ ...opts, mode: "login" }, opts?.gate || "login");
     setOptions({
       ...opts,
       mode: "login",
@@ -77,11 +91,13 @@ export function AuthDialogProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const openSignupDialog = useCallback((opts?: Omit<AuthDialogOptions, "mode">) => {
+    trackGate({ ...opts, mode: "signup" }, opts?.gate || "signup");
     setOptions({ ...opts, mode: "signup" });
     setIsOpen(true);
   }, []);
 
   const openResetDialog = useCallback((opts?: Omit<AuthDialogOptions, "mode">) => {
+    trackGate({ ...opts, mode: "reset" }, opts?.gate || "reset");
     setOptions({ ...opts, mode: "reset" });
     setIsOpen(true);
   }, []);

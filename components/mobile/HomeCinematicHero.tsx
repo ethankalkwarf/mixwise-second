@@ -11,6 +11,8 @@ import { nativePhotoUrl } from "@/lib/mobile/nativeImage";
 type Props = {
   eyebrow: string;
   title: string;
+  /** Rotating prompt when the drink name is not revealed yet. */
+  idleTitle?: string;
   subtitle: string;
   imageUrl?: string | null;
   recipeHref?: string | null;
@@ -26,6 +28,7 @@ type Props = {
 export function HomeCinematicHero({
   eyebrow,
   title,
+  idleTitle = "What are you pouring?",
   subtitle,
   imageUrl,
   recipeHref,
@@ -52,7 +55,7 @@ export function HomeCinematicHero({
     video.play().catch(() => {});
   }, [heroSrc]);
 
-  const displayTitle = revealName ? formatCocktailName(title) : "What are you pouring?";
+  const displayTitle = revealName ? formatCocktailName(title) : idleTitle;
 
   return (
     <section className="relative w-full bg-[#1c1814]">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackContentShared } from "@/lib/analytics";
 import { ShareIcon, LinkIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/components/ui/toast";
 import { Capacitor } from "@capacitor/core";
@@ -48,6 +49,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      void trackContentShared("cocktail", "copy_link", { url });
       toast.success("Link copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -64,6 +66,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
           url,
           dialogTitle: `Share ${title}`,
         });
+        void trackContentShared("cocktail", "native_share", { url });
       } catch (err) {
         if ((err as Error).name !== "AbortError") {
           toast.error("Failed to share");
@@ -80,14 +83,13 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
           text: description || title,
           url,
         });
+        void trackContentShared("cocktail", "web_share", { url });
       } catch (err) {
-        // User cancelled or error
         if ((err as Error).name !== "AbortError") {
           toast.error("Failed to share");
         }
       }
     } else {
-      // Fall back to copy link if share API not available
       handleCopyLink();
     }
   };
@@ -112,6 +114,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
             href={shareLinks.twitter}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => void trackContentShared("cocktail", "twitter", { url })}
             className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors"
             aria-label="Share on X (Twitter)"
           >
@@ -123,6 +126,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
             href={shareLinks.facebook}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => void trackContentShared("cocktail", "facebook", { url })}
             className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors"
             aria-label="Share on Facebook"
           >

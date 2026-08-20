@@ -1,32 +1,41 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { activeMobileTab, MIXWISE_FOCUS_SEARCH, MOBILE_TABS } from "@/lib/mobile/navConfig";
+import { useEffect, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  activeTabDestination,
+  MIXWISE_FOCUS_SEARCH,
+  type MobileTabDestination,
+} from "@/lib/mobile/tabBarConfig";
+import { useMobileTabBar } from "@/hooks/useMobileTabBar";
 import { navigateInApp } from "@/lib/mobile/navigate";
 
 export function MobileTabBar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const activeTab = activeMobileTab(pathname);
+  const { bar, tabs } = useMobileTabBar();
+
+  const activeId = useMemo(
+    () => activeTabDestination(pathname, searchParams, bar),
+    [pathname, searchParams, bar]
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      for (const tab of MOBILE_TABS) {
-        if (tab.path) router.prefetch(tab.path);
+      for (const tab of tabs) {
+        router.prefetch(tab.path.split("?")[0] ?? tab.path);
       }
     }, 800);
     return () => window.clearTimeout(timer);
-  }, [router]);
+  }, [router, tabs]);
 
-  const handlePress = (tab: (typeof MOBILE_TABS)[number]) => {
-    if (tab.id === "search" && pathname === "/cocktails") {
+  const handlePress = (tab: MobileTabDestination) => {
+    if (tab.id === "search" && pathname === "/cocktails" && !searchParams.get("browse")) {
       window.dispatchEvent(new Event(MIXWISE_FOCUS_SEARCH));
       return;
     }
-    if (tab.path) {
-      navigateInApp(router, tab.path);
-    }
+    navigateInApp(router, tab.path);
   };
 
   return (
@@ -35,13 +44,13 @@ export function MobileTabBar() {
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div className="flex h-[4.25rem] items-stretch px-1">
-        {MOBILE_TABS.map((tab) => {
-          const isActive = tab.id === activeTab;
+        {tabs.map((tab) => {
+          const isActive = tab.id === activeId;
           const Icon = isActive ? tab.iconSolid : tab.icon;
 
           return (
             <button
-              key={tab.id}
+              key={`${tab.id}-${tab.path}`}
               type="button"
               onClick={() => handlePress(tab)}
               className="group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5"
@@ -65,7 +74,7 @@ export function MobileTabBar() {
                 />
               </span>
               <span
-                className={`text-[10px] font-semibold leading-none transition-colors ${
+                className={`max-w-full truncate px-0.5 text-[10px] font-semibold leading-none transition-colors ${
                   isActive ? "text-terracotta" : "text-forest/70"
                 }`}
               >

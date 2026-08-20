@@ -22,6 +22,8 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (8.0.3):
     - Capacitor
+  - CapgoCapacitorInappbrowser (8.15.3):
+    - Capacitor
 
 DEPENDENCIES:
   - "AparajitaCapacitorBiometricAuth (from `../../node_modules/@aparajita/capacitor-biometric-auth`)"
@@ -36,6 +38,7 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "CapgoCapacitorInappbrowser (from `../../node_modules/@capgo/capacitor-inappbrowser`)"
 
 EXTERNAL SOURCES:
   AparajitaCapacitorBiometricAuth:
@@ -62,6 +65,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
+  CapgoCapacitorInappbrowser:
+    :path: "../../node_modules/@capgo/capacitor-inappbrowser"
 
 SPEC CHECKSUMS:
   AparajitaCapacitorBiometricAuth: 1ae24ba90d7977dffb4bc9040f374a807a510c98
@@ -76,7 +81,8 @@ SPEC CHECKSUMS:
   CapacitorShare: 0c58305114538568059bfc07111f22dcb9cb2a82
   CapacitorSplashScreen: 7bf61c2001557ff9e195e601c6b87344480d3c65
   CapacitorStatusBar: eca7bc2b58d9f886f1ef9edb66e57a9b29c121af
+  CapgoCapacitorInappbrowser: 8aec1e343724d47f99e9c157d4ca7ff567f8649c
 
-PODFILE CHECKSUM: 9358b1584ef36a311bc7cf17b50ebd688af50677
+PODFILE CHECKSUM: 2d9060e071d3514de78fe8cd8c64e444ee8ec31c
 
 COCOAPODS: 1.16.2

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import {
   CheckIcon,
   ChevronLeftIcon,
@@ -19,6 +19,12 @@ import { formatIngredientCategory } from "@/lib/formatters";
 import { lookupIngredient } from "@/lib/ingredientMatching";
 import { searchMixIngredients } from "@/lib/search";
 import type { MixCocktail, MixIngredient, MixMatchGroups } from "@/lib/mixTypes";
+import {
+  trackEmptyStateSeen,
+  trackMixResultClicked,
+  trackMixToolUsed,
+} from "@/lib/analytics";
+import { useUser } from "@/components/auth/UserProvider";
 
 type Pane = "tonight" | "shelf";
 
@@ -78,6 +84,8 @@ export function NativeMixView({
   const [pane, setPane] = useState<Pane>(initialPane ?? "shelf");
   const [ready, setReady] = useState(false);
   const [query, setQuery] = useState("");
+  const { user } = useUser();
+  const mixTracked = useRef(false);
   const [category, setCategory] = useState<string | null>(null);
   const { favorites } = useFavorites();
 
@@ -90,6 +98,24 @@ export function NativeMixView({
     }
     setReady(true);
   }, [barLoading, ingredientIds.length, initialPane, ready]);
+
+  useEffect(() => {
+    if (!ready || pane !== "tonight" || cocktailsLoading || mixTracked.current) return;
+    if (ingredientIds.length === 0) return;
+    mixTracked.current = true;
+    void trackMixToolUsed(user?.id ?? null, ingredientIds.length, matchCounts.canMake, {
+      almost_there: matchCounts.almostThere,
+      step: "tonight",
+    });
+  }, [
+    ready,
+    pane,
+    cocktailsLoading,
+    ingredientIds.length,
+    matchCounts.canMake,
+    matchCounts.almostThere,
+    user?.id,
+  ]);
 
   const catalog = useMemo(
     () => allIngredients.filter((item) => !stapleIds.includes(item.id)),
@@ -241,6 +267,38 @@ function PaneButton({
   );
 }
 
+function EmptyTonight({
+  cocktailsLoading,
+  onOpenShelf,
+}: {
+  cocktailsLoading: boolean;
+  onOpenShelf: () => void;
+}) {
+  useEffect(() => {
+    if (!cocktailsLoading) {
+      void trackEmptyStateSeen("mix_tonight");
+    }
+  }, [cocktailsLoading]);
+
+  return (
+    <div className="rounded-3xl bg-white px-5 py-12 text-center">
+      <p className="font-display text-xl font-bold text-forest">
+        {cocktailsLoading ? "Matching drinks…" : "Nothing you can pour yet"}
+      </p>
+      <p className="mt-2 text-sm text-sage">
+        Add a mixer or citrus — lime juice and simple syrup unlock a lot.
+      </p>
+      <button
+        type="button"
+        onClick={onOpenShelf}
+        className="mt-5 rounded-2xl bg-terracotta px-5 py-3 text-sm font-bold text-cream"
+      >
+        Edit cabinet
+      </button>
+    </div>
+  );
+}
+
 function TonightPane({
   drinks,
   hasMore,
@@ -264,21 +322,10 @@ function TonightPane({
 }) {
   if (canMake === 0) {
     return (
-      <div className="rounded-3xl bg-white px-5 py-12 text-center">
-        <p className="font-display text-xl font-bold text-forest">
-          {cocktailsLoading ? "Matching drinks…" : "Nothing you can pour yet"}
-        </p>
-        <p className="mt-2 text-sm text-sage">
-          Add a mixer or citrus — lime juice and simple syrup unlock a lot.
-        </p>
-        <button
-          type="button"
-          onClick={onOpenShelf}
-          className="mt-5 rounded-2xl bg-terracotta px-5 py-3 text-sm font-bold text-cream"
-        >
-          Edit cabinet
-        </button>
-      </div>
+      <EmptyTonight
+        cocktailsLoading={cocktailsLoading}
+        onOpenShelf={onOpenShelf}
+      />
     );
   }
 
@@ -296,11 +343,14 @@ function TonightPane({
         {drinks.map((cocktail) => (
           <NativeDrinkTile
             key={cocktail.id}
-            href={`/cocktails/${cocktail.slug}`}
+            href={`/cocktails/${cocktail.slug}?from=mix`}
             name={cocktail.name}
             spirit={cocktail.primarySpirit}
             imageUrl={cocktail.imageUrl}
             createdAt={cocktail.createdAt}
+            onNavigate={() => {
+              void trackMixResultClicked(cocktail.slug, "tonight");
+            }}
           />
         ))}
       </div>

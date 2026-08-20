@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BookOpenIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import { LearnProgressProvider, useLearnProgress } from "@/hooks/useLearnProgress";
+import { formatLearnLevelDetail, formatLearnProgressLine } from "@/lib/learnProgressCopy";
 
 export function DashboardLearnCard() {
   return (
@@ -79,7 +80,7 @@ function DashboardLearnCardInner() {
           <div>
             <h2 className="text-xl font-display font-bold text-forest">Learn Mixology</h2>
             <span className="text-sm text-sage block min-h-[1.25rem]">
-              {`${level.name} · ${level.xp} XP · ${lessonsDone}/${lessonsTotal} lessons`}
+              {formatLearnProgressLine(level, lessonsDone, lessonsTotal)}
             </span>
           </div>
         </div>
@@ -97,9 +98,7 @@ function DashboardLearnCardInner() {
             <span className="font-semibold uppercase tracking-wider text-terracotta">
               Level {level.level}
             </span>
-            <span className="text-sage">
-              {level.nextAt ? `${level.xp} / ${level.nextAt} XP` : `${level.xp} XP`}
-            </span>
+            <span className="text-sage">{formatLearnLevelDetail(level)}</span>
           </div>
           <div className="h-2 rounded-full bg-mist overflow-hidden">
             <div

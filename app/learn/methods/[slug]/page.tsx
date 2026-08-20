@@ -5,9 +5,10 @@ import { LearnHero } from "@/components/learn/LearnHero";
 import { LearnLessonArticle } from "@/components/learn/LearnLessonArticle";
 import { LearnPracticeCocktails } from "@/components/learn/LearnPracticeCocktails";
 import { LearnJoinCta } from "@/components/learn/LearnJoinCta";
-import { LearnChecks } from "@/components/learn/LearnChecks";
-import { LearnProgressControls } from "@/components/learn/LearnProgressControls";
 import { LearnContentGate } from "@/components/learn/LearnContentGate";
+import { LearnLessonChallengeProvider } from "@/components/learn/LearnLessonChallenge";
+import { NativeLearnLessonHero } from "@/components/mobile/NativeLearnLessonHero";
+import { NativeLearnLessonActions } from "@/components/mobile/NativeLearnLessonActions";
 import { LEARN_METHODS, getLearnGuide, getLearnMethod } from "@/lib/learnLibrary";
 import { getMethodLessonLayers } from "@/lib/learnMethodsContent";
 import { getMethodChecks } from "@/lib/learnChecks";
@@ -47,35 +48,48 @@ export default async function LearnMethodPage({ params }: PageProps) {
   const layers = getMethodLessonLayers(method);
 
   return (
-    <div className="min-h-screen bg-cream">
-      <LearnHero
+    <LearnLessonChallengeProvider
+      kind="method"
+      slug={slug}
+      checks={checks}
+      lessonTitle={method.label}
+    >
+    <div className="min-h-screen bg-cream" data-native-learn-lesson>
+      <NativeLearnLessonHero
+        title={method.label}
+        eyebrow={`Core method · ${method.cue}`}
+        summary={method.summary}
         imageSrc={method.coverImage}
         imageAlt={method.coverAlt}
-        eyebrow={`Core method · ${method.cue}`}
-        title={method.label}
-        summary={method.summary}
-        backHref="/learn"
+        kind="method"
+        slug={slug}
       />
+      <div data-web-learn-chrome>
+        <LearnHero
+          imageSrc={method.coverImage}
+          imageAlt={method.coverAlt}
+          eyebrow={`Core method · ${method.cue}`}
+          title={method.label}
+          summary={method.summary}
+          backHref="/learn"
+        />
+      </div>
 
-      <MainContainer className="py-10 sm:py-14 max-w-3xl">
+      <MainContainer className="native-learn-lesson__body py-10 sm:py-14 max-w-3xl">
         <LearnContentGate gateId={`method:${slug}`} teaserLabel="Keep learning this method">
           <LearnLessonArticle
             layers={layers}
             afterCore={
-              <>
-                <LearnChecks checks={checks} kind="method" slug={slug} />
-                <LearnPracticeCocktails
-                  drinks={method.practice}
-                  heading={`Practice ${method.label.toLowerCase()}`}
-                />
-                <LearnProgressControls kind="method" slug={slug} />
-              </>
+              <LearnPracticeCocktails
+                drinks={method.practice}
+                heading={`Practice ${method.label.toLowerCase()}`}
+              />
             }
           />
         </LearnContentGate>
 
         {(relatedGuide || relatedTechniques.length > 0) && (
-          <nav className="mt-14 pt-8 border-t border-mist">
+          <nav className="native-learn-related mt-14 pt-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-terracotta mb-5">
               Keep going
             </p>
@@ -112,10 +126,12 @@ export default async function LearnMethodPage({ params }: PageProps) {
           </nav>
         )}
 
-        <div className="mt-12">
+        <div className="mt-12" data-web-learn-chrome>
           <LearnJoinCta />
         </div>
       </MainContainer>
+      <NativeLearnLessonActions kind="method" slug={slug} />
     </div>
+    </LearnLessonChallengeProvider>
   );
 }

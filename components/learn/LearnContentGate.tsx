@@ -5,6 +5,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { isLearnPublic } from "@/lib/learnAccess";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
 
 type Props = {
   /** Unique per lesson — used for session lock persistence */
@@ -29,8 +30,9 @@ export function LearnContentGate({
 }: Props) {
   const { isAuthenticated, isLoading } = useUser();
   const { openSignupDialog, openLoginDialog } = useAuthDialog();
+  const nativeShell = useNativeShell();
   const [locked, setLocked] = useState(false);
-  const gatingEnabled = isLearnPublic();
+  const gatingEnabled = isLearnPublic() && !nativeShell;
   const preferredMode = usePreferredAuthMode();
 
   useEffect(() => {

@@ -9,6 +9,7 @@ import { checkBarBadges } from "@/lib/badgeEngine";
 import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 import { buildNameToIdMap, buildIdToNameMap, normalizeToCanonicalMultiple } from "@/lib/ingredientId";
 import type { BarIngredient } from "@/lib/supabase/database.types";
+import { trackIngredientAdded, trackIngredientRemoved } from "@/lib/analytics";
 import { debugLog } from "@/lib/debugLog";
 
 const LOCAL_STORAGE_KEY = "mixwise-bar-inventory";
@@ -611,6 +612,10 @@ export function useBarIngredients(): UseBarIngredientsResult {
         } else {
           debugLog(`[useBarIngredients] Ingredient ${id} added, bar size: ${newIds.length}`);
           toast.success("Ingredient added to your bar");
+          void trackIngredientAdded(user.id, id, name!, {
+            bar_size: newIds.length,
+            guest: false,
+          });
 
           // Check for badge unlocks
           try {
@@ -639,6 +644,10 @@ export function useBarIngredients(): UseBarIngredientsResult {
       saveToLocal(newIds);
       debugLog(`[useBarIngredients] Ingredient ${id} added to localStorage, bar size: ${newIds.length}`);
       toast.success("Ingredient added to your bar");
+      void trackIngredientAdded(null, id, name!, {
+        bar_size: newIds.length,
+        guest: true,
+      });
     }
   }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
 
@@ -663,12 +672,14 @@ export function useBarIngredients(): UseBarIngredientsResult {
       } else {
         debugLog(`[useBarIngredients] Ingredient ${id} removed, bar size: ${newIds.length}`);
         toast.info("Ingredient removed");
+        void trackIngredientRemoved(user.id, id, { bar_size: newIds.length });
       }
     } else {
       // Save to localStorage
       saveToLocal(newIds);
       debugLog(`[useBarIngredients] Ingredient ${id} removed from localStorage, bar size: ${newIds.length}`);
       toast.info("Ingredient removed");
+      void trackIngredientRemoved(null, id, { bar_size: newIds.length });
     }
   }, [ingredientIds, isAuthenticated, user, supabase, saveToLocal, toast]);
 

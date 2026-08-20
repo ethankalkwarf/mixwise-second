@@ -78,19 +78,23 @@ Browse pages (recipes, learn, ingredients, collections) show a **horizontal chip
 
 Google and Apple sign-in **must** return to the app via a deep link. If OAuth finishes in Safari on `getmixwise.com`, the session stays in the browser and the app stays logged out.
 
-Add this redirect URL in Supabase **Authentication → URL Configuration → Redirect URLs**:
+Add these redirect URLs in Supabase **Authentication → URL Configuration → Redirect URLs**:
 
 ```
 com.getmixwise.app://auth/callback
+https://www.getmixwise.com/auth/native-callback
+https://mixwise-testflight.vercel.app/auth/native-callback
 ```
 
-Without it, Supabase rejects the OAuth callback and Google/Apple login will fail for all users (not just in testing).
+Without them, Supabase rejects the OAuth callback (or falls back to Site URL) and Google/Apple login opens the website instead of the app.
 
 ### How native OAuth works
 
-1. App opens Google/Apple in an in-app browser (`@capacitor/browser`)
+1. App opens Google/Apple via `ASWebAuthenticationSession` (`@capgo/capacitor-inappbrowser` `openSecureWindow`)
 2. Supabase redirects to `com.getmixwise.app://auth/callback?code=…`
-3. iOS reopens MixWise; the app exchanges the code and stores the session in the WebView
+3. The auth sheet dismisses automatically; the app exchanges the code and stores the session in the WebView
+
+Fallback (older Browser flow / allowlist mishap): Supabase can still land on `https://<origin>/auth/native-callback?code=…`, which deep-links into the app.
 
 Email magic links still use the web callback (`https://www.getmixwise.com/auth/callback` or your LAN URL in dev).
 

@@ -320,7 +320,7 @@ export function registerNotificationDeepLinks(): () => void {
   void LocalNotifications.addListener("localNotificationActionPerformed", (event) => {
     const type = event.notification.extra?.type;
     if (type === "drink_of_the_day") {
-      requestInAppNavigation("/cocktail-of-the-day");
+      requestInAppNavigation("/cocktail-of-the-day", "notification");
     }
   }).then((handle) => {
     removeListener = () => handle.remove();

@@ -6,9 +6,9 @@ import { LearnLessonArticle } from "@/components/learn/LearnLessonArticle";
 import { LearnPracticeCocktails } from "@/components/learn/LearnPracticeCocktails";
 import { LearnJoinCta } from "@/components/learn/LearnJoinCta";
 import { LearnContentGate } from "@/components/learn/LearnContentGate";
-import { LearnTechniqueVisual } from "@/components/learn/LearnTechniqueVisual";
-import { LearnChecks } from "@/components/learn/LearnChecks";
-import { LearnProgressControls } from "@/components/learn/LearnProgressControls";
+import { LearnLessonChallengeProvider } from "@/components/learn/LearnLessonChallenge";
+import { NativeLearnLessonHero } from "@/components/mobile/NativeLearnLessonHero";
+import { NativeLearnLessonActions } from "@/components/mobile/NativeLearnLessonActions";
 import {
   getAllTechniqueLearnEntries,
   getTechniqueTermBySlug,
@@ -70,42 +70,53 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
     ? { src: lesson.coverImage, alt: lesson.coverAlt }
     : { src: "/learn/method-shake.webp", alt: formatTechniqueLabel(term.label) };
 
-  const midFigure = <LearnTechniqueVisual slug={slug} label={term.label} />;
-
   return (
-    <div className="min-h-screen bg-cream">
-      <LearnHero
+    <LearnLessonChallengeProvider
+      kind="technique"
+      slug={slug}
+      checks={checks}
+      lessonTitle={formatTechniqueLabel(term.label)}
+    >
+    <div className="min-h-screen bg-cream" data-native-learn-lesson>
+      <NativeLearnLessonHero
+        title={formatTechniqueLabel(term.label)}
+        eyebrow="Technique"
+        summary={term.explanation}
         imageSrc={cover.src}
         imageAlt={cover.alt}
-        eyebrow="Technique"
-        title={formatTechniqueLabel(term.label)}
-        summary={term.explanation}
-        backHref="/learn"
+        kind="technique"
+        slug={slug}
       />
+      <div data-web-learn-chrome>
+        <LearnHero
+          imageSrc={cover.src}
+          imageAlt={cover.alt}
+          eyebrow="Technique"
+          title={formatTechniqueLabel(term.label)}
+          summary={term.explanation}
+          backHref="/learn"
+        />
+      </div>
 
-      <MainContainer className="py-10 sm:py-14 max-w-3xl">
+      <MainContainer className="native-learn-lesson__body py-10 sm:py-14 max-w-3xl">
         <LearnContentGate gateId={`technique:${slug}`} teaserLabel="Keep learning this technique">
           <LearnLessonArticle
             layers={layers}
-            midFigure={midFigure}
+            techniqueSlug={slug}
             afterCore={
-              <>
-                <LearnChecks checks={checks} kind="technique" slug={slug} />
-                {lesson && lesson.practice.length > 0 ? (
-                  <LearnPracticeCocktails
-                    drinks={lesson.practice}
-                    heading="Practice it"
-                    subcopy="Open a recipe, focus on this move once, then make it again next week."
-                  />
-                ) : null}
-                <LearnProgressControls kind="technique" slug={slug} />
-              </>
+              lesson && lesson.practice.length > 0 ? (
+                <LearnPracticeCocktails
+                  drinks={lesson.practice}
+                  heading="Practice it"
+                  subcopy="Open a recipe, focus on this move once, then make it again next week."
+                />
+              ) : null
             }
           />
         </LearnContentGate>
 
         {(relatedMethod || related.length > 0) && (
-          <nav className="mt-14 pt-8 border-t border-mist">
+          <nav className="native-learn-related mt-14 pt-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-terracotta mb-5">
               Keep going
             </p>
@@ -145,10 +156,12 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
           </nav>
         )}
 
-        <div className="mt-12">
+        <div className="mt-12" data-web-learn-chrome>
           <LearnJoinCta />
         </div>
       </MainContainer>
+      <NativeLearnLessonActions kind="technique" slug={slug} />
     </div>
+    </LearnLessonChallengeProvider>
   );
 }

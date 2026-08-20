@@ -30,14 +30,14 @@ export function LearnProgressControls({ kind, slug }: Props) {
   if (!isAuthenticated) {
     return (
       <div className="rounded-2xl border border-dashed border-mist px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-sage">Sign in to save this lesson and earn XP.</p>
+        <p className="text-sm text-sage">Sign in to save this lesson and track your progress.</p>
         <div className="flex gap-4 text-sm">
           <button
             type="button"
             onClick={() =>
               openLoginDialog({
                 title: "Save Learn progress",
-                subtitle: "Pick up where you left off and earn XP.",
+                subtitle: "Pick up where you left off and keep your streak.",
               })
             }
             className="font-semibold text-terracotta hover:underline"
@@ -81,7 +81,7 @@ export function LearnProgressControls({ kind, slug }: Props) {
       onClick={() => void completeLesson(kind, slug)}
       className="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
     >
-      Mark complete · earn XP
+      Mark complete
     </button>
   );
 }

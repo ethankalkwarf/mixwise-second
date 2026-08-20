@@ -1,5 +1,7 @@
 "use client";
 
+import { trackFirstWinShown } from "@/lib/analytics";
+
 export const FIRST_WIN_SEEN_KEY = "mixwise-first-win-seen";
 export const FIRST_WIN_EVENT = "mixwise:first-win";
 
@@ -24,6 +26,7 @@ export function markFirstWinSeen(): void {
 export function notifyFirstWin(readyCount: number): void {
   if (typeof window === "undefined") return;
   markFirstWinSeen();
+  void trackFirstWinShown(readyCount);
   window.dispatchEvent(
     new CustomEvent(FIRST_WIN_EVENT, { detail: { readyCount } })
   );

@@ -11,7 +11,7 @@ export default async function MixPage() {
   const native = await isNativeAppRequest();
 
   return (
-    <div className="bg-cream min-h-screen">
+    <div className="bg-cream min-h-screen" data-native-mix-page>
       {!native ? (
         <>
           <SoftwareApplicationSchema />

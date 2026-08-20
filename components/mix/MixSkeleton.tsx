@@ -2,7 +2,7 @@
 
 export function MixSkeleton() {
   return (
-    <div className="py-10 bg-cream min-h-screen" aria-busy="true" aria-label="Loading Mix tool">
+    <div className="mix-skeleton-root bg-cream min-h-screen py-10" aria-busy="true" aria-label="Loading Mix tool">
       <div className="native-mix-skeleton-header max-w-7xl mx-auto px-4 sm:px-6 mb-6">
         <div className="skeleton h-8 w-40 rounded-2xl mb-2" />
         <div className="skeleton h-4 w-64 rounded-2xl" />

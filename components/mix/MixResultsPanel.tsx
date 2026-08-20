@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
@@ -10,6 +10,7 @@ import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
 import { isNewCocktail } from "@/lib/formatters";
 import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
+import { trackEmptyStateSeen, trackMixResultClicked } from "@/lib/analytics";
 
 type Props = {
   inventoryIds: string[];
@@ -65,6 +66,14 @@ export function MixResultsPanel({
   }, [ready, activeCategory, showAllRecipes, allCocktails]);
 
   const { visibleItems: visibleDrinks, hasMore, loadMoreRef } = useInfiniteVisibleCount(displayedDrinks);
+
+  useEffect(() => {
+    if (displayedDrinks.length === 0 && !showAllRecipes) {
+      void trackEmptyStateSeen("mix_results", {
+        inventory_count: inventoryIds.length,
+      });
+    }
+  }, [displayedDrinks.length, showAllRecipes, inventoryIds.length]);
 
   // Smart additions
   const unlockPotential = useMemo(() => {
@@ -352,7 +361,10 @@ function CocktailCard({
 
   return (
     <HardNavLink
-      href={`/cocktails/${cocktail.slug}`}
+      href={`/cocktails/${cocktail.slug}?from=mix`}
+      onClick={() => {
+        void trackMixResultClicked(cocktail.slug, isReady ? "ready" : "almost");
+      }}
       className={`group relative flex flex-col min-w-0 w-full overflow-hidden rounded-3xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-terracotta/50 ${
         isReady
           ? "bg-white border-mist hover:border-olive/40 hover:shadow-card-hover hover:-translate-y-1"

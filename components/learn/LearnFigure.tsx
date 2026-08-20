@@ -1,10 +1,18 @@
 import type { ReactNode } from "react";
+import { LearnPhotoPager, type LearnPhotoSlide } from "@/components/learn/LearnPhotoPager";
 
 type DiagramSpec = {
   kicker: string;
   title: string;
   note?: string;
   node: ReactNode;
+};
+
+type PhotoFigureSpec = {
+  kicker: string;
+  title: string;
+  note?: string;
+  slides: LearnPhotoSlide[];
 };
 
 const FOREST = "#3A4D39";
@@ -42,164 +50,6 @@ function PanelNote({ children }: { children: ReactNode }) {
 }
 
 /** Coupe / sour glass with three fill bands (spirit, citrus, sweet). */
-function SourGlass() {
-  return (
-    <Svg viewBox="0 0 120 140" className="w-full max-w-[140px] mx-auto h-auto">
-      <path
-        d="M28 18h64c-2 22-10 38-32 46C38 56 30 40 28 18Z"
-        fill="#E8F0C8"
-        stroke={FOREST}
-        strokeWidth="2"
-      />
-      <path d="M34 38h52" stroke={OLIVE} strokeWidth="1.5" opacity="0.7" />
-      <path d="M38 52h44" stroke={TERRACOTTA} strokeWidth="1.5" opacity="0.55" />
-      <path d="M60 64v40" stroke={FOREST} strokeWidth="2" />
-      <path d="M44 118h32" stroke={FOREST} strokeWidth="2" strokeLinecap="round" />
-      <ellipse cx="60" cy="118" rx="22" ry="5" stroke={FOREST} strokeWidth="2" fill={CREAM} />
-    </Svg>
-  );
-}
-
-function RocksGlass({ fill = "#C47A3A" }: { fill?: string }) {
-  return (
-    <Svg viewBox="0 0 120 140" className="w-full max-w-[140px] mx-auto h-auto">
-      <path
-        d="M32 28h56v78c0 6-5 10-12 10H44c-7 0-12-4-12-10V28Z"
-        fill={fill}
-        stroke={FOREST}
-        strokeWidth="2"
-      />
-      <rect x="42" y="40" width="36" height="36" rx="4" fill="#D9E4F0" stroke={FOREST} strokeWidth="1.5" opacity="0.95" />
-      <path d="M48 48h8M70 62h6" stroke="white" strokeWidth="1.2" opacity="0.5" />
-      <circle cx="78" cy="36" r="3" fill={OLIVE} />
-      <circle cx="86" cy="42" r="2" fill={TERRACOTTA} />
-    </Svg>
-  );
-}
-
-function HighballGlass() {
-  return (
-    <Svg viewBox="0 0 120 140" className="w-full max-w-[140px] mx-auto h-auto">
-      <path
-        d="M40 16h40v100c0 6-4 10-10 10H50c-6 0-10-4-10-10V16Z"
-        fill="#D7EDE4"
-        stroke={FOREST}
-        strokeWidth="2"
-      />
-      <rect x="46" y="28" width="12" height="14" rx="1.5" fill="#C5D4E8" stroke={FOREST} strokeWidth="1" />
-      <rect x="62" y="36" width="12" height="14" rx="1.5" fill="#C5D4E8" stroke={FOREST} strokeWidth="1" />
-      <rect x="50" y="52" width="12" height="14" rx="1.5" fill="#C5D4E8" stroke={FOREST} strokeWidth="1" />
-      <rect x="64" y="64" width="10" height="12" rx="1.5" fill="#C5D4E8" stroke={FOREST} strokeWidth="1" />
-      <circle cx="54" cy="84" r="2" fill="white" opacity="0.8" />
-      <circle cx="70" cy="92" r="1.5" fill="white" opacity="0.8" />
-      <circle cx="58" cy="100" r="1.5" fill="white" opacity="0.7" />
-      <path d="M44 110h32" stroke={OLIVE} strokeWidth="3" opacity="0.4" />
-    </Svg>
-  );
-}
-
-function TemplatesDiagram() {
-  return (
-    <div className="grid grid-cols-3 gap-3 sm:gap-5">
-      <div>
-        <SourGlass />
-        <PanelLabel>Sour</PanelLabel>
-        <PanelNote>2 · 1 · 1 spirit, citrus, sweet</PanelNote>
-      </div>
-      <div>
-        <RocksGlass />
-        <PanelLabel>Old fashioned</PanelLabel>
-        <PanelNote>Spirit + sugar + bitters + ice</PanelNote>
-      </div>
-      <div>
-        <HighballGlass />
-        <PanelLabel>Highball</PanelLabel>
-        <PanelNote>Spirit + packed ice + cold fizz</PanelNote>
-      </div>
-    </div>
-  );
-}
-
-function IceTypesDiagram() {
-  return (
-    <div className="grid grid-cols-3 gap-3 sm:gap-5">
-      <div>
-        <Svg viewBox="0 0 100 110" className="w-full max-w-[120px] mx-auto h-auto">
-          <path d="M28 18h44v72c0 5-4 8-9 8H37c-5 0-9-3-9-8V18Z" fill="#EAF2F6" stroke={FOREST} strokeWidth="2" />
-          <rect x="36" y="32" width="28" height="28" rx="3" fill="#C9D7E6" stroke={FOREST} strokeWidth="1.5" />
-        </Svg>
-        <PanelLabel>Large cube</PanelLabel>
-        <PanelNote>Slow melt · stir, rocks</PanelNote>
-      </div>
-      <div>
-        <Svg viewBox="0 0 100 110" className="w-full max-w-[120px] mx-auto h-auto">
-          <path d="M28 18h44v72c0 5-4 8-9 8H37c-5 0-9-3-9-8V18Z" fill="#EAF2F6" stroke={FOREST} strokeWidth="2" />
-          <path d="M34 34l12 6 4-10 10 8-2 12 12 2-8 10-12-4-10 8-4-12-10-2z" fill="#C9D7E6" stroke={FOREST} strokeWidth="1.2" />
-        </Svg>
-        <PanelLabel>Cracked</PanelLabel>
-        <PanelNote>Fast chill · hard shake</PanelNote>
-      </div>
-      <div>
-        <Svg viewBox="0 0 100 110" className="w-full max-w-[120px] mx-auto h-auto">
-          <path d="M28 18h44v72c0 5-4 8-9 8H37c-5 0-9-3-9-8V18Z" fill="#EAF2F6" stroke={FOREST} strokeWidth="2" />
-          {[
-            [36, 30],
-            [48, 28],
-            [60, 32],
-            [40, 42],
-            [52, 40],
-            [34, 52],
-            [46, 50],
-            [58, 54],
-            [42, 62],
-            [54, 64],
-            [38, 72],
-            [50, 74],
-          ].map(([x, y]) => (
-            <circle key={`${x}-${y}`} cx={x} cy={y} r="4.5" fill="#C9D7E6" stroke={FOREST} strokeWidth="0.8" />
-          ))}
-        </Svg>
-        <PanelLabel>Crushed</PanelLabel>
-        <PanelNote>Texture · swizzle, julep</PanelNote>
-      </div>
-    </div>
-  );
-}
-
-function ShakeOrStirDiagram() {
-  return (
-    <div className="grid sm:grid-cols-2 gap-4">
-      <div className="rounded-2xl border border-mist bg-white p-4">
-        <Svg viewBox="0 0 160 100" className="w-full h-auto mb-3">
-          <ellipse cx="48" cy="28" rx="16" ry="12" fill="#E8F0C8" stroke={FOREST} strokeWidth="1.8" />
-          <path d="M42 22c4-6 12-6 16 2" stroke={OLIVE} strokeWidth="1.5" />
-          <rect x="96" y="18" width="36" height="64" rx="6" fill={MIST} stroke={FOREST} strokeWidth="2" />
-          <rect x="100" y="14" width="28" height="12" rx="3" fill={FOREST} />
-          <path d="M72 40h16" stroke={TERRACOTTA} strokeWidth="2" strokeLinecap="round" />
-          <path d="M84 34l8 6-8 6" stroke={TERRACOTTA} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        </Svg>
-        <PanelLabel>Shake</PanelLabel>
-        <PanelNote>Citrus, egg, dairy, anything cloudy</PanelNote>
-      </div>
-      <div className="rounded-2xl border border-mist bg-white p-4">
-        <Svg viewBox="0 0 160 100" className="w-full h-auto mb-3">
-          <rect x="28" y="22" width="18" height="50" rx="2" fill="#C4A574" stroke={FOREST} strokeWidth="1.5" />
-          <rect x="50" y="18" width="16" height="54" rx="2" fill="#D8C4A0" stroke={FOREST} strokeWidth="1.5" />
-          <path
-            d="M96 22h32v48c0 8-6 14-16 14s-16-6-16-14V22Z"
-            fill="#EAF2F6"
-            stroke={FOREST}
-            strokeWidth="2"
-          />
-          <path d="M128 18c8 18 8 40 0 58" stroke={TERRACOTTA} strokeWidth="2" strokeLinecap="round" />
-        </Svg>
-        <PanelLabel>Stir</PanelLabel>
-        <PanelNote>All spirits — clear, dense, silky</PanelNote>
-      </div>
-    </div>
-  );
-}
-
 function FourPartsDiagram() {
   const parts = [
     { label: "Strong", sub: "Spirit", color: TERRACOTTA, flex: "flex-[2]" },
@@ -272,34 +122,6 @@ function ExpressPeelDiagram() {
   );
 }
 
-function VermouthCareDiagram() {
-  return (
-    <div className="grid sm:grid-cols-2 gap-4">
-      <div className="rounded-2xl border border-olive/40 bg-olive/10 p-4">
-        <Svg viewBox="0 0 140 90" className="w-full h-auto mb-2">
-          <rect x="18" y="12" width="104" height="68" rx="6" fill="#EAF2F6" stroke={FOREST} strokeWidth="2" />
-          <path d="M18 28h104" stroke={FOREST} strokeWidth="1.5" />
-          <rect x="36" y="36" width="18" height="36" rx="2" fill="#8B3A2A" stroke={FOREST} strokeWidth="1.2" />
-          <rect x="62" y="32" width="16" height="40" rx="2" fill="#D8C4A0" stroke={FOREST} strokeWidth="1.2" />
-          <rect x="88" y="38" width="16" height="34" rx="2" fill={TERRACOTTA} stroke={FOREST} strokeWidth="1.2" />
-        </Svg>
-        <PanelLabel>Fridge after opening</PanelLabel>
-        <PanelNote>Weeks, not seasons</PanelNote>
-      </div>
-      <div className="rounded-2xl border border-terracotta/30 bg-terracotta/5 p-4">
-        <Svg viewBox="0 0 140 90" className="w-full h-auto mb-2">
-          <rect x="20" y="40" width="100" height="10" rx="2" fill="#C4A574" stroke={FOREST} strokeWidth="1.5" />
-          <rect x="28" y="18" width="16" height="32" rx="2" fill="#8B3A2A" stroke={FOREST} strokeWidth="1.2" opacity="0.45" />
-          <rect x="62" y="14" width="16" height="36" rx="2" fill="#D8C4A0" stroke={FOREST} strokeWidth="1.2" opacity="0.45" />
-          <path d="M108 16l8 12-8 4" stroke={TERRACOTTA} strokeWidth="2" strokeLinecap="round" />
-        </Svg>
-        <PanelLabel>Warm cart</PanelLabel>
-        <PanelNote>Oxidizes — dusty Manhattans</PanelNote>
-      </div>
-    </div>
-  );
-}
-
 function AgaveAgesDiagram() {
   const bottles = [
     { label: "Blanco", sub: "< 2 mo", fill: "#F4EFE4" },
@@ -323,79 +145,198 @@ function AgaveAgesDiagram() {
   );
 }
 
-function HomeKitDiagram() {
-  const tools = [
-    {
-      label: "Shaker",
-      node: (
-        <Svg viewBox="0 0 64 64" className="w-12 h-12 mx-auto">
-          <rect x="18" y="10" width="28" height="22" rx="6" fill={MIST} stroke={FOREST} strokeWidth="2" />
-          <rect x="20" y="30" width="24" height="24" rx="4" fill={CREAM} stroke={FOREST} strokeWidth="2" />
-        </Svg>
-      ),
-    },
-    {
-      label: "Jigger",
-      node: (
-        <Svg viewBox="0 0 64 64" className="w-12 h-12 mx-auto">
-          <path d="M32 8l10 18H22L32 8Z" fill={TERRACOTTA} stroke={FOREST} strokeWidth="1.8" />
-          <path d="M32 56L20 34h24L32 56Z" fill={OLIVE} stroke={FOREST} strokeWidth="1.8" />
-        </Svg>
-      ),
-    },
-    {
-      label: "Strainer",
-      node: (
-        <Svg viewBox="0 0 64 64" className="w-12 h-12 mx-auto">
-          <circle cx="32" cy="34" r="16" fill={MIST} stroke={FOREST} strokeWidth="2" />
-          <path d="M20 34h24M32 22v24M24 24l16 20M40 24L24 44" stroke={FOREST} strokeWidth="1.2" />
-          <path d="M14 28h8" stroke={FOREST} strokeWidth="2" strokeLinecap="round" />
-        </Svg>
-      ),
-    },
-    {
-      label: "Barspoon",
-      node: (
-        <Svg viewBox="0 0 64 64" className="w-12 h-12 mx-auto">
-          <path d="M32 8c10 16 10 32 0 48" stroke={FOREST} strokeWidth="2" fill="none" />
-          <ellipse cx="32" cy="10" rx="6" ry="4" fill={MIST} stroke={FOREST} strokeWidth="1.5" />
-        </Svg>
-      ),
-    },
-    {
-      label: "Peeler",
-      node: (
-        <Svg viewBox="0 0 64 64" className="w-12 h-12 mx-auto">
-          <rect x="22" y="8" width="20" height="36" rx="4" fill={MIST} stroke={FOREST} strokeWidth="2" />
-          <path d="M28 16v20M36 16v20" stroke={FOREST} strokeWidth="1.5" />
-          <rect x="26" y="44" width="12" height="12" rx="2" fill={FOREST} />
-        </Svg>
-      ),
-    },
-  ];
-  return (
-    <div className="grid grid-cols-5 gap-2">
-      {tools.map((t) => (
-        <div key={t.label}>
-          {t.node}
-          <PanelLabel>{t.label}</PanelLabel>
-        </div>
-      ))}
-    </div>
-  );
-}
+const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
+  templates: {
+    kicker: "Three skeletons",
+    title: "Name the family, then pour",
+    slides: [
+      {
+        src: "/learn/figure-template-sour.webp",
+        alt: "A citrus sour cocktail in a coupe glass",
+        label: "Sour",
+        note: "2 · 1 · 1 spirit, citrus, sweet",
+      },
+      {
+        src: "/learn/figure-template-old-fashioned.webp",
+        alt: "An Old Fashioned in a rocks glass with a large ice cube",
+        label: "Old fashioned",
+        note: "Spirit + sugar + bitters + ice",
+      },
+      {
+        src: "/learn/figure-template-highball.webp",
+        alt: "A highball cocktail with ice and soda in a tall glass",
+        label: "Highball",
+        note: "Spirit + packed ice + cold fizz",
+      },
+    ],
+  },
+  "home-kit": {
+    kicker: "The kit",
+    title: "Five tools cover almost every MixWise method",
+    slides: [
+      {
+        src: "/learn/figure-kit-shaker.webp",
+        alt: "Stainless steel Boston shaker on a kitchen counter",
+        label: "Shaker",
+        note: "Chill, dilute, and blend — tin on tin",
+      },
+      {
+        src: "/learn/figure-kit-jigger.webp",
+        alt: "Stainless steel double jigger on a kitchen counter",
+        label: "Jigger",
+        note: "Accurate pours beat free-pour guessing",
+      },
+      {
+        src: "/learn/figure-kit-strainer.webp",
+        alt: "Hawthorne cocktail strainer on a kitchen counter",
+        label: "Strainer",
+        note: "Hold back ice for a clean pour",
+      },
+      {
+        src: "/learn/figure-kit-barspoon.webp",
+        alt: "Twisted bar spoon on a kitchen counter",
+        label: "Barspoon",
+        note: "Stir, layer, and reach the bottom of the glass",
+      },
+      {
+        src: "/learn/figure-kit-peeler.webp",
+        alt: "Citrus peeler on a kitchen counter",
+        label: "Peeler",
+        note: "Thin peels for garnish and express",
+      },
+    ],
+  },
+  "ice-types": {
+    kicker: "Ice is an ingredient",
+    title: "Size changes melt — pick on purpose",
+    slides: [
+      {
+        src: "/learn/figure-ice-large-cube.webp",
+        alt: "A large clear ice cube in a rocks glass",
+        label: "Large cube",
+        note: "Slow melt · stir, rocks",
+      },
+      {
+        src: "/learn/figure-ice-cracked.webp",
+        alt: "Cracked cocktail ice shards on a tray",
+        label: "Cracked",
+        note: "Fast chill · hard shake",
+      },
+      {
+        src: "/learn/figure-ice-crushed.webp",
+        alt: "Crushed ice packed in a metal julep cup",
+        label: "Crushed",
+        note: "Texture · swizzle, julep",
+      },
+    ],
+  },
+  "shake-or-stir": {
+    kicker: "The rule",
+    title: "Cloudy or acidic? Shake. All spirit? Stir.",
+    slides: [
+      {
+        src: "/learn/figure-method-shake.webp",
+        alt: "Stainless steel cocktail shaker on a kitchen counter",
+        label: "Shake",
+        note: "Citrus, egg, dairy, anything cloudy",
+      },
+      {
+        src: "/learn/figure-method-stir.webp",
+        alt: "Mixing glass with ice and a bar spoon",
+        label: "Stir",
+        note: "All spirits — clear, dense, silky",
+      },
+    ],
+  },
+  "vermouth-care": {
+    kicker: "Modifiers",
+    title: "Vermouth is wine. Treat it that way.",
+    slides: [
+      {
+        src: "/learn/figure-vermouth-fridge.webp",
+        alt: "Unlabeled vermouth bottles chilling on a refrigerator shelf",
+        label: "Do this",
+        note: "Refrigerate as soon as you open it. Plan to finish the bottle in a few weeks.",
+        tone: "good",
+      },
+      {
+        src: "/learn/figure-vermouth-warm-cart.webp",
+        alt: "Vermouth bottles left out on a warm wooden bar cart",
+        label: "Skip this",
+        note: "Leaving it out oxidizes the wine — Manhattans turn dusty and flat.",
+        tone: "bad",
+      },
+    ],
+  },
+  "garnish-citrus": {
+    kicker: "Citrus",
+    title: "Perfume the surface — don’t juice the glass",
+    slides: [
+      {
+        src: "/learn/figure-garnish-thin-peel.webp",
+        alt: "A thin strip of orange peel with minimal pith on a counter",
+        label: "Thin peel",
+        note: "Wide strip, little white pith — oils without bitterness.",
+      },
+      {
+        src: "/learn/figure-garnish-express.webp",
+        alt: "Expressing citrus peel oils over a coupe cocktail",
+        label: "Pinch over the glass",
+        note: "Squeeze skin-side down so oils mist the surface, not the liquid.",
+      },
+      {
+        src: "/learn/figure-garnish-oils.webp",
+        alt: "Old Fashioned with an orange twist on the rim",
+        label: "Oils on the surface",
+        note: "Optional rim wipe, then drop or discard. The nose gets the first hit.",
+      },
+    ],
+  },
+  "garnish-mint": {
+    kicker: "Herbs",
+    title: "Wake the oils — don’t shred the leaves",
+    slides: [
+      {
+        src: "/learn/figure-garnish-mint-slap.webp",
+        alt: "A highball with a fresh upright mint sprig garnish",
+        label: "Do this",
+        note: "Slap gently, then place so the drinker smells mint on the first sip.",
+        tone: "good",
+      },
+      {
+        src: "/learn/figure-garnish-mint-shred.webp",
+        alt: "Mint being shredded and over-muddled in a glass",
+        label: "Skip this",
+        note: "Shredding releases grassy bitterness — it tastes like lawn.",
+        tone: "bad",
+      },
+    ],
+  },
+  "garnish-none": {
+    kicker: "Restraint",
+    title: "Sometimes the cleanest finish is nothing",
+    slides: [
+      {
+        src: "/learn/figure-garnish-none.webp",
+        alt: "An ungarnished coupe cocktail on a wooden table",
+        label: "No garnish",
+        note: "Equal-parts and spirit-forward drinks often read clearer without clutter.",
+      },
+    ],
+  },
+};
 
 function NaArchitectureDiagram() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="learn-na-grid">
       {[
         { label: "Acid", sub: "Citrus, shrub", color: OLIVE },
         { label: "Sweet", sub: "Syrup, fruit", color: "#C4A574" },
         { label: "Bitter / spice", sub: "Tea, ginger, chile", color: TERRACOTTA },
         { label: "Texture", sub: "Shake, soda, ice", color: FOREST },
       ].map((p) => (
-        <div key={p.label} className="rounded-2xl border border-mist p-3 text-center bg-white">
-          <div className="mx-auto mb-2 h-2 w-10 rounded-full" style={{ background: p.color }} />
+        <div key={p.label} className="learn-na-grid__item">
+          <div className="learn-na-grid__swatch" style={{ background: p.color }} />
           <PanelLabel>{p.label}</PanelLabel>
           <PanelNote>{p.sub}</PanelNote>
         </div>
@@ -451,16 +392,11 @@ function BuildOrderDiagram() {
         { n: "1", t: "Ice", d: "Pack the serving glass." },
         { n: "2", t: "Spirit + modifiers", d: "Measure. This is still a recipe." },
         { n: "3", t: "Lengthener last", d: "Cold soda or ginger beer. Brief stir." },
-      ].map((s, i) => (
-        <div key={s.n} className="flex-1 rounded-2xl border border-mist bg-white p-4 text-center">
+      ].map((s) => (
+        <div key={s.n} className="flex-1 text-center py-2">
           <span className="font-display text-2xl text-terracotta">{s.n}</span>
           <PanelLabel>{s.t}</PanelLabel>
           <PanelNote>{s.d}</PanelNote>
-          {i < 2 && (
-            <p className="hidden sm:block text-terracotta mt-2" aria-hidden>
-              →
-            </p>
-          )}
         </div>
       ))}
     </div>
@@ -525,26 +461,6 @@ function MuddlePressDiagram() {
 }
 
 const DIAGRAMS: Record<string, DiagramSpec> = {
-  "home-kit": {
-    kicker: "The kit",
-    title: "Five tools cover almost every MixWise method",
-    node: <HomeKitDiagram />,
-  },
-  templates: {
-    kicker: "Three skeletons",
-    title: "Name the family, then pour",
-    node: <TemplatesDiagram />,
-  },
-  "ice-types": {
-    kicker: "Ice is an ingredient",
-    title: "Size changes melt — pick on purpose",
-    node: <IceTypesDiagram />,
-  },
-  "shake-or-stir": {
-    kicker: "The rule",
-    title: "Cloudy or acidic? Shake. All spirit? Stir.",
-    node: <ShakeOrStirDiagram />,
-  },
   "four-parts": {
     kicker: "Balance",
     title: "Strong, sour, sweet, weak",
@@ -554,11 +470,6 @@ const DIAGRAMS: Record<string, DiagramSpec> = {
     kicker: "Garnish",
     title: "Perfume the surface — don’t juice the glass",
     node: <ExpressPeelDiagram />,
-  },
-  "vermouth-care": {
-    kicker: "Modifiers",
-    title: "Vermouth is wine. Treat it that way.",
-    node: <VermouthCareDiagram />,
   },
   "agave-ages": {
     kicker: "Agave",
@@ -597,24 +508,54 @@ const DIAGRAMS: Record<string, DiagramSpec> = {
   },
 };
 
-export function LearnFigure({ id }: { id: string }) {
+export function LearnFigure({
+  id,
+  /** When true (section embed), skip duplicate kicker/title — section heading owns the title. */
+  embedded = false,
+}: {
+  id: string;
+  embedded?: boolean;
+}) {
+  const photo = PHOTO_FIGURES[id];
+  if (photo) {
+    return (
+      <figure className="learn-figure learn-figure--photos">
+        {!embedded ? (
+          <header className="learn-figure__header learn-figure__header--flat">
+            <figcaption className="learn-figure__title">{photo.title}</figcaption>
+          </header>
+        ) : (
+          <figcaption className="sr-only">{photo.title}</figcaption>
+        )}
+        <LearnPhotoPager slides={photo.slides} label={photo.title} />
+        {photo.note ? <p className="learn-figure__note">{photo.note}</p> : null}
+      </figure>
+    );
+  }
+
   const spec = DIAGRAMS[id];
   if (!spec) return null;
 
   return (
-    <figure className="rounded-3xl border border-mist bg-cream/50 overflow-hidden">
-      <div className="bg-forest px-5 py-4 sm:px-6">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-olive font-bold mb-1">
-          {spec.kicker}
-        </p>
-        <figcaption className="font-sans text-lg font-medium text-cream leading-snug">
-          {spec.title}
-        </figcaption>
-      </div>
-      <div className="px-4 py-6 sm:px-6">{spec.node}</div>
-      {spec.note ? <p className="px-5 pb-5 text-sm text-sage leading-relaxed">{spec.note}</p> : null}
+    <figure className="learn-figure learn-figure--diagram">
+      {!embedded ? (
+        <header className="learn-figure__header learn-figure__header--flat">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-terracotta">
+            {spec.kicker}
+          </p>
+          <figcaption className="learn-figure__title">{spec.title}</figcaption>
+        </header>
+      ) : (
+        <figcaption className="sr-only">{spec.title}</figcaption>
+      )}
+      <div className="learn-figure__body learn-figure__body--flat">{spec.node}</div>
+      {spec.note ? <p className="learn-figure__note">{spec.note}</p> : null}
     </figure>
   );
 }
 
-export const LEARN_FIGURE_IDS = Object.keys(DIAGRAMS);
+export const LEARN_FIGURE_IDS = [...Object.keys(PHOTO_FIGURES), ...Object.keys(DIAGRAMS)];
+
+export function hasLearnPhotoFigure(id: string): boolean {
+  return Boolean(PHOTO_FIGURES[id]);
+}

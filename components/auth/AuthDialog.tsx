@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Fragment, useEffect } from "react";
+import React, { useState, Fragment, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon, EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
@@ -26,8 +26,8 @@ function GoogleIcon({ className }: { className?: string }) {
 
 function AppleIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" fill="#000000"/>
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
     </svg>
   );
 }
@@ -73,7 +73,12 @@ export function AuthDialog({
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPasswordFields, setShowPasswordFields] = useState(true);
+  /** Prefer password once email is valid; user can switch to magic link. */
+  const [preferPassword, setPreferPassword] = useState(true);
+  const [accountHint, setAccountHint] = useState<"existing" | "new" | null>(null);
+  /** True after a valid email has been stable briefly — avoids password popping mid-typing. */
+  const [emailSettled, setEmailSettled] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const defaultTitle = mode === "login"
     ? "Welcome back to MixWise"
@@ -82,7 +87,10 @@ export function AuthDialog({
     : "Create your free MixWise account";
 
   const displayTitle = title || defaultTitle;
-  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  /** Require a real TLD (2+ letters) so `user@gmail.c` does not unlock the password step. */
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email.trim());
+  const showCredentialStep = mode !== "reset" && isEmailValid && emailSettled;
+  const showPasswordFields = showCredentialStep && preferPassword;
   const anyLoading = isEmailLoading || isMagicLoading || isGoogleLoading || isAppleLoading;
 
   useEffect(() => {
@@ -90,6 +98,67 @@ export function AuthDialog({
       setEmail(initialEmail);
     }
   }, [isOpen, initialEmail]);
+
+  useEffect(() => {
+    setPreferPassword(true);
+    setError(null);
+    setPassword("");
+    setEmailSettled(false);
+  }, [mode]);
+
+  // Wait until the address stops changing so mid-typing (.com) does not pop the password field.
+  useEffect(() => {
+    if (!isEmailValid) {
+      setEmailSettled(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setEmailSettled(true), 650);
+    return () => window.clearTimeout(timer);
+  }, [email, isEmailValid]);
+
+  // Reveal password only after a settled valid email; look up existing accounts on signup.
+  useEffect(() => {
+    if (!isOpen || mode === "reset") return;
+
+    if (!isEmailValid || !emailSettled) {
+      if (!isEmailValid) {
+        setPassword("");
+        setAccountHint(null);
+      }
+      return;
+    }
+
+    if (mode !== "signup") return;
+
+    const trimmed = email.trim().toLowerCase();
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch("/api/auth/lookup-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: trimmed }),
+        });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { hasAccount?: boolean };
+        if (cancelled) return;
+        if (data.hasAccount) {
+          markHasAccount(trimmed);
+          setAccountHint("existing");
+          onModeChange?.("login");
+        } else {
+          setAccountHint("new");
+        }
+      } catch {
+        /* ignore lookup failures — signup still works */
+      }
+    }, 200);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [email, isEmailValid, emailSettled, isOpen, mode, onModeChange]);
 
   useEffect(() => {
     if (isAuthenticated && isOpen) {
@@ -121,21 +190,16 @@ export function AuthDialog({
     };
   }, [isOpen, onClose, onSuccess]);
 
-  useEffect(() => {
-    setShowPasswordFields(true);
-    setError(null);
-    setPassword("");
-  }, [mode]);
-
   const handleGoogleSignIn = async () => {
     rememberAuthReturnTo();
     setIsGoogleLoading(true);
     setError(null);
     try {
       await signInWithGoogle();
-    } catch {
-      setError("Failed to sign in with Google. Please try again.");
+    } catch (err) {
       setIsGoogleLoading(false);
+      if ((err as { code?: string } | null)?.code === "OAUTH_CANCELLED") return;
+      setError("Failed to sign in with Google. Please try again.");
     }
   };
 
@@ -145,9 +209,10 @@ export function AuthDialog({
     setError(null);
     try {
       await signInWithApple();
-    } catch {
-      setError("Failed to sign in with Apple. Please try again.");
+    } catch (err) {
       setIsAppleLoading(false);
+      if ((err as { code?: string } | null)?.code === "OAUTH_CANCELLED") return;
+      setError("Failed to sign in with Apple. Please try again.");
     }
   };
 
@@ -308,7 +373,8 @@ export function AuthDialog({
     setEmailSent(false);
     setMagicLinkSent(false);
     setSignupSuccess(false);
-    setShowPasswordFields(true);
+    setPreferPassword(true);
+    setAccountHint(null);
     setError(null);
   };
 
@@ -326,51 +392,60 @@ export function AuthDialog({
 
   const showEscape = Boolean(escapeLabel) && !signupSuccess && !magicLinkSent && !emailSent;
 
+  const panelClass = nativeShell
+    ? "relative flex min-h-[100dvh] w-full flex-col overflow-y-auto bg-cream px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] text-left"
+    : "relative w-full max-w-md overflow-hidden rounded-3xl bg-white border border-mist p-6 sm:p-8 text-left align-middle shadow-card-hover";
+
+  const shellWrapClass = nativeShell
+    ? "flex min-h-full items-stretch justify-center bg-cream"
+    : "flex min-h-full items-center justify-center p-4 text-center";
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog
         as="div"
-        className={nativeShell ? "relative z-[90]" : "relative z-[100]"}
+        className={nativeShell ? "relative z-[120]" : "relative z-[100]"}
         onClose={dismissible ? handleClose : () => {}}
         data-auth-dialog
+        data-native-auth={nativeShell ? "1" : undefined}
       >
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-forest/35 backdrop-blur-md" aria-hidden />
-        </Transition.Child>
+        {nativeShell ? (
+          <div className="fixed inset-0 bg-cream" aria-hidden />
+        ) : (
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-forest/35 backdrop-blur-md" aria-hidden />
+          </Transition.Child>
+        )}
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div
-            className={
-              nativeShell
-                ? "flex min-h-full items-center justify-center px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(5.75rem+env(safe-area-inset-bottom))]"
-                : "flex min-h-full items-center justify-center p-4 text-center"
-            }
-          >
+          <div className={shellWrapClass}>
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
+              enterFrom={nativeShell ? "opacity-0 translate-y-3" : "opacity-0"}
+              enterTo="opacity-100 translate-y-0"
               leave="ease-in duration-200"
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Dialog.Panel
-                className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white border border-mist p-6 sm:p-8 text-left align-middle shadow-card-hover"
-              >
+              <Dialog.Panel className={panelClass}>
                 {dismissible && (
                   <button
                     onClick={handleClose}
-                    className="absolute top-4 right-4 p-2 rounded-xl text-sage hover:text-forest hover:bg-mist transition-colors"
-                    aria-label="Close dialog"
+                    className={
+                      nativeShell
+                        ? "absolute right-3 top-[max(0.5rem,env(safe-area-inset-top))] z-10 rounded-full bg-white p-2.5 text-forest ring-1 ring-mist shadow-sm"
+                        : "absolute top-4 right-4 p-2 rounded-xl text-sage hover:text-forest hover:bg-mist transition-colors"
+                    }
+                    aria-label="Close"
                   >
                     <XMarkIcon className="w-5 h-5" />
                   </button>
@@ -443,14 +518,53 @@ export function AuthDialog({
                   </div>
                 ) : (
                   <>
-                    <div className="text-center mb-6">
-                      <div className="mb-4 flex justify-center">
+                    <div className={nativeShell ? "mx-auto flex w-full max-w-md flex-1 flex-col pt-6" : ""}>
+                    <div className={`text-center ${nativeShell ? "mb-8" : "mb-6"}`}>
+                      <div className={`${nativeShell ? "mb-6" : "mb-4"} flex justify-center`}>
                         <BrandLogo size="lg" variant="dark" linked={false} render="img" />
                       </div>
-                      <Dialog.Title className="text-xl font-display font-bold text-forest mb-2">
+                      {nativeShell && mode !== "reset" ? (
+                        <div
+                          className="mb-6 grid grid-cols-2 gap-1 rounded-2xl bg-mist p-1 ring-1 ring-mist"
+                          role="tablist"
+                          aria-label="Account"
+                        >
+                          <button
+                            type="button"
+                            role="tab"
+                            aria-selected={mode === "login"}
+                            onClick={() => onModeChange?.("login")}
+                            className={`rounded-xl py-3 text-sm font-bold transition-colors ${
+                              mode === "login"
+                                ? "bg-forest text-cream shadow-sm"
+                                : "text-sage"
+                            }`}
+                          >
+                            Log in
+                          </button>
+                          <button
+                            type="button"
+                            role="tab"
+                            aria-selected={mode === "signup"}
+                            onClick={() => onModeChange?.("signup")}
+                            className={`rounded-xl py-3 text-sm font-bold transition-colors ${
+                              mode === "signup"
+                                ? "bg-forest text-cream shadow-sm"
+                                : "text-sage"
+                            }`}
+                          >
+                            Create account
+                          </button>
+                        </div>
+                      ) : null}
+                      <Dialog.Title
+                        className={`font-display font-bold text-forest mb-2 ${
+                          nativeShell ? "text-2xl tracking-tight" : "text-xl"
+                        }`}
+                      >
                         {displayTitle}
                       </Dialog.Title>
-                      <p className="text-sage text-sm">
+                      <p className={`text-sage ${nativeShell ? "text-[15px] leading-relaxed" : "text-sm"}`}>
                         {subtitle || (mode === "login"
                           ? "Sign in to access your saved cocktails, notes, bar inventory, and more."
                           : mode === "reset"
@@ -466,12 +580,14 @@ export function AuthDialog({
                     )}
 
                     {mode !== "reset" && (
-                      <div className="space-y-3 mb-4">
+                      <div className={`space-y-3 ${nativeShell ? "mb-5" : "mb-4"}`}>
                         <button
                           type="button"
                           onClick={handleGoogleSignIn}
                           disabled={anyLoading}
-                          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white hover:bg-mist/50 text-forest font-medium rounded-2xl border border-mist transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={`w-full flex items-center justify-center gap-3 px-4 bg-white hover:bg-mist/50 text-forest font-semibold rounded-2xl border border-mist transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            nativeShell ? "py-3.5 text-[15px] shadow-sm" : "py-3 font-medium"
+                          }`}
                         >
                           {isGoogleLoading ? (
                             <div className="spinner" />
@@ -485,7 +601,9 @@ export function AuthDialog({
                           type="button"
                           onClick={handleAppleSignIn}
                           disabled={anyLoading}
-                          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-black hover:bg-gray-900 text-white font-medium rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={`w-full flex items-center justify-center gap-3 px-4 bg-black hover:bg-gray-900 text-white font-semibold rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            nativeShell ? "py-3.5 text-[15px]" : "py-3 font-medium"
+                          }`}
                         >
                           {isAppleLoading ? (
                             <div className="spinner border-white/30 border-t-white" />
@@ -498,12 +616,14 @@ export function AuthDialog({
                     )}
 
                     {mode !== "reset" && (
-                      <div className="relative my-6">
+                      <div className={`relative ${nativeShell ? "my-5" : "my-6"}`}>
                         <div className="absolute inset-0 flex items-center">
                           <div className="w-full border-t border-mist" />
                         </div>
                         <div className="relative flex justify-center text-xs">
-                          <span className="bg-white px-3 text-sage">or continue with email</span>
+                          <span className={`${nativeShell ? "bg-cream" : "bg-white"} px-3 text-sage`}>
+                            or continue with email
+                          </span>
                         </div>
                       </div>
                     )}
@@ -525,15 +645,22 @@ export function AuthDialog({
                           autoCorrect="off"
                           spellCheck={false}
                           inputMode="email"
-                          enterKeyHint="next"
+                          enterKeyHint={showCredentialStep ? "next" : "done"}
                         />
                       </div>
+
+                      {accountHint === "existing" && mode === "login" ? (
+                        <p className="mb-3 text-sm text-forest/80">
+                          Welcome back — we found an account for this email.
+                        </p>
+                      ) : null}
 
                       {mode !== "reset" && showPasswordFields && (
                         <>
                           <label className="label-botanical">Password</label>
                           <div className="relative mb-4">
                             <input
+                              ref={passwordInputRef}
                               type="password"
                               name={mode === "signup" ? "new-password" : "password"}
                               value={password}
@@ -572,7 +699,7 @@ export function AuthDialog({
                           <button
                             type="button"
                             onClick={() => {
-                              setShowPasswordFields(false);
+                              setPreferPassword(false);
                               setPassword("");
                               setError(null);
                             }}
@@ -583,7 +710,7 @@ export function AuthDialog({
                         </>
                       )}
 
-                      {mode !== "reset" && !showPasswordFields && (
+                      {mode !== "reset" && showCredentialStep && !preferPassword && (
                         <div className="space-y-3">
                           <button
                             type="button"
@@ -599,7 +726,7 @@ export function AuthDialog({
                           </button>
                           <button
                             type="button"
-                            onClick={() => setShowPasswordFields(true)}
+                            onClick={() => setPreferPassword(true)}
                             className="w-full text-sm text-sage hover:text-forest transition-colors py-1"
                           >
                             Use a password instead
@@ -607,6 +734,9 @@ export function AuthDialog({
                         </div>
                       )}
 
+                      {mode !== "reset" && !showCredentialStep ? (
+                        <p className="text-sm text-sage">Enter your email to continue with a password or a sign-in link.</p>
+                      ) : null}
                       {mode === "reset" && (
                         <button
                           type="submit"
@@ -622,7 +752,7 @@ export function AuthDialog({
                       )}
                     </form>
 
-                    {mode === "signup" && (
+                    {mode === "signup" && !nativeShell && (
                       <div className="mt-6 pt-6 border-t border-mist">
                         <p className="font-mono text-xs text-sage text-center mb-3 uppercase tracking-widest">Free accounts include:</p>
                         <ul className="space-y-2 text-sm text-charcoal">
@@ -642,8 +772,8 @@ export function AuthDialog({
                       </div>
                     )}
 
-                    <div className="mt-6 pt-6 border-t border-mist text-center">
-                      {mode === "signup" ? (
+                    <div className={`text-center ${nativeShell ? "mt-8 pt-2" : "mt-6 pt-6 border-t border-mist"}`}>
+                      {mode === "signup" && !nativeShell ? (
                         <p className="text-sm text-sage">
                           Already have an account?{" "}
                           <button
@@ -663,7 +793,7 @@ export function AuthDialog({
                             Back to login
                           </button>
                         </p>
-                      ) : (
+                      ) : mode === "login" ? (
                         <div className="space-y-2">
                           <p className="text-sm text-sage">
                             <button
@@ -673,17 +803,19 @@ export function AuthDialog({
                               Forgot your password?
                             </button>
                           </p>
-                          <p className="text-sm text-sage">
-                            Don&apos;t have an account?{" "}
-                            <button
-                              onClick={() => onModeChange?.("signup")}
-                              className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
-                            >
-                              Create one for free
-                            </button>
-                          </p>
+                          {!nativeShell ? (
+                            <p className="text-sm text-sage">
+                              Don&apos;t have an account?{" "}
+                              <button
+                                onClick={() => onModeChange?.("signup")}
+                                className="text-terracotta hover:text-terracotta-dark font-medium transition-colors"
+                              >
+                                Create one for free
+                              </button>
+                            </p>
+                          ) : null}
                         </div>
-                      )}
+                      ) : null}
                     </div>
 
                     <p className="mt-4 text-xs text-sage text-center">
@@ -702,6 +834,7 @@ export function AuthDialog({
                         {escapeLabel}
                       </button>
                     ) : null}
+                    </div>
                   </>
                 )}
               </Dialog.Panel>

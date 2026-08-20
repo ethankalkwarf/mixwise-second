@@ -17,6 +17,7 @@ import {
 import { debugLog } from "@/lib/debugLog";
 import { getSiteUrl } from "@/lib/site";
 import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
+import { applyEmailUtmsToContent } from "@/lib/analytics/utm";
 
 export type CampaignSlug =
   | "thursday-featured"
@@ -516,13 +517,15 @@ export async function dispatchCampaignEmail(input: {
 
   try {
     const resend = createResendClient();
+    const html = applyEmailUtmsToContent(input.template.html, input.campaign);
+    const text = applyEmailUtmsToContent(input.template.text, input.campaign);
     const { data, error } = await resend.emails.send({
       from: MIXWISE_FROM_EMAIL,
       replyTo: "hello@getmixwise.com",
       to: email,
       subject: input.template.subject,
-      html: input.template.html,
-      text: input.template.text,
+      html,
+      text,
       headers: {
         ...(input.userId ? { "X-Entity-Ref-ID": input.userId } : {}),
         "List-Unsubscribe": `<${input.oneClickUnsubscribeUrl}>`,

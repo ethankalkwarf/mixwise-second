@@ -5,7 +5,10 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
-import { trackCocktailFavorited } from "@/lib/analytics";
+import {
+  trackCocktailFavorited,
+  trackCocktailUnfavorited,
+} from "@/lib/analytics";
 import { checkFavoritesBadges } from "@/lib/badgeEngine";
 import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 import { isNativeApp } from "@/lib/mobile/platform";
@@ -166,6 +169,10 @@ export function useFavorites(): UseFavoritesResult {
 
       if (isCurrentlyFavorite) {
         next = current.filter((f) => f.cocktail_id !== cocktail.id);
+        void trackCocktailUnfavorited(null, cocktail.id, {
+          cocktail_name: cocktail.name,
+          guest: true,
+        });
         toast.info("Removed from favorites");
       } else {
         next = [
@@ -182,6 +189,7 @@ export function useFavorites(): UseFavoritesResult {
 
         if (next.length >= GUEST_AUTH_NUDGE_AT && isNativeApp()) {
           openAuthDialog({
+            gate: "guest_favorites_nudge",
             title: "Keep your favorites",
             subtitle: "Create a free account to sync saved drinks across devices.",
             dismissible: true,
@@ -219,6 +227,9 @@ export function useFavorites(): UseFavoritesResult {
           lastFetchedUserId.current = null;
           await loadFavorites(user.id);
         } else {
+          void trackCocktailUnfavorited(user.id, cocktail.id, {
+            cocktail_name: cocktail.name,
+          });
           toast.info("Removed from favorites");
         }
       } else {
@@ -285,6 +296,7 @@ export function useFavorites(): UseFavoritesResult {
         const next = loadGuestFavorites().filter((f) => f.cocktail_id !== cocktailId);
         saveGuestFavorites(next);
         setFavorites(next.map(guestToFavorite));
+        void trackCocktailUnfavorited(null, cocktailId, { guest: true });
         toast.info("Removed from favorites");
         return;
       }
@@ -303,6 +315,7 @@ export function useFavorites(): UseFavoritesResult {
         lastFetchedUserId.current = null;
         loadFavorites(user.id);
       } else {
+        void trackCocktailUnfavorited(user.id, cocktailId);
         toast.info("Removed from favorites");
       }
     },

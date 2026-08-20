@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   MagnifyingGlassIcon,
   BookOpenIcon,
@@ -11,6 +10,10 @@ import {
   BeakerIcon,
   CheckIcon,
 } from "@heroicons/react/24/outline";
+import { LearnCoverImage } from "@/components/learn/LearnCoverImage";
+import { NativeLearnCardShell } from "@/components/mobile/NativeLearnCardShell";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
+import { formatLearnProgressLine } from "@/lib/learnProgressCopy";
 import {
   LEARN_GUIDES,
   LEARN_LIBRARY_METHODS,
@@ -74,19 +77,19 @@ function PathStartCard({
   const total = stats?.total ?? path.steps.length;
 
   return (
-    <Link
+    <NativeLearnCardShell
       href={`/learn/paths/${path.slug}`}
+      ariaLabel={path.title}
       className="group flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all hover:-translate-y-0.5 hover:border-terracotta/30 hover:shadow-card-hover"
     >
-      <div className="relative h-36 bg-mist">
-        <Image
+      <div className="native-learn-card__photo relative h-36 bg-mist overflow-hidden">
+        <LearnCoverImage
           src={path.coverImage}
           alt=""
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          className="pointer-events-none object-cover transition-transform duration-700 group-hover:scale-105"
           priority={recommended}
-          aria-hidden
+          fill
+          className="transition-transform duration-700 group-hover:scale-105 pointer-events-none"
+          sizes="(max-width: 768px) 100vw, 33vw"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest/50 to-transparent" />
         {recommended && (
@@ -112,7 +115,7 @@ function PathStartCard({
           </div>
         )}
       </div>
-    </Link>
+    </NativeLearnCardShell>
   );
 }
 
@@ -121,18 +124,18 @@ function GuideRow({ guide }: { guide: LearnGuide }) {
   const done = isAuthenticated && isComplete("guide", guide.slug);
 
   return (
-    <Link
+    <NativeLearnCardShell
       href={`/learn/guides/${guide.slug}`}
+      ariaLabel={guide.title}
       className="group flex gap-4 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
     >
-      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
-        <Image
+      <div className="native-learn-card__photo relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
+        <LearnCoverImage
           src={guide.coverImage}
           alt=""
           fill
+          className="transition-transform duration-500 group-hover:scale-105 pointer-events-none"
           sizes="96px"
-          className="pointer-events-none object-cover transition-transform duration-500 group-hover:scale-105"
-          aria-hidden
         />
         {done && (
           <span className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-olive text-forest">
@@ -149,7 +152,7 @@ function GuideRow({ guide }: { guide: LearnGuide }) {
         </h3>
         <p className="text-xs text-sage line-clamp-2 mt-1">{guide.summary}</p>
       </div>
-    </Link>
+    </NativeLearnCardShell>
   );
 }
 
@@ -158,17 +161,18 @@ function MethodChip({ method }: { method: LearnMethod }) {
   const done = isAuthenticated && isComplete("method", method.slug);
 
   return (
-    <Link
+    <NativeLearnCardShell
       href={`/learn/methods/${method.slug}`}
+      ariaLabel={method.label}
       className="group flex gap-3 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
     >
-      <div className="relative h-[4.75rem] w-[5.5rem] sm:h-20 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
-        <Image
+      <div className="native-learn-card__photo relative h-[4.75rem] w-[5.5rem] sm:h-20 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
+        <LearnCoverImage
           src={method.coverImage}
           alt={method.coverAlt}
           fill
-          sizes="96px"
           className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+          sizes="96px"
         />
         {done && (
           <span className="absolute top-1.5 right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-olive text-forest">
@@ -185,13 +189,14 @@ function MethodChip({ method }: { method: LearnMethod }) {
         </p>
         <p className="text-xs text-sage line-clamp-1 mt-1">{method.summary}</p>
       </span>
-    </Link>
+    </NativeLearnCardShell>
   );
 }
 
 export function LearnLibraryClient() {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<BrowseTab>("guides");
+  const nativeShell = useNativeShell();
   const techniques = getAllTechniqueLearnEntries();
   const starterPath = LEARN_PATHS[0];
   const tabCounts: Record<BrowseTab, number> = {
@@ -237,7 +242,7 @@ export function LearnLibraryClient() {
   const searching = Boolean(query.trim());
 
   return (
-    <div className="space-y-16">
+    <div className={nativeShell ? "native-learn-library space-y-8" : "space-y-16"}>
       {/* Courses — playlists of library lessons */}
       <section>
         <div className="mb-6 max-w-2xl">
@@ -249,7 +254,7 @@ export function LearnLibraryClient() {
           </h2>
           <LibraryContinueStrip />
         </div>
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className={nativeShell ? "grid gap-4" : "grid gap-5 md:grid-cols-3"}>
           {LEARN_PATHS.map((path) => (
             <PathStartCard
               key={path.slug}
@@ -398,13 +403,7 @@ function LibraryContinueStrip() {
       href={nextHref || "/learn"}
       className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-terracotta/25 bg-white px-4 py-3 hover:border-terracotta/50 transition-colors"
     >
-      <p className="text-sm text-forest">
-        <span className="font-semibold">{level.name}</span>
-        <span className="text-sage">
-          {" "}
-          · {level.xp} XP · {lessonsDone}/{lessonsTotal} lessons
-        </span>
-      </p>
+      <p className="text-sm text-forest">{formatLearnProgressLine(level, lessonsDone, lessonsTotal)}</p>
       <span className="text-sm font-semibold text-terracotta shrink-0">
         {lessonsDone === 0 ? "Start" : "Continue"} →
       </span>

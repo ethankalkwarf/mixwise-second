@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -12,7 +12,9 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import Image from "next/image";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useToast } from "@/components/ui/toast";
-import { BADGE_LIST, RARITY_COLORS, BadgeDefinition } from "@/lib/badges";
+import { BADGE_LIST } from "@/lib/badges";
+import { useUserBadges } from "@/hooks/useUserBadges";
+import { AppLink } from "@/components/mobile/AppLink";
 import { TrophyIcon } from "@heroicons/react/24/outline";
 import {
   UserCircleIcon,
@@ -30,16 +32,6 @@ import { NativeAccountExtras } from "@/components/mobile/NativeAccountExtras";
 
 export const dynamic = "force-dynamic";
 
-interface UserBadge {
-  badge_id: string;
-  earned_at: string;
-}
-
-interface BadgeDisplayData extends BadgeDefinition {
-  locked?: boolean;
-  earnedAt?: string;
-}
-
 export default function AccountPage() {
   const router = useRouter();
   const { user, profile, isLoading, isAuthenticated, signOut, refreshProfile } = useUser();
@@ -49,6 +41,7 @@ export default function AccountPage() {
   const { recentlyViewed, clearHistory } = useRecentlyViewed();
   const { ingredientIds } = useBarIngredients();
   const { preferences, updatePreferences } = useUserPreferences();
+  const { earnedIds, isLoading: badgesLoading } = useUserBadges();
   const toast = useToast();
 
   // Ensure public_slug exists if public bar is enabled but no username/slug
@@ -89,7 +82,6 @@ export default function AccountPage() {
   
   // Fetch ingredient names from Sanity for fallback lookup
   const [ingredientNames, setIngredientNames] = useState<Map<string, string>>(new Map());
-  const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   
   useEffect(() => {
     supabase
@@ -104,24 +96,6 @@ export default function AccountPage() {
         setIngredientNames(nameMap);
       });
   }, [supabase]);
-
-  // Fetch user badges
-  useEffect(() => {
-    async function fetchBadges() {
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("user_badges")
-        .select("badge_id, earned_at")
-        .eq("user_id", user.id);
-
-      if (!error && data) {
-        setUserBadges(data);
-      }
-    }
-
-    fetchBadges();
-  }, [user]);
 
   // Initialize profile name inputs when profile loads
   useEffect(() => {
@@ -484,18 +458,6 @@ export default function AccountPage() {
     }
   }, [usernameInput, checkUsernameUnique, updateUsername, updatePreferences, toast]);
 
-  // Badge display data - show all badges with earned status
-  const allBadgeData = useMemo(() => {
-    const earnedIds = new Set(userBadges.map(ub => ub.badge_id));
-    const earnedTimes = new Map(userBadges.map(ub => [ub.badge_id, ub.earned_at]));
-
-    return BADGE_LIST.map((badge) => ({
-      ...badge,
-      locked: !earnedIds.has(badge.id),
-      earnedAt: earnedTimes.get(badge.id),
-    }));
-  }, [userBadges]);
-
   // Helper to get ingredient display name (from stored name, Sanity, or ID fallback)
   const getIngredientName = (ingredient: { id: string; name: string | null }) => {
     return ingredient.name || ingredientNames.get(ingredient.id) || ingredient.id;
@@ -700,8 +662,8 @@ export default function AccountPage() {
                       <p className="text-sm text-sage mb-3">
                         Share your bar profile with friends using this link:
                       </p>
-                      <div className="flex items-center gap-2 mb-3">
-                        <code className="flex-1 px-3 py-2 bg-cream text-forest text-sm rounded-lg border border-mist font-mono">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch mb-3">
+                        <code className="min-w-0 break-all px-3 py-2 bg-cream text-forest text-sm rounded-lg border border-mist font-mono">
                           {typeof window !== 'undefined' ? `${window.location.origin}/bar/${shareableBarUrl}` : `/bar/${shareableBarUrl}`}
                         </code>
                         <button
@@ -710,17 +672,20 @@ export default function AccountPage() {
                             navigator.clipboard.writeText(url);
                             toast.success('Link copied to clipboard!');
                           }}
-                          className="px-3 py-2 bg-terracotta hover:bg-terracotta-dark text-cream text-sm rounded-lg transition-colors font-medium"
+                          className="native-compact-cta shrink-0 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-cream text-sm rounded-lg transition-colors font-medium sm:self-center"
                         >
                           Copy
                         </button>
                       </div>
                       {/* Show suggestion if using public_slug but have display name */}
                       {!profile?.username && profile?.public_slug && profile?.display_name && (
-                        <div className="mt-3 pt-3 border-t border-olive/20">
-                          <p className="text-sm text-sage mb-2">
-                            💡 <strong>Tip:</strong> Set a username from your display name to get a cleaner URL like <code className="text-xs bg-cream px-1.5 py-0.5 rounded">/bar/{generateDefaultUsername() || 'username'}</code>
+                        <div className="mt-3 pt-3 border-t border-olive/20 space-y-3">
+                          <p className="text-sm text-sage leading-relaxed">
+                            <strong>Tip:</strong> Set a username from your display name for a cleaner link:
                           </p>
+                          <code className="block min-w-0 break-all px-3 py-2 bg-cream text-forest text-xs rounded-lg border border-mist font-mono">
+                            /bar/{generateDefaultUsername() || 'username'}
+                          </code>
                           <button
                             onClick={async () => {
                               const suggestedUsername = generateDefaultUsername();
@@ -811,7 +776,7 @@ export default function AccountPage() {
                               }
                             }}
                             disabled={isCheckingUsername}
-                            className="text-sm px-3 py-1.5 bg-olive/20 hover:bg-olive/30 text-forest rounded-lg transition-colors font-medium disabled:opacity-50"
+                            className="native-menu-row flex w-full items-center justify-center text-sm px-3 py-2.5 bg-olive/20 hover:bg-olive/30 text-forest rounded-lg transition-colors font-medium disabled:opacity-50"
                           >
                             {isCheckingUsername ? 'Setting...' : `Set username: ${generateDefaultUsername() || 'username'}`}
                           </button>
@@ -959,101 +924,59 @@ export default function AccountPage() {
             )}
           </section>
 
-          {/* Achievements */}
+          {/* Badges — full gallery lives on /badges */}
           <section className="section-botanical">
-            <div className="flex items-center gap-3 mb-6">
-              <TrophyIcon className="w-6 h-6 text-olive" />
-              <h2 className="text-xl font-serif font-bold text-forest">
-                Achievements
-              </h2>
-              <span className="text-sm text-sage">
-                {userBadges.length} earned
-              </span>
-            </div>
-            {allBadgeData.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {allBadgeData.map((badge) => (
-                  <BadgeCard key={badge.id} badge={badge} locked={badge.locked} />
-                ))}
+            <AppLink
+              href="/badges"
+              className="native-menu-row flex w-full items-center justify-between gap-3 rounded-xl bg-mist/50 p-4 transition-colors hover:bg-mist group"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <TrophyIcon className="h-6 w-6 shrink-0 text-olive" />
+                <div className="min-w-0">
+                  <h2 className="text-lg font-serif font-bold text-forest">Badges</h2>
+                  <p className="text-sm text-sage">
+                    {badgesLoading
+                      ? "Loading progress…"
+                      : `${earnedIds.size} of ${BADGE_LIST.length} earned`}
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-sage text-sm">
-                  Keep mixing to earn your first badge.
-                </p>
-              </div>
-            )}
+              <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+            </AppLink>
           </section>
 
           {/* Account Actions */}
           <section className="section-botanical">
             <h2 className="text-xl font-serif font-bold text-forest mb-6">Account Actions</h2>
-            <div className="space-y-4">
+            <div className="overflow-hidden rounded-xl bg-mist/50">
               <button
+                type="button"
                 onClick={clearHistory}
-                className="flex items-center justify-between p-4 bg-mist/50 hover:bg-mist rounded-xl transition-colors w-full text-left group"
+                className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist group"
               >
-                <div className="flex items-center gap-3">
-                  <TrashIcon className="w-5 h-5 text-sage group-hover:text-forest" />
-                  <span className="text-forest">Clear History</span>
-                </div>
-                <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-forest" />
+                <TrashIcon className="h-5 w-5 shrink-0 text-sage group-hover:text-forest" />
+                <span className="min-w-0 flex-1 font-medium text-forest">Clear History</span>
+                <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
               </button>
               {ingredientIds.length > 0 && (
                 <ShareBarButton
                   variant="menu"
-                  className="flex items-center justify-between p-4 bg-mist/50 hover:bg-mist rounded-xl transition-colors w-full text-left group text-forest"
+                  className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left text-sm font-medium text-forest transition-colors hover:bg-mist hover:text-terracotta disabled:opacity-50"
                 />
               )}
               <button
+                type="button"
                 onClick={handleSignOut}
-                className="flex items-center justify-between p-4 bg-mist/50 hover:bg-mist rounded-xl transition-colors w-full text-left group"
+                className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left transition-colors hover:bg-mist group"
               >
-                <div className="flex items-center gap-3">
-                  <ArrowRightOnRectangleIcon className="w-5 h-5 text-terracotta group-hover:text-terracotta-dark" />
-                  <span className="text-forest">Sign Out</span>
-                </div>
-                <ArrowRightIcon className="w-4 h-4 text-sage group-hover:text-forest" />
+                <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0 text-terracotta group-hover:text-terracotta-dark" />
+                <span className="min-w-0 flex-1 font-medium text-forest">Sign Out</span>
+                <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
               </button>
             </div>
           </section>
         </div>
       </MainContainer>
-    </div>
-  );
-}
-
-// Badge Card Component
-function BadgeCard({ badge, locked }: { badge: BadgeDisplayData, locked: boolean }) {
-  return (
-    <div className={`relative group flex flex-col items-center p-4 bg-mist/50 rounded-xl text-center transition-all border border-stone/20 ${
-      locked ? "opacity-60" : ""
-    }`}>
-      <div
-        className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-          locked ? "from-stone-300 to-stone-400" : RARITY_COLORS[badge.rarity]
-        } flex items-center justify-center text-2xl mb-3 shadow-sm`}
-      >
-        {badge.icon}
-      </div>
-      <p className={`text-sm font-medium line-clamp-2 ${locked ? "text-sage/60" : "text-forest"}`}>
-        {badge.name}
-      </p>
-      {locked && (
-        <div className="absolute inset-0 bg-mist/5 rounded-xl flex items-center justify-center pointer-events-none">
-          <div className="text-sage/60 text-xs">🔒</div>
-        </div>
-      )}
-
-      {/* Custom Tooltip */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2
-                      opacity-0 group-hover:opacity-100
-                      bg-forest/90 text-cream text-sm font-medium
-                      px-3 py-2 rounded-lg shadow-lg
-                      whitespace-nowrap pointer-events-none
-                      transition-opacity duration-200 z-50 max-w-xs">
-        {badge.criteria}
-      </div>
     </div>
   );
 }

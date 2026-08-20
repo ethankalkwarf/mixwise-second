@@ -4,65 +4,77 @@ import { useState } from "react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import type { LearnLessonLayers, LearnSource } from "@/lib/learnTypes";
 import { LearnSectionBlock, LEARN_LABEL, LEARN_HEADING, LEARN_BODY, LEARN_LEDE } from "@/components/learn/LearnSectionBlock";
+import { LearnStepDeck } from "@/components/learn/LearnStepDeck";
+import {
+  LearnLessonChallengeButton,
+  LearnLessonReadSentinel,
+} from "@/components/learn/LearnLessonChallenge";
 
 type Props = {
   layers: LearnLessonLayers;
   /** Optional mid-article visual (methods) */
   midFigure?: React.ReactNode;
+  /** Technique slug for numbered “How to do it” lists */
+  techniqueSlug?: string;
   /** Content after core, before deepen (checks get passed separately by parent) */
   afterCore?: React.ReactNode;
 };
 
 /**
  * Layered lesson: big idea → core → go deeper → sources.
+ * Flat reading flow — one heading level at a time, no stacked meta labels.
  */
-export function LearnLessonArticle({ layers, midFigure, afterCore }: Props) {
+export function LearnLessonArticle({ layers, midFigure, techniqueSlug, afterCore }: Props) {
   const hasDeep = (layers.deepDive?.length ?? 0) > 0;
   const hasSources = (layers.sources?.length ?? 0) > 0;
   const deepCount = layers.deepDive?.length ?? 0;
   const [deepOpen, setDeepOpen] = useState(false);
 
   return (
-    <div className="space-y-14">
-      {/* Big idea */}
-      <header className="space-y-8">
+    <div className="learn-lesson-stack space-y-8 sm:space-y-10">
+      <header className="learn-lesson-intro space-y-6">
         <div>
           <p className={LEARN_LABEL}>The big idea</p>
           <p className={LEARN_LEDE}>{layers.bigIdea}</p>
         </div>
 
-        <div>
-          <p className={LEARN_LABEL}>Take with you</p>
-          <ol className="space-y-3">
-            {layers.keyTakeaways.map((item, i) => (
-              <li key={item.slice(0, 32)} className={`flex gap-3 ${LEARN_BODY}`}>
-                <span className="font-display text-lg !text-terracotta shrink-0 w-6 tabular-nums">
-                  {i + 1}.
-                </span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
+        {layers.keyTakeaways.length >= 2 ? (
+          <LearnStepDeck
+            kicker=""
+            title={`${layers.keyTakeaways.length} things to remember`}
+            steps={layers.keyTakeaways.map((item) => ({ title: "", body: item }))}
+            variant="takeaway"
+          />
+        ) : (
+          <div>
+            <p className={LEARN_LABEL}>Take with you</p>
+            <ol className="space-y-3">
+              {layers.keyTakeaways.map((item, i) => (
+                <li key={item.slice(0, 32)} className={`flex gap-3 ${LEARN_BODY}`}>
+                  <span className="font-display text-lg !text-terracotta shrink-0 w-6 tabular-nums">
+                    {i + 1}.
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </header>
 
-      <div className="border-t border-mist" />
-
-      {/* Core lesson */}
-      <div className="space-y-14">
-        <p className={LEARN_LABEL}>The lesson</p>
+      {/* Core lesson — open flow, not a nested panel of panels */}
+      <div className="learn-lesson-core space-y-10 sm:space-y-12">
         {layers.sections.map((section, index) => (
-          <div key={section.heading}>
-            {midFigure && index === 1 ? <div className="mb-14">{midFigure}</div> : null}
-            <LearnSectionBlock section={section} />
+          <div key={section.heading} className="learn-lesson-section">
+            {midFigure && index === 1 ? <div className="mb-10">{midFigure}</div> : null}
+            <LearnSectionBlock section={section} techniqueSlug={techniqueSlug} />
           </div>
         ))}
         {midFigure && layers.sections.length <= 1 ? midFigure : null}
       </div>
 
-      {/* Go deeper — optional study before checks/practice */}
       {hasDeep && (
-        <section className="border-t border-mist pt-10">
+        <section className="learn-lesson-deepen border-t border-mist/80 pt-8">
           <button
             type="button"
             onClick={() => setDeepOpen((v) => !v)}
@@ -92,26 +104,32 @@ export function LearnLessonArticle({ layers, midFigure, afterCore }: Props) {
           </button>
 
           {deepOpen && (
-            <div className="mt-10 space-y-14 border-t border-mist/80 pt-10">
+            <div className="mt-8 space-y-10 border-t border-mist/80 pt-8">
               {layers.deepDive!.map((section) => (
-                <LearnSectionBlock key={section.heading} section={section} />
+                <LearnSectionBlock key={section.heading} section={section} techniqueSlug={techniqueSlug} />
               ))}
             </div>
           )}
         </section>
       )}
 
-      {/* Sources */}
       {hasSources && <LearnSourcesList sources={layers.sources!} />}
 
-      {afterCore ? <div className="space-y-14 border-t border-mist pt-10">{afterCore}</div> : null}
+      <LearnLessonReadSentinel />
+      <div className="learn-quiz-inline-cta">
+        <LearnLessonChallengeButton />
+      </div>
+
+      {afterCore ? (
+        <div className="learn-lesson-stack space-y-8 pt-2">{afterCore}</div>
+      ) : null}
     </div>
   );
 }
 
 function LearnSourcesList({ sources }: { sources: LearnSource[] }) {
   return (
-    <aside className="border-t border-mist pt-8">
+    <aside className="border-t border-mist/80 pt-8">
       <p className={LEARN_LABEL}>Cited and recommended</p>
       <ol className="space-y-2.5">
         {sources.map((source, index) => (

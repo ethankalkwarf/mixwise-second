@@ -470,7 +470,11 @@ export function RecipeContent({
             <TechniqueCue technique={cocktail.technique} />
             <ol className="space-y-3">
               {instructionSteps.map((step, idx) => (
-                <li key={idx} className="flex gap-3 items-start">
+                <li
+                  key={idx}
+                  id={`step-${idx + 1}`}
+                  className="flex gap-3 items-start scroll-mt-24"
+                >
                   <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold">
                     {idx + 1}
                   </span>

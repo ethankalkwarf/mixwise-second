@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { CheckIcon } from "@heroicons/react/24/outline";
+import { LearnCoverImage } from "@/components/learn/LearnCoverImage";
+import { NativeLearnCardShell } from "@/components/mobile/NativeLearnCardShell";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { useLearnProgress } from "@/hooks/useLearnProgress";
 import { getTechniqueLesson } from "@/lib/learnTechniques";
 import type { GlossaryTerm } from "@/lib/cocktailTechniqueGlossary";
@@ -68,24 +70,24 @@ export function LearnTechniqueIndex({ techniques }: { techniques: Technique[] })
 }
 
 function TechniqueCard({ term }: { term: Technique }) {
+  const nativeShell = useNativeShell();
   const { isComplete, isAuthenticated } = useLearnProgress();
   const lesson = getTechniqueLesson(term.slug);
   const done = isAuthenticated && isComplete("technique", term.slug);
   const cover = lesson?.coverImage ?? "/learn/method-shake.webp";
+  const href = `/learn/techniques/${term.slug}`;
+  const cardClass =
+    "group flex gap-3 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft";
 
-  return (
-    <Link
-      href={`/learn/techniques/${term.slug}`}
-      className="group flex gap-3 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
-    >
-      <div className="relative h-[4.75rem] w-[5.5rem] shrink-0 overflow-hidden rounded-xl bg-mist">
-        <Image
+  const body = (
+    <>
+      <div className="native-learn-card__photo relative h-[4.75rem] w-[5.5rem] shrink-0 overflow-hidden rounded-xl bg-mist">
+        <LearnCoverImage
           src={cover}
           alt=""
           fill
+          className="transition-transform duration-500 group-hover:scale-105 pointer-events-none"
           sizes="88px"
-          className="pointer-events-none object-cover transition-transform duration-500 group-hover:scale-105"
-          aria-hidden
         />
         {done && (
           <span className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-olive text-forest">
@@ -101,6 +103,24 @@ function TechniqueCard({ term }: { term: Technique }) {
           {term.why || term.explanation}
         </p>
       </div>
+    </>
+  );
+
+  if (nativeShell) {
+    return (
+      <NativeLearnCardShell
+        href={href}
+        ariaLabel={formatTechniqueLabel(term.label)}
+        className={cardClass}
+      >
+        {body}
+      </NativeLearnCardShell>
+    );
+  }
+
+  return (
+    <Link href={href} className={cardClass}>
+      {body}
     </Link>
   );
 }

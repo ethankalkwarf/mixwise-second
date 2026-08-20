@@ -429,7 +429,11 @@ export function NativeRecipeView({
           ) : (
             <ol className="space-y-3">
               {instructionSteps.map((step, idx) => (
-                <li key={idx} className="flex gap-3 rounded-2xl bg-white p-4">
+                <li
+                  key={idx}
+                  id={`step-${idx + 1}`}
+                  className="flex gap-3 rounded-2xl bg-white p-4 scroll-mt-24"
+                >
                   <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-terracotta/12 font-display text-sm font-bold text-terracotta">
                     {idx + 1}
                   </span>

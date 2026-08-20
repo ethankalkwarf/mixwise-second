@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { MobileTabBar } from "./MobileTabBar";
 import { MobileAppProvider } from "./MobileAppProvider";
@@ -20,7 +20,7 @@ interface MobileLayoutProps {
  */
 export function MobileLayout({ children }: MobileLayoutProps) {
   const pathname = usePathname();
-  const bleedTop = pathname === "/";
+  const bleedTop = pathname === "/" || pathname === "/saved";
 
   return (
     <MobileAppProvider>
@@ -42,7 +42,9 @@ export function MobileLayout({ children }: MobileLayoutProps) {
             {children}
           </main>
 
-          <MobileTabBar />
+          <Suspense fallback={null}>
+            <MobileTabBar />
+          </Suspense>
           <NativeSignupNudge />
           <NativePostAuthNudge />
           <NativeFirstWinCelebration />

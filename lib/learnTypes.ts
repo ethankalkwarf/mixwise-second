@@ -9,6 +9,11 @@ export type LearnSection = {
   kind?: "default" | "rule" | "mistakes" | "tip";
   /** Inline teaching diagram rendered under the heading */
   figure?: string;
+  /** Optional structured steps for flip-through card decks */
+  steps?: { title: string; body: string }[];
+  /** Deck header override when using `steps` */
+  deckKicker?: string;
+  deckTitle?: string;
 };
 
 /** A catalog drink used as a drill, with the sensory cue to practice. */

@@ -1,85 +1,35 @@
-import type { ComponentType } from "react";
+export {
+  MIXWISE_FOCUS_SEARCH,
+  activeMobileTab,
+  activeTabDestination,
+  DEFAULT_MOBILE_TAB_BAR,
+  getTabBarConfig,
+  MOBILE_TAB_DESTINATIONS,
+  resolveTabDestinations,
+  type MobileTabDestination,
+  type MobileTabDestinationId,
+  type MobileTabId,
+} from "@/lib/mobile/tabBarConfig";
 import {
-  HomeIcon,
-  MagnifyingGlassIcon,
-  ShoppingBagIcon,
-  UserCircleIcon,
-} from "@heroicons/react/24/outline";
-import {
-  HomeIcon as HomeIconSolid,
-  MagnifyingGlassIcon as MagnifyingGlassIconSolid,
-  ShoppingBagIcon as ShoppingBagIconSolid,
-  UserCircleIcon as UserCircleIconSolid,
-} from "@heroicons/react/24/solid";
+  DEFAULT_MOBILE_TAB_BAR,
+  getTabBarConfig,
+  resolveTabDestinations,
+  type MobileTabDestination,
+  type MobileTabDestinationId,
+} from "@/lib/mobile/tabBarConfig";
 
-export type MobileTabId = "home" | "search" | "mix" | "you";
+/** @deprecated Use MobileTabDestination */
+export type MobileTabConfig = MobileTabDestination & { id: MobileTabDestinationId };
 
-export const MIXWISE_FOCUS_SEARCH = "mixwise-focus-search";
-
-export interface MobileTabConfig {
-  id: MobileTabId;
-  label: string;
-  path?: string;
-  icon: ComponentType<{ className?: string }>;
-  iconSolid: ComponentType<{ className?: string }>;
-  opensSheet?: boolean;
+/** @deprecated Use resolveTabDestinations(getTabBarConfig()) */
+export function getMobileTabs(): MobileTabConfig[] {
+  return resolveTabDestinations(getTabBarConfig()) as MobileTabConfig[];
 }
 
-export const MOBILE_TABS: MobileTabConfig[] = [
-  {
-    id: "home",
-    label: "Home",
-    path: "/",
-    icon: HomeIcon,
-    iconSolid: HomeIconSolid,
-  },
-  {
-    id: "search",
-    label: "Search",
-    path: "/cocktails",
-    icon: MagnifyingGlassIcon,
-    iconSolid: MagnifyingGlassIconSolid,
-  },
-  {
-    id: "mix",
-    label: "Mix",
-    path: "/mix",
-    icon: ShoppingBagIcon,
-    iconSolid: ShoppingBagIconSolid,
-  },
-  {
-    id: "you",
-    label: "You",
-    path: "/saved",
-    icon: UserCircleIcon,
-    iconSolid: UserCircleIconSolid,
-  },
-];
-
-/** Which tab should appear active for a given pathname. */
-export function activeMobileTab(pathname: string): MobileTabId {
-  if (pathname === "/") return "home";
-  if (pathname.startsWith("/mix")) return "mix";
-  if (
-    pathname === "/saved" ||
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/account") ||
-    pathname.startsWith("/badges") ||
-    pathname.startsWith("/ingredients") ||
-    pathname.startsWith("/shopping-list")
-  ) {
-    return "you";
-  }
-  if (
-    pathname.startsWith("/cocktails") ||
-    pathname.startsWith("/cocktail-of-the-day") ||
-    pathname.startsWith("/occasions") ||
-    pathname.startsWith("/collections")
-  ) {
-    return "search";
-  }
-  return "home";
-}
+/** @deprecated Use getTabBarConfig() + resolveTabDestinations() */
+export const MOBILE_TABS: MobileTabConfig[] = resolveTabDestinations(
+  DEFAULT_MOBILE_TAB_BAR
+) as MobileTabConfig[];
 
 export interface MobileExploreLink {
   href: string;
@@ -90,6 +40,13 @@ export interface MobileExploreLink {
 }
 
 export const MOBILE_EXPLORE_LINKS: MobileExploreLink[] = [
+  {
+    href: "/learn",
+    label: "Learn",
+    description: "Guides, methods & courses",
+    emoji: "📚",
+    gradient: "from-forest to-charcoal",
+  },
   {
     href: "/ingredients",
     label: "Ingredients",

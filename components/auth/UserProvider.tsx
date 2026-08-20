@@ -4,12 +4,14 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { User, Session } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/supabase/database.types";
-import { trackUserSignup } from "@/lib/analytics";
+import { trackUserSignIn, trackUserSignOut, trackUserSignup } from "@/lib/analytics";
 import { debugLog } from "@/lib/debugLog";
 import { markHasAccount } from "@/lib/auth/returning-user";
 import { authCallbackUrlWithNext, rememberAuthReturnTo } from "@/lib/auth/return-to";
-import { getNativeOAuthRedirectUrl } from "@/lib/mobile/authRedirect";
-import { isNativeApp } from "@/lib/mobile/platform";
+import {
+  getNativeOAuthRedirectUrl,
+  shouldUseNativeOAuthFlow,
+} from "@/lib/mobile/authRedirect";
 import { openNativeOAuthProvider } from "@/lib/mobile/nativeOAuth";
 
 /**
@@ -474,14 +476,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         void (async () => {
           switch (event) {
             case "SIGNED_IN":
+              debugLog("[UserProvider] User signed in");
+              await updateAuthState(newSession);
+              if (newSession?.user) {
+                const createdAt = new Date(newSession.user.created_at);
+                const isBrandNew =
+                  Date.now() - createdAt.getTime() < 60_000;
+                // New accounts are counted via trackUserSignup in updateAuthState
+                if (!isBrandNew) {
+                  void trackUserSignIn(newSession.user.id);
+                }
+              }
+              break;
+
             case "TOKEN_REFRESHED":
-              debugLog("[UserProvider] User signed in or token refreshed");
+              debugLog("[UserProvider] Token refreshed");
               await updateAuthState(newSession);
               break;
 
             case "SIGNED_OUT":
               if (mounted) {
                 debugLog("[UserProvider] User signed out");
+                trackUserSignOut();
                 try {
                   if (userIdRef.current) {
                     localStorage.removeItem(getProfileCacheKey(userIdRef.current));
@@ -558,18 +574,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const getAuthRedirectUrl = useCallback(() => {
     rememberAuthReturnTo();
     const nativeOAuth = getNativeOAuthRedirectUrl();
+    // Native OAuth: exact allowlisted custom scheme — do not append ?next=
+    // (Supabase Site URL fallback sends users to the marketing site in Safari).
+    if (nativeOAuth) return nativeOAuth;
+
     const origin =
       typeof window !== "undefined"
         ? window.location.origin
         : process.env.NEXT_PUBLIC_SITE_URL || "";
-    const base = nativeOAuth ?? (origin ? `${origin}/auth/callback` : "/auth/callback");
+    const base = origin ? `${origin}/auth/callback` : "/auth/callback";
     return authCallbackUrlWithNext(base);
   }, []);
 
   const signInWithOAuthProvider = useCallback(
     async (provider: "google" | "apple") => {
       const redirectUrl = getAuthRedirectUrl();
-      const useNativeFlow = isNativeApp();
+      const useNativeFlow = shouldUseNativeOAuthFlow();
 
       debugLog(`[UserProvider] Starting ${provider} OAuth`, {
         redirect: redirectUrl,

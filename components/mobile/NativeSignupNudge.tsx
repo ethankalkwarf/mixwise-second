@@ -39,7 +39,9 @@ export function NativeSignupNudge() {
     }
     if (isGuestNudgeSnoozed() || !hooked) return;
 
-    const timer = window.setTimeout(() => setVisible(true), 900);
+    const timer = window.setTimeout(() => {
+      setVisible(true);
+    }, 900);
     return () => window.clearTimeout(timer);
   }, [native, isLoading, isAuthenticated, isOpen, hooked]);
 
@@ -67,6 +69,7 @@ export function NativeSignupNudge() {
             onClick={() => {
               setVisible(false);
               openAuthDialog({
+                gate: "native_signup_nudge",
                 mode: returning ? "login" : "signup",
                 dismissible: true,
                 title: returning ? "Welcome back" : "Save your bar",

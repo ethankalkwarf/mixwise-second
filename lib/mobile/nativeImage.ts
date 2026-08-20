@@ -8,7 +8,7 @@ export function nativePhotoUrl(
 ): string | null {
   if (!src) return null;
   if (src.startsWith("data:") || src.startsWith("blob:")) return src;
-  if (src.endsWith(".svg") || src.startsWith("/brand/") || src.startsWith("/occasions/")) return src;
+  if (src.endsWith(".svg") || src.startsWith("/brand/") || src.startsWith("/occasions/") || src.startsWith("/learn/") || src.startsWith("/media/") || src.startsWith("/ingredients/")) return src;
   if (src.includes("/_next/image?")) return src;
   if (!TILE_WIDTHS.has(width)) width = 640;
 

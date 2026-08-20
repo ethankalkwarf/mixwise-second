@@ -239,7 +239,40 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   });
 }
 
-// Generate JSON-LD Recipe Schema
+function minutesToIso8601(minutes: number): string {
+  return `PT${Math.max(1, Math.round(minutes))}M`;
+}
+
+/** Typical cocktail prep from technique / difficulty when no explicit minutes exist. */
+function inferPrepMinutes(
+  technique?: string | null,
+  difficulty?: string | null
+): number {
+  const t = (technique || "").toLowerCase();
+  const d = (difficulty || "").toLowerCase();
+  if (t.includes("blend")) return 8;
+  if (t.includes("muddle") || t.includes("layer") || t.includes("float")) return 7;
+  if (d.includes("advanced") || d.includes("hard")) return 8;
+  if (d.includes("intermediate")) return 6;
+  if (t.includes("build") || t.includes("pour")) return 3;
+  if (t.includes("stir")) return 4;
+  if (t.includes("shake")) return 5;
+  return 5;
+}
+
+/** Short HowToStep name — Google rejects "Step 1" style labels. */
+function stepNameFromInstruction(text: string): string {
+  const cleaned = text.replace(/^\d+[\.\)]\s*/, "").trim();
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  let name = words.slice(0, Math.min(5, words.length)).join(" ");
+  name = name.replace(/[.,;:!]+$/, "");
+  if (name.length > 48) {
+    name = name.slice(0, 45).replace(/\s+\S*$/, "") || name.slice(0, 45);
+  }
+  return name || "Mix";
+}
+
+// Generate JSON-LD Recipe Schema (Google Recipe rich-result fields)
 function generateRecipeSchema(args: {
   name: string;
   description?: string | null;
@@ -247,39 +280,70 @@ function generateRecipeSchema(args: {
   ingredients: string[];
   instructionSteps: string[];
   keywords: string[];
+  url: string;
+  technique?: string | null;
+  difficulty?: string | null;
+  calories?: number | null;
+  prepTimeMinutes?: number | null;
+  totalTimeMinutes?: number | null;
+  servings?: number | null;
 }) {
+  const image = args.imageUrl || `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`;
+  const servings =
+    args.servings && args.servings > 0 ? Math.round(args.servings) : 1;
+  const prepMinutes =
+    args.prepTimeMinutes ?? inferPrepMinutes(args.technique, args.difficulty);
+  const totalMinutes = args.totalTimeMinutes ?? prepMinutes;
+
   const instructions = args.instructionSteps.map((text, index) => ({
     "@type": "HowToStep",
+    name: stepNameFromInstruction(text),
     text,
+    url: `${args.url}#step-${index + 1}`,
+    image,
     position: index + 1,
   }));
 
-  return {
+  const schema: Record<string, unknown> = {
     "@context": "https://schema.org/",
     "@type": "Recipe",
     name: args.name,
     description: args.description || undefined,
-    image: args.imageUrl || `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`,
+    image,
+    url: args.url,
     recipeIngredient: args.ingredients,
-    "recipeInstructions": instructions,
+    ...(instructions.length > 0 ? { recipeInstructions: instructions } : {}),
     keywords: args.keywords.join(", "),
-    "recipeCategory": "Cocktail",
-    "recipeCuisine": "Cocktail",
-    "author": {
+    recipeCategory: "Cocktail",
+    recipeCuisine: "Cocktail",
+    prepTime: minutesToIso8601(prepMinutes),
+    totalTime: minutesToIso8601(totalMinutes),
+    recipeYield: servings === 1 ? "1 cocktail" : `${servings} cocktails`,
+    author: {
       "@type": "Organization",
-      "name": SITE_CONFIG.name,
-      "url": SITE_CONFIG.url,
+      name: SITE_CONFIG.name,
+      url: SITE_CONFIG.url,
     },
-    "publisher": {
+    publisher: {
       "@type": "Organization",
-      "name": SITE_CONFIG.name,
-      "url": SITE_CONFIG.url,
-      "logo": {
+      name: SITE_CONFIG.name,
+      url: SITE_CONFIG.url,
+      logo: {
         "@type": "ImageObject",
-        "url": `${SITE_CONFIG.url}${SITE_CONFIG.logo}`,
+        url: `${SITE_CONFIG.url}${SITE_CONFIG.logo}`,
       },
     },
   };
+
+  // Only emit nutrition when we have a real calorie value — don't invent estimates.
+  if (args.calories != null && args.calories > 0) {
+    schema.nutrition = {
+      "@type": "NutritionInformation",
+      calories: `${Math.round(args.calories)} calories`,
+    };
+  }
+
+  return schema;
 }
 
 export default async function CocktailDetailPage({ params }: PageProps) {
@@ -324,6 +388,15 @@ export default async function CocktailDetailPage({ params }: PageProps) {
 
   // Use external image URL from Supabase
   const imageUrl = sanityCocktail.externalImageUrl || null;
+  const recipeUrl = `${SITE_CONFIG.url}/cocktails/${cocktail.slug}`;
+  const meta =
+    cocktail.metadata_json && typeof cocktail.metadata_json === "object"
+      ? (cocktail.metadata_json as Record<string, unknown>)
+      : {};
+  const metaNumber = (key: string): number | null => {
+    const value = meta[key];
+    return typeof value === "number" && Number.isFinite(value) ? value : null;
+  };
 
   const recipeSchema = generateRecipeSchema({
     name: sanityCocktail.name,
@@ -332,6 +405,13 @@ export default async function CocktailDetailPage({ params }: PageProps) {
     ingredients: ingredients.map((i) => i.text),
     instructionSteps,
     keywords: [...tags, ...asStringArray(sanityCocktail.bestFor)].filter(Boolean),
+    url: recipeUrl,
+    technique: cocktail.technique,
+    difficulty: cocktail.difficulty,
+    calories: metaNumber("calories"),
+    prepTimeMinutes: metaNumber("prepTimeMinutes"),
+    totalTimeMinutes: metaNumber("totalTimeMinutes"),
+    servings: metaNumber("servings"),
   });
 
   // Sanitize similar recipes data for client components

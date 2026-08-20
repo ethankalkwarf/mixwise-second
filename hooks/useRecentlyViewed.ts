@@ -3,7 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
-import { trackCocktailView } from "@/lib/analytics";
+import {
+  type AnalyticsSource,
+  inferCocktailViewSource,
+  trackCocktailView,
+} from "@/lib/analytics";
 import {
   clearGuestRecent,
   loadGuestRecent,
@@ -150,10 +154,14 @@ export function useRecentlyViewed(): UseRecentlyViewedResult {
       name: string;
       slug?: string;
       imageUrl?: string;
+      source?: AnalyticsSource;
     }) => {
       if (!cocktail.id) return;
 
-      trackCocktailView(user?.id || null, cocktail.id, cocktail.name);
+      trackCocktailView(user?.id || null, cocktail.id, cocktail.name, {
+        slug: cocktail.slug,
+        source: cocktail.source ?? inferCocktailViewSource(),
+      });
 
       if (!isAuthenticated || !user) {
         setRecentlyViewed(recordGuestView(cocktail));
@@ -244,10 +252,14 @@ export function useRecordCocktailView() {
       name: string;
       slug?: string;
       imageUrl?: string;
+      source?: AnalyticsSource;
     }) => {
       if (!cocktail.id) return;
 
-      trackCocktailView(user?.id || null, cocktail.id, cocktail.name);
+      trackCocktailView(user?.id || null, cocktail.id, cocktail.name, {
+        slug: cocktail.slug,
+        source: cocktail.source ?? inferCocktailViewSource(),
+      });
 
       if (authLoading || !isAuthenticated || !user) {
         recordGuestView(cocktail);

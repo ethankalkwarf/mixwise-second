@@ -7,6 +7,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { formatCocktailName } from "@/lib/formatters";
+import { trackEmptyStateSeen } from "@/lib/analytics";
 import {
   HeartIcon,
   ClockIcon,
@@ -22,6 +23,7 @@ import {
   BookOpenIcon,
   CalendarDaysIcon,
   SparklesIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 import { NotificationSettings } from "@/components/mobile/NotificationSettings";
 import { BiometricSettings } from "@/components/mobile/BiometricSettings";
@@ -62,7 +64,8 @@ function SavedPageContent() {
       setActiveTab(tab);
     }
   }, [searchParams]);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsView, setSettingsView] = useState<"closed" | "main" | "tabBar">("closed");
+  const settingsOpen = settingsView !== "closed";
   const givenName = currentGivenName({
     firstName: profile?.first_name,
     displayName: profile?.display_name,
@@ -83,21 +86,28 @@ function SavedPageContent() {
       }}
     >
       <div
-        className="sticky z-10 bg-white/80 backdrop-blur-xl border-b border-white/50"
-        style={{ top: "env(safe-area-inset-top, 0px)" }}
+        className="sticky z-10 border-b border-mist/40 bg-cream/95 backdrop-blur-xl"
+        style={{
+          top: 0,
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)",
+        }}
       >
-        <div className="px-4 pt-4 pb-2">
+        <div className="px-4 pb-2">
           {settingsOpen ? (
             <div className="mb-3 flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setSettingsOpen(false)}
+                onClick={() =>
+                  setSettingsView((view) => (view === "tabBar" ? "main" : "closed"))
+                }
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-mist/70 text-forest"
                 aria-label="Back"
               >
                 <ArrowLeftIcon className="h-5 w-5" />
               </button>
-              <h1 className="font-display text-2xl font-bold text-forest">Settings</h1>
+              <h1 className="font-display text-2xl font-bold text-forest">
+                {settingsView === "tabBar" ? "Tab bar" : "Settings"}
+              </h1>
             </div>
           ) : (
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -119,7 +129,7 @@ function SavedPageContent() {
               {isAuthenticated ? (
                 <button
                   type="button"
-                  onClick={() => setSettingsOpen(true)}
+                  onClick={() => setSettingsView("main")}
                   className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-sm font-semibold text-forest shadow-sm"
                   aria-label="Account settings"
                 >
@@ -179,8 +189,10 @@ function SavedPageContent() {
       </div>
 
       <div className="px-4 pt-6">
-        {settingsOpen ? (
-          <SettingsScreen />
+        {settingsView === "tabBar" ? (
+          <TabBarSettings />
+        ) : settingsView === "main" ? (
+          <SettingsScreen onOpenTabBar={() => setSettingsView("tabBar")} />
         ) : (
           <>
             <NativeNamePrompt />
@@ -270,6 +282,12 @@ function ExploreRow({
 }
 
 function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boolean }) {
+  useEffect(() => {
+    if (!loading && favorites.length === 0) {
+      void trackEmptyStateSeen("saved_favorites");
+    }
+  }, [loading, favorites.length]);
+
   if (loading) {
     return <div className="text-center py-12 text-sage">Loading...</div>;
   }
@@ -410,7 +428,7 @@ function BarTab({ ingredientIds }: { ingredientIds: string[] }) {
   );
 }
 
-function SettingsScreen() {
+function SettingsScreen({ onOpenTabBar }: { onOpenTabBar: () => void }) {
   const router = useRouter();
   const { user, profile, isAuthenticated, isLoading, signOut } = useUser();
   const { openAuthDialog } = useAuthDialog();
@@ -441,11 +459,35 @@ function SettingsScreen() {
           >
             {preferredAuthMode === "login" ? "Log in" : "Create free account"}
           </button>
+          <button
+            type="button"
+            onClick={() =>
+              openAuthDialog({
+                mode: preferredAuthMode === "login" ? "signup" : "login",
+              })
+            }
+            className="mt-2 w-full py-2.5 text-sm font-medium text-sage"
+          >
+            {preferredAuthMode === "login" ? "Create a free account" : "Log in instead"}
+          </button>
         </div>
         <NotificationSettings />
         <BiometricSettings />
         <OfflineDataSettings />
-        <TabBarSettings />
+        <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+          <button
+            type="button"
+            onClick={onOpenTabBar}
+            className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left"
+          >
+            <Squares2X2Icon className="h-5 w-5 flex-shrink-0 text-sage" />
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium text-forest">Tab bar</span>
+              <span className="block text-xs text-sage">Customize bottom navigation</span>
+            </span>
+            <ArrowRightIcon className="h-4 w-4 flex-shrink-0 text-sage" />
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => replayNativeIntro()}
@@ -468,17 +510,26 @@ function SettingsScreen() {
       <NotificationSettings />
       <BiometricSettings />
       <OfflineDataSettings />
-      <TabBarSettings />
+
+      <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+        <button
+          type="button"
+          onClick={onOpenTabBar}
+          className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left"
+        >
+          <Squares2X2Icon className="h-5 w-5 flex-shrink-0 text-sage" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium text-forest">Tab bar</span>
+            <span className="block text-xs text-sage">Customize bottom navigation</span>
+          </span>
+          <ArrowRightIcon className="h-4 w-4 flex-shrink-0 text-sage" />
+        </button>
+      </div>
 
       <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
         <AppLink href="/account" className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left">
           <UserCircleIcon className="h-5 w-5 flex-shrink-0 text-sage" />
           <span className="min-w-0 flex-1 font-medium text-forest">Account</span>
-          <ArrowRightIcon className="h-4 w-4 text-sage" />
-        </AppLink>
-        <AppLink href="/badges" className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left">
-          <TrophyIcon className="h-5 w-5 flex-shrink-0 text-sage" />
-          <span className="min-w-0 flex-1 font-medium text-forest">Badges</span>
           <ArrowRightIcon className="h-4 w-4 text-sage" />
         </AppLink>
         <ShareBarButton

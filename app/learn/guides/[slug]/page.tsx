@@ -3,10 +3,11 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { LearnHero } from "@/components/learn/LearnHero";
 import { LearnLessonArticle } from "@/components/learn/LearnLessonArticle";
 import { LearnPracticeCocktails } from "@/components/learn/LearnPracticeCocktails";
-import { LearnChecks } from "@/components/learn/LearnChecks";
-import { LearnProgressControls } from "@/components/learn/LearnProgressControls";
 import { LearnContentGate } from "@/components/learn/LearnContentGate";
 import { LearnLessonFooter } from "@/components/learn/LearnLessonFooter";
+import { LearnLessonChallengeProvider } from "@/components/learn/LearnLessonChallenge";
+import { NativeLearnLessonHero } from "@/components/mobile/NativeLearnLessonHero";
+import { NativeLearnLessonActions } from "@/components/mobile/NativeLearnLessonActions";
 import {
   LEARN_GUIDES,
   LEARN_PATHS,
@@ -50,7 +51,13 @@ export default async function LearnGuidePage({ params }: PageProps) {
   const checks = getGuideChecks(slug);
 
   return (
-    <div className="min-h-screen bg-cream">
+    <LearnLessonChallengeProvider
+      kind="guide"
+      slug={slug}
+      checks={checks}
+      lessonTitle={guide.title}
+    >
+    <div className="min-h-screen bg-cream" data-native-learn-lesson>
       <ArticleSchema
         title={guide.title}
         description={guide.summary}
@@ -65,31 +72,39 @@ export default async function LearnGuidePage({ params }: PageProps) {
           { name: guide.title, url: `${SITE_CONFIG.url}/learn/guides/${slug}` },
         ]}
       />
-      <LearnHero
+      <NativeLearnLessonHero
+        title={guide.title}
+        eyebrow={guide.eyebrow}
+        summary={guide.summary}
         imageSrc={guide.coverImage}
         imageAlt={guide.coverAlt}
-        eyebrow={`${guide.eyebrow} · ${guide.readingMinutes} min read`}
-        title={guide.title}
-        summary={guide.summary}
-        backHref="/learn"
+        kind="guide"
+        slug={slug}
+        readingMinutes={guide.readingMinutes}
       />
+      <div data-web-learn-chrome>
+        <LearnHero
+          imageSrc={guide.coverImage}
+          imageAlt={guide.coverAlt}
+          eyebrow={`${guide.eyebrow} · ${guide.readingMinutes} min read`}
+          title={guide.title}
+          summary={guide.summary}
+          backHref="/learn"
+        />
+      </div>
 
-      <MainContainer className="py-10 sm:py-14 max-w-3xl space-y-14">
+      <MainContainer className="native-learn-lesson__body py-10 sm:py-14 max-w-3xl space-y-14">
         <LearnContentGate gateId={`guide:${slug}`} teaserLabel="Keep reading this lesson">
           <LearnLessonArticle
             layers={guide}
-            afterCore={
-              <>
-                <LearnChecks checks={checks} kind="guide" slug={slug} />
-                <LearnPracticeCocktails drinks={guide.practice} />
-                <LearnProgressControls kind="guide" slug={slug} />
-              </>
-            }
+            afterCore={<LearnPracticeCocktails drinks={guide.practice} />}
           />
         </LearnContentGate>
 
         <LearnLessonFooter next={next} path={pathUsingGuide} />
       </MainContainer>
+      <NativeLearnLessonActions kind="guide" slug={slug} />
     </div>
+    </LearnLessonChallengeProvider>
   );
 }

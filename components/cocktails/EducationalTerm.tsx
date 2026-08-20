@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AppLink } from "@/components/mobile/AppLink";
 import { useNativeShell } from "@/hooks/useIsNativeApp";
 import type { GlossaryTerm } from "@/lib/cocktailTechniqueGlossary";
+import { trackGlossaryTermOpened } from "@/lib/analytics";
 
 interface EducationalTermProps {
   term: GlossaryTerm;
@@ -125,7 +127,14 @@ export function EducationalTerm({ term, children }: EducationalTermProps) {
         className="mw-inline-term font-medium text-forest underline decoration-dotted decoration-olive/70 underline-offset-2 hover:text-olive focus:outline-none focus-visible:ring-2 focus-visible:ring-olive/40 rounded-sm"
         aria-expanded={open}
         aria-controls={panelId}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (!open) {
+            void trackGlossaryTermOpened(term.label, {
+              learn_path: term.learnPath || null,
+            });
+          }
+          setOpen((v) => !v);
+        }}
       >
         {children}
       </button>
@@ -154,15 +163,25 @@ export function EducationalTerm({ term, children }: EducationalTermProps) {
               {term.why && (
                 <span className="mt-1.5 block text-cream/75">{term.why}</span>
               )}
-              {term.learnPath && !nativeShell && (
-                <a
-                  href={term.learnPath}
-                  className="mw-inline-term mt-2 inline-block text-[11px] font-semibold uppercase tracking-wide text-olive hover:text-cream"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Learn more →
-                </a>
-              )}
+              {term.learnPath ? (
+                nativeShell ? (
+                  <AppLink
+                    href={term.learnPath}
+                    className="mw-inline-term mt-2 inline-block text-[11px] font-semibold uppercase tracking-wide text-olive hover:text-cream"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Learn more →
+                  </AppLink>
+                ) : (
+                  <a
+                    href={term.learnPath}
+                    className="mw-inline-term mt-2 inline-block text-[11px] font-semibold uppercase tracking-wide text-olive hover:text-cream"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Learn more →
+                  </a>
+                )
+              ) : null}
               {pos && (
                 <span
                   aria-hidden

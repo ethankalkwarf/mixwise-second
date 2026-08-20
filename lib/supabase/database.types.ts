@@ -490,6 +490,76 @@ export interface Database {
           sent_at?: string;
         };
       };
+      email_campaign_events: {
+        Row: {
+          id: number;
+          resend_email_id: string | null;
+          event_type: string;
+          email: string | null;
+          campaign: string | null;
+          link_url: string | null;
+          cocktail_slug: string | null;
+          payload: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          resend_email_id?: string | null;
+          event_type: string;
+          email?: string | null;
+          campaign?: string | null;
+          link_url?: string | null;
+          cocktail_slug?: string | null;
+          payload?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          resend_email_id?: string | null;
+          event_type?: string;
+          email?: string | null;
+          campaign?: string | null;
+          link_url?: string | null;
+          cocktail_slug?: string | null;
+          payload?: Json;
+          created_at?: string;
+        };
+      };
+      search_console_daily: {
+        Row: {
+          id: number;
+          date: string;
+          query: string;
+          page: string;
+          clicks: number;
+          impressions: number;
+          ctr: number | null;
+          position: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          date: string;
+          query?: string;
+          page?: string;
+          clicks?: number;
+          impressions?: number;
+          ctr?: number | null;
+          position?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          date?: string;
+          query?: string;
+          page?: string;
+          clicks?: number;
+          impressions?: number;
+          ctr?: number | null;
+          position?: number | null;
+          created_at?: string;
+        };
+      };
       cocktails: {
         Row: {
           id: string;

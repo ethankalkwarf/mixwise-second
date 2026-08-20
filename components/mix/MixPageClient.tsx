@@ -23,6 +23,7 @@ import { HomeIcon, WrenchScrewdriverIcon, BookOpenIcon } from "@heroicons/react/
 import { MainContainer } from "@/components/layout/MainContainer";
 import { debugLog } from "@/lib/debugLog";
 import { slugifyIngredientName } from "@/lib/ingredientSlug";
+import { trackMixToolUsed } from "@/lib/analytics";
 
 // Show sign-up prompt after adding this many ingredients
 const PROMPT_THRESHOLD = 3;
@@ -58,11 +59,12 @@ function MixPageContent() {
     setIsNative(nativeShell);
   }, [nativeShell]);
 
-  const { isAuthenticated, isLoading: authLoading } = useUser();
+  const { isAuthenticated, isLoading: authLoading, user } = useUser();
   const { openAuthDialog, closeAuthDialog, isOpen: authDialogOpen } = useAuthDialog();
   const router = useRouter();
   const skippedMixAuth = useRef(false);
   const openedMixGate = useRef(false);
+  const mixTrackedForStep = useRef(false);
   const { skipIds } = useCocktailSkips();
   const {
     ingredientIds,
@@ -181,6 +183,7 @@ function MixPageContent() {
     const mode = getPreferredAuthMode();
     const copy = preferredAuthCopy(mode);
     openAuthDialog({
+      gate: "mix_native_gate",
       mode,
       dismissible: false,
       title: mode === "login" ? "Sign in to mix" : copy.title,
@@ -324,6 +327,28 @@ function MixPageContent() {
     }),
     [mixMatches]
   );
+
+  // Fire once when the user lands on Mix results (menu step)
+  useEffect(() => {
+    if (currentStep !== "menu") {
+      mixTrackedForStep.current = false;
+      return;
+    }
+    if (mixTrackedForStep.current || dataLoading || cocktailsLoading) return;
+    mixTrackedForStep.current = true;
+    void trackMixToolUsed(user?.id ?? null, ingredientIds.length, matchCounts.canMake, {
+      almost_there: matchCounts.almostThere,
+      step: "menu",
+    });
+  }, [
+    currentStep,
+    dataLoading,
+    cocktailsLoading,
+    user?.id,
+    ingredientIds.length,
+    matchCounts.canMake,
+    matchCounts.almostThere,
+  ]);
 
   const goToMenu = useCallback(() => {
     if (isNative || nativeShell) {

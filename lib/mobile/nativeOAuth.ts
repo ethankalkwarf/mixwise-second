@@ -2,37 +2,109 @@ import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { createClient } from "@/lib/supabase/client";
-import { isSafeReturnPath } from "@/lib/auth/return-to";
+import { isSafeReturnPath, consumeAuthReturnTo, resolvePostAuthPath } from "@/lib/auth/return-to";
 import { debugLog } from "@/lib/debugLog";
-import { isNativeOAuthCallbackUrl } from "@/lib/mobile/authRedirect";
+import {
+  isNativeOAuthCallbackUrl,
+  NATIVE_OAUTH_BRIDGE_PATH,
+  NATIVE_OAUTH_CALLBACK,
+} from "@/lib/mobile/authRedirect";
 
-/** Opens the provider OAuth URL in an in-app browser (required on iOS). */
-export async function openNativeOAuthProvider(url: string): Promise<void> {
-  await Browser.open({ url, presentationStyle: "popover" });
-}
+let oauthBrowserOpen = false;
+let oauthExchangeInFlight: string | null = null;
 
-/** Exchanges the PKCE code from the deep link and loads the session into the WebView. */
-export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
-  if (!isNativeOAuthCallbackUrl(url)) {
-    return false;
+async function dismissOAuthBrowser(): Promise<void> {
+  if (!oauthBrowserOpen) {
+    try {
+      await Browser.close();
+    } catch {
+      // nothing open
+    }
+    return;
   }
 
+  oauthBrowserOpen = false;
   try {
     await Browser.close();
   } catch {
     // Browser may already be dismissed
   }
+  // SFSafariViewController sometimes needs a beat after the deep link.
+  window.setTimeout(() => {
+    void Browser.close().catch(() => {});
+  }, 150);
+}
 
+/**
+ * Opens the provider OAuth URL with ASWebAuthenticationSession (iOS) so the
+ * sheet auto-dismisses when the custom-scheme redirect fires. Falls back to
+ * Capacitor Browser if the secure session API is unavailable.
+ */
+export async function openNativeOAuthProvider(url: string): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      // Dynamic import — a hard dependency can blank the WebView if the
+      // native plugin isn't linked yet (needs a fresh cap sync / rebuild).
+      const { InAppBrowser } = await import("@capgo/capacitor-inappbrowser");
+      const { redirectedUri } = await InAppBrowser.openSecureWindow({
+        authEndpoint: url,
+        redirectUri: NATIVE_OAUTH_CALLBACK,
+      });
+      debugLog("[NativeOAuth] openSecureWindow returned:", redirectedUri);
+      if (redirectedUri) {
+        await handleNativeOAuthCallback(redirectedUri);
+      }
+      return;
+    } catch (error) {
+      // User cancel is expected; don't fall through to a second browser.
+      const message = error instanceof Error ? error.message : String(error);
+      if (/cancel|dismiss|abort/i.test(message)) {
+        debugLog("[NativeOAuth] Auth session cancelled by user");
+        throw Object.assign(new Error("Sign-in cancelled"), { code: "OAUTH_CANCELLED" as const });
+      }
+      console.warn("[NativeOAuth] openSecureWindow failed, falling back to Browser:", error);
+    }
+  }
+
+  oauthBrowserOpen = true;
+  await Browser.open({ url, presentationStyle: "fullscreen" });
+}
+
+function collectOAuthParams(url: string): URLSearchParams {
   const parsed = new URL(url);
-  const code = parsed.searchParams.get("code");
-  const oauthError = parsed.searchParams.get("error");
-  const next = parsed.searchParams.get("next");
+  const params = new URLSearchParams(parsed.search);
+  if (parsed.hash?.startsWith("#")) {
+    const hash = new URLSearchParams(parsed.hash.slice(1));
+    hash.forEach((value, key) => {
+      if (value && !params.has(key)) params.set(key, value);
+    });
+  }
+  return params;
+}
+
+/** Exchanges the PKCE code from the deep link and loads the session into the WebView. */
+export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
+  const isDeepLink = isNativeOAuthCallbackUrl(url);
+  const isBridge =
+    url.includes(NATIVE_OAUTH_BRIDGE_PATH) &&
+    (url.startsWith("http://") || url.startsWith("https://"));
+
+  if (!isDeepLink && !isBridge) {
+    return false;
+  }
+
+  await dismissOAuthBrowser();
+
+  const params = collectOAuthParams(url);
+  const code = params.get("code");
+  const oauthError = params.get("error");
+  const next = params.get("next");
 
   if (oauthError) {
     console.error(
       "[NativeOAuth] Provider error:",
       oauthError,
-      parsed.searchParams.get("error_description")
+      params.get("error_description")
     );
     return true;
   }
@@ -42,10 +114,18 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
     return true;
   }
 
+  // openSecureWindow + appUrlOpen can both deliver the same callback.
+  if (oauthExchangeInFlight === code) {
+    debugLog("[NativeOAuth] Ignoring duplicate callback for code");
+    return true;
+  }
+  oauthExchangeInFlight = code;
+
   const supabase = createClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
+    oauthExchangeInFlight = null;
     console.error("[NativeOAuth] exchangeCodeForSession failed:", error);
     return true;
   }
@@ -54,7 +134,8 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
     return true;
   }
 
-  const path = isSafeReturnPath(next) ? next : "/";
+  const remembered = consumeAuthReturnTo();
+  const path = resolvePostAuthPath(isSafeReturnPath(next) ? next : remembered);
   const target = new URL(path, window.location.origin);
   target.searchParams.set("mixwise_app", "1");
   debugLog("[NativeOAuth] Session established, navigating to", target.toString());
@@ -68,7 +149,7 @@ export function registerNativeOAuthListener(): () => void {
     return () => {};
   }
 
-  const handle = App.addListener("appUrlOpen", ({ url }) => {
+  const urlHandle = App.addListener("appUrlOpen", ({ url }) => {
     debugLog("[NativeOAuth] appUrlOpen:", url);
     void handleNativeOAuthCallback(url).then((handled) => {
       if (handled) return;
@@ -78,7 +159,15 @@ export function registerNativeOAuthListener(): () => void {
     });
   });
 
+  // If the secure session falls back to Browser, dismiss it when we regain focus.
+  const stateHandle = App.addListener("appStateChange", ({ isActive }) => {
+    if (isActive && oauthBrowserOpen) {
+      void dismissOAuthBrowser();
+    }
+  });
+
   return () => {
-    void handle.then((h) => h.remove());
+    void urlHandle.then((h) => h.remove());
+    void stateHandle.then((h) => h.remove());
   };
 }

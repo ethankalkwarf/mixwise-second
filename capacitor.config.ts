@@ -20,20 +20,25 @@ const isProduction = process.env.CAPACITOR_ENV === 'production';
 const devPort = process.env.CAPACITOR_DEV_PORT ?? '3000';
 const devHost = `http://${getLocalIp()}:${devPort}`;
 
+/** TestFlight can load a Vercel preview instead of live getmixwise.com. */
+function appServerUrl(raw: string, cleartext: boolean): CapacitorConfig['server'] {
+  const url = new URL(raw);
+  url.searchParams.set('mixwise_app', '1');
+  return { url: url.toString(), cleartext };
+}
+
+const overrideUrl = process.env.CAPACITOR_SERVER_URL?.trim();
+
 const config: CapacitorConfig = {
   appId: 'com.getmixwise.app',
   appName: 'MixWise',
   // Bundled fallback — production builds load from server.url instead.
   webDir: 'out',
-  server: isProduction
-    ? {
-        url: 'https://www.getmixwise.com/?mixwise_app=1',
-        cleartext: false,
-      }
-    : {
-        url: `${devHost}/?mixwise_app=1`,
-        cleartext: true,
-      },
+  server: overrideUrl
+    ? appServerUrl(overrideUrl, overrideUrl.startsWith('http://'))
+    : isProduction
+      ? appServerUrl('https://www.getmixwise.com/', false)
+      : appServerUrl(devHost, true),
   plugins: {
     SplashScreen: {
       launchShowDuration: 0,

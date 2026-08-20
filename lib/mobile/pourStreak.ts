@@ -72,6 +72,11 @@ export function markDrinkMade(_slug: string): { streak: number; isNewToday: bool
   const streak = computeStreak(dates);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(POUR_STREAK_EVENT, { detail: { streak } }));
+    if (isNewToday) {
+      void import("@/lib/analytics").then(({ trackPourStreakUpdated }) => {
+        void trackPourStreakUpdated(streak);
+      });
+    }
   }
   return { streak, isNewToday };
 }

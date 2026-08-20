@@ -6,6 +6,7 @@ import { EnvelopeIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { useUser } from "@/components/auth/UserProvider";
 import { clearReturningUserHints } from "@/lib/auth/returning-user";
+import { trackEmailSignup } from "@/lib/analytics";
 
 type CaptureStatus = "idle" | "loading" | "success" | "existing_account" | "error";
 
@@ -58,6 +59,7 @@ export function EmailListCapture({
       setStatus("success");
       setMessage(data.message || "You're on the list — check your email.");
       setJoinUrl(typeof data.joinUrl === "string" ? data.joinUrl : "/join");
+      void trackEmailSignup(email.trim(), source);
       setEmail("");
     } catch {
       setStatus("error");

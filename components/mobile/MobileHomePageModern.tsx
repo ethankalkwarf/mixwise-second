@@ -21,8 +21,11 @@ import { useShakeGesture } from "@/hooks/useShakeGesture";
 import {
   getHomeContextSubtitle,
   getHomeGreetingEyebrow,
+  getHomePourPrompt,
   greetingFirstName,
+  readOrCreatePourPromptSessionKey,
 } from "@/lib/homeHeroHeadline";
+import { getIngredientOriginCover } from "@/lib/ingredientHeroes";
 import type { MixCocktail } from "@/lib/mixTypes";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
@@ -35,13 +38,14 @@ interface MobileHomePageProps {
 const SHAKE_PREF_KEY = "mixwise-shake-granted";
 const SHAKE_INTRO_KEY = "mixwise-shake-intro-seen";
 
-const SPIRIT_CHIPS = [
-  { value: "gin", label: "Gin" },
-  { value: "whiskey", label: "Whiskey" },
-  { value: "rum", label: "Rum" },
-  { value: "tequila", label: "Tequila" },
-  { value: "vodka", label: "Vodka" },
-  { value: "mezcal", label: "Mezcal" },
+/** Home spirit browse — photos match ingredient-page origin covers. */
+const HOME_SPIRITS = [
+  { value: "gin", slug: "gin", label: "Gin", hint: "Botanical & bright" },
+  { value: "whiskey", slug: "whiskey", label: "Whiskey", hint: "Oak & warmth" },
+  { value: "rum", slug: "rum", label: "Rum", hint: "Cane & spice" },
+  { value: "tequila", slug: "tequila", label: "Tequila", hint: "Agave & citrus" },
+  { value: "vodka", slug: "vodka", label: "Vodka", hint: "Clean & cold" },
+  { value: "mezcal", slug: "mezcal", label: "Mezcal", hint: "Smoke & earth" },
 ] as const;
 
 type HomeDrink = {
@@ -98,6 +102,7 @@ export function MobileHomePage({
   const { profile, user, isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, isLoading: barLoading } = useBarIngredients();
   const [sessionHint] = useState(readHomeSessionHint);
+  const [pourPromptSessionKey] = useState(readOrCreatePourPromptSessionKey);
   const [mixCocktails, setMixCocktails] = useState<MixCocktail[]>([]);
   const [hour, setHour] = useState(18);
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -134,9 +139,11 @@ export function MobileHomePage({
     ]
   );
 
-  const greetingEyebrow = useMemo(
-    () => getHomeGreetingEyebrow({ firstName, hour }),
-    [firstName, hour]
+  const greetingEyebrow = useMemo(() => getHomeGreetingEyebrow({ hour }), [hour]);
+
+  const pourPrompt = useMemo(
+    () => getHomePourPrompt({ firstName, sessionKey: pourPromptSessionKey }),
+    [firstName, pourPromptSessionKey]
   );
 
   useEffect(() => {
@@ -402,6 +409,7 @@ export function MobileHomePage({
       <HomeCinematicHero
         eyebrow={greetingEyebrow}
         title={heroTitle}
+        idleTitle={pourPrompt}
         subtitle={heroSubtitle}
         imageUrl={heroDrink?.imageUrl}
         recipeHref={revealName && heroDrink ? `/cocktails/${heroDrink.slug}` : null}
@@ -463,21 +471,51 @@ export function MobileHomePage({
         <NativeNotificationPrompt />
 
         <section className="pb-2">
-          <p className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
-            Browse
+          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+            Browse by bottle
           </p>
-          <h2 className="mb-4 font-display text-2xl font-bold text-forest">Start with a spirit</h2>
-          <div className="grid grid-cols-3 gap-2">
-            {SPIRIT_CHIPS.map((spirit) => (
-              <AppLink
-                key={spirit.value}
-                href={`/cocktails?spirit=${spirit.value}`}
-                className="rounded-2xl border border-mist/80 bg-white/80 px-3 py-3.5 text-center active:scale-[0.97] transition-transform"
-              >
-                <span className="font-display text-[15px] font-bold text-forest">{spirit.label}</span>
-              </AppLink>
-            ))}
-          </div>
+          <h2 className="mb-5 font-display text-[1.65rem] font-bold leading-none tracking-tight text-forest">
+            Start with a spirit
+          </h2>
+          <ul className="grid gap-3">
+            {HOME_SPIRITS.map((spirit) => {
+              const cover = getIngredientOriginCover(spirit.slug);
+              const photo = cover?.src ?? null;
+              return (
+                <li key={spirit.value}>
+                  <AppLink
+                    href={`/cocktails?spirit=${encodeURIComponent(spirit.value)}`}
+                    className="native-card-link home-spirit-row group relative flex flex-row items-stretch overflow-hidden rounded-[1.25rem] active:opacity-95"
+                    aria-label={`Browse ${spirit.label} cocktails`}
+                  >
+                    <span className="home-spirit-row__shade" aria-hidden />
+                    {photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- local origin covers; plain img is WKWebView-safe
+                      <img
+                        src={photo}
+                        alt=""
+                        className="home-spirit-row__photo"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : null}
+                    <span className="home-spirit-row__copy">
+                      <span className="home-spirit-row__name">{spirit.label}</span>
+                      <span className="home-spirit-row__hint">{spirit.hint}</span>
+                    </span>
+                    <span className="home-spirit-row__arrow" aria-hidden>
+                      →
+                    </span>
+                  </AppLink>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-3 text-center">
+            <AppLink href="/ingredients" className="text-[13px] font-semibold text-terracotta">
+              All ingredients
+            </AppLink>
+          </p>
         </section>
       </div>
     </div>

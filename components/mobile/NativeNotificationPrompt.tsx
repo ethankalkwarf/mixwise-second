@@ -10,6 +10,7 @@ import {
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { FIRST_WIN_EVENT } from "@/lib/mobile/firstWin";
 import { readCabinetReadyCount } from "@/lib/mobile/guestData";
+import { trackNotificationPermission } from "@/lib/analytics";
 
 const DISMISS_KEY = "mixwise-notif-ask-dismissed";
 
@@ -65,6 +66,7 @@ export function NativeNotificationPrompt() {
 
   const enable = async () => {
     const granted = await requestNotificationPermissions();
+    void trackNotificationPermission(granted, { surface: "native_prompt" });
     if (granted) {
       await setNotificationEnabled(true);
     }

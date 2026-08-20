@@ -14,6 +14,10 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
 import { checkLearnBadges } from "@/lib/badgeEngine";
+import {
+  trackLearnLessonCompleted,
+  trackLearnLessonStarted,
+} from "@/lib/analytics";
 import { LEARN_GUIDES, LEARN_PATHS } from "@/lib/learnLibrary";
 import {
   LEARN_XP,
@@ -147,6 +151,7 @@ function useLearnProgressState(): LearnProgressApi {
           if (prev.some((row) => row.lesson_kind === kind && row.lesson_slug === slug)) return prev;
           return [data as LearnProgressRow, ...prev];
         });
+        void trackLearnLessonStarted(kind, slug);
       }
     },
     [user?.id, supabase]
@@ -256,14 +261,20 @@ function useLearnProgressState(): LearnProgressApi {
         finishedPaths
       );
 
-      toast.success(`+${xpEarned} XP — lesson complete`);
+      toast.success("Lesson complete — saved to your progress");
       for (const pathSlug of newlyFinishedPaths) {
         const path = LEARN_PATHS.find((p) => p.slug === pathSlug);
-        toast.success(`Path complete${path ? `: ${path.title}` : ""} · +${LEARN_XP.path} XP`);
+        toast.success(`Course complete${path ? `: ${path.title}` : ""}`);
       }
       for (const badge of result.awarded) {
         toast.success(`Badge unlocked: ${badge.name}`);
       }
+
+      void trackLearnLessonCompleted(kind, slug, {
+        xp: xpEarned,
+        checks_correct: checks?.correct,
+        checks_total: checks?.total,
+      });
 
       return { newlyCompleted: true, xpEarned };
     },

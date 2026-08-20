@@ -60,14 +60,69 @@ export function profileNeedsGivenName(input: {
 }): boolean {
   return !greetingFirstName(input);
 }
+
+/** Time-of-day eyebrow only — name belongs on the pour prompt, not here. */
 export function getHomeGreetingEyebrow({
-  firstName,
   hour = new Date().getHours(),
-}: Pick<HomeHeroHeadlineInput, "firstName" | "hour">): string {
-  const bucket = timeBucket(hour);
-  const name = firstName?.trim();
-  if (name) return `${EYEBROW_GENERIC[bucket]}, ${name}`;
-  return EYEBROW_GENERIC[bucket];
+}: Pick<HomeHeroHeadlineInput, "hour"> = {}): string {
+  return EYEBROW_GENERIC[timeBucket(hour)];
+}
+
+const POUR_PROMPT_NAMED = [
+  "What are you pouring, {name}?",
+  "Ready to shake something up, {name}?",
+  "What's calling your name, {name}?",
+  "Feel like mixing, {name}?",
+  "What sounds good tonight, {name}?",
+  "Pick your pour, {name}.",
+  "Craving a classic, {name}?",
+  "Shall we make a drink, {name}?",
+];
+
+const POUR_PROMPT_GENERIC = [
+  "What are you pouring?",
+  "Ready to shake something up?",
+  "What's calling your name?",
+  "Feel like mixing?",
+  "What sounds good tonight?",
+  "Pick your pour.",
+  "Craving a classic?",
+  "Shall we make a drink?",
+];
+
+const POUR_PROMPT_SESSION_KEY = "mw-home-pour-prompt-v1";
+
+/**
+ * Rotating idle hero line for the home screen.
+ * Picks once per browser/app session so it changes on each open, not on every re-render.
+ */
+export function getHomePourPrompt({
+  firstName,
+  sessionKey,
+}: {
+  firstName?: string | null;
+  /** Stable per-session seed; pass from sessionStorage when available. */
+  sessionKey?: string | null;
+} = {}): string {
+  const name = firstName?.trim() || null;
+  const variants = name ? POUR_PROMPT_NAMED : POUR_PROMPT_GENERIC;
+  const seed = sessionKey?.trim() || localDateKey(new Date());
+  const template = pickVariant(variants, `pour-prompt:${seed}:${name ?? "guest"}`);
+  return name ? template.replaceAll("{name}", name) : template;
+}
+
+/** Create or reuse a session seed so the pour prompt rotates on each app open. */
+export function readOrCreatePourPromptSessionKey(): string {
+  if (typeof window === "undefined") return localDateKey(new Date());
+  try {
+    const existing = window.sessionStorage.getItem(POUR_PROMPT_SESSION_KEY);
+    if (existing) return existing;
+    const next = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+    window.sessionStorage.setItem(POUR_PROMPT_SESSION_KEY, next);
+    return next;
+  } catch {
+    return `${Date.now()}`;
+  }
 }
 
 const PERSONALIZED: Record<TimeBucket, string[]> = {

@@ -28,3 +28,18 @@
 | `technique-float.webp` | Float |
 | `technique-swizzle.webp` | Swizzle |
 | `technique-rinse.webp` | Rinse |
+
+## In-lesson figure stills (same photoshoot grade)
+Soft daylight, cream/oak home-bar, shallow DOF, no humans/logos/text.
+
+| File | Figure panel |
+|------|--------------|
+| `figure-vermouth-fridge.webp` | Vermouth care — fridge |
+| `figure-vermouth-warm-cart.webp` | Vermouth care — warm cart |
+| `figure-ice-large-cube.webp` | Ice types — large cube |
+| `figure-ice-cracked.webp` | Ice types — cracked |
+| `figure-ice-crushed.webp` | Ice types — crushed |
+| `figure-method-shake.webp` | Shake vs stir — shake |
+| `figure-method-stir.webp` | Shake vs stir — stir |
+
+Keep **diagrams** (ratios, balance bars, numbered how-tos, agave age bottles, NA architecture, tool glyphs) as SVG — photos help when the lesson is about a real object or place.

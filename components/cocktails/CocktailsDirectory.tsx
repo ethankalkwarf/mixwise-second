@@ -28,6 +28,7 @@ import {
 import { NativeDrinkTile } from "@/components/mobile/NativeDrinkTile";
 import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { MIXWISE_FOCUS_SEARCH } from "@/lib/mobile/navConfig";
+import { trackSearch } from "@/lib/analytics";
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
 
@@ -128,6 +129,12 @@ export function CocktailsDirectory({
     const browse = searchParams.get("browse");
     if (browse === "collections" || browse === "recipes") {
       setBrowseTab(browse);
+    }
+    const spirit = searchParams.get("spirit")?.toLowerCase() || null;
+    if (spirit) {
+      setFilterSpirit(spirit);
+      setShowFilters(true);
+      setBrowseTab("recipes");
     }
   }, [searchParams]);
 
@@ -288,6 +295,22 @@ export function CocktailsDirectory({
 
     return results;
   }, [catalogOrder, searchQuery, sortBy, filterSpirit, filterGlass]);
+
+  // Debounced search analytics (skip empty queries)
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) return;
+    const timer = window.setTimeout(() => {
+      void trackSearch(q, filteredCocktails.length, {
+        filters: {
+          spirit: filterSpirit,
+          glass: filterGlass,
+          sort: sortBy,
+        },
+      });
+    }, 600);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery, filteredCocktails.length, filterSpirit, filterGlass, sortBy]);
 
   const { visibleItems: visibleCocktails, hasMore, loadMoreRef } = useInfiniteVisibleCount(
     filteredCocktails,

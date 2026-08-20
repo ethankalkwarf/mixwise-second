@@ -396,7 +396,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
     ],
     sections: [
       {
-        heading: "The rule of thumb",
+        heading: "Cloudy or clear?",
         kind: "rule",
         figure: "shake-or-stir",
         body: [
@@ -620,7 +620,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       {
         heading: "Citrus peels are perfume",
         kind: "rule",
-        figure: "express-peel",
+        figure: "garnish-citrus",
         body: [
           "Express a peel over the drink so oils hit the surface, then optionally wipe the rim. That aroma hit is often more important than the twist sitting in the glass.",
           "Avoid thick pithy peels when you can — bitter white pith muddies a Martini or Old Fashioned.",
@@ -628,6 +628,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       },
       {
         heading: "Mint and herbs",
+        figure: "garnish-mint",
         body: [
           "Slap mint gently between your palms to wake the oils, then place it so the drinker smells it on the first sip. Do not shred mint into a mojito muddle.",
           "Wilted herbs look and taste tired. Fresh garnish is part of the recipe, not an afterthought.",
@@ -636,6 +637,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       {
         heading: "When no garnish is correct",
         kind: "tip",
+        figure: "garnish-none",
         body: [
           "Many stirred equal-parts drinks and some sours are better ungarnished. If the recipe says none, trust it — clutter can fight the aroma of Chartreuse, mezcal, or bitters.",
         ],
@@ -727,7 +729,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
     ],
     sections: [
       {
-        heading: "Wine that thinks it’s a spirit",
+        heading: "Refrigerate vermouth after you open it",
         kind: "rule",
         figure: "vermouth-care",
         body: [

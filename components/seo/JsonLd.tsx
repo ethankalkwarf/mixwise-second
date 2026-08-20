@@ -51,13 +51,26 @@ type RecipeSchemaProps = {
   description?: string;
   image?: string | null;
   ingredients: string[];
-  instructions?: string;
+  /** Single block of instruction text, or pre-split steps. */
+  instructions?: string | string[];
   prepTime?: string; // ISO 8601 duration (e.g., "PT5M" for 5 minutes)
   totalTime?: string;
   servings?: number;
   category?: string | null;
   url: string;
+  calories?: number | null;
 };
+
+function stepNameFromInstruction(text: string): string {
+  const cleaned = text.replace(/^\d+[\.\)]\s*/, "").trim();
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  let name = words.slice(0, Math.min(5, words.length)).join(" ");
+  name = name.replace(/[.,;:!]+$/, "");
+  if (name.length > 48) {
+    name = name.slice(0, 45).replace(/\s+\S*$/, "") || name.slice(0, 45);
+  }
+  return name || "Mix";
+}
 
 export function RecipeSchema({
   name,
@@ -70,13 +83,21 @@ export function RecipeSchema({
   servings = 1,
   category = "Cocktail",
   url,
+  calories,
 }: RecipeSchemaProps) {
-  const schema = {
+  const recipeImage = image || `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`;
+  const instructionSteps = Array.isArray(instructions)
+    ? instructions.filter((s) => typeof s === "string" && s.trim())
+    : instructions
+      ? [instructions]
+      : [];
+
+  const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Recipe",
     name,
     description: description || `Learn how to make a ${name} cocktail.`,
-    image: image || `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`,
+    image: recipeImage,
     author: organizationRef,
     publisher: {
       ...organizationRef,
@@ -88,15 +109,28 @@ export function RecipeSchema({
     recipeCategory: category || "Cocktail",
     recipeCuisine: "International",
     recipeIngredient: ingredients,
-    recipeInstructions: instructions
+    ...(instructionSteps.length > 0
       ? {
-          "@type": "HowToStep",
-          text: instructions,
+          recipeInstructions: instructionSteps.map((text, index) => ({
+            "@type": "HowToStep",
+            name: stepNameFromInstruction(text),
+            text,
+            url: `${url}#step-${index + 1}`,
+            image: recipeImage,
+            position: index + 1,
+          })),
         }
-      : undefined,
+      : {}),
     url,
     keywords: [name, "cocktail", "drink recipe", "mixology", category].join(", "),
   };
+
+  if (calories != null && calories > 0) {
+    schema.nutrition = {
+      "@type": "NutritionInformation",
+      calories: `${Math.round(calories)} calories`,
+    };
+  }
 
   return (
     <script

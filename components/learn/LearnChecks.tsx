@@ -31,8 +31,11 @@ export function LearnChecks({ checks, kind, slug }: Props) {
   if (checks.length === 0) return null;
 
   return (
-    <section className="space-y-5">
-      <p className={LEARN_LABEL}>Quick check</p>
+    <section className="learn-lesson-block space-y-5">
+      <div>
+        <p className={LEARN_LABEL}>Quiz</p>
+        <p className="text-sm text-sage mt-1">Answer to finish the lesson and save your progress.</p>
+      </div>
       <div className="space-y-4">
         {checks.map((check) => (
           <CheckCard

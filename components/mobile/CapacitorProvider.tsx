@@ -8,9 +8,13 @@ import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { debugLog } from "@/lib/debugLog";
 import { initializeNotifications, registerNotificationDeepLinks, refreshDailyNotificationIfNeeded } from "@/lib/mobile/notifications";
-import { registerNativeOAuthListener } from "@/lib/mobile/nativeOAuth";
+import {
+  handleNativeOAuthCallback,
+  registerNativeOAuthListener,
+} from "@/lib/mobile/nativeOAuth";
 import { prefetchNativeCatalog } from "@/lib/mobile/prefetchNativeData";
 import { requestInAppNavigation } from "@/lib/mobile/deepLinks";
+import { isNativeOAuthCallbackUrl } from "@/lib/mobile/authRedirect";
 
 /**
  * CapacitorProvider
@@ -54,7 +58,11 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
           }
         });
 
-        unregisterOAuth = registerNativeOAuthListener();
+        try {
+          unregisterOAuth = registerNativeOAuthListener();
+        } catch (oauthError) {
+          console.error("[Capacitor] OAuth listener failed:", oauthError);
+        }
 
         backButtonHandle = await App.addListener("backButton", ({ canGoBack }) => {
           if (canGoBack) {
@@ -70,9 +78,16 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
         const launch = await App.getLaunchUrl();
         if (launch?.url) {
           try {
-            const path = new URL(launch.url).pathname;
-            if (path.startsWith("/")) {
-              requestInAppNavigation(path);
+            if (
+              isNativeOAuthCallbackUrl(launch.url) ||
+              launch.url.includes("/auth/native-callback")
+            ) {
+              await handleNativeOAuthCallback(launch.url);
+            } else {
+              const path = new URL(launch.url).pathname;
+              if (path.startsWith("/")) {
+                requestInAppNavigation(path, "universal_link");
+              }
             }
           } catch {
             /* ignore malformed launch URLs */
@@ -82,6 +97,8 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
         debugLog("[Capacitor] Native plugins initialized");
       } catch (error) {
         console.error("[Capacitor] Error initializing plugins:", error);
+        // Never leave the user on a permanent splash / white screen.
+        void SplashScreen.hide().catch(() => {});
       }
     };
 
