@@ -21,36 +21,52 @@ export function isNewCocktail(
 
 /**
  * Formats a cocktail name with proper title casing
- * Capitalizes every word except filler words (the, and, a, of) unless they're the first word
+ * Capitalizes every word except filler words (the, and, a, of) unless they're the first word.
+ * Preserves all-caps acronyms from the source (e.g. VDC in "The Yoozh (aka VDC)").
  *
  * Examples:
  * - "tom collins" → "Tom Collins"
  * - "the last word" → "The Last Word"
  * - "gin and tonic" → "Gin and Tonic"
  * - "death of a salesman" → "Death of a Salesman"
+ * - "The Yoozh (aka VDC)" → "The Yoozh (aka VDC)"
  */
 export function formatCocktailName(name: string): string {
   if (!name) return name;
 
   // Filler words that should remain lowercase (unless first word)
-  const fillerWords = new Set(['the', 'and', 'a', 'of']);
+  const fillerWords = new Set(['the', 'and', 'a', 'of', 'aka']);
+
+  // Preserve source all-caps acronyms (2+ letters), ignoring surrounding punctuation
+  const acronyms = new Set<string>();
+  for (const token of name.split(/[\s-]+/)) {
+    const letters = token.replace(/[^A-Za-z]/g, '');
+    if (letters.length >= 2 && letters === letters.toUpperCase()) {
+      acronyms.add(letters.toLowerCase());
+    }
+  }
 
   return name
     .toLowerCase()
     .split(/[\s-]+/) // Split on spaces and hyphens
     .map((word, index) => {
-      // Always capitalize first word
-      if (index === 0) {
+      const match = word.match(/^([^a-z]*)([a-z]+)([^a-z]*)$/);
+      if (!match) {
         return word.charAt(0).toUpperCase() + word.slice(1);
       }
 
-      // Capitalize if not a filler word
-      if (!fillerWords.has(word)) {
-        return word.charAt(0).toUpperCase() + word.slice(1);
+      const [, prefix, letters, suffix] = match;
+
+      if (acronyms.has(letters)) {
+        return prefix + letters.toUpperCase() + suffix;
       }
 
-      // Keep filler word lowercase
-      return word;
+      // Always capitalize first word; otherwise skip filler words
+      if (index === 0 || !fillerWords.has(letters)) {
+        return prefix + letters.charAt(0).toUpperCase() + letters.slice(1) + suffix;
+      }
+
+      return prefix + letters + suffix;
     })
     .join(' '); // Rejoin with spaces
 }
