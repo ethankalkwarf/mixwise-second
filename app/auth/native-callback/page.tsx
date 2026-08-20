@@ -53,7 +53,7 @@ export default function NativeOAuthCallbackPage() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-cream px-6 text-center">
-      <BrandLogo size="lg" variant="dark" linked={false} render="img" />
+      <BrandLogo size="lg" variant="dark" linked={false} />
       <p className="mt-6 font-display text-xl font-bold text-forest">
         {failed ? "Open MixWise to finish signing in" : "Returning to MixWise…"}
       </p>

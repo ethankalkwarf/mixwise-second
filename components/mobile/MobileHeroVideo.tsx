@@ -48,7 +48,7 @@ export function MobileHeroVideo({ greeting, subtitle }: MobileHeroVideoProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/55 to-charcoal/20" />
 
         <div className="absolute inset-0 flex flex-col justify-between p-5">
-          <BrandLogo variant="light" size="lg" linked={false} render="img" />
+          <BrandLogo variant="light" size="lg" linked={false} />
           <div>
             <h1 className="font-display text-[1.65rem] leading-tight font-bold text-cream">
               {greeting}

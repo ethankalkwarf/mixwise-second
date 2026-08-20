@@ -187,7 +187,7 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
   if (phase === "loading") {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-6">
-        <BrandLogo variant="dark" size="lg" linked={false} render="img" />
+        <BrandLogo variant="dark" size="lg" linked={false} />
         <p className="mt-6 text-sm text-sage">Opening your bar…</p>
       </div>
     );
@@ -212,7 +212,7 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/50 to-charcoal/20" />
             <div className="absolute inset-0 flex flex-col justify-between p-5">
-              <BrandLogo variant="light" size="lg" linked={false} render="img" />
+              <BrandLogo variant="light" size="lg" linked={false} />
               <p className="text-sm text-cream/80">Cocktails, matched to your cabinet</p>
             </div>
           </div>

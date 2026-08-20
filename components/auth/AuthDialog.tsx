@@ -521,7 +521,7 @@ export function AuthDialog({
                     <div className={nativeShell ? "mx-auto flex w-full max-w-md flex-1 flex-col pt-6" : ""}>
                     <div className={`text-center ${nativeShell ? "mb-8" : "mb-6"}`}>
                       <div className={`${nativeShell ? "mb-6" : "mb-4"} flex justify-center`}>
-                        <BrandLogo size="lg" variant="dark" linked={false} render="img" />
+                        <BrandLogo size="lg" variant="dark" linked={false} />
                       </div>
                       {nativeShell && mode !== "reset" ? (
                         <div

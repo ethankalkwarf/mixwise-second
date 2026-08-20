@@ -107,7 +107,6 @@ export function HomeCinematicHero({
             variant="light"
             size="sm"
             linked={false}
-            render="img"
             className="native-home-hero__logo"
           />
           <div className="pointer-events-auto">
