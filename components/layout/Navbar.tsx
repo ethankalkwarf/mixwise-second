@@ -195,7 +195,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
           <div className="h-16 flex items-center justify-between relative">
             {/* Logo */}
             <div className="flex items-center">
-              <BrandLogo size="md" variant="dark" />
+              <BrandLogo size="lg" variant="dark" />
             </div>
 
             {/* Desktop navigation — shown at lg+; tablet uses bottom tab bar */}
