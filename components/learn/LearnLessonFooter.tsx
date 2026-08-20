@@ -16,38 +16,6 @@ export function LearnLessonFooter({ next, path }: Props) {
   return (
     <div className="space-y-6 border-t border-mist pt-10">
       <div className="grid gap-4 sm:grid-cols-2">
-        {next ? (
-          <Link
-            href={`/learn/guides/${next.slug}`}
-            className="group flex gap-4 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
-          >
-            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
-              <Image
-                src={next.coverImage}
-                alt={next.coverAlt}
-                fill
-                sizes="96px"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
-            <div className="min-w-0 flex flex-col justify-center py-1 pr-1">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta font-bold mb-1">
-                Up next · {next.readingMinutes} min
-              </p>
-              <p className="font-display text-lg font-bold !text-charcoal group-hover:!text-terracotta transition-colors leading-snug">
-                {next.title}
-              </p>
-            </div>
-          </Link>
-        ) : (
-          <Link
-            href="/learn"
-            className="flex items-center rounded-2xl border border-mist bg-white px-5 py-4 text-sm font-semibold !text-charcoal hover:border-terracotta/30"
-          >
-            Browse more guides →
-          </Link>
-        )}
-
         {path ? (
           <div className="flex flex-col justify-center rounded-2xl border border-mist bg-cream/70 px-5 py-4">
             <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-sage font-bold mb-1">
@@ -74,7 +42,39 @@ export function LearnLessonFooter({ next, path }: Props) {
             href="/learn#library"
             className="flex items-center rounded-2xl border border-dashed border-mist px-5 py-4 text-sm font-medium text-sage hover:text-terracotta hover:border-terracotta/30"
           >
-            Back to Learn library →
+            ← Back to Learn library
+          </Link>
+        )}
+
+        {next ? (
+          <Link
+            href={`/learn/guides/${next.slug}`}
+            className="group flex gap-4 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
+          >
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
+              <Image
+                src={next.coverImage}
+                alt={next.coverAlt}
+                fill
+                sizes="96px"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div className="min-w-0 flex flex-col justify-center py-1 pr-1">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta font-bold mb-1">
+                Up next · {next.readingMinutes} min
+              </p>
+              <p className="font-display text-lg font-bold !text-charcoal group-hover:!text-terracotta transition-colors leading-snug">
+                {next.title}
+              </p>
+            </div>
+          </Link>
+        ) : (
+          <Link
+            href="/learn"
+            className="flex items-center justify-end rounded-2xl border border-mist bg-white px-5 py-4 text-sm font-semibold !text-charcoal hover:border-terracotta/30"
+          >
+            Browse more guides →
           </Link>
         )}
       </div>

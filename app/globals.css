@@ -1175,18 +1175,20 @@ html.native-app [data-native-learn-lesson] .learn-step-list__item {
   color: #bc5a45;
 }
 
-/* Desktop: show every photo in a vertical stack — no horizontal swipe UX */
+/* Desktop: vertical stack, smaller frames, caption overlapping the photo */
 @media (min-width: 768px) {
   .learn-photo-pager__scroller {
     display: flex;
     flex-direction: column;
     overflow: visible;
     scroll-snap-type: none;
-    gap: 1.25rem;
+    gap: 1.5rem;
   }
 
   .learn-photo-pager__slide {
+    position: relative;
     width: 100%;
+    max-width: 32rem;
     flex: 0 0 auto;
   }
 
@@ -1201,7 +1203,34 @@ html.native-app [data-native-learn-lesson] .learn-step-list__item {
   }
 
   .learn-photo-pager__media {
+    aspect-ratio: 3 / 2;
     border-radius: 1rem;
+  }
+
+  .learn-photo-pager__meta {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    margin: 0;
+    padding: 2.75rem 1rem 0.95rem;
+    border-radius: 0 0 1rem 1rem;
+    background: linear-gradient(
+      to top,
+      rgba(249, 247, 242, 0.97) 0%,
+      rgba(249, 247, 242, 0.88) 42%,
+      rgba(249, 247, 242, 0) 100%
+    );
+  }
+
+  .learn-photo-pager__meta--good,
+  .learn-photo-pager__meta--bad {
+    padding-left: 1rem;
+  }
+
+  .learn-photo-pager__note {
+    font-size: 1rem;
   }
 }
 
