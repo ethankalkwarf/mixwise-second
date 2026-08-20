@@ -1,6 +1,5 @@
 "use client";
 
-import { Suspense } from "react";
 import { UserProvider } from "@/components/auth/UserProvider";
 import { AuthDialogProvider } from "@/components/auth/AuthDialogProvider";
 import { SetPasswordPrompt } from "@/components/auth/SetPasswordPrompt";
@@ -17,17 +16,15 @@ export function SupabaseProvider({
   return (
     <CapacitorProvider>
       <UserProvider>
-        <Suspense fallback={null}>
-          <PostHogProvider>
-            <AuthDialogProvider>
-              <ToastProvider>
-                {children}
-                <SignupPrompt />
-                <SetPasswordPrompt />
-              </ToastProvider>
-            </AuthDialogProvider>
-          </PostHogProvider>
-        </Suspense>
+        <PostHogProvider>
+          <AuthDialogProvider>
+            <ToastProvider>
+              {children}
+              <SignupPrompt />
+              <SetPasswordPrompt />
+            </ToastProvider>
+          </AuthDialogProvider>
+        </PostHogProvider>
       </UserProvider>
     </CapacitorProvider>
   );
