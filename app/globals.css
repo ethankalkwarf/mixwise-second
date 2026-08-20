@@ -545,6 +545,17 @@ html.native-app .native-learn-library > section {
   object-position: center;
 }
 
+/* Course path covers — faces/glasses sit high; bias crop upward on wide tiles */
+.native-learn-card__photo--path img {
+  object-position: center 22%;
+}
+
+@media (min-width: 768px) {
+  .native-learn-card__photo--path img {
+    object-position: center 18%;
+  }
+}
+
 .native-learn-cover {
   display: block !important;
   width: 100%;
@@ -2660,6 +2671,26 @@ html.native-app .input-botanical {
 
 .native-collection-tile--stack .native-collection-tile__overlay {
   padding: 1rem 1.125rem;
+}
+
+/* iPad / tablet: shorter tiles so full-width (or grid cells) don’t dominate */
+@media (min-width: 768px) {
+  .native-collection-tile--stack .native-collection-tile__photo {
+    aspect-ratio: 3 / 2;
+    border-radius: 1.125rem;
+  }
+
+  .native-collection-tile--stack .native-collection-tile__name {
+    font-size: 1.125rem;
+  }
+
+  .native-collection-tile--stack .native-collection-tile__headline {
+    font-size: 0.75rem;
+  }
+
+  .native-collection-tile--stack .native-collection-tile__overlay {
+    padding: 0.875rem 1rem;
+  }
 }
 
 .native-collection-tile__photo img {

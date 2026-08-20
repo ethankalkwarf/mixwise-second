@@ -31,7 +31,7 @@ export function HomeCollectionsRail({ initialCovers = {} }: Props) {
           See all
         </AppLink>
       </div>
-      <div className="flex flex-col gap-3.5">
+      <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
         {collections.map((occasion) => (
           <NativeCollectionTile
             key={occasion.slug}

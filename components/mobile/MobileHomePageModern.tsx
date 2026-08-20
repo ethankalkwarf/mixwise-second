@@ -102,6 +102,7 @@ export function MobileHomePage({
   const { profile, user, isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, isLoading: barLoading } = useBarIngredients();
   const [sessionHint] = useState(readHomeSessionHint);
+  const [cachedReadyCount] = useState(readCabinetReadyCount);
   const [pourPromptSessionKey] = useState(readOrCreatePourPromptSessionKey);
   const [mixCocktails, setMixCocktails] = useState<MixCocktail[]>([]);
   const [hour, setHour] = useState(18);
@@ -209,17 +210,37 @@ export function MobileHomePage({
   }, [catalogDrinks, featuredCocktails, readyToMake]);
 
   const homeSettled = !authLoading && !barLoading;
+  /** Confirmed empty bar — only then do we use the pour-prompt / stock CTA. */
+  const emptyCabinetConfirmed = homeSettled && ingredientIds.length === 0;
+  /**
+   * While auth/bar are still loading, assume a cabinet if the user is signed in
+   * or we have a prior session / ready-count cache. Avoids flashing the idle
+   * “What’s a good pour…” line before the rotating drink hero.
+   */
+  const expectCabinet =
+    ingredientIds.length > 0 ||
+    (sessionHint?.barCount ?? 0) > 0 ||
+    cachedReadyCount > 0 ||
+    Boolean(sessionHint?.heroImageUrl) ||
+    (signedIn && !homeSettled);
 
   const heroDrink = useMemo(() => {
-    if (!homeSettled && sessionHint?.signedIn && sessionHint.heroImageUrl) {
+    // Hold last session pour until cabinet matching can produce today's pick —
+    // otherwise liveHero briefly falls back to a featured drink and the image swaps.
+    const holdSessionHero =
+      Boolean(sessionHint?.heroImageUrl) &&
+      readyToMake.length === 0 &&
+      (expectCabinet || !homeSettled);
+
+    if (holdSessionHero && sessionHint?.heroImageUrl) {
       return {
-        name: sessionHint.heroName || liveHero?.name || "What are you pouring?",
+        name: sessionHint.heroName || liveHero?.name || "Tonight's pour",
         slug: sessionHint.heroSlug || liveHero?.slug || "cached",
         imageUrl: sessionHint.heroImageUrl,
       };
     }
     return liveHero;
-  }, [homeSettled, liveHero, sessionHint]);
+  }, [expectCabinet, homeSettled, liveHero, readyToMake.length, sessionHint]);
 
   useEffect(() => {
     if (!homeSettled) return;
@@ -266,33 +287,32 @@ export function MobileHomePage({
   const pourRail = readyToMake.slice(0, 14).map(fromMix);
   const useCabinetForShake = readyToMake.length >= 1;
   const heroFromCabinet = useMemo(() => {
-    if (!homeSettled && sessionHint?.signedIn && (sessionHint.barCount ?? 0) > 0) return true;
+    if (!homeSettled && expectCabinet) return true;
     if (!heroDrink || readyToMake.length === 0) return false;
     return readyToMake.some((cocktail) => cocktail.slug === heroDrink.slug);
-  }, [heroDrink, readyToMake, homeSettled, sessionHint]);
+  }, [heroDrink, readyToMake, homeSettled, expectCabinet]);
 
   const heroTitle = heroDrink?.name ?? "What are you pouring?";
-  const revealName = homeSettled
-    ? Boolean(liveHero && ingredientIds.length > 0)
-    : Boolean(sessionHint?.signedIn && (sessionHint.barCount ?? 0) > 0 && sessionHint.heroName);
-  const showStockCta = homeSettled && ingredientIds.length === 0;
-  const heroKicker = heroFromCabinet
-    ? "From your cabinet"
-    : revealName
-      ? "Tonight's pick"
-      : null;
+  // Drink headline whenever we expect bottles; pour prompt only for empty-cabinet CTA.
+  const revealName = !emptyCabinetConfirmed && expectCabinet && Boolean(heroDrink?.name);
+  const showStockCta = emptyCabinetConfirmed;
+  const heroKicker = revealName
+    ? heroFromCabinet
+      ? "From your cabinet"
+      : "Tonight's pick"
+    : null;
 
-  const heroSubtitle = homeSettled
-    ? ingredientIds.length === 0
-      ? "Add a few bottles. We'll show every drink you can pour tonight."
-      : contextSubtitle
-    : sessionHint?.signedIn
-      ? getHomeContextSubtitle({
-          barLoading: false,
-          barCount: sessionHint.barCount,
-          readyCount: readyToMake.length || readCabinetReadyCount(),
-        })
-      : "Add a few bottles. We'll show every drink you can pour tonight.";
+  const heroSubtitle = emptyCabinetConfirmed
+    ? "Add a few bottles. We'll show every drink you can pour tonight."
+    : homeSettled
+      ? contextSubtitle
+      : expectCabinet
+        ? getHomeContextSubtitle({
+            barLoading: true,
+            barCount: Math.max(sessionHint?.barCount ?? 0, ingredientIds.length),
+            readyCount: readyToMake.length || cachedReadyCount,
+          })
+        : "Add a few bottles. We'll show every drink you can pour tonight.";
 
   const shakeImageUrl =
     worthAPour.find((drink) => drink.imageUrl && drink.slug !== heroDrink?.slug)?.imageUrl ||

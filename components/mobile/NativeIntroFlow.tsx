@@ -302,7 +302,7 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
               <h1 className="mt-3 whitespace-pre-line font-display text-[2.05rem] font-bold leading-[1.08] text-cream sm:text-[2.25rem]">
                 {slide.title}
               </h1>
-              <p className="mt-3 max-w-[20rem] text-[15px] leading-relaxed text-cream/78">
+              <p className="mt-3 max-w-[20rem] text-[15px] leading-relaxed text-white">
                 {slide.body}
               </p>
             </div>

@@ -82,14 +82,14 @@ function PathStartCard({
       ariaLabel={path.title}
       className="group flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all hover:-translate-y-0.5 hover:border-terracotta/30 hover:shadow-card-hover"
     >
-      <div className="native-learn-card__photo relative h-36 bg-mist overflow-hidden">
+      <div className="native-learn-card__photo native-learn-card__photo--path relative aspect-[16/10] overflow-hidden bg-mist md:aspect-[5/3]">
         <LearnCoverImage
           src={path.coverImage}
           alt=""
           priority={recommended}
           fill
-          className="transition-transform duration-700 group-hover:scale-105 pointer-events-none"
-          sizes="(max-width: 768px) 100vw, 33vw"
+          className="pointer-events-none object-[center_22%] transition-transform duration-700 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, 50vw"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest/50 to-transparent" />
         {recommended && (
@@ -254,7 +254,7 @@ export function LearnLibraryClient() {
           </h2>
           <LibraryContinueStrip />
         </div>
-        <div className={nativeShell ? "grid gap-4" : "grid gap-5 md:grid-cols-3"}>
+        <div className={nativeShell ? "grid gap-4 md:grid-cols-2" : "grid gap-5 md:grid-cols-3"}>
           {LEARN_PATHS.map((path) => (
             <PathStartCard
               key={path.slug}
