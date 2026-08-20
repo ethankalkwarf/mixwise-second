@@ -2248,7 +2248,7 @@ html.native-app .input-botanical {
 .native-home-hero__logo img {
   display: block;
   width: auto;
-  height: 1.35rem;
+  height: 2.15rem;
   max-width: none;
   object-fit: contain;
 }
@@ -2452,6 +2452,10 @@ html.native-app .input-botanical {
 
   .native-home-hero__tile-title {
     font-size: 1.25rem;
+  }
+
+  .native-home-hero__logo img {
+    height: 2.5rem;
   }
 }
 

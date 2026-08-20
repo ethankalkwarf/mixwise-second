@@ -40,19 +40,19 @@ export function shouldUseNativeOAuthFlow(): boolean {
 /**
  * Supabase redirectTo for Capacitor OAuth.
  *
- * Always use the HTTPS bridge (allowlisted in Supabase). The bridge page
- * immediately deep-links to {@link NATIVE_OAUTH_CALLBACK}, which
- * ASWebAuthenticationSession / the app URL handler catch and dismiss.
+ * Use the custom scheme directly so ASWebAuthenticationSession can dismiss on
+ * the final hop. An HTTPS bridge page often leaves users stranded in Safari /
+ * SFSafariViewController after Google finishes.
  *
- * Sending the custom scheme straight to Supabase often fails the allowlist
- * check and falls back to Site URL — leaving the user stuck in Safari on the
- * marketing site (often /mix).
+ * Both of these must be allowlisted in Supabase Redirect URLs:
+ * - com.getmixwise.app://auth/callback
+ * - https://www.getmixwise.com/auth/native-callback (kept as a manual fallback)
  */
 export function getNativeOAuthRedirectUrl(): string | null {
   if (typeof window === "undefined") return null;
   if (!shouldUseNativeOAuthFlow()) return null;
 
-  return `${window.location.origin}${NATIVE_OAUTH_BRIDGE_PATH}`;
+  return NATIVE_OAUTH_CALLBACK;
 }
 
 /**

@@ -12,8 +12,16 @@ import {
 let oauthBrowserOpen = false;
 let oauthExchangeInFlight: string | null = null;
 
+function isOAuthReturnUrl(url: string): boolean {
+  return (
+    isNativeOAuthCallbackUrl(url) ||
+    (url.includes(NATIVE_OAUTH_BRIDGE_PATH) &&
+      (url.startsWith("http://") || url.startsWith("https://")))
+  );
+}
+
 async function dismissOAuthBrowser(): Promise<void> {
-  // Prefer closing Capgo's secure session if it is still visible, then the
+  // Prefer closing Capgo's secure session / webview if still visible, then the
   // Capacitor Browser fallback (SFSafariViewController) which does not
   // auto-dismiss on custom-scheme redirects.
   try {
@@ -39,10 +47,65 @@ async function dismissOAuthBrowser(): Promise<void> {
   }, 600);
 }
 
+/** Fallback when ASWebAuthenticationSession isn't available — watch navigations. */
+async function openNativeOAuthWithUrlWatch(url: string): Promise<void> {
+  const { InAppBrowser, ToolBarType } = await import("@capgo/capacitor-inappbrowser");
+
+  await new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const finish = async (nextUrl: string) => {
+      if (settled) return;
+      settled = true;
+      try {
+        await urlHandle.then((h) => h.remove());
+        await schemeHandle.then((h) => h.remove());
+      } catch {
+        /* ignore */
+      }
+      try {
+        await InAppBrowser.close();
+      } catch {
+        /* ignore */
+      }
+      try {
+        await handleNativeOAuthCallback(nextUrl);
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    const urlHandle = InAppBrowser.addListener("urlChangeEvent", ({ url: next }) => {
+      if (isOAuthReturnUrl(next)) {
+        void finish(next);
+      }
+    });
+
+    const schemeHandle = InAppBrowser.addListener("customSchemeIntercepted", ({ url: next }) => {
+      if (isOAuthReturnUrl(next) || isNativeOAuthCallbackUrl(next)) {
+        void finish(next);
+      }
+    });
+
+    void InAppBrowser.openWebView({
+      url,
+      toolbarType: ToolBarType.COMPACT,
+      title: "Sign in",
+    }).catch((error: unknown) => {
+      if (settled) return;
+      settled = true;
+      void urlHandle.then((h) => h.remove());
+      void schemeHandle.then((h) => h.remove());
+      reject(error);
+    });
+  });
+}
+
 /**
  * Opens the provider OAuth URL with ASWebAuthenticationSession (iOS) so the
- * sheet auto-dismisses when the custom-scheme deep link fires (after the
- * HTTPS bridge bounces). Falls back to Capacitor Browser only as a last resort.
+ * sheet auto-dismisses when the custom-scheme deep link fires.
+ * Falls back to an in-app webview that watches for the callback URL, then
+ * Capacitor Browser only as a last resort.
  */
 export async function openNativeOAuthProvider(url: string): Promise<void> {
   if (Capacitor.isNativePlatform()) {
@@ -50,7 +113,6 @@ export async function openNativeOAuthProvider(url: string): Promise<void> {
       // Dynamic import — a hard dependency can blank the WebView if the
       // native plugin isn't linked yet (needs a fresh cap sync / rebuild).
       const { InAppBrowser } = await import("@capgo/capacitor-inappbrowser");
-      // Watch for the app scheme — the HTTPS bridge page redirects there.
       const { redirectedUri } = await InAppBrowser.openSecureWindow({
         authEndpoint: url,
         redirectUri: NATIVE_OAUTH_CALLBACK,
@@ -67,7 +129,13 @@ export async function openNativeOAuthProvider(url: string): Promise<void> {
         debugLog("[NativeOAuth] Auth session cancelled by user");
         throw Object.assign(new Error("Sign-in cancelled"), { code: "OAUTH_CANCELLED" as const });
       }
-      console.warn("[NativeOAuth] openSecureWindow failed, falling back to Browser:", error);
+      console.warn("[NativeOAuth] openSecureWindow failed, trying webview watch:", error);
+      try {
+        await openNativeOAuthWithUrlWatch(url);
+        return;
+      } catch (watchError) {
+        console.warn("[NativeOAuth] webview watch failed, falling back to Browser:", watchError);
+      }
     }
   }
 
@@ -89,12 +157,7 @@ function collectOAuthParams(url: string): URLSearchParams {
 
 /** Exchanges the PKCE code from the deep link and loads the session into the WebView. */
 export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
-  const isDeepLink = isNativeOAuthCallbackUrl(url);
-  const isBridge =
-    url.includes(NATIVE_OAUTH_BRIDGE_PATH) &&
-    (url.startsWith("http://") || url.startsWith("https://"));
-
-  if (!isDeepLink && !isBridge) {
+  if (!isOAuthReturnUrl(url)) {
     return false;
   }
 

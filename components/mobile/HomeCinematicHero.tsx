@@ -105,7 +105,7 @@ export function HomeCinematicHero({
         >
           <BrandLogo
             variant="light"
-            size="sm"
+            size="md"
             linked={false}
             className="native-home-hero__logo"
           />
