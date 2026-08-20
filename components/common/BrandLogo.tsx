@@ -70,7 +70,7 @@ export function BrandLogo({
     <img
       src={VARIANT_ASSET[variant]}
       alt="mixwise"
-      className={`block h-auto w-auto ${SIZE_IMG[size]}`}
+      className={`block w-auto ${SIZE_IMG[size]}`}
       width={243}
       height={59}
       decoding="async"
