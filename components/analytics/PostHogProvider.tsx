@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   capturePageview,
@@ -12,14 +12,12 @@ import {
 import { useUser } from "@/components/auth/UserProvider";
 
 /**
- * Initializes PostHog, identifies the signed-in user, and records App Router pageviews.
- * Safe when NEXT_PUBLIC_POSTHOG_KEY is missing (no-op).
+ * Initializes PostHog and identifies the signed-in user.
+ * Pageviews live in a nested Suspense boundary so useSearchParams
+ * never blanks the whole app tree.
  */
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useUser();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const lastPath = useRef<string | null>(null);
   const identifiedId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -40,6 +38,21 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, isLoading, user?.id, user?.email]);
 
+  return (
+    <>
+      {children}
+      <Suspense fallback={null}>
+        <PostHogPageView />
+      </Suspense>
+    </>
+  );
+}
+
+function PostHogPageView() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const lastPath = useRef<string | null>(null);
+
   useEffect(() => {
     if (!pathname || !isAnalyticsEnabled()) return;
     const qs = searchParams?.toString();
@@ -49,5 +62,5 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     capturePageview(url);
   }, [pathname, searchParams]);
 
-  return <>{children}</>;
+  return null;
 }
