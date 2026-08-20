@@ -88,6 +88,7 @@ export function HomeCinematicHero({
         )}
 
         <div className="native-home-hero__shade" aria-hidden />
+        <div className="native-home-hero__chrome-blur" aria-hidden />
 
         {revealName && recipeHref ? (
           <AppLink

@@ -2276,6 +2276,41 @@ html.native-app .input-botanical {
     );
 }
 
+/* Soft blur + darken behind logo / streak so cream type holds on bright ice */
+.native-home-hero__chrome-blur {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: clamp(5.75rem, 16vh, 8.25rem);
+  z-index: 1;
+  pointer-events: none;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+  backdrop-filter: blur(18px) saturate(1.05);
+  background:
+    radial-gradient(
+      ellipse 75% 120% at 100% 0%,
+      rgba(18, 16, 14, 0.5) 0%,
+      rgba(18, 16, 14, 0.18) 42%,
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 60% 110% at 0% 0%,
+      rgba(18, 16, 14, 0.48) 0%,
+      rgba(18, 16, 14, 0.16) 45%,
+      transparent 70%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(18, 16, 14, 0.28) 0%,
+      rgba(18, 16, 14, 0.1) 55%,
+      transparent 100%
+    );
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
+}
+
 .native-home-hero__copy {
   position: absolute;
   inset-inline: 0;
