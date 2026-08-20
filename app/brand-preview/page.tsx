@@ -1,36 +1,10 @@
 import type { Metadata } from "next";
+import { MixwiseTypeMark } from "@/components/brand/MixwiseTypeMark";
 
 export const metadata: Metadata = {
   title: "Brand Preview",
   robots: { index: false, follow: false },
 };
-
-function MixwiseTypeMark({
-  className,
-  size = "lg",
-}: {
-  className?: string;
-  size?: "sm" | "lg";
-}) {
-  const type =
-    size === "sm"
-      ? "font-display text-[28px] font-bold tracking-tight leading-none"
-      : "font-display text-5xl sm:text-6xl font-bold tracking-tight leading-none";
-  const lime = size === "sm" ? "ml-1 h-[18px] w-[18px]" : "ml-1.5 mb-1 h-7 w-7 sm:h-8 sm:w-8";
-
-  return (
-    <div className={`flex items-end justify-center ${className ?? ""}`}>
-      <span className={`${type} text-forest`}>mix</span>
-      <span className={`${type} text-sage -ml-[0.08em]`}>wise</span>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/brand/mixwise-lime-wheel-vector.svg"
-        alt=""
-        className={`${lime} shrink-0 object-contain`}
-      />
-    </div>
-  );
-}
 
 export default function BrandPreviewPage() {
   const wedgeFixes: Array<{
@@ -146,10 +120,73 @@ export default function BrandPreviewPage() {
             mixwise
           </h1>
           <p className="text-lg text-sage max-w-2xl">
-            Latest: v8 with the top x–w hairline removed. Plus earlier wedge and
-            lime-x explorations.
+            Lime lockup: same height as the e, white inner ring. Saved as
+            <code className="text-forest">/brand/mixwise-lockup.svg</code> and
+            applied sitewide. App icon is the lime on cream.
           </p>
         </header>
+
+        <section className="mb-16">
+          <div className="mb-6">
+            <p className="text-xs uppercase tracking-wider text-sage mb-2">
+              Lime = height of the e
+            </p>
+            <p className="text-sm text-sage max-w-3xl">
+              Sized from the real ink box of “e” (not 1ex guesses), baseline-shifted
+              so top/bottom match the letter. White ring between rind and flesh is
+              back.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <figure className="rounded-3xl border border-mist bg-white p-6 sm:p-8 shadow-soft">
+              <figcaption className="text-xs uppercase tracking-wider text-sage mb-2">
+                Live lockup
+              </figcaption>
+              <div className="flex items-center justify-center min-h-[120px] bg-cream/40 rounded-2xl px-4">
+                <MixwiseTypeMark />
+              </div>
+            </figure>
+            <figure className="rounded-3xl border border-mist bg-white p-6 sm:p-8 shadow-soft">
+              <figcaption className="text-xs uppercase tracking-wider text-sage mb-2">
+                From your screenshot (corrected)
+              </figcaption>
+              <div className="flex items-center justify-center min-h-[120px] bg-cream/40 rounded-2xl px-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/brand/mixwise-lockup-lime-eheight.png"
+                  alt="mixwise with lime sized to the e"
+                  className="w-full max-w-md h-16 object-contain"
+                />
+              </div>
+            </figure>
+          </div>
+
+          <div className="rounded-3xl border border-mist overflow-hidden shadow-soft mb-8">
+            <p className="text-xs uppercase tracking-wider text-sage px-6 pt-6 pb-4 bg-white border-b border-mist">
+              Navbar (~28px) + favicon
+            </p>
+            <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-mist bg-cream">
+              <div className="px-8 py-8 flex flex-col items-center gap-3">
+                <span className="text-[10px] uppercase tracking-wider text-sage">
+                  Header size
+                </span>
+                <MixwiseTypeMark size="sm" />
+              </div>
+              <div className="px-8 py-8 flex flex-col items-center gap-3">
+                <span className="text-[10px] uppercase tracking-wider text-sage">
+                  Favicon
+                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/icon.svg"
+                  alt="MixWise lime favicon"
+                  className="h-10 w-10 object-contain"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section className="mb-16">
           <div className="mb-6">
