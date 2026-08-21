@@ -57,6 +57,7 @@
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.3",
     "@capgo/capacitor-inappbrowser": "^8.15.3",
+    "@capgo/capacitor-social-login": "^8.4.4",
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.1.1",
     "@portabletext/react": "^8.0.0",

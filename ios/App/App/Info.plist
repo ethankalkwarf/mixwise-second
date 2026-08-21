@@ -72,6 +72,16 @@
 				<string>com.getmixwise.app</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Google Sign-In</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.200787084084-kq7af34h07boo7mntltcqpa09uve1ce9</string>
+			</array>
+		</dict>
 	</array>
+	<key>GIDClientID</key>
+	<string>200787084084-kq7af34h07boo7mntltcqpa09uve1ce9.apps.googleusercontent.com</string>
 </dict>
 </plist>

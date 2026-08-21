@@ -13,6 +13,8 @@ import {
   shouldUseNativeOAuthFlow,
 } from "@/lib/mobile/authRedirect";
 import { openNativeOAuthProvider } from "@/lib/mobile/nativeOAuth";
+import { signInWithGoogleNative } from "@/lib/mobile/googleNativeAuth";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * UserProvider - Single Source of Truth for Auth State
@@ -621,8 +623,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     [supabase, getOAuthRedirectUrl]
   );
 
-  // Sign in with Google OAuth
+  // Sign in with Google — native ID token on iOS/Android; browser OAuth on web
   const signInWithGoogle = useCallback(async () => {
+    if (Capacitor.isNativePlatform()) {
+      debugLog("[UserProvider] Native Google Sign-In (ID token)");
+      try {
+        await signInWithGoogleNative();
+        return;
+      } catch (error) {
+        console.error("[UserProvider] Native Google Sign-In error:", error);
+        setError(error instanceof Error ? error : new Error(String(error)));
+        throw error;
+      }
+    }
     await signInWithOAuthProvider("google");
   }, [signInWithOAuthProvider]);
 
