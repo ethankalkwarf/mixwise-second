@@ -279,7 +279,7 @@ export async function loadMatchIndex(): Promise<MatchIndex> {
       continue;
     }
     for (const ingredient of ingredients || []) {
-      ingredientNames.set(ingredient.id, ingredient.name);
+      ingredientNames.set(String(ingredient.id), ingredient.name);
     }
   }
 
@@ -331,15 +331,17 @@ export function almostThereForBar(
   }
 
   const ranked = [...byMissing.entries()].sort((a, b) => b[1].length - a[1].length);
-  const top = ranked[0];
-  if (!top) return [];
-
-  const [missingId, drinks] = top;
-  const missingName = index.ingredientNames.get(missingId) || "one bottle";
-  return drinks.slice(0, limit).map((drink) => ({
-    ...toCampaignDrink(drink),
-    missingIngredient: missingName,
-  }));
+  // Prefer a real ingredient name — never interpolate a placeholder like "one bottle"
+  // into subject lines ("Friday: a Grasshopper, or grab one bottle").
+  for (const [missingId, drinks] of ranked) {
+    const missingName = index.ingredientNames.get(String(missingId));
+    if (!missingName) continue;
+    return drinks.slice(0, limit).map((drink) => ({
+      ...toCampaignDrink(drink),
+      missingIngredient: missingName,
+    }));
+  }
+  return [];
 }
 
 export async function loadAccountRecipients(): Promise<AccountRecipient[]> {

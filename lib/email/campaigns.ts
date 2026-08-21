@@ -554,42 +554,52 @@ export function fridayPersonalizedDraftTemplate({
   const name = firstName(displayName);
   const gap = almostThere[0];
   const leadDrink = canMake[0]?.name;
+  const moreReady = Math.max(readyCount - 1, 0);
   const resolvedSubject =
     subject ||
-    (gap && leadDrink
-      ? `Friday: a ${leadDrink}, or grab ${gap.missingIngredient}`
+    (leadDrink && moreReady > 0
+      ? `You can make a ${leadDrink} (+${moreReady} more)`
       : leadDrink
-        ? `Friday starts with a ${leadDrink}`
-        : `${readyCount} Friday drinks already on your shelf`);
+        ? `You can make a ${leadDrink} tonight`
+        : `${readyCount} drinks you can make tonight`);
   const previewText =
     canMake[0] && gap
-      ? `${canMake[0].name} tonight. ${gap.missingIngredient} unlocks a ${gap.name} if you're heading out.`
+      ? `${canMake[0].name} is ready now. Add ${gap.missingIngredient} and you can make a ${gap.name} too.`
       : canMake[0]
-        ? `${canMake[0].name} and ${Math.max(readyCount - 1, 0)} more you can pour before the weekend gets loud.`
-        : "Your bar already knows what Friday wants.";
+        ? moreReady > 0
+          ? `${canMake[0].name} plus ${moreReady} more from bottles you already have.`
+          : `${canMake[0].name} — you already have everything.`
+        : "Open Mix to see what your bar can pour tonight.";
   const mixUrl = `${siteUrl}/mix`;
   const shown = canMake.slice(0, 5);
+  const remaining = Math.max(readyCount - shown.length, 0);
+  const remainingCopy =
+    remaining === 1
+      ? "See 1 more you can make"
+      : remaining > 1
+        ? `See ${remaining} more you can make`
+        : "";
   const resolvedHeadline = (
     headline ||
     (readyCount === 1
-      ? `One drink ready for Friday, ${name}.`
-      : `Friday menu: ${readyCount} you can pour tonight.`)
+      ? `One drink you can make tonight, ${name}.`
+      : `${readyCount} drinks you can make tonight, ${name}.`)
   ).replace("{name}", name);
   const resolvedIntro =
     intro ||
     (gap
-      ? `These match bottles you already logged. Weekend's coming — ${gap.missingIngredient} is the only errand between you and a couple more.`
-      : `These match bottles you already logged. No store run. Just ice and a glass.`);
+      ? `These use bottles already in your bar. One store stop — ${gap.missingIngredient} — unlocks a few more.`
+      : `These use bottles already in your bar. No store run. Just ice and a glass.`);
   const resolvedSignoff = signoff || "Happy Friday. Put ice in something.";
 
   const almostHtml = almostThere.length
     ? `
         ${emailPad(
-          `<p style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E; margin: 28px 0 8px 0;">If you're already out</p>`
+          `<p style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E; margin: 28px 0 8px 0;">One bottle away</p>`
         )}
         ${drinkListHtml(
           almostThere.slice(0, 2).map((drink) =>
-            asThumb(drink, siteUrl, `Needs ${drink.missingIngredient}. That's it.`)
+            asThumb(drink, siteUrl, `Add ${drink.missingIngredient} to unlock.`)
           )
         )}
       `
@@ -598,24 +608,24 @@ export function fridayPersonalizedDraftTemplate({
   const body = `
     ${greetingHtml(escapeEmailHtml(resolvedHeadline))}
     ${bodyHtml(escapeEmailHtml(resolvedIntro))}
-    ${drinkListHtml(shown.map((drink) => asThumb(drink, siteUrl, drink.blurb || "Already in the cabinet.")))}
+    ${drinkListHtml(shown.map((drink) => asThumb(drink, siteUrl, drink.blurb || "You have everything.")))}
     ${
-      readyCount > shown.length
+      remainingCopy
         ? mutedHtml(
-            `<a href="${escapeEmailHtml(mixUrl)}" style="color:#BC5A45;text-decoration:none;font-weight:600;">The other ${readyCount - shown.length} are waiting in Mix</a>`
+            `<a href="${escapeEmailHtml(mixUrl)}" style="color:#BC5A45;text-decoration:none;font-weight:600;">${remainingCopy}</a>`
           )
         : ""
     }
     ${almostHtml}
-    ${primaryCtaHtml(mixUrl, "Pick tonight's drink")}
+    ${primaryCtaHtml(mixUrl, "See all you can make")}
     ${signoffHtml(resolvedSignoff)}
   `;
   const almostText = almostThere.length
-    ? `\nIF YOU'RE ALREADY OUT\n${almostThere
+    ? `\nONE BOTTLE AWAY\n${almostThere
         .slice(0, 2)
         .map(
           (drink) =>
-            `  • ${drink.name}: Needs ${drink.missingIngredient}. That's it.\n    ${hrefFor(drink, siteUrl)}`
+            `  • ${drink.name}: Add ${drink.missingIngredient} to unlock.\n    ${hrefFor(drink, siteUrl)}`
         )
         .join("\n")}\n`
     : "";
@@ -627,9 +637,9 @@ ${resolvedIntro}
 
 YOU CAN MAKE
 ${textDrinkList(shown, siteUrl)}
-${readyCount > shown.length ? `\nThe other ${readyCount - shown.length} are waiting in Mix: ${mixUrl}\n` : ""}
+${remainingCopy ? `\n${remainingCopy}: ${mixUrl}\n` : ""}
 ${almostText}
-Pick tonight's drink: ${mixUrl}
+See all you can make: ${mixUrl}
 
 ${signoffText(resolvedSignoff)}
   `.trim();
