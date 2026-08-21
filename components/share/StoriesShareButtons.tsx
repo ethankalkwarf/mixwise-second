@@ -389,23 +389,36 @@ export function StoriesShareButtons({
   const showStories = native && (igAvailable || fbAvailable) && !!FACEBOOK_APP_ID;
   if (!showStories) return null;
 
+  const bothPlatforms = igAvailable && fbAvailable;
   const btnBase = compact
-    ? "inline-flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium disabled:opacity-50"
-    : "inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium disabled:opacity-50";
+    ? "inline-flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium disabled:opacity-50 active:scale-[0.98]"
+    : "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3.5 text-sm font-semibold tracking-tight disabled:opacity-50 active:scale-[0.98] transition-transform";
 
   return (
-    <div className={className ?? (compact ? "inline-flex flex-wrap items-center gap-2" : "mt-3 space-y-3")}>
-      <div className="flex flex-wrap gap-2">
+    <div className={className ?? (compact ? "inline-flex flex-wrap items-center gap-2" : "mt-0 space-y-2.5")}>
+      <div
+        className={
+          compact
+            ? "flex flex-wrap gap-2"
+            : bothPlatforms
+              ? "grid grid-cols-2 gap-2"
+              : "grid grid-cols-1 gap-2"
+        }
+      >
         {igAvailable && (
           <button
             type="button"
             disabled={busy !== null}
             onClick={() => void shareToStories("ig")}
-            className={`${btnBase} bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white`}
+            className={`${btnBase} bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white shadow-sm shadow-[#FD1D1D]/25`}
             aria-label="Share to Instagram Story"
           >
-            <InstagramGlyph className="w-4 h-4" />
-            {!compact && (busy === "ig" ? "Opening…" : "Instagram Story")}
+            <InstagramGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+            {!compact && (
+              <span className="min-w-0 truncate">
+                {busy === "ig" ? "Opening…" : "Instagram"}
+              </span>
+            )}
           </button>
         )}
         {fbAvailable && (
@@ -413,24 +426,28 @@ export function StoriesShareButtons({
             type="button"
             disabled={busy !== null}
             onClick={() => void shareToStories("fb")}
-            className={`${btnBase} bg-[#1877F2] text-white`}
+            className={`${btnBase} bg-[#1877F2] text-white shadow-sm shadow-[#1877F2]/30`}
             aria-label="Share to Facebook Story"
           >
-            <FacebookGlyph className="w-4 h-4" />
-            {!compact && (busy === "fb" ? "Opening…" : "Facebook Story")}
-          </button>
-        )}
-        {!compact && (
-          <button
-            type="button"
-            onClick={handleCopy}
-            className={`${btnBase} bg-mist hover:bg-stone text-forest`}
-          >
-            {copied ? <CheckIcon className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
-            {copied ? "Copied" : "Copy link"}
+            <FacebookGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+            {!compact && (
+              <span className="min-w-0 truncate">
+                {busy === "fb" ? "Opening…" : "Facebook"}
+              </span>
+            )}
           </button>
         )}
       </div>
+      {!compact && (
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-mist/80 bg-white/60 px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-mist/50 active:scale-[0.98]"
+        >
+          {copied ? <CheckIcon className="h-4 w-4 text-forest" /> : <LinkIcon className="h-4 w-4 text-sage" />}
+          {copied ? "Copied" : "Copy link"}
+        </button>
+      )}
 
       <div
         className="pointer-events-none fixed left-0 top-0 -z-10 opacity-0"

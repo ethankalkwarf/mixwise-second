@@ -33,11 +33,16 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { awardSharingBadge, checkExplorationBadges } from "@/lib/badgeEngine";
 import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 import { markDrinkMade, hasMixedCocktail } from "@/lib/mobile/pourStreak";
-import { useEffect, useState } from "react";
+import {
+  hasSeenFirstPourShare,
+  markFirstPourShareSeen,
+} from "@/lib/mobile/firstPourShare";
+import { useEffect, useRef, useState } from "react";
 import type { MatchedIngredient } from "@/lib/ingredientMatching";
 import { findWholePhraseIndex } from "@/lib/ingredientMatching";
 import { withShareUtm } from "@/lib/analytics/utm";
 import { CocktailStoriesShare } from "@/components/share/CocktailStoriesShare";
+import { FirstPourShareSpotlight } from "@/components/mobile/FirstPourShareSpotlight";
 
 interface NativeRecipeViewProps {
   cocktail: {
@@ -127,11 +132,27 @@ export function NativeRecipeView({
   const toast = useToast();
   const [quantity, setQuantity] = useState(1);
   const [pouredToday, setPouredToday] = useState(false);
+  const [showShareSpotlight, setShowShareSpotlight] = useState(false);
+  const sharePanelRef = useRef<HTMLDivElement>(null);
   const scaledIngredients = scaleIngredientLines(ingredients, quantity);
 
   useEffect(() => {
     setPouredToday(hasMixedCocktail(cocktail.slug));
+    setShowShareSpotlight(false);
   }, [cocktail.slug]);
+
+  useEffect(() => {
+    if (!showShareSpotlight) return;
+    const t = window.setTimeout(() => {
+      sharePanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, [showShareSpotlight]);
+
+  const dismissShareSpotlight = () => {
+    markFirstPourShareSeen();
+    setShowShareSpotlight(false);
+  };
 
   useEffect(() => {
     recordView({
@@ -278,9 +299,14 @@ export function NativeRecipeView({
             <button
               type="button"
               onClick={() => {
+                const alreadySeenShare = hasSeenFirstPourShare();
                 const { streak, isNewToday, isNewForCocktail } = markDrinkMade(cocktail.slug);
                 setPouredToday(true);
-                if (isNewToday) {
+                const shouldSpotlight = isNewForCocktail && !alreadySeenShare;
+                if (shouldSpotlight) {
+                  markFirstPourShareSeen();
+                  setShowShareSpotlight(true);
+                } else if (isNewToday) {
                   toast.success(
                     streak > 1 ? `${streak}-day pour streak!` : "Nice pour — streak started"
                   );
@@ -299,19 +325,39 @@ export function NativeRecipeView({
               {pouredToday ? "✓ Mixed" : "I mixed this"}
             </button>
             {pouredToday && (
-              <div className="rounded-2xl border border-mist bg-cream/80 p-3">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-sage">
-                  Share your pour
-                </p>
-                <CocktailStoriesShare
-                  variant="mixed"
-                  cocktail={{
-                    name: cocktail.name,
-                    slug: cocktail.slug,
-                    imageUrl: cocktail.image_url,
-                    primarySpirit: cocktail.base_spirit,
-                  }}
-                />
+              <div className="relative">
+                {showShareSpotlight && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Dismiss share tip"
+                      onClick={dismissShareSpotlight}
+                      className="fixed inset-0 z-[80] bg-charcoal/50"
+                    />
+                    <FirstPourShareSpotlight onDismiss={dismissShareSpotlight} />
+                  </>
+                )}
+                <div
+                  ref={sharePanelRef}
+                  className={`rounded-2xl border border-mist bg-cream p-3.5 ${
+                    showShareSpotlight
+                      ? "relative z-[81] ring-2 ring-terracotta ring-offset-2 ring-offset-cream shadow-2xl shadow-charcoal/25"
+                      : "bg-cream/80"
+                  }`}
+                >
+                  <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-sage">
+                    Share your pour
+                  </p>
+                  <CocktailStoriesShare
+                    variant="mixed"
+                    cocktail={{
+                      name: cocktail.name,
+                      slug: cocktail.slug,
+                      imageUrl: cocktail.image_url,
+                      primarySpirit: cocktail.base_spirit,
+                    }}
+                  />
+                </div>
               </div>
             )}
           </div>
