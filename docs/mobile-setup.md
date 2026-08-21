@@ -114,6 +114,16 @@ dev). The native app **hides** magic-link CTAs (Auth dialog, join panel, save-ba
 links open Safari and cannot return the session to the WebView — native sign-in is Google, Apple, or
 email + password.
 
+## Instagram / Facebook Stories
+
+Native Stories share uses `StoriesSharePlugin` + `NEXT_PUBLIC_FACEBOOK_APP_ID`.
+
+1. Create a Meta app (developers.facebook.com) and paste the App ID into `.env.local` and Vercel.
+2. In Meta **App settings → Basic**, add iOS Bundle ID `com.getmixwise.app` and domains `getmixwise.com` / `www.getmixwise.com`.
+3. Ship a new TestFlight build after pulling Stories plugin / Info.plist changes — web deploy alone is not enough.
+
+Share surfaces: Share My Bar, cocktail recipe actions, “I mixed this” after logging a pour, Host Night on Mix results.
+
 ## Supabase auth (dev web callback)
 
 When testing magic links against your local dev server, add your LAN callback:

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
+import { HostNightStoriesShare } from "@/components/share/HostNightStoriesShare";
 import { HardNavLink } from "@/components/layout/HardNavLink";
 import Image from "next/image";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
@@ -149,8 +150,23 @@ export function MixResultsPanel({
               />
             )}
           </div>
-
         </div>
+        {!showAllRecipes && ready.length > 0 && (
+          <HostNightStoriesShare
+            className="mb-4"
+            drinks={ready.slice(0, 5).map((m) => ({
+              name: m.cocktail.name,
+              slug: m.cocktail.slug,
+            }))}
+          />
+        )}
+        {!showAllRecipes && ready.length === 0 && unlockPotential[0] && (
+          <HostNightStoriesShare
+            className="mb-4"
+            missingBottle={unlockPotential[0].name}
+            drinks={(unlockPotential[0].drinks || []).map((name) => ({ name }))}
+          />
+        )}
 
         {/* Category Filters */}
         {displayedDrinks.length > 0 && availableCategories.length > 0 && (

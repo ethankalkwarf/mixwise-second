@@ -37,6 +37,7 @@ import { useEffect, useState } from "react";
 import type { MatchedIngredient } from "@/lib/ingredientMatching";
 import { findWholePhraseIndex } from "@/lib/ingredientMatching";
 import { withShareUtm } from "@/lib/analytics/utm";
+import { CocktailStoriesShare } from "@/components/share/CocktailStoriesShare";
 
 interface NativeRecipeViewProps {
   cocktail: {
@@ -273,27 +274,45 @@ export function NativeRecipeView({
         )}
 
         {Capacitor.isNativePlatform() && (
-          <button
-            type="button"
-            onClick={() => {
-              const { streak, isNewToday } = markDrinkMade(cocktail.slug);
-              setPouredToday(true);
-              if (isNewToday) {
-                toast.success(
-                  streak > 1 ? `${streak}-day pour streak!` : "Nice pour — streak started"
-                );
-              } else {
-                toast.info("Already logged today");
-              }
-            }}
-            className={`mb-5 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-colors ${
-              pouredToday
-                ? "bg-forest/10 text-forest"
-                : "bg-terracotta text-cream active:scale-[0.98]"
-            }`}
-          >
-            {pouredToday ? "✓ Logged today" : "I made this"}
-          </button>
+          <div className="mb-5 space-y-3">
+            <button
+              type="button"
+              onClick={() => {
+                const { streak, isNewToday } = markDrinkMade(cocktail.slug);
+                setPouredToday(true);
+                if (isNewToday) {
+                  toast.success(
+                    streak > 1 ? `${streak}-day pour streak!` : "Nice pour — streak started"
+                  );
+                } else {
+                  toast.info("Already logged today");
+                }
+              }}
+              className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-colors ${
+                pouredToday
+                  ? "bg-forest/10 text-forest"
+                  : "bg-terracotta text-cream active:scale-[0.98]"
+              }`}
+            >
+              {pouredToday ? "✓ Logged today" : "I made this"}
+            </button>
+            {pouredToday && (
+              <div className="rounded-2xl border border-mist bg-cream/80 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-sage">
+                  Share your pour
+                </p>
+                <CocktailStoriesShare
+                  variant="mixed"
+                  cocktail={{
+                    name: cocktail.name,
+                    slug: cocktail.slug,
+                    imageUrl: cocktail.image_url,
+                    primarySpirit: cocktail.base_spirit,
+                  }}
+                />
+              </div>
+            )}
+          </div>
         )}
 
         {pills.length > 0 && (

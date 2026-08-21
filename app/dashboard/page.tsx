@@ -340,7 +340,9 @@ export default function DashboardPage() {
               </p>
             </div>
             {ingredientIds.length > 0 && (
-              <ShareBarButton />
+              <ShareBarButton
+                stats={{ ingredientCount: ingredientIds.length }}
+              />
             )}
           </div>
 

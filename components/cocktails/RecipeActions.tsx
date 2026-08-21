@@ -5,6 +5,7 @@ import { FavoriteButton } from "./FavoriteButton";
 import { NoteButton } from "./NoteButton";
 import { SkipButton } from "./SkipButton";
 import { ShareButtons } from "./ShareButtons";
+import { CocktailStoriesShare } from "@/components/share/CocktailStoriesShare";
 import { useCocktailNotes } from "@/hooks/useCocktailNotes";
 import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 import { useRecordCocktailView } from "@/hooks/useRecentlyViewed";
@@ -111,6 +112,15 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
           url={shareUrl}
           title={`${cocktail.name} Cocktail Recipe`}
           description={`Learn how to make a ${cocktail.name} cocktail with ingredients and instructions.`}
+        />
+        <CocktailStoriesShare
+          compact
+          cocktail={{
+            name: cocktail.name,
+            slug: cocktail.slug,
+            imageUrl: cocktail.image_url,
+            primarySpirit: cocktail.base_spirit,
+          }}
         />
       </div>
       {skipped || note ? (

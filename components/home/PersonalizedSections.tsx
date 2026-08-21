@@ -32,7 +32,7 @@ interface MixCocktail {
 const HOME_READY_LIMIT = 4;
 const HOME_ONE_AWAY_LIMIT = 3;
 const HOME_FAVORITES_LIMIT = 4;
-const HOME_RECENT_LIMIT = 4;
+const HOME_RECENT_LIMIT = 8;
 
 interface PersonalizedSectionsProps {
   allCocktails: MixCocktail[];
@@ -205,11 +205,11 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       {/* Cocktails You Can Make */}
       {hasBar && readyToMake.length > 0 && (
         <section aria-labelledby="canmake-title">
-          <div className="flex items-center justify-between mb-5">
-            <SectionHeader title="Cocktails You Can Make" id="canmake-title" />
+          <div className="flex items-end justify-between gap-4 mb-5">
+            <SectionHeader title="Cocktails You Can Make" id="canmake-title" className="mb-0" />
             <Link
               href="/mix"
-              className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1"
+              className="shrink-0 text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1 pb-1"
             >
               View all in Mix <ArrowRightIcon className="w-4 h-4" />
             </Link>
@@ -240,73 +240,69 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
         </section>
       )}
 
-      {/* Favorites + Recents — single compact band */}
-      {(hasFavorites || hasRecent) && (
-        <div className="grid gap-10 lg:grid-cols-2 lg:gap-8">
-          {hasFavorites && (
-            <section aria-labelledby="favorites-title">
-              <div className="flex items-center justify-between mb-5">
-                <SectionHeader title="Your Favorites" id="favorites-title" />
-                <Link
-                  href="/account"
-                  className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1"
-                >
-                  View all <ArrowRightIcon className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4" role="list">
-                {visibleFavorites.map((fav) => {
-                  const supabaseImageUrl = favoriteImageUrls.get(fav.cocktail_id);
-                  const storedImageUrl = fav.cocktail_image_url;
-                  const imageUrl =
-                    (supabaseImageUrl && supabaseImageUrl.trim() && supabaseImageUrl.trim().length > 0 ? supabaseImageUrl.trim() : null) ||
-                    (storedImageUrl && storedImageUrl.trim() && storedImageUrl.trim().length > 0 ? storedImageUrl.trim() : null) ||
-                    undefined;
+      {/* Your Favorites */}
+      {hasFavorites && (
+        <section aria-labelledby="favorites-title">
+          <div className="flex items-end justify-between gap-4 mb-5">
+            <SectionHeader title="Your Favorites" id="favorites-title" className="mb-0" />
+            <Link
+              href="/account"
+              className="shrink-0 text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1 pb-1"
+            >
+              View all <ArrowRightIcon className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-4" role="list">
+            {visibleFavorites.map((fav) => {
+              const supabaseImageUrl = favoriteImageUrls.get(fav.cocktail_id);
+              const storedImageUrl = fav.cocktail_image_url;
+              const imageUrl =
+                (supabaseImageUrl && supabaseImageUrl.trim() && supabaseImageUrl.trim().length > 0 ? supabaseImageUrl.trim() : null) ||
+                (storedImageUrl && storedImageUrl.trim() && storedImageUrl.trim().length > 0 ? storedImageUrl.trim() : null) ||
+                undefined;
 
-                  return (
-                    <SmallCocktailCard
-                      key={fav.cocktail_id}
-                      cocktail={{
-                        _id: fav.cocktail_id,
-                        name: fav.cocktail_name || "Cocktail",
-                        slug: { current: fav.cocktail_slug || "" },
-                        externalImageUrl: imageUrl,
-                      }}
-                      badge={undefined}
-                    />
-                  );
-                })}
-              </div>
-            </section>
-          )}
+              return (
+                <SmallCocktailCard
+                  key={fav.cocktail_id}
+                  cocktail={{
+                    _id: fav.cocktail_id,
+                    name: fav.cocktail_name || "Cocktail",
+                    slug: { current: fav.cocktail_slug || "" },
+                    externalImageUrl: imageUrl,
+                  }}
+                  badge={undefined}
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
 
-          {hasRecent && visibleRecent.length > 0 && (
-            <section aria-labelledby="recent-title">
-              <div className="mb-5">
-                <SectionHeader title="Continue Exploring" id="recent-title" />
-              </div>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4" role="list">
-                {visibleRecent.map((item) => {
-                  const supabaseImageUrl = recentImageUrls.get(item.cocktail_id);
-                  const storedImageUrl = item.cocktail_image_url;
-                  const imageUrl = (supabaseImageUrl && supabaseImageUrl.trim()) || (storedImageUrl && storedImageUrl.trim()) || undefined;
+      {/* Continue Exploring */}
+      {hasRecent && visibleRecent.length > 0 && (
+        <section aria-labelledby="recent-title">
+          <SectionHeader title="Continue Exploring" id="recent-title" />
+          <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin" role="list">
+            {visibleRecent.map((item) => {
+              const supabaseImageUrl = recentImageUrls.get(item.cocktail_id);
+              const storedImageUrl = item.cocktail_image_url;
+              const imageUrl = (supabaseImageUrl && supabaseImageUrl.trim()) || (storedImageUrl && storedImageUrl.trim()) || undefined;
 
-                  return (
-                    <SmallCocktailCard
-                      key={item.cocktail_id}
-                      cocktail={{
-                        _id: item.cocktail_id,
-                        name: item.cocktail_name || "Cocktail",
-                        slug: { current: item.cocktail_slug || "" },
-                        externalImageUrl: imageUrl,
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            </section>
-          )}
-        </div>
+              return (
+                <SmallCocktailCard
+                  key={item.cocktail_id}
+                  cocktail={{
+                    _id: item.cocktail_id,
+                    name: item.cocktail_name || "Cocktail",
+                    slug: { current: item.cocktail_slug || "" },
+                    externalImageUrl: imageUrl,
+                  }}
+                  compact
+                />
+              );
+            })}
+          </div>
+        </section>
       )}
         </div>
       </div>
@@ -326,9 +322,10 @@ interface SmallCocktailCardProps {
   };
   badge?: string;
   badgeColor?: string;
+  compact?: boolean;
 }
 
-function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive" }: SmallCocktailCardProps) {
+function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }: SmallCocktailCardProps) {
   // Prioritize externalImageUrl (from Supabase) over Sanity image for favorites/recent
   const sanityImageUrl = getImageUrl(cocktail.image, { width: 600, height: 400, quality: 90 });
   const imageUrl = cocktail.externalImageUrl || sanityImageUrl || null;
@@ -337,17 +334,17 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive" }: SmallCo
   return (
     <Link
       href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover"
+      className={`group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover ${compact ? "flex-shrink-0 w-48" : ""}`}
       role="listitem"
     >
-      <div className="relative h-36 w-full overflow-hidden bg-mist">
+      <div className={`relative ${compact ? "h-28" : "h-36"} w-full overflow-hidden bg-mist`}>
         {imageUrl ? (
           <>
             <Image
               src={imageUrl}
               alt=""
               fill
-              sizes="(max-width: 768px) 50vw, 25vw"
+              sizes={compact ? "192px" : "(max-width: 768px) 50vw, 25vw"}
               className="object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
               quality={90}
               placeholder="blur"
@@ -375,8 +372,8 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive" }: SmallCo
           </div>
         )}
       </div>
-      <div className="p-4 flex-1">
-        <h3 className="font-display font-bold text-base text-forest group-hover:text-terracotta transition-colors line-clamp-2">
+      <div className={`${compact ? "p-3" : "p-4"} flex-1`}>
+        <h3 className={`font-display font-bold ${compact ? "text-sm" : "text-base"} text-forest group-hover:text-terracotta transition-colors line-clamp-2`}>
           {formatCocktailName(cocktail.name)}
         </h3>
       </div>
