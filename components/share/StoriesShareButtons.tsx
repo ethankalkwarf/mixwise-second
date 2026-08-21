@@ -89,6 +89,11 @@ type Props = {
   backgroundImageUrl?: string;
   backgroundTopColor?: string;
   backgroundBottomColor?: string;
+  /**
+   * Sticker only — no background image or color gradient.
+   * Instagram/Facebook open the camera so people shoot their own photo.
+   */
+  cameraBackground?: boolean;
   className?: string;
   /** Compact icon-style buttons for recipe action rows. */
   compact?: boolean;
@@ -107,6 +112,7 @@ export function StoriesShareButtons({
   backgroundImageUrl,
   backgroundTopColor = "#1F3A2E",
   backgroundBottomColor = "#5C4033",
+  cameraBackground = false,
   className,
   compact = false,
 }: Props) {
@@ -136,15 +142,15 @@ export function StoriesShareButtons({
 
   const renderStickerBase64 = useCallback(async () => {
     if (!stickerRef.current) throw new Error("Sticker not ready");
-    // Transparent PNG so Instagram shows text only — no solid “card” box.
+    // Omit backgroundColor so the PNG keeps an alpha channel (no solid card).
     return toPng(stickerRef.current, {
       cacheBust: true,
       pixelRatio: 2,
       width: stickerWidth,
       height: stickerHeight,
-      backgroundColor: null as unknown as string,
       style: {
         background: "transparent",
+        backgroundColor: "transparent",
       },
     });
   }, [stickerWidth, stickerHeight]);
@@ -169,21 +175,31 @@ export function StoriesShareButtons({
     }
     setBusy(platform);
     try {
-      const [stickerDataUrl, backgroundDataUrl] = await Promise.all([
-        renderStickerBase64(),
-        backgroundImageUrl ? imageUrlToDataUrl(backgroundImageUrl) : Promise.resolve(null),
-      ]);
+      const stickerDataUrl = await renderStickerBase64();
 
-      const payload = {
+      const payload: {
+        facebookAppId: string;
+        stickerImageBase64: string;
+        backgroundImageBase64?: string;
+        backgroundTopColor?: string;
+        backgroundBottomColor?: string;
+      } = {
         facebookAppId: FACEBOOK_APP_ID,
         stickerImageBase64: stickerDataUrl,
-        ...(backgroundDataUrl
-          ? { backgroundImageBase64: backgroundDataUrl }
-          : {
-              backgroundTopColor,
-              backgroundBottomColor,
-            }),
       };
+
+      if (!cameraBackground) {
+        const backgroundDataUrl = backgroundImageUrl
+          ? await imageUrlToDataUrl(backgroundImageUrl)
+          : null;
+        if (backgroundDataUrl) {
+          payload.backgroundImageBase64 = backgroundDataUrl;
+        } else {
+          // Solid gradient fill — only when we are not opening the camera
+          payload.backgroundTopColor = backgroundTopColor;
+          payload.backgroundBottomColor = backgroundBottomColor;
+        }
+      }
 
       if (platform === "ig") {
         await MixwiseStories.shareToInstagramStories(payload);

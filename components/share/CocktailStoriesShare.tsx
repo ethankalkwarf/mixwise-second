@@ -23,35 +23,41 @@ export function pourMomentLabel(date = new Date()): "Today's pour" | "Tonight's 
   return hour >= 16 ? "Tonight's pour" : "Today's pour";
 }
 
-/** Transparent text-only sticker — drink photo is the Stories background layer. */
+/**
+ * Large transparent text sticker for Instagram/Facebook Stories.
+ * No photo — people snap their own pour against the camera.
+ * Canvas is story-width so pinch-to-scale starts (and tops out) bigger.
+ */
 function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) {
   const name = formatCocktailName(cocktail.name);
   const moment = pourMomentLabel();
-  const textShadow = "0 2px 16px rgba(0,0,0,0.65), 0 1px 3px rgba(0,0,0,0.45)";
+  const textShadow = "0 4px 28px rgba(0,0,0,0.75), 0 2px 8px rgba(0,0,0,0.55)";
+  const nameSize = name.length > 28 ? 88 : name.length > 18 ? 104 : 120;
 
   return (
     <div
       style={{
-        width: 680,
-        height: 320,
-        background: "transparent",
-        color: "#F9F7F2",
+        width: 1080,
+        height: 560,
+        backgroundColor: "transparent",
+        color: "#FFFFFF",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "flex-end",
-        gap: 8,
-        padding: "0 8px 8px",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        gap: 14,
+        padding: "40px 48px",
         boxSizing: "border-box",
       }}
     >
       <div
         style={{
           fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-          fontSize: 30,
+          fontSize: 48,
           fontWeight: 400,
-          letterSpacing: 0.5,
-          color: "#F9F7F2",
-          lineHeight: 1.2,
+          letterSpacing: 0.6,
+          color: "#FFFFFF",
+          lineHeight: 1.15,
           textShadow,
         }}
       >
@@ -60,24 +66,26 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
       <div
         style={{
           fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-          fontSize: name.length > 22 ? 52 : 62,
+          fontSize: nameSize,
           fontWeight: 400,
-          lineHeight: 1.05,
-          color: "#F9F7F2",
+          lineHeight: 1.02,
+          color: "#FFFFFF",
           textShadow,
+          maxWidth: "100%",
+          wordBreak: "break-word",
         }}
       >
         {name}
       </div>
       <div
         style={{
-          marginTop: 6,
+          marginTop: 10,
           fontFamily: "var(--font-jost), Jost, system-ui, sans-serif",
-          fontSize: 18,
+          fontSize: 28,
           fontWeight: 500,
-          letterSpacing: 1.4,
+          letterSpacing: 2,
           textTransform: "uppercase",
-          color: "rgba(249, 247, 242, 0.9)",
+          color: "rgba(255,255,255,0.92)",
           textShadow,
         }}
       >
@@ -108,12 +116,10 @@ export function CocktailStoriesShare({
       shareUrl={shareUrl}
       compact={compact}
       className={className}
-      stickerWidth={680}
-      stickerHeight={320}
-      backgroundImageUrl={cocktail.imageUrl || undefined}
-      // Soft fallback only if drink photo can't load — not a solid sticker box
-      backgroundTopColor="#1A2E24"
-      backgroundBottomColor="#2F4A3A"
+      stickerWidth={1080}
+      stickerHeight={560}
+      // Sticker only — Instagram opens the camera so they shoot their own pour
+      cameraBackground
       sticker={<CocktailPourTextSticker cocktail={cocktail} />}
     />
   );
