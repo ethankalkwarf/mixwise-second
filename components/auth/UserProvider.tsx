@@ -629,56 +629,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Capacitor.isNativePlatform() is unreliable with a remote server.url WebView.
     // isNativeApp() also checks MixWiseNative UA / bridge — use that, and never
     // fall through to browser OAuth (that path strands users in Safari).
-    const nativeApp = isNativeApp();
-    const oauthNative = shouldUseNativeOAuthFlow();
-    const capNative = (() => {
-      try {
-        return Capacitor.isNativePlatform();
-      } catch {
-        return false;
-      }
-    })();
-    const socialLogin = (() => {
-      try {
-        return Capacitor.isPluginAvailable("SocialLogin");
-      } catch {
-        return false;
-      }
-    })();
-    const useIdToken = nativeApp || oauthNative;
-
-    // Temporary proof for TestFlight — remove once Google path is verified.
-    if (typeof window !== "undefined" && (nativeApp || oauthNative || capNative)) {
-      let pluginVersion = "?";
-      let appBuild = "?";
-      try {
-        const [{ SocialLogin }, { App }] = await Promise.all([
-          import("@capgo/capacitor-social-login"),
-          import("@capacitor/app"),
-        ]);
-        const [ver, info] = await Promise.all([
-          SocialLogin.getPluginVersion(),
-          App.getInfo(),
-        ]);
-        pluginVersion = ver?.version ?? JSON.stringify(ver);
-        appBuild = `${info.version} (${info.build})`;
-      } catch (e) {
-        pluginVersion = `err:${e instanceof Error ? e.message : String(e)}`;
-      }
-      window.alert(
-        [
-          "MixWise Google path (debug)",
-          "",
-          `app: ${appBuild}`,
-          `path: ${useIdToken ? "NATIVE_ID_TOKEN" : "BROWSER_OAUTH"}`,
-          `SocialLogin: ${socialLogin} v${pluginVersion}`,
-          "",
-          "After OK: stay in MixWise, or Safari opens?",
-        ].join("\n")
-      );
-    }
-
-    if (useIdToken) {
+    if (isNativeApp() || shouldUseNativeOAuthFlow()) {
       debugLog("[UserProvider] Native Google Sign-In (ID token)");
       try {
         await signInWithGoogleNative();
