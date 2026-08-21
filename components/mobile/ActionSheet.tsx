@@ -77,6 +77,8 @@ export function ActionSheet({
               onClick={() => {
                 if (!option.disabled) {
                   option.action();
+                  // Only auto-close when the action didn't already dismiss (e.g. via parent state).
+                  // Callers that manage open state themselves still work; double-close is harmless.
                   onClose();
                 }
               }}

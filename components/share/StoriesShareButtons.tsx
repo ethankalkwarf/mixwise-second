@@ -15,24 +15,62 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { awardSharingBadge } from "@/lib/badgeEngine";
 import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 
-/** Capture a pour photo. Use Camera or Photos explicitly — Prompt misroutes on iOS. */
+function wait(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () =>
+      resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(reader.error ?? new Error("FileReader failed"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+/**
+ * Capture a pour photo. Prefer Uri (more reliable on Cap 8) over DataUrl.
+ * Call only after any MixWise sheet has fully dismissed — iOS won't present
+ * the camera/picker on top of another modal.
+ */
 async function capturePourBackground(
-  source: CameraSource.Camera | CameraSource.Photos
+  source: CameraSource
 ): Promise<string | null> {
   try {
     const photo = await Camera.getPhoto({
-      quality: 85,
+      quality: 80,
       allowEditing: false,
-      resultType: CameraResultType.DataUrl,
+      resultType: CameraResultType.Uri,
       source,
       correctOrientation: true,
       width: 1080,
     });
-    if (!photo.dataUrl) return null;
-    return await normalizeStoryBackground(photo.dataUrl);
+
+    let dataUrl: string | null = null;
+    if (photo.webPath) {
+      const res = await fetch(photo.webPath);
+      if (!res.ok) throw new Error("Couldn't read the photo");
+      dataUrl = await blobToDataUrl(await res.blob());
+    } else if (photo.path) {
+      // Capacitor may only give a file path — try converting via Capacitor convertFileSrc
+      const { Capacitor: Cap } = await import("@capacitor/core");
+      const src = Cap.convertFileSrc(photo.path);
+      const res = await fetch(src);
+      if (!res.ok) throw new Error("Couldn't read the photo");
+      dataUrl = await blobToDataUrl(await res.blob());
+    }
+
+    if (!dataUrl) return null;
+    return await normalizeStoryBackground(dataUrl);
   } catch (err) {
     const message = String((err as Error)?.message ?? err).toLowerCase();
-    if (message.includes("cancel") || message.includes("dismiss")) {
+    if (
+      message.includes("cancel") ||
+      message.includes("dismiss") ||
+      message.includes("no image") ||
+      message.includes("user cancelled")
+    ) {
       return null;
     }
     throw err;
@@ -40,11 +78,11 @@ async function capturePourBackground(
 }
 
 /**
- * Cover-fill into 9:16 so the pour fills the Stories canvas (Meta ~1080×1920).
+ * Cover-fill into 9:16. Keep the JPEG modest so Capacitor → pasteboard doesn't choke.
  */
 async function normalizeStoryBackground(dataUrl: string): Promise<string> {
-  const TARGET_W = 1080;
-  const TARGET_H = 1920;
+  const TARGET_W = 720;
+  const TARGET_H = 1280;
   return await new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -63,12 +101,12 @@ async function normalizeStoryBackground(dataUrl: string): Promise<string> {
         const w = img.naturalWidth * scale;
         const h = img.naturalHeight * scale;
         ctx.drawImage(img, (TARGET_W - w) / 2, (TARGET_H - h) / 2, w, h);
-        resolve(canvas.toDataURL("image/jpeg", 0.88));
+        resolve(canvas.toDataURL("image/jpeg", 0.72));
       } catch (err) {
         reject(err);
       }
     };
-    img.onerror = () => resolve(dataUrl);
+    img.onerror = () => reject(new Error("Couldn't process the photo"));
     img.src = dataUrl;
   });
 }
@@ -187,13 +225,23 @@ export function StoriesShareButtons({
   const [native, setNative] = useState(false);
   const [pourPicker, setPourPicker] = useState<{
     platform: "ig" | "fb";
-    resolve: (source: "camera" | "photos" | null) => void;
   } | null>(null);
+  const pourResolveRef = useRef<((source: "camera" | "photos" | null) => void) | null>(
+    null
+  );
 
   const pickPourSource = (platform: "ig" | "fb") =>
     new Promise<"camera" | "photos" | null>((resolve) => {
-      setPourPicker({ platform, resolve });
+      pourResolveRef.current = resolve;
+      setPourPicker({ platform });
     });
+
+  const finishPourPick = (source: "camera" | "photos" | null) => {
+    const resolve = pourResolveRef.current;
+    pourResolveRef.current = null;
+    setPourPicker(null);
+    resolve?.(source);
+  };
 
   useEffect(() => {
     setNative(isNativeApp());
@@ -249,6 +297,8 @@ export function StoriesShareButtons({
         // Own sheet + explicit Camera/Photos — Capacitor Prompt opens library for both on iOS
         const source = await pickPourSource(platform);
         if (!source) return;
+        // iOS won't present UIImagePicker while our sheet is still dismissing
+        await wait(450);
         capturedBackground = await capturePourBackground(
           source === "camera" ? CameraSource.Camera : CameraSource.Photos
         );
@@ -306,9 +356,16 @@ export function StoriesShareButtons({
         );
       } else {
         console.error("Stories share failed:", err);
-        const msg = String((err as Error)?.message ?? "");
-        if (msg.toLowerCase().includes("permission") || msg.toLowerCase().includes("denied")) {
-          toast.error("Camera or Photos access is required to share your pour.");
+        const msg = String((err as Error)?.message ?? err);
+        const lower = msg.toLowerCase();
+        if (lower.includes("permission") || lower.includes("denied") || lower.includes("access")) {
+          toast.error("Allow Camera and Photos access in Settings, then try again.");
+        } else if (lower.includes("sticker")) {
+          toast.error("Couldn't build the pour sticker. Try again.");
+        } else if (lower.includes("background") || lower.includes("photo") || lower.includes("image")) {
+          toast.error("Couldn't use that photo. Try another shot.");
+        } else if (lower.includes("could not open") || lower.includes("invalid")) {
+          toast.error("Couldn't hand off to Stories. Try again in a moment.");
         } else {
           toast.error("Couldn't open Stories. Try Share instead.");
         }
@@ -401,24 +458,15 @@ export function StoriesShareButtons({
             ? "Share your pour with friends on Facebook"
             : "Share your pour with friends on Instagram"
         }
-        onClose={() => {
-          pourPicker?.resolve(null);
-          setPourPicker(null);
-        }}
+        onClose={() => finishPourPick(null)}
         options={[
           {
             label: "Take photo",
-            action: () => {
-              pourPicker?.resolve("camera");
-              setPourPicker(null);
-            },
+            action: () => finishPourPick("camera"),
           },
           {
             label: "Choose from library",
-            action: () => {
-              pourPicker?.resolve("photos");
-              setPourPicker(null);
-            },
+            action: () => finishPourPick("photos"),
           },
         ]}
       />
