@@ -581,12 +581,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return authCallbackUrlWithNext(base);
   }, []);
 
-  /** OAuth-only: native uses custom scheme; web uses /auth/callback with next. */
+  /** OAuth-only: native uses HTTPS bridge; web uses /auth/callback with next. */
   const getOAuthRedirectUrl = useCallback(() => {
     rememberAuthReturnTo();
     const nativeOAuth = getNativeOAuthRedirectUrl();
-    // Native OAuth: exact allowlisted custom scheme, no ?next=
-    // (query params can fail Supabase allowlist matching).
+    // Native: exact allowlisted HTTPS bridge, no ?next=
     if (nativeOAuth) return nativeOAuth;
     return getEmailAuthRedirectUrl();
   }, [getEmailAuthRedirectUrl]);

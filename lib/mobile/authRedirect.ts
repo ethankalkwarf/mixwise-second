@@ -4,8 +4,11 @@ import { isNativeApp } from "@/lib/mobile/platform";
 /** Deep-link target registered in Info.plist — ASWebAuthenticationSession catches this. */
 export const NATIVE_OAUTH_CALLBACK = "com.getmixwise.app://auth/callback";
 
-/** Path on the current origin that bounces OAuth codes into the app scheme. */
+/** Path that bounces OAuth codes into the app scheme (server route, not React page). */
 export const NATIVE_OAUTH_BRIDGE_PATH = "/auth/native-callback";
+
+/** Canonical HTTPS bridge — must match Supabase Redirect URLs exactly (no query). */
+export const NATIVE_OAUTH_BRIDGE_URL = `https://www.getmixwise.com${NATIVE_OAUTH_BRIDGE_PATH}`;
 
 export function isNativeOAuthCallbackUrl(url: string): boolean {
   return url.startsWith(NATIVE_OAUTH_CALLBACK);
@@ -32,27 +35,22 @@ function isCapacitorNativeRuntime(): boolean {
 /** True when OAuth must leave the WebView (in-app browser + deep link). */
 export function shouldUseNativeOAuthFlow(): boolean {
   if (typeof window === "undefined") return false;
-  // Require a real Capacitor runtime — sticky web cookies must not trigger
-  // custom-scheme OAuth (which strands mobile Safari on the bridge page).
   return isCapacitorNativeRuntime();
 }
 
 /**
  * Supabase redirectTo for Capacitor OAuth.
  *
- * Always the custom scheme so ASWebAuthenticationSession dismisses on the final
- * hop. Do not use the HTTPS `/auth/native-callback` bridge as redirectTo — that
- * page is only a manual recovery UI if a deep link is opened in Safari.
- *
- * Required in Supabase Redirect URLs:
- * - com.getmixwise.app://auth/callback
- * Keep the https native-callback URLs allowlisted for the bridge page itself.
+ * Always the allowlisted HTTPS bridge (not the custom scheme, not window.origin).
+ * Custom-scheme redirectTo often completes in system Safari and leaves the user
+ * there after the app deep-links. The bridge 302/JS-bounces into the app scheme
+ * inside ASWebAuthenticationSession so the sheet can dismiss.
  */
 export function getNativeOAuthRedirectUrl(): string | null {
   if (typeof window === "undefined") return null;
   if (!shouldUseNativeOAuthFlow()) return null;
 
-  return NATIVE_OAUTH_CALLBACK;
+  return NATIVE_OAUTH_BRIDGE_URL;
 }
 
 /**

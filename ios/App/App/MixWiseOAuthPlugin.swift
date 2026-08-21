@@ -6,10 +6,9 @@ import UIKit
 /**
  * ASWebAuthenticationSession wrapper that:
  * 1. Keeps a strong reference for the full OAuth flow (required)
- * 2. Exposes cancel() so a deep-link handler can dismiss the sheet
- *
- * Capgo's openSecureWindow cannot cancel the session from JS, which leaves
- * users staring at the auth browser after appUrlOpen already logged them in.
+ * 2. Prefers iOS 17.4+ HTTPS callbacks (dismisses on getmixwise.com bridge — no Safari hop)
+ * 3. Falls back to custom-scheme callbacks on older iOS
+ * 4. Exposes cancel() so a deep-link handler can dismiss a leftover sheet
  */
 @objc(MixWiseOAuthPlugin)
 public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticationPresentationContextProviding {
@@ -30,10 +29,11 @@ public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticatio
         }
 
         let callbackScheme = call.getString("callbackScheme") ?? "com.getmixwise.app"
+        let httpsHost = call.getString("callbackHTTPSHost")
+        let httpsPath = call.getString("callbackHTTPSPath")
         let prefersEphemeral = call.getBool("prefersEphemeralWebBrowserSession") ?? false
 
         DispatchQueue.main.async {
-            // Cancel any prior session before starting a new one.
             self.authSession?.cancel()
             self.authSession = nil
             if let prior = self.activeCall {
@@ -43,8 +43,7 @@ public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticatio
 
             self.activeCall = call
 
-            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) {
-                [weak self] callbackURL, error in
+            let completion: ASWebAuthenticationSession.CompletionHandler = { [weak self] callbackURL, error in
                 guard let self else { return }
 
                 self.authSession = nil
@@ -52,7 +51,6 @@ public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticatio
                 self.activeCall = nil
 
                 if let error = error as NSError? {
-                    // User cancelled (ASWebAuthenticationSessionError.canceledLogin = 1)
                     if error.domain == ASWebAuthenticationSessionError.errorDomain,
                        error.code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
                         pending?.reject("Sign-in cancelled", "OAUTH_CANCELLED")
@@ -68,6 +66,24 @@ public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticatio
                 }
 
                 pending?.resolve(["url": callbackURL.absoluteString])
+            }
+
+            let session: ASWebAuthenticationSession
+            if #available(iOS 17.4, *),
+               let httpsHost,
+               let httpsPath,
+               !httpsHost.isEmpty,
+               !httpsPath.isEmpty {
+                // Completes when Supabase lands on the HTTPS bridge — stays inside
+                // the auth session (never dumps the user into system Safari).
+                let callback = ASWebAuthenticationSession.Callback.https(host: httpsHost, path: httpsPath)
+                session = ASWebAuthenticationSession(url: url, callback: callback, completionHandler: completion)
+            } else {
+                session = ASWebAuthenticationSession(
+                    url: url,
+                    callbackURLScheme: callbackScheme,
+                    completionHandler: completion
+                )
             }
 
             session.prefersEphemeralWebBrowserSession = prefersEphemeral
@@ -86,7 +102,6 @@ public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticatio
         DispatchQueue.main.async {
             if let session = self.authSession {
                 self.authSession = nil
-                // cancel() dismisses the sheet; completion may also fire with canceledLogin.
                 session.cancel()
             }
             if let pending = self.activeCall {

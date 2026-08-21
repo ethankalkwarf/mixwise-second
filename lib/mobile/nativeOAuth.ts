@@ -5,19 +5,17 @@ import { debugLog } from "@/lib/debugLog";
 import {
   isNativeOAuthCallbackUrl,
   NATIVE_OAUTH_BRIDGE_PATH,
+  NATIVE_OAUTH_BRIDGE_URL,
   NATIVE_OAUTH_CALLBACK,
 } from "@/lib/mobile/authRedirect";
 import { MixwiseOAuth } from "@/lib/mobile/oauthSessionPlugin";
 
-/** Custom-scheme host for ASWebAuthenticationSession (scheme only). */
+/** Custom-scheme host for ASWebAuthenticationSession (pre–iOS 17.4). */
 const NATIVE_OAUTH_SCHEME = "com.getmixwise.app";
 
-/** True while MixwiseOAuth / Capgo auth UI is presenting. */
 let oauthUiOpen = false;
-/** True while our MixwiseOAuth ASWebAuthenticationSession is active. */
 let mixwiseOAuthActive = false;
 let oauthExchangeInFlight: string | null = null;
-/** Resolves when a deep-link / secure-window callback finishes exchange. */
 let pendingOAuthHandled: Promise<boolean> | null = null;
 
 function isOAuthReturnUrl(url: string): boolean {
@@ -42,10 +40,6 @@ function isUserCancelError(error: unknown): boolean {
   );
 }
 
-/**
- * Close leftover Capgo webviews. Only cancel the ASWebAuthenticationSession when
- * we have a real OAuth callback — never on app resume (that killed Google login).
- */
 async function dismissOAuthUi(options?: { cancelAuthSession?: boolean }): Promise<void> {
   const cancelAuthSession = options?.cancelAuthSession === true;
   oauthUiOpen = false;
@@ -63,10 +57,9 @@ async function dismissOAuthUi(options?: { cancelAuthSession?: boolean }): Promis
     const { InAppBrowser } = await import("@capgo/capacitor-inappbrowser");
     await InAppBrowser.close().catch(() => {});
   } catch {
-    // Plugin may be unavailable
+    /* Plugin may be unavailable */
   }
 
-  // Capgo webview only — do not re-cancel MixwiseOAuth on a timer (that races start()).
   window.setTimeout(() => {
     void import("@capgo/capacitor-inappbrowser")
       .then(({ InAppBrowser }) => InAppBrowser.close().catch(() => {}))
@@ -74,67 +67,6 @@ async function dismissOAuthUi(options?: { cancelAuthSession?: boolean }): Promis
   }, 150);
 }
 
-/**
- * Fallback when ASWebAuthenticationSession isn't available — in-app webview that
- * closes itself as soon as the custom scheme / bridge URL appears.
- */
-async function openNativeOAuthWithUrlWatch(url: string): Promise<void> {
-  const { InAppBrowser, ToolBarType } = await import("@capgo/capacitor-inappbrowser");
-  oauthUiOpen = true;
-
-  await new Promise<void>((resolve, reject) => {
-    let settled = false;
-    const finish = async (nextUrl: string) => {
-      if (settled) return;
-      settled = true;
-      try {
-        await urlHandle.then((h) => h.remove());
-        await schemeHandle.then((h) => h.remove());
-      } catch {
-        /* ignore */
-      }
-      try {
-        await InAppBrowser.close();
-      } catch {
-        /* ignore */
-      }
-      oauthUiOpen = false;
-      try {
-        await handleNativeOAuthCallback(nextUrl);
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    const urlHandle = InAppBrowser.addListener("urlChangeEvent", ({ url: next }) => {
-      if (isOAuthReturnUrl(next)) {
-        void finish(next);
-      }
-    });
-
-    const schemeHandle = InAppBrowser.addListener("customSchemeIntercepted", ({ url: next }) => {
-      if (isOAuthReturnUrl(next) || isNativeOAuthCallbackUrl(next)) {
-        void finish(next);
-      }
-    });
-
-    void InAppBrowser.openWebView({
-      url,
-      toolbarType: ToolBarType.COMPACT,
-      title: "Sign in",
-    }).catch((error: unknown) => {
-      if (settled) return;
-      settled = true;
-      oauthUiOpen = false;
-      void urlHandle.then((h) => h.remove());
-      void schemeHandle.then((h) => h.remove());
-      reject(error);
-    });
-  });
-}
-
-/** Preferred path: MixWise native plugin that can cancel the auth sheet after callback. */
 async function openWithMixwiseOAuth(url: string): Promise<void> {
   if (!Capacitor.isPluginAvailable("MixwiseOAuth")) {
     throw Object.assign(new Error("MixwiseOAuth plugin unavailable"), {
@@ -145,15 +77,18 @@ async function openWithMixwiseOAuth(url: string): Promise<void> {
   oauthUiOpen = true;
   mixwiseOAuthActive = true;
   try {
+    const bridge = new URL(NATIVE_OAUTH_BRIDGE_URL);
     const { url: redirectedUri } = await MixwiseOAuth.start({
       url,
       callbackScheme: NATIVE_OAUTH_SCHEME,
+      // iOS 17.4+: complete on the HTTPS bridge itself (no Safari custom-scheme hop).
+      callbackHTTPSHost: bridge.hostname,
+      callbackHTTPSPath: bridge.pathname,
     });
     mixwiseOAuthActive = false;
     oauthUiOpen = false;
     debugLog("[NativeOAuth] MixwiseOAuth returned:", redirectedUri);
     if (redirectedUri) {
-      // Session already auto-dismissed on success — don't cancel().
       await handleNativeOAuthCallback(redirectedUri);
     }
   } catch (error) {
@@ -166,6 +101,7 @@ async function openWithMixwiseOAuth(url: string): Promise<void> {
 async function openWithCapgoSecureWindow(url: string): Promise<void> {
   const { InAppBrowser } = await import("@capgo/capacitor-inappbrowser");
   oauthUiOpen = true;
+  // Watch for the custom scheme the HTTPS bridge bounces to.
   const { redirectedUri } = await InAppBrowser.openSecureWindow({
     authEndpoint: url,
     redirectUri: NATIVE_OAUTH_CALLBACK,
@@ -178,8 +114,8 @@ async function openWithCapgoSecureWindow(url: string): Promise<void> {
 }
 
 /**
- * Opens the provider OAuth URL with ASWebAuthenticationSession so the sheet
- * auto-dismisses on the custom-scheme callback.
+ * Opens Google/Apple OAuth inside ASWebAuthenticationSession only.
+ * Never falls through to WKWebView / Safari — that path strands users in Safari.
  */
 export async function openNativeOAuthProvider(url: string): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
@@ -192,8 +128,6 @@ export async function openNativeOAuthProvider(url: string): Promise<void> {
     await openWithMixwiseOAuth(url);
     return;
   } catch (error) {
-    // Deep link may have finished exchange while start() rejected as cancelled
-    // (session.cancel after callback). Treat that as success.
     if (pendingOAuthHandled) {
       const handled = await pendingOAuthHandled.catch(() => false);
       if (handled) {
@@ -222,26 +156,20 @@ export async function openNativeOAuthProvider(url: string): Promise<void> {
     await openWithCapgoSecureWindow(url);
     return;
   } catch (error) {
-    if (isUserCancelError(error)) {
-      throw Object.assign(new Error("Sign-in cancelled"), { code: "OAUTH_CANCELLED" as const });
-    }
-
     if (pendingOAuthHandled) {
       const handled = await pendingOAuthHandled.catch(() => false);
       if (handled) return;
     }
 
-    console.warn("[NativeOAuth] openSecureWindow failed, trying webview watch:", error);
-  }
+    if (isUserCancelError(error)) {
+      throw Object.assign(new Error("Sign-in cancelled"), { code: "OAUTH_CANCELLED" as const });
+    }
 
-  try {
-    await openNativeOAuthWithUrlWatch(url);
-  } catch (watchError) {
-    await dismissOAuthUi({ cancelAuthSession: false });
-    console.error("[NativeOAuth] webview watch failed — not opening Safari:", watchError);
-    throw Object.assign(new Error("Couldn’t open Google sign-in. Please try again."), {
-      code: "OAUTH_UI_FAILED" as const,
-    });
+    console.error("[NativeOAuth] Secure auth window failed — not opening Safari:", error);
+    throw Object.assign(
+      new Error("Couldn’t open Google sign-in. Please try again."),
+      { code: "OAUTH_UI_FAILED" as const }
+    );
   }
 }
 
@@ -268,7 +196,6 @@ function navigateHomeAfterNativeOAuth(): void {
   window.location.href = target.toString();
 }
 
-/** Exchanges the PKCE code from the deep link and loads the session into the WebView. */
 export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
   if (!isOAuthReturnUrl(url)) {
     return false;
@@ -276,7 +203,6 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
 
   if (pendingOAuthHandled) {
     debugLog("[NativeOAuth] Joining in-flight OAuth callback");
-    // Callback already in flight — only cancel a leftover session if still active.
     await dismissOAuthUi({ cancelAuthSession: mixwiseOAuthActive });
     return pendingOAuthHandled;
   }
@@ -286,8 +212,6 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
     const code = params.get("code");
     const oauthError = params.get("error");
 
-    // Only cancel the auth sheet once we know this is a real OAuth return.
-    // (Successful MixwiseOAuth.start already dismissed the sheet itself.)
     if (mixwiseOAuthActive) {
       await dismissOAuthUi({ cancelAuthSession: true });
     } else {
@@ -340,7 +264,6 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
   return pendingOAuthHandled;
 }
 
-/** Wire deep-link OAuth callbacks for Google / Apple sign-in. */
 export function registerNativeOAuthListener(): () => void {
   if (!Capacitor.isNativePlatform()) {
     return () => {};
@@ -351,7 +274,7 @@ export function registerNativeOAuthListener(): () => void {
     void handleNativeOAuthCallback(url)
       .then((handled) => {
         if (handled) return;
-        if (url.startsWith("http")) {
+        if (url.startsWith("http") && !url.includes(NATIVE_OAUTH_BRIDGE_PATH)) {
           window.location.href = url;
         }
       })
@@ -370,9 +293,6 @@ export function registerNativeOAuthListener(): () => void {
         );
       });
   });
-
-  // Do NOT dismiss on appStateChange. Presenting ASWebAuthenticationSession
-  // briefly backgrounds the app; treating resume as "done" cancelled Google login.
 
   return () => {
     void urlHandle.then((h) => h.remove());

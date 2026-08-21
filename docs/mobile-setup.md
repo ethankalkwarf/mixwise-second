@@ -87,12 +87,13 @@ https://getmixwise.com/auth/native-callback
 https://mixwise-testflight.vercel.app/auth/native-callback
 ```
 
-Native Google/Apple sign-in uses the **custom scheme** (`com.getmixwise.app://auth/callback`) as
-`redirectTo` so `ASWebAuthenticationSession` can dismiss as soon as Google/Apple finishes. Keep the
-HTTPS bridge URLs allowlisted too as a fallback path.
+Native Google/Apple sign-in uses the **HTTPS bridge** (`https://www.getmixwise.com/auth/native-callback`)
+as `redirectTo`. That route immediately hands off to `com.getmixwise.app://auth/callback` so
+`ASWebAuthenticationSession` can dismiss. On iOS 17.4+ the auth session completes on the HTTPS
+URL directly (associated domains) and never opens system Safari.
 
-Without the custom scheme allowlisted, Supabase falls back to Site URL and Google login opens the
-website instead of returning to the app.
+Without the HTTPS bridge allowlisted, Supabase falls back to Site URL and Google login opens
+Safari instead of returning to the app.
 
 ### How native OAuth works
 
