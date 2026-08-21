@@ -14,7 +14,7 @@ import {
 } from "@/lib/mobile/authRedirect";
 import { openNativeOAuthProvider } from "@/lib/mobile/nativeOAuth";
 import { signInWithGoogleNative } from "@/lib/mobile/googleNativeAuth";
-import { Capacitor } from "@capacitor/core";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 /**
  * UserProvider - Single Source of Truth for Auth State
@@ -623,9 +623,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     [supabase, getOAuthRedirectUrl]
   );
 
-  // Sign in with Google — native ID token on iOS/Android; browser OAuth on web
+  // Sign in with Google — native ID token in the app; never Safari OAuth on native.
   const signInWithGoogle = useCallback(async () => {
-    if (Capacitor.isNativePlatform()) {
+    // Capacitor.isNativePlatform() is unreliable with a remote server.url WebView.
+    // isNativeApp() also checks MixWiseNative UA / bridge — use that, and never
+    // fall through to browser OAuth (that path strands users in Safari).
+    if (isNativeApp() || shouldUseNativeOAuthFlow()) {
       debugLog("[UserProvider] Native Google Sign-In (ID token)");
       try {
         await signInWithGoogleNative();

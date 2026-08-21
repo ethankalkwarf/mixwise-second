@@ -6,6 +6,7 @@ import {
 } from "@capgo/capacitor-social-login";
 import { createClient } from "@/lib/supabase/client";
 import { debugLog } from "@/lib/debugLog";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 /** Web OAuth client used by Supabase Google provider (token audience). */
 const GOOGLE_WEB_CLIENT_ID =
@@ -116,10 +117,19 @@ async function ensureInitialized(): Promise<void> {
  * Never opens Safari / ASWebAuthenticationSession.
  */
 export async function signInWithGoogleNative(retry = false): Promise<void> {
-  if (!Capacitor.isNativePlatform()) {
+  // Do not rely solely on Capacitor.isNativePlatform() — remote server.url
+  // WebViews often report "web" even inside the iOS shell.
+  if (!isNativeApp() && !Capacitor.isNativePlatform()) {
     throw Object.assign(new Error("Native Google Sign-In is only available in the app."), {
       code: "OAUTH_NOT_NATIVE" as const,
     });
+  }
+
+  if (!Capacitor.isPluginAvailable("SocialLogin")) {
+    throw Object.assign(
+      new Error("Google Sign-In isn’t available in this app build. Update MixWise from TestFlight."),
+      { code: "GOOGLE_PLUGIN_MISSING" as const }
+    );
   }
 
   await ensureInitialized();
