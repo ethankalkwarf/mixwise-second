@@ -10,7 +10,7 @@ import { BarProfile } from "@/components/bar/BarProfile";
 import { PublicBarJoinCta } from "@/components/bar/PublicBarJoinCta";
 import { generatePageMetadata } from "@/lib/seo";
 import type { Database } from "@/lib/supabase/database.types";
-import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, Cog6ToothIcon, BeakerIcon } from "@heroicons/react/24/outline";
+import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, Cog6ToothIcon, BeakerIcon, UserGroupIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
 import { PublicBarShare } from "@/components/bar/PublicBarShare";
 import { PublicBarCompare } from "@/components/bar/PublicBarCompare";
@@ -18,6 +18,8 @@ import { BarStoriesShareActions } from "@/components/bar/BarStoriesShareActions"
 import { getBarSharePath } from "@/lib/barShare";
 import { debugLog } from "@/lib/debugLog";
 import { getMixMatchGroups } from "@/lib/mixMatching";
+import { FollowButton } from "@/components/bar/FollowButton";
+import { getPublicMixologistTier } from "@/lib/mixologistTier.server";
 
 // Force dynamic rendering to ensure fresh data on every request
 // This ensures ingredients and favorites are always up-to-date
@@ -37,6 +39,7 @@ interface PublicProfile {
   username: string | null;
   public_slug: string;
   avatar_url: string | null;
+  bio: string | null;
 }
 
 interface BarIngredient {
@@ -120,7 +123,7 @@ async function getProfileData(slug: string): Promise<{
     debugLog('[BAR PAGE] Supabase client created, type:', isOwnerView ? 'authenticated' : 'anonymous');
 
     // Build query dynamically to handle missing columns gracefully
-    const selectFields = "id, display_name, avatar_url, username, public_slug" as const;
+    const selectFields = "id, display_name, avatar_url, username, public_slug, bio" as const;
 
     let profileQuery = supabase
       .from("profiles")
@@ -232,7 +235,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     return generatePageMetadata({
       title: `${displayName}'s Bar`,
-      description: `Check out ${displayName}'s bar and see what cocktails they can make at home on MixWise.`,
+      description:
+        profile.bio?.trim() ||
+        `Check out ${displayName}'s bar and see what cocktails they can make at home on MixWise.`,
       path: `/bar/${slug}`,
     });
   } catch (error) {
@@ -260,6 +265,7 @@ export default async function BarPage({ params }: Props) {
   const displayName = profile.display_name || profile.username || "Anonymous Bartender";
   const firstName = displayName.split(' ')[0] || displayName; // Get first name for personalized heading
   const isPublic = preferences?.public_bar_enabled === true;
+  const { tier } = await getPublicMixologistTier(profile.id, { asOwner: isOwnerView });
 
   // Use ingredient IDs directly (they're already UUID strings from getUserBarIngredients)
   const cocktailIngredientIds = ingredients.map(ing => ing.ingredient_id);
@@ -282,6 +288,13 @@ export default async function BarPage({ params }: Props) {
 
               <div className="flex flex-wrap items-center gap-2">
                 <Link
+                  href="/friends"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-mist hover:bg-stone text-forest rounded-xl transition-colors font-medium"
+                >
+                  <UserGroupIcon className="w-4 h-4" />
+                  Friends
+                </Link>
+                <Link
                   href="/mix"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-olive hover:bg-olive-dark text-cream rounded-xl transition-colors font-medium"
                 >
@@ -299,19 +312,45 @@ export default async function BarPage({ params }: Props) {
             </div>
 
             {/* Owner Bar Header */}
-            <div className="card p-8">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-olive/20 rounded-full flex items-center justify-center">
-                    <UserCircleIcon className="w-8 h-8 text-olive" />
+            <div className="card p-6 sm:p-8">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-5 min-w-0">
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-full overflow-hidden bg-olive/20 ring-2 ring-mist flex items-center justify-center">
+                    {profile.avatar_url ? (
+                      <Image
+                        src={profile.avatar_url}
+                        alt={displayName}
+                        width={128}
+                        height={128}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <UserCircleIcon className="w-14 h-14 text-olive" />
+                    )}
                   </div>
-                  <div>
+                  <div className="min-w-0 pt-0.5">
                     <h1 className="text-3xl font-serif font-bold text-forest">
                       {displayName}
                     </h1>
-                    <p className="text-sage mt-1">
-                      Your personal bar • {ingredients.length} ingredients
+                    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-sage">
+                      <Link
+                        href="/badges"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-olive/10 px-2.5 py-0.5 font-medium text-olive hover:bg-olive/15"
+                      >
+                        <span aria-hidden>{tier.emoji}</span>
+                        {tier.name}
+                      </Link>
+                      <span className="text-mist hidden sm:inline" aria-hidden>
+                        ·
+                      </span>
+                      <span>
+                        {ingredients.length} ingredient{ingredients.length === 1 ? "" : "s"}
+                      </span>
                     </p>
+                    {profile.bio && (
+                      <p className="mt-2 text-forest/80 max-w-md">{profile.bio}</p>
+                    )}
+                    <FollowButton userId={profile.id} className="mt-3" />
                   </div>
                 </div>
                 <div className="flex flex-col items-stretch sm:items-end gap-2">
@@ -418,87 +457,159 @@ export default async function BarPage({ params }: Props) {
   };
   const sharePath = getBarSharePath(profile) || `/bar/${slug}`;
 
+  // Owner viewing their own public bar URL — offer Edit
+  let isLoggedInOwner = false;
+  try {
+    const authClient = await createServerClient();
+    const {
+      data: { user: viewer },
+    } = await authClient.auth.getUser();
+    isLoggedInOwner = Boolean(viewer?.id && viewer.id === profile.id);
+  } catch {
+    isLoggedInOwner = false;
+  }
+
   return (
     <div className="min-h-screen bg-botanical-gradient py-8 sm:py-16">
       <MainContainer>
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Back Navigation */}
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sage hover:text-forest transition-colors"
-          >
-            <ArrowLeftIcon className="w-4 h-4" />
-            Back to MixWise
-          </Link>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-sage hover:text-forest transition-colors"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+              Back to MixWise
+            </Link>
+            {isLoggedInOwner && (
+              <Link
+                href="/account"
+                className="inline-flex items-center gap-2 rounded-xl bg-white/80 px-3.5 py-2 text-sm font-medium text-forest ring-1 ring-mist transition hover:bg-white hover:ring-olive/30"
+              >
+                <PencilSquareIcon className="h-4 w-4 text-olive" />
+                Edit profile
+              </Link>
+            )}
+          </div>
 
           {/* Profile Header */}
-          <div className="card p-8">
-            <div className="flex items-start gap-6">
-              <div className="flex-shrink-0">
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-olive/20 flex items-center justify-center">
+          <div className="card p-6 sm:p-8">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+              <div className="flex items-start gap-5 min-w-0 flex-1">
+                <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-full overflow-hidden bg-olive/20 ring-2 ring-mist flex items-center justify-center">
                   {profile.avatar_url ? (
                     <Image
                       src={profile.avatar_url}
                       alt={displayName}
-                      width={80}
-                      height={80}
+                      width={128}
+                      height={128}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <UserCircleIcon className="w-10 h-10 text-olive" />
+                    <UserCircleIcon className="w-14 h-14 text-olive" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h1 className="text-2xl sm:text-3xl font-serif font-bold text-forest">
+                        {displayName}&apos;s Bar
+                      </h1>
+                      {profile.username && (
+                        <p className="text-sage mt-0.5">@{profile.username}</p>
+                      )}
+                    </div>
+                    {isLoggedInOwner && (
+                      <Link
+                        href="/account"
+                        className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-mist bg-cream/50 px-3 py-1.5 text-sm font-medium text-forest transition hover:border-olive/40 hover:bg-white"
+                      >
+                        <PencilSquareIcon className="h-4 w-4 text-olive" />
+                        Edit
+                      </Link>
+                    )}
+                  </div>
+                  <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm text-sage">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-olive/10 px-2.5 py-0.5 font-medium text-olive">
+                      <span aria-hidden>{tier.emoji}</span>
+                      {tier.name}
+                    </span>
+                    <span className="text-mist" aria-hidden>
+                      ·
+                    </span>
+                    <span>
+                      {ingredients.length} ingredient{ingredients.length === 1 ? "" : "s"}
+                    </span>
+                    {makeableCount > 0 && (
+                      <>
+                        <span className="text-mist" aria-hidden>
+                          ·
+                        </span>
+                        <span>
+                          {makeableCount} drink{makeableCount === 1 ? "" : "s"} ready
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {profile.bio && (
+                    <p className="mt-3 max-w-xl text-forest/80 leading-relaxed">{profile.bio}</p>
+                  )}
+                  {isLoggedInOwner ? (
+                    <p className="mt-4 text-sm text-sage">
+                      This is how your bar looks to friends.{" "}
+                      <Link href="/account" className="font-medium text-olive hover:text-olive-dark">
+                        Edit photo, bio & username
+                      </Link>
+                    </p>
+                  ) : (
+                    <FollowButton userId={profile.id} className="mt-4" />
                   )}
                 </div>
               </div>
-              <div className="flex-grow">
-                <h1 className="text-3xl font-serif font-bold text-forest mb-2">
-                  {displayName}&apos;s Bar
-                </h1>
-                {profile.username && (
-                  <p className="text-sage mb-4">@{profile.username}</p>
-                )}
-                  <p className="text-sage">
-                    Public bar • {ingredients.length} ingredients
-                    {makeableCount > 0 ? ` • ${makeableCount} cocktails ready` : ""}
-                  </p>
-                  <PublicBarShare
-                    displayName={displayName}
-                    sharePath={sharePath}
-                    username={profile.username}
-                    stats={shareStats}
-                  />
-                  <BarStoriesShareActions
-                    displayName={displayName}
-                    sharePath={sharePath}
-                    username={profile.username}
-                    avatarUrl={profile.avatar_url}
-                    stats={shareStats}
-                    mode="recipient"
-                  />
-              </div>
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-mist/80 pt-5">
+              <PublicBarShare
+                displayName={displayName}
+                sharePath={sharePath}
+                username={profile.username}
+                stats={shareStats}
+              />
+              <BarStoriesShareActions
+                displayName={displayName}
+                sharePath={sharePath}
+                username={profile.username}
+                avatarUrl={profile.avatar_url}
+                stats={shareStats}
+                mode={isLoggedInOwner ? "owner" : "recipient"}
+              />
             </div>
           </div>
 
-          <PublicBarCompare
-            displayName={firstName}
-            theirIngredients={ingredients}
-          />
+          {!isLoggedInOwner && (
+            <PublicBarCompare
+              displayName={firstName}
+              theirIngredients={ingredients}
+            />
+          )}
 
-          {/* Bar Content */}
           <BarProfile
             ingredientIds={cocktailIngredientIds}
             ingredients={ingredients}
-            isOwner={false}
+            isOwner={isLoggedInOwner}
             showAlmostThere={false}
             isPublicView={true}
             userFirstName={firstName}
             userId={profile.id}
           />
 
-          <PublicBarJoinCta
-            displayName={firstName}
-            makeableCount={makeableCount}
-            ingredientCount={ingredients.length}
-          />
+          {!isLoggedInOwner && (
+            <PublicBarJoinCta
+              displayName={firstName}
+              makeableCount={makeableCount}
+              ingredientCount={ingredients.length}
+              inviteUsername={profile.username}
+            />
+          )}
         </div>
       </MainContainer>
     </div>
