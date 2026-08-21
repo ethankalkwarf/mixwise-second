@@ -98,12 +98,21 @@ public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticatio
     }
 
     public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        if let window = self.bridge?.viewController?.view.window {
+        if let window = self.bridge?.viewController?.view.window, window.windowScene != nil {
             return window
         }
-        return UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .first { $0.isKeyWindow } ?? ASPresentationAnchor()
+        if let window = (UIApplication.shared.delegate as? AppDelegate)?.window, window.windowScene != nil {
+            return window
+        }
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        for scene in scenes {
+            if let key = scene.windows.first(where: { $0.isKeyWindow }) {
+                return key
+            }
+            if let any = scene.windows.first {
+                return any
+            }
+        }
+        return ASPresentationAnchor()
     }
 }

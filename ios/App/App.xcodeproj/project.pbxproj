@@ -18,6 +18,7 @@
 		M1XW1SE0011FED79650016851 /* MixWiseBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = M1XW1SE0021FED79650016851 /* MixWiseBridgeViewController.swift */; };
 		M1XW1SE0031FED79650016851 /* ShakePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = M1XW1SE0041FED79650016851 /* ShakePlugin.swift */; };
 		M1XW1SE0051FED79650016851 /* MixWiseOAuthPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = M1XW1SE0061FED79650016851 /* MixWiseOAuthPlugin.swift */; };
+		M1XW1SE0071FED79650016851 /* OAuthDebugHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = M1XW1SE0081FED79650016851 /* OAuthDebugHarness.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		M1XW1SE0021FED79650016851 /* MixWiseBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MixWiseBridgeViewController.swift; sourceTree = "<group>"; };
 		M1XW1SE0041FED79650016851 /* ShakePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShakePlugin.swift; sourceTree = "<group>"; };
 		M1XW1SE0061FED79650016851 /* MixWiseOAuthPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MixWiseOAuthPlugin.swift; sourceTree = "<group>"; };
+		M1XW1SE0081FED79650016851 /* OAuthDebugHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OAuthDebugHarness.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +78,7 @@
 				M1XW1SE0021FED79650016851 /* MixWiseBridgeViewController.swift */,
 				M1XW1SE0041FED79650016851 /* ShakePlugin.swift */,
 				M1XW1SE0061FED79650016851 /* MixWiseOAuthPlugin.swift */,
+				M1XW1SE0081FED79650016851 /* OAuthDebugHarness.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -225,6 +228,7 @@
 				M1XW1SE0011FED79650016851 /* MixWiseBridgeViewController.swift in Sources */,
 				M1XW1SE0031FED79650016851 /* ShakePlugin.swift in Sources */,
 				M1XW1SE0051FED79650016851 /* MixWiseOAuthPlugin.swift in Sources */,
+				M1XW1SE0071FED79650016851 /* OAuthDebugHarness.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

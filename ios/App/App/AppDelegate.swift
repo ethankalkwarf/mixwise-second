@@ -26,6 +26,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        #if DEBUG
+        if OAuthDebugHarness.handle(url: url) {
+            return true
+        }
+        #endif
         return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
     }
 
