@@ -41,16 +41,16 @@ export function shouldUseNativeOAuthFlow(): boolean {
 /**
  * Supabase redirectTo for Capacitor OAuth.
  *
- * Always the allowlisted HTTPS bridge (not the custom scheme, not window.origin).
- * Custom-scheme redirectTo often completes in system Safari and leaves the user
- * there after the app deep-links. The bridge 302/JS-bounces into the app scheme
- * inside ASWebAuthenticationSession so the sheet can dismiss.
+ * Use the custom scheme directly. An HTTPS bridge that 302s into the scheme
+ * often escapes ASWebAuthenticationSession into system Safari (app logs in,
+ * user left in Safari). With the scheme allowlisted in Supabase, the auth
+ * session can catch the final hop and dismiss itself.
  */
 export function getNativeOAuthRedirectUrl(): string | null {
   if (typeof window === "undefined") return null;
   if (!shouldUseNativeOAuthFlow()) return null;
 
-  return NATIVE_OAUTH_BRIDGE_URL;
+  return NATIVE_OAUTH_CALLBACK;
 }
 
 /**
