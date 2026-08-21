@@ -6,7 +6,23 @@
         "appID": "D3G5N6DM4U.com.getmixwise.app",
         "paths": [
           "/auth/native-callback",
-          "/auth/native-callback/*"
+          "/auth/native-callback/*",
+          "/bar/*",
+          "/cocktails/*",
+          "/ingredients/*",
+          "/mix",
+          "/mix/*",
+          "/learn",
+          "/learn/*",
+          "/dashboard",
+          "/dashboard/*",
+          "/saved",
+          "/saved/*",
+          "/account",
+          "/account/*",
+          "/occasions",
+          "/occasions/*",
+          "/make-with/*"
         ]
       }
     ]

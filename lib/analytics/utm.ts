@@ -2,6 +2,43 @@
  * Append MixWise email campaign UTMs for PostHog attribution.
  */
 
+/** Append attribution UTMs for on-site share actions (PostHog / acquisition). */
+export function withShareUtm(
+  url: string,
+  extras: {
+    medium: string;
+    source?: string;
+    campaign?: string;
+    content?: string;
+  }
+): string {
+  try {
+    const parsed = new URL(url, "https://www.getmixwise.com");
+    const source = extras.source || "cocktail_share";
+    if (!parsed.searchParams.has("utm_source")) {
+      parsed.searchParams.set("utm_source", source);
+    }
+    if (!parsed.searchParams.has("utm_medium")) {
+      parsed.searchParams.set("utm_medium", extras.medium);
+    }
+    if (!parsed.searchParams.has("utm_campaign")) {
+      parsed.searchParams.set(
+        "utm_campaign",
+        extras.campaign || "share_cocktail"
+      );
+    }
+    if (extras.content && !parsed.searchParams.has("utm_content")) {
+      parsed.searchParams.set("utm_content", extras.content);
+    }
+    if (!parsed.searchParams.has("from")) {
+      parsed.searchParams.set("from", source);
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 export function withEmailUtm(
   url: string,
   campaign: string,

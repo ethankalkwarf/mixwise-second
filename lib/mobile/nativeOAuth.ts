@@ -8,6 +8,7 @@ import {
   NATIVE_OAUTH_CALLBACK,
 } from "@/lib/mobile/authRedirect";
 import { MixwiseOAuth } from "@/lib/mobile/oauthSessionPlugin";
+import { pathFromUniversalLink, requestInAppNavigation } from "@/lib/mobile/deepLinks";
 
 /** Custom-scheme host for ASWebAuthenticationSession (pre–iOS 17.4). */
 const NATIVE_OAUTH_SCHEME = "com.getmixwise.app";
@@ -269,9 +270,13 @@ export function registerNativeOAuthListener(): () => void {
     void handleNativeOAuthCallback(url)
       .then((handled) => {
         if (handled) return;
-        // Never assign arbitrary https URLs into the WebView. After Google Sign-In,
-        // iOS may deliver accounts.google.com (or similar) here; loading that in
-        // WKWebView makes Capacitor hand the URL to Safari.app and leave the user there.
+        // Universal Links for product paths (bar, cocktails, mix, …).
+        // Never load arbitrary third-party https URLs into the WebView.
+        const path = pathFromUniversalLink(url);
+        if (path) {
+          requestInAppNavigation(path, "universal_link");
+          return;
+        }
         debugLog("[NativeOAuth] Ignoring non-callback appUrlOpen:", url);
       })
       .catch((error) => {

@@ -36,6 +36,7 @@ import { markDrinkMade, madeDrinkToday } from "@/lib/mobile/pourStreak";
 import { useEffect, useState } from "react";
 import type { MatchedIngredient } from "@/lib/ingredientMatching";
 import { findWholePhraseIndex } from "@/lib/ingredientMatching";
+import { withShareUtm } from "@/lib/analytics/utm";
 
 interface NativeRecipeViewProps {
   cocktail: {
@@ -164,7 +165,13 @@ export function NativeRecipeView({
   ].filter((value): value is string => Boolean(value));
 
   const shareRecipe = async () => {
-    const url = `${window.location.origin}/cocktails/${cocktail.slug}`;
+    const url = withShareUtm(
+      `${window.location.origin}/cocktails/${cocktail.slug}`,
+      {
+        medium: Capacitor.isNativePlatform() ? "native_share" : "web_share",
+        content: cocktail.slug,
+      }
+    );
     const title = `${formatCocktailName(name)} cocktail`;
     try {
       if (Capacitor.isNativePlatform()) {

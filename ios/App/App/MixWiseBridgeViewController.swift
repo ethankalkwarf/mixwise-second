@@ -21,6 +21,7 @@ class MixWiseBridgeViewController: CAPBridgeViewController {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(ShakePlugin())
         bridge?.registerPluginInstance(MixWiseOAuthPlugin())
+        bridge?.registerPluginInstance(StoriesSharePlugin())
         webView?.backgroundColor = UIColor(red: 249 / 255, green: 247 / 255, blue: 242 / 255, alpha: 1)
         webView?.scrollView.backgroundColor = webView?.backgroundColor
         configureScrollBounce()

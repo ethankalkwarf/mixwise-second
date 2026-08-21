@@ -139,7 +139,14 @@ export function MixResultsPanel({
               </span>
             )}
             {!showAllRecipes && inventoryIds.length > 0 && ready.length > 0 && (
-              <ShareBarButton variant="inline" className="flex-shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-terracotta hover:text-terracotta-dark" />
+              <ShareBarButton
+                variant="inline"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-terracotta hover:text-terracotta-dark"
+                stats={{
+                  ingredientCount: inventoryIds.length,
+                  makeableCount: ready.length,
+                }}
+              />
             )}
           </div>
 

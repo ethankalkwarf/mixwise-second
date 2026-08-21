@@ -4,17 +4,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase/server";
-import { getUserBarIngredients } from "@/lib/cocktails.server";
+import { getUserBarIngredients, getMixCocktails, getStapleIngredientIds } from "@/lib/cocktails.server";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
 import { PublicBarJoinCta } from "@/components/bar/PublicBarJoinCta";
-import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
+import { generatePageMetadata } from "@/lib/seo";
 import type { Database } from "@/lib/supabase/database.types";
 import { UserCircleIcon, LockClosedIcon, ArrowLeftIcon, Cog6ToothIcon, BeakerIcon } from "@heroicons/react/24/outline";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
 import { PublicBarShare } from "@/components/bar/PublicBarShare";
+import { PublicBarCompare } from "@/components/bar/PublicBarCompare";
+import { BarStoriesShareActions } from "@/components/bar/BarStoriesShareActions";
 import { getBarSharePath } from "@/lib/barShare";
 import { debugLog } from "@/lib/debugLog";
+import { getMixMatchGroups } from "@/lib/mixMatching";
 
 // Force dynamic rendering to ensure fresh data on every request
 // This ensures ingredients and favorites are always up-to-date
@@ -229,7 +232,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     return generatePageMetadata({
       title: `${displayName}'s Bar`,
-      description: `Check out ${displayName}'s bar and see what cocktails they can make.`,
+      description: `Check out ${displayName}'s bar and see what cocktails they can make at home on MixWise.`,
       path: `/bar/${slug}`,
     });
   } catch (error) {
@@ -311,7 +314,21 @@ export default async function BarPage({ params }: Props) {
                     </p>
                   </div>
                 </div>
-                <ShareBarButton />
+                <div className="flex flex-col items-stretch sm:items-end gap-2">
+                  <ShareBarButton
+                    stats={{ ingredientCount: ingredients.length }}
+                  />
+                  {getBarSharePath(profile) ? (
+                    <BarStoriesShareActions
+                      displayName={displayName}
+                      sharePath={getBarSharePath(profile)!}
+                      username={profile.username}
+                      avatarUrl={profile.avatar_url}
+                      stats={{ ingredientCount: ingredients.length }}
+                      mode="owner"
+                    />
+                  ) : null}
+                </div>
               </div>
             </div>
 
@@ -377,6 +394,29 @@ export default async function BarPage({ params }: Props) {
   }
 
   // Public bar view
+  let makeableCount = 0;
+  try {
+    const [cocktails, stapleIds] = await Promise.all([
+      getMixCocktails(),
+      getStapleIngredientIds(),
+    ]);
+    const valid = cocktails.filter(
+      (c) => c?.ingredients && Array.isArray(c.ingredients) && c.ingredients.length > 0
+    );
+    const { ready } = getMixMatchGroups({
+      cocktails: valid,
+      ownedIngredientIds: cocktailIngredientIds,
+      stapleIngredientIds: stapleIds,
+    });
+    makeableCount = ready.length;
+  } catch (err) {
+    console.error("[BAR PAGE] Failed to compute makeable count:", err);
+  }
+  const shareStats = {
+    ingredientCount: ingredients.length,
+    makeableCount,
+  };
+  const sharePath = getBarSharePath(profile) || `/bar/${slug}`;
 
   return (
     <div className="min-h-screen bg-botanical-gradient py-8 sm:py-16">
@@ -411,21 +451,37 @@ export default async function BarPage({ params }: Props) {
               </div>
               <div className="flex-grow">
                 <h1 className="text-3xl font-serif font-bold text-forest mb-2">
-                  {displayName}'s Bar
+                  {displayName}&apos;s Bar
                 </h1>
                 {profile.username && (
                   <p className="text-sage mb-4">@{profile.username}</p>
                 )}
                   <p className="text-sage">
                     Public bar • {ingredients.length} ingredients
+                    {makeableCount > 0 ? ` • ${makeableCount} cocktails ready` : ""}
                   </p>
                   <PublicBarShare
                     displayName={displayName}
-                    sharePath={getBarSharePath(profile) || `/bar/${slug}`}
+                    sharePath={sharePath}
+                    username={profile.username}
+                    stats={shareStats}
+                  />
+                  <BarStoriesShareActions
+                    displayName={displayName}
+                    sharePath={sharePath}
+                    username={profile.username}
+                    avatarUrl={profile.avatar_url}
+                    stats={shareStats}
+                    mode="recipient"
                   />
               </div>
             </div>
           </div>
+
+          <PublicBarCompare
+            displayName={firstName}
+            theirIngredients={ingredients}
+          />
 
           {/* Bar Content */}
           <BarProfile
@@ -438,7 +494,11 @@ export default async function BarPage({ params }: Props) {
             userId={profile.id}
           />
 
-          <PublicBarJoinCta />
+          <PublicBarJoinCta
+            displayName={firstName}
+            makeableCount={makeableCount}
+            ingredientCount={ingredients.length}
+          />
         </div>
       </MainContainer>
     </div>

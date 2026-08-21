@@ -2,26 +2,48 @@
 
 import { useState } from "react";
 import { ShareIcon, LinkIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
 import { useToast } from "@/components/ui/toast";
+import {
+  buildBarShareCopy,
+  withBarShareUtm,
+  type BarShareStats,
+} from "@/lib/barShare";
+import { trackContentShared } from "@/lib/analytics";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 interface PublicBarShareProps {
   displayName: string;
   sharePath: string;
+  username?: string | null;
+  stats?: BarShareStats;
 }
 
-export function PublicBarShare({ displayName, sharePath }: PublicBarShareProps) {
+export function PublicBarShare({
+  displayName,
+  sharePath,
+  username,
+  stats,
+}: PublicBarShareProps) {
   const toast = useToast();
   const [copied, setCopied] = useState(false);
 
   const getUrl = () => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return `${origin}${sharePath}`;
+    const base = `${origin}${sharePath}`;
+    return withBarShareUtm(base, {
+      medium: isNativeApp() ? "app" : "web",
+      campaign: "reshare_public_bar",
+      content: username || sharePath.replace("/bar/", ""),
+    });
   };
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(getUrl());
       setCopied(true);
+      void trackContentShared("bar", "copy_link", { path: sharePath, role: "recipient" });
       toast.success("Link copied");
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -31,12 +53,38 @@ export function PublicBarShare({ displayName, sharePath }: PublicBarShareProps) 
 
   const handleShare = async () => {
     const url = getUrl();
+    const { title, text } = buildBarShareCopy(
+      { display_name: displayName, username },
+      stats,
+      { forRecipient: true }
+    );
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Share.share({
+          title,
+          text,
+          url,
+          dialogTitle: `Share ${displayName}'s bar`,
+        });
+        void trackContentShared("bar", "native_share", {
+          path: sharePath,
+          role: "recipient",
+          medium: "capacitor",
+        });
+        return;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+      }
+    }
+
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({
-          title: `${displayName}'s MixWise bar`,
-          text: `See what ${displayName} can mix at home.`,
-          url,
+        await navigator.share({ title, text, url });
+        void trackContentShared("bar", "native_share", {
+          path: sharePath,
+          role: "recipient",
+          medium: "web_share",
         });
         return;
       } catch (err) {

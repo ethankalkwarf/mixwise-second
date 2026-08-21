@@ -11,6 +11,7 @@ import {
   LinkIcon,
   ShareIcon,
 } from "@heroicons/react/24/outline";
+import { withShareUtm } from "@/lib/analytics/utm";
 
 interface CocktailShareCardProps {
   cocktail: {
@@ -72,8 +73,14 @@ export function CocktailShareCard({ cocktail }: CocktailShareCardProps) {
     }
   };
 
+  const cocktailShareUrl = (medium: string) =>
+    withShareUtm(`${window.location.origin}/cocktails/${cocktail.slug}`, {
+      medium,
+      content: cocktail.slug,
+    });
+
   const handleCopyLink = async () => {
-    const url = `${window.location.origin}/cocktails/${cocktail.slug}`;
+    const url = cocktailShareUrl("copy_link");
 
     try {
       await navigator.clipboard.writeText(url);
@@ -84,7 +91,7 @@ export function CocktailShareCard({ cocktail }: CocktailShareCardProps) {
   };
 
   const handleNativeShare = async () => {
-    const url = `${window.location.origin}/cocktails/${cocktail.slug}`;
+    const url = cocktailShareUrl("web_share");
 
     if (navigator.share) {
       try {

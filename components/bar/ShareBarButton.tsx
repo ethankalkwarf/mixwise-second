@@ -3,6 +3,8 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { ShareIcon, CheckIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
 import { useUser } from "@/components/auth/UserProvider";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
@@ -10,8 +12,15 @@ import { useToast } from "@/components/ui/toast";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { awardSharingBadge } from "@/lib/badgeEngine";
 import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
-import { getBarSharePath, getBarShareUrl } from "@/lib/barShare";
+import {
+  buildBarShareCopy,
+  getBarSharePath,
+  getBarShareUrl,
+  withBarShareUtm,
+  type BarShareStats,
+} from "@/lib/barShare";
 import { trackContentShared } from "@/lib/analytics";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 type ShareBarVariant = "cta" | "menu" | "inline";
 
@@ -21,6 +30,8 @@ interface ShareBarButtonProps {
   onShared?: () => void;
   /** When false, skip the preview link next to the CTA. */
   showPreview?: boolean;
+  /** Optional counts for dynamic share copy. */
+  stats?: BarShareStats;
 }
 
 export function ShareBarButton({
@@ -28,6 +39,7 @@ export function ShareBarButton({
   className,
   onShared,
   showPreview = true,
+  stats,
 }: ShareBarButtonProps) {
   const { user, profile, isAuthenticated, isLoading: authLoading } = useUser();
   const { preferences, isLoading: preferencesLoading, updatePreferences } = useUserPreferences();
@@ -53,8 +65,8 @@ export function ShareBarButton({
     }
 
     const origin = window.location.origin;
-    const url = getBarShareUrl(origin, profile);
-    if (!url) {
+    const baseUrl = getBarShareUrl(origin, profile);
+    if (!baseUrl) {
       toast.error("Set a username in Account to get a shareable bar link.");
       onShared?.();
       return;
@@ -70,20 +82,47 @@ export function ShareBarButton({
         }
       }
 
-      const sharePayload = {
-        title: profile?.display_name
-          ? `${profile.display_name}'s MixWise bar`
-          : "My MixWise bar",
-        text: "Here's what I can mix at home.",
-        url,
-      };
+      const medium = isNativeApp() ? "app" : "web";
+      const url = withBarShareUtm(baseUrl, {
+        medium,
+        content: getBarSharePath(profile)?.replace("/bar/", "") || undefined,
+      });
+      const { title, text } = buildBarShareCopy(profile, stats);
 
       let usedNativeShare = false;
-      if (typeof navigator.share === "function") {
+
+      if (Capacitor.isNativePlatform()) {
         try {
-          await navigator.share(sharePayload);
+          await Share.share({
+            title,
+            text,
+            url,
+            dialogTitle: "Share My Bar",
+          });
           usedNativeShare = true;
-          void trackContentShared("bar", "native_share", { path: sharePath });
+          void trackContentShared("bar", "native_share", {
+            path: sharePath,
+            medium: "capacitor",
+            makeable_count: stats?.makeableCount,
+            ingredient_count: stats?.ingredientCount,
+          });
+        } catch (err) {
+          if ((err as Error).name === "AbortError") {
+            return;
+          }
+        }
+      }
+
+      if (!usedNativeShare && typeof navigator.share === "function") {
+        try {
+          await navigator.share({ title, text, url });
+          usedNativeShare = true;
+          void trackContentShared("bar", "native_share", {
+            path: sharePath,
+            medium: "web_share",
+            makeable_count: stats?.makeableCount,
+            ingredient_count: stats?.ingredientCount,
+          });
         } catch (err) {
           if ((err as Error).name === "AbortError") {
             return;
@@ -95,11 +134,16 @@ export function ShareBarButton({
         await navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-        void trackContentShared("bar", "copy_link", { path: sharePath });
+        void trackContentShared("bar", "copy_link", {
+          path: sharePath,
+          medium,
+          makeable_count: stats?.makeableCount,
+          ingredient_count: stats?.ingredientCount,
+        });
         toast.success(
           isPublic ? "Bar link copied — send it to a friend." : "Your bar is public. Link copied!",
           5000,
-          { label: "View public bar", href: url.replace(origin, "") }
+          { label: "View public bar", href: url.replace(origin, "").split("?")[0] || sharePath || "/" }
         );
       }
 
@@ -126,6 +170,8 @@ export function ShareBarButton({
     toast,
     supabase,
     onShared,
+    sharePath,
+    stats,
   ]);
 
   if (authLoading || (isAuthenticated && preferencesLoading)) {

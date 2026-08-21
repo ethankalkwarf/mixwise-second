@@ -24,6 +24,7 @@ export type AnalyticsSource =
   | "related"
   | "email"
   | "notification"
+  | "share"
   | "unknown";
 
 function baseProps(extra?: Record<string, unknown>): Record<string, unknown> {
@@ -42,14 +43,23 @@ export function inferCocktailViewSource(
     (typeof window !== "undefined" ? window.location.search : "");
   const params = new URLSearchParams(qs.startsWith("?") ? qs.slice(1) : qs);
   const from = params.get("from") || params.get("src") || params.get("utm_medium");
+  const utmSource = params.get("utm_source");
 
   if (from === "mix" || path.startsWith("/mix")) return "mix";
   if (from === "search" || params.get("q")) return "search";
   if (from === "saved" || path.startsWith("/saved")) return "saved";
   if (from === "learn" || path.startsWith("/learn")) return "learn";
   if (from === "related") return "related";
-  if (from === "email" || params.get("utm_source") === "resend") return "email";
+  if (from === "email" || utmSource === "resend") return "email";
   if (from === "notification" || params.get("utm_medium") === "push") return "notification";
+  if (
+    from === "cocktail_share" ||
+    from === "share" ||
+    utmSource === "cocktail_share" ||
+    utmSource === "bar_share"
+  ) {
+    return "share";
+  }
   if (from === "home" || path === "/" || path === "/dashboard") return "home";
   if (from === "deep_link" || params.get("mixwise_app") === "1") return "deep_link";
   if (path.startsWith("/cocktails") && !path.includes("/", 11)) return "browse";

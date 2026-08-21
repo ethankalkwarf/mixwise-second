@@ -13,7 +13,7 @@ import {
   registerNativeOAuthListener,
 } from "@/lib/mobile/nativeOAuth";
 import { prefetchNativeCatalog } from "@/lib/mobile/prefetchNativeData";
-import { requestInAppNavigation } from "@/lib/mobile/deepLinks";
+import { pathFromUniversalLink, requestInAppNavigation } from "@/lib/mobile/deepLinks";
 import { isNativeOAuthCallbackUrl } from "@/lib/mobile/authRedirect";
 
 /**
@@ -84,8 +84,8 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
             ) {
               await handleNativeOAuthCallback(launch.url);
             } else {
-              const path = new URL(launch.url).pathname;
-              if (path.startsWith("/")) {
+              const path = pathFromUniversalLink(launch.url);
+              if (path) {
                 requestInAppNavigation(path, "universal_link");
               }
             }

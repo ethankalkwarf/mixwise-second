@@ -113,8 +113,19 @@ const nextConfig = {
   // Long-lived caches are for production hashed assets only.
   // In dev, immutable /_next/static caching serves stale JS and breaks hydration.
   async headers() {
+    const aasaHeaders = [
+      {
+        source: "/.well-known/apple-app-site-association",
+        headers: [
+          { key: "Content-Type", value: "application/json" },
+          { key: "Cache-Control", value: "public, max-age=3600" },
+        ],
+      },
+    ];
+
     if (process.env.NODE_ENV !== "production") {
       return [
+        ...aasaHeaders,
         {
           source: "/_next/static/(.*)",
           headers: [
@@ -128,6 +139,7 @@ const nextConfig = {
     }
 
     return [
+      ...aasaHeaders,
       {
         source: "/api/cocktails/(.*)",
         headers: [
