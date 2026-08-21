@@ -8,6 +8,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Ensure GIDSignIn has a configuration even before JS initialize runs.
+        if let clientID = Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String, !clientID.isEmpty {
+            let serverClientID =
+                "200787084084-p94m1d02kjnjgdc7o56ggimo4rg1c6ns.apps.googleusercontent.com"
+            GIDSignIn.sharedInstance.configuration = GIDConfiguration(
+                clientID: clientID,
+                serverClientID: serverClientID
+            )
+        }
         return true
     }
 

@@ -649,6 +649,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     // Temporary proof for TestFlight — remove once Google path is verified.
     if (typeof window !== "undefined" && (nativeApp || oauthNative || capNative)) {
+      let pluginVersion = "?";
+      try {
+        const { SocialLogin } = await import("@capgo/capacitor-social-login");
+        const ver = await SocialLogin.getPluginVersion();
+        pluginVersion = ver?.version ?? JSON.stringify(ver);
+      } catch (e) {
+        pluginVersion = `err:${e instanceof Error ? e.message : String(e)}`;
+      }
       window.alert(
         [
           "MixWise Google path (debug)",
@@ -656,9 +664,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           `path: ${useIdToken ? "NATIVE_ID_TOKEN" : "BROWSER_OAUTH"}`,
           `isNativeApp: ${nativeApp}`,
           `SocialLogin plugin: ${socialLogin}`,
+          `SocialLogin version: ${pluginVersion}`,
           "",
-          "After OK, Google may show a browser-looking sheet (normal).",
-          "Tell us: did you return to MixWise, or get stuck in the Safari app?",
+          "After OK: return to MixWise, or stuck in Safari app?",
         ].join("\n")
       );
     }

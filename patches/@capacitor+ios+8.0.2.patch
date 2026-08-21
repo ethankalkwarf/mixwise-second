@@ -1,0 +1,56 @@
+diff --git a/node_modules/@capacitor/ios/Capacitor/Capacitor/WebViewDelegationHandler.swift b/node_modules/@capacitor/ios/Capacitor/Capacitor/WebViewDelegationHandler.swift
+index 2b4a256..02b0ff1 100644
+--- a/node_modules/@capacitor/ios/Capacitor/Capacitor/WebViewDelegationHandler.swift
++++ b/node_modules/@capacitor/ios/Capacitor/Capacitor/WebViewDelegationHandler.swift
+@@ -106,6 +106,14 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
+             navURL.absoluteString.starts(with: bridge.config.localURL.absoluteString)
+ 
+         if !isApplicationNavigation, toplevelNavigation {
++            // Google OAuth must stay in ASWebAuthenticationSession / GIDSignIn.
++            // Opening these URLs via UIApplication.open leaves the user stuck in Safari.app
++            // while the Capacitor app may still complete auth in the background.
++            if Self.isGoogleOAuthURL(navURL) {
++                CAPLog.print("⚡️  MixWise: blocked Safari open for Google OAuth navigation: \(navURL.absoluteString)")
++                decisionHandler(.cancel)
++                return
++            }
+             // disallow and let the system handle it
+             if UIApplication.shared.applicationState == .active {
+                 UIApplication.shared.open(navURL, options: [:], completionHandler: nil)
+@@ -327,11 +335,36 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
+ 
+     open func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+         if let url = navigationAction.request.url {
++            // Capgo's web Google fallback uses window.open → this Capacitor hook → Safari.app.
++            // Native Google Sign-In must not be hijacked into the system browser.
++            if Self.isGoogleOAuthURL(url) {
++                CAPLog.print("⚡️  MixWise: blocked Safari open for Google OAuth window.open: \(url.absoluteString)")
++                return nil
++            }
+             UIApplication.shared.open(url, options: [:], completionHandler: nil)
+         }
+         return nil
+     }
+ 
++    /// True for Google account / OAuth hosts that must never be handed to Safari.app.
++    private static func isGoogleOAuthURL(_ url: URL) -> Bool {
++        guard let host = url.host?.lowercased() else { return false }
++        if host == "accounts.google.com" || host.hasSuffix(".accounts.google.com") {
++            return true
++        }
++        if host == "oauth2.googleapis.com" ||
++            (host.hasSuffix(".googleapis.com") && url.path.contains("oauth")) {
++            return true
++        }
++        if host.contains("googleusercontent.com") {
++            return true
++        }
++        if host == "www.google.com" || host == "google.com" {
++            return url.path.contains("/o/oauth") || url.path.contains("/oauth")
++        }
++        return false
++    }
++
+     // MARK: - UIScrollViewDelegate
+ 
+     // disable zooming in WKWebView ScrollView
