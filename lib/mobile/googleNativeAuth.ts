@@ -191,10 +191,10 @@ export async function signInWithGoogleNative(retry = false): Promise<void> {
 
   debugLog("[GoogleNativeAuth] Signed in with native Google ID token");
 
+  // Do not hard-navigate. A full reload races Google's dismiss and AuthDialog's
+  // isAuthenticated effect already closes the sheet + routes in-app.
   if (typeof window !== "undefined") {
-    const target = new URL("/", window.location.origin);
-    target.searchParams.set("mixwise_app", "1");
-    window.location.href = target.toString();
+    window.dispatchEvent(new CustomEvent("mixwise:nativeGoogleSignedIn"));
   }
 }
 

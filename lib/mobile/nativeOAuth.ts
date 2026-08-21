@@ -269,9 +269,10 @@ export function registerNativeOAuthListener(): () => void {
     void handleNativeOAuthCallback(url)
       .then((handled) => {
         if (handled) return;
-        if (url.startsWith("http") && !url.includes(NATIVE_OAUTH_BRIDGE_PATH)) {
-          window.location.href = url;
-        }
+        // Never assign arbitrary https URLs into the WebView. After Google Sign-In,
+        // iOS may deliver accounts.google.com (or similar) here; loading that in
+        // WKWebView makes Capacitor hand the URL to Safari.app and leave the user there.
+        debugLog("[NativeOAuth] Ignoring non-callback appUrlOpen:", url);
       })
       .catch((error) => {
         console.error("[NativeOAuth] appUrlOpen handler failed:", error);
