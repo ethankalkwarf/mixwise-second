@@ -697,11 +697,11 @@ export default function AccountPage() {
     </section>
   );
 
-  const sharingSection = (
+  const publicBarSection = (
     <section className={cardClass}>
       <div className="border-b border-mist/80 px-5 py-4 sm:px-6">
-        <h2 className={sectionTitleClass}>Sharing &amp; email</h2>
-        <p className={rowDescClass}>Who can see your bar, and what we send you</p>
+        <h2 className={sectionTitleClass}>Public bar</h2>
+        <p className={rowDescClass}>Who can see your cabinet and share link</p>
       </div>
 
       <div className="divide-y divide-mist/80">
@@ -814,37 +814,45 @@ export default function AccountPage() {
             </p>
           </div>
         )}
+      </div>
+    </section>
+  );
 
-        <div className="px-5 py-4 sm:px-6">
-          <div className="mb-3 flex items-center gap-2">
-            <EnvelopeIcon className="h-5 w-5 text-sage" />
-            <p className={rowTitleClass}>Email</p>
-          </div>
-          {emailPrefsLoading ? (
-            <div className="h-12 animate-pulse rounded-xl bg-mist/50" />
-          ) : (
-            <div className="flex items-start justify-between gap-4">
+  const emailSection = (
+    <section className={cardClass}>
+      <div className="border-b border-mist/80 px-5 py-4 sm:px-6">
+        <h2 className={sectionTitleClass}>Email</h2>
+        <p className={rowDescClass}>What MixWise sends to your inbox</p>
+      </div>
+
+      <div className="px-5 py-4 sm:px-6">
+        {emailPrefsLoading ? (
+          <div className="h-12 animate-pulse rounded-xl bg-mist/50" />
+        ) : (
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-start gap-3">
+              <EnvelopeIcon className="mt-0.5 h-5 w-5 shrink-0 text-sage" />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-forest">MixWise emails</p>
+                <p className={rowTitleClass}>MixWise emails</p>
                 <p className={rowDescClass}>
                   {emailPrefsError
                     ? emailPrefsError
                     : "Welcome tips, weekly cocktail inspiration, and updates"}
                 </p>
               </div>
-              <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
-                <input
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={emailSubscribed}
-                  onChange={(e) => updateEmailPref(e.target.checked)}
-                  disabled={emailPrefsSaving}
-                />
-                <div className="peer h-6 w-11 rounded-full bg-stone/30 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white after:bg-white after:transition-all after:content-[''] peer-checked:bg-terracotta peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 disabled:opacity-50"></div>
-              </label>
             </div>
-          )}
-        </div>
+            <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
+              <input
+                type="checkbox"
+                className="peer sr-only"
+                checked={emailSubscribed}
+                onChange={(e) => updateEmailPref(e.target.checked)}
+                disabled={emailPrefsSaving}
+              />
+              <div className="peer h-6 w-11 rounded-full bg-stone/30 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white after:bg-white after:transition-all after:content-[''] peer-checked:bg-terracotta peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 disabled:opacity-50"></div>
+            </label>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -978,14 +986,15 @@ export default function AccountPage() {
               </button>
               <div className="min-w-0 flex-1">
                 <h1 className="font-display text-2xl font-bold text-forest">Account</h1>
-                <p className="text-sm text-sage">Profile, sharing, and preferences</p>
+                <p className="text-sm text-sage">Profile, public bar, and email</p>
               </div>
             </div>
           </div>
           <div className="space-y-4 px-4 pt-4">
             {profileSection}
             {friendsLink}
-            {sharingSection}
+            {publicBarSection}
+            {emailSection}
             {shortcutsSection}
           </div>
         </PullToRefreshContainer>
@@ -998,11 +1007,12 @@ export default function AccountPage() {
     <div className="mx-auto max-w-xl space-y-8">
       <header>
         <h1 className="font-serif text-3xl font-bold text-forest">Account</h1>
-        <p className="mt-1 text-sm text-sage">Profile, sharing, and preferences</p>
+        <p className="mt-1 text-sm text-sage">Profile, public bar, and email</p>
       </header>
       {profileSection}
       {friendsLink}
-      {sharingSection}
+      {publicBarSection}
+      {emailSection}
       {shortcutsSection}
     </div>
   );
@@ -1011,13 +1021,14 @@ export default function AccountPage() {
     <div className="mx-auto max-w-5xl lg:max-w-6xl">
       <header className="mb-8">
         <h1 className="font-serif text-3xl font-bold text-forest lg:text-4xl">Account</h1>
-        <p className="mt-1.5 text-sm text-sage">Profile, sharing, and preferences</p>
+        <p className="mt-1.5 text-sm text-sage">Profile, public bar, and email</p>
       </header>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(280px,400px)_minmax(0,1fr)] md:items-start lg:gap-8">
         <div className="md:sticky md:top-24 space-y-6">{profileSection}</div>
         <div className="space-y-6">
           {friendsLink}
-          {sharingSection}
+          {publicBarSection}
+          {emailSection}
           {shortcutsSection}
         </div>
       </div>
