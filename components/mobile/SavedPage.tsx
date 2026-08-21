@@ -37,6 +37,7 @@ import { refreshNativeShellData } from "@/lib/mobile/refreshNativeData";
 import { AppLink } from "@/components/mobile/AppLink";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
 import { NativeFriendsPromoCard } from "@/components/friends/NativeFriendsPromoCard";
+import { NativePublicProfileCard } from "@/components/mobile/NativePublicProfileCard";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
@@ -202,6 +203,7 @@ function SavedPageContent() {
           <>
             <NativeNamePrompt />
 
+            {isAuthenticated ? <NativePublicProfileCard /> : null}
             {isAuthenticated ? <NativeFriendsPromoCard /> : null}
 
             <div className="mb-6">

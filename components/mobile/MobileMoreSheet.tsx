@@ -104,7 +104,7 @@ export function MobileMoreSheet() {
         {
           href: publicBarPath,
           label: "My public bar",
-          description: "How friends see your cabinet",
+          description: "Profile, soundtrack & share link",
           icon: EyeIcon,
         },
         ...TOOL_ROWS,

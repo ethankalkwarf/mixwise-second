@@ -9,6 +9,7 @@ import { ListeningTrackPicker } from "@/components/account/ListeningTrackPicker"
 import { getMixologistTier } from "@/lib/mixologistTiers";
 import { listeningUnlocked } from "@/lib/listening";
 import { getBarSharePath } from "@/lib/barShare";
+import { getShareOrigin } from "@/lib/shareOrigin";
 import { optimizeAvatarUrl } from "@/lib/avatarUrl";
 import {
   UserCircleIcon,
@@ -22,6 +23,7 @@ import {
   TrophyIcon,
   UsersIcon,
   EyeIcon,
+  MusicalNoteIcon,
 } from "@heroicons/react/24/outline";
 import { debugLog } from "@/lib/debugLog";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
@@ -571,7 +573,7 @@ export default function AccountPage() {
 
   const copyPublicBarLink = () => {
     if (!publicBarPath) return;
-    const url = `${window.location.origin}${publicBarPath}`;
+    const url = `${getShareOrigin()}${publicBarPath}`;
     void navigator.clipboard.writeText(url);
     toast.success("Public bar link copied");
   };
@@ -667,7 +669,7 @@ export default function AccountPage() {
           {!preferences?.public_bar_enabled && " (enable Public Bar below)"}
         </p>
       </div>
-      <div className="border-t border-mist/70 pt-4">
+      <div id="account-soundtrack" className="border-t border-mist/70 pt-4 scroll-mt-24">
         <ListeningTrackPicker
           deezerId={profile?.listening_deezer_id}
           trackName={profile?.listening_track_name}
@@ -1030,10 +1032,77 @@ export default function AccountPage() {
     <section className={cardClass}>
       <div className="border-b border-mist/70 px-5 py-4 sm:px-6">
         <h2 className={sectionTitleClass}>More</h2>
-        <p className={rowDescClass}>Friends, badges, and session</p>
+        <p className={rowDescClass}>Public profile, friends, and share</p>
       </div>
       <div className="divide-y divide-mist/70">
+        {showPublicBarLink ? (
+          <AppLink
+            href={publicBarPath!}
+            className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-mist/40 sm:px-6"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <EyeIcon className="h-5 w-5 shrink-0 text-olive" />
+              <div className="min-w-0">
+                <p className={rowTitleClass}>My public profile</p>
+                <p className={rowDescClass}>
+                  {profile?.username ? `@${profile.username}` : "See how friends view your bar"}
+                </p>
+              </div>
+            </div>
+            <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+          </AppLink>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              if (!profile?.username && !profile?.public_slug) {
+                setShowUsernameInput(true);
+                return;
+              }
+              void handleTogglePublicBar(true);
+            }}
+            className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors hover:bg-mist/40 sm:px-6"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <GlobeAltIcon className="h-5 w-5 shrink-0 text-olive" />
+              <div className="min-w-0">
+                <p className={rowTitleClass}>Turn on public profile</p>
+                <p className={rowDescClass}>Required before friends can open your link</p>
+              </div>
+            </div>
+            <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+          </button>
+        )}
+
+        <ShareBarButton
+          variant="menu"
+          className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-sm font-semibold text-forest transition-colors hover:bg-mist/40 hover:text-terracotta disabled:opacity-50 sm:px-6"
+        />
+
         {friendsLink}
+
+        <button
+          type="button"
+          onClick={() => {
+            const el = document.getElementById("account-soundtrack");
+            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+          className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors hover:bg-mist/40 sm:px-6"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <MusicalNoteIcon className="h-5 w-5 shrink-0 text-olive" />
+            <div className="min-w-0">
+              <p className={rowTitleClass}>Bar soundtrack</p>
+              <p className={rowDescClass}>
+                {profile?.listening_track_name
+                  ? `${profile.listening_track_name} · ${profile.listening_track_artist}`
+                  : "Add a song to your public bar"}
+              </p>
+            </div>
+          </div>
+          <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+        </button>
+
         <AppLink
           href="/badges"
           className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-mist/40 sm:px-6"
@@ -1075,13 +1144,6 @@ export default function AccountPage() {
           <span className={`min-w-0 flex-1 ${rowTitleClass}`}>Clear history</span>
           <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
         </button>
-
-        {ingredientIds.length > 0 && !isDesktop && (
-          <ShareBarButton
-            variant="menu"
-            className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-sm font-semibold text-forest transition-colors hover:bg-mist/40 hover:text-terracotta disabled:opacity-50 sm:px-6"
-          />
-        )}
 
         <button
           type="button"

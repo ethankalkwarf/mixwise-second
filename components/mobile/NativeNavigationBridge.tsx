@@ -2,12 +2,12 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { NATIVE_NAV_EVENT } from "@/lib/mobile/deepLinks";
+import { NATIVE_NAV_EVENT, consumePendingDeepLink } from "@/lib/mobile/deepLinks";
 import { navigateInApp } from "@/lib/mobile/navigate";
 import { isNativeApp } from "@/lib/mobile/platform";
 
 function sameOriginPath(href: string): string | null {
-  if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+  if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("sms:")) {
     return null;
   }
   if (href.startsWith("/") && !href.startsWith("//")) {
@@ -33,6 +33,13 @@ export function NativeNavigationBridge() {
     };
 
     window.addEventListener(NATIVE_NAV_EVENT, onNav);
+
+    // Cold-start Universal Links may fire before this bridge mounts.
+    const pending = consumePendingDeepLink();
+    if (pending?.href) {
+      navigateInApp(router, pending.href);
+    }
+
     return () => window.removeEventListener(NATIVE_NAV_EVENT, onNav);
   }, [router]);
 

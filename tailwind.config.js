@@ -43,7 +43,7 @@ module.exports = {
         "3xl": "2rem"
       },
       boxShadow: {
-        'terracotta': '0 10px 25px -5px rgba(188, 90, 69, 0.2)',
+        'terracotta': '0 4px 12px -2px rgba(188, 90, 69, 0.22)',
         'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.08)',
         'card': '0 8px 30px -8px rgba(0, 0, 0, 0.1)',
         'card-hover': '0 20px 40px -12px rgba(0, 0, 0, 0.15)',

@@ -20,6 +20,8 @@ import { debugLog } from "@/lib/debugLog";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { FollowButton } from "@/components/bar/FollowButton";
 import { ListeningTrackPlayer } from "@/components/bar/ListeningTrackPlayer";
+import { NativeBarChrome } from "@/components/bar/NativeBarChrome";
+import { OwnerListeningEditor } from "@/components/bar/OwnerListeningEditor";
 import { getPublicMixologistTier } from "@/lib/mixologistTier.server";
 import { optimizeAvatarUrl } from "@/lib/avatarUrl";
 
@@ -492,10 +494,17 @@ export default async function BarPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-botanical-gradient py-8 sm:py-16">
+    <div
+      data-public-bar-page
+      className="min-h-screen bg-botanical-gradient py-8 sm:py-16"
+    >
       <MainContainer>
         <div className="max-w-4xl mx-auto space-y-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <NativeBarChrome isOwner={isLoggedInOwner} />
+          <div
+            data-web-bar-nav
+            className="flex flex-wrap items-center justify-between gap-3"
+          >
             <Link
               href="/"
               className="inline-flex items-center gap-2 text-sage hover:text-forest transition-colors"
@@ -588,12 +597,19 @@ export default async function BarPage({ params }: Props) {
                     />
                   )}
                   {isLoggedInOwner ? (
-                    <p className="mt-4 text-sm text-sage">
-                      This is how your bar looks to friends.{" "}
-                      <Link href="/account" className="font-medium text-olive hover:text-olive-dark">
-                        Edit photo, bio & username
-                      </Link>
-                    </p>
+                    <>
+                      <OwnerListeningEditor
+                        initialDeezerId={profile.listening_deezer_id}
+                        initialTrackName={profile.listening_track_name}
+                        initialTrackArtist={profile.listening_track_artist}
+                      />
+                      <p data-web-owner-hint className="mt-4 text-sm text-sage">
+                        This is how your bar looks to friends.{" "}
+                        <Link href="/account" className="font-medium text-olive hover:text-olive-dark">
+                          Edit photo, bio & username
+                        </Link>
+                      </p>
+                    </>
                   ) : (
                     <FollowButton userId={profile.id} className="mt-4" />
                   )}

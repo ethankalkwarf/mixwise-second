@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { MagnifyingGlassIcon, MusicalNoteIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/components/ui/toast";
 import { ListeningTrackPlayer } from "@/components/bar/ListeningTrackPlayer";
+import { AppLink } from "@/components/mobile/AppLink";
 import {
   LISTENING_UNLOCK_BADGE_COUNT,
   type ListeningSearchTrack,
@@ -160,12 +160,12 @@ export function ListeningTrackPicker({
           <p className="mt-1 text-sm text-sage">
             Earn {LISTENING_UNLOCK_BADGE_COUNT} achievement badges to put a song on your public bar.
           </p>
-          <Link
+          <AppLink
             href="/badges"
             className="mt-2 inline-block text-sm font-medium text-olive hover:text-olive-dark"
           >
             View badges →
-          </Link>
+          </AppLink>
         </div>
       </div>
     );

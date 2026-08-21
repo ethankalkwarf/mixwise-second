@@ -179,7 +179,7 @@ body {
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold 
            bg-terracotta text-cream shadow-terracotta
-           hover:bg-terracotta-dark hover:shadow-lg hover:shadow-terracotta/30
+           hover:bg-terracotta-dark hover:shadow-md hover:shadow-terracotta/25
            active:scale-95
            transition-all duration-300
            focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-2 focus-visible:ring-offset-cream;
@@ -497,8 +497,23 @@ html.native-app [data-web-collections-chrome],
 html.native-app [data-web-ingredients-chrome],
 html.native-app [data-web-ingredient-chrome],
 html.native-app [data-web-learn-chrome],
+html.native-app [data-web-bar-nav],
+html.native-app [data-web-owner-hint],
 html.native-app footer {
   display: none !important;
+}
+
+html.native-app [data-public-bar-page] {
+  padding-top: 0.5rem;
+  padding-bottom: 7rem;
+}
+
+/* Keep primary CTAs tight in-app — large terracotta glows bleed past card corners. */
+html.native-app .btn-primary {
+  box-shadow: 0 2px 8px -2px rgba(188, 90, 69, 0.28);
+}
+html.native-app .btn-primary:hover {
+  box-shadow: 0 3px 10px -2px rgba(188, 90, 69, 0.32);
 }
 
 html.native-app [data-native-ingredients-page] .native-ingredients__main {

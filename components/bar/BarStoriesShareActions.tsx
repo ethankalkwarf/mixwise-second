@@ -2,6 +2,7 @@
 
 import { withBarShareUtm, type BarShareStats } from "@/lib/barShare";
 import { StoriesShareButtons } from "@/components/share/StoriesShareButtons";
+import { getShareOrigin } from "@/lib/shareOrigin";
 
 type Props = {
   displayName: string;
@@ -123,7 +124,7 @@ export function BarStoriesShareActions({
   stats,
   mode = "owner",
 }: Props) {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://www.getmixwise.com";
+  const origin = getShareOrigin();
   const shareUrl = withBarShareUtm(`${origin}${sharePath}`, {
     medium: "stories",
     campaign: mode === "owner" ? "share_my_bar" : "reshare_public_bar",

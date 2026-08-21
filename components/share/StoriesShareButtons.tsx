@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { toPng } from "html-to-image";
 import { Capacitor } from "@capacitor/core";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
-import { LinkIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { Share } from "@capacitor/share";
+import { LinkIcon, CheckIcon, ShareIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/components/auth/UserProvider";
 import { ActionSheet } from "@/components/mobile/ActionSheet";
@@ -195,7 +196,8 @@ type Props = {
 
 /**
  * Native Instagram / Facebook Stories share using MixwiseStories plugin.
- * Renders nothing on web or when Stories apps / App ID are unavailable.
+ * When Meta apps aren't installed, falls back to Share link / Copy link on native.
+ * Renders nothing on web.
  */
 export function StoriesShareButtons({
   entity,
@@ -214,11 +216,12 @@ export function StoriesShareButtons({
   const { user } = useUser();
   const supabase = getSupabaseClient();
   const stickerRef = useRef<HTMLDivElement>(null);
-  const [busy, setBusy] = useState<"ig" | "fb" | null>(null);
+  const [busy, setBusy] = useState<"ig" | "fb" | "share" | null>(null);
   const [copied, setCopied] = useState(false);
   const [igAvailable, setIgAvailable] = useState(false);
   const [fbAvailable, setFbAvailable] = useState(false);
   const [native, setNative] = useState(false);
+  const [availabilityReady, setAvailabilityReady] = useState(false);
   const [pourPicker, setPourPicker] = useState<{
     platform: "ig" | "fb";
   } | null>(null);
@@ -244,13 +247,27 @@ export function StoriesShareButtons({
   }, []);
 
   useEffect(() => {
-    if (!native || !Capacitor.isNativePlatform()) return;
-    void MixwiseStories.canShareToInstagramStories()
-      .then((r) => setIgAvailable(r.available))
-      .catch(() => setIgAvailable(false));
-    void MixwiseStories.canShareToFacebookStories()
-      .then((r) => setFbAvailable(r.available))
-      .catch(() => setFbAvailable(false));
+    if (!native || !Capacitor.isNativePlatform()) {
+      setAvailabilityReady(true);
+      return;
+    }
+    let cancelled = false;
+    void Promise.all([
+      MixwiseStories.canShareToInstagramStories()
+        .then((r) => r.available)
+        .catch(() => false),
+      MixwiseStories.canShareToFacebookStories()
+        .then((r) => r.available)
+        .catch(() => false),
+    ]).then(([ig, fb]) => {
+      if (cancelled) return;
+      setIgAvailable(ig);
+      setFbAvailable(fb);
+      setAvailabilityReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [native]);
 
   const renderStickerBase64 = useCallback(async () => {
@@ -386,86 +403,154 @@ export function StoriesShareButtons({
     }
   };
 
-  const showStories = native && (igAvailable || fbAvailable) && !!FACEBOOK_APP_ID;
-  if (!showStories) return null;
+  const handleSystemShare = async () => {
+    setBusy("share");
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({
+          title: "MixWise",
+          url: shareUrl,
+          dialogTitle: "Share link",
+        });
+        void trackContentShared(entity, "native_share", {
+          url: shareUrl,
+          from: "stories_fallback",
+        });
+        return;
+      }
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ url: shareUrl });
+        void trackContentShared(entity, "native_share", {
+          url: shareUrl,
+          from: "stories_fallback",
+        });
+        return;
+      }
+      await handleCopy();
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return;
+      // Last resort: copy
+      await handleCopy();
+    } finally {
+      setBusy(null);
+    }
+  };
 
-  const bothPlatforms = igAvailable && fbAvailable;
+  const showIg = native && igAvailable && !!FACEBOOK_APP_ID;
+  const showFb = native && fbAvailable && !!FACEBOOK_APP_ID;
+  const showStories = showIg || showFb;
+  // Always offer a link path on native — Stories buttons disappear when Meta apps aren't installed.
+  const showLinkFallback = native;
+
+  if (!native) return null;
+  // Compact recipe row: only render when Stories apps exist (copy lives elsewhere).
+  if (compact && (!availabilityReady || !showStories)) return null;
+
+  const bothPlatforms = showIg && showFb;
   const btnBase = compact
     ? "inline-flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium disabled:opacity-50 active:scale-[0.98]"
     : "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3.5 text-sm font-semibold tracking-tight disabled:opacity-50 active:scale-[0.98] transition-transform";
 
+  const showSystemShareFallback = availabilityReady && !showStories;
+
   return (
     <div className={className ?? (compact ? "inline-flex flex-wrap items-center gap-2" : "mt-0 space-y-2.5")}>
-      <div
-        className={
-          compact
-            ? "flex flex-wrap gap-2"
-            : bothPlatforms
-              ? "grid grid-cols-2 gap-2"
-              : "grid grid-cols-1 gap-2"
-        }
-      >
-        {igAvailable && (
-          <button
-            type="button"
-            disabled={busy !== null}
-            onClick={() => void shareToStories("ig")}
-            className={`${btnBase} bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white shadow-sm shadow-[#FD1D1D]/25`}
-            aria-label="Share to Instagram Story"
-          >
-            <InstagramGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
-            {!compact && (
-              <span className="min-w-0 truncate">
-                {busy === "ig" ? "Opening…" : "Instagram"}
-              </span>
-            )}
-          </button>
-        )}
-        {fbAvailable && (
-          <button
-            type="button"
-            disabled={busy !== null}
-            onClick={() => void shareToStories("fb")}
-            className={`${btnBase} bg-[#1877F2] text-white shadow-sm shadow-[#1877F2]/30`}
-            aria-label="Share to Facebook Story"
-          >
-            <FacebookGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
-            {!compact && (
-              <span className="min-w-0 truncate">
-                {busy === "fb" ? "Opening…" : "Facebook"}
-              </span>
-            )}
-          </button>
-        )}
-      </div>
-      {!compact && (
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-mist/80 bg-white/60 px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-mist/50 active:scale-[0.98]"
-        >
-          {copied ? <CheckIcon className="h-4 w-4 text-forest" /> : <LinkIcon className="h-4 w-4 text-sage" />}
-          {copied ? "Copied" : "Copy link"}
-        </button>
-      )}
-
-      <div
-        className="pointer-events-none fixed left-0 top-0 -z-10 opacity-0"
-        aria-hidden
-        style={{ width: stickerWidth, height: stickerHeight }}
-      >
+      {showStories ? (
         <div
-          ref={stickerRef}
-          style={{
-            width: stickerWidth,
-            height: stickerHeight,
-            overflow: "hidden",
-            background: "transparent",
-          }}
+          className={
+            compact
+              ? "flex flex-wrap gap-2"
+              : bothPlatforms
+                ? "grid grid-cols-2 gap-2"
+                : "grid grid-cols-1 gap-2"
+          }
         >
-          {sticker}
+          {showIg && (
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => void shareToStories("ig")}
+              className={`${btnBase} bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white shadow-sm shadow-[#FD1D1D]/25`}
+              aria-label="Share to Instagram Story"
+            >
+              <InstagramGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+              {!compact && (
+                <span className="min-w-0 truncate">
+                  {busy === "ig" ? "Opening…" : "Instagram"}
+                </span>
+              )}
+            </button>
+          )}
+          {showFb && (
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => void shareToStories("fb")}
+              className={`${btnBase} bg-[#1877F2] text-white shadow-sm shadow-[#1877F2]/30`}
+              aria-label="Share to Facebook Story"
+            >
+              <FacebookGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+              {!compact && (
+                <span className="min-w-0 truncate">
+                  {busy === "fb" ? "Opening…" : "Facebook"}
+                </span>
+              )}
+            </button>
+          )}
         </div>
-      </div>
+      ) : null}
+
+      {!compact && showLinkFallback ? (
+        <div
+          className={
+            showStories || !showSystemShareFallback
+              ? "space-y-2.5"
+              : "grid grid-cols-1 gap-2 sm:grid-cols-2"
+          }
+        >
+          {showSystemShareFallback ? (
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => void handleSystemShare()}
+              className={`${btnBase} bg-olive text-cream shadow-sm`}
+            >
+              <ShareIcon className="h-[1.125rem] w-[1.125rem]" />
+              <span className="min-w-0 truncate">
+                {busy === "share" ? "Sharing…" : "Share link"}
+              </span>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => void handleCopy()}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-mist/80 bg-white/60 px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-mist/50 active:scale-[0.98]"
+          >
+            {copied ? <CheckIcon className="h-4 w-4 text-forest" /> : <LinkIcon className="h-4 w-4 text-sage" />}
+            {copied ? "Copied" : "Copy link"}
+          </button>
+        </div>
+      ) : null}
+
+      {showStories ? (
+        <div
+          className="pointer-events-none fixed left-0 top-0 -z-10 opacity-0"
+          aria-hidden
+          style={{ width: stickerWidth, height: stickerHeight }}
+        >
+          <div
+            ref={stickerRef}
+            style={{
+              width: stickerWidth,
+              height: stickerHeight,
+              overflow: "hidden",
+              background: "transparent",
+            }}
+          >
+            {sticker}
+          </div>
+        </div>
+      ) : null}
 
       <ActionSheet
         isOpen={pourPicker !== null}

@@ -3,6 +3,7 @@
 import { trackDeepLinkOpened } from "@/lib/analytics";
 
 export const NATIVE_NAV_EVENT = "mixwise:native-nav";
+export const PENDING_DEEP_LINK_KEY = "mixwise_pending_deep_link";
 
 const UNIVERSAL_LINK_HOSTS = new Set([
   "www.getmixwise.com",
@@ -12,6 +13,8 @@ const UNIVERSAL_LINK_HOSTS = new Set([
 /** Paths we intentionally open inside the native shell via Universal Links. */
 const IN_APP_PATH_PREFIXES = [
   "/bar/",
+  "/invite/",
+  "/friends",
   "/cocktails/",
   "/ingredients/",
   "/learn",
@@ -19,12 +22,13 @@ const IN_APP_PATH_PREFIXES = [
   "/dashboard",
   "/saved",
   "/account",
+  "/badges",
   "/occasions",
   "/make-with/",
 ];
 
 function isAllowedInAppPath(pathname: string): boolean {
-  if (pathname === "/" || pathname === "/mix") return true;
+  if (pathname === "/" || pathname === "/mix" || pathname === "/friends") return true;
   return IN_APP_PATH_PREFIXES.some(
     (prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix)
   );
@@ -72,5 +76,33 @@ export function requestInAppNavigation(
   if (typeof window === "undefined") return;
   if (!href.startsWith("/") || href.startsWith("//")) return;
   void trackDeepLinkOpened(href, origin);
+
+  // Persist so cold-start links survive until NativeNavigationBridge mounts.
+  try {
+    sessionStorage.setItem(
+      PENDING_DEEP_LINK_KEY,
+      JSON.stringify({ href, origin, at: Date.now() })
+    );
+  } catch {
+    /* private mode */
+  }
+
   window.dispatchEvent(new CustomEvent(NATIVE_NAV_EVENT, { detail: { href, origin } }));
+}
+
+/** Consume a pending deep link (once) after the native shell is ready. */
+export function consumePendingDeepLink(): { href: string; origin: string } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(PENDING_DEEP_LINK_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(PENDING_DEEP_LINK_KEY);
+    const parsed = JSON.parse(raw) as { href?: string; origin?: string; at?: number };
+    if (!parsed.href || !parsed.href.startsWith("/")) return null;
+    // Ignore stale links older than 2 minutes.
+    if (parsed.at && Date.now() - parsed.at > 120_000) return null;
+    return { href: parsed.href, origin: parsed.origin || "deep_link" };
+  } catch {
+    return null;
+  }
 }
