@@ -31,16 +31,62 @@ function FacebookGlyph({ className }: { className?: string }) {
   );
 }
 
+/** Load a remote image as a JPEG data URL for Stories backgroundImage. */
+async function imageUrlToDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { mode: "cors", credentials: "omit" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    // CORS fallback: draw via Image + canvas
+    try {
+      const dataUrl = await new Promise<string | null>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth || 1080;
+            canvas.height = img.naturalHeight || 1920;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              resolve(null);
+              return;
+            }
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL("image/jpeg", 0.92));
+          } catch {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+      return dataUrl;
+    } catch {
+      return null;
+    }
+  }
+}
+
 export type StoriesEntity = "bar" | "cocktail" | "other";
 
 type Props = {
   entity: StoriesEntity;
   /** Absolute or path share URL (will be copied / attributed by caller). */
   shareUrl: string;
-  /** Offscreen sticker content — rendered at 720×900. */
+  /** Offscreen sticker content — prefer transparent text-only stickers. */
   sticker: ReactNode;
   stickerWidth?: number;
   stickerHeight?: number;
+  /** Optional drink/photo URL used as the full Stories background layer. */
+  backgroundImageUrl?: string;
   backgroundTopColor?: string;
   backgroundBottomColor?: string;
   className?: string;
@@ -58,6 +104,7 @@ export function StoriesShareButtons({
   sticker,
   stickerWidth = 720,
   stickerHeight = 900,
+  backgroundImageUrl,
   backgroundTopColor = "#1F3A2E",
   backgroundBottomColor = "#5C4033",
   className,
@@ -89,11 +136,16 @@ export function StoriesShareButtons({
 
   const renderStickerBase64 = useCallback(async () => {
     if (!stickerRef.current) throw new Error("Sticker not ready");
+    // Transparent PNG so Instagram shows text only — no solid “card” box.
     return toPng(stickerRef.current, {
       cacheBust: true,
       pixelRatio: 2,
       width: stickerWidth,
       height: stickerHeight,
+      backgroundColor: null as unknown as string,
+      style: {
+        background: "transparent",
+      },
     });
   }, [stickerWidth, stickerHeight]);
 
@@ -117,13 +169,22 @@ export function StoriesShareButtons({
     }
     setBusy(platform);
     try {
-      const dataUrl = await renderStickerBase64();
+      const [stickerDataUrl, backgroundDataUrl] = await Promise.all([
+        renderStickerBase64(),
+        backgroundImageUrl ? imageUrlToDataUrl(backgroundImageUrl) : Promise.resolve(null),
+      ]);
+
       const payload = {
         facebookAppId: FACEBOOK_APP_ID,
-        stickerImageBase64: dataUrl,
-        backgroundTopColor,
-        backgroundBottomColor,
+        stickerImageBase64: stickerDataUrl,
+        ...(backgroundDataUrl
+          ? { backgroundImageBase64: backgroundDataUrl }
+          : {
+              backgroundTopColor,
+              backgroundBottomColor,
+            }),
       };
+
       if (platform === "ig") {
         await MixwiseStories.shareToInstagramStories(payload);
         void trackContentShared(entity, "instagram_stories", { url: shareUrl });
@@ -213,6 +274,7 @@ export function StoriesShareButtons({
             width: stickerWidth,
             height: stickerHeight,
             overflow: "hidden",
+            background: "transparent",
           }}
         >
           {sticker}

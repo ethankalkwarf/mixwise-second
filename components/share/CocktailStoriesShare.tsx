@@ -23,106 +23,65 @@ export function pourMomentLabel(date = new Date()): "Today's pour" | "Tonight's 
   return hour >= 16 ? "Tonight's pour" : "Today's pour";
 }
 
-function CocktailStorySticker({ cocktail }: { cocktail: Props["cocktail"] }) {
+/** Transparent text-only sticker — drink photo is the Stories background layer. */
+function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) {
   const name = formatCocktailName(cocktail.name);
   const moment = pourMomentLabel();
+  const textShadow = "0 2px 16px rgba(0,0,0,0.65), 0 1px 3px rgba(0,0,0,0.45)";
 
   return (
     <div
       style={{
-        width: 720,
-        height: 900,
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: 40,
-        background: "#1A2E24",
+        width: 680,
+        height: 320,
+        background: "transparent",
         color: "#F9F7F2",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",
+        gap: 8,
+        padding: "0 8px 8px",
+        boxSizing: "border-box",
       }}
     >
-      {cocktail.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={cocktail.imageUrl}
-          alt=""
-          crossOrigin="anonymous"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
-        />
-      ) : (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(165deg, #1A2E24 0%, #2F4A3A 45%, #5C4033 100%)",
-          }}
-        />
-      )}
-
-      {/* Soft bottom scrim so type stays readable on any drink */}
       <div
         style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: "55%",
-          background:
-            "linear-gradient(to top, rgba(15, 26, 20, 0.88) 0%, rgba(15, 26, 20, 0.45) 55%, transparent 100%)",
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          left: 44,
-          right: 44,
-          bottom: 52,
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
+          fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+          fontSize: 30,
+          fontWeight: 400,
+          letterSpacing: 0.5,
+          color: "#F9F7F2",
+          lineHeight: 1.2,
+          textShadow,
         }}
       >
-        <div
-          style={{
-            fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-            fontSize: 28,
-            fontWeight: 400,
-            letterSpacing: 0.5,
-            color: "#E8D5C4",
-            lineHeight: 1.2,
-          }}
-        >
-          {moment}
-        </div>
-        <div
-          style={{
-            fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
-            fontSize: name.length > 22 ? 48 : 56,
-            fontWeight: 400,
-            lineHeight: 1.05,
-            color: "#F9F7F2",
-          }}
-        >
-          {name}
-        </div>
-        <div
-          style={{
-            marginTop: 8,
-            fontFamily: "var(--font-jost), Jost, system-ui, sans-serif",
-            fontSize: 18,
-            fontWeight: 500,
-            letterSpacing: 1.2,
-            textTransform: "uppercase",
-            color: "rgba(249, 247, 242, 0.72)",
-          }}
-        >
-          made with MixWise
-        </div>
+        {moment}
+      </div>
+      <div
+        style={{
+          fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+          fontSize: name.length > 22 ? 52 : 62,
+          fontWeight: 400,
+          lineHeight: 1.05,
+          color: "#F9F7F2",
+          textShadow,
+        }}
+      >
+        {name}
+      </div>
+      <div
+        style={{
+          marginTop: 6,
+          fontFamily: "var(--font-jost), Jost, system-ui, sans-serif",
+          fontSize: 18,
+          fontWeight: 500,
+          letterSpacing: 1.4,
+          textTransform: "uppercase",
+          color: "rgba(249, 247, 242, 0.9)",
+          textShadow,
+        }}
+      >
+        made with MixWise
       </div>
     </div>
   );
@@ -149,9 +108,13 @@ export function CocktailStoriesShare({
       shareUrl={shareUrl}
       compact={compact}
       className={className}
+      stickerWidth={680}
+      stickerHeight={320}
+      backgroundImageUrl={cocktail.imageUrl || undefined}
+      // Soft fallback only if drink photo can't load — not a solid sticker box
       backgroundTopColor="#1A2E24"
-      backgroundBottomColor="#5C4033"
-      sticker={<CocktailStorySticker cocktail={cocktail} />}
+      backgroundBottomColor="#2F4A3A"
+      sticker={<CocktailPourTextSticker cocktail={cocktail} />}
     />
   );
 }
