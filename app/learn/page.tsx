@@ -38,8 +38,8 @@ export default function LearnPage() {
       />
       <section data-web-learn-chrome>
         <LearnHero
-          imageSrc="/media/bartender-home.webp"
-          imageAlt="Home bartender preparing a cocktail"
+          imageSrc="/media/kitchen-friends.webp"
+          imageAlt="Friends mixing cocktails together in a bright home kitchen"
           eyebrow="Education"
           title="Learn to make better drinks"
           summary="Practical mixology for the home bar — templates, methods, and the small habits that change a drink."

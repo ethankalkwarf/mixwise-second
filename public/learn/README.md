@@ -1,5 +1,15 @@
 # Learn cover photos
 
+## Lifestyle (Envato — same home-kitchen series)
+| File | Used on |
+|------|---------|
+| `/media/kitchen-shelf.webp` | Home bar fundamentals guide |
+| `/media/kitchen-prep.webp` | Homepage guest experience |
+| `/media/kitchen-friends.webp` | Learn hub hero |
+| `/media/kitchen-gathering.webp` | First Month at Home path |
+| `/media/kitchen-bartender-man.webp` | About opener |
+| `/media/kitchen-pour.webp` | Mix mega-menu, Smart swaps hero |
+
 ## Guides (Envato)
 | File | Guide |
 |------|--------|

@@ -32,7 +32,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
     readingMinutes: 12,
     topics: ["tools", "ice", "citrus", "bottles", "beginner"],
     coverImage: "/media/kitchen-shelf.webp",
-    coverAlt: "Home bar bottles and glassware on a kitchen shelf",
+    coverAlt: "Home bartender preparing cocktails at a bright kitchen counter",
     accentClass: "from-olive/30 via-cream to-cream",
     practice: [
       {

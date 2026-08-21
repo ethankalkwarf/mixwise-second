@@ -25,8 +25,8 @@ export function AboutPageContent() {
       {/* 1. Full-bleed opener */}
       <section className="relative isolate min-h-[85vh] overflow-hidden bg-charcoal">
         <Image
-          src="/media/bartender-home.webp"
-          alt="Making an Old Fashioned at a home bar"
+          src="/media/kitchen-bartender-man.webp"
+          alt="Man pouring a cocktail at a bright home kitchen counter"
           fill
           priority
           sizes="100vw"

@@ -363,7 +363,9 @@ export const OCCASIONS: OccasionDefinition[] = [
     description: "Low-effort drinks you can make with a couple of bottles — highballs, two-ingredient classics, and weeknight builds.",
     accentClass: "from-terracotta/15 via-cream to-cream",
     matchTokens: ["easy"],
-    coverSlugs: ["gin-and-tonic", "aperol-spritz", "paloma", "mimosa"],
+    // Prefer spritz/mimosa covers so Easy doesn’t collide with Highballs (G&T-first)
+    coverSlugs: ["aperol-spritz", "mimosa", "paloma", "gin-and-tonic"],
+    staticCoverPath: "/occasions/easy.jpg",
     matchExtra: (c) =>
       /gin and tonic|rum and coke|cuba libre|screwdriver|paloma|moscow mule|aperol spritz|mimosa|americano/i.test(
         c.name || ""

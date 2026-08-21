@@ -27,17 +27,18 @@ export function buildOccasionCoverMap(
   for (const slug of occasionSlugs) {
     const occasion = getOccasion(slug);
     if (!occasion) continue;
-    map[slug] = catalogCoverForOccasion(occasion, catalog);
+    map[slug] = resolveNativeCollectionCover(occasion, catalog);
   }
   return map;
 }
 
-/** Best cover URL for native tiles: catalog photo first, static asset fallback. */
+/** Best cover URL for native tiles: static asset first (matches web), then catalog. */
 export function resolveNativeCollectionCover(
   occasion: OccasionDefinition,
   catalog: CatalogCoverSource[],
   prefetched?: string | null
 ): string | null {
+  if (occasion.staticCoverPath) return occasion.staticCoverPath;
   if (prefetched) return prefetched;
-  return catalogCoverForOccasion(occasion, catalog) || occasion.staticCoverPath || null;
+  return catalogCoverForOccasion(occasion, catalog);
 }

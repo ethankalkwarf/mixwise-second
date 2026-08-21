@@ -21,3 +21,4 @@ Local covers live here as `{slug}.jpg` (or `.webp`). Pages prefer these over cat
 | `hot-drinks.jpg` | Catalog: Hot Toddy |
 | `punch.jpg` | Catalog: Apple Cider Punch |
 | `dessert.jpg` | Catalog: Porto Flip |
+| `easy.jpg` | Generated: Aperol Spritz (distinct from Highballs G&T) |

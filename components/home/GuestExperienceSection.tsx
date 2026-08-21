@@ -69,7 +69,7 @@ export function GuestExperienceSection() {
               }}
             >
               <Image
-                src="/media/kitchen-shelf.webp"
+                src="/media/kitchen-prep.webp"
                 alt="Preparing cocktails at home with ingredients already on the counter"
                 fill
                 sizes="(max-width: 1024px) 90vw, 42vw"

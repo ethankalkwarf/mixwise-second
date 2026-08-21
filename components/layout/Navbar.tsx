@@ -243,8 +243,8 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                     : "Add what’s in your bar. We’ll show what’s ready to pour."
                 }
                 cta={isAuthenticated ? "Open Mix" : "Open your cabinet"}
-                imageUrl="/media/kitchen-shelf.webp"
-                imageFocusClass="object-[center_40%]"
+                imageUrl="/media/kitchen-pour.webp"
+                imageFocusClass="object-[center_45%]"
               />
               <RecipesMegaMenu
                 active={isActive("/cocktails") || isActive("/occasions") || isActive("/learn") || isActive("/ingredients")}

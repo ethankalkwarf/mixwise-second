@@ -17,8 +17,8 @@ export default function LearnSwapsPage() {
   return (
     <div className="min-h-screen bg-cream">
       <LearnHero
-        imageSrc="/media/kitchen-shelf.webp"
-        imageAlt="Bar bottles on a shelf"
+        imageSrc="/media/kitchen-pour.webp"
+        imageAlt="Pouring a shaken cocktail into a coupe at a home kitchen counter"
         eyebrow="Reference"
         title="Smart swaps"
         summary="Reach for this mid-shop or mid-mix when a bottle is missing. Keep the role of the ingredient; adjust sweetness if the swap is richer."

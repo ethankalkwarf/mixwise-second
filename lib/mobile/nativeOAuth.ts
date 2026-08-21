@@ -5,7 +5,6 @@ import { debugLog } from "@/lib/debugLog";
 import {
   isNativeOAuthCallbackUrl,
   NATIVE_OAUTH_BRIDGE_PATH,
-  NATIVE_OAUTH_BRIDGE_URL,
   NATIVE_OAUTH_CALLBACK,
 } from "@/lib/mobile/authRedirect";
 import { MixwiseOAuth } from "@/lib/mobile/oauthSessionPlugin";

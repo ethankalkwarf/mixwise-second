@@ -437,8 +437,8 @@ export const LEARN_PATHS: LearnPath[] = [
     summary:
       "Stock a small kit, learn the sour and old-fashioned templates, shake a Daiquiri, stir a Manhattan or Negroni, then taste for balance.",
     estimatedMinutes: 50,
-    coverImage: "/media/kitchen-shelf.webp",
-    coverAlt: "Home bar starter kit",
+    coverImage: "/media/kitchen-gathering.webp",
+    coverAlt: "Friends measuring and mixing cocktails in a home kitchen",
     steps: [
       {
         type: "guide",
