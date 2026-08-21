@@ -1,11 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
+import { isNativeApp } from "@/lib/mobile/platform";
 
 /**
  * Soft prompt for signed-in users without a username — key for friend discovery.
+ * Must sit above the native tab bar (z-100) or Save/Later are unreachable.
  */
 export function UsernamePrompt() {
   const { user, profile, isAuthenticated, refreshProfile } = useUser();
@@ -39,7 +42,7 @@ export function UsernamePrompt() {
     }
   }, [isAuthenticated, user, profile, dismissed]);
 
-  const dismiss = () => {
+  const dismiss = useCallback(() => {
     setOpen(false);
     setDismissed(true);
     if (user) {
@@ -49,7 +52,7 @@ export function UsernamePrompt() {
         /* ignore */
       }
     }
-  };
+  }, [user]);
 
   const save = useCallback(async () => {
     const trimmed = username.trim();
@@ -70,14 +73,7 @@ export function UsernamePrompt() {
         setError(data.error || "Couldn't save username");
         return;
       }
-      // Also enable public bar so friends can find them
-      try {
-        await fetch("/api/username", { method: "GET" }); // no-op keep
-      } catch {
-        /* ignore */
-      }
       toast.success("Username saved");
-      // Make bar findable by default once they claim a username
       try {
         const { getSupabaseClient } = await import("@/lib/supabase/client");
         const supabase = getSupabaseClient();
@@ -95,24 +91,44 @@ export function UsernamePrompt() {
     } finally {
       setSaving(false);
     }
-  }, [username, toast, refreshProfile]);
+  }, [username, toast, refreshProfile, user]);
 
   if (!open) return null;
 
+  const native = typeof window !== "undefined" && isNativeApp();
+
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-charcoal/40 p-4 sm:items-center"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-charcoal/50 p-4"
+      style={{
+        paddingBottom: native
+          ? "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)"
+          : undefined,
+        paddingTop: native ? "env(safe-area-inset-top, 0px)" : undefined,
+      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="username-prompt-title"
+      onClick={dismiss}
     >
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
-        <h2 id="username-prompt-title" className="font-serif text-xl font-bold text-forest">
+      <div
+        className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={dismiss}
+          className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full text-sage active:bg-mist"
+          aria-label="Dismiss"
+        >
+          <XMarkIcon className="h-5 w-5" />
+        </button>
+
+        <h2 id="username-prompt-title" className="pr-10 font-display text-xl font-bold text-forest">
           Choose a username
         </h2>
         <p className="mt-2 text-sm text-sage">
-          Friends find you with @{username || "yourname"} — required to share your bar and send
-          invites.
+          Friends find you with @{username || "yourname"}. You can set this later in Account.
         </p>
         <div className="mt-4">
           <label htmlFor="username-prompt-input" className="label-botanical mb-1.5">
@@ -133,15 +149,16 @@ export function UsernamePrompt() {
               placeholder="yourname"
               autoComplete="username"
               maxLength={30}
+              autoFocus={!native}
             />
           </div>
-          {error && <p className="mt-1.5 text-sm text-terracotta">{error}</p>}
+          {error ? <p className="mt-1.5 text-sm text-terracotta">{error}</p> : null}
         </div>
-        <div className="mt-5 flex gap-2 justify-end">
+        <div className="mt-5 flex gap-2">
           <button
             type="button"
             onClick={dismiss}
-            className="rounded-xl px-4 py-2 text-sm font-medium text-sage hover:bg-mist hover:text-forest"
+            className="flex-1 rounded-xl border border-mist bg-white px-4 py-3 text-sm font-semibold text-forest active:bg-mist"
           >
             Later
           </button>
@@ -149,9 +166,9 @@ export function UsernamePrompt() {
             type="button"
             disabled={saving}
             onClick={() => void save()}
-            className="btn-primary disabled:opacity-50"
+            className="flex-1 rounded-xl bg-terracotta px-4 py-3 text-sm font-semibold text-cream active:opacity-90 disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Save username"}
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
       </div>
