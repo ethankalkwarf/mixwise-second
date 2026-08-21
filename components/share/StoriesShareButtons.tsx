@@ -18,24 +18,63 @@ import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 async function capturePourBackground(): Promise<string | null> {
   try {
     const photo = await Camera.getPhoto({
-      quality: 92,
+      quality: 85,
       allowEditing: false,
       resultType: CameraResultType.DataUrl,
-      // Camera first; Prompt also offers library if they already shot the pour
+      // Prompt: Take photo or choose from library
       source: CameraSource.Prompt,
       correctOrientation: true,
+      // Keep payload smaller for the Capacitor → pasteboard bridge
       width: 1080,
       promptLabelHeader: "Your pour",
       promptLabelPhoto: "Take photo",
       promptLabelPicture: "Choose from library",
       promptLabelCancel: "Cancel",
     });
-    return photo.dataUrl ?? null;
+    if (!photo.dataUrl) return null;
+    return await normalizeStoryBackground(photo.dataUrl);
   } catch (err) {
     const message = String((err as Error)?.message ?? err).toLowerCase();
-    if (message.includes("cancel") || message.includes("dismiss")) return null;
+    if (message.includes("cancel") || message.includes("dismiss")) {
+      return null;
+    }
     throw err;
   }
+}
+
+/**
+ * Letterbox into 9:16 so Instagram accepts it as a full Stories background
+ * (Meta recommends ~1080×1920; bare camera shots are often landscape).
+ */
+async function normalizeStoryBackground(dataUrl: string): Promise<string> {
+  const TARGET_W = 1080;
+  const TARGET_H = 1920;
+  return await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = TARGET_W;
+        canvas.height = TARGET_H;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(dataUrl);
+          return;
+        }
+        ctx.fillStyle = "#111111";
+        ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+        const scale = Math.min(TARGET_W / img.naturalWidth, TARGET_H / img.naturalHeight);
+        const w = img.naturalWidth * scale;
+        const h = img.naturalHeight * scale;
+        ctx.drawImage(img, (TARGET_W - w) / 2, (TARGET_H - h) / 2, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.88));
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
 }
 
 const FACEBOOK_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "";
@@ -204,12 +243,15 @@ export function StoriesShareButtons({
       if (cameraBackground) {
         capturedBackground = await capturePourBackground();
         if (!capturedBackground) {
-          // User cancelled the camera / picker — don’t open Stories on a black canvas
+          // User cancelled / denied — don’t open Stories on a black canvas
           return;
         }
       }
 
       const stickerDataUrl = await renderStickerBase64();
+      if (!stickerDataUrl || stickerDataUrl.length < 100) {
+        throw new Error("Sticker render failed");
+      }
 
       const payload: {
         facebookAppId: string;
@@ -254,7 +296,12 @@ export function StoriesShareButtons({
         );
       } else {
         console.error("Stories share failed:", err);
-        toast.error("Couldn't open Stories. Try Share instead.");
+        const msg = String((err as Error)?.message ?? "");
+        if (msg.toLowerCase().includes("permission") || msg.toLowerCase().includes("denied")) {
+          toast.error("Camera or Photos access is required to share your pour.");
+        } else {
+          toast.error("Couldn't open Stories. Try Share instead.");
+        }
       }
     } finally {
       setBusy(null);
@@ -319,7 +366,11 @@ export function StoriesShareButtons({
         )}
       </div>
 
-      <div className="pointer-events-none absolute -left-[9999px] top-0" aria-hidden>
+      <div
+        className="pointer-events-none fixed left-0 top-0 -z-10 opacity-0"
+        aria-hidden
+        style={{ width: stickerWidth, height: stickerHeight }}
+      >
         <div
           ref={stickerRef}
           style={{

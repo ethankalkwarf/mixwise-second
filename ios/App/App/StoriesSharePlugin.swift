@@ -57,10 +57,18 @@ public class StoriesSharePlugin: CAPPlugin, CAPBridgedPlugin {
             "\(pasteboardAppKey).appID": appId
         ]
 
-        if let bg = backgroundBase64, let data = Data(base64Encoded: stripDataUrl(bg)) {
+        if let bg = backgroundBase64 {
+            guard let data = Data(base64Encoded: stripDataUrl(bg), options: .ignoreUnknownCharacters) else {
+                call.reject("Invalid backgroundImageBase64")
+                return
+            }
             pasteboardItems["\(pasteboardAppKey).backgroundImage"] = data
         }
-        if let sticker = stickerBase64, let data = Data(base64Encoded: stripDataUrl(sticker)) {
+        if let sticker = stickerBase64 {
+            guard let data = Data(base64Encoded: stripDataUrl(sticker), options: .ignoreUnknownCharacters) else {
+                call.reject("Invalid stickerImageBase64")
+                return
+            }
             pasteboardItems["\(pasteboardAppKey).stickerImage"] = data
         }
 
