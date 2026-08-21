@@ -15,10 +15,12 @@ export function PublicBarJoinCta({
   displayName,
   makeableCount,
   ingredientCount,
+  inviteUsername,
 }: {
   displayName?: string;
   makeableCount?: number;
   ingredientCount?: number;
+  inviteUsername?: string | null;
 } = {}) {
   const { isAuthenticated, isLoading } = useUser();
   const preferredMode = usePreferredAuthMode();
@@ -27,6 +29,14 @@ export function PublicBarJoinCta({
   useEffect(() => {
     setNative(isNativeApp());
   }, []);
+
+  useEffect(() => {
+    if (inviteUsername) {
+      void import("@/lib/invite").then(({ rememberInviteUsername }) => {
+        rememberInviteUsername(inviteUsername);
+      });
+    }
+  }, [inviteUsername]);
 
   if (isLoading || isAuthenticated) {
     return null;

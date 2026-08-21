@@ -30,6 +30,9 @@ export interface Database {
           first_name: string | null;
           last_name: string | null;
           avatar_url: string | null;
+          bio: string | null;
+          phone_hash: string | null;
+          phone_findable: boolean;
           role: "free" | "paid" | "admin";
           preferences: Json;
           username: string | null;
@@ -44,6 +47,9 @@ export interface Database {
           first_name?: string | null;
           last_name?: string | null;
           avatar_url?: string | null;
+          bio?: string | null;
+          phone_hash?: string | null;
+          phone_findable?: boolean;
           role?: "free" | "paid" | "admin";
           preferences?: Json;
           username?: string | null;
@@ -58,12 +64,32 @@ export interface Database {
           first_name?: string | null;
           last_name?: string | null;
           avatar_url?: string | null;
+          bio?: string | null;
+          phone_hash?: string | null;
+          phone_findable?: boolean;
           role?: "free" | "paid" | "admin";
           preferences?: Json;
           username?: string | null;
           public_slug?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      user_follows: {
+        Row: {
+          follower_id: string;
+          followee_id: string;
+          created_at: string;
+        };
+        Insert: {
+          follower_id: string;
+          followee_id: string;
+          created_at?: string;
+        };
+        Update: {
+          follower_id?: string;
+          followee_id?: string;
+          created_at?: string;
         };
       };
       bar_ingredients: {
@@ -818,6 +844,9 @@ export type UserPreferencesUpdate = Database["public"]["Tables"]["user_preferenc
 
 export type UserBadge = Database["public"]["Tables"]["user_badges"]["Row"];
 export type UserBadgeInsert = Database["public"]["Tables"]["user_badges"]["Insert"];
+
+export type UserFollow = Database["public"]["Tables"]["user_follows"]["Row"];
+export type UserFollowInsert = Database["public"]["Tables"]["user_follows"]["Insert"];
 
 export type LearnProgressRow = Database["public"]["Tables"]["learn_progress"]["Row"];
 export type LearnProgressInsert = Database["public"]["Tables"]["learn_progress"]["Insert"];
