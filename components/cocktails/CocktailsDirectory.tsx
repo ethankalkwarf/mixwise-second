@@ -312,9 +312,10 @@ export function CocktailsDirectory({
     return () => window.clearTimeout(timer);
   }, [searchQuery, filteredCocktails.length, filterSpirit, filterGlass, sortBy]);
 
-  const { visibleItems: visibleCocktails, hasMore, loadMoreRef } = useInfiniteVisibleCount(
+  const { visibleItems: visibleCocktails, hasMore, loadMore } = useInfiniteVisibleCount(
     filteredCocktails,
-    ITEMS_PER_PAGE
+    ITEMS_PER_PAGE,
+    { mode: "manual" }
   );
 
   const activeFilterCount = [filterSpirit, filterGlass].filter(Boolean).length;
@@ -425,11 +426,17 @@ export function CocktailsDirectory({
                       );
                     })}
                   </div>
-                  {hasMore && (
-                    <div ref={loadMoreRef} className="flex justify-center py-8">
-                      <div className="spinner" />
+                  {hasMore ? (
+                    <div className="flex justify-center py-6">
+                      <button
+                        type="button"
+                        onClick={loadMore}
+                        className="rounded-xl border border-mist bg-white px-5 py-3 text-sm font-semibold text-forest shadow-sm transition-colors hover:border-terracotta/40 hover:text-terracotta"
+                      >
+                        Load more
+                      </button>
                     </div>
-                  )}
+                  ) : null}
                 </>
               )}
             </>
@@ -630,18 +637,20 @@ export function CocktailsDirectory({
             ))}
           </div>
           
-          {/* Load More Trigger */}
-          {hasMore && (
-            <div 
-              ref={loadMoreRef}
-              className="flex justify-center py-8 animate-fade-in"
-            >
-              <div className="flex items-center gap-3 text-sage">
-                <div className="spinner" />
-                <span className="text-sm font-medium">Loading more cocktails...</span>
-              </div>
+          {hasMore ? (
+            <div className="flex flex-col items-center gap-3 py-10 animate-fade-in">
+              <button
+                type="button"
+                onClick={loadMore}
+                className="rounded-xl border border-mist bg-white px-6 py-3 text-sm font-semibold text-forest shadow-sm transition-all duration-200 hover:border-terracotta/40 hover:text-terracotta hover:shadow-md active:scale-[0.98]"
+              >
+                Load more cocktails
+              </button>
+              <p className="text-xs text-sage">
+                {visibleCocktails.length} of {filteredCocktails.length} shown
+              </p>
             </div>
-          )}
+          ) : null}
         </>
       )}
     </div>
@@ -755,11 +764,8 @@ function CocktailCard({
             </p>
           )}
 
-          <div className="mt-auto flex items-center justify-between text-xs text-sage">
+          <div className="mt-auto text-xs text-sage">
             <span>{ingredientCount} ingredient{ingredientCount !== 1 ? "s" : ""}</span>
-            {cocktail.glass && (
-              <span className="capitalize">{cocktail.glass.replace(/-/g, " ")}</span>
-            )}
           </div>
         </div>
       </div>
