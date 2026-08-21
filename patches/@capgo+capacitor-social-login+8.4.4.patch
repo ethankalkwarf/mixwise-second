@@ -1,0 +1,57 @@
+diff --git a/node_modules/@capgo/capacitor-social-login/ios/Sources/SocialLoginPlugin/GoogleProvider.swift b/node_modules/@capgo/capacitor-social-login/ios/Sources/SocialLoginPlugin/GoogleProvider.swift
+index 9169503..256fe7b 100644
+--- a/node_modules/@capgo/capacitor-social-login/ios/Sources/SocialLoginPlugin/GoogleProvider.swift
++++ b/node_modules/@capgo/capacitor-social-login/ios/Sources/SocialLoginPlugin/GoogleProvider.swift
+@@ -29,7 +29,29 @@ class GoogleProvider {
+         forceAuthCode = false
+     }
+ 
+-    func login(payload: [String: Any], completion: @escaping (Result<GoogleLoginResponse, Error>) -> Void) {
++    /// Prefer Capacitor's bridge VC; fall back to key-window topmost VC.
++    /// `UIApplication.shared.windows.first` is often wrong on modern iOS and can
++    /// make ASWebAuthenticationSession escape into system Safari.
++    private static func resolvePresentingViewController(preferred: UIViewController?) -> UIViewController? {
++        if let preferred = preferred {
++            var top = preferred
++            while let presented = top.presentedViewController {
++                top = presented
++            }
++            return top
++        }
++
++        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
++        let windows = scenes.flatMap { $0.windows }
++        let keyWindow = windows.first(where: { $0.isKeyWindow }) ?? windows.first
++        var top = keyWindow?.rootViewController
++        while let presented = top?.presentedViewController {
++            top = presented
++        }
++        return top
++    }
++
++    func login(payload: [String: Any], presentingViewController: UIViewController? = nil, completion: @escaping (Result<GoogleLoginResponse, Error>) -> Void) {
+         DispatchQueue.main.async {
+             if let forcePrompt = payload["forcePrompt"] as? Bool {
+                 self.forceAuthCode = forcePrompt
+@@ -38,7 +60,7 @@ class GoogleProvider {
+             }
+ 
+             func login() {
+-                guard let presentingVc = UIApplication.shared.windows.first?.rootViewController else {
++                guard let presentingVc = GoogleProvider.resolvePresentingViewController(preferred: presentingViewController) else {
+                     completion(.failure(NSError(domain: "GoogleProvider", code: 0, userInfo: [NSLocalizedDescriptionKey: "No presenting view controller found"])))
+                     return
+                 }
+diff --git a/node_modules/@capgo/capacitor-social-login/ios/Sources/SocialLoginPlugin/SocialLoginPlugin.swift b/node_modules/@capgo/capacitor-social-login/ios/Sources/SocialLoginPlugin/SocialLoginPlugin.swift
+index dae8503..4d7deeb 100644
+--- a/node_modules/@capgo/capacitor-social-login/ios/Sources/SocialLoginPlugin/SocialLoginPlugin.swift
++++ b/node_modules/@capgo/capacitor-social-login/ios/Sources/SocialLoginPlugin/SocialLoginPlugin.swift
+@@ -441,7 +441,7 @@ public class SocialLoginPlugin: CAPPlugin, CAPBridgedPlugin {
+                 call.reject("Google Sign-In provider is disabled. Dependencies are not available. Ensure Google Sign-In dependencies are included in your Podfile")
+                 return
+             }
+-            gProvider.login(payload: payload) { (result: Result<GoogleLoginResponse, Error>) in
++            gProvider.login(payload: payload, presentingViewController: self.bridge?.viewController) { (result: Result<GoogleLoginResponse, Error>) in
+                 self.handleLoginResult(result, call: call)
+             }
+         case "apple":

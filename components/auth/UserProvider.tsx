@@ -648,7 +648,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const useIdToken = nativeApp || oauthNative;
 
     // Temporary proof for TestFlight — remove once Google path is verified.
-    // Shows which path will run BEFORE any Google UI opens.
     if (typeof window !== "undefined" && (nativeApp || oauthNative || capNative)) {
       window.alert(
         [
@@ -656,10 +655,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           "",
           `path: ${useIdToken ? "NATIVE_ID_TOKEN" : "BROWSER_OAUTH"}`,
           `isNativeApp: ${nativeApp}`,
-          `shouldUseNativeOAuth: ${oauthNative}`,
-          `Capacitor.isNativePlatform: ${capNative}`,
           `SocialLogin plugin: ${socialLogin}`,
-          `platform: ${Capacitor.getPlatform?.() ?? "?"}`,
+          "",
+          "After OK, Google may show a browser-looking sheet (normal).",
+          "Tell us: did you return to MixWise, or get stuck in the Safari app?",
         ].join("\n")
       );
     }
