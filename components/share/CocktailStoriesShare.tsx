@@ -23,24 +23,66 @@ export function pourMomentLabel(date = new Date()): "Today's pour" | "Tonight's 
   return hour >= 16 ? "Tonight's pour" : "Today's pour";
 }
 
+const STICKER_W = 900;
+const STICKER_PAD_X = 36;
+const NAME_MAX_WIDTH = STICKER_W - STICKER_PAD_X * 2;
+const NAME_MAX_PX = 200;
+const NAME_MIN_PX = 64;
+const NAME_FONT = '"DM Serif Display", Georgia, "Times New Roman", serif';
+
+function measureTextWidth(text: string, fontSize: number): number {
+  if (typeof document === "undefined") {
+    return text.length * fontSize * 0.58;
+  }
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return text.length * fontSize * 0.58;
+  ctx.font = `400 ${fontSize}px ${NAME_FONT}`;
+  return ctx.measureText(text).width;
+}
+
+/**
+ * Largest font size where every token (and the full name when nowrap) fits
+ * inside the sticker — never mid-word wrap, never clipped letters.
+ */
+function fitDrinkNameSize(name: string, allowWrapAtSpaces: boolean): number {
+  const tokens = allowWrapAtSpaces ? name.split(/\s+/).filter(Boolean) : [name];
+  // Slightly under the box so shadows / antialias don't clip
+  const limit = NAME_MAX_WIDTH * 0.96;
+
+  let lo = NAME_MIN_PX;
+  let hi = NAME_MAX_PX;
+  let best = NAME_MIN_PX;
+
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const tokensFit = tokens.every((token) => measureTextWidth(token, mid) <= limit);
+    const fullFits = allowWrapAtSpaces || measureTextWidth(name, mid) <= limit;
+    if (tokensFit && fullFits) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return best;
+}
+
 /**
  * Large transparent text sticker for Instagram/Facebook Stories.
- * Tight bounds + big type so pinch-to-scale tops out larger in Stories.
+ * Type scales to fit — words never split, letters never clipped.
  */
 function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) {
   const name = formatCocktailName(cocktail.name);
   const moment = pourMomentLabel();
   const textShadow = "0 6px 32px rgba(0,0,0,0.8), 0 2px 10px rgba(0,0,0,0.55)";
   const hasSpaces = /\s/.test(name);
-  // Long unbroken names shrink to stay on one line instead of hyphenating mid-word
-  const longestToken = Math.max(...name.split(/\s+/).map((w) => w.length), 0);
-  const nameSize =
-    longestToken > 16 ? 120 : longestToken > 12 ? 148 : name.length > 22 ? 160 : name.length > 14 ? 176 : 200;
+  const nameSize = fitDrinkNameSize(name, hasSpaces);
 
   return (
     <div
       style={{
-        width: 900,
+        width: STICKER_W,
         height: 560,
         backgroundColor: "transparent",
         color: "#FFFFFF",
@@ -49,13 +91,14 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
         justifyContent: "flex-end",
         alignItems: "flex-start",
         gap: 12,
-        padding: "32px 36px 40px",
+        padding: `32px ${STICKER_PAD_X}px 40px`,
         boxSizing: "border-box",
+        overflow: "visible",
       }}
     >
       <div
         style={{
-          fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+          fontFamily: `var(--font-dm-serif), ${NAME_FONT}`,
           fontSize: 56,
           fontWeight: 400,
           letterSpacing: 0.6,
@@ -68,7 +111,7 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
       </div>
       <div
         style={{
-          fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
+          fontFamily: `var(--font-dm-serif), ${NAME_FONT}`,
           fontSize: nameSize,
           fontWeight: 400,
           lineHeight: 1.05,
@@ -123,7 +166,7 @@ export function CocktailStoriesShare({
       shareUrl={shareUrl}
       compact={compact}
       className={className}
-      stickerWidth={900}
+      stickerWidth={STICKER_W}
       stickerHeight={560}
       // Capture pour in MixWise, then hand photo + text sticker to Stories
       cameraBackground
