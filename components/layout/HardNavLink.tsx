@@ -10,6 +10,13 @@ type Props = {
   children: ReactNode;
 } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href">;
 
+function stayInNativeShell(): boolean {
+  if (typeof document !== "undefined" && document.documentElement.classList.contains("native-app")) {
+    return true;
+  }
+  return isNativeApp();
+}
+
 /**
  * Full-document navigation on web. Client router navigation in the native shell
  * so recipe pages stay inside the app WebView.
@@ -22,7 +29,7 @@ export function HardNavLink({ href, children, onClick, ...props }: Props) {
     if (event.defaultPrevented) return;
     if (!href.startsWith("/") || href.startsWith("//")) return;
 
-    if (isNativeApp()) {
+    if (stayInNativeShell()) {
       event.preventDefault();
       event.stopPropagation();
       navigateInApp(router, href);

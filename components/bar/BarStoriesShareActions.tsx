@@ -101,11 +101,11 @@ function BarStorySticker({
               fontSize: 20,
             }}
           >
-            MW
+            {(displayName.trim()[0] || "M").toUpperCase()}
           </div>
         )}
         <div>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>MixWise</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>mixwise</div>
           <div style={{ fontSize: 18, color: "#C4B5A0" }}>
             getmixwise.com{sharePath}
           </div>

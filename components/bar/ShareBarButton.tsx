@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Link from "next/link";
 import { ShareIcon, CheckIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
@@ -21,6 +20,8 @@ import {
 } from "@/lib/barShare";
 import { trackContentShared } from "@/lib/analytics";
 import { isNativeApp } from "@/lib/mobile/platform";
+import { getShareOrigin } from "@/lib/shareOrigin";
+import { AppLink } from "@/components/mobile/AppLink";
 
 type ShareBarVariant = "cta" | "menu" | "inline";
 
@@ -64,8 +65,8 @@ export function ShareBarButton({
       return;
     }
 
-    const origin = window.location.origin;
-    const baseUrl = getBarShareUrl(origin, profile);
+      const origin = getShareOrigin();
+      const baseUrl = getBarShareUrl(origin, profile);
     if (!baseUrl) {
       toast.error("Set a username in Account to get a shareable bar link.");
       onShared?.();
@@ -217,10 +218,13 @@ export function ShareBarButton({
         type="button"
         onClick={handleShare}
         disabled={busy}
-        className={className ?? "inline-flex items-center gap-2 text-sm font-medium text-terracotta hover:text-terracotta-dark disabled:opacity-50"}
+        className={
+          className ??
+          "inline-flex items-center gap-2 text-sm font-medium text-terracotta hover:text-terracotta-dark disabled:opacity-50"
+        }
       >
-        <Icon className="w-4 h-4" />
-        {busy ? "Sharing..." : label}
+        <Icon className="h-4 w-4 shrink-0" />
+        <span>{busy ? "Sharing..." : label}</span>
       </button>
     );
   }
@@ -236,19 +240,18 @@ export function ShareBarButton({
           "inline-flex items-center gap-2 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-cream rounded-2xl transition-all text-sm font-medium shadow-soft disabled:opacity-50"
         }
       >
-        <Icon className="w-4 h-4" />
-        {busy ? "Sharing..." : label}
+        <Icon className="h-4 w-4 shrink-0" />
+        <span>{busy ? "Sharing..." : label}</span>
       </button>
       {showPreview && sharePath && isPublic && (
-        <Link
+        <AppLink
           href={sharePath}
-          prefetch={false}
           title="See your bar the way friends will"
           className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-forest bg-white border border-mist hover:border-stone rounded-2xl transition-all"
         >
           <EyeIcon className="w-4 h-4" />
           View public bar
-        </Link>
+        </AppLink>
       )}
     </div>
   );

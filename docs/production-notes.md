@@ -82,6 +82,11 @@ In Supabase Dashboard → Authentication → URL Configuration:
 - `https://getmixwise.com/auth/native-callback` (apex bridge)
 - `com.getmixwise.app://auth/callback` (iOS deep link — **required** as native `redirectTo`)
 - `http://localhost:3000/auth/callback` (development)
+- `http://127.0.0.1:3000/auth/callback` (development)
+
+OAuth `redirectTo` must be an **exact** allowlisted URL with **no query string**.
+`?next=` is stored in sessionStorage instead — if you append query params, GoTrue
+rejects the URL and falls back to Site URL (so local Google login lands on production).
 
 Native Google/Apple sign-in uses the custom scheme as `redirectTo` with Capgo
 `openSecureWindow` (ASWebAuthenticationSession). Do not fall back to Capacitor

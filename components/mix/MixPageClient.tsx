@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
 import { ClearBarConfirmDialog } from "@/components/mix/ClearBarConfirmDialog";
 import { MixCabinet } from "@/components/mix/MixCabinet";
-import { MixMixer } from "@/components/mix/MixMixer";
 import { MixMenu } from "@/components/mix/MixMenu";
 import { getMixCocktailsClient, getMixIngredients } from "@/lib/cocktails";
 import { NativeMixView } from "@/components/mobile/NativeMixView";
@@ -19,14 +18,16 @@ import { navigateInApp } from "@/lib/mobile/navigate";
 import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 import { SaveBarPrompt } from "@/components/auth/SaveBarPrompt";
 import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
-import { HomeIcon, WrenchScrewdriverIcon, BookOpenIcon } from "@heroicons/react/24/outline";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { WebPageHero } from "@/components/layout/WebPageHero";
 import { debugLog } from "@/lib/debugLog";
 import { slugifyIngredientName } from "@/lib/ingredientSlug";
 import { trackMixToolUsed } from "@/lib/analytics";
 
 // Show sign-up prompt after adding this many ingredients
 const PROMPT_THRESHOLD = 3;
+
+type MixPane = "cabinet" | "menu";
 
 /**
  * Inner component that uses useSearchParams().
@@ -45,9 +46,9 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  // Three-step funnel state
-  const [currentStep, setCurrentStep] = useState<'cabinet' | 'mixer' | 'menu'>('cabinet');
-  const [isProcessing, setIsProcessing] = useState(false);
+  // Dual-pane Mix: Cabinet (edit shelf) vs Menu (drinks you can pour)
+  const [currentStep, setCurrentStep] = useState<MixPane>("cabinet");
+  const [paneReady, setPaneReady] = useState(false);
 
   // Safe native platform detection (prevents SSR errors and hydration mismatches)
   const nativeShell = useNativeShell();
@@ -79,13 +80,24 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
   const searchParams = useSearchParams();
   const haveAppliedRef = useRef<string | null>(null);
 
-  // Allow deep-linking to the Menu step when the user already has ingredients
+  // Pick initial pane once the bar loads: drinks-first when stocked, cabinet when empty.
+  // Respect ?step=menu|cabinet and ?shelf=1 deep links.
   useEffect(() => {
+    if (barLoading || paneReady) return;
+
     const stepParam = searchParams?.get("step");
-    if (stepParam === "menu" && ingredientIds.length > 0) {
+    const shelfParam = searchParams?.get("shelf") === "1";
+    const hasBar = ingredientIds.length > 0;
+
+    if (shelfParam || stepParam === "cabinet") {
+      setCurrentStep("cabinet");
+    } else if ((stepParam === "menu" || !stepParam) && hasBar) {
       setCurrentStep("menu");
+    } else {
+      setCurrentStep("cabinet");
     }
-  }, [searchParams, ingredientIds.length]);
+    setPaneReady(true);
+  }, [barLoading, ingredientIds.length, paneReady, searchParams]);
 
   // Prefill the bar from /mix?have=campari,gin (ingredient product pages, QR landers)
   useEffect(() => {
@@ -258,8 +270,7 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
   const handleConfirmClear = useCallback(async () => {
     setShowClearConfirm(false);
     await clearAll();
-    // Reset to step 1 (cabinet) after clearing
-    setCurrentStep('cabinet');
+    setCurrentStep("cabinet");
   }, [clearAll]);
 
   const handleCancelClear = useCallback(() => {
@@ -278,26 +289,6 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
       .map((id) => allIngredients.find((i) => i.id === id))
       .filter((i): i is MixIngredient => i !== undefined);
   }, [ingredientIds, allIngredients]);
-
-  // Get selected ingredients for current category (for "Selected" section)
-  const selectedInCategory = useMemo(() => {
-    if (!selectedCategory) return [];
-    return selectedIngredients.filter((i) => i.category === selectedCategory);
-  }, [selectedIngredients, selectedCategory]);
-
-  // Filter ingredients for display
-  const filteredIngredients = useMemo(() => {
-    if (!allIngredients || allIngredients.length === 0) return [];
-
-    let filtered = allIngredients.filter((i) => !stapleIds.includes(i.id));
-
-    // Apply category filter
-    if (selectedCategory) {
-      filtered = filtered.filter((i) => (i.category || "Garnish") === selectedCategory);
-    }
-
-    return filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  }, [allIngredients, selectedCategory, stapleIds]);
 
   // Get match counts for display - only run when all data is loaded and stable
   const mixMatches: MixMatchGroups = useMemo(() => {
@@ -352,19 +343,20 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
   ]);
 
   const goToMenu = useCallback(() => {
-    if (isNative || nativeShell) {
-      setCurrentStep("menu");
-      return;
-    }
-    setCurrentStep("mixer");
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setCurrentStep("menu");
-    }, 2000);
-  }, [isNative, nativeShell]);
+    if (ingredientIds.length === 0) return;
+    setCurrentStep("menu");
+  }, [ingredientIds.length]);
+
+  const goToCabinet = useCallback(() => {
+    setCurrentStep("cabinet");
+  }, []);
 
   if (dataLoading && allIngredients.length === 0) {
+    return <MixSkeleton />;
+  }
+
+  // Web only: wait for bar load so we land on pour vs cabinet without a flash
+  if (!isNativeShell && !paneReady) {
     return <MixSkeleton />;
   }
 
@@ -417,10 +409,10 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
     );
   }
 
-  // Render content based on current step
+  // Render content based on current pane
   const renderStepContent = () => {
     switch (currentStep) {
-      case 'cabinet':
+      case "cabinet":
         return (
           <MixCabinet
             allIngredients={allIngredients}
@@ -435,17 +427,7 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
             compact={isNative}
           />
         );
-      case 'mixer':
-        return (
-          <MixMixer
-            ingredientIds={ingredientIds}
-            selectedIngredients={selectedIngredients}
-            matchCounts={matchCounts}
-            isProcessing={isProcessing}
-            onComplete={() => setCurrentStep('menu')}
-          />
-        );
-      case 'menu':
+      case "menu":
         return (
           <MixMenu
             inventoryIds={ingredientIds}
@@ -457,6 +439,7 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
             selectedIngredients={selectedIngredients}
             onRemoveIngredient={handleRemoveFromInventory}
             onClearAll={handleClearAll}
+            onEditCabinet={goToCabinet}
           />
         );
       default:
@@ -464,183 +447,140 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
     }
   };
 
+  const hasBar = ingredientIds.length > 0;
+  const pourMeta =
+    !hasBar
+      ? "Start by adding a few bottles below."
+      : cocktailsLoading && matchCounts.canMake === 0
+        ? "Matching drinks to your ingredients…"
+        : `${matchCounts.canMake} drink${matchCounts.canMake === 1 ? "" : "s"} ready · ${ingredientIds.length} ingredient${ingredientIds.length === 1 ? "" : "s"} in your cabinet`;
+
+  // Guests get the SEO MixExplainer h1 above; signed-in users get this product hero.
+  // While auth is loading, prefer the product hero to avoid a flash of marketing copy.
+  const showProductHero = authLoading || isAuthenticated;
+
+  const paneDescription =
+    currentStep === "menu"
+      ? cocktailsLoading
+        ? "Matching drinks to your bottles…"
+        : "Drinks you can pour with what's in your cabinet."
+      : hasBar
+        ? "Edit what's on your shelf. Drink matches update as you go."
+        : "Add what's in your bar — then see what you can pour tonight.";
+
+  const paneToggle = (
+    <div className="grid max-w-md grid-cols-2 rounded-2xl bg-white p-1 shadow-sm">
+      <button
+        type="button"
+        onClick={goToMenu}
+        disabled={!hasBar}
+        className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-sm font-semibold transition-colors ${
+          currentStep === "menu" ? "bg-terracotta text-cream" : "text-forest"
+        } ${!hasBar ? "opacity-40" : ""}`}
+      >
+        <span>You can pour</span>
+        {matchCounts.canMake > 0 && currentStep !== "menu" ? (
+          <span className="rounded-full bg-terracotta/15 px-1.5 py-0.5 text-[10px] font-bold text-terracotta">
+            {matchCounts.canMake}
+          </span>
+        ) : null}
+      </button>
+      <button
+        type="button"
+        onClick={goToCabinet}
+        className={`inline-flex items-center justify-center rounded-xl px-2 py-2.5 text-sm font-semibold transition-colors ${
+          currentStep === "cabinet" ? "bg-terracotta text-cream" : "text-forest"
+        }`}
+      >
+        Cabinet
+      </button>
+    </div>
+  );
+
   return (
-    <div className="pb-24 overflow-x-hidden">
-      <MainContainer className="mb-10">
-        <div className="mb-6">
-          {isNative ? (
-            <div className="min-w-0">
-              <h1 className="font-display text-2xl font-bold text-forest">
-                {currentStep === "menu" ? "Your menu" : "Your cabinet"}
-              </h1>
-              <p className="mt-1 text-[15px] leading-relaxed text-sage">
-                {currentStep === "menu"
-                  ? cocktailsLoading
-                    ? "Matching drinks to your bottles…"
-                    : "Drinks you can pour with what's in your cabinet."
-                  : "Tap every bottle you have. Then see what you can pour."}
-              </p>
-              <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep("cabinet")}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                    currentStep === "cabinet"
-                      ? "bg-terracotta text-cream"
-                      : "bg-white text-sage"
-                  }`}
-                >
-                  Cabinet
-                </button>
-                <button
-                  type="button"
-                  onClick={goToMenu}
-                  disabled={ingredientIds.length === 0}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                    currentStep === "menu"
-                      ? "bg-terracotta text-cream"
-                      : "bg-white text-sage"
-                  } ${ingredientIds.length === 0 ? "opacity-40" : ""}`}
-                >
-                  Menu
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4 min-w-0">
-                {ingredientIds.length === 0 && (
-                  <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                      currentStep === 'cabinet'
-                        ? 'bg-terracotta text-white'
-                        : 'bg-mist text-sage'
-                    }`}>
-                      Step 1
-                    </div>
-                    <div className="text-sage">→</div>
-                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                      currentStep === 'mixer'
-                        ? 'bg-olive text-white'
-                        : 'bg-mist text-sage'
-                    }`}>
-                      Step 2
-                    </div>
-                    <div className="text-sage">→</div>
-                    <div className={`px-3 py-1 rounded-full text-sm font-bold ${
-                      currentStep === 'menu'
-                        ? 'bg-forest text-white'
-                        : 'bg-mist text-sage'
-                    }`}>
-                      Step 3
-                    </div>
-                  </div>
-                )}
-              </div>
-              <p className="text-sage max-w-2xl text-lg leading-relaxed">
-                {currentStep === 'cabinet' && "Start by adding ingredients from your cabinet. The more you add, the more cocktails you'll unlock!"}
-                {currentStep === 'mixer' && "Finding the perfect cocktails for your ingredients..."}
-                {currentStep === 'menu' && "Explore your personalized cocktail menu with recipes you can make right now!"}
-              </p>
-            </>
-          )}
-        </div>
+    <div className="overflow-x-hidden pb-24">
+      <MainContainer>
+        {showProductHero ? (
+          <WebPageHero
+            title="Mix"
+            description={paneDescription}
+            meta={hasBar ? pourMeta : undefined}
+          >
+            {paneToggle}
+          </WebPageHero>
+        ) : (
+          <div className="mb-8 min-w-0">
+            {hasBar ? (
+              <p className="mb-3 text-sm font-semibold leading-snug text-forest">{pourMeta}</p>
+            ) : null}
+            {paneToggle}
+          </div>
+        )}
 
-        {/* Progress Actions */}
-        {ingredientIds.length > 0 && currentStep !== 'menu' && (
-          <div className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start mb-6 min-w-0">
+        {/* Sticky payoff while editing the cabinet */}
+        {hasBar && currentStep === "cabinet" && (
+          <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center">
             <button
+              type="button"
               onClick={goToMenu}
-              className="w-full sm:w-auto max-w-full px-6 sm:px-8 py-4 bg-terracotta text-cream rounded-2xl font-bold text-base sm:text-lg shadow-lg hover:bg-terracotta-dark transition-all sm:hover:scale-[1.02] flex items-center justify-center gap-2 text-center"
+              className="inline-flex w-full max-w-full items-center justify-center gap-2 rounded-2xl bg-terracotta px-6 py-3.5 text-base font-bold text-cream shadow-lg transition-all hover:bg-terracotta-dark sm:w-auto sm:hover:scale-[1.02]"
             >
-              <span className="min-w-0">
-                {cocktailsLoading && matchCounts.canMake === 0
-                  ? "Matching drinks…"
-                  : isNative
-                    ? "See what I can make →"
-                    : "🎉 Ready to Mix! See Your Cocktails →"}
-              </span>
+              {cocktailsLoading && matchCounts.canMake === 0
+                ? "Matching drinks…"
+                : matchCounts.canMake > 0
+                  ? `See ${matchCounts.canMake} drink${matchCounts.canMake === 1 ? "" : "s"} you can pour →`
+                  : "See what I can pour →"}
             </button>
-
-            {/* Cocktail Counter */}
-            {matchCounts.canMake > 0 && (
-              <div className="flex items-center justify-center gap-2 px-4 py-2 bg-olive/10 border border-olive/30 rounded-xl flex-shrink-0">
-                <span className="text-2xl">🍸</span>
-                <span className="font-bold text-olive">{matchCounts.canMake}</span>
-                <span className="text-sage">cocktails ready</span>
-              </div>
-            )}
+            {matchCounts.canMake > 0 ? (
+              <p className="text-sm text-sage sm:pl-1">
+                Matches update live as you add or remove bottles.
+              </p>
+            ) : null}
           </div>
         )}
       </MainContainer>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 overflow-x-hidden">
+      <main className="min-w-0 flex-1 overflow-x-hidden">
         {renderStepContent()}
       </main>
 
-      {/* Step Navigation - Only show on web, not on native (native uses app tab bar) */}
+      {/* Mobile pane switcher — web only (native uses NativeMixView) */}
       {isMounted && !isNative && (
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-mist z-50 safe-area-inset-bottom">
-          <div className="grid grid-cols-3 py-safe">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-mist bg-white safe-area-inset-bottom lg:hidden">
+          <div className="grid grid-cols-2 py-safe">
             <button
-              onClick={() => setCurrentStep('cabinet')}
-              className={`flex flex-col items-center py-3 px-2 transition-colors relative ${
-                currentStep === 'cabinet'
-                  ? 'text-terracotta bg-terracotta/10'
-                  : 'text-sage hover:text-forest'
-              }`}
+              type="button"
+              onClick={goToMenu}
+              disabled={!hasBar}
+              className={`flex flex-col items-center px-2 py-3 transition-colors ${
+                currentStep === "menu"
+                  ? "bg-terracotta/10 text-terracotta"
+                  : "text-sage hover:text-forest"
+              } ${!hasBar ? "opacity-50" : ""}`}
             >
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1 ${
-                currentStep === 'cabinet'
-                  ? 'bg-terracotta text-white'
-                  : 'bg-mist text-sage'
-              }`}>
-                {ingredientIds.length === 0 ? '1' : <HomeIcon className="w-3 h-3" />}
-              </div>
-              <span className="text-xs font-medium">Cabinet</span>
-              <span className="text-xs text-sage/70">Add ingredients</span>
+              <span className="text-xs font-semibold">You can pour</span>
+              <span className="text-[11px] text-sage/80">
+                {hasBar
+                  ? matchCounts.canMake > 0
+                    ? `${matchCounts.canMake} ready`
+                    : "Your drinks"
+                  : "Add bottles first"}
+              </span>
             </button>
             <button
-              onClick={() => {
-                if (ingredientIds.length > 0) {
-                  goToMenu();
-                }
-              }}
-              className={`flex flex-col items-center py-3 px-2 transition-colors relative ${
-                currentStep === 'mixer'
-                  ? 'text-olive bg-olive/10'
-                  : 'text-sage hover:text-forest'
-              } ${ingredientIds.length === 0 ? 'opacity-50' : ''}`}
-              disabled={ingredientIds.length === 0}
-            >
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1 ${
-                currentStep === 'mixer'
-                  ? 'bg-olive text-white'
-                  : ingredientIds.length === 0 ? 'bg-mist/50 text-sage/50' : 'bg-mist text-sage'
-              }`}>
-                {ingredientIds.length === 0 ? '2' : <WrenchScrewdriverIcon className="w-3 h-3" />}
-              </div>
-              <span className="text-xs font-medium">Mix</span>
-              <span className="text-xs text-sage/70">Find cocktails</span>
-            </button>
-            <button
-              onClick={() => setCurrentStep('menu')}
-              className={`flex flex-col items-center py-3 px-2 transition-colors relative ${
-                currentStep === 'menu'
-                  ? 'text-forest bg-forest/10'
-                  : 'text-sage hover:text-forest'
+              type="button"
+              onClick={goToCabinet}
+              className={`flex flex-col items-center px-2 py-3 transition-colors ${
+                currentStep === "cabinet"
+                  ? "bg-terracotta/10 text-terracotta"
+                  : "text-sage hover:text-forest"
               }`}
             >
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mb-1 ${
-                currentStep === 'menu'
-                  ? 'bg-forest text-white'
-                  : 'bg-mist text-sage'
-              }`}>
-                {ingredientIds.length === 0 ? '3' : <BookOpenIcon className="w-3 h-3" />}
-              </div>
-              <span className="text-xs font-medium">Menu</span>
-              <span className="text-xs text-sage/70">See recipes</span>
+              <span className="text-xs font-semibold">Cabinet</span>
+              <span className="text-[11px] text-sage/80">
+                {hasBar ? `${ingredientIds.length} on shelf` : "Add ingredients"}
+              </span>
             </button>
           </div>
         </nav>
@@ -651,7 +591,6 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
         <SaveBarPrompt onDismiss={handleDismissPrompt} />
       )}
 
-
       {/* Clear Bar Confirmation Dialog */}
       <ClearBarConfirmDialog
         isOpen={showClearConfirm}
@@ -660,9 +599,7 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
       />
 
       {/* Add padding for mobile navigation - Only on web */}
-      {isMounted && !isNative && (
-        <div className="lg:hidden h-16" />
-      )}
+      {isMounted && !isNative && <div className="h-16 lg:hidden" />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { useUser } from "@/components/auth/UserProvider";
@@ -26,6 +26,7 @@ import {
   readOrCreatePourPromptSessionKey,
 } from "@/lib/homeHeroHeadline";
 import { getIngredientOriginCover } from "@/lib/ingredientHeroes";
+import { randomShuffle } from "@/lib/randomization";
 import type { MixCocktail } from "@/lib/mixTypes";
 import type { SanityCocktail } from "@/lib/sanityTypes";
 
@@ -124,11 +125,14 @@ export function MobileHomePage({
   occasionCovers,
 }: MobileHomePageProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { profile, user, isAuthenticated, isLoading: authLoading } = useUser();
   const { ingredientIds, isLoading: barLoading } = useBarIngredients();
   const [sessionHint] = useState(readHomeSessionHint);
   const [cachedReadyCount] = useState(readCabinetReadyCount);
   const [pourPromptSessionKey] = useState(readOrCreatePourPromptSessionKey);
+  /** Bumps whenever Ready to pour should reshuffle (visit, tab press, foreground). */
+  const [pourRailEpoch, setPourRailEpoch] = useState(0);
   const [mixCocktails, setMixCocktails] = useState<MixCocktail[]>([]);
   const [catalogLoaded, setCatalogLoaded] = useState(false);
   const [committedHero, setCommittedHero] = useState<HomeDrink | null>(() =>
@@ -180,6 +184,21 @@ export function MobileHomePage({
   useEffect(() => {
     setHour(new Date().getHours());
   }, []);
+
+  // Soft-nav keeps Home mounted — reshuffle on every visit / Home tab press / foreground.
+  useEffect(() => {
+    if (pathname !== "/") return;
+    setPourRailEpoch((n) => n + 1);
+
+    const bump = () => setPourRailEpoch((n) => n + 1);
+
+    window.addEventListener("mixwise-home-revisit", bump);
+    window.addEventListener("pageshow", bump);
+    return () => {
+      window.removeEventListener("mixwise-home-revisit", bump);
+      window.removeEventListener("pageshow", bump);
+    };
+  }, [pathname]);
 
   useEffect(() => {
     void getMixCocktailsClient()
@@ -346,7 +365,10 @@ export function MobileHomePage({
     return take(mixCocktails.map(fromMix));
   }, [allCocktails, featuredCocktails, mixCocktails, heroDrink?.slug]);
 
-  const pourRail = readyToMake.slice(0, 14).map(fromMix);
+  const pourRail = useMemo(() => {
+    void pourRailEpoch; // dependency: reshuffle when epoch bumps
+    return randomShuffle(readyToMake).slice(0, 14).map(fromMix);
+  }, [readyToMake, pourRailEpoch]);
   const useCabinetForShake = readyToMake.length >= 1;
   const heroFromCabinet = useMemo(() => {
     if (!homeSettled && expectCabinet) return true;

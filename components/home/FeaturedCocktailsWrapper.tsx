@@ -2,7 +2,6 @@
 
 import { FeaturedCocktails } from "./FeaturedCocktails";
 import { ImagePreloader } from "@/components/common/ImagePreloader";
-import { useUser } from "@/components/auth/UserProvider";
 import { getImageUrl } from "@/lib/sanityImage";
 import { isSupabaseStorageUrl, toOptimizedImagePath } from "@/lib/mediaDelivery";
 import type { SanityCocktail } from "@/lib/sanityTypes";
@@ -12,11 +11,6 @@ interface FeaturedCocktailsWrapperProps {
 }
 
 export function FeaturedCocktailsWrapper({ cocktails }: FeaturedCocktailsWrapperProps) {
-  const { isAuthenticated } = useUser();
-
-  if (isAuthenticated) {
-    return null;
-  }
   // Prefer Sanity URLs; rewrite Supabase catalog URLs through /_next/image so
   // preloads don't hotlink Storage (counts as cached egress).
   const preloadImageUrls = cocktails

@@ -22,7 +22,7 @@ type NativeBrowseTabsProps = {
 
 export function NativeBrowseTabs({ tab, onTab }: NativeBrowseTabsProps) {
   return (
-    <div className="mb-4 grid grid-cols-2 rounded-2xl bg-white p-1 shadow-sm">
+    <div className="mb-4 grid grid-cols-2 rounded-2xl bg-mist/50 p-1">
       <BrowseTabButton
         label="Collections"
         active={tab === "collections"}
@@ -50,8 +50,8 @@ function BrowseTabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl py-2.5 text-sm font-semibold transition-colors ${
-        active ? "bg-terracotta text-cream" : "text-forest"
+      className={`rounded-xl py-2.5 text-sm font-semibold transition-colors outline-none focus:outline-none focus-visible:outline-none ${
+        active ? "bg-white text-forest shadow-sm" : "text-sage active:text-forest"
       }`}
     >
       {label}

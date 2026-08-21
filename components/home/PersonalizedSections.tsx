@@ -12,6 +12,7 @@ import { SectionHeader } from "@/components/common/SectionHeader";
 import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
+import { randomShuffle } from "@/lib/randomization";
 import { PlusCircleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import type { SanityCocktail, SanityImage } from "@/lib/sanityTypes";
 
@@ -28,6 +29,12 @@ interface MixCocktail {
   }>;
 }
 
+/** Keep logged-in home drink rails short — one grid row, no horizontal scroll. */
+const HOME_READY_LIMIT = 4;
+const HOME_ONE_AWAY_LIMIT = 3;
+const HOME_FAVORITES_LIMIT = 4;
+const HOME_RECENT_LIMIT = 4;
+
 interface PersonalizedSectionsProps {
   allCocktails: MixCocktail[];
   featuredCocktails: SanityCocktail[];
@@ -41,6 +48,8 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
   const { recentlyViewed, isLoading: recentLoading } = useRecentlyViewed();
   const [favoriteImageUrls, setFavoriteImageUrls] = useState<Map<string, string | null>>(new Map());
   const [recentImageUrls, setRecentImageUrls] = useState<Map<string, string | null>>(new Map());
+  /** Remount-only epoch so Ready list order is random per page load. */
+  const [readyEpoch] = useState(() => Math.random());
 
   // Only show loading state AFTER auth is confirmed
   const dataLoading = barLoading || favsLoading || recentLoading;
@@ -52,7 +61,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
     }
 
     const ingredientSet = new Set(ingredientIds);
-    const readyToMake: MixCocktail[] = [];
+    const readyPool: MixCocktail[] = [];
     const oneAway: Array<{ cocktail: MixCocktail; missingIngredient: { id: string; name: string } }> = [];
 
     allCocktails.forEach((cocktail) => {
@@ -65,7 +74,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       );
 
       if (missing.length === 0) {
-        readyToMake.push(cocktail);
+        readyPool.push(cocktail);
       } else if (missing.length === 1 && missing[0].ingredient) {
         oneAway.push({
           cocktail,
@@ -77,22 +86,32 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       }
     });
 
+    void readyEpoch;
     return {
-      readyToMake: readyToMake.slice(0, 6),
-      oneAway: oneAway.slice(0, 4),
+      readyToMake: randomShuffle(readyPool).slice(0, HOME_READY_LIMIT),
+      oneAway: oneAway.slice(0, HOME_ONE_AWAY_LIMIT),
     };
-  }, [allCocktails, ingredientIds, skipIds]);
+  }, [allCocktails, ingredientIds, skipIds, readyEpoch]);
+
+  const visibleFavorites = useMemo(
+    () => favorites.slice(0, HOME_FAVORITES_LIMIT),
+    [favorites],
+  );
+  const visibleRecent = useMemo(
+    () => recentlyViewed.slice(0, HOME_RECENT_LIMIT),
+    [recentlyViewed],
+  );
 
   // Fetch image URLs from Sanity for favorites
   useEffect(() => {
     async function fetchFavoriteImages() {
-      if (favorites.length === 0) {
+      if (visibleFavorites.length === 0) {
         setFavoriteImageUrls(new Map());
         return;
       }
 
       try {
-        const cocktailIds = favorites.map(fav => fav.cocktail_id);
+        const cocktailIds = visibleFavorites.map(fav => fav.cocktail_id);
         const imageUrls = await getCocktailImageUrls(cocktailIds);
         setFavoriteImageUrls(imageUrls);
       } catch (error) {
@@ -100,21 +119,21 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       }
     }
 
-    if (!favsLoading && favorites.length > 0) {
+    if (!favsLoading && visibleFavorites.length > 0) {
       fetchFavoriteImages();
     }
-  }, [favorites, favsLoading]);
+  }, [visibleFavorites, favsLoading]);
 
   // Fetch image URLs from Sanity for recently viewed
   useEffect(() => {
     async function fetchRecentImages() {
-      if (recentlyViewed.length === 0) {
+      if (visibleRecent.length === 0) {
         setRecentImageUrls(new Map());
         return;
       }
 
       try {
-        const cocktailIds = recentlyViewed.map(item => item.cocktail_id);
+        const cocktailIds = visibleRecent.map(item => item.cocktail_id);
         const imageUrls = await getCocktailImageUrls(cocktailIds);
         setRecentImageUrls(imageUrls);
       } catch (error) {
@@ -122,10 +141,10 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       }
     }
 
-    if (!recentLoading && recentlyViewed.length > 0) {
+    if (!recentLoading && visibleRecent.length > 0) {
       fetchRecentImages();
     }
-  }, [recentlyViewed, recentLoading]);
+  }, [visibleRecent, recentLoading]);
 
   // IMPORTANT: Don't show anything if auth is still loading or user is not authenticated
   // This prevents skeleton states from showing for anonymous users
@@ -193,15 +212,21 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
           <div className="flex items-center justify-between mb-6">
             <SectionHeader title="Cocktails You Can Make" id="canmake-title" />
             <Link
-              href="/mix"
+              href="/mix?step=menu"
               className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1"
             >
               View all in Mix <ArrowRightIcon className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" role="list">
+          <div className="grid gap-5 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4" role="list">
             {readyToMake.map((cocktail) => (
-              <SmallCocktailCard key={cocktail._id} cocktail={cocktail} badge="Ready!" badgeColor="bg-olive" />
+              <SmallCocktailCard
+                key={cocktail._id}
+                cocktail={cocktail}
+                badge="Ready!"
+                badgeColor="bg-olive"
+                openInNewTab
+              />
             ))}
           </div>
         </section>
@@ -212,7 +237,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
         <section aria-labelledby="oneaway-title">
           <SectionHeader title="Just One Ingredient Away" id="oneaway-title" />
           <p className="text-sage text-sm mb-6">Add one ingredient to unlock these recipes!</p>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" role="list">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="list">
             {oneAway.map(({ cocktail, missingIngredient }) => (
               <OneAwayCard
                 key={cocktail._id}
@@ -237,18 +262,15 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
               View all <ArrowRightIcon className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" role="list">
-            {favorites.slice(0, 8).map((fav) => {
-              // Try to get image URL from Supabase cocktails table first, fallback to stored URL
-              // Handle both null and empty string cases
+          <div className="grid gap-5 grid-cols-2 lg:grid-cols-4" role="list">
+            {visibleFavorites.map((fav) => {
               const supabaseImageUrl = favoriteImageUrls.get(fav.cocktail_id);
               const storedImageUrl = fav.cocktail_image_url;
-              // Prioritize Supabase URL, then stored URL, ensuring non-empty strings
-              const imageUrl = 
+              const imageUrl =
                 (supabaseImageUrl && supabaseImageUrl.trim() && supabaseImageUrl.trim().length > 0 ? supabaseImageUrl.trim() : null) ||
                 (storedImageUrl && storedImageUrl.trim() && storedImageUrl.trim().length > 0 ? storedImageUrl.trim() : null) ||
                 undefined;
-              
+
               return (
                 <SmallCocktailCard
                   key={fav.cocktail_id}
@@ -267,17 +289,15 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       )}
 
       {/* Continue Exploring */}
-      {hasRecent && recentlyViewed.length > 0 && (
+      {hasRecent && visibleRecent.length > 0 && (
         <section aria-labelledby="recent-title">
           <SectionHeader title="Continue Exploring" id="recent-title" />
-          <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin" role="list">
-            {recentlyViewed.slice(0, 8).map((item) => {
-              // Try to get image URL from Supabase cocktails table first, fallback to stored URL
-              // Handle both null and empty string cases
+          <div className="grid gap-5 grid-cols-2 lg:grid-cols-4" role="list">
+            {visibleRecent.map((item) => {
               const supabaseImageUrl = recentImageUrls.get(item.cocktail_id);
               const storedImageUrl = item.cocktail_image_url;
               const imageUrl = (supabaseImageUrl && supabaseImageUrl.trim()) || (storedImageUrl && storedImageUrl.trim()) || undefined;
-              
+
               return (
                 <SmallCocktailCard
                   key={item.cocktail_id}
@@ -287,7 +307,6 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
                     slug: { current: item.cocktail_slug || "" },
                     externalImageUrl: imageUrl,
                   }}
-                  compact
                 />
               );
             })}
@@ -312,10 +331,15 @@ interface SmallCocktailCardProps {
   };
   badge?: string;
   badgeColor?: string;
-  compact?: boolean;
+  openInNewTab?: boolean;
 }
 
-function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }: SmallCocktailCardProps) {
+function SmallCocktailCard({
+  cocktail,
+  badge,
+  badgeColor = "bg-olive",
+  openInNewTab = false,
+}: SmallCocktailCardProps) {
   // Prioritize externalImageUrl (from Supabase) over Sanity image for favorites/recent
   const sanityImageUrl = getImageUrl(cocktail.image, { width: 600, height: 400, quality: 90 });
   const imageUrl = cocktail.externalImageUrl || sanityImageUrl || null;
@@ -324,23 +348,23 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }
   return (
     <Link
       href={`/cocktails/${cocktail.slug?.current || cocktail._id}`}
-      className={`group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover ${compact ? "flex-shrink-0 w-48" : ""}`}
+      {...(openInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className="group relative flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-card-hover"
       role="listitem"
     >
-      <div className={`relative ${compact ? "h-28" : "h-36"} w-full overflow-hidden bg-mist`}>
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-mist">
         {imageUrl ? (
           <>
             <Image
               src={imageUrl}
               alt=""
               fill
-              sizes={compact ? "192px" : "(max-width: 768px) 50vw, 25vw"}
-              className="object-cover transition-transform duration-500 group-hover:scale-105 mix-blend-multiply"
+              sizes="(max-width: 768px) 50vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
               quality={90}
               placeholder="blur"
               blurDataURL={COCKTAIL_BLUR_DATA_URL}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
           </>
         ) : (
           <div className="h-full w-full flex items-center justify-center text-sage text-4xl" aria-hidden="true">
@@ -362,10 +386,15 @@ function SmallCocktailCard({ cocktail, badge, badgeColor = "bg-olive", compact }
           </div>
         )}
       </div>
-      <div className={`${compact ? "p-3" : "p-4"} flex-1`}>
-        <h3 className={`font-display font-bold ${compact ? "text-sm" : "text-base"} text-forest group-hover:text-terracotta transition-colors line-clamp-2`}>
+      <div className="p-3.5 sm:p-4">
+        <h3 className="font-display font-bold text-base leading-tight text-forest group-hover:text-terracotta transition-colors line-clamp-2">
           {formatCocktailName(cocktail.name)}
         </h3>
+        {cocktail.primarySpirit ? (
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-sage sm:text-xs">
+            {cocktail.primarySpirit}
+          </p>
+        ) : null}
       </div>
     </Link>
   );

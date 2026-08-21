@@ -49,3 +49,13 @@ export function deterministicShuffle<T>(array: T[], seed: string): T[] {
     return [...array];
   }
 }
+
+/** Non-deterministic Fisher–Yates — new order every call (home Ready to pour, etc.). */
+export function randomShuffle<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}

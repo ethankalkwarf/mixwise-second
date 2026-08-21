@@ -31,6 +31,10 @@ export function MobileTabBar() {
   }, [router, tabs]);
 
   const handlePress = (tab: MobileTabDestination) => {
+    if (tab.id === "home" && pathname === "/") {
+      window.dispatchEvent(new Event("mixwise-home-revisit"));
+      return;
+    }
     if (tab.id === "search" && pathname === "/cocktails" && !searchParams.get("browse")) {
       window.dispatchEvent(new Event(MIXWISE_FOCUS_SEARCH));
       return;
@@ -53,7 +57,7 @@ export function MobileTabBar() {
               key={`${tab.id}-${tab.path}`}
               type="button"
               onClick={() => handlePress(tab)}
-              className="group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5"
+              className="group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 outline-none focus:outline-none focus-visible:outline-none"
               aria-label={tab.label}
               aria-current={isActive ? "page" : undefined}
             >
@@ -61,10 +65,8 @@ export function MobileTabBar() {
                 <span className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-terracotta" />
               )}
               <span
-                className={`flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-200 ${
-                  isActive
-                    ? "bg-terracotta/12 scale-105"
-                    : "group-active:bg-mist/60 group-active:scale-95"
+                className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors duration-200 ${
+                  isActive ? "text-terracotta" : "group-active:bg-mist/50"
                 }`}
               >
                 <Icon

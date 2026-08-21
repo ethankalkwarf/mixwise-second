@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getCocktailsList } from "@/lib/cocktails.server";
 import { MainContainer } from "@/components/layout/MainContainer";
+import { WebPageHero } from "@/components/layout/WebPageHero";
 import { CocktailsDirectory } from "@/components/cocktails/CocktailsDirectory";
 import { generatePageMetadata } from "@/lib/seo";
 import { isNativeAppRequest } from "@/lib/mobile/serverNative";
@@ -65,20 +66,20 @@ export default async function CocktailsPage({
       <MainContainer>
         {/* Web-only marketing header — native Search tab uses NativePageHero instead. */}
         {!native ? (
-          <div data-web-recipes-chrome className="mb-10">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-forest mb-4">
-              Cocktail Recipes
-            </h1>
-            <p className="text-sage max-w-2xl">
-              Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each
-              recipe includes detailed ingredients and instructions. Looking up a bottle? See
-              the{" "}
-              <Link href="/ingredients" className="text-terracotta hover:underline">
-                ingredient guides
-              </Link>
-              .
-            </p>
-          </div>
+          <WebPageHero
+            title="Cocktail Recipes"
+            description={
+              <>
+                Browse our collection of {cocktails.length} handcrafted cocktail recipes. Each
+                recipe includes detailed ingredients and instructions. Looking up a bottle? See
+                the{" "}
+                <Link href="/ingredients" className="text-terracotta hover:underline">
+                  ingredient guides
+                </Link>
+                .
+              </>
+            }
+          />
         ) : null}
 
         {/* Empty State */}

@@ -5,6 +5,11 @@ import { useToast } from "@/components/ui/toast";
 import { BADGE_LIST } from "@/lib/badges";
 import { useUserBadges } from "@/hooks/useUserBadges";
 import { AppLink } from "@/components/mobile/AppLink";
+import { ListeningTrackPicker } from "@/components/account/ListeningTrackPicker";
+import { getMixologistTier } from "@/lib/mixologistTiers";
+import { listeningUnlocked } from "@/lib/listening";
+import { getBarSharePath } from "@/lib/barShare";
+import { optimizeAvatarUrl } from "@/lib/avatarUrl";
 import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
@@ -16,13 +21,12 @@ import {
   EnvelopeIcon,
   TrophyIcon,
   UsersIcon,
+  EyeIcon,
 } from "@heroicons/react/24/outline";
 import { debugLog } from "@/lib/debugLog";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
 import { AvatarUploader } from "@/components/account/AvatarUploader";
-import { getMixologistTier } from "@/lib/mixologistTiers";
-import Link from "next/link";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
@@ -545,24 +549,156 @@ export default function AccountPage() {
 
   // Only show display name if profile data is loaded, otherwise show loading state
   const displayName = profile ? (profile.display_name || user?.email?.split("@")[0] || "User") : "Loading...";
-  const avatarUrl = profile?.avatar_url;
+  const avatarUrl = optimizeAvatarUrl(profile?.avatar_url, 256);
   const email = user?.email;
   const mixologistTier = getMixologistTier([...earnedIds]);
+  const canPinListening = listeningUnlocked([...earnedIds]);
+  const publicBarPath = getBarSharePath(profile);
+  const showPublicBarLink =
+    Boolean(preferences?.public_bar_enabled && publicBarPath);
 
   const cardClass = nativeShell
     ? "overflow-hidden rounded-[1.75rem] bg-white shadow-sm"
-    : "overflow-hidden rounded-3xl border border-mist bg-white";
+    : "overflow-hidden rounded-2xl border border-mist/80 bg-white/90 shadow-[0_1px_0_rgba(45,58,46,0.04)]";
 
   const sectionTitleClass = nativeShell
     ? "font-display text-lg font-bold text-forest"
-    : "font-serif text-lg font-bold text-forest";
+    : "font-serif text-xl font-bold tracking-tight text-forest";
   const rowTitleClass = "text-sm font-semibold text-forest";
   const rowDescClass = "mt-0.5 text-sm text-sage";
   const metaClass = "text-xs text-sage";
+  const isDesktop = !nativeShell && layoutTier === "desktop";
+
+  const copyPublicBarLink = () => {
+    if (!publicBarPath) return;
+    const url = `${window.location.origin}${publicBarPath}`;
+    void navigator.clipboard.writeText(url);
+    toast.success("Public bar link copied");
+  };
+
+  const identityDetails = (
+    <>
+      <p className="truncate text-xl font-semibold tracking-tight text-forest sm:text-2xl">
+        {displayName}
+      </p>
+      {profile?.username ? (
+        <p className="mt-0.5 truncate text-sm text-olive">@{profile.username}</p>
+      ) : (
+        <p className="mt-1 text-xs font-medium leading-snug text-terracotta">
+          Add a username so friends can find you
+        </p>
+      )}
+      <div className={`mt-2 space-y-0.5 ${metaClass}`}>
+        {email && <p className="truncate">{email}</p>}
+        <p className="truncate">
+          <AppLink href="/badges" className="font-medium text-olive hover:text-olive-dark">
+            <span aria-hidden>{mixologistTier.emoji} </span>
+            {mixologistTier.name}
+          </AppLink>
+          {!badgesLoading && (
+            <> · {earnedIds.size} of {BADGE_LIST.length} badges</>
+          )}
+        </p>
+      </div>
+    </>
+  );
+
+  const profileFields = (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
+        <div>
+          <label htmlFor="firstName" className="label-botanical mb-1.5">
+            First Name
+          </label>
+          <input
+            id="firstName"
+            type="text"
+            value={firstNameInput}
+            onChange={(e) => setFirstNameInput(e.target.value)}
+            className="input-botanical"
+            placeholder="Optional"
+            disabled={profileSaving}
+          />
+        </div>
+        <div>
+          <label htmlFor="lastName" className="label-botanical mb-1.5">
+            Last Name
+          </label>
+          <input
+            id="lastName"
+            type="text"
+            value={lastNameInput}
+            onChange={(e) => setLastNameInput(e.target.value)}
+            className="input-botanical"
+            placeholder="Optional"
+            disabled={profileSaving}
+          />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="displayName" className="label-botanical mb-1.5">
+          Display Name
+        </label>
+        <input
+          id="displayName"
+          type="text"
+          value={displayNameInput}
+          onChange={(e) => setDisplayNameInput(e.target.value)}
+          className="input-botanical"
+          placeholder="How your name appears in the app"
+          disabled={profileSaving}
+        />
+      </div>
+      <div>
+        <label htmlFor="bio" className="label-botanical mb-1.5">
+          Public bio
+        </label>
+        <textarea
+          id="bio"
+          value={bioInput}
+          onChange={(e) => setBioInput(e.target.value.slice(0, 160))}
+          className="input-botanical min-h-[88px] resize-y"
+          placeholder="A short line about your bar — favorites, vibes, what you're mixing"
+          maxLength={160}
+          disabled={profileSaving}
+        />
+        <p className={`mt-1.5 ${metaClass}`}>
+          {bioInput.length}/160 · Shown on your public bar
+          {!preferences?.public_bar_enabled && " (enable Public Bar below)"}
+        </p>
+      </div>
+      <div className="border-t border-mist/70 pt-4">
+        <ListeningTrackPicker
+          deezerId={profile?.listening_deezer_id}
+          trackName={profile?.listening_track_name}
+          trackArtist={profile?.listening_track_artist}
+          unlocked={canPinListening}
+          onSaved={async () => {
+            try {
+              const cacheKey = user ? `mixwise_profile_${user.id}` : null;
+              if (cacheKey) localStorage.removeItem(cacheKey);
+            } catch {
+              /* ignore */
+            }
+            await refreshProfile();
+          }}
+        />
+      </div>
+      <div className="flex justify-end pt-1">
+        <button
+          onClick={handleUpdateProfile}
+          disabled={profileSaving}
+          className="btn-primary disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[10rem]"
+        >
+          {profileSaving ? "Saving..." : "Save profile"}
+        </button>
+      </div>
+    </div>
+  );
 
   const profileSection = (
     <section className={cardClass}>
-      <div className="border-b border-mist/80 px-5 py-4 sm:px-6">
+      <div className="border-b border-mist/70 px-5 py-4 sm:px-6">
         <h2 className={sectionTitleClass}>Profile</h2>
         <p className={rowDescClass}>How you appear on your public bar</p>
       </div>
@@ -576,135 +712,137 @@ export default function AccountPage() {
           }}
           details={
             <>
-              <p className="truncate text-lg font-semibold tracking-tight text-forest">
-                {displayName}
-              </p>
-              {profile?.username ? (
-                <p className="mt-0.5 truncate text-sm text-olive">@{profile.username}</p>
+              {identityDetails}
+              {showPublicBarLink ? (
+                <AppLink
+                  href={publicBarPath!}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-olive/10 px-3 py-1.5 text-sm font-semibold text-olive transition hover:bg-olive/15"
+                >
+                  <EyeIcon className="h-4 w-4" />
+                  View my public bar
+                </AppLink>
               ) : (
-                <p className="mt-1 text-xs font-medium leading-snug text-terracotta">
-                  Add a username so friends can find you
+                <p className="mt-3 text-xs text-sage">
+                  Turn on Public bar below so friends can find you.
                 </p>
               )}
-              <div className={`mt-2 space-y-0.5 ${metaClass}`}>
-                {email && <p className="truncate">{email}</p>}
-                <p className="truncate">
-                  <Link href="/badges" className="font-medium text-olive hover:text-olive-dark">
-                    <span aria-hidden>{mixologistTier.emoji} </span>
-                    {mixologistTier.name}
-                  </Link>
-                  {!badgesLoading && (
-                    <> · {earnedIds.size} of {BADGE_LIST.length} badges</>
-                  )}
-                </p>
-              </div>
             </>
           }
         />
 
-        <div className="mt-6 space-y-4 border-t border-mist/80 pt-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
-            <div>
-              <label htmlFor="firstName" className="label-botanical mb-1.5">
-                First Name
-              </label>
-              <input
-                id="firstName"
-                type="text"
-                value={firstNameInput}
-                onChange={(e) => setFirstNameInput(e.target.value)}
-                className="input-botanical"
-                placeholder="Optional"
-                disabled={profileSaving}
-              />
+        <div className="mt-6 space-y-4 border-t border-mist/70 pt-6">
+          {showPublicBarLink && !isDesktop && (
+            <div className="flex flex-col gap-2 rounded-xl border border-olive/20 bg-olive/[0.06] px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-forest">Your public bar</p>
+                <p className="mt-0.5 truncate font-mono text-xs text-sage">
+                  /bar/{shareableBarUrl}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <AppLink
+                  href={publicBarPath!}
+                  className="inline-flex items-center justify-center rounded-xl bg-olive px-3 py-2 text-sm font-medium text-cream transition hover:bg-olive-dark"
+                >
+                  Open
+                </AppLink>
+                <button
+                  type="button"
+                  onClick={copyPublicBarLink}
+                  className="inline-flex items-center justify-center rounded-xl border border-mist bg-white px-3 py-2 text-sm font-medium text-forest transition hover:border-olive/40"
+                >
+                  Copy link
+                </button>
+              </div>
             </div>
-            <div>
-              <label htmlFor="lastName" className="label-botanical mb-1.5">
-                Last Name
-              </label>
-              <input
-                id="lastName"
-                type="text"
-                value={lastNameInput}
-                onChange={(e) => setLastNameInput(e.target.value)}
-                className="input-botanical"
-                placeholder="Optional"
-                disabled={profileSaving}
-              />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="displayName" className="label-botanical mb-1.5">
-              Display Name
-            </label>
-            <input
-              id="displayName"
-              type="text"
-              value={displayNameInput}
-              onChange={(e) => setDisplayNameInput(e.target.value)}
-              className="input-botanical"
-              placeholder="How your name appears in the app"
-              disabled={profileSaving}
-            />
-          </div>
-          <div>
-            <label htmlFor="bio" className="label-botanical mb-1.5">
-              Public bio
-            </label>
-            <textarea
-              id="bio"
-              value={bioInput}
-              onChange={(e) => setBioInput(e.target.value.slice(0, 160))}
-              className="input-botanical min-h-[88px] resize-y"
-              placeholder="A short line about your bar — favorites, vibes, what you're mixing"
-              maxLength={160}
-              disabled={profileSaving}
-            />
-            <p className={`mt-1.5 ${metaClass}`}>
-              {bioInput.length}/160 · Shown on your public bar
-              {!preferences?.public_bar_enabled && " (enable Public Bar below)"}
-            </p>
-          </div>
-          <div className="flex justify-end pt-1">
-            <button
-              onClick={handleUpdateProfile}
-              disabled={profileSaving}
-              className="btn-primary disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[10rem]"
-            >
-              {profileSaving ? "Saving..." : "Save profile"}
-            </button>
-          </div>
+          )}
+          {profileFields}
         </div>
       </div>
+    </section>
+  );
+
+  const desktopIdentityHero = (
+    <section className={cardClass}>
+      <div className="flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:p-10">
+        <AvatarUploader
+          avatarUrl={avatarUrl}
+          displayName={displayName}
+          size="lg"
+          onUploaded={async () => {
+            await refreshProfile().catch(() => undefined);
+          }}
+          details={identityDetails}
+        />
+        <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+          {showPublicBarLink ? (
+            <>
+              <AppLink
+                href={publicBarPath!}
+                className="inline-flex items-center gap-2 rounded-xl bg-olive px-4 py-2.5 text-sm font-semibold text-cream transition hover:bg-olive-dark"
+              >
+                <EyeIcon className="h-4 w-4 shrink-0" />
+                View public bar
+              </AppLink>
+              <button
+                type="button"
+                onClick={copyPublicBarLink}
+                className="inline-flex items-center gap-2 rounded-xl border border-mist bg-white px-4 py-2.5 text-sm font-medium text-forest transition hover:border-olive/35"
+              >
+                Copy link
+              </button>
+            </>
+          ) : (
+            <p className="max-w-xs text-sm text-sage lg:text-right">
+              Turn on your public bar in Visibility to share a profile link.
+            </p>
+          )}
+          {ingredientIds.length > 0 && (
+            <ShareBarButton
+              variant="inline"
+              showPreview={false}
+              className="inline-flex items-center gap-2 rounded-xl border border-mist bg-white py-2.5 pl-[1.125rem] pr-4 text-sm font-medium text-forest transition hover:border-olive/35 disabled:opacity-50"
+            />
+          )}
+        </div>
+      </div>
+    </section>
+  );
+
+  const profileDetailsCard = (
+    <section className={cardClass}>
+      <div className="border-b border-mist/70 px-6 py-5">
+        <h2 className={sectionTitleClass}>Profile details</h2>
+        <p className={rowDescClass}>Names, bio, and bar soundtrack</p>
+      </div>
+      <div className="p-6">{profileFields}</div>
     </section>
   );
 
   const friendsLink = (
-    <section className={cardClass}>
-      <Link
-        href="/friends"
-        className="native-menu-row flex w-full items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-mist/40 sm:px-6 group"
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          <UsersIcon className="h-5 w-5 shrink-0 text-olive" />
-          <div className="min-w-0">
-            <p className={rowTitleClass}>Friends</p>
-            <p className={rowDescClass}>Invite, follow, and activity</p>
-          </div>
+    <AppLink
+      href="/friends"
+      className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-mist/40 sm:px-6"
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <UsersIcon className="h-5 w-5 shrink-0 text-olive" />
+        <div className="min-w-0">
+          <p className={rowTitleClass}>Friends</p>
+          <p className={rowDescClass}>Invite, follow, and activity</p>
         </div>
-        <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
-      </Link>
-    </section>
+      </div>
+      <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+    </AppLink>
   );
 
   const publicBarSection = (
     <section className={cardClass}>
-      <div className="border-b border-mist/80 px-5 py-4 sm:px-6">
-        <h2 className={sectionTitleClass}>Public bar</h2>
+      <div className="border-b border-mist/70 px-5 py-4 sm:px-6">
+        <h2 className={sectionTitleClass}>Visibility</h2>
         <p className={rowDescClass}>Who can see your cabinet and share link</p>
       </div>
 
-      <div className="divide-y divide-mist/80">
+      <div className="divide-y divide-mist/70">
         <div className="flex items-start justify-between gap-4 px-5 py-4 sm:px-6">
           <div className="flex min-w-0 items-start gap-3">
             {preferences?.public_bar_enabled ? (
@@ -733,10 +871,10 @@ export default function AccountPage() {
         </div>
 
         {preferences?.public_bar_enabled && shareableBarUrl && (
-          <div className="space-y-3 bg-olive/[0.04] px-5 py-4 sm:px-6">
-            <p className="text-sm text-sage">Share your bar with this link:</p>
+          <div className="space-y-3 bg-olive/[0.03] px-5 py-4 sm:px-6">
+            <p className="text-sm text-sage">Your share link</p>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-              <code className="min-w-0 break-all rounded-xl border border-mist bg-cream px-3 py-2 font-mono text-sm text-forest">
+              <code className="min-w-0 break-all rounded-xl border border-mist bg-cream/80 px-3 py-2 font-mono text-sm text-forest">
                 {typeof window !== "undefined"
                   ? `${window.location.origin}/bar/${shareableBarUrl}`
                   : `/bar/${shareableBarUrl}`}
@@ -820,7 +958,7 @@ export default function AccountPage() {
 
   const emailSection = (
     <section className={cardClass}>
-      <div className="border-b border-mist/80 px-5 py-4 sm:px-6">
+      <div className="border-b border-mist/70 px-5 py-4 sm:px-6">
         <h2 className={sectionTitleClass}>Email</h2>
         <p className={rowDescClass}>What MixWise sends to your inbox</p>
       </div>
@@ -857,52 +995,108 @@ export default function AccountPage() {
     </section>
   );
 
+  /** Compact email opt-out for native / phone — tucked away, not its own card. */
+  const emailQuietRow = (
+    <div className="flex items-center justify-between gap-3 px-5 py-3.5 sm:px-6">
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-sage">Email updates</p>
+        <p className="mt-0.5 text-[11px] leading-snug text-sage/80">
+          {emailPrefsError
+            ? emailPrefsError
+            : emailSubscribed
+              ? "You're on the list for tips and inspiration"
+              : "You're unsubscribed from MixWise emails"}
+        </p>
+      </div>
+      {emailPrefsLoading ? (
+        <div className="h-5 w-9 shrink-0 animate-pulse rounded-full bg-mist/60" />
+      ) : (
+        <label className="relative inline-flex shrink-0 cursor-pointer items-center opacity-80">
+          <input
+            type="checkbox"
+            className="peer sr-only"
+            checked={emailSubscribed}
+            onChange={(e) => updateEmailPref(e.target.checked)}
+            disabled={emailPrefsSaving}
+            aria-label="Email updates"
+          />
+          <div className="peer h-5 w-9 rounded-full bg-stone/30 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-white after:bg-white after:transition-all after:content-[''] peer-checked:bg-sage peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sage/30 disabled:opacity-50"></div>
+        </label>
+      )}
+    </div>
+  );
+
   const shortcutsSection = (
     <section className={cardClass}>
-      <AppLink
-        href="/badges"
-        className="native-menu-row flex w-full items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-mist/40 sm:px-6 group"
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          <TrophyIcon className="h-5 w-5 shrink-0 text-olive" />
-          <div className="min-w-0">
-            <p className={rowTitleClass}>Badges</p>
-            <p className={rowDescClass}>
-              {badgesLoading
-                ? "Loading progress…"
-                : `${earnedIds.size} of ${BADGE_LIST.length} earned`}
-            </p>
+      <div className="border-b border-mist/70 px-5 py-4 sm:px-6">
+        <h2 className={sectionTitleClass}>More</h2>
+        <p className={rowDescClass}>Friends, badges, and session</p>
+      </div>
+      <div className="divide-y divide-mist/70">
+        {friendsLink}
+        <AppLink
+          href="/badges"
+          className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-mist/40 sm:px-6"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <TrophyIcon className="h-5 w-5 shrink-0 text-olive" />
+            <div className="min-w-0">
+              <p className={rowTitleClass}>Badges</p>
+              <p className={rowDescClass}>
+                {badgesLoading
+                  ? "Loading progress…"
+                  : `${earnedIds.size} of ${BADGE_LIST.length} earned`}
+              </p>
+            </div>
           </div>
-        </div>
-        <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
-      </AppLink>
+          <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+        </AppLink>
 
-      <button
-        type="button"
-        onClick={clearHistory}
-        className="native-menu-row flex w-full items-center gap-3 border-t border-mist/80 px-5 py-4 text-left transition-colors hover:bg-mist/40 sm:px-6 group"
-      >
-        <TrashIcon className="h-5 w-5 shrink-0 text-sage group-hover:text-forest" />
-        <span className={`min-w-0 flex-1 ${rowTitleClass}`}>Clear history</span>
-        <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
-      </button>
+        <AppLink
+          href="/contact"
+          className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-mist/40 sm:px-6"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <EnvelopeIcon className="h-5 w-5 shrink-0 text-olive" />
+            <div className="min-w-0">
+              <p className={rowTitleClass}>Contact us</p>
+              <p className={rowDescClass}>Questions, feedback, or ideas</p>
+            </div>
+          </div>
+          <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+        </AppLink>
 
-      {ingredientIds.length > 0 && (
-        <ShareBarButton
-          variant="menu"
-          className="native-menu-row flex w-full items-center gap-3 border-t border-mist/80 px-5 py-4 text-left text-sm font-semibold text-forest transition-colors hover:bg-mist/40 hover:text-terracotta disabled:opacity-50 sm:px-6"
-        />
-      )}
+        <button
+          type="button"
+          onClick={clearHistory}
+          className="group flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-mist/40 sm:px-6"
+        >
+          <TrashIcon className="h-5 w-5 shrink-0 text-sage group-hover:text-forest" />
+          <span className={`min-w-0 flex-1 ${rowTitleClass}`}>Clear history</span>
+          <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+        </button>
 
-      <button
-        type="button"
-        onClick={handleSignOut}
-        className="native-menu-row flex w-full items-center gap-3 border-t border-mist/80 px-5 py-4 text-left transition-colors hover:bg-mist/40 sm:px-6 group"
-      >
-        <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0 text-terracotta group-hover:text-terracotta-dark" />
-        <span className="min-w-0 flex-1 text-sm font-semibold text-forest">Sign out</span>
-        <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
-      </button>
+        {ingredientIds.length > 0 && !isDesktop && (
+          <ShareBarButton
+            variant="menu"
+            className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-sm font-semibold text-forest transition-colors hover:bg-mist/40 hover:text-terracotta disabled:opacity-50 sm:px-6"
+          />
+        )}
+
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="group flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-mist/40 sm:px-6"
+        >
+          <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0 text-terracotta group-hover:text-terracotta-dark" />
+          <span className="min-w-0 flex-1 text-sm font-semibold text-forest">Sign out</span>
+          <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+        </button>
+
+        {(nativeShell || layoutTier === "phone") && (
+          <div className="bg-cream/40">{emailQuietRow}</div>
+        )}
+      </div>
     </section>
   );
 
@@ -986,15 +1180,13 @@ export default function AccountPage() {
               </button>
               <div className="min-w-0 flex-1">
                 <h1 className="font-display text-2xl font-bold text-forest">Account</h1>
-                <p className="text-sm text-sage">Profile, public bar, and email</p>
+                <p className="text-sm text-sage">Profile and preferences</p>
               </div>
             </div>
           </div>
           <div className="space-y-4 px-4 pt-4">
             {profileSection}
-            {friendsLink}
             {publicBarSection}
-            {emailSection}
             {shortcutsSection}
           </div>
         </PullToRefreshContainer>
@@ -1004,32 +1196,38 @@ export default function AccountPage() {
   }
 
   const phoneLayout = (
-    <div className="mx-auto max-w-xl space-y-8">
-      <header>
+    <div className="mx-auto max-w-xl space-y-6">
+      <header className="pb-1">
         <h1 className="font-serif text-3xl font-bold text-forest">Account</h1>
-        <p className="mt-1 text-sm text-sage">Profile, public bar, and email</p>
+        <p className="mt-1 text-sm text-sage">Profile, visibility, and preferences</p>
       </header>
       {profileSection}
-      {friendsLink}
       {publicBarSection}
-      {emailSection}
       {shortcutsSection}
     </div>
   );
 
   const wideLayout = (
-    <div className="mx-auto max-w-5xl lg:max-w-6xl">
+    <div className="mx-auto max-w-5xl">
       <header className="mb-8">
-        <h1 className="font-serif text-3xl font-bold text-forest lg:text-4xl">Account</h1>
-        <p className="mt-1.5 text-sm text-sage">Profile, public bar, and email</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-olive">Settings</p>
+        <h1 className="mt-1.5 font-serif text-4xl font-bold tracking-tight text-forest">
+          Account
+        </h1>
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-sage">
+          Manage how you show up on MixWise — your public bar, profile details, and preferences.
+        </p>
       </header>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(280px,400px)_minmax(0,1fr)] md:items-start lg:gap-8">
-        <div className="md:sticky md:top-24 space-y-6">{profileSection}</div>
-        <div className="space-y-6">
-          {friendsLink}
-          {publicBarSection}
-          {emailSection}
-          {shortcutsSection}
+
+      <div className="space-y-8">
+        {desktopIdentityHero}
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)]">
+          {profileDetailsCard}
+          <aside className="space-y-5 lg:sticky lg:top-24">
+            {publicBarSection}
+            {emailSection}
+            {shortcutsSection}
+          </aside>
         </div>
       </div>
     </div>

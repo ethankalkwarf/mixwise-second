@@ -12,6 +12,7 @@ interface AvatarUploaderProps {
   onUploaded: (url: string | null) => void;
   /** Optional identity/meta shown beside the avatar; upload actions move below. */
   details?: ReactNode;
+  size?: "md" | "lg";
 }
 
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -59,6 +60,7 @@ export function AvatarUploader({
   displayName,
   onUploaded,
   details,
+  size = "md",
 }: AvatarUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
@@ -160,28 +162,33 @@ export function AvatarUploader({
     }
   };
 
+  const dim = size === "lg" ? 96 : 64;
   const avatarButton = (
     <button
       type="button"
       onClick={() => inputRef.current?.click()}
       disabled={uploading}
-      className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-olive disabled:opacity-60"
+      className={`group relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-olive disabled:opacity-60 ${
+        size === "lg" ? "h-24 w-24" : "h-16 w-16"
+      }`}
       aria-label="Change profile photo"
     >
       {shownUrl ? (
         <Image
           src={shownUrl}
           alt=""
-          width={64}
-          height={64}
+          width={dim}
+          height={dim}
           className="h-full w-full object-cover"
           unoptimized={shownUrl.startsWith("blob:")}
         />
       ) : (
-        <span className="text-xl font-bold text-olive">{initial}</span>
+        <span className={`font-bold text-olive ${size === "lg" ? "text-3xl" : "text-xl"}`}>
+          {initial}
+        </span>
       )}
       <span className="absolute inset-0 flex items-center justify-center bg-forest/45 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-        <CameraIcon className="h-5 w-5 text-cream drop-shadow" />
+        <CameraIcon className={`text-cream drop-shadow ${size === "lg" ? "h-6 w-6" : "h-5 w-5"}`} />
       </span>
     </button>
   );

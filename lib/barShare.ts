@@ -52,6 +52,10 @@ export function withBarShareUtm(
     if (!parsed.searchParams.has("from")) {
       parsed.searchParams.set("from", "bar_share");
     }
+    // Durable invite attribution for post-signup auto-follow
+    if (extras?.content && !parsed.searchParams.has("ref")) {
+      parsed.searchParams.set("ref", extras.content);
+    }
     return parsed.toString();
   } catch {
     return url;

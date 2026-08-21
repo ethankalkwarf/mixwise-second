@@ -109,7 +109,7 @@ export function TabBarSettings() {
                     ? "border-terracotta/50 bg-terracotta/10"
                     : inBar
                       ? "border-mist bg-cream/80"
-                      : "border-transparent bg-cream hover:border-mist",
+                      : "border-transparent bg-cream hover:bg-white",
                 ].join(" ")}
                 aria-pressed={isActive}
                 aria-label={`Set ${meta.label} in tab ${selectedSlot + 1}`}

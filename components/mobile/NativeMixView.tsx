@@ -26,6 +26,7 @@ import {
 } from "@/lib/analytics";
 import { useUser } from "@/components/auth/UserProvider";
 import { readCabinetReadyCount, readHomeSessionHint } from "@/lib/mobile/guestData";
+import { randomShuffle } from "@/lib/randomization";
 
 type Pane = "tonight" | "shelf";
 
@@ -98,6 +99,13 @@ export function NativeMixView({
   const mixTracked = useRef(false);
   const [category, setCategory] = useState<string | null>(null);
   const { favorites } = useFavorites();
+  const [readyEpoch, setReadyEpoch] = useState(0);
+
+  useEffect(() => {
+    if (pane === "tonight") {
+      setReadyEpoch((n) => n + 1);
+    }
+  }, [pane]);
 
   useEffect(() => {
     if (ready || barLoading) return;
@@ -144,7 +152,10 @@ export function NativeMixView({
   }, [catalog, category, query]);
 
   const { visibleItems, hasMore, loadMoreRef } = useInfiniteVisibleCount(filtered, 40);
-  const readyDrinks = mixMatches.ready.map((match) => match.cocktail);
+  const readyDrinks = useMemo(() => {
+    void readyEpoch;
+    return randomShuffle(mixMatches.ready.map((match) => match.cocktail));
+  }, [mixMatches.ready, readyEpoch]);
   const drinkPager = useInfiniteVisibleCount(readyDrinks, 24);
 
   const popular = useMemo(() => {
@@ -195,7 +206,7 @@ export function NativeMixView({
         }
       />
 
-      <div className="mb-4 grid grid-cols-2 rounded-2xl bg-white p-1 shadow-sm">
+      <div className="mb-4 grid grid-cols-2 rounded-2xl bg-mist/50 p-1">
         <PaneButton
           label="You can pour"
           active={pane === "tonight"}
@@ -263,8 +274,8 @@ function PaneButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`relative rounded-xl py-2.5 text-sm font-semibold transition-colors ${
-        active ? "bg-terracotta text-cream" : "text-forest"
+      className={`relative rounded-xl py-2.5 text-sm font-semibold transition-colors outline-none focus:outline-none focus-visible:outline-none ${
+        active ? "bg-white text-forest shadow-sm" : "text-sage"
       } ${disabled ? "opacity-40" : ""}`}
     >
       {label}

@@ -141,20 +141,20 @@ export const BADGES: Record<string, BadgeDefinition> = {
   mixologist: {
     id: "mixologist",
     name: "Mixologist",
-    description: "Earned 5 different badges",
+    description: "Reached Mixologist level (5 achievement badges)",
     icon: "🏆",
     category: "mastery",
     rarity: "rare",
-    criteria: "Earn 5 badges",
+    criteria: "Automatic when you earn 5 counting badges",
   },
   master_mixologist: {
     id: "master_mixologist",
     name: "Master Mixologist",
-    description: "Earned 10 different badges",
+    description: "Reached Master Mixologist level (10 achievement badges)",
     icon: "👑",
     category: "mastery",
     rarity: "legendary",
-    criteria: "Earn 10 badges",
+    criteria: "Automatic when you earn 10 counting badges",
   },
   
   // Social Badges

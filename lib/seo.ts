@@ -7,7 +7,7 @@ export const SITE_CONFIG = {
   description:
     "MixWise is a free cocktail tool that matches drinks to the bottles already in your cabinet. Add what you have, see what you can pour tonight, and which one extra ingredient unlocks more.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://www.getmixwise.com",
-  ogImage: "/og-image.jpg",
+  ogImage: "/opengraph-image",
   logo: "/logo.png",
   twitterHandle: "@mixwise",
   sameAs: [] as string[],
@@ -55,7 +55,12 @@ type MetadataOptions = {
   title?: string;
   description?: string;
   path?: string;
-  ogImage?: string;
+  /**
+   * Absolute or site-relative OG image URL.
+   * Pass `false` to omit images so a route `opengraph-image` file can supply them
+   * (Next metadata `images` otherwise overrides the file convention).
+   */
+  ogImage?: string | false;
   noIndex?: boolean;
   type?: "website" | "article";
   publishedTime?: string;
@@ -96,8 +101,13 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
     : `${SITE_CONFIG.name} - ${SITE_CONFIG.tagline}`;
 
   const url = `${SITE_CONFIG.url}${path}`;
-  const resolvedOg = ogImage ? absoluteUrl(ogImage) : absoluteUrl(SITE_CONFIG.ogImage);
-  const imageUrl = toPublicDeliveryUrl(resolvedOg, "og") || resolvedOg;
+  const skipOgImage = ogImage === false;
+  const resolvedOg = skipOgImage
+    ? null
+    : absoluteUrl(typeof ogImage === "string" ? ogImage : SITE_CONFIG.ogImage);
+  const imageUrl = resolvedOg
+    ? toPublicDeliveryUrl(resolvedOg, "og") || resolvedOg
+    : null;
 
   const metadata: Metadata = {
     description,
@@ -112,20 +122,26 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
       title: pageTitle,
       description,
       siteName: SITE_CONFIG.name,
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: title ? `${stripSiteSuffix(title)} | ${SITE_CONFIG.name}` : SITE_CONFIG.name,
-        },
-      ],
+      ...(imageUrl
+        ? {
+            images: [
+              {
+                url: imageUrl,
+                width: 1200,
+                height: 630,
+                alt: title
+                  ? `${stripSiteSuffix(title)} | ${SITE_CONFIG.name}`
+                  : SITE_CONFIG.name,
+              },
+            ],
+          }
+        : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: pageTitle,
       description,
-      images: [imageUrl],
+      ...(imageUrl ? { images: [imageUrl] } : {}),
       creator: SITE_CONFIG.twitterHandle,
     },
     robots: noIndex

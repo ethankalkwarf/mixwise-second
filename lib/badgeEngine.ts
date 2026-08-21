@@ -326,18 +326,20 @@ async function checkMetaBadges(
   newlyAwarded: BadgeDefinition[]
 ): Promise<void> {
   const existingBadges = await getUserBadges(supabase, userId);
-  const totalBadges = existingBadges.length + newlyAwarded.length;
   const existingBadgeIds = new Set(existingBadges.map((b) => b.badge_id));
+  // Count achievement badges only — meta badges don't count toward the threshold
+  const counting =
+    existingBadges.filter((b) => b.badge_id !== "mixologist" && b.badge_id !== "master_mixologist")
+      .length +
+    newlyAwarded.filter((b) => b.id !== "mixologist" && b.id !== "master_mixologist").length;
 
-  // Check mixologist (5 badges)
-  if (totalBadges >= 5 && !existingBadgeIds.has("mixologist")) {
+  if (counting >= 5 && !existingBadgeIds.has("mixologist")) {
     if (await awardBadge(supabase, userId, "mixologist")) {
       newlyAwarded.push(BADGES.mixologist);
     }
   }
 
-  // Check master_mixologist (10 badges)
-  if (totalBadges >= 10 && !existingBadgeIds.has("master_mixologist")) {
+  if (counting >= 10 && !existingBadgeIds.has("master_mixologist")) {
     if (await awardBadge(supabase, userId, "master_mixologist")) {
       newlyAwarded.push(BADGES.master_mixologist);
     }

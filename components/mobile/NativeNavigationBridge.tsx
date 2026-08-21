@@ -50,8 +50,6 @@ export function NativeNavigationBridge() {
       const anchor = target.closest("a");
       if (!anchor) return;
       if (anchor.hasAttribute("download")) return;
-      const anchorTarget = anchor.getAttribute("target");
-      if (anchorTarget && anchorTarget !== "_self") return;
 
       const href = anchor.getAttribute("href");
       if (!href) return;
@@ -62,6 +60,7 @@ export function NativeNavigationBridge() {
       // Ensure the native flag/class is set for other helpers (AppLink, CSS).
       void isNativeApp();
 
+      // Intercept target=_blank too — same-origin blanks open Safari in Capacitor.
       event.preventDefault();
       event.stopPropagation();
       navigateInApp(router, path);

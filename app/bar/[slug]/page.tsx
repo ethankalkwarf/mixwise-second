@@ -19,7 +19,9 @@ import { getBarSharePath } from "@/lib/barShare";
 import { debugLog } from "@/lib/debugLog";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { FollowButton } from "@/components/bar/FollowButton";
+import { ListeningTrackPlayer } from "@/components/bar/ListeningTrackPlayer";
 import { getPublicMixologistTier } from "@/lib/mixologistTier.server";
+import { optimizeAvatarUrl } from "@/lib/avatarUrl";
 
 // Force dynamic rendering to ensure fresh data on every request
 // This ensures ingredients and favorites are always up-to-date
@@ -40,6 +42,10 @@ interface PublicProfile {
   public_slug: string;
   avatar_url: string | null;
   bio: string | null;
+  listening_spotify_id: string | null;
+  listening_deezer_id: string | null;
+  listening_track_name: string | null;
+  listening_track_artist: string | null;
 }
 
 interface BarIngredient {
@@ -123,7 +129,8 @@ async function getProfileData(slug: string): Promise<{
     debugLog('[BAR PAGE] Supabase client created, type:', isOwnerView ? 'authenticated' : 'anonymous');
 
     // Build query dynamically to handle missing columns gracefully
-    const selectFields = "id, display_name, avatar_url, username, public_slug, bio" as const;
+    const selectFields =
+      "id, display_name, avatar_url, username, public_slug, bio, listening_spotify_id, listening_deezer_id, listening_track_name, listening_track_artist" as const;
 
     let profileQuery = supabase
       .from("profiles")
@@ -230,6 +237,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: "Manage your bar with ingredients and discover new cocktails.",
         path: `/bar/${slug}`,
         noIndex: true,
+        // Let opengraph-image.tsx own the preview (don't force legacy /og-image.jpg).
+        ogImage: false,
       });
     }
 
@@ -239,6 +248,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         profile.bio?.trim() ||
         `Check out ${displayName}'s bar and see what cocktails they can make at home on MixWise.`,
       path: `/bar/${slug}`,
+      ogImage: false,
     });
   } catch (error) {
     console.error('[BAR PAGE] Error in generateMetadata:', error);
@@ -266,6 +276,7 @@ export default async function BarPage({ params }: Props) {
   const firstName = displayName.split(' ')[0] || displayName; // Get first name for personalized heading
   const isPublic = preferences?.public_bar_enabled === true;
   const { tier } = await getPublicMixologistTier(profile.id, { asOwner: isOwnerView });
+  const avatarUrl = optimizeAvatarUrl(profile.avatar_url, 400);
 
   // Use ingredient IDs directly (they're already UUID strings from getUserBarIngredients)
   const cocktailIngredientIds = ingredients.map(ing => ing.ingredient_id);
@@ -315,17 +326,18 @@ export default async function BarPage({ params }: Props) {
             <div className="card p-6 sm:p-8">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start gap-5 min-w-0">
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-full overflow-hidden bg-olive/20 ring-2 ring-mist flex items-center justify-center">
-                    {profile.avatar_url ? (
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-full overflow-hidden bg-olive/20 ring-2 ring-mist flex items-center justify-center">
+                    {avatarUrl ? (
                       <Image
-                        src={profile.avatar_url}
+                        src={avatarUrl}
                         alt={displayName}
-                        width={128}
-                        height={128}
+                        width={112}
+                        height={112}
+                        quality={90}
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <UserCircleIcon className="w-14 h-14 text-olive" />
+                      <UserCircleIcon className="w-12 h-12 text-olive" />
                     )}
                   </div>
                   <div className="min-w-0 pt-0.5">
@@ -350,6 +362,16 @@ export default async function BarPage({ params }: Props) {
                     {profile.bio && (
                       <p className="mt-2 text-forest/80 max-w-md">{profile.bio}</p>
                     )}
+                    {profile.listening_deezer_id &&
+                      profile.listening_track_name &&
+                      profile.listening_track_artist && (
+                      <ListeningTrackPlayer
+                        className="mt-4"
+                        deezerId={profile.listening_deezer_id}
+                        trackName={profile.listening_track_name}
+                        trackArtist={profile.listening_track_artist}
+                      />
+                    )}
                     <FollowButton userId={profile.id} className="mt-3" />
                   </div>
                 </div>
@@ -362,7 +384,7 @@ export default async function BarPage({ params }: Props) {
                       displayName={displayName}
                       sharePath={getBarSharePath(profile)!}
                       username={profile.username}
-                      avatarUrl={profile.avatar_url}
+                      avatarUrl={avatarUrl}
                       stats={{ ingredientCount: ingredients.length }}
                       mode="owner"
                     />
@@ -496,17 +518,18 @@ export default async function BarPage({ params }: Props) {
           <div className="card p-6 sm:p-8">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
               <div className="flex items-start gap-5 min-w-0 flex-1">
-                <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-full overflow-hidden bg-olive/20 ring-2 ring-mist flex items-center justify-center">
-                  {profile.avatar_url ? (
+                <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-full overflow-hidden bg-olive/20 ring-2 ring-mist flex items-center justify-center">
+                  {avatarUrl ? (
                     <Image
-                      src={profile.avatar_url}
+                      src={avatarUrl}
                       alt={displayName}
-                      width={128}
-                      height={128}
+                      width={112}
+                      height={112}
+                      quality={90}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <UserCircleIcon className="w-14 h-14 text-olive" />
+                    <UserCircleIcon className="w-12 h-12 text-olive" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1 pt-0.5">
@@ -554,6 +577,16 @@ export default async function BarPage({ params }: Props) {
                   {profile.bio && (
                     <p className="mt-3 max-w-xl text-forest/80 leading-relaxed">{profile.bio}</p>
                   )}
+                  {profile.listening_deezer_id &&
+                    profile.listening_track_name &&
+                    profile.listening_track_artist && (
+                    <ListeningTrackPlayer
+                      className="mt-4"
+                      deezerId={profile.listening_deezer_id}
+                      trackName={profile.listening_track_name}
+                      trackArtist={profile.listening_track_artist}
+                    />
+                  )}
                   {isLoggedInOwner ? (
                     <p className="mt-4 text-sm text-sage">
                       This is how your bar looks to friends.{" "}
@@ -578,7 +611,7 @@ export default async function BarPage({ params }: Props) {
                 displayName={displayName}
                 sharePath={sharePath}
                 username={profile.username}
-                avatarUrl={profile.avatar_url}
+                avatarUrl={avatarUrl}
                 stats={shareStats}
                 mode={isLoggedInOwner ? "owner" : "recipient"}
               />

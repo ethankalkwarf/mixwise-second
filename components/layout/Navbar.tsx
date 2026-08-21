@@ -16,6 +16,8 @@ import { ExplainerMegaMenu } from "@/components/layout/ExplainerMegaMenu";
 import type { NavMegaController, NavMegaId } from "@/components/layout/MegaMenuFrame";
 import { MEGA_ROOT_ID } from "@/components/layout/MegaMenuFrame";
 import type { MegaMenuData } from "@/lib/megaMenu";
+import { getBarSharePath } from "@/lib/barShare";
+import { optimizeAvatarUrl } from "@/lib/avatarUrl";
 
 export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
@@ -118,7 +120,10 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
 
   // Get user display info
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || null;
+  const avatarUrl = optimizeAvatarUrl(
+    profile?.avatar_url || user?.user_metadata?.avatar_url || null,
+    128
+  );
   const userInitial = displayName.charAt(0).toUpperCase();
 
   // Close search when clicking outside or pressing Escape
@@ -232,7 +237,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                 id="mix"
                 controller={megaController}
                 active={isActive("/mix")}
-                href="/mix"
+                href={isAuthenticated ? "/mix?step=menu" : "/mix"}
                 label="What Can I Make?"
                 compactLabel="Mix"
                 eyebrow="Your cabinet"
@@ -242,7 +247,7 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                     ? "Your bar is saved. We’ll show what’s ready to pour."
                     : "Add what’s in your bar. We’ll show what’s ready to pour."
                 }
-                cta={isAuthenticated ? "Open Mix" : "Open your cabinet"}
+                cta={isAuthenticated ? "See what you can pour" : "Open your cabinet"}
                 imageUrl="/media/kitchen-pour.webp"
                 imageFocusClass="object-[center_45%]"
               />
@@ -319,6 +324,23 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
                       variant="menu"
                       onShared={() => setAccountMenuOpen(false)}
                     />
+                    {getBarSharePath(profile) ? (
+                      <HardNavLink
+                        href={getBarSharePath(profile)!}
+                        role="menuitem"
+                        className="block px-4 py-2.5 text-sm text-charcoal hover:bg-mist/50 hover:text-terracotta"
+                        onClick={() => setAccountMenuOpen(false)}
+                      >
+                        My public bar
+                      </HardNavLink>
+                    ) : null}
+                    <HardNavLink
+                      href="/friends"
+                      role="menuitem"
+                      className="block px-4 py-2.5 text-sm text-charcoal hover:bg-mist/50 hover:text-terracotta"
+                    >
+                      Friends
+                    </HardNavLink>
                     <HardNavLink
                       href="/account"
                       role="menuitem"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type TouchEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/common/BrandLogo";
@@ -170,6 +170,7 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
   const [step, setStep] = useState(0);
   const [isReplay, setIsReplay] = useState(false);
   const [entered, setEntered] = useState(false);
+  const swipeRef = useRef<{ x: number; y: number; active: boolean } | null>(null);
 
   const totalSteps = INTRO_SLIDES.length;
   const lastIntro = step === INTRO_SLIDES.length - 1;
@@ -243,7 +244,7 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
     return () => window.cancelAnimationFrame(id);
   }, [phase, step]);
 
-  const goNext = () => {
+  const goNext = useCallback(() => {
     void trackNativeIntroStep("step", { step, is_replay: isReplay });
     if (isReplay && lastIntro) {
       setIsReplay(false);
@@ -255,6 +256,42 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
       return;
     }
     enterApp("/");
+  }, [enterApp, isReplay, lastIntro, step]);
+
+  const goPrev = useCallback(() => {
+    if (step <= 0) return;
+    void trackNativeIntroStep("step", { step, is_replay: isReplay, direction: "back" });
+    setStep((s) => Math.max(0, s - 1));
+  }, [isReplay, step]);
+
+  const onSwipeTouchStart = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    swipeRef.current = { x: touch.clientX, y: touch.clientY, active: true };
+  };
+
+  const onSwipeTouchEnd = (e: TouchEvent) => {
+    const start = swipeRef.current;
+    swipeRef.current = null;
+    if (!start?.active) return;
+
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    // Horizontal swipe only — ignore taps and vertical scrolls.
+    if (absX < 48 || absX < absY * 1.2) return;
+
+    if (dx < 0) goNext();
+    else goPrev();
+  };
+
+  const onSwipeTouchCancel = () => {
+    swipeRef.current = null;
   };
 
   if (!native || (phase === "ready" && !isReplay)) {
@@ -271,7 +308,12 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
   }
 
   return (
-    <div className="native-intro fixed inset-0 z-[90] overflow-hidden bg-charcoal">
+    <div
+      className="native-intro fixed inset-0 z-[90] overflow-hidden bg-charcoal touch-pan-y"
+      onTouchStart={onSwipeTouchStart}
+      onTouchEnd={onSwipeTouchEnd}
+      onTouchCancel={onSwipeTouchCancel}
+    >
       <div className="absolute inset-0">
         <IntroAmbientVideo />
         <div

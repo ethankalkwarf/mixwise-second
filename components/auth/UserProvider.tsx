@@ -8,6 +8,7 @@ import { trackUserSignIn, trackUserSignOut, trackUserSignup } from "@/lib/analyt
 import { debugLog } from "@/lib/debugLog";
 import { markHasAccount } from "@/lib/auth/returning-user";
 import { authCallbackUrlWithNext, rememberAuthReturnTo } from "@/lib/auth/return-to";
+import { applyPendingSocialIntents } from "@/lib/invite";
 import {
   getNativeOAuthRedirectUrl,
   shouldUseNativeOAuthFlow,
@@ -365,6 +366,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 trackUserSignup(newSession.user.id, newSession.user.email);
               }
             }
+
+            // Invite link / follow-while-logged-out intents
+            void applyPendingSocialIntents().catch((err) => {
+              console.warn("[UserProvider] Pending social intents failed:", err);
+            });
           }
         } catch (err) {
           // Profile ensure failed - but don't block on it
@@ -581,17 +587,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         ? window.location.origin
         : process.env.NEXT_PUBLIC_SITE_URL || "";
     const base = origin ? `${origin}/auth/callback` : "/auth/callback";
+    // Email links are opened later (often another device) — keep ?next= in the URL.
     return authCallbackUrlWithNext(base);
   }, []);
 
-  /** OAuth-only: native uses custom scheme; web uses /auth/callback with next. */
+  /**
+   * OAuth redirectTo must match Supabase Redirect URLs exactly (no query string).
+   * Otherwise GoTrue falls back to Site URL (production) and local login leaves localhost.
+   * Post-login destination lives in sessionStorage via rememberAuthReturnTo().
+   */
   const getOAuthRedirectUrl = useCallback(() => {
     rememberAuthReturnTo();
     const nativeOAuth = getNativeOAuthRedirectUrl();
     // Native: exact allowlisted custom scheme, no ?next=
     if (nativeOAuth) return nativeOAuth;
-    return getEmailAuthRedirectUrl();
-  }, [getEmailAuthRedirectUrl]);
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/auth/callback`;
+    }
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    return siteUrl ? `${siteUrl}/auth/callback` : "/auth/callback";
+  }, []);
 
   const signInWithOAuthProvider = useCallback(
     async (provider: "google" | "apple") => {

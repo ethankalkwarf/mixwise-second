@@ -1,8 +1,13 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import { getUserBarIngredients } from "@/lib/cocktails.server";
-import { getMixCocktails, getStapleIngredientIds } from "@/lib/cocktails.server";
+import {
+  getUserBarIngredients,
+  getMixCocktails,
+  getStapleIngredientIds,
+} from "@/lib/cocktails.server";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 
 export const alt = "MixWise bar";
@@ -61,6 +66,13 @@ async function loadBar(slug: string) {
   };
 }
 
+async function loadLockupDataUrl() {
+  const bytes = await readFile(
+    join(process.cwd(), "public/brand/mixwise-lockup-cream.png")
+  );
+  return `data:image/png;base64,${bytes.toString("base64")}`;
+}
+
 export default async function Image({
   params,
 }: {
@@ -68,13 +80,16 @@ export default async function Image({
 }) {
   const { slug } = await params;
 
-  // Owner UUID routes are private — generic card
   const isUuid =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
       slug
     );
 
-  const bar = isUuid ? null : await loadBar(slug).catch(() => null);
+  const [bar, lockupSrc] = await Promise.all([
+    isUuid ? Promise.resolve(null) : loadBar(slug).catch(() => null),
+    loadLockupDataUrl(),
+  ]);
+
   const name = bar?.displayName || "MixWise Bar";
   const bottles = bar?.bottleCount ?? 0;
   const makeable = bar?.makeableCount ?? 0;
@@ -89,49 +104,103 @@ export default async function Image({
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          padding: 64,
-          background: "linear-gradient(135deg, #1F3A2E 0%, #2F4A3A 45%, #5C4033 100%)",
+          padding: "56px 64px",
+          background: "#1F3A2E",
           color: "#F9F7F2",
-          fontFamily: "Georgia, serif",
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Soft light wash — no generic multi-stop brand gradient */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(ellipse 80% 70% at 100% 0%, rgba(196,120,90,0.22) 0%, transparent 55%), radial-gradient(ellipse 60% 50% at 0% 100%, rgba(138,154,91,0.18) 0%, transparent 50%)",
+          }}
+        />
+
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lockupSrc}
+            alt="mixwise"
+            width={280}
+            height={68}
+            style={{ height: 52, width: "auto" }}
+          />
           <div
             style={{
               display: "flex",
-              fontSize: 28,
-              letterSpacing: 4,
+              fontSize: 22,
+              letterSpacing: 3,
               textTransform: "uppercase",
-              color: "#C4B5A0",
+              color: "rgba(249,247,242,0.62)",
             }}
           >
-            MixWise Bar
+            Home bar
           </div>
-          <div style={{ display: "flex", fontSize: 72, fontWeight: 700, lineHeight: 1.05 }}>
-            {name}
-          </div>
-          <div style={{ display: "flex", fontSize: 28, color: "#D4C4B0" }}>{handle}</div>
         </div>
 
-        <div style={{ display: "flex", gap: 48, alignItems: "flex-end" }}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", fontSize: 56, fontWeight: 700 }}>{makeable}</div>
-            <div style={{ display: "flex", fontSize: 22, color: "#C4B5A0" }}>
-              cocktails ready
-            </div>
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 14 }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 68,
+              fontWeight: 700,
+              lineHeight: 1.05,
+              letterSpacing: -1,
+              maxWidth: 920,
+            }}
+          >
+            {name}
           </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", fontSize: 56, fontWeight: 700 }}>{bottles}</div>
-            <div style={{ display: "flex", fontSize: 22, color: "#C4B5A0" }}>
-              bottles in bar
+          <div style={{ display: "flex", fontSize: 28, color: "rgba(249,247,242,0.72)" }}>
+            {handle}
+          </div>
+        </div>
+
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            gap: 40,
+          }}
+        >
+          <div style={{ display: "flex", gap: 48 }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", fontSize: 56, fontWeight: 700, lineHeight: 1 }}>
+                {makeable}
+              </div>
+              <div style={{ display: "flex", fontSize: 22, color: "rgba(249,247,242,0.62)", marginTop: 6 }}>
+                ready to pour
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", fontSize: 56, fontWeight: 700, lineHeight: 1 }}>
+                {bottles}
+              </div>
+              <div style={{ display: "flex", fontSize: 22, color: "rgba(249,247,242,0.62)", marginTop: 6 }}>
+                bottles in bar
+              </div>
             </div>
           </div>
           <div
             style={{
               display: "flex",
-              marginLeft: "auto",
-              fontSize: 24,
-              color: "#E8D5C4",
+              fontSize: 22,
+              color: "rgba(249,247,242,0.55)",
             }}
           >
             getmixwise.com

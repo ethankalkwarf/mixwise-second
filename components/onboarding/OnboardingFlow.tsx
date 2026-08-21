@@ -74,15 +74,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const { user, session } = useUser();
   const toast = useToast();
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
+  const [usernameInput, setUsernameInput] = useState("");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const [selectedSpirits, setSelectedSpirits] = useState<string[]>([]);
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [selectedSkill, setSelectedSkill] = useState<string>("beginner");
 
-  const totalSteps = 3;
+  const totalSteps = 4; // 0 username + 3 preference steps
 
   const toggleSpirit = (spiritId: string) => {
     setSelectedSpirits((prev) =>
@@ -100,15 +102,63 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     );
   };
 
-  const handleNext = () => {
-    if (currentStep < totalSteps) {
+  const handleNext = async () => {
+    if (currentStep === 0) {
+      const trimmed = usernameInput.trim();
+      if (trimmed.length >= 3 && user) {
+        setIsSubmitting(true);
+        setUsernameError(null);
+        try {
+          const res = await fetch("/api/username", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: trimmed }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            setUsernameError(data.error || "Couldn't save username");
+            setIsSubmitting(false);
+            return;
+          }
+          const supabase = getSupabaseClient();
+          await supabase.from("user_preferences").upsert(
+            { user_id: user.id, public_bar_enabled: true },
+            { onConflict: "user_id" }
+          );
+        } catch {
+          setUsernameError("Couldn't save username");
+          setIsSubmitting(false);
+          return;
+        }
+        setIsSubmitting(false);
+      } else if (trimmed.length > 0 && trimmed.length < 3) {
+        setUsernameError("At least 3 characters");
+        return;
+      }
+    }
+    if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
+    if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const canProceed = () => {
+    switch (currentStep) {
+      case 0:
+        return true; // username encouraged but skippable
+      case 1:
+        return selectedSpirits.length > 0;
+      case 2:
+        return selectedFlavors.length > 0;
+      case 3:
+        return selectedSkill !== "";
+      default:
+        return false;
     }
   };
 
@@ -236,26 +286,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     }
   };
 
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return selectedSpirits.length > 0;
-      case 2:
-        return selectedFlavors.length > 0;
-      case 3:
-        return selectedSkill !== "";
-      default:
-        return false;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-cream flex flex-col">
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-mist z-50">
         <div
           className="h-full bg-terracotta transition-all duration-500"
-          style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+          style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
         />
       </div>
 
@@ -269,7 +306,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="w-full max-w-2xl">
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-2 mb-8">
-            {[1, 2, 3].map((step) => (
+            {[0, 1, 2, 3].map((step) => (
               <div
                 key={step}
                 className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all ${
@@ -283,11 +320,51 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 {step < currentStep ? (
                   <CheckIcon className="w-4 h-4" />
                 ) : (
-                  step
+                  step + 1
                 )}
               </div>
             ))}
           </div>
+
+          {/* Step 0: Username */}
+          {currentStep === 0 && (
+            <div className="animate-in fade-in duration-300">
+              <div className="text-center mb-8">
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-forest mb-3">
+                  Pick a username
+                </h1>
+                <p className="text-sage">
+                  Friends find your bar with @{usernameInput || "yourname"}. You can change it later.
+                </p>
+              </div>
+              <div className="mx-auto max-w-sm">
+                <label htmlFor="onboard-username" className="label-botanical mb-1.5">
+                  Username
+                </label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sage">
+                    @
+                  </span>
+                  <input
+                    id="onboard-username"
+                    value={usernameInput}
+                    onChange={(e) => {
+                      setUsernameInput(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ""));
+                      setUsernameError(null);
+                    }}
+                    className="input-botanical pl-8"
+                    placeholder="yourname"
+                    maxLength={30}
+                    autoComplete="username"
+                  />
+                </div>
+                {usernameError && (
+                  <p className="mt-1.5 text-sm text-terracotta">{usernameError}</p>
+                )}
+                <p className="mt-2 text-xs text-sage">Letters, numbers, _ and - · at least 3 characters</p>
+              </div>
+            </div>
+          )}
 
           {/* Step 1: Spirits */}
           {currentStep === 1 && (
@@ -393,7 +470,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-8">
-            {currentStep > 1 ? (
+            {currentStep > 0 ? (
               <button
                 onClick={handleBack}
                 className="flex items-center gap-2 px-6 py-3 text-sage hover:text-forest transition-colors"
@@ -405,13 +482,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <div />
             )}
 
-            {currentStep < totalSteps ? (
+            {currentStep < totalSteps - 1 ? (
               <button
-                onClick={handleNext}
-                disabled={!canProceed()}
+                onClick={() => void handleNext()}
+                disabled={!canProceed() || isSubmitting}
                 className="flex items-center gap-2 px-8 py-3 bg-terracotta hover:bg-terracotta-dark text-cream font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-terracotta"
               >
-                Continue
+                {currentStep === 0 && !usernameInput.trim() ? "Skip for now" : "Continue"}
                 <ArrowRightIcon className="w-4 h-4" />
               </button>
             ) : (

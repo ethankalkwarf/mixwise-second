@@ -17,7 +17,15 @@ const CATEGORY_LABELS: Record<BadgeDefinition["category"], string> = {
 type Props = {
   badges: BadgeDisplayItem[];
   groupByCategory?: boolean;
+  /** native = 2–3 cols; web = wider desktop gallery */
+  columns?: "native" | "web";
 };
+
+function gridClass(columns: "native" | "web") {
+  return columns === "web"
+    ? "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+    : "grid grid-cols-2 gap-3 sm:grid-cols-3";
+}
 
 function BadgeTile({ badge }: { badge: BadgeDisplayItem }) {
   return (
@@ -48,10 +56,14 @@ function BadgeTile({ badge }: { badge: BadgeDisplayItem }) {
   );
 }
 
-export function BadgeGalleryGrid({ badges, groupByCategory = true }: Props) {
+export function BadgeGalleryGrid({
+  badges,
+  groupByCategory = true,
+  columns = "native",
+}: Props) {
   if (!groupByCategory) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className={gridClass(columns)}>
         {badges.map((badge) => (
           <BadgeTile key={badge.id} badge={badge} />
         ))}
@@ -71,7 +83,7 @@ export function BadgeGalleryGrid({ badges, groupByCategory = true }: Props) {
             <h2 className="mb-3 font-display text-lg font-bold text-forest">
               {CATEGORY_LABELS[category]}
             </h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className={gridClass(columns)}>
               {items.map((badge) => (
                 <BadgeTile key={badge.id} badge={badge} />
               ))}

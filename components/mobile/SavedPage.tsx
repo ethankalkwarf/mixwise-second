@@ -25,6 +25,9 @@ import {
   CalendarDaysIcon,
   SparklesIcon,
   Squares2X2Icon,
+  UserGroupIcon,
+  ChatBubbleLeftRightIcon,
+  EnvelopeIcon,
 } from "@heroicons/react/24/outline";
 import { NotificationSettings } from "@/components/mobile/NotificationSettings";
 import { BiometricSettings } from "@/components/mobile/BiometricSettings";
@@ -33,6 +36,7 @@ import { PullToRefreshContainer } from "@/components/mobile/PullToRefreshContain
 import { refreshNativeShellData } from "@/lib/mobile/refreshNativeData";
 import { AppLink } from "@/components/mobile/AppLink";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
+import { NativeFriendsPromoCard } from "@/components/friends/NativeFriendsPromoCard";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
@@ -159,13 +163,13 @@ function SavedPageContent() {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`
+                      className={`
                       flex items-center gap-2 px-4 py-2 rounded-2xl font-semibold text-sm whitespace-nowrap
-                      transition-all duration-300
+                      transition-colors outline-none focus:outline-none focus-visible:outline-none
                       ${
                         isActive
-                          ? "bg-terracotta text-cream shadow-lg shadow-terracotta/30"
-                          : "bg-white/50 text-sage"
+                          ? "bg-terracotta text-cream"
+                          : "bg-white/70 text-sage active:bg-white"
                       }
                     `}
                   >
@@ -198,17 +202,19 @@ function SavedPageContent() {
           <>
             <NativeNamePrompt />
 
+            {isAuthenticated ? <NativeFriendsPromoCard /> : null}
+
             <div className="mb-6">
               {activeTab === "favorites" && <FavoritesTab favorites={favorites} loading={favsLoading} />}
               {activeTab === "recent" && <RecentTab recent={recentlyViewed} loading={recentLoading} />}
               {activeTab === "bar" && <BarTab />}
             </div>
 
-            <section className="mb-6 mt-6">
+            <section className="mb-6 mt-2">
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
                 Explore
               </p>
-              <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+              <div className="divide-y divide-mist/70">
                 <ExploreRow
                   href="/learn"
                   icon={BookOpenIcon}
@@ -216,10 +222,22 @@ function SavedPageContent() {
                   description="Guides, methods, and courses"
                 />
                 <ExploreRow
+                  href="/friends"
+                  icon={UserGroupIcon}
+                  label="Friends"
+                  description="Invite, follow, and activity"
+                />
+                <ExploreRow
                   href="/badges"
                   icon={TrophyIcon}
                   label="Badges"
                   description="See what you've earned"
+                />
+                <ExploreRow
+                  href="/contact"
+                  icon={ChatBubbleLeftRightIcon}
+                  label="Contact us"
+                  description="Questions, feedback, or ideas"
                 />
                 <ExploreRow
                   href="/cocktail-of-the-day"
@@ -268,7 +286,7 @@ function ExploreRow({
   return (
     <AppLink
       href={href}
-      className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left first:border-t-0"
+      className="native-menu-row flex w-full items-center gap-3 px-1 py-3.5 text-left outline-none focus:outline-none focus-visible:outline-none active:opacity-70"
     >
       <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-cream text-forest">
         <Icon className="h-5 w-5" />
@@ -581,6 +599,16 @@ function SettingsScreen({ onOpenTabBar }: { onOpenTabBar: () => void }) {
             <ArrowRightIcon className="h-4 w-4 flex-shrink-0 text-sage" />
           </button>
         </div>
+        <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+          <AppLink
+            href="/contact"
+            className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left"
+          >
+            <EnvelopeIcon className="h-5 w-5 flex-shrink-0 text-sage" />
+            <span className="min-w-0 flex-1 font-medium text-forest">Contact us</span>
+            <ArrowRightIcon className="h-4 w-4 text-sage" />
+          </AppLink>
+        </div>
         <button
           type="button"
           onClick={() => replayNativeIntro()}
@@ -623,6 +651,14 @@ function SettingsScreen({ onOpenTabBar }: { onOpenTabBar: () => void }) {
         <AppLink href="/account" className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left">
           <UserCircleIcon className="h-5 w-5 flex-shrink-0 text-sage" />
           <span className="min-w-0 flex-1 font-medium text-forest">Account</span>
+          <ArrowRightIcon className="h-4 w-4 text-sage" />
+        </AppLink>
+        <AppLink
+          href="/contact"
+          className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left"
+        >
+          <EnvelopeIcon className="h-5 w-5 flex-shrink-0 text-sage" />
+          <span className="min-w-0 flex-1 font-medium text-forest">Contact us</span>
           <ArrowRightIcon className="h-4 w-4 text-sage" />
         </AppLink>
         <ShareBarButton

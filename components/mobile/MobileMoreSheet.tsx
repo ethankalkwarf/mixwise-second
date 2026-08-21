@@ -8,16 +8,22 @@ import {
   BookOpenIcon,
   CalendarDaysIcon,
   ChevronRightIcon,
+  EyeIcon,
   HeartIcon,
   ShoppingCartIcon,
   SparklesIcon,
+  UserGroupIcon,
   XMarkIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { useMobileApp } from "@/components/mobile/MobileAppProvider";
 import { replayNativeIntro } from "@/lib/mobile/nativeIntro";
+import { getBarSharePath } from "@/lib/barShare";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { optimizeAvatarUrl } from "@/lib/avatarUrl";
 
 type MoreRow = {
   href: string;
@@ -49,6 +55,18 @@ const BROWSE_ROWS: MoreRow[] = [
 
 const TOOL_ROWS: MoreRow[] = [
   {
+    href: "/friends",
+    label: "Friends",
+    description: "Find and follow bartenders",
+    icon: UserGroupIcon,
+  },
+  {
+    href: "/contact",
+    label: "Contact us",
+    description: "Questions, feedback, or ideas",
+    icon: ChatBubbleLeftRightIcon,
+  },
+  {
     href: "/saved",
     label: "Favorites",
     description: "Recipes you've saved",
@@ -66,12 +84,32 @@ export function MobileMoreSheet() {
   const { moreOpen, closeMore } = useMobileApp();
   const router = useRouter();
   const { user, profile, isAuthenticated, isLoading } = useUser();
+  const { preferences } = useUserPreferences();
   const { openAuthDialog } = useAuthDialog();
   const preferredAuthMode = usePreferredAuthMode();
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || null;
+  const avatarUrl = optimizeAvatarUrl(
+    profile?.avatar_url || user?.user_metadata?.avatar_url || null,
+    128
+  );
   const userInitial = displayName.charAt(0).toUpperCase();
+  const publicBarPath =
+    preferences?.public_bar_enabled && getBarSharePath(profile)
+      ? getBarSharePath(profile)
+      : null;
+
+  const toolRows: MoreRow[] = publicBarPath
+    ? [
+        {
+          href: publicBarPath,
+          label: "My public bar",
+          description: "How friends see your cabinet",
+          icon: EyeIcon,
+        },
+        ...TOOL_ROWS,
+      ]
+    : TOOL_ROWS;
 
   const navigate = (href: string) => {
     closeMore();
@@ -135,7 +173,7 @@ export function MobileMoreSheet() {
           </MoreSection>
 
           <MoreSection title="Tools">
-            {TOOL_ROWS.map((row) => (
+            {toolRows.map((row) => (
               <MoreRowButton key={row.href} row={row} onNavigate={navigate} />
             ))}
           </MoreSection>
@@ -145,7 +183,7 @@ export function MobileMoreSheet() {
           ) : isAuthenticated ? (
             <button
               type="button"
-              onClick={() => navigate("/saved")}
+              onClick={() => navigate("/account")}
               className="flex w-full items-center gap-3 rounded-3xl border border-white/60 bg-white/80 px-4 py-4 text-left shadow-md active:scale-[0.98] transition-transform"
             >
               {avatarUrl ? (

@@ -385,6 +385,8 @@ function CocktailCard({
   return (
     <HardNavLink
       href={`/cocktails/${cocktail.slug}?from=mix`}
+      target="_blank"
+      rel="noopener noreferrer"
       onClick={() => {
         void trackMixResultClicked(cocktail.slug, isReady ? "ready" : "almost");
       }}

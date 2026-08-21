@@ -27,7 +27,7 @@ type Props = {
     canMake: number;
     almostThere: number;
   };
-  onStepChange: (step: "cabinet" | "mixer" | "menu") => void;
+  onStepChange: (step: "cabinet" | "menu") => void;
   /** Tighter layout for the native app shell */
   compact?: boolean;
 };
@@ -201,7 +201,7 @@ export function MixCabinet({
 
   return (
     <MainContainer
-      className={`py-6 pb-24 lg:pb-6 overflow-x-hidden ${compact ? "max-w-lg px-4" : ""}`}
+      className={`overflow-x-hidden pb-24 pt-0 lg:pb-6 ${compact ? "max-w-lg px-4" : ""}`}
     >
 
       {/* Popular Ingredients Quick Add */}

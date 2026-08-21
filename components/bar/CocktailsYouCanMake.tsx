@@ -33,7 +33,17 @@ export function CocktailsYouCanMake({
 }: CocktailsYouCanMakeProps) {
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllReady, setShowAllReady] = useState(false);
   const { skipIds } = useCocktailSkips();
+
+  // Default cap on public bars so 200+ drinks don't dump onto the page
+  const publicCap = 12;
+  const effectiveMax =
+    typeof maxResults === "number"
+      ? maxResults
+      : isPublicView && !showAllReady
+        ? publicCap
+        : undefined;
 
   // Fetch ingredients to calculate staple IDs (same logic as mix wizard)
   useEffect(() => {
@@ -117,8 +127,10 @@ export function CocktailsYouCanMake({
       {ready.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-serif font-bold text-forest">
-              Cocktails {isPublicView ? `${userFirstName || 'They'}` : 'You'} Can Make ({ready.length})
+            <h3 className={`font-serif font-bold text-forest ${isPublicView ? "text-base" : "text-xl"}`}>
+              {isPublicView
+                ? `${ready.length} ready`
+                : `Cocktails You Can Make (${ready.length})`}
             </h3>
             {showAllRecipesLink && (
               <Link
@@ -130,14 +142,31 @@ export function CocktailsYouCanMake({
             )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(typeof maxResults === "number" ? ready.slice(0, maxResults) : ready).map((match) => (
-              <CocktailCard key={match.cocktail.id} match={match} />
+            {(typeof effectiveMax === "number" ? ready.slice(0, effectiveMax) : ready).map((match) => (
+              <CocktailCard
+                key={match.cocktail.id}
+                match={match}
+                openInNewTab={isPublicView}
+              />
             ))}
           </div>
-          {typeof maxResults === "number" && ready.length > maxResults && (
-            <p className="text-sage text-sm mt-4">
-              And {ready.length - maxResults} more cocktails...
-            </p>
+          {typeof effectiveMax === "number" && ready.length > effectiveMax && (
+            <button
+              type="button"
+              onClick={() => setShowAllReady(true)}
+              className="mt-4 text-sm font-medium text-olive hover:text-olive-dark"
+            >
+              Show all {ready.length} cocktails
+            </button>
+          )}
+          {isPublicView && showAllReady && ready.length > publicCap && (
+            <button
+              type="button"
+              onClick={() => setShowAllReady(false)}
+              className="mt-4 ml-4 text-sm font-medium text-sage hover:text-forest"
+            >
+              Show less
+            </button>
           )}
         </section>
       )}
@@ -163,7 +192,12 @@ export function CocktailsYouCanMake({
               ? almostThere.slice(0, Math.min(6, maxResults))
               : almostThere.slice(0, 6)
             ).map((match) => (
-              <CocktailCard key={match.cocktail.id} match={match} isAlmostThere />
+              <CocktailCard
+                key={match.cocktail.id}
+                match={match}
+                isAlmostThere
+                openInNewTab={isPublicView}
+              />
             ))}
           </div>
         </section>
@@ -175,9 +209,10 @@ export function CocktailsYouCanMake({
 interface CocktailCardProps {
   match: MixMatchResult;
   isAlmostThere?: boolean;
+  openInNewTab?: boolean;
 }
 
-function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
+function CocktailCard({ match, isAlmostThere, openInNewTab }: CocktailCardProps) {
   const { cocktail } = match;
   // Use same slug format as browse page: slug or id as fallback
   const slug = cocktail.slug || cocktail.id;
@@ -188,6 +223,9 @@ function CocktailCard({ match, isAlmostThere }: CocktailCardProps) {
   return (
     <Link
       href={href}
+      {...(openInNewTab
+        ? { target: "_blank", rel: "noopener noreferrer" }
+        : {})}
       className={`block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group ${
         isAlmostThere ? 'opacity-75' : ''
       }`}

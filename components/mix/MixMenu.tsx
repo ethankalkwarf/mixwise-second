@@ -25,6 +25,7 @@ type Props = {
   selectedIngredients: MixIngredient[];
   onRemoveIngredient: (id: string) => void;
   onClearAll: () => void;
+  onEditCabinet?: () => void;
 };
 
 export function MixMenu({
@@ -37,6 +38,7 @@ export function MixMenu({
   selectedIngredients,
   onRemoveIngredient,
   onClearAll,
+  onEditCabinet,
 }: Props) {
   const router = useRouter();
   const [showAllRecipes, setShowAllRecipes] = useState(false);
@@ -112,7 +114,7 @@ export function MixMenu({
   }, [selectedIngredients]);
 
   return (
-    <MainContainer className="py-6 pb-24 md:pb-6 overflow-x-hidden">
+    <MainContainer className="overflow-x-hidden pb-24 pt-0 md:pb-6">
       <div className="grid md:grid-cols-[300px_minmax(0,1fr)] gap-8">
         {/* Left Sidebar - Your Bar */}
         <aside className="md:sticky md:top-24 space-y-6 min-w-0">
@@ -149,16 +151,17 @@ export function MixMenu({
               </button>
 
               <button
-                onClick={() => go("/mix")}
+                type="button"
+                onClick={() => (onEditCabinet ? onEditCabinet() : go("/mix?step=cabinet"))}
                 className="w-full text-left p-3 rounded-xl border border-mist hover:border-olive/30 hover:bg-olive/5 transition-all group"
               >
                 <div className="flex items-center justify-between gap-2 min-w-0">
                   <div className="min-w-0">
                     <div className="font-medium text-forest text-sm">
-                      Add more ingredients
+                      Edit cabinet
                     </div>
                     <div className="text-xs text-sage">
-                      Return to ingredient selector
+                      Add or remove bottles from your shelf
                     </div>
                   </div>
                   <PlusIcon className="w-4 h-4 text-sage group-hover:text-olive flex-shrink-0" />

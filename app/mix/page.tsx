@@ -1,9 +1,8 @@
 import { Suspense } from "react";
 import { FAQPageSchema, SoftwareApplicationSchema, WebPageSchema } from "@/components/seo/JsonLd";
-import { MixExplainer, MixFaq } from "@/components/mix/MixExplainer";
+import { MixMarketingChrome } from "@/components/mix/MixMarketingChrome";
 import { MixPageClient } from "@/components/mix/MixPageClient";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
-import { NativeMixGate } from "@/components/mobile/NativeMixGate";
 import { MIXWISE_TOOL, SITE_CONFIG } from "@/lib/seo";
 import { isNativeAppRequest } from "@/lib/mobile/serverNative";
 
@@ -11,7 +10,10 @@ export default async function MixPage() {
   const native = await isNativeAppRequest();
 
   return (
-    <div className="bg-cream min-h-screen" data-native-mix-page>
+    <div
+      className={`bg-cream min-h-screen ${native ? "" : "py-10"}`}
+      data-native-mix-page
+    >
       {!native ? (
         <>
           <SoftwareApplicationSchema />
@@ -25,9 +27,7 @@ export default async function MixPage() {
       ) : null}
       {!native ? (
         <div data-web-mix-marketing>
-          <NativeMixGate>
-            <MixExplainer />
-          </NativeMixGate>
+          <MixMarketingChrome slot="top" />
         </div>
       ) : null}
       <Suspense fallback={<MixSkeleton />}>
@@ -35,9 +35,7 @@ export default async function MixPage() {
       </Suspense>
       {!native ? (
         <div data-web-mix-marketing>
-          <NativeMixGate>
-            <MixFaq />
-          </NativeMixGate>
+          <MixMarketingChrome slot="bottom" />
         </div>
       ) : null}
     </div>

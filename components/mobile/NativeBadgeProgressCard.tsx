@@ -9,7 +9,8 @@ import { useUserBadges } from "@/hooks/useUserBadges";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getNextBadgeQuest } from "@/lib/mobile/badgeProgress";
-import { BADGE_LIST, RARITY_COLORS } from "@/lib/badges";
+import { BADGE_LIST, RARITY_COLORS, type BadgeDefinition } from "@/lib/badges";
+import { getMixologistTier, getNextMixologistTier } from "@/lib/mixologistTiers";
 
 type Props = {
   compact?: boolean;
@@ -26,7 +27,7 @@ export function NativeBadgeProgressCard({ compact = false, hidePreview = false }
   const preferredAuthMode = usePreferredAuthMode();
   const { ingredientIds } = useBarIngredients();
   const { favorites } = useFavorites();
-  const { earnedIds, earned, nextQuest, isLoading } = useUserBadges();
+  const { earnedIds, earned, rows, nextQuest, isLoading } = useUserBadges();
 
   const guestQuest = getNextBadgeQuest({
     earnedIds: new Set(),
@@ -39,6 +40,25 @@ export function NativeBadgeProgressCard({ compact = false, hidePreview = false }
   const previewEarnedIds = isAuthenticated ? earnedIds : new Set<string>();
 
   const previewBadges = useMemo(() => BADGE_LIST.slice(0, 8), []);
+
+  const showcaseBadges = useMemo(() => {
+    if (!isAuthenticated || rows.length === 0) return [] as BadgeDefinition[];
+    const byId = new Map(earned.map((badge) => [badge.id, badge]));
+    const ordered = [...rows]
+      .sort((a, b) => new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime())
+      .map((row) => byId.get(row.badge_id))
+      .filter((badge): badge is BadgeDefinition => Boolean(badge));
+    return ordered.slice(0, 8);
+  }, [earned, isAuthenticated, rows]);
+
+  const tier = useMemo(
+    () => getMixologistTier(isAuthenticated ? [...earnedIds] : []),
+    [earnedIds, isAuthenticated]
+  );
+  const nextTier = useMemo(
+    () => getNextMixologistTier(isAuthenticated ? [...earnedIds] : []),
+    [earnedIds, isAuthenticated]
+  );
 
   if (authLoading) return null;
   if (isLoading && isAuthenticated) return null;
@@ -110,16 +130,92 @@ export function NativeBadgeProgressCard({ compact = false, hidePreview = false }
           }
         />
       ) : (
-        <AppLink href="/badges" className="native-card-link block">
-          <div className="border-y border-forest/10 py-5">
-            <p className="font-display text-2xl font-bold tracking-tight text-forest">
-              {earnedCount} badge{earnedCount === 1 ? "" : "s"} earned
-            </p>
-            <p className="mt-1 text-sm text-sage">Open your collection</p>
-          </div>
-        </AppLink>
+        <CollectionBoard
+          earnedCount={earnedCount}
+          total={BADGE_LIST.length}
+          tierName={tier.name}
+          nextTierName={nextTier?.name ?? null}
+          badges={showcaseBadges}
+        />
       )}
     </section>
+  );
+}
+
+function CollectionBoard({
+  earnedCount,
+  total,
+  tierName,
+  nextTierName,
+  badges,
+}: {
+  earnedCount: number;
+  total: number;
+  tierName: string;
+  nextTierName: string | null;
+  badges: BadgeDefinition[];
+}) {
+  const complete = earnedCount >= total;
+
+  return (
+    <AppLink href="/badges" className="native-card-link block">
+      <div className="relative overflow-hidden rounded-[1.35rem] bg-forest px-5 py-5 text-cream">
+        <div
+          className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-amber-400/20 blur-2xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-14 left-4 h-32 w-32 rounded-full bg-terracotta/30 blur-2xl"
+          aria-hidden
+        />
+
+        <div className="relative">
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cream/55">
+              {complete ? "Collection" : "Your shelf"}
+            </p>
+            <p className="font-mono text-[11px] font-bold tabular-nums text-cream/55">
+              {earnedCount}/{total}
+            </p>
+          </div>
+
+          <h3 className="mt-3 font-display text-[1.85rem] font-bold leading-[1.05] tracking-tight text-cream">
+            {tierName}
+          </h3>
+          <p className="mt-2 max-w-[18rem] text-[15px] leading-snug text-cream/70">
+            {complete
+              ? "Every badge unlocked — open the gallery anytime."
+              : nextTierName
+                ? `${earnedCount} earned · next level: ${nextTierName}`
+                : `${earnedCount} badge${earnedCount === 1 ? "" : "s"} in your collection`}
+          </p>
+
+          {badges.length > 0 ? (
+            <div className="mt-5 flex flex-wrap gap-2" aria-hidden>
+              {badges.map((badge) => (
+                <span
+                  key={badge.id}
+                  className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-lg shadow-sm ${RARITY_COLORS[badge.rarity]}`}
+                  title={badge.name}
+                >
+                  {badge.icon}
+                </span>
+              ))}
+              {earnedCount > badges.length ? (
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-cream/20 bg-cream/10 text-xs font-bold text-cream/80">
+                  +{earnedCount - badges.length}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
+          <p className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-cream">
+            Open gallery
+            <span aria-hidden>→</span>
+          </p>
+        </div>
+      </div>
+    </AppLink>
   );
 }
 

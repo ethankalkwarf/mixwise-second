@@ -38,10 +38,20 @@ body {
     @apply text-xl sm:text-2xl font-bold;
   }
   
-  /* Focus states for accessibility - terracotta accent with smooth animation */
+  /* Focus states — keep accessible without a thick “picture frame” outline */
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-terracotta;
     animation: focus-pulse 0.3s ease-out;
+  }
+
+  html.native-app :focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  html.native-app a:focus-visible,
+  html.native-app button:focus-visible {
+    opacity: 0.92;
   }
   
   @keyframes focus-pulse {

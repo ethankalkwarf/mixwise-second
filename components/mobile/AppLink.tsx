@@ -10,6 +10,13 @@ type Props = {
   children: ReactNode;
 } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href">;
 
+function stayInNativeShell(): boolean {
+  if (typeof document !== "undefined" && document.documentElement.classList.contains("native-app")) {
+    return true;
+  }
+  return isNativeApp();
+}
+
 /** In-app navigation for the native shell. Never does a full http load (that opens Safari). */
 export function AppLink({ href, children, onClick, ...props }: Props) {
   const router = useRouter();
@@ -19,7 +26,7 @@ export function AppLink({ href, children, onClick, ...props }: Props) {
     if (event.defaultPrevented) return;
     if (!href.startsWith("/") || href.startsWith("//")) return;
 
-    if (isNativeApp()) {
+    if (stayInNativeShell()) {
       event.preventDefault();
       event.stopPropagation();
       navigateInApp(router, href);

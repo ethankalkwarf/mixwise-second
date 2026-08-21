@@ -20,6 +20,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { isLearnPublic } from "@/lib/learnAccess";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
+import { optimizeAvatarUrl } from "@/lib/avatarUrl";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
 
 const TABS = [
@@ -34,7 +35,7 @@ const TABS = [
   {
     id: "mix",
     label: "Mix",
-    href: "/mix",
+    href: "/mix?step=menu",
     match: (path: string) => path === "/mix" || path.startsWith("/mix/"),
     Icon: ShoppingBagIcon,
     IconActive: ShoppingBagIconSolid,
@@ -65,7 +66,10 @@ export function MobileBottomNav() {
   const preferredAuthMode = usePreferredAuthMode();
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
-  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || null;
+  const avatarUrl = optimizeAvatarUrl(
+    profile?.avatar_url || user?.user_metadata?.avatar_url || null,
+    96
+  );
   const userInitial = displayName.charAt(0).toUpperCase();
 
   useEffect(() => {
@@ -94,7 +98,7 @@ export function MobileBottomNav() {
     closeMore();
   };
 
-  // Mix uses its own 3-step bottom nav — avoid stacking two tab bars.
+  // Mix uses its own dual-pane bottom nav — avoid stacking two tab bars.
   if (pathname.startsWith("/mix")) {
     return null;
   }

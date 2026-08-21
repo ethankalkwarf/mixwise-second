@@ -31,6 +31,10 @@ export interface Database {
           last_name: string | null;
           avatar_url: string | null;
           bio: string | null;
+          listening_spotify_id: string | null;
+          listening_deezer_id: string | null;
+          listening_track_name: string | null;
+          listening_track_artist: string | null;
           phone_hash: string | null;
           phone_findable: boolean;
           role: "free" | "paid" | "admin";
@@ -48,6 +52,10 @@ export interface Database {
           last_name?: string | null;
           avatar_url?: string | null;
           bio?: string | null;
+          listening_spotify_id?: string | null;
+          listening_deezer_id?: string | null;
+          listening_track_name?: string | null;
+          listening_track_artist?: string | null;
           phone_hash?: string | null;
           phone_findable?: boolean;
           role?: "free" | "paid" | "admin";
@@ -65,6 +73,10 @@ export interface Database {
           last_name?: string | null;
           avatar_url?: string | null;
           bio?: string | null;
+          listening_spotify_id?: string | null;
+          listening_deezer_id?: string | null;
+          listening_track_name?: string | null;
+          listening_track_artist?: string | null;
           phone_hash?: string | null;
           phone_findable?: boolean;
           role?: "free" | "paid" | "admin";
