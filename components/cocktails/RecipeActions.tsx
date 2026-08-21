@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FavoriteButton } from "./FavoriteButton";
 import { NoteButton } from "./NoteButton";
 import { SkipButton } from "./SkipButton";
@@ -12,6 +12,7 @@ import { useRecordCocktailView } from "@/hooks/useRecentlyViewed";
 import { useUser } from "@/components/auth/UserProvider";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { checkExplorationBadges } from "@/lib/badgeEngine";
+import { hasMixedCocktail } from "@/lib/mobile/pourStreak";
 
 interface RecipeActionsProps {
   cocktail: {
@@ -28,6 +29,11 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
   const recordView = useRecordCocktailView();
   const { user, isAuthenticated, isLoading: authLoading } = useUser();
   const { isSkipped } = useCocktailSkips();
+  const [mixed, setMixed] = useState(false);
+
+  useEffect(() => {
+    setMixed(hasMixedCocktail(cocktail.slug));
+  }, [cocktail.slug]);
   const { getNote } = useCocktailNotes();
   const skipped = isSkipped(cocktail.id);
   const note = getNote(cocktail.id)?.notes;
@@ -113,15 +119,17 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
           title={`${cocktail.name} Cocktail Recipe`}
           description={`Learn how to make a ${cocktail.name} cocktail with ingredients and instructions.`}
         />
-        <CocktailStoriesShare
-          compact
-          cocktail={{
-            name: cocktail.name,
-            slug: cocktail.slug,
-            imageUrl: cocktail.image_url,
-            primarySpirit: cocktail.base_spirit,
-          }}
-        />
+        {mixed && (
+          <CocktailStoriesShare
+            compact
+            cocktail={{
+              name: cocktail.name,
+              slug: cocktail.slug,
+              imageUrl: cocktail.image_url,
+              primarySpirit: cocktail.base_spirit,
+            }}
+          />
+        )}
       </div>
       {skipped || note ? (
         <div className="space-y-1">

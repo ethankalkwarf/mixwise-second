@@ -32,7 +32,7 @@ import { useToast } from "@/components/ui/toast";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { awardSharingBadge, checkExplorationBadges } from "@/lib/badgeEngine";
 import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
-import { markDrinkMade, madeDrinkToday } from "@/lib/mobile/pourStreak";
+import { markDrinkMade, hasMixedCocktail } from "@/lib/mobile/pourStreak";
 import { useEffect, useState } from "react";
 import type { MatchedIngredient } from "@/lib/ingredientMatching";
 import { findWholePhraseIndex } from "@/lib/ingredientMatching";
@@ -130,7 +130,7 @@ export function NativeRecipeView({
   const scaledIngredients = scaleIngredientLines(ingredients, quantity);
 
   useEffect(() => {
-    setPouredToday(madeDrinkToday());
+    setPouredToday(hasMixedCocktail(cocktail.slug));
   }, [cocktail.slug]);
 
   useEffect(() => {
@@ -278,14 +278,16 @@ export function NativeRecipeView({
             <button
               type="button"
               onClick={() => {
-                const { streak, isNewToday } = markDrinkMade(cocktail.slug);
+                const { streak, isNewToday, isNewForCocktail } = markDrinkMade(cocktail.slug);
                 setPouredToday(true);
                 if (isNewToday) {
                   toast.success(
                     streak > 1 ? `${streak}-day pour streak!` : "Nice pour — streak started"
                   );
+                } else if (!isNewForCocktail) {
+                  toast.info("Already marked this one as mixed");
                 } else {
-                  toast.info("Already counted for today's streak");
+                  toast.success("Nice pour");
                 }
               }}
               className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-colors ${

@@ -1,6 +1,8 @@
 "use client";
 
 const POUR_DATES_KEY = "mixwise-pour-dates";
+/** Per-cocktail mix ledger: slug → ISO date (YYYY-MM-DD) of last mix. */
+const MIXED_SLUGS_KEY = "mixwise-mixed-slugs";
 export const POUR_STREAK_EVENT = "mixwise:pour-streak";
 
 function canUseStorage(): boolean {
@@ -26,6 +28,36 @@ function savePourDates(dates: string[]): void {
   if (!canUseStorage()) return;
   try {
     localStorage.setItem(POUR_DATES_KEY, JSON.stringify(dates.slice(-60)));
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadMixedSlugs(): Record<string, string> {
+  if (!canUseStorage()) return {};
+  try {
+    const raw = localStorage.getItem(MIXED_SLUGS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out: Record<string, string> = {};
+    for (const [slug, date] of Object.entries(parsed)) {
+      if (typeof slug === "string" && typeof date === "string") out[slug] = date;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function saveMixedSlugs(map: Record<string, string>): void {
+  if (!canUseStorage()) return;
+  try {
+    // Keep the most recent ~200 mixes so storage stays bounded
+    const entries = Object.entries(map).sort((a, b) => b[1].localeCompare(a[1]));
+    localStorage.setItem(
+      MIXED_SLUGS_KEY,
+      JSON.stringify(Object.fromEntries(entries.slice(0, 200)))
+    );
   } catch {
     /* ignore */
   }
@@ -60,8 +92,21 @@ export function getPourStreak(): number {
   return computeStreak(dates);
 }
 
-/** Record that the user made a drink today. Returns updated streak. */
-export function markDrinkMade(_slug: string): { streak: number; isNewToday: boolean } {
+/** True if this cocktail was marked mixed (any day). */
+export function hasMixedCocktail(slug: string): boolean {
+  if (!slug) return false;
+  return Boolean(loadMixedSlugs()[slug]);
+}
+
+/**
+ * Record that the user mixed this cocktail.
+ * Streak still advances once per calendar day; mix state is per-slug.
+ */
+export function markDrinkMade(slug: string): {
+  streak: number;
+  isNewToday: boolean;
+  isNewForCocktail: boolean;
+} {
   const today = todayKey();
   const dates = [...new Set(loadPourDates())].sort();
   const isNewToday = !dates.includes(today);
@@ -69,6 +114,12 @@ export function markDrinkMade(_slug: string): { streak: number; isNewToday: bool
     dates.push(today);
     savePourDates(dates);
   }
+
+  const mixed = loadMixedSlugs();
+  const isNewForCocktail = mixed[slug] !== today;
+  mixed[slug] = today;
+  saveMixedSlugs(mixed);
+
   const streak = computeStreak(dates);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(POUR_STREAK_EVENT, { detail: { streak } }));
@@ -78,9 +129,10 @@ export function markDrinkMade(_slug: string): { streak: number; isNewToday: bool
       });
     }
   }
-  return { streak, isNewToday };
+  return { streak, isNewToday, isNewForCocktail };
 }
 
+/** @deprecated Prefer hasMixedCocktail(slug) — this was global “any pour today”. */
 export function madeDrinkToday(): boolean {
   return loadPourDates().includes(todayKey());
 }
