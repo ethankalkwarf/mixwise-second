@@ -15,6 +15,7 @@ import {
 import { openNativeOAuthProvider } from "@/lib/mobile/nativeOAuth";
 import { signInWithGoogleNative } from "@/lib/mobile/googleNativeAuth";
 import { isNativeApp } from "@/lib/mobile/platform";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * UserProvider - Single Source of Truth for Auth State
@@ -628,7 +629,42 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Capacitor.isNativePlatform() is unreliable with a remote server.url WebView.
     // isNativeApp() also checks MixWiseNative UA / bridge — use that, and never
     // fall through to browser OAuth (that path strands users in Safari).
-    if (isNativeApp() || shouldUseNativeOAuthFlow()) {
+    const nativeApp = isNativeApp();
+    const oauthNative = shouldUseNativeOAuthFlow();
+    const capNative = (() => {
+      try {
+        return Capacitor.isNativePlatform();
+      } catch {
+        return false;
+      }
+    })();
+    const socialLogin = (() => {
+      try {
+        return Capacitor.isPluginAvailable("SocialLogin");
+      } catch {
+        return false;
+      }
+    })();
+    const useIdToken = nativeApp || oauthNative;
+
+    // Temporary proof for TestFlight — remove once Google path is verified.
+    // Shows which path will run BEFORE any Google UI opens.
+    if (typeof window !== "undefined" && (nativeApp || oauthNative || capNative)) {
+      window.alert(
+        [
+          "MixWise Google path (debug)",
+          "",
+          `path: ${useIdToken ? "NATIVE_ID_TOKEN" : "BROWSER_OAUTH"}`,
+          `isNativeApp: ${nativeApp}`,
+          `shouldUseNativeOAuth: ${oauthNative}`,
+          `Capacitor.isNativePlatform: ${capNative}`,
+          `SocialLogin plugin: ${socialLogin}`,
+          `platform: ${Capacitor.getPlatform?.() ?? "?"}`,
+        ].join("\n")
+      );
+    }
+
+    if (useIdToken) {
       debugLog("[UserProvider] Native Google Sign-In (ID token)");
       try {
         await signInWithGoogleNative();
