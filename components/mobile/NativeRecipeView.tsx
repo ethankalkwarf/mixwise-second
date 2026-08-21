@@ -285,7 +285,7 @@ export function NativeRecipeView({
                     streak > 1 ? `${streak}-day pour streak!` : "Nice pour — streak started"
                   );
                 } else {
-                  toast.info("Already logged today");
+                  toast.info("Already counted for today's streak");
                 }
               }}
               className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-colors ${
@@ -294,7 +294,7 @@ export function NativeRecipeView({
                   : "bg-terracotta text-cream active:scale-[0.98]"
               }`}
             >
-              {pouredToday ? "✓ Logged today" : "I made this"}
+              {pouredToday ? "✓ Mixed" : "I mixed this"}
             </button>
             {pouredToday && (
               <div className="rounded-2xl border border-mist bg-cream/80 p-3">
