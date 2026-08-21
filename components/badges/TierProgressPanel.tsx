@@ -107,12 +107,16 @@ export function TierProgressPanel({ earnedIds, compact = false }: Props) {
           <p className="text-xs font-semibold uppercase tracking-wide text-sage">
             Badges that raise your level
           </p>
-          <ul className="mt-2 space-y-1.5">
+          <ul className="mt-2 space-y-2.5">
             {nextSuggestions.map((b) => (
-              <li key={b.id} className="flex items-center gap-2 text-sm text-forest">
-                <span aria-hidden>{b.icon}</span>
-                <span className="font-medium">{b.name}</span>
-                <span className="text-sage">· {b.criteria}</span>
+              <li key={b.id} className="flex items-start gap-2.5 text-sm text-forest">
+                <span className="mt-0.5 shrink-0" aria-hidden>
+                  {b.icon}
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-medium leading-snug">{b.name}</span>
+                  <span className="mt-0.5 block text-xs leading-snug text-sage">{b.criteria}</span>
+                </span>
               </li>
             ))}
           </ul>

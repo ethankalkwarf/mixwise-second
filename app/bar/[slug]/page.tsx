@@ -616,20 +616,12 @@ export default async function BarPage({ params }: Props) {
                 </div>
               </div>
             </div>
-            <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-mist/80 pt-5">
+            <div className="mt-5 border-t border-mist/80 pt-5">
               <PublicBarShare
                 displayName={displayName}
                 sharePath={sharePath}
                 username={profile.username}
                 stats={shareStats}
-              />
-              <BarStoriesShareActions
-                displayName={displayName}
-                sharePath={sharePath}
-                username={profile.username}
-                avatarUrl={avatarUrl}
-                stats={shareStats}
-                mode={isLoggedInOwner ? "owner" : "recipient"}
               />
             </div>
           </div>

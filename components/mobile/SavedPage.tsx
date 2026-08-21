@@ -164,8 +164,8 @@ function SavedPageContent() {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                      className={`
-                      flex items-center gap-2 px-4 py-2 rounded-2xl font-semibold text-sm whitespace-nowrap
+                    className={`
+                      native-compact-cta inline-flex items-center gap-2 px-4 py-2 rounded-2xl font-semibold text-sm whitespace-nowrap
                       transition-colors outline-none focus:outline-none focus-visible:outline-none
                       ${
                         isActive
@@ -174,12 +174,14 @@ function SavedPageContent() {
                       }
                     `}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span>{tab.label}</span>
+                    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="leading-none">{tab.label}</span>
                     {tab.count > 0 && (
                       <span
                         className={`
-                      px-1.5 py-0.5 rounded-full text-[10px] font-bold
+                      shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none
                       ${isActive ? "bg-cream/20 text-cream" : "bg-terracotta/10 text-terracotta"}
                     `}
                       >
@@ -218,10 +220,34 @@ function SavedPageContent() {
               </p>
               <div className="divide-y divide-mist/70">
                 <ExploreRow
+                  href="/cocktail-of-the-day"
+                  icon={SparklesIcon}
+                  label="Drink of the Day"
+                  description="Today's featured pour"
+                />
+                <ExploreRow
+                  href="/cocktails?browse=collections"
+                  icon={CalendarDaysIcon}
+                  label="Collections"
+                  description="Seasons, holidays, and styles"
+                />
+                <ExploreRow
                   href="/learn"
                   icon={BookOpenIcon}
                   label="Learn"
                   description="Guides, methods, and courses"
+                />
+                <ExploreRow
+                  href="/ingredients"
+                  icon={BeakerIcon}
+                  label="Ingredients"
+                  description="Guides and bottle picks"
+                />
+                <ExploreRow
+                  href="/shopping-list"
+                  icon={ShoppingBagIcon}
+                  label="Shopping list"
+                  description="What to pick up next"
                 />
                 <ExploreRow
                   href="/friends"
@@ -240,30 +266,6 @@ function SavedPageContent() {
                   icon={ChatBubbleLeftRightIcon}
                   label="Contact us"
                   description="Questions, feedback, or ideas"
-                />
-                <ExploreRow
-                  href="/cocktail-of-the-day"
-                  icon={SparklesIcon}
-                  label="Drink of the Day"
-                  description="Today's featured pour"
-                />
-                <ExploreRow
-                  href="/cocktails?browse=collections"
-                  icon={CalendarDaysIcon}
-                  label="Collections"
-                  description="Seasons, holidays, and styles"
-                />
-                <ExploreRow
-                  href="/ingredients"
-                  icon={BeakerIcon}
-                  label="Ingredients"
-                  description="Guides and bottle picks"
-                />
-                <ExploreRow
-                  href="/shopping-list"
-                  icon={ShoppingBagIcon}
-                  label="Shopping list"
-                  description="What to pick up next"
                 />
               </div>
             </section>

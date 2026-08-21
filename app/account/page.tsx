@@ -821,18 +821,16 @@ export default function AccountPage() {
     </section>
   );
 
+  const menuRowClass =
+    "native-menu-row group flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-mist/40 sm:px-6";
+
   const friendsLink = (
-    <AppLink
-      href="/friends"
-      className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-mist/40 sm:px-6"
-    >
-      <div className="flex min-w-0 items-center gap-3">
-        <UsersIcon className="h-5 w-5 shrink-0 text-olive" />
-        <div className="min-w-0">
-          <p className={rowTitleClass}>Friends</p>
-          <p className={rowDescClass}>Invite, follow, and activity</p>
-        </div>
-      </div>
+    <AppLink href="/friends" className={menuRowClass}>
+      <UsersIcon className="h-5 w-5 shrink-0 text-olive" />
+      <span className="min-w-0 flex-1">
+        <span className={`block ${rowTitleClass}`}>Friends</span>
+        <span className={`block ${rowDescClass}`}>Invite, follow, and activity</span>
+      </span>
       <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
     </AppLink>
   );
@@ -1036,19 +1034,14 @@ export default function AccountPage() {
       </div>
       <div className="divide-y divide-mist/70">
         {showPublicBarLink ? (
-          <AppLink
-            href={publicBarPath!}
-            className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-mist/40 sm:px-6"
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <EyeIcon className="h-5 w-5 shrink-0 text-olive" />
-              <div className="min-w-0">
-                <p className={rowTitleClass}>My public profile</p>
-                <p className={rowDescClass}>
-                  {profile?.username ? `@${profile.username}` : "See how friends view your bar"}
-                </p>
-              </div>
-            </div>
+          <AppLink href={publicBarPath!} className={menuRowClass}>
+            <EyeIcon className="h-5 w-5 shrink-0 text-olive" />
+            <span className="min-w-0 flex-1">
+              <span className={`block ${rowTitleClass}`}>My public profile</span>
+              <span className={`block ${rowDescClass}`}>
+                {profile?.username ? `@${profile.username}` : "See how friends view your bar"}
+              </span>
+            </span>
             <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
           </AppLink>
         ) : (
@@ -1061,22 +1054,20 @@ export default function AccountPage() {
               }
               void handleTogglePublicBar(true);
             }}
-            className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors hover:bg-mist/40 sm:px-6"
+            className={menuRowClass}
           >
-            <div className="flex min-w-0 items-center gap-3">
-              <GlobeAltIcon className="h-5 w-5 shrink-0 text-olive" />
-              <div className="min-w-0">
-                <p className={rowTitleClass}>Turn on public profile</p>
-                <p className={rowDescClass}>Required before friends can open your link</p>
-              </div>
-            </div>
+            <GlobeAltIcon className="h-5 w-5 shrink-0 text-olive" />
+            <span className="min-w-0 flex-1">
+              <span className={`block ${rowTitleClass}`}>Turn on public profile</span>
+              <span className={`block ${rowDescClass}`}>Required before friends can open your link</span>
+            </span>
             <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
           </button>
         )}
 
         <ShareBarButton
           variant="menu"
-          className="flex w-full items-center gap-3 px-5 py-3.5 text-left text-sm font-semibold text-forest transition-colors hover:bg-mist/40 hover:text-terracotta disabled:opacity-50 sm:px-6"
+          className={`${menuRowClass} text-sm font-semibold text-forest hover:text-terracotta disabled:opacity-50`}
         />
 
         {friendsLink}
@@ -1087,69 +1078,49 @@ export default function AccountPage() {
             const el = document.getElementById("account-soundtrack");
             el?.scrollIntoView({ behavior: "smooth", block: "center" });
           }}
-          className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors hover:bg-mist/40 sm:px-6"
+          className={menuRowClass}
         >
-          <div className="flex min-w-0 items-center gap-3">
-            <MusicalNoteIcon className="h-5 w-5 shrink-0 text-olive" />
-            <div className="min-w-0">
-              <p className={rowTitleClass}>Bar soundtrack</p>
-              <p className={rowDescClass}>
-                {profile?.listening_track_name
-                  ? `${profile.listening_track_name} · ${profile.listening_track_artist}`
-                  : "Add a song to your public bar"}
-              </p>
-            </div>
-          </div>
+          <MusicalNoteIcon className="h-5 w-5 shrink-0 text-olive" />
+          <span className="min-w-0 flex-1">
+            <span className={`block ${rowTitleClass}`}>Bar soundtrack</span>
+            <span className={`block ${rowDescClass}`}>
+              {profile?.listening_track_name
+                ? `${profile.listening_track_name} · ${profile.listening_track_artist}`
+                : "Add a song to your public bar"}
+            </span>
+          </span>
           <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
         </button>
 
-        <AppLink
-          href="/badges"
-          className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-mist/40 sm:px-6"
-        >
-          <div className="flex min-w-0 items-center gap-3">
-            <TrophyIcon className="h-5 w-5 shrink-0 text-olive" />
-            <div className="min-w-0">
-              <p className={rowTitleClass}>Badges</p>
-              <p className={rowDescClass}>
-                {badgesLoading
-                  ? "Loading progress…"
-                  : `${earnedIds.size} of ${BADGE_LIST.length} earned`}
-              </p>
-            </div>
-          </div>
+        <AppLink href="/badges" className={menuRowClass}>
+          <TrophyIcon className="h-5 w-5 shrink-0 text-olive" />
+          <span className="min-w-0 flex-1">
+            <span className={`block ${rowTitleClass}`}>Badges</span>
+            <span className={`block ${rowDescClass}`}>
+              {badgesLoading
+                ? "Loading progress…"
+                : `${earnedIds.size} of ${BADGE_LIST.length} earned`}
+            </span>
+          </span>
           <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
         </AppLink>
 
-        <AppLink
-          href="/contact"
-          className="group flex w-full items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-mist/40 sm:px-6"
-        >
-          <div className="flex min-w-0 items-center gap-3">
-            <EnvelopeIcon className="h-5 w-5 shrink-0 text-olive" />
-            <div className="min-w-0">
-              <p className={rowTitleClass}>Contact us</p>
-              <p className={rowDescClass}>Questions, feedback, or ideas</p>
-            </div>
-          </div>
+        <AppLink href="/contact" className={menuRowClass}>
+          <EnvelopeIcon className="h-5 w-5 shrink-0 text-olive" />
+          <span className="min-w-0 flex-1">
+            <span className={`block ${rowTitleClass}`}>Contact us</span>
+            <span className={`block ${rowDescClass}`}>Questions, feedback, or ideas</span>
+          </span>
           <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
         </AppLink>
 
-        <button
-          type="button"
-          onClick={clearHistory}
-          className="group flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-mist/40 sm:px-6"
-        >
+        <button type="button" onClick={clearHistory} className={menuRowClass}>
           <TrashIcon className="h-5 w-5 shrink-0 text-sage group-hover:text-forest" />
           <span className={`min-w-0 flex-1 ${rowTitleClass}`}>Clear history</span>
           <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
         </button>
 
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="group flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-mist/40 sm:px-6"
-        >
+        <button type="button" onClick={handleSignOut} className={menuRowClass}>
           <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0 text-terracotta group-hover:text-terracotta-dark" />
           <span className="min-w-0 flex-1 text-sm font-semibold text-forest">Sign out</span>
           <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />

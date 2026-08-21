@@ -95,21 +95,21 @@ export function PublicBarShare({
   };
 
   return (
-    <div className="flex items-center gap-2 mt-4">
+    <div className="flex flex-wrap items-center gap-2">
       <button
         type="button"
-        onClick={handleShare}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors text-sm font-medium"
+        onClick={() => void handleShare()}
+        className="inline-flex items-center gap-2 rounded-xl bg-mist px-3.5 py-2 text-sm font-medium text-forest transition-colors hover:bg-stone"
       >
-        <ShareIcon className="w-4 h-4" />
-        Share this bar
+        <ShareIcon className="h-4 w-4 shrink-0" />
+        Share
       </button>
       <button
         type="button"
-        onClick={handleCopy}
-        className="inline-flex items-center gap-2 px-3 py-2 bg-mist hover:bg-stone text-forest rounded-xl transition-colors text-sm font-medium"
+        onClick={() => void handleCopy()}
+        className="inline-flex items-center gap-2 rounded-xl border border-mist bg-white/70 px-3.5 py-2 text-sm font-medium text-forest transition-colors hover:bg-mist/60"
       >
-        {copied ? <CheckIcon className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
+        {copied ? <CheckIcon className="h-4 w-4 shrink-0" /> : <LinkIcon className="h-4 w-4 shrink-0" />}
         {copied ? "Copied" : "Copy link"}
       </button>
     </div>

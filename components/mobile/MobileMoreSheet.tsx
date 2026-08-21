@@ -61,12 +61,6 @@ const TOOL_ROWS: MoreRow[] = [
     icon: UserGroupIcon,
   },
   {
-    href: "/contact",
-    label: "Contact us",
-    description: "Questions, feedback, or ideas",
-    icon: ChatBubbleLeftRightIcon,
-  },
-  {
     href: "/saved",
     label: "Favorites",
     description: "Recipes you've saved",
@@ -77,6 +71,12 @@ const TOOL_ROWS: MoreRow[] = [
     label: "Shopping list",
     description: "Track what to buy next",
     icon: ShoppingCartIcon,
+  },
+  {
+    href: "/contact",
+    label: "Contact us",
+    description: "Questions, feedback, or ideas",
+    icon: ChatBubbleLeftRightIcon,
   },
 ];
 

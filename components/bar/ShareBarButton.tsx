@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { ShareIcon, CheckIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { ShareIcon, CheckIcon, EyeIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { useUser } from "@/components/auth/UserProvider";
@@ -179,8 +179,9 @@ export function ShareBarButton({
     if (variant === "menu") {
       return (
         <span className={className ?? "native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm text-sage"}>
-          <ShareIcon className="h-5 w-5 flex-shrink-0" />
+          <ShareIcon className="h-5 w-5 shrink-0" />
           <span className="min-w-0 flex-1 font-medium">Share My Bar</span>
+          <ChevronRightIcon className="h-4 w-4 shrink-0 text-sage" />
         </span>
       );
     }
@@ -206,8 +207,9 @@ export function ShareBarButton({
           "native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-medium text-forest hover:bg-mist/50 hover:text-terracotta disabled:opacity-50"
         }
       >
-        <Icon className="h-5 w-5 flex-shrink-0 text-sage" />
+        <Icon className="h-5 w-5 shrink-0 text-olive" />
         <span className="min-w-0 flex-1">{busy ? "Sharing..." : label}</span>
+        <ChevronRightIcon className="h-4 w-4 shrink-0 text-sage" />
       </button>
     );
   }

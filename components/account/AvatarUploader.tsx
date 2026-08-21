@@ -18,39 +18,77 @@ interface AvatarUploaderProps {
 const MAX_BYTES = 2 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
-async function getCroppedBlob(imageSrc: string, crop: Area): Promise<Blob> {
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new window.Image();
-    img.addEventListener("load", () => resolve(img));
-    img.addEventListener("error", reject);
-    img.crossOrigin = "anonymous";
-    img.src = imageSrc;
+const OUTPUT_SIZE = 512;
+
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  const image = new window.Image();
+  // crossOrigin on blob:/data: URLs breaks decode on some WebKit builds and
+  // can yield an empty canvas → solid black JPEG.
+  if (!src.startsWith("blob:") && !src.startsWith("data:")) {
+    image.crossOrigin = "anonymous";
+  }
+  await new Promise<void>((resolve, reject) => {
+    image.addEventListener("load", () => resolve());
+    image.addEventListener("error", () => reject(new Error("Failed to load image")));
+    image.src = src;
   });
+  if (typeof image.decode === "function") {
+    try {
+      await image.decode();
+    } catch {
+      // Still drawable in most browsers even if decode() rejects.
+    }
+  }
+  if (!image.naturalWidth || !image.naturalHeight) {
+    throw new Error("Image has no dimensions");
+  }
+  return image;
+}
+
+async function getCroppedBlob(imageSrc: string, crop: Area): Promise<Blob> {
+  const image = await loadImage(imageSrc);
+
+  // Clamp to natural bounds — out-of-range crops draw nothing → black JPEG.
+  const sx = Math.max(0, Math.min(image.naturalWidth - 1, Math.round(crop.x)));
+  const sy = Math.max(0, Math.min(image.naturalHeight - 1, Math.round(crop.y)));
+  const sw = Math.max(1, Math.min(image.naturalWidth - sx, Math.round(crop.width)));
+  const sh = Math.max(1, Math.min(image.naturalHeight - sy, Math.round(crop.height)));
 
   const canvas = document.createElement("canvas");
-  const size = Math.min(512, Math.round(Math.max(crop.width, crop.height)));
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = OUTPUT_SIZE;
+  canvas.height = OUTPUT_SIZE;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas unavailable");
 
-  ctx.drawImage(
-    image,
-    crop.x,
-    crop.y,
-    crop.width,
-    crop.height,
-    0,
-    0,
-    size,
-    size
-  );
+  // JPEG has no alpha; unfilled pixels encode as black (common with PNG/WebP).
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  // createImageBitmap + resize is more reliable for large phone photos on Safari
+  // (full-res drawImage into a small canvas can produce a black frame).
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(image, sx, sy, sw, sh, {
+        resizeWidth: OUTPUT_SIZE,
+        resizeHeight: OUTPUT_SIZE,
+        resizeQuality: "high",
+      });
+      ctx.drawImage(bitmap, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+      bitmap.close();
+    } catch {
+      ctx.drawImage(image, sx, sy, sw, sh, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+    }
+  } else {
+    ctx.drawImage(image, sx, sy, sw, sh, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+  }
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error("Crop failed"))),
       "image/jpeg",
-      0.9
+      0.92
     );
   });
 }
@@ -187,7 +225,15 @@ export function AvatarUploader({
           {initial}
         </span>
       )}
-      <span className="absolute inset-0 flex items-center justify-center bg-forest/45 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+      {/* Mobile: corner badge — full-bleed overlay made uploaded photos look black */}
+      <span
+        className={`absolute bottom-0.5 right-0.5 flex items-center justify-center rounded-full bg-forest/85 sm:hidden ${
+          size === "lg" ? "h-7 w-7" : "h-6 w-6"
+        }`}
+      >
+        <CameraIcon className={`text-cream ${size === "lg" ? "h-3.5 w-3.5" : "h-3 w-3"}`} />
+      </span>
+      <span className="absolute inset-0 hidden items-center justify-center bg-forest/45 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 sm:flex">
         <CameraIcon className={`text-cream drop-shadow ${size === "lg" ? "h-6 w-6" : "h-5 w-5"}`} />
       </span>
     </button>

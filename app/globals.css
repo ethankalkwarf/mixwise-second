@@ -3525,7 +3525,8 @@ html.native-app body {
     min-width: 44px;
     flex-shrink: 0;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
   }
 
   a.native-hero-tile,
