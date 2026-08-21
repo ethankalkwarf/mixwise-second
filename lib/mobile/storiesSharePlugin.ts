@@ -3,7 +3,9 @@ import { registerPlugin } from "@capacitor/core";
 export type StoriesShareOptions = {
   /** Meta / Facebook App ID (required by Instagram & Facebook Stories). */
   facebookAppId: string;
-  /** PNG/JPEG as raw base64 or data URL. */
+  /** Local file path from Capacitor Camera (preferred — avoids huge bridge payloads). */
+  backgroundImagePath?: string;
+  /** PNG/JPEG as raw base64 or data URL (fallback). */
   backgroundImageBase64?: string;
   /** Transparent PNG sticker as raw base64 or data URL. */
   stickerImageBase64?: string;

@@ -30,39 +30,35 @@ async function blobToDataUrl(blob: Blob): Promise<string> {
 }
 
 /**
- * Capture a pour photo. Prefer Uri (more reliable on Cap 8) over DataUrl.
- * Call only after any MixWise sheet has fully dismissed — iOS won't present
- * the camera/picker on top of another modal.
+ * Capture a pour photo. Prefer the on-disk Camera path so native Stories
+ * can read the file directly (avoids multi‑MB base64 over the Capacitor bridge).
  */
 async function capturePourBackground(
   source: CameraSource
-): Promise<string | null> {
+): Promise<{ path?: string; dataUrl?: string } | null> {
   try {
     const photo = await Camera.getPhoto({
-      quality: 80,
+      quality: 85,
       allowEditing: false,
       resultType: CameraResultType.Uri,
       source,
       correctOrientation: true,
-      width: 1080,
+      width: 1440,
     });
 
-    let dataUrl: string | null = null;
+    if (photo.path) {
+      return { path: photo.path };
+    }
+
+    // Fallback when only a webPath is available
     if (photo.webPath) {
       const res = await fetch(photo.webPath);
       if (!res.ok) throw new Error("Couldn't read the photo");
-      dataUrl = await blobToDataUrl(await res.blob());
-    } else if (photo.path) {
-      // Capacitor may only give a file path — try converting via Capacitor convertFileSrc
-      const { Capacitor: Cap } = await import("@capacitor/core");
-      const src = Cap.convertFileSrc(photo.path);
-      const res = await fetch(src);
-      if (!res.ok) throw new Error("Couldn't read the photo");
-      dataUrl = await blobToDataUrl(await res.blob());
+      const dataUrl = await blobToDataUrl(await res.blob());
+      return { dataUrl: await normalizeStoryBackground(dataUrl) };
     }
 
-    if (!dataUrl) return null;
-    return await normalizeStoryBackground(dataUrl);
+    return null;
   } catch (err) {
     const message = String((err as Error)?.message ?? err).toLowerCase();
     if (
@@ -292,7 +288,7 @@ export function StoriesShareButtons({
     }
     setBusy(platform);
     try {
-      let capturedBackground: string | null = null;
+      let capturedBackground: { path?: string; dataUrl?: string } | null = null;
       if (cameraBackground) {
         // Own sheet + explicit Camera/Photos — Capacitor Prompt opens library for both on iOS
         const source = await pickPourSource(platform);
@@ -316,6 +312,7 @@ export function StoriesShareButtons({
       const payload: {
         facebookAppId: string;
         stickerImageBase64: string;
+        backgroundImagePath?: string;
         backgroundImageBase64?: string;
         backgroundTopColor?: string;
         backgroundBottomColor?: string;
@@ -324,8 +321,10 @@ export function StoriesShareButtons({
         stickerImageBase64: stickerDataUrl,
       };
 
-      if (capturedBackground) {
-        payload.backgroundImageBase64 = capturedBackground;
+      if (capturedBackground?.path) {
+        payload.backgroundImagePath = capturedBackground.path;
+      } else if (capturedBackground?.dataUrl) {
+        payload.backgroundImageBase64 = capturedBackground.dataUrl;
       } else if (backgroundImageUrl) {
         const backgroundDataUrl = await imageUrlToDataUrl(backgroundImageUrl);
         if (backgroundDataUrl) {
@@ -334,7 +333,7 @@ export function StoriesShareButtons({
           payload.backgroundTopColor = backgroundTopColor;
           payload.backgroundBottomColor = backgroundBottomColor;
         }
-      } else {
+      } else if (!cameraBackground) {
         payload.backgroundTopColor = backgroundTopColor;
         payload.backgroundBottomColor = backgroundBottomColor;
       }
@@ -351,11 +350,13 @@ export function StoriesShareButtons({
       console.error("Stories share failed:", err);
       const msg = String((err as Error)?.message ?? err);
       const lower = msg.toLowerCase();
-      if (lower.includes("not installed")) {
+      // Surface a short native reason so we can diagnose TestFlight reports
+      const detail = msg.replace(/^Error:\s*/i, "").slice(0, 90);
+      if (lower.includes("not installed") || lower.includes("could not open")) {
         toast.error(
           platform === "ig"
-            ? "Instagram isn’t installed (or MixWise can’t open it). Reinstall Instagram and try again."
-            : "Facebook isn’t installed (or MixWise can’t open it)."
+            ? `Couldn't open Instagram Stories${detail ? ` — ${detail}` : ""}. Update to the latest TestFlight build and try again.`
+            : `Couldn't open Facebook Stories${detail ? ` — ${detail}` : ""}.`
         );
       } else if (lower.includes("permission") || lower.includes("denied") || lower.includes("access")) {
         toast.error("Allow Camera and Photos access in Settings, then try again.");
@@ -365,10 +366,8 @@ export function StoriesShareButtons({
         toast.error("Couldn't use that photo. Try another shot.");
       } else if (lower.includes("facebookappid") || lower.includes("app id")) {
         toast.error("Stories isn’t configured yet. Use Share instead.");
-      } else if (lower.includes("could not open")) {
-        toast.error("Instagram didn’t open. Switch back to MixWise and try once more.");
       } else {
-        toast.error("Couldn't open Stories. Try Share instead.");
+        toast.error(`Couldn't open Stories${detail ? ` — ${detail}` : ""}. Try Share instead.`);
       }
     } finally {
       setBusy(null);

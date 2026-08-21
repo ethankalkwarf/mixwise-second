@@ -37,8 +37,8 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
   return (
     <div
       style={{
-        width: 1080,
-        height: 720,
+        width: 900,
+        height: 560,
         backgroundColor: "transparent",
         color: "#FFFFFF",
         display: "flex",
@@ -116,8 +116,8 @@ export function CocktailStoriesShare({
       shareUrl={shareUrl}
       compact={compact}
       className={className}
-      stickerWidth={1080}
-      stickerHeight={720}
+      stickerWidth={900}
+      stickerHeight={560}
       // Capture pour in MixWise, then hand photo + text sticker to Stories
       cameraBackground
       sticker={<CocktailPourTextSticker cocktail={cocktail} />}
