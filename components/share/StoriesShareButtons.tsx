@@ -259,10 +259,10 @@ export function StoriesShareButtons({
 
   const renderStickerBase64 = useCallback(async () => {
     if (!stickerRef.current) throw new Error("Sticker not ready");
-    // Omit backgroundColor so the PNG keeps an alpha channel (no solid card).
+    // pixelRatio 1 keeps Capacitor → pasteboard payloads small enough to survive the bridge
     return toPng(stickerRef.current, {
       cacheBust: true,
-      pixelRatio: 2,
+      pixelRatio: 1,
       width: stickerWidth,
       height: stickerHeight,
       style: {
@@ -348,27 +348,27 @@ export function StoriesShareButtons({
       }
       void maybeAwardStoryBadge();
     } catch (err) {
-      if ((err as Error)?.message?.includes("not installed")) {
+      console.error("Stories share failed:", err);
+      const msg = String((err as Error)?.message ?? err);
+      const lower = msg.toLowerCase();
+      if (lower.includes("not installed")) {
         toast.error(
           platform === "ig"
-            ? "Instagram isn’t installed on this device."
-            : "Facebook isn’t installed on this device."
+            ? "Instagram isn’t installed (or MixWise can’t open it). Reinstall Instagram and try again."
+            : "Facebook isn’t installed (or MixWise can’t open it)."
         );
+      } else if (lower.includes("permission") || lower.includes("denied") || lower.includes("access")) {
+        toast.error("Allow Camera and Photos access in Settings, then try again.");
+      } else if (lower.includes("sticker")) {
+        toast.error("Couldn't build the pour sticker. Try again.");
+      } else if (lower.includes("background") || lower.includes("photo") || lower.includes("image")) {
+        toast.error("Couldn't use that photo. Try another shot.");
+      } else if (lower.includes("facebookappid") || lower.includes("app id")) {
+        toast.error("Stories isn’t configured yet. Use Share instead.");
+      } else if (lower.includes("could not open")) {
+        toast.error("Instagram didn’t open. Switch back to MixWise and try once more.");
       } else {
-        console.error("Stories share failed:", err);
-        const msg = String((err as Error)?.message ?? err);
-        const lower = msg.toLowerCase();
-        if (lower.includes("permission") || lower.includes("denied") || lower.includes("access")) {
-          toast.error("Allow Camera and Photos access in Settings, then try again.");
-        } else if (lower.includes("sticker")) {
-          toast.error("Couldn't build the pour sticker. Try again.");
-        } else if (lower.includes("background") || lower.includes("photo") || lower.includes("image")) {
-          toast.error("Couldn't use that photo. Try another shot.");
-        } else if (lower.includes("could not open") || lower.includes("invalid")) {
-          toast.error("Couldn't hand off to Stories. Try again in a moment.");
-        } else {
-          toast.error("Couldn't open Stories. Try Share instead.");
-        }
+        toast.error("Couldn't open Stories. Try Share instead.");
       }
     } finally {
       setBusy(null);
