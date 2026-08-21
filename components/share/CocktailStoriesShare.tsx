@@ -25,7 +25,7 @@ export function pourMomentLabel(date = new Date()): "Today's pour" | "Tonight's 
 
 /**
  * Large transparent text sticker for Instagram/Facebook Stories.
- * No photo — people snap their own pour against the camera.
+ * MixWise opens the camera first; their pour becomes the Stories background.
  * Canvas is story-width so pinch-to-scale starts (and tops out) bigger.
  */
 function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) {
@@ -118,7 +118,7 @@ export function CocktailStoriesShare({
       className={className}
       stickerWidth={1080}
       stickerHeight={560}
-      // Sticker only — Instagram opens the camera so they shoot their own pour
+      // Capture pour in MixWise, then hand photo + text sticker to Stories
       cameraBackground
       sticker={<CocktailPourTextSticker cocktail={cocktail} />}
     />

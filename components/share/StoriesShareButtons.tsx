@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
 import { Capacitor } from "@capacitor/core";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { LinkIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/components/auth/UserProvider";
@@ -12,6 +13,30 @@ import { isNativeApp } from "@/lib/mobile/platform";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { awardSharingBadge } from "@/lib/badgeEngine";
 import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
+
+/** Instagram’s Stories API never opens the camera — capture in MixWise first. */
+async function capturePourBackground(): Promise<string | null> {
+  try {
+    const photo = await Camera.getPhoto({
+      quality: 92,
+      allowEditing: false,
+      resultType: CameraResultType.DataUrl,
+      // Camera first; Prompt also offers library if they already shot the pour
+      source: CameraSource.Prompt,
+      correctOrientation: true,
+      width: 1080,
+      promptLabelHeader: "Your pour",
+      promptLabelPhoto: "Take photo",
+      promptLabelPicture: "Choose from library",
+      promptLabelCancel: "Cancel",
+    });
+    return photo.dataUrl ?? null;
+  } catch (err) {
+    const message = String((err as Error)?.message ?? err).toLowerCase();
+    if (message.includes("cancel") || message.includes("dismiss")) return null;
+    throw err;
+  }
+}
 
 const FACEBOOK_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "";
 
@@ -90,8 +115,8 @@ type Props = {
   backgroundTopColor?: string;
   backgroundBottomColor?: string;
   /**
-   * Sticker only — no background image or color gradient.
-   * Instagram/Facebook open the camera so people shoot their own photo.
+   * Open MixWise camera/library first, then pass that photo as the Stories
+   * background with the text sticker on top. (Meta’s API cannot open IG’s camera.)
    */
   cameraBackground?: boolean;
   className?: string;
@@ -175,6 +200,15 @@ export function StoriesShareButtons({
     }
     setBusy(platform);
     try {
+      let capturedBackground: string | null = null;
+      if (cameraBackground) {
+        capturedBackground = await capturePourBackground();
+        if (!capturedBackground) {
+          // User cancelled the camera / picker — don’t open Stories on a black canvas
+          return;
+        }
+      }
+
       const stickerDataUrl = await renderStickerBase64();
 
       const payload: {
@@ -188,17 +222,19 @@ export function StoriesShareButtons({
         stickerImageBase64: stickerDataUrl,
       };
 
-      if (!cameraBackground) {
-        const backgroundDataUrl = backgroundImageUrl
-          ? await imageUrlToDataUrl(backgroundImageUrl)
-          : null;
+      if (capturedBackground) {
+        payload.backgroundImageBase64 = capturedBackground;
+      } else if (backgroundImageUrl) {
+        const backgroundDataUrl = await imageUrlToDataUrl(backgroundImageUrl);
         if (backgroundDataUrl) {
           payload.backgroundImageBase64 = backgroundDataUrl;
         } else {
-          // Solid gradient fill — only when we are not opening the camera
           payload.backgroundTopColor = backgroundTopColor;
           payload.backgroundBottomColor = backgroundBottomColor;
         }
+      } else {
+        payload.backgroundTopColor = backgroundTopColor;
+        payload.backgroundBottomColor = backgroundBottomColor;
       }
 
       if (platform === "ig") {

@@ -48,6 +48,7 @@
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
     "@capacitor/app": "^8.1.1",
     "@capacitor/browser": "^8.0.4",
+    "@capacitor/camera": "^8.2.3",
     "@capacitor/core": "^8.0.0",
     "@capacitor/keyboard": "^8.0.5",
     "@capacitor/local-notifications": "^8.0.0",
@@ -75,6 +76,7 @@
     "qrcode.react": "^4.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-easy-crop": "^6.2.3",
     "react-to-print": "^3.2.0",
     "resend": "^6.6.0",
     "sanity": "^4.19.0"

@@ -49,6 +49,10 @@
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
 	<string>MixWise uses Face ID to lock the app when you return from the background.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>MixWise uses the camera so you can photograph your pour for Instagram and Facebook Stories.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MixWise needs photo access so you can pick a pour photo for Stories.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>MixWise uses motion so you can shake your phone to pick a random cocktail.</string>
 	<key>NSLocalNetworkUsageDescription</key>
