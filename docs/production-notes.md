@@ -78,10 +78,14 @@ In Supabase Dashboard → Authentication → URL Configuration:
 **Redirect URLs** (add all of these):
 - `https://www.getmixwise.com/auth/callback` (web)
 - `https://getmixwise.com/auth/callback` (apex web)
-- `https://www.getmixwise.com/auth/native-callback` (iOS app OAuth bridge — required)
+- `https://www.getmixwise.com/auth/native-callback` (manual bridge page; keep allowlisted)
 - `https://getmixwise.com/auth/native-callback` (apex bridge)
-- `com.getmixwise.app://auth/callback` (iOS deep link)
+- `com.getmixwise.app://auth/callback` (iOS deep link — **required** as native `redirectTo`)
 - `http://localhost:3000/auth/callback` (development)
+
+Native Google/Apple sign-in uses the custom scheme as `redirectTo` with Capgo
+`openSecureWindow` (ASWebAuthenticationSession). Do not fall back to Capacitor
+Browser — that leaves users logged-in but stuck in Safari.
 
 In Supabase Dashboard → Authentication → Providers:
 - **Google**: Authorized redirect is Supabase’s callback; app return uses the Redirect URLs above

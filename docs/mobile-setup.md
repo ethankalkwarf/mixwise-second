@@ -100,8 +100,9 @@ website instead of returning to the app.
 2. Supabase redirects to `com.getmixwise.app://auth/callback?code=…`
 3. The auth sheet dismisses; the app exchanges the code and opens **Home**
 
-Fallback (if `openSecureWindow` is unavailable): an in-app webview watches for the callback URL, then
-Capacitor Browser as a last resort.
+Fallback (if `openSecureWindow` is unavailable): an in-app Capgo webview that watches for the
+callback URL and closes itself. We never fall back to Capacitor Browser / system Safari — that
+path logs the app in via deep link but leaves the user stranded in the browser sheet.
 
 Email magic links use the web callback (`https://www.getmixwise.com/auth/callback` or your LAN URL in
 dev). The native app **hides** magic-link CTAs (Auth dialog, join panel, save-bar prompt) because those
