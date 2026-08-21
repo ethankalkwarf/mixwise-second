@@ -1,0 +1,54 @@
+diff --git a/node_modules/@capgo/capacitor-inappbrowser/ios/Sources/InAppBrowserPlugin/InAppBrowserPlugin.swift b/node_modules/@capgo/capacitor-inappbrowser/ios/Sources/InAppBrowserPlugin/InAppBrowserPlugin.swift
+index ac3dd40..2552eda 100644
+--- a/node_modules/@capgo/capacitor-inappbrowser/ios/Sources/InAppBrowserPlugin/InAppBrowserPlugin.swift
++++ b/node_modules/@capgo/capacitor-inappbrowser/ios/Sources/InAppBrowserPlugin/InAppBrowserPlugin.swift
+@@ -476,6 +476,8 @@ public class CapgoInAppBrowserPlugin: CAPPlugin, CAPBridgedPlugin {
+     private var safariViewController: SFSafariViewController?
+     private var safariOpenedUrl: String?
+     private var openSecureWindowCall: CAPPluginCall?
++    /// Retained for the full OAuth flow; also cancelled from close().
++    private var authSession: ASWebAuthenticationSession?
+ 
+     private func setup() {
+         self.isSetupDone = true
+@@ -2511,6 +2513,16 @@ public class CapgoInAppBrowserPlugin: CAPPlugin, CAPBridgedPlugin {
+         let isAnimated = call.getBool("isAnimated", true)
+ 
+         DispatchQueue.main.async {
++            // Always cancel a lingering ASWebAuthenticationSession first.
++            if let authSession = self.authSession {
++                self.authSession = nil
++                authSession.cancel()
++            }
++            if let secureCall = self.openSecureWindowCall {
++                self.openSecureWindowCall = nil
++                secureCall.reject("Sign-in cancelled")
++            }
++
+             if call.getString("id") == nil, let safariViewController = self.safariViewController {
+                 let url = self.safariOpenedUrl ?? ""
+                 self.safariViewController = nil
+@@ -2712,11 +2724,15 @@ public class CapgoInAppBrowserPlugin: CAPPlugin, CAPBridgedPlugin {
+ 
+         // Open the URL in a secure browser window
+         DispatchQueue.main.async {
++            self.authSession?.cancel()
++            self.authSession = nil
++
+             let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackURLScheme) {
+                 callbackURL, error in
+ 
+                 // Clean up the stored call
+                 self.openSecureWindowCall = nil
++                self.authSession = nil
+ 
+                 if let error = error {
+                     // Handle error (e.g., user cancelled)
+@@ -2741,6 +2757,7 @@ public class CapgoInAppBrowserPlugin: CAPPlugin, CAPBridgedPlugin {
+             // Present the session
+             session.prefersEphemeralWebBrowserSession = prefersEphemeral
+             session.presentationContextProvider = self
++            self.authSession = session
+             session.start()
+         }
+     }

@@ -7,9 +7,15 @@ import {
   NATIVE_OAUTH_BRIDGE_PATH,
   NATIVE_OAUTH_CALLBACK,
 } from "@/lib/mobile/authRedirect";
+import { MixwiseOAuth } from "@/lib/mobile/oauthSessionPlugin";
+
+/** Custom-scheme host for ASWebAuthenticationSession (scheme only). */
+const NATIVE_OAUTH_SCHEME = "com.getmixwise.app";
 
 /** Capgo/ASWebAuthenticationSession sheet or watched webview is presenting OAuth. */
 let oauthUiOpen = false;
+/** True while our MixwiseOAuth ASWebAuthenticationSession is active. */
+let mixwiseOAuthActive = false;
 let oauthExchangeInFlight: string | null = null;
 /** Resolves when a deep-link / secure-window callback finishes exchange. */
 let pendingOAuthHandled: Promise<boolean> | null = null;
@@ -24,22 +30,31 @@ function isOAuthReturnUrl(url: string): boolean {
 
 function isUserCancelError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
-  return /cancel|dismiss|abort|ASWebAuthenticationSessionErrorDomain.*canceled/i.test(
-    message
+  const code =
+    error && typeof error === "object" && "code" in error
+      ? String((error as { code?: string }).code)
+      : "";
+  return (
+    code === "OAUTH_CANCELLED" ||
+    /cancel|dismiss|abort|ASWebAuthenticationSessionErrorDomain.*canceled|Sign-in cancelled/i.test(
+      message
+    )
   );
-}
-
-/** Pull a callback URL out of Capgo reject strings when match checks fail. */
-function callbackUrlFromError(error: unknown): string | null {
-  const message = error instanceof Error ? error.message : String(error);
-  const match = message.match(/but got\s+(\S+)/i);
-  if (!match?.[1]) return null;
-  const candidate = match[1].trim();
-  return isOAuthReturnUrl(candidate) ? candidate : null;
 }
 
 async function dismissOAuthUi(): Promise<void> {
   oauthUiOpen = false;
+
+  // Our plugin can actually dismiss ASWebAuthenticationSession (Capgo close cannot).
+  if (mixwiseOAuthActive || Capacitor.isPluginAvailable("MixwiseOAuth")) {
+    try {
+      await MixwiseOAuth.cancel();
+    } catch {
+      /* nothing open */
+    }
+    mixwiseOAuthActive = false;
+  }
+
   try {
     const { InAppBrowser } = await import("@capgo/capacitor-inappbrowser");
     await InAppBrowser.close().catch(() => {});
@@ -47,16 +62,21 @@ async function dismissOAuthUi(): Promise<void> {
     // Plugin may be unavailable
   }
 
-  // Capgo / SFSafari leftovers sometimes need a short beat after the deep link.
   window.setTimeout(() => {
     void import("@capgo/capacitor-inappbrowser")
       .then(({ InAppBrowser }) => InAppBrowser.close().catch(() => {}))
       .catch(() => {});
+    if (Capacitor.isPluginAvailable("MixwiseOAuth")) {
+      void MixwiseOAuth.cancel().catch(() => {});
+    }
   }, 150);
   window.setTimeout(() => {
     void import("@capgo/capacitor-inappbrowser")
       .then(({ InAppBrowser }) => InAppBrowser.close().catch(() => {}))
       .catch(() => {});
+    if (Capacitor.isPluginAvailable("MixwiseOAuth")) {
+      void MixwiseOAuth.cancel().catch(() => {});
+    }
   }, 600);
 }
 
@@ -121,11 +141,53 @@ async function openNativeOAuthWithUrlWatch(url: string): Promise<void> {
   });
 }
 
+/** Preferred path: MixWise native plugin that can cancel the auth sheet. */
+async function openWithMixwiseOAuth(url: string): Promise<void> {
+  if (!Capacitor.isPluginAvailable("MixwiseOAuth")) {
+    throw Object.assign(new Error("MixwiseOAuth plugin unavailable"), {
+      code: "OAUTH_PLUGIN_MISSING" as const,
+    });
+  }
+
+  oauthUiOpen = true;
+  mixwiseOAuthActive = true;
+  try {
+    const { url: redirectedUri } = await MixwiseOAuth.start({
+      url,
+      callbackScheme: NATIVE_OAUTH_SCHEME,
+    });
+    mixwiseOAuthActive = false;
+    oauthUiOpen = false;
+    debugLog("[NativeOAuth] MixwiseOAuth returned:", redirectedUri);
+    if (redirectedUri) {
+      await handleNativeOAuthCallback(redirectedUri);
+    }
+  } catch (error) {
+    mixwiseOAuthActive = false;
+    oauthUiOpen = false;
+    throw error;
+  }
+}
+
+/** Capgo openSecureWindow — cannot cancel from JS if appUrlOpen wins the race. */
+async function openWithCapgoSecureWindow(url: string): Promise<void> {
+  const { InAppBrowser } = await import("@capgo/capacitor-inappbrowser");
+  oauthUiOpen = true;
+  const { redirectedUri } = await InAppBrowser.openSecureWindow({
+    authEndpoint: url,
+    redirectUri: NATIVE_OAUTH_CALLBACK,
+  });
+  oauthUiOpen = false;
+  debugLog("[NativeOAuth] openSecureWindow returned:", redirectedUri);
+  if (redirectedUri) {
+    await handleNativeOAuthCallback(redirectedUri);
+  }
+}
+
 /**
- * Opens the provider OAuth URL with ASWebAuthenticationSession (iOS) so the
- * sheet auto-dismisses when the custom-scheme deep link fires.
- * Falls back only to a Capgo webview that watches for the callback — never to
- * system Safari / Capacitor Browser (that path leaves users stranded logged-in).
+ * Opens the provider OAuth URL with ASWebAuthenticationSession so the sheet
+ * auto-dismisses on the custom-scheme callback. Prefer MixwiseOAuth (cancellable);
+ * Capgo and watched webview are fallbacks. Never use system Safari / Browser.
  */
 export async function openNativeOAuthProvider(url: string): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
@@ -134,39 +196,13 @@ export async function openNativeOAuthProvider(url: string): Promise<void> {
     });
   }
 
+  // 1) MixWise plugin — retains session + cancel() for deep-link races
   try {
-    // Dynamic import — a hard dependency can blank the WebView if the
-    // native plugin isn't linked yet (needs a fresh cap sync / rebuild).
-    const { InAppBrowser } = await import("@capgo/capacitor-inappbrowser");
-    oauthUiOpen = true;
-    const { redirectedUri } = await InAppBrowser.openSecureWindow({
-      authEndpoint: url,
-      // Must match Supabase redirectTo + Info.plist scheme so the sheet dismisses.
-      redirectUri: NATIVE_OAUTH_CALLBACK,
-    });
-    oauthUiOpen = false;
-    debugLog("[NativeOAuth] openSecureWindow returned:", redirectedUri);
-    if (redirectedUri) {
-      await handleNativeOAuthCallback(redirectedUri);
-    }
+    await openWithMixwiseOAuth(url);
     return;
   } catch (error) {
-    oauthUiOpen = false;
-
-    if (isUserCancelError(error)) {
-      debugLog("[NativeOAuth] Auth session cancelled by user");
-      throw Object.assign(new Error("Sign-in cancelled"), { code: "OAUTH_CANCELLED" as const });
-    }
-
-    // Capgo may reject after the sheet already dismissed (path match quirks).
-    // Prefer the URL from the error, or a deep link already handled via appUrlOpen.
-    const fromError = callbackUrlFromError(error);
-    if (fromError) {
-      debugLog("[NativeOAuth] Recovering callback from secure-window error");
-      await handleNativeOAuthCallback(fromError);
-      return;
-    }
-
+    // Deep link often wins: cancel() dismisses the sheet and rejects start(),
+    // but exchange may already be in flight / done via appUrlOpen.
     if (pendingOAuthHandled) {
       const handled = await pendingOAuthHandled.catch(() => false);
       if (handled) {
@@ -176,18 +212,51 @@ export async function openNativeOAuthProvider(url: string): Promise<void> {
       }
     }
 
-    console.warn("[NativeOAuth] openSecureWindow failed, trying webview watch:", error);
-    try {
-      await openNativeOAuthWithUrlWatch(url);
-      return;
-    } catch (watchError) {
-      await dismissOAuthUi();
-      console.error("[NativeOAuth] webview watch failed — not opening Safari:", watchError);
-      throw Object.assign(
-        new Error("Couldn’t open Google sign-in. Please try again."),
-        { code: "OAUTH_UI_FAILED" as const }
-      );
+    if (isUserCancelError(error)) {
+      debugLog("[NativeOAuth] Auth session cancelled by user");
+      throw Object.assign(new Error("Sign-in cancelled"), { code: "OAUTH_CANCELLED" as const });
     }
+
+    const missing =
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code?: string }).code === "OAUTH_PLUGIN_MISSING";
+
+    if (!missing) {
+      console.warn("[NativeOAuth] MixwiseOAuth failed, trying Capgo:", error);
+    }
+  }
+
+  // 2) Capgo secure window (older builds / plugin not linked yet)
+  try {
+    await openWithCapgoSecureWindow(url);
+    return;
+  } catch (error) {
+    if (isUserCancelError(error)) {
+      throw Object.assign(new Error("Sign-in cancelled"), { code: "OAUTH_CANCELLED" as const });
+    }
+
+    if (pendingOAuthHandled) {
+      const handled = await pendingOAuthHandled.catch(() => false);
+      if (handled) {
+        await dismissOAuthUi();
+        return;
+      }
+    }
+
+    console.warn("[NativeOAuth] openSecureWindow failed, trying webview watch:", error);
+  }
+
+  // 3) Watched Capgo webview only — never Safari
+  try {
+    await openNativeOAuthWithUrlWatch(url);
+  } catch (watchError) {
+    await dismissOAuthUi();
+    console.error("[NativeOAuth] webview watch failed — not opening Safari:", watchError);
+    throw Object.assign(new Error("Couldn’t open Google sign-in. Please try again."), {
+      code: "OAUTH_UI_FAILED" as const,
+    });
   }
 }
 
@@ -206,7 +275,6 @@ function collectOAuthParams(url: string): URLSearchParams {
 function navigateHomeAfterNativeOAuth(): void {
   if (typeof window === "undefined") return;
 
-  // Always greet on Home after native OAuth — ignore remembered /mix return-to.
   const target = new URL("/", window.location.origin);
   if (Capacitor.isNativePlatform()) {
     target.searchParams.set("mixwise_app", "1");
@@ -221,7 +289,6 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
     return false;
   }
 
-  // openSecureWindow + appUrlOpen often deliver the same callback — share one promise.
   if (pendingOAuthHandled) {
     debugLog("[NativeOAuth] Joining in-flight OAuth callback");
     await dismissOAuthUi();
@@ -229,6 +296,7 @@ export async function handleNativeOAuthCallback(url: string): Promise<boolean> {
   }
 
   const run = (async (): Promise<boolean> => {
+    // Dismiss FIRST — this is what was missing when appUrlOpen won the race.
     await dismissOAuthUi();
 
     const params = collectOAuthParams(url);
@@ -291,6 +359,10 @@ export function registerNativeOAuthListener(): () => void {
 
   const urlHandle = App.addListener("appUrlOpen", ({ url }) => {
     debugLog("[NativeOAuth] appUrlOpen:", url);
+    // Always try to kill the auth sheet immediately on OAuth deep links.
+    if (isOAuthReturnUrl(url)) {
+      void dismissOAuthUi();
+    }
     void handleNativeOAuthCallback(url)
       .then((handled) => {
         if (handled) {
@@ -317,7 +389,6 @@ export function registerNativeOAuthListener(): () => void {
       });
   });
 
-  // If a Capgo webview is still up when we regain focus after a deep link, close it.
   const stateHandle = App.addListener("appStateChange", ({ isActive }) => {
     if (isActive && oauthUiOpen) {
       void dismissOAuthUi();
