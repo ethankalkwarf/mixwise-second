@@ -25,6 +25,7 @@ import {
   trackMixToolUsed,
 } from "@/lib/analytics";
 import { useUser } from "@/components/auth/UserProvider";
+import { readCabinetReadyCount, readHomeSessionHint } from "@/lib/mobile/guestData";
 
 type Pane = "tonight" | "shelf";
 
@@ -67,6 +68,15 @@ type Props = {
   onClearAll: () => void;
 };
 
+function guessInitialPane(initialPane?: Pane): Pane {
+  if (initialPane) return initialPane;
+  if (typeof window === "undefined") return "shelf";
+  const hint = readHomeSessionHint();
+  const readyCount = readCabinetReadyCount();
+  if ((hint?.barCount ?? 0) > 0 || readyCount > 0) return "tonight";
+  return "shelf";
+}
+
 export function NativeMixView({
   allIngredients,
   ingredientIds,
@@ -81,8 +91,8 @@ export function NativeMixView({
   onRemoveIngredient,
   onClearAll,
 }: Props) {
-  const [pane, setPane] = useState<Pane>(initialPane ?? "shelf");
-  const [ready, setReady] = useState(false);
+  const [pane, setPane] = useState<Pane>(() => guessInitialPane(initialPane));
+  const [ready, setReady] = useState(() => Boolean(initialPane));
   const [query, setQuery] = useState("");
   const { user } = useUser();
   const mixTracked = useRef(false);

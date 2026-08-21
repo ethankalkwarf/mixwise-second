@@ -12,10 +12,33 @@ import { FIRST_WIN_EVENT } from "@/lib/mobile/firstWin";
 import { readCabinetReadyCount } from "@/lib/mobile/guestData";
 import { trackNotificationPermission } from "@/lib/analytics";
 
-const DISMISS_KEY = "mixwise-notif-ask-dismissed";
+const SNOOZE_KEY = "mixwise-notif-ask-snooze";
+const LEGACY_DISMISS_KEY = "mixwise-notif-ask-dismissed";
+const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function isSnoozed(): boolean {
+  try {
+    // Migrate permanent dismiss → one-week snooze so we can ask again.
+    if (localStorage.getItem(LEGACY_DISMISS_KEY) === "1") {
+      localStorage.removeItem(LEGACY_DISMISS_KEY);
+      localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
+      return true;
+    }
+    const raw = localStorage.getItem(SNOOZE_KEY);
+    if (!raw) return false;
+    const until = Number(raw);
+    if (!Number.isFinite(until)) return false;
+    if (Date.now() < until) return true;
+    localStorage.removeItem(SNOOZE_KEY);
+    return false;
+  } catch {
+    return true;
+  }
+}
 
 /**
  * Ask for daily Drink of the Day after the guest's first pourable win or a stocked cabinet.
+ * Shown on Home — not buried in settings.
  */
 export function NativeNotificationPrompt() {
   const { ingredientIds } = useBarIngredients();
@@ -37,12 +60,7 @@ export function NativeNotificationPrompt() {
 
     const hasValue = readyCount >= 1 || ingredientIds.length >= 3;
     if (!hasValue) return;
-
-    try {
-      if (localStorage.getItem(DISMISS_KEY) === "1") return;
-    } catch {
-      return;
-    }
+    if (isSnoozed()) return;
 
     let cancelled = false;
     void isNotificationEnabled().then((enabled) => {
@@ -55,9 +73,9 @@ export function NativeNotificationPrompt() {
 
   if (!visible) return null;
 
-  const dismiss = () => {
+  const snooze = () => {
     try {
-      localStorage.setItem(DISMISS_KEY, "1");
+      localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
     } catch {
       /* ignore */
     }
@@ -70,7 +88,7 @@ export function NativeNotificationPrompt() {
     if (granted) {
       await setNotificationEnabled(true);
     }
-    dismiss();
+    snooze();
   };
 
   const subtitle =
@@ -91,7 +109,7 @@ export function NativeNotificationPrompt() {
         >
           Notify me
         </button>
-        <button type="button" onClick={dismiss} className="rounded-2xl px-4 py-2.5 text-sm font-medium text-sage">
+        <button type="button" onClick={snooze} className="rounded-2xl px-4 py-2.5 text-sm font-medium text-sage">
           Not now
         </button>
       </div>

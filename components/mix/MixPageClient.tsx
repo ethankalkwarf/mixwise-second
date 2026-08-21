@@ -32,7 +32,7 @@ const PROMPT_THRESHOLD = 3;
  * Inner component that uses useSearchParams().
  * Must be a separate component to avoid "useSearchParams without Suspense" error.
  */
-function MixPageContent() {
+function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
   const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
   const [allCocktails, setAllCocktails] = useState<MixCocktail[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -51,13 +51,14 @@ function MixPageContent() {
 
   // Safe native platform detection (prevents SSR errors and hydration mismatches)
   const nativeShell = useNativeShell();
-  const [isNative, setIsNative] = useState(false);
+  const isNativeShell = forceNative || nativeShell;
+  const [isNative, setIsNative] = useState(forceNative);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    setIsNative(nativeShell);
-  }, [nativeShell]);
+    setIsNative(isNativeShell);
+  }, [isNativeShell]);
 
   const { isAuthenticated, isLoading: authLoading, user } = useUser();
   const { openAuthDialog, closeAuthDialog, isOpen: authDialogOpen } = useAuthDialog();
@@ -387,7 +388,7 @@ function MixPageContent() {
     );
   }
 
-  if (nativeShell) {
+  if (isNativeShell) {
     const shelfParam = searchParams?.get("shelf") === "1";
     const menuParam = searchParams?.get("step") === "menu";
 
@@ -666,6 +667,6 @@ function MixPageContent() {
   );
 }
 
-export function MixPageClient() {
-  return <MixPageContent />;
+export function MixPageClient({ forceNative = false }: { forceNative?: boolean }) {
+  return <MixPageContent forceNative={forceNative} />;
 }

@@ -28,7 +28,6 @@ import {
 import { debugLog } from "@/lib/debugLog";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
-import { NativeAccountExtras } from "@/components/mobile/NativeAccountExtras";
 
 export const dynamic = "force-dynamic";
 
@@ -530,410 +529,309 @@ export default function AccountPage() {
   const email = user?.email;
 
   return (
-    <div className="py-12">
+    <div className="py-10 sm:py-12">
       <MainContainer>
-        <div className="max-w-3xl mx-auto space-y-8">
-          {/* Page Title */}
-          <div className="text-center">
-            <h1 className="text-3xl font-serif font-bold text-forest mb-2">
-              Account Settings
-            </h1>
-            <p className="text-sage">Manage your profile and account preferences</p>
-          </div>
+        <div className="mx-auto max-w-xl space-y-8">
+          <header>
+            <h1 className="font-serif text-3xl font-bold text-forest">Account</h1>
+            <p className="mt-1 text-sage">Profile, privacy, and preferences</p>
+          </header>
 
-          {/* Profile Section */}
-          <section className="section-botanical">
-            <h2 className="text-xl font-serif font-bold text-forest mb-6">Profile</h2>
-            <div className="flex items-start gap-6">
-              <div className="flex-shrink-0">
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-olive/20 flex items-center justify-center">
-                  {avatarUrl ? (
-                    <Image
-                      src={avatarUrl}
-                      alt={displayName}
-                      width={80}
-                      height={80}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // If image fails to load, hide it (fallback will show)
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <span className="text-olive font-bold text-2xl">
-                      {userInitial}
-                    </span>
-                  )}
+          {/* Profile */}
+          <section className="rounded-3xl border border-mist bg-white p-6 sm:p-7">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-olive/15">
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt={displayName}
+                    width={64}
+                    height={64}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <span className="text-xl font-bold text-olive">{userInitial}</span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <h2 className="truncate font-serif text-xl font-bold text-forest">{displayName}</h2>
+                <p className="truncate text-sm text-sage">{email}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-4 border-t border-mist/80 pt-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
+                <div>
+                  <label htmlFor="firstName" className="label-botanical mb-1.5">
+                    First Name
+                  </label>
+                  <input
+                    id="firstName"
+                    type="text"
+                    value={firstNameInput}
+                    onChange={(e) => setFirstNameInput(e.target.value)}
+                    className="input-botanical"
+                    placeholder="Optional"
+                    disabled={profileSaving}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lastName" className="label-botanical mb-1.5">
+                    Last Name
+                  </label>
+                  <input
+                    id="lastName"
+                    type="text"
+                    value={lastNameInput}
+                    onChange={(e) => setLastNameInput(e.target.value)}
+                    className="input-botanical"
+                    placeholder="Optional"
+                    disabled={profileSaving}
+                  />
                 </div>
               </div>
-              <div className="flex-grow">
-                <h3 className="text-lg font-serif font-bold text-forest mb-1">
-                  {displayName}
-                </h3>
-                <p className="text-sage mb-4">{email}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="firstName" className="label-botanical">First Name</label>
-                    <input
-                      id="firstName"
-                      type="text"
-                      value={firstNameInput}
-                      onChange={(e) => setFirstNameInput(e.target.value)}
-                      className="input-botanical"
-                      placeholder="Optional"
-                      disabled={profileSaving}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="lastName" className="label-botanical">Last Name</label>
-                    <input
-                      id="lastName"
-                      type="text"
-                      value={lastNameInput}
-                      onChange={(e) => setLastNameInput(e.target.value)}
-                      className="input-botanical"
-                      placeholder="Optional"
-                      disabled={profileSaving}
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label htmlFor="displayName" className="label-botanical">Display Name</label>
-                    <input
-                      id="displayName"
-                      type="text"
-                      value={displayNameInput}
-                      onChange={(e) => setDisplayNameInput(e.target.value)}
-                      className="input-botanical"
-                      placeholder="How your name appears in the app"
-                      disabled={profileSaving}
-                    />
-                  </div>
-                  <div className="sm:col-span-2 flex items-end">
-                    <button 
-                      onClick={handleUpdateProfile}
-                      disabled={profileSaving}
-                      className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {profileSaving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                  </div>
-                </div>
+              <div>
+                <label htmlFor="displayName" className="label-botanical mb-1.5">
+                  Display Name
+                </label>
+                <input
+                  id="displayName"
+                  type="text"
+                  value={displayNameInput}
+                  onChange={(e) => setDisplayNameInput(e.target.value)}
+                  className="input-botanical"
+                  placeholder="How your name appears in the app"
+                  disabled={profileSaving}
+                />
+              </div>
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={handleUpdateProfile}
+                  disabled={profileSaving}
+                  className="btn-primary disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[10rem]"
+                >
+                  {profileSaving ? "Saving..." : "Save Changes"}
+                </button>
               </div>
             </div>
           </section>
 
-          {/* Privacy & Sharing */}
-          <section className="section-botanical">
-            <h2 className="text-xl font-serif font-bold text-forest mb-6">Privacy & Sharing</h2>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
-                <div className="flex items-center gap-3">
+          {/* Preferences */}
+          <section className="overflow-hidden rounded-3xl border border-mist bg-white">
+            <div className="border-b border-mist/80 px-6 py-4 sm:px-7">
+              <h2 className="font-serif text-lg font-bold text-forest">Preferences</h2>
+            </div>
+
+            <div className="divide-y divide-mist/80">
+              <div className="flex items-start justify-between gap-4 px-6 py-4 sm:px-7">
+                <div className="flex min-w-0 items-start gap-3">
                   {preferences?.public_bar_enabled ? (
-                    <GlobeAltIcon className="w-6 h-6 text-olive" />
+                    <GlobeAltIcon className="mt-0.5 h-5 w-5 shrink-0 text-olive" />
                   ) : (
-                    <LockClosedIcon className="w-6 h-6 text-sage" />
+                    <LockClosedIcon className="mt-0.5 h-5 w-5 shrink-0 text-sage" />
                   )}
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-semibold text-forest">Public Bar Profile</h3>
-                    <p className="text-sm text-sage">
+                    <p className="mt-0.5 text-sm text-sage">
                       {preferences?.public_bar_enabled
-                        ? "Your bar is visible to anyone with the link"
-                        : "Your bar is private and only visible to you. Enable to share what cocktails you can make!"
-                      }
+                        ? "Visible to anyone with the link"
+                        : "Private — only you can see your bar"}
                     </p>
                   </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
+                <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
                   <input
                     type="checkbox"
-                    className="sr-only peer"
+                    className="peer sr-only"
                     checked={preferences?.public_bar_enabled || false}
                     onChange={(e) => handleTogglePublicBar(e.target.checked)}
                   />
-                  <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta"></div>
+                  <div className="peer h-6 w-11 rounded-full bg-stone/30 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white after:bg-white after:transition-all after:content-[''] peer-checked:bg-terracotta peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25"></div>
                 </label>
               </div>
+
               {preferences?.public_bar_enabled && shareableBarUrl && (
-                <div className="p-4 bg-olive/10 border border-olive/20 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <GlobeAltIcon className="w-5 h-5 text-olive mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-forest mb-1">Your bar is now public!</h4>
-                      <p className="text-sm text-sage mb-3">
-                        Share your bar profile with friends using this link:
-                      </p>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch mb-3">
-                        <code className="min-w-0 break-all px-3 py-2 bg-cream text-forest text-sm rounded-lg border border-mist font-mono">
-                          {typeof window !== 'undefined' ? `${window.location.origin}/bar/${shareableBarUrl}` : `/bar/${shareableBarUrl}`}
-                        </code>
-                        <button
-                          onClick={() => {
-                            const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/bar/${shareableBarUrl}`;
-                            navigator.clipboard.writeText(url);
-                            toast.success('Link copied to clipboard!');
-                          }}
-                          className="native-compact-cta shrink-0 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-cream text-sm rounded-lg transition-colors font-medium sm:self-center"
-                        >
-                          Copy
-                        </button>
-                      </div>
-                      {/* Show suggestion if using public_slug but have display name */}
-                      {!profile?.username && profile?.public_slug && profile?.display_name && (
-                        <div className="mt-3 pt-3 border-t border-olive/20 space-y-3">
-                          <p className="text-sm text-sage leading-relaxed">
-                            <strong>Tip:</strong> Set a username from your display name for a cleaner link:
-                          </p>
-                          <code className="block min-w-0 break-all px-3 py-2 bg-cream text-forest text-xs rounded-lg border border-mist font-mono">
-                            /bar/{generateDefaultUsername() || 'username'}
-                          </code>
-                          <button
-                            onClick={async () => {
-                              const suggestedUsername = generateDefaultUsername();
-                              if (!suggestedUsername) {
-                                toast.error('Unable to generate username from display name');
-                                return;
-                              }
-                              
-                              debugLog('🔵 [CLIENT] Setting username from display name:', {
-                                suggestedUsername,
-                                currentUsername: profile?.username,
-                                currentPublicSlug: profile?.public_slug,
-                                userId: user?.id,
-                                profileData: profile
-                              });
-                              
-                              // First, check if user already has this username (case-insensitive)
-                              if (profile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
-                                debugLog('✅ [CLIENT] User already has this username, refreshing profile');
-                                toast.success('You already have this username!');
-                                await refreshProfile();
-                                return;
-                              }
-                              
-                              // Skip the availability check and just try to set it directly
-                              // The API will handle uniqueness checking and return appropriate errors
-                              setIsCheckingUsername(true);
-                              try {
-                                debugLog('🔵 [CLIENT] Calling updateUsername API...');
-                                // Try to set the username directly - API will check uniqueness
-                                const result = await updateUsername(suggestedUsername);
-                                
-                                debugLog('🔵 [CLIENT] API response:', result);
-                                
-                                if (result.success) {
-                                  debugLog('✅ [CLIENT] Username set successfully:', suggestedUsername);
-                                  toast.success('Username set! Your bar URL has been updated.');
-                                  // Refresh profile to get updated username
-                                  await refreshProfile();
-                                } else {
-                                  console.error('❌ [CLIENT] Failed to set username:', result.error);
-                                  
-                                  // If it says "already taken", check if it's actually the user's own username
-                                  if (result.error?.includes('taken') || result.error?.includes('already')) {
-                                    debugLog('🔵 [CLIENT] Username appears taken, checking if user already has it...');
-                                    // Try to fetch current profile to see if user already has it
-                                    try {
-                                      if (!user?.id) return;
-                                      const { data: currentProfile, error: fetchError } = await supabase
-                                        .from('profiles')
-                                        .select('username')
-                                        .eq('id', user.id)
-                                        .single();
-                                      
-                                      debugLog('🔵 [CLIENT] Fetched current profile:', {
-                                        username: currentProfile?.username,
-                                        fetchError,
-                                        suggestedUsername,
-                                        match: currentProfile?.username?.toLowerCase() === suggestedUsername.toLowerCase()
-                                      });
-                                      
-                                      if (currentProfile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
-                                        // User already has this username - just refresh
-                                        debugLog('✅ [CLIENT] User already has this username, refreshing profile');
-                                        toast.success('You already have this username!');
-                                        await refreshProfile();
-                                        setIsCheckingUsername(false);
-                                        return;
-                                      }
-                                    } catch (fetchErr) {
-                                      console.error('❌ [CLIENT] Error fetching current profile:', fetchErr);
-                                    }
-                                    
-                                    // It's actually taken by someone else
-                                    console.error('❌ [CLIENT] Username is taken by another user');
-                                    toast.error('This username is already taken. Please choose a different one.');
-                                    setUsernameInput(suggestedUsername);
-                                    setShowUsernameInput(true);
-                                  } else {
-                                    toast.error(result.error || 'Failed to set username');
-                                  }
-                                }
-                              } catch (err) {
-                                console.error('❌ [CLIENT] Error setting username:', err);
-                                toast.error('An error occurred. Please try again.');
-                              } finally {
-                                setIsCheckingUsername(false);
-                              }
-                            }}
-                            disabled={isCheckingUsername}
-                            className="native-menu-row flex w-full items-center justify-center text-sm px-3 py-2.5 bg-olive/20 hover:bg-olive/30 text-forest rounded-lg transition-colors font-medium disabled:opacity-50"
-                          >
-                            {isCheckingUsername ? 'Setting...' : `Set username: ${generateDefaultUsername() || 'username'}`}
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                <div className="space-y-3 bg-olive/[0.04] px-6 py-4 sm:px-7">
+                  <p className="text-sm text-sage">Share your bar with this link:</p>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+                    <code className="min-w-0 break-all rounded-xl border border-mist bg-cream px-3 py-2 font-mono text-sm text-forest">
+                      {typeof window !== "undefined"
+                        ? `${window.location.origin}/bar/${shareableBarUrl}`
+                        : `/bar/${shareableBarUrl}`}
+                    </code>
+                    <button
+                      onClick={() => {
+                        const url = `${typeof window !== "undefined" ? window.location.origin : ""}/bar/${shareableBarUrl}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success("Link copied to clipboard!");
+                      }}
+                      className="native-compact-cta shrink-0 rounded-xl bg-terracotta px-4 py-2 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark sm:self-center"
+                    >
+                      Copy
+                    </button>
                   </div>
+                  {!profile?.username && profile?.public_slug && profile?.display_name && (
+                    <div className="space-y-3 border-t border-olive/15 pt-3">
+                      <p className="text-sm leading-relaxed text-sage">
+                        <strong>Tip:</strong> Set a username from your display name for a cleaner link:
+                      </p>
+                      <code className="block min-w-0 break-all rounded-xl border border-mist bg-cream px-3 py-2 font-mono text-xs text-forest">
+                        /bar/{generateDefaultUsername() || "username"}
+                      </code>
+                      <button
+                        onClick={async () => {
+                          const suggestedUsername = generateDefaultUsername();
+                          if (!suggestedUsername) {
+                            toast.error("Unable to generate username from display name");
+                            return;
+                          }
+
+                          debugLog("🔵 [CLIENT] Setting username from display name:", {
+                            suggestedUsername,
+                            currentUsername: profile?.username,
+                            currentPublicSlug: profile?.public_slug,
+                            userId: user?.id,
+                            profileData: profile,
+                          });
+
+                          if (profile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
+                            debugLog("✅ [CLIENT] User already has this username, refreshing profile");
+                            toast.success("You already have this username!");
+                            await refreshProfile();
+                            return;
+                          }
+
+                          setIsCheckingUsername(true);
+                          try {
+                            debugLog("🔵 [CLIENT] Calling updateUsername API...");
+                            const result = await updateUsername(suggestedUsername);
+
+                            debugLog("🔵 [CLIENT] API response:", result);
+
+                            if (result.success) {
+                              debugLog("✅ [CLIENT] Username set successfully:", suggestedUsername);
+                              toast.success("Username set! Your bar URL has been updated.");
+                              await refreshProfile();
+                            } else {
+                              console.error("❌ [CLIENT] Failed to set username:", result.error);
+
+                              if (result.error?.includes("taken") || result.error?.includes("already")) {
+                                debugLog("🔵 [CLIENT] Username appears taken, checking if user already has it...");
+                                try {
+                                  if (!user?.id) return;
+                                  const { data: currentProfile, error: fetchError } = await supabase
+                                    .from("profiles")
+                                    .select("username")
+                                    .eq("id", user.id)
+                                    .single();
+
+                                  debugLog("🔵 [CLIENT] Fetched current profile:", {
+                                    username: currentProfile?.username,
+                                    fetchError,
+                                    suggestedUsername,
+                                    match:
+                                      currentProfile?.username?.toLowerCase() ===
+                                      suggestedUsername.toLowerCase(),
+                                  });
+
+                                  if (
+                                    currentProfile?.username?.toLowerCase() ===
+                                    suggestedUsername.toLowerCase()
+                                  ) {
+                                    debugLog(
+                                      "✅ [CLIENT] User already has this username, refreshing profile"
+                                    );
+                                    toast.success("You already have this username!");
+                                    await refreshProfile();
+                                    setIsCheckingUsername(false);
+                                    return;
+                                  }
+                                } catch (fetchErr) {
+                                  console.error("❌ [CLIENT] Error fetching current profile:", fetchErr);
+                                }
+
+                                console.error("❌ [CLIENT] Username is taken by another user");
+                                toast.error("This username is already taken. Please choose a different one.");
+                                setUsernameInput(suggestedUsername);
+                                setShowUsernameInput(true);
+                              } else {
+                                toast.error(result.error || "Failed to set username");
+                              }
+                            }
+                          } catch (err) {
+                            console.error("❌ [CLIENT] Error setting username:", err);
+                            toast.error("An error occurred. Please try again.");
+                          } finally {
+                            setIsCheckingUsername(false);
+                          }
+                        }}
+                        disabled={isCheckingUsername}
+                        className="native-menu-row flex w-full items-center justify-center rounded-xl bg-olive/15 px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-olive/25 disabled:opacity-50"
+                      >
+                        {isCheckingUsername
+                          ? "Setting..."
+                          : `Set username: ${generateDefaultUsername() || "username"}`}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
               {preferences?.public_bar_enabled && !shareableBarUrl && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center mt-0.5">
-                      <span className="text-white text-xs">!</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-forest mb-1">Username Required</h4>
-                      <p className="text-sm text-sage mb-3">
-                        You need to set a username to make your bar fully public. Click the toggle again to set one.
+                <div className="bg-amber-50/80 px-6 py-4 sm:px-7">
+                  <h4 className="font-semibold text-forest">Username required</h4>
+                  <p className="mt-1 text-sm text-sage">
+                    You need to set a username to make your bar fully public. Toggle again to set one.
+                  </p>
+                </div>
+              )}
+
+              <div className="px-6 py-4 sm:px-7">
+                <div className="mb-3 flex items-center gap-2">
+                  <EnvelopeIcon className="h-5 w-5 text-sage" />
+                  <h3 className="font-semibold text-forest">Email</h3>
+                </div>
+                {emailPrefsLoading ? (
+                  <div className="h-12 animate-pulse rounded-xl bg-mist/50" />
+                ) : (
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-medium text-forest">MixWise emails</p>
+                      <p className="mt-0.5 text-sm text-sage">
+                        {emailPrefsError
+                          ? emailPrefsError
+                          : "Welcome tips, weekly cocktail inspiration, and updates"}
                       </p>
                     </div>
+                    <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        className="peer sr-only"
+                        checked={emailSubscribed}
+                        onChange={(e) => updateEmailPref(e.target.checked)}
+                        disabled={emailPrefsSaving}
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-stone/30 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white after:bg-white after:transition-all after:content-[''] peer-checked:bg-terracotta peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 disabled:opacity-50"></div>
+                    </label>
                   </div>
-                </div>
-              )}
-
-              {/* Username Input Modal */}
-              {showUsernameInput && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-cream rounded-2xl p-6 max-w-md w-full">
-                    <div className="flex items-center gap-3 mb-4">
-                      <GlobeAltIcon className="w-6 h-6 text-olive" />
-                      <h3 className="text-lg font-serif font-bold text-forest">Set Your Username</h3>
-                    </div>
-                    <p className="text-sage text-sm mb-4">
-                      To make your bar public, you need a unique username for your profile URL.
-                    </p>
-                    <form onSubmit={handleUsernameSubmit}>
-                      <div className="mb-4">
-                        <label htmlFor="username" className="label-botanical block mb-2">
-                          Username
-                        </label>
-                        <input
-                          id="username"
-                          type="text"
-                          value={usernameInput}
-                          onChange={(e) => {
-                            setUsernameInput(e.target.value);
-                            setUsernameError(null);
-                          }}
-                          className="input-botanical w-full"
-                          placeholder="Enter your username"
-                          disabled={isCheckingUsername}
-                        />
-                        <p className="text-xs text-sage mt-1">
-                          Your public URL will be: /bar/{usernameInput || 'username'}
-                        </p>
-                        {usernameError && (
-                          <p className="text-xs text-terracotta mt-1">{usernameError}</p>
-                        )}
-                      </div>
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setShowUsernameInput(false)}
-                          className="flex-1 px-4 py-2 bg-mist hover:bg-stone text-forest rounded-xl transition-colors font-medium"
-                          disabled={isCheckingUsername}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="flex-1 px-4 py-2 bg-terracotta hover:bg-terracotta-dark text-cream rounded-xl transition-colors font-medium disabled:opacity-50"
-                          disabled={isCheckingUsername || !usernameInput.trim()}
-                        >
-                          {isCheckingUsername ? 'Checking...' : 'Enable Public Bar'}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </section>
 
-          {/* Email Preferences */}
-          <NativeAccountExtras />
-
-          <section className="section-botanical">
-            <div className="flex items-center gap-3 mb-6">
-              <EnvelopeIcon className="w-6 h-6 text-olive" />
-              <h2 className="text-xl font-serif font-bold text-forest">Email Preferences</h2>
-            </div>
-            <p className="text-sage text-sm mb-6">
-              Choose which emails you'd like to receive from MixWise.
-            </p>
-            
-            {emailPrefsLoading ? (
-              <div className="space-y-4">
-                <div className="h-16 bg-mist/50 rounded-xl animate-pulse border border-mist" />
-              </div>
-            ) : emailPrefsError ? (
-              <div className="space-y-4">
-                <p className="text-sm text-sage">{emailPrefsError}</p>
-                <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
-                  <div>
-                    <h3 className="font-semibold text-forest">MixWise emails</h3>
-                    <p className="text-sm text-sage">
-                      Welcome tips, weekly cocktail inspiration, and other updates from us
-                    </p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={emailSubscribed}
-                      onChange={(e) => updateEmailPref(e.target.checked)}
-                      disabled={emailPrefsSaving}
-                    />
-                    <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>
-                  </label>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-mist/30 rounded-xl border border-mist">
-                  <div>
-                    <h3 className="font-semibold text-forest">MixWise emails</h3>
-                    <p className="text-sm text-sage">
-                      Welcome tips, weekly cocktail inspiration, and other updates from us
-                    </p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={emailSubscribed}
-                      onChange={(e) => updateEmailPref(e.target.checked)}
-                      disabled={emailPrefsSaving}
-                    />
-                    <div className="w-11 h-6 bg-stone/30 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terracotta disabled:opacity-50"></div>
-                  </label>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Badges — full gallery lives on /badges */}
-          <section className="section-botanical">
+          {/* Shortcuts & actions */}
+          <section className="overflow-hidden rounded-3xl border border-mist bg-white">
             <AppLink
               href="/badges"
-              className="native-menu-row flex w-full items-center justify-between gap-3 rounded-xl bg-mist/50 p-4 transition-colors hover:bg-mist group"
+              className="native-menu-row flex w-full items-center justify-between gap-3 px-6 py-4 transition-colors hover:bg-mist/40 sm:px-7 group"
             >
               <div className="flex min-w-0 items-center gap-3">
-                <TrophyIcon className="h-6 w-6 shrink-0 text-olive" />
+                <TrophyIcon className="h-5 w-5 shrink-0 text-olive" />
                 <div className="min-w-0">
-                  <h2 className="text-lg font-serif font-bold text-forest">Badges</h2>
+                  <h2 className="font-semibold text-forest">Badges</h2>
                   <p className="text-sm text-sage">
                     {badgesLoading
                       ? "Loading progress…"
@@ -943,38 +841,90 @@ export default function AccountPage() {
               </div>
               <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
             </AppLink>
+
+            <button
+              type="button"
+              onClick={clearHistory}
+              className="native-menu-row flex w-full items-center gap-3 border-t border-mist/80 px-6 py-4 text-left transition-colors hover:bg-mist/40 sm:px-7 group"
+            >
+              <TrashIcon className="h-5 w-5 shrink-0 text-sage group-hover:text-forest" />
+              <span className="min-w-0 flex-1 font-medium text-forest">Clear History</span>
+              <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+            </button>
+
+            {ingredientIds.length > 0 && (
+              <ShareBarButton
+                variant="menu"
+                className="native-menu-row flex w-full items-center gap-3 border-t border-mist/80 px-6 py-4 text-left text-sm font-medium text-forest transition-colors hover:bg-mist/40 hover:text-terracotta disabled:opacity-50 sm:px-7"
+              />
+            )}
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="native-menu-row flex w-full items-center gap-3 border-t border-mist/80 px-6 py-4 text-left transition-colors hover:bg-mist/40 sm:px-7 group"
+            >
+              <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0 text-terracotta group-hover:text-terracotta-dark" />
+              <span className="min-w-0 flex-1 font-medium text-forest">Sign Out</span>
+              <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+            </button>
           </section>
 
-          {/* Account Actions */}
-          <section className="section-botanical">
-            <h2 className="text-xl font-serif font-bold text-forest mb-6">Account Actions</h2>
-            <div className="overflow-hidden rounded-xl bg-mist/50">
-              <button
-                type="button"
-                onClick={clearHistory}
-                className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-mist group"
-              >
-                <TrashIcon className="h-5 w-5 shrink-0 text-sage group-hover:text-forest" />
-                <span className="min-w-0 flex-1 font-medium text-forest">Clear History</span>
-                <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
-              </button>
-              {ingredientIds.length > 0 && (
-                <ShareBarButton
-                  variant="menu"
-                  className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left text-sm font-medium text-forest transition-colors hover:bg-mist hover:text-terracotta disabled:opacity-50"
-                />
-              )}
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left transition-colors hover:bg-mist group"
-              >
-                <ArrowRightOnRectangleIcon className="h-5 w-5 shrink-0 text-terracotta group-hover:text-terracotta-dark" />
-                <span className="min-w-0 flex-1 font-medium text-forest">Sign Out</span>
-                <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
-              </button>
+          {showUsernameInput && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="w-full max-w-md rounded-2xl bg-cream p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <GlobeAltIcon className="h-6 w-6 text-olive" />
+                  <h3 className="font-serif text-lg font-bold text-forest">Set Your Username</h3>
+                </div>
+                <p className="mb-4 text-sm text-sage">
+                  To make your bar public, you need a unique username for your profile URL.
+                </p>
+                <form onSubmit={handleUsernameSubmit}>
+                  <div className="mb-4">
+                    <label htmlFor="username" className="label-botanical mb-2 block">
+                      Username
+                    </label>
+                    <input
+                      id="username"
+                      type="text"
+                      value={usernameInput}
+                      onChange={(e) => {
+                        setUsernameInput(e.target.value);
+                        setUsernameError(null);
+                      }}
+                      className="input-botanical w-full"
+                      placeholder="Enter your username"
+                      disabled={isCheckingUsername}
+                    />
+                    <p className="mt-1 text-xs text-sage">
+                      Your public URL will be: /bar/{usernameInput || "username"}
+                    </p>
+                    {usernameError && (
+                      <p className="mt-1 text-xs text-terracotta">{usernameError}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowUsernameInput(false)}
+                      className="flex-1 rounded-xl bg-mist px-4 py-2 font-medium text-forest transition-colors hover:bg-stone"
+                      disabled={isCheckingUsername}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 rounded-xl bg-terracotta px-4 py-2 font-medium text-cream transition-colors hover:bg-terracotta-dark disabled:opacity-50"
+                      disabled={isCheckingUsername || !usernameInput.trim()}
+                    >
+                      {isCheckingUsername ? "Checking..." : "Enable Public Bar"}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </section>
+          )}
         </div>
       </MainContainer>
     </div>

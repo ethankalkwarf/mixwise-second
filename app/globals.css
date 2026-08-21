@@ -2237,6 +2237,17 @@ html.native-app .input-botanical {
   object-position: center 30%;
 }
 
+.native-home-hero__photo--incoming {
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 280ms ease;
+  pointer-events: none;
+}
+
+.native-home-hero__photo--incoming.is-ready {
+  opacity: 1;
+}
+
 .native-home-hero__logo {
   position: relative;
   z-index: 2;

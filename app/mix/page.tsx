@@ -31,7 +31,7 @@ export default async function MixPage() {
         </div>
       ) : null}
       <Suspense fallback={<MixSkeleton />}>
-        <MixPageClient />
+        <MixPageClient forceNative={native} />
       </Suspense>
       {!native ? (
         <div data-web-mix-marketing>

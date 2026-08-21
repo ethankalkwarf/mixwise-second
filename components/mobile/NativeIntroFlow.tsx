@@ -15,7 +15,7 @@ import {
 } from "@/lib/mobile/nativeIntro";
 import { NativeNamePrompt } from "@/components/mobile/NativeNamePrompt";
 import { profileNeedsGivenName } from "@/lib/homeHeroHeadline";
-import { getTabBarConfig, MOBILE_TAB_DESTINATIONS, type MobileTabId } from "@/lib/mobile/tabBarConfig";
+import { getTabBarConfig, MOBILE_TAB_DESTINATIONS } from "@/lib/mobile/tabBarConfig";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { trackNativeIntroStep } from "@/lib/analytics";
 
@@ -116,15 +116,43 @@ function IntroAmbientVideo() {
 const INTRO_SLIDES = [
   {
     id: "welcome",
+    tab: null,
     kicker: "Welcome",
     title: "Your home bar,\nin your pocket.",
     body: "Discover cocktails you can actually make — with the bottles you already have.",
+    hint: null,
   },
   {
     id: "mix",
+    tab: "mix" as const,
     kicker: "Mix",
     title: "Stock your cabinet.",
     body: "Tap the bottles you own. MixWise shows every drink you can pour — and what one bottle unlocks next.",
+    hint: "Tap bottles · see your menu",
+  },
+  {
+    id: "search",
+    tab: "search" as const,
+    kicker: "Search",
+    title: "Browse every recipe.",
+    body: "Filter by spirit, vibe, or occasion. Find the classic you want — or the one you didn't know you needed.",
+    hint: "Curated recipes, ready to filter",
+  },
+  {
+    id: "you",
+    tab: "you" as const,
+    kicker: "You",
+    title: "Heart the keepers.",
+    body: "Save favorites, leave tasting notes, and skip what isn't for you — so MixWise learns your taste.",
+    hint: "Favorites, notes, and your bar",
+  },
+  {
+    id: "learn",
+    tab: "learn" as const,
+    kicker: "Learn",
+    title: "Shake with confidence.",
+    body: "Techniques, bottle guides, and short courses — so every pour tastes like you meant it.",
+    hint: "Guides, methods, and courses",
   },
 ] as const;
 
@@ -222,10 +250,6 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
       setPhase("ready");
       return;
     }
-    if (!lastIntro && step === 0 && !isReplay) {
-      enterApp("/");
-      return;
-    }
     if (!lastIntro) {
       setStep((s) => s + 1);
       return;
@@ -276,16 +300,18 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col justify-end px-6 pb-2 pt-8">
-          {!isWelcome && slide && (
+          {!isWelcome && slide?.tab && (
             <div
               className={`mb-8 transition-all delay-100 duration-700 ${
                 entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
               }`}
             >
-              <TabBarPreview active={slide.id as MobileTabId} />
-              <p className="mt-4 text-center text-xs font-medium tracking-wide text-cream/65">
-                Tap bottles · see your menu
-              </p>
+              <TabBarPreview active={slide.tab} />
+              {slide.hint ? (
+                <p className="mt-4 text-center text-xs font-medium tracking-wide text-cream/65">
+                  {slide.hint}
+                </p>
+              ) : null}
             </div>
           )}
 
@@ -324,23 +350,13 @@ export function NativeIntroFlow({ children }: NativeIntroFlowProps) {
             >
               {isReplay && lastIntro
                 ? "Done"
-                : step === 0 && !isReplay
-                  ? "Get started"
-                  : lastIntro
-                    ? "Start exploring"
+                : lastIntro
+                  ? "Start exploring"
+                  : step === 0
+                    ? "See how it works"
                     : "Next"}
               {!(isReplay && lastIntro) && <ArrowRightIcon className="h-4 w-4" aria-hidden />}
             </button>
-
-            {!isReplay && step === 0 && (
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="w-full py-2.5 text-sm font-medium text-cream/70 transition-colors active:text-cream"
-              >
-                How it works
-              </button>
-            )}
 
             {!isReplay && lastIntro && (
               <div className="mt-1 space-y-2">

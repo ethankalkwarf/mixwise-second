@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
+import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import { formatCocktailName } from "@/lib/formatters";
 import { trackEmptyStateSeen } from "@/lib/analytics";
 import {
@@ -281,7 +282,52 @@ function ExploreRow({
   );
 }
 
+function useLiveCocktailImages(
+  items: { cocktail_id: string; cocktail_image_url?: string | null }[],
+  loading: boolean
+) {
+  const [imageUrls, setImageUrls] = useState<Map<string, string | null>>(() => new Map());
+  const idsKey = items.map((item) => item.cocktail_id).join("|");
+
+  useEffect(() => {
+    if (loading || !idsKey) {
+      setImageUrls(new Map());
+      return;
+    }
+
+    let cancelled = false;
+    const cocktailIds = idsKey.split("|");
+
+    void getCocktailImageUrls(cocktailIds)
+      .then((urls) => {
+        if (!cancelled) setImageUrls(urls);
+      })
+      .catch((error) => {
+        console.error("Error fetching cocktail images:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [idsKey, loading]);
+
+  return imageUrls;
+}
+
+function resolveCocktailImageUrl(
+  cocktailId: string,
+  storedUrl: string | null | undefined,
+  liveUrls: Map<string, string | null>
+) {
+  const live = liveUrls.get(cocktailId);
+  const liveTrimmed = live?.trim() || null;
+  const storedTrimmed = storedUrl?.trim() || null;
+  return liveTrimmed || storedTrimmed;
+}
+
 function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boolean }) {
+  const liveImageUrls = useLiveCocktailImages(favorites, loading);
+
   useEffect(() => {
     if (!loading && favorites.length === 0) {
       void trackEmptyStateSeen("saved_favorites");
@@ -310,40 +356,49 @@ function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boole
 
   return (
     <div className="space-y-3">
-      {favorites.map((fav) => (
-        <AppLink
-          key={fav.cocktail_id}
-          href={`/cocktails/${fav.cocktail_slug || fav.cocktail_id}`}
-          className="flex gap-3 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-md p-3 active:scale-[0.98] transition-all"
-        >
-          <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-mist flex-shrink-0">
-            {fav.cocktail_image_url ? (
-              <Image
-                src={fav.cocktail_image_url}
-                alt={fav.cocktail_name}
-                fill
-                sizes="80px"
-                className="object-cover"
-                quality={90}
-              />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-sage text-2xl">🍸</div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display font-bold text-base text-forest mb-1 line-clamp-2">
-              {formatCocktailName(fav.cocktail_name || 'Cocktail')}
-            </h3>
-            <p className="text-xs text-sage">Saved favorite</p>
-          </div>
-          <ArrowRightIcon className="w-5 h-5 text-sage flex-shrink-0 self-center" />
-        </AppLink>
-      ))}
+      {favorites.map((fav) => {
+        const imageUrl = resolveCocktailImageUrl(
+          fav.cocktail_id,
+          fav.cocktail_image_url,
+          liveImageUrls
+        );
+        return (
+          <AppLink
+            key={fav.cocktail_id}
+            href={`/cocktails/${fav.cocktail_slug || fav.cocktail_id}`}
+            className="flex gap-3 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-md p-3 active:scale-[0.98] transition-all"
+          >
+            <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-mist flex-shrink-0">
+              {imageUrl ? (
+                <Image
+                  src={imageUrl}
+                  alt={fav.cocktail_name}
+                  fill
+                  sizes="80px"
+                  className="object-cover"
+                  quality={90}
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-sage text-2xl">🍸</div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display font-bold text-base text-forest mb-1 line-clamp-2">
+                {formatCocktailName(fav.cocktail_name || 'Cocktail')}
+              </h3>
+              <p className="text-xs text-sage">Saved favorite</p>
+            </div>
+            <ArrowRightIcon className="w-5 h-5 text-sage flex-shrink-0 self-center" />
+          </AppLink>
+        );
+      })}
     </div>
   );
 }
 
 function RecentTab({ recent, loading }: { recent: any[]; loading: boolean }) {
+  const liveImageUrls = useLiveCocktailImages(recent, loading);
+
   if (loading) {
     return <div className="text-center py-12 text-sage">Loading...</div>;
   }
@@ -360,35 +415,42 @@ function RecentTab({ recent, loading }: { recent: any[]; loading: boolean }) {
 
   return (
     <div className="space-y-3">
-      {recent.map((item) => (
-        <AppLink
-          key={item.cocktail_id}
-          href={`/cocktails/${item.cocktail_slug || item.cocktail_id}`}
-          className="flex gap-3 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-md p-3 active:scale-[0.98] transition-all"
-        >
-          <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-mist flex-shrink-0">
-            {item.cocktail_image_url ? (
-              <Image
-                src={item.cocktail_image_url}
-                alt={item.cocktail_name}
-                fill
-                sizes="80px"
-                className="object-cover"
-                quality={90}
-              />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-sage text-2xl">🍸</div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display font-bold text-base text-forest mb-1 line-clamp-2">
-              {formatCocktailName(item.cocktail_name || 'Cocktail')}
-            </h3>
-            <p className="text-xs text-sage">Recently viewed</p>
-          </div>
-          <ArrowRightIcon className="w-5 h-5 text-sage flex-shrink-0 self-center" />
-        </AppLink>
-      ))}
+      {recent.map((item) => {
+        const imageUrl = resolveCocktailImageUrl(
+          item.cocktail_id,
+          item.cocktail_image_url,
+          liveImageUrls
+        );
+        return (
+          <AppLink
+            key={item.cocktail_id}
+            href={`/cocktails/${item.cocktail_slug || item.cocktail_id}`}
+            className="flex gap-3 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-md p-3 active:scale-[0.98] transition-all"
+          >
+            <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-mist flex-shrink-0">
+              {imageUrl ? (
+                <Image
+                  src={imageUrl}
+                  alt={item.cocktail_name}
+                  fill
+                  sizes="80px"
+                  className="object-cover"
+                  quality={90}
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-sage text-2xl">🍸</div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display font-bold text-base text-forest mb-1 line-clamp-2">
+                {formatCocktailName(item.cocktail_name || 'Cocktail')}
+              </h3>
+              <p className="text-xs text-sage">Recently viewed</p>
+            </div>
+            <ArrowRightIcon className="w-5 h-5 text-sage flex-shrink-0 self-center" />
+          </AppLink>
+        );
+      })}
     </div>
   );
 }

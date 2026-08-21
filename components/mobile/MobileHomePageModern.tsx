@@ -61,16 +61,30 @@ function pickRandom<T>(items: T[]): T | null {
   return items[Math.floor(Math.random() * items.length)] ?? null;
 }
 
-function dailyIndex(length: number, salt: string): number {
-  if (length <= 0) return 0;
-  const day = new Date().toISOString().slice(0, 10);
-  const key = `${day}:${salt}`;
+function hashKey(key: string): number {
   let hash = 2166136261;
   for (let i = 0; i < key.length; i += 1) {
     hash ^= key.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
-  return Math.abs(hash) % length;
+  return Math.abs(hash);
+}
+
+/** Pick a drink by day+salt+slug so growing ready lists don't reshuffle the hero. */
+function pickDailyDrink<T extends { slug: string }>(items: T[], salt: string): T | null {
+  if (items.length === 0) return null;
+  const day = new Date().toISOString().slice(0, 10);
+  const prefix = `${day}:${salt}`;
+  let best: T | null = null;
+  let bestScore = -1;
+  for (const item of items) {
+    const score = hashKey(`${prefix}:${item.slug}`);
+    if (score > bestScore) {
+      bestScore = score;
+      best = item;
+    }
+  }
+  return best;
 }
 
 function fromMix(cocktail: MixCocktail): HomeDrink {
@@ -93,6 +107,17 @@ function fromSanity(cocktail: SanityCocktail): HomeDrink {
   };
 }
 
+function sessionHeroDrink(
+  hint: ReturnType<typeof readHomeSessionHint>
+): HomeDrink | null {
+  if (!hint?.heroImageUrl) return null;
+  return {
+    name: hint.heroName || "Tonight's pour",
+    slug: hint.heroSlug || "cached",
+    imageUrl: hint.heroImageUrl,
+  };
+}
+
 export function MobileHomePage({
   featuredCocktails,
   allCocktails,
@@ -105,6 +130,11 @@ export function MobileHomePage({
   const [cachedReadyCount] = useState(readCabinetReadyCount);
   const [pourPromptSessionKey] = useState(readOrCreatePourPromptSessionKey);
   const [mixCocktails, setMixCocktails] = useState<MixCocktail[]>([]);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
+  const [committedHero, setCommittedHero] = useState<HomeDrink | null>(() =>
+    sessionHeroDrink(readHomeSessionHint())
+  );
+  const heroLockedRef = useRef(false);
   const [hour, setHour] = useState(18);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayMode, setOverlayMode] = useState<ShakeOverlayMode>("listening");
@@ -153,9 +183,14 @@ export function MobileHomePage({
 
   useEffect(() => {
     void getMixCocktailsClient()
-      .then(setMixCocktails)
+      .then((cocktails) => {
+        setMixCocktails(cocktails);
+      })
       .catch((error) => {
         console.warn("[MobileHome] Catalog load failed:", error);
+      })
+      .finally(() => {
+        setCatalogLoaded(true);
       });
   }, []);
 
@@ -203,13 +238,17 @@ export function MobileHomePage({
 
   const liveHero = useMemo(() => {
     if (readyToMake.length > 0) {
-      return fromMix(readyToMake[dailyIndex(readyToMake.length, "tonight")]!);
+      const pick = pickDailyDrink(readyToMake, "tonight");
+      return pick ? fromMix(pick) : null;
     }
     const featuredHero = featuredCocktails.map(fromSanity).find((drink) => drink.imageUrl);
     return featuredHero ?? catalogDrinks.find((drink) => drink.imageUrl) ?? catalogDrinks[0] ?? null;
   }, [catalogDrinks, featuredCocktails, readyToMake]);
 
   const homeSettled = !authLoading && !barLoading;
+  /** Auth + bar + catalog settled enough to choose a lasting hero. */
+  const heroResolved =
+    homeSettled && (catalogLoaded || ingredientIds.length === 0);
   /** Confirmed empty bar — only then do we use the pour-prompt / stock CTA. */
   const emptyCabinetConfirmed = homeSettled && ingredientIds.length === 0;
   /**
@@ -224,26 +263,49 @@ export function MobileHomePage({
     Boolean(sessionHint?.heroImageUrl) ||
     (signedIn && !homeSettled);
 
-  const heroDrink = useMemo(() => {
-    // Hold last session pour until cabinet matching can produce today's pick —
-    // otherwise liveHero briefly falls back to a featured drink and the image swaps.
-    const holdSessionHero =
-      Boolean(sessionHint?.heroImageUrl) &&
-      readyToMake.length === 0 &&
-      (expectCabinet || !homeSettled);
+  // Commit one hero for the session: hold session/cache until matching is ready,
+  // then lock the cabinet (or featured) pick so imageUrl stops thrashing.
+  useEffect(() => {
+    if (heroLockedRef.current) return;
 
-    if (holdSessionHero && sessionHint?.heroImageUrl) {
-      return {
-        name: sessionHint.heroName || liveHero?.name || "Tonight's pour",
-        slug: sessionHint.heroSlug || liveHero?.slug || "cached",
-        imageUrl: sessionHint.heroImageUrl,
-      };
+    if (!heroResolved) {
+      const hold = sessionHeroDrink(sessionHint);
+      if (hold && (expectCabinet || !homeSettled)) {
+        setCommittedHero((prev) => {
+          if (prev?.imageUrl === hold.imageUrl && prev?.slug === hold.slug) return prev;
+          return hold;
+        });
+      }
+      return;
     }
+
+    if (expectCabinet && readyToMake.length === 0 && !catalogLoaded) {
+      return;
+    }
+
+    if (liveHero) {
+      setCommittedHero(liveHero);
+      heroLockedRef.current = true;
+    }
+  }, [
+    catalogLoaded,
+    expectCabinet,
+    heroResolved,
+    homeSettled,
+    liveHero,
+    readyToMake.length,
+    sessionHint,
+  ]);
+
+  const heroDrink = useMemo(() => {
+    if (committedHero) return committedHero;
+    // Prefer an empty stage over a featured-drink flash while the cabinet match loads.
+    if (!heroResolved && expectCabinet) return null;
     return liveHero;
-  }, [expectCabinet, homeSettled, liveHero, readyToMake.length, sessionHint]);
+  }, [committedHero, expectCabinet, heroResolved, liveHero]);
 
   useEffect(() => {
-    if (!homeSettled) return;
+    if (!heroResolved || !heroLockedRef.current) return;
     writeHomeSessionHint({
       signedIn: isAuthenticated,
       firstName: isAuthenticated
@@ -254,20 +316,20 @@ export function MobileHomePage({
           })
         : null,
       barCount: ingredientIds.length,
-      heroName: liveHero?.name ?? null,
-      heroSlug: liveHero?.slug ?? null,
-      heroImageUrl: liveHero?.imageUrl ?? null,
+      heroName: heroDrink?.name ?? null,
+      heroSlug: heroDrink?.slug ?? null,
+      heroImageUrl: heroDrink?.imageUrl ?? null,
     });
   }, [
-    homeSettled,
+    heroResolved,
     isAuthenticated,
     profile?.first_name,
     profile?.display_name,
     user?.email,
     ingredientIds.length,
-    liveHero?.name,
-    liveHero?.slug,
-    liveHero?.imageUrl,
+    heroDrink?.name,
+    heroDrink?.slug,
+    heroDrink?.imageUrl,
   ]);
 
   const worthAPour = useMemo(() => {
@@ -464,6 +526,8 @@ export function MobileHomePage({
           </section>
         ) : null}
 
+        <NativeNotificationPrompt />
+
         <HomeCollectionsRail initialCovers={occasionCovers} />
 
         {worthAPour.length > 0 && (
@@ -488,7 +552,6 @@ export function MobileHomePage({
         )}
 
         <NativeBadgeProgressCard hidePreview />
-        <NativeNotificationPrompt />
 
         <section className="pb-2">
           <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">

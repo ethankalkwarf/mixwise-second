@@ -12,7 +12,7 @@ import {
   type NotificationTime,
 } from "@/lib/mobile/notifications";
 
-export function NotificationSettings() {
+export function NotificationSettings({ framed = true }: { framed?: boolean }) {
   const [isNative, setIsNative] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [time, setTime] = useState<NotificationTime>({ hour: 17, minute: 0 });
@@ -89,24 +89,23 @@ export function NotificationSettings() {
   }
 
   if (loading) {
-    return (
-      <div className="card p-6">
-        <div className="flex items-center gap-4">
-          <BellIcon className="w-6 h-6 text-sage" />
-          <div className="flex-1">
-            <h3 className="font-semibold text-forest">Daily Cocktail Notifications</h3>
-            <p className="text-sm text-sage">Loading...</p>
-          </div>
-        </div>
+    const loadingBody = (
+      <div className="space-y-3 py-2">
+        <div className="h-14 animate-pulse rounded-xl bg-mist/60" />
       </div>
+    );
+    return framed ? (
+      <div className="rounded-3xl bg-white p-4 shadow-sm">{loadingBody}</div>
+    ) : (
+      loadingBody
     );
   }
 
-  return (
-    <div className="card p-6 space-y-4">
+  const body = (
+    <div className="space-y-4">
       <div className="flex items-center gap-4">
-        <BellIcon className="w-6 h-6 text-sage" />
-        <div className="flex-1">
+        <BellIcon className="w-5 h-5 shrink-0 text-sage" />
+        <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-forest">Daily Cocktail Notifications</h3>
           <p className="text-sm text-sage">Daily reminder with today&apos;s featured recipe</p>
         </div>
@@ -123,10 +122,10 @@ export function NotificationSettings() {
       </div>
 
       {enabled && (
-        <div className="flex items-center gap-4 pl-10 border-t border-mist pt-4">
-          <ClockIcon className="w-5 h-5 text-sage" />
+        <div className="flex items-center gap-4 border-t border-mist/80 pt-4 pl-9">
+          <ClockIcon className="w-5 h-5 shrink-0 text-sage" />
           <div className="flex-1">
-            <label className="text-sm font-medium text-forest block mb-2">
+            <label className="mb-2 block text-sm font-medium text-forest">
               Notification Time
             </label>
             <div className="flex items-center gap-2">
@@ -144,12 +143,18 @@ export function NotificationSettings() {
                 {formatTime(time.hour, time.minute)}
               </span>
             </div>
-            <p className="text-xs text-sage mt-1">
+            <p className="mt-1 text-xs text-sage">
               Default: 5:00 PM. Change anytime to adjust your notification time.
             </p>
           </div>
         </div>
       )}
     </div>
+  );
+
+  return framed ? (
+    <div className="rounded-3xl bg-white p-4 shadow-sm">{body}</div>
+  ) : (
+    body
   );
 }

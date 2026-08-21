@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { BrandLogo } from "@/components/common/BrandLogo";
 import { AppLink } from "@/components/mobile/AppLink";
@@ -41,28 +41,67 @@ export function HomeCinematicHero({
   dailyImageUrl,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const heroSrc = nativePhotoUrl(imageUrl, 1080, 85) || imageUrl;
+  const heroSrc = nativePhotoUrl(imageUrl, 1080, 85) || imageUrl || null;
   const shakeSrc = nativePhotoUrl(shakeImageUrl, 640) || shakeImageUrl;
   // Daily spotlight is intentionally de-emphasized, but the current blur/scale makes some photos look AI/CGI.
   // Use higher-quality optimization and keep it mostly crisp.
   const dailySrc = nativePhotoUrl(dailyImageUrl, 640, 85) || dailyImageUrl;
 
+  const [displaySrc, setDisplaySrc] = useState<string | null>(heroSrc);
+  const [incomingSrc, setIncomingSrc] = useState<string | null>(null);
+  const [incomingReady, setIncomingReady] = useState(false);
+
   useEffect(() => {
-    if (heroSrc) return;
+    if (!heroSrc) {
+      setDisplaySrc(null);
+      setIncomingSrc(null);
+      setIncomingReady(false);
+      return;
+    }
+    if (heroSrc === displaySrc) {
+      setIncomingSrc(null);
+      setIncomingReady(false);
+      return;
+    }
+    // First paint: show immediately (session cache / committed hero).
+    if (!displaySrc) {
+      setDisplaySrc(heroSrc);
+      return;
+    }
+    // Crossfade: keep current frame until the next image has loaded.
+    setIncomingSrc(heroSrc);
+    setIncomingReady(false);
+  }, [heroSrc, displaySrc]);
+
+  useEffect(() => {
+    if (!incomingSrc || !incomingReady) return;
+    setDisplaySrc(incomingSrc);
+    setIncomingSrc(null);
+    setIncomingReady(false);
+  }, [incomingSrc, incomingReady]);
+
+  useEffect(() => {
+    if (displaySrc) return;
     const video = videoRef.current;
     if (!video) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     video.play().catch(() => {});
-  }, [heroSrc]);
+  }, [displaySrc]);
 
   const displayTitle = revealName ? formatCocktailName(title) : idleTitle;
 
   return (
     <section className="relative w-full bg-[#1c1814]">
       <div className="native-home-hero__stage">
-        {heroSrc ? (
+        {displaySrc ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="native-home-hero__photo" src={heroSrc} alt="" />
+          <img
+            className="native-home-hero__photo"
+            src={displaySrc}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+          />
         ) : (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -86,6 +125,24 @@ export function HomeCinematicHero({
             </video>
           </>
         )}
+
+        {incomingSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className={`native-home-hero__photo native-home-hero__photo--incoming${
+              incomingReady ? " is-ready" : ""
+            }`}
+            src={incomingSrc}
+            alt=""
+            decoding="async"
+            onLoad={() => setIncomingReady(true)}
+            onError={() => {
+              setDisplaySrc(incomingSrc);
+              setIncomingSrc(null);
+              setIncomingReady(false);
+            }}
+          />
+        ) : null}
 
         <div className="native-home-hero__shade" aria-hidden />
         <div className="native-home-hero__chrome-blur" aria-hidden />
