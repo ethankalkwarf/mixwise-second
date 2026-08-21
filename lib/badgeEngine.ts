@@ -232,7 +232,7 @@ export async function checkExplorationBadges(
 export async function awardSharingBadge(
   supabase: ReturnType<typeof createClient>,
   userId: string,
-  type: "cocktail" | "bar"
+  type: "cocktail" | "bar" | "stories"
 ): Promise<BadgeCheckResult> {
   const awarded: BadgeDefinition[] = [];
   const alreadyHad: BadgeDefinition[] = [];
@@ -257,6 +257,16 @@ export async function awardSharingBadge(
       }
     } else {
       alreadyHad.push(BADGES.bar_host);
+    }
+  }
+
+  if (type === "stories") {
+    if (!existingBadgeIds.has("story_pour")) {
+      if (await awardBadge(supabase, userId, "story_pour")) {
+        awarded.push(BADGES.story_pour);
+      }
+    } else {
+      alreadyHad.push(BADGES.story_pour);
     }
   }
 

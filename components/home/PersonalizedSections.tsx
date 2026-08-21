@@ -28,12 +28,6 @@ interface MixCocktail {
   }>;
 }
 
-/** Keep logged-in home drink rails short so the page doesn't turn into a long scroll. */
-const HOME_READY_LIMIT = 4;
-const HOME_ONE_AWAY_LIMIT = 3;
-const HOME_FAVORITES_LIMIT = 4;
-const HOME_RECENT_LIMIT = 8;
-
 interface PersonalizedSectionsProps {
   allCocktails: MixCocktail[];
   featuredCocktails: SanityCocktail[];
@@ -84,30 +78,21 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
     });
 
     return {
-      readyToMake: readyToMake.slice(0, HOME_READY_LIMIT),
-      oneAway: oneAway.slice(0, HOME_ONE_AWAY_LIMIT),
+      readyToMake: readyToMake.slice(0, 6),
+      oneAway: oneAway.slice(0, 4),
     };
   }, [allCocktails, ingredientIds, skipIds]);
-
-  const visibleFavorites = useMemo(
-    () => favorites.slice(0, HOME_FAVORITES_LIMIT),
-    [favorites],
-  );
-  const visibleRecent = useMemo(
-    () => recentlyViewed.slice(0, HOME_RECENT_LIMIT),
-    [recentlyViewed],
-  );
 
   // Fetch image URLs from Sanity for favorites
   useEffect(() => {
     async function fetchFavoriteImages() {
-      if (visibleFavorites.length === 0) {
+      if (favorites.length === 0) {
         setFavoriteImageUrls(new Map());
         return;
       }
 
       try {
-        const cocktailIds = visibleFavorites.map(fav => fav.cocktail_id);
+        const cocktailIds = favorites.map(fav => fav.cocktail_id);
         const imageUrls = await getCocktailImageUrls(cocktailIds);
         setFavoriteImageUrls(imageUrls);
       } catch (error) {
@@ -115,21 +100,21 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       }
     }
 
-    if (!favsLoading && visibleFavorites.length > 0) {
+    if (!favsLoading && favorites.length > 0) {
       fetchFavoriteImages();
     }
-  }, [visibleFavorites, favsLoading]);
+  }, [favorites, favsLoading]);
 
   // Fetch image URLs from Sanity for recently viewed
   useEffect(() => {
     async function fetchRecentImages() {
-      if (visibleRecent.length === 0) {
+      if (recentlyViewed.length === 0) {
         setRecentImageUrls(new Map());
         return;
       }
 
       try {
-        const cocktailIds = visibleRecent.map(item => item.cocktail_id);
+        const cocktailIds = recentlyViewed.map(item => item.cocktail_id);
         const imageUrls = await getCocktailImageUrls(cocktailIds);
         setRecentImageUrls(imageUrls);
       } catch (error) {
@@ -137,10 +122,10 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       }
     }
 
-    if (!recentLoading && visibleRecent.length > 0) {
+    if (!recentLoading && recentlyViewed.length > 0) {
       fetchRecentImages();
     }
-  }, [visibleRecent, recentLoading]);
+  }, [recentlyViewed, recentLoading]);
 
   // IMPORTANT: Don't show anything if auth is still loading or user is not authenticated
   // This prevents skeleton states from showing for anonymous users
@@ -199,22 +184,22 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
   }
 
   return (
-    <section className="bg-cream py-10 sm:py-12">
+    <section className="bg-cream py-12 sm:py-16 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="space-y-10">
+        <div className="space-y-16">
       {/* Cocktails You Can Make */}
       {hasBar && readyToMake.length > 0 && (
         <section aria-labelledby="canmake-title">
-          <div className="flex items-end justify-between gap-4 mb-5">
-            <SectionHeader title="Cocktails You Can Make" id="canmake-title" className="mb-0" />
+          <div className="flex items-center justify-between mb-6">
+            <SectionHeader title="Cocktails You Can Make" id="canmake-title" />
             <Link
               href="/mix"
-              className="shrink-0 text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1 pb-1"
+              className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1"
             >
               View all in Mix <ArrowRightIcon className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" role="list">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" role="list">
             {readyToMake.map((cocktail) => (
               <SmallCocktailCard key={cocktail._id} cocktail={cocktail} badge="Ready!" badgeColor="bg-olive" />
             ))}
@@ -226,8 +211,8 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       {oneAway.length > 0 && (
         <section aria-labelledby="oneaway-title">
           <SectionHeader title="Just One Ingredient Away" id="oneaway-title" />
-          <p className="text-sage text-sm mb-5">Add one ingredient to unlock these recipes!</p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
+          <p className="text-sage text-sm mb-6">Add one ingredient to unlock these recipes!</p>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" role="list">
             {oneAway.map(({ cocktail, missingIngredient }) => (
               <OneAwayCard
                 key={cocktail._id}
@@ -243,24 +228,27 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       {/* Your Favorites */}
       {hasFavorites && (
         <section aria-labelledby="favorites-title">
-          <div className="flex items-end justify-between gap-4 mb-5">
-            <SectionHeader title="Your Favorites" id="favorites-title" className="mb-0" />
+          <div className="flex items-center justify-between mb-6">
+            <SectionHeader title="Your Favorites" id="favorites-title" />
             <Link
               href="/account"
-              className="shrink-0 text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1 pb-1"
+              className="text-sm font-medium text-terracotta hover:text-terracotta-dark transition-colors flex items-center gap-1"
             >
               View all <ArrowRightIcon className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-4" role="list">
-            {visibleFavorites.map((fav) => {
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" role="list">
+            {favorites.slice(0, 8).map((fav) => {
+              // Try to get image URL from Supabase cocktails table first, fallback to stored URL
+              // Handle both null and empty string cases
               const supabaseImageUrl = favoriteImageUrls.get(fav.cocktail_id);
               const storedImageUrl = fav.cocktail_image_url;
-              const imageUrl =
+              // Prioritize Supabase URL, then stored URL, ensuring non-empty strings
+              const imageUrl = 
                 (supabaseImageUrl && supabaseImageUrl.trim() && supabaseImageUrl.trim().length > 0 ? supabaseImageUrl.trim() : null) ||
                 (storedImageUrl && storedImageUrl.trim() && storedImageUrl.trim().length > 0 ? storedImageUrl.trim() : null) ||
                 undefined;
-
+              
               return (
                 <SmallCocktailCard
                   key={fav.cocktail_id}
@@ -279,15 +267,17 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
       )}
 
       {/* Continue Exploring */}
-      {hasRecent && visibleRecent.length > 0 && (
+      {hasRecent && recentlyViewed.length > 0 && (
         <section aria-labelledby="recent-title">
           <SectionHeader title="Continue Exploring" id="recent-title" />
           <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin" role="list">
-            {visibleRecent.map((item) => {
+            {recentlyViewed.slice(0, 8).map((item) => {
+              // Try to get image URL from Supabase cocktails table first, fallback to stored URL
+              // Handle both null and empty string cases
               const supabaseImageUrl = recentImageUrls.get(item.cocktail_id);
               const storedImageUrl = item.cocktail_image_url;
               const imageUrl = (supabaseImageUrl && supabaseImageUrl.trim()) || (storedImageUrl && storedImageUrl.trim()) || undefined;
-
+              
               return (
                 <SmallCocktailCard
                   key={item.cocktail_id}

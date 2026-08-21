@@ -4,12 +4,11 @@ interface SectionHeaderProps {
   title: string;
   subtitle?: string;
   id?: string;
-  className?: string;
 }
 
-export function SectionHeader({ title, subtitle, id, className }: SectionHeaderProps) {
+export function SectionHeader({ title, subtitle, id }: SectionHeaderProps) {
   return (
-    <div className={className ?? "mb-6"}>
+    <div className="mb-6">
       <h2 
         id={id}
         className="text-2xl sm:text-3xl font-display font-bold text-forest"

@@ -176,6 +176,15 @@ export const BADGES: Record<string, BadgeDefinition> = {
     rarity: "common",
     criteria: "Share your public bar link",
   },
+  story_pour: {
+    id: "story_pour",
+    name: "Story Pour",
+    description: "Shared a cocktail to Instagram or Facebook Stories",
+    icon: "✨",
+    category: "social",
+    rarity: "uncommon",
+    criteria: "Share a cocktail to Stories",
+  },
 
   // Learn badges
   first_lesson: {

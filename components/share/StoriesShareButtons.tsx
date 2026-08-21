@@ -5,9 +5,13 @@ import { toPng } from "html-to-image";
 import { Capacitor } from "@capacitor/core";
 import { LinkIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/components/ui/toast";
+import { useUser } from "@/components/auth/UserProvider";
 import { MixwiseStories } from "@/lib/mobile/storiesSharePlugin";
 import { trackContentShared } from "@/lib/analytics";
 import { isNativeApp } from "@/lib/mobile/platform";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import { awardSharingBadge } from "@/lib/badgeEngine";
+import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 
 const FACEBOOK_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "";
 
@@ -60,6 +64,8 @@ export function StoriesShareButtons({
   compact = false,
 }: Props) {
   const toast = useToast();
+  const { user } = useUser();
+  const supabase = getSupabaseClient();
   const stickerRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState<"ig" | "fb" | null>(null);
   const [copied, setCopied] = useState(false);
@@ -91,6 +97,19 @@ export function StoriesShareButtons({
     });
   }, [stickerWidth, stickerHeight]);
 
+  const maybeAwardStoryBadge = useCallback(async () => {
+    if (!user || entity !== "cocktail") return;
+    try {
+      const result = await awardSharingBadge(supabase, user.id, "stories");
+      result.awarded.forEach((badge) => {
+        toast.success(`${badge.icon} ${badge.name} unlocked`);
+      });
+      if (result.awarded.length > 0) notifyBadgesUpdated();
+    } catch (err) {
+      console.error("Story badge award failed:", err);
+    }
+  }, [entity, supabase, toast, user]);
+
   const shareToStories = async (platform: "ig" | "fb") => {
     if (!FACEBOOK_APP_ID) {
       toast.error("Stories sharing isn’t configured yet. Use Share or Copy link.");
@@ -112,6 +131,7 @@ export function StoriesShareButtons({
         await MixwiseStories.shareToFacebookStories(payload);
         void trackContentShared(entity, "facebook_stories", { url: shareUrl });
       }
+      void maybeAwardStoryBadge();
     } catch (err) {
       if ((err as Error)?.message?.includes("not installed")) {
         toast.error(
