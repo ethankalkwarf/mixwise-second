@@ -31,8 +31,11 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
   const name = formatCocktailName(cocktail.name);
   const moment = pourMomentLabel();
   const textShadow = "0 6px 32px rgba(0,0,0,0.8), 0 2px 10px rgba(0,0,0,0.55)";
-  // Short names get huge; long names stay readable but still oversized vs prior
-  const nameSize = name.length > 28 ? 120 : name.length > 18 ? 148 : name.length > 12 ? 176 : 200;
+  const hasSpaces = /\s/.test(name);
+  // Long unbroken names shrink to stay on one line instead of hyphenating mid-word
+  const longestToken = Math.max(...name.split(/\s+/).map((w) => w.length), 0);
+  const nameSize =
+    longestToken > 16 ? 120 : longestToken > 12 ? 148 : name.length > 22 ? 160 : name.length > 14 ? 176 : 200;
 
   return (
     <div
@@ -68,11 +71,15 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
           fontFamily: "var(--font-dm-serif), 'DM Serif Display', Georgia, serif",
           fontSize: nameSize,
           fontWeight: 400,
-          lineHeight: 0.98,
+          lineHeight: 1.05,
           color: "#FFFFFF",
           textShadow,
           maxWidth: "100%",
-          wordBreak: "break-word",
+          // Never split a word — only wrap at spaces (e.g. "Espresso Martini")
+          whiteSpace: hasSpaces ? "normal" : "nowrap",
+          wordBreak: "normal",
+          overflowWrap: "normal",
+          hyphens: "none",
         }}
       >
         {name}
