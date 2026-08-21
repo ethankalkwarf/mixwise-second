@@ -7,6 +7,7 @@ import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { LinkIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/components/auth/UserProvider";
+import { ActionSheet } from "@/components/mobile/ActionSheet";
 import { MixwiseStories } from "@/lib/mobile/storiesSharePlugin";
 import { trackContentShared } from "@/lib/analytics";
 import { isNativeApp } from "@/lib/mobile/platform";
@@ -14,22 +15,18 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { awardSharingBadge } from "@/lib/badgeEngine";
 import { notifyBadgesUpdated } from "@/hooks/useUserBadges";
 
-/** Instagram’s Stories API never opens the camera — capture in MixWise first. */
-async function capturePourBackground(): Promise<string | null> {
+/** Capture a pour photo. Use Camera or Photos explicitly — Prompt misroutes on iOS. */
+async function capturePourBackground(
+  source: CameraSource.Camera | CameraSource.Photos
+): Promise<string | null> {
   try {
     const photo = await Camera.getPhoto({
       quality: 85,
       allowEditing: false,
       resultType: CameraResultType.DataUrl,
-      // Prompt: Take photo or choose from library
-      source: CameraSource.Prompt,
+      source,
       correctOrientation: true,
-      // Keep payload smaller for the Capacitor → pasteboard bridge
       width: 1080,
-      promptLabelHeader: "Your pour",
-      promptLabelPhoto: "Take photo",
-      promptLabelPicture: "Choose from library",
-      promptLabelCancel: "Cancel",
     });
     if (!photo.dataUrl) return null;
     return await normalizeStoryBackground(photo.dataUrl);
@@ -43,8 +40,7 @@ async function capturePourBackground(): Promise<string | null> {
 }
 
 /**
- * Letterbox into 9:16 so Instagram accepts it as a full Stories background
- * (Meta recommends ~1080×1920; bare camera shots are often landscape).
+ * Cover-fill into 9:16 so the pour fills the Stories canvas (Meta ~1080×1920).
  */
 async function normalizeStoryBackground(dataUrl: string): Promise<string> {
   const TARGET_W = 1080;
@@ -63,7 +59,7 @@ async function normalizeStoryBackground(dataUrl: string): Promise<string> {
         }
         ctx.fillStyle = "#111111";
         ctx.fillRect(0, 0, TARGET_W, TARGET_H);
-        const scale = Math.min(TARGET_W / img.naturalWidth, TARGET_H / img.naturalHeight);
+        const scale = Math.max(TARGET_W / img.naturalWidth, TARGET_H / img.naturalHeight);
         const w = img.naturalWidth * scale;
         const h = img.naturalHeight * scale;
         ctx.drawImage(img, (TARGET_W - w) / 2, (TARGET_H - h) / 2, w, h);
@@ -189,6 +185,15 @@ export function StoriesShareButtons({
   const [igAvailable, setIgAvailable] = useState(false);
   const [fbAvailable, setFbAvailable] = useState(false);
   const [native, setNative] = useState(false);
+  const [pourPicker, setPourPicker] = useState<{
+    platform: "ig" | "fb";
+    resolve: (source: "camera" | "photos" | null) => void;
+  } | null>(null);
+
+  const pickPourSource = (platform: "ig" | "fb") =>
+    new Promise<"camera" | "photos" | null>((resolve) => {
+      setPourPicker({ platform, resolve });
+    });
 
   useEffect(() => {
     setNative(isNativeApp());
@@ -241,7 +246,12 @@ export function StoriesShareButtons({
     try {
       let capturedBackground: string | null = null;
       if (cameraBackground) {
-        capturedBackground = await capturePourBackground();
+        // Own sheet + explicit Camera/Photos — Capacitor Prompt opens library for both on iOS
+        const source = await pickPourSource(platform);
+        if (!source) return;
+        capturedBackground = await capturePourBackground(
+          source === "camera" ? CameraSource.Camera : CameraSource.Photos
+        );
         if (!capturedBackground) {
           // User cancelled / denied — don’t open Stories on a black canvas
           return;
@@ -383,6 +393,35 @@ export function StoriesShareButtons({
           {sticker}
         </div>
       </div>
+
+      <ActionSheet
+        isOpen={pourPicker !== null}
+        title={
+          pourPicker?.platform === "fb"
+            ? "Share your pour with friends on Facebook"
+            : "Share your pour with friends on Instagram"
+        }
+        onClose={() => {
+          pourPicker?.resolve(null);
+          setPourPicker(null);
+        }}
+        options={[
+          {
+            label: "Take photo",
+            action: () => {
+              pourPicker?.resolve("camera");
+              setPourPicker(null);
+            },
+          },
+          {
+            label: "Choose from library",
+            action: () => {
+              pourPicker?.resolve("photos");
+              setPourPicker(null);
+            },
+          },
+        ]}
+      />
     </div>
   );
 }
