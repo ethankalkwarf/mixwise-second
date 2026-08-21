@@ -5,7 +5,14 @@
  * point at Supabase Storage are rewritten through MixWise image delivery.
  */
 
-import { EMAIL_SERIF, baseStyles, getPreheaderHtml, type EmailTemplate } from "@/lib/email/templates";
+import {
+  EMAIL_BTN_STUDIO,
+  EMAIL_LINK_CTA_STUDIO,
+  EMAIL_SERIF,
+  emailDocument,
+  emailPad,
+  type EmailTemplate,
+} from "@/lib/email/templates";
 import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 
 export const WEEKEND_KICKOFF_TEMPLATE_ALIAS = "weekend-kickoff";
@@ -259,7 +266,7 @@ function catalogImage(opts: {
   const deliveryUrl = toPublicDeliveryUrl(opts.imageUrl, "email") || opts.imageUrl;
   return `
       <a href="${attr(opts.mode, opts.urlKey, opts.href)}" style="display:block;text-decoration:none;line-height:0;">
-        <img src="${attr(opts.mode, opts.imageKey, deliveryUrl)}" alt="${attr(opts.mode, opts.altKey, opts.imageAlt)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;" />
+        <img src="${attr(opts.mode, opts.imageKey, deliveryUrl)}" alt="${attr(opts.mode, opts.altKey, opts.imageAlt)}" width="504" style="display:block;width:100%;max-width:504px;height:auto;border:0;" />
       </a>
   `;
 }
@@ -278,30 +285,30 @@ function featuredDrinkCard(opts: {
   altUrlKey: string;
 }): string {
   const { mode, drink } = opts;
-  return `
-    <div style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); border-radius: 16px; overflow: hidden; margin: 24px 0;">
-      ${catalogImage({
-        mode,
-        imageKey: opts.imageKey,
-        altKey: opts.altKey,
-        urlKey: opts.urlKey,
-        imageUrl: drink.imageUrl,
-        imageAlt: drink.imageAlt,
-        href: drink.url,
-      })}
-      <div style="background-color: #3A4D39; padding: 24px; text-align: center;">
-        <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #8A9A5B;">${text(mode, opts.labelKey, drink.label)}</p>
-        <h3 style="margin: 0 0 12px 0; font-family: ${EMAIL_SERIF}; font-size: 28px; color: #FFFFFF;">${text(mode, opts.nameKey, drink.name)}</h3>
-        <p style="margin: 0 0 16px 0; font-size: 14px; color: #E6EBE4; line-height: 1.5;">${text(mode, opts.blurbKey, drink.blurb)}</p>
-        <a href="${attr(mode, opts.urlKey, drink.url)}" style="display: inline-block; background-color: #BC5A45; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 25px; font-size: 14px; font-weight: 600;">View Recipe →</a>
-        ${
-          drink.altName && drink.altUrl
-            ? `<p style="margin: 14px 0 0 0; font-size: 13px; color: #E6EBE4;">${text(mode, opts.altLeadKey, drink.altLead || "")} <a href="${attr(mode, opts.altUrlKey, drink.altUrl)}" style="color: #FFFFFF; font-weight: 600; text-decoration: none;">${text(mode, opts.altNameKey, drink.altName)}</a></p>`
-            : ""
-        }
+  return emailPad(`
+    <div style="margin: 12px 0 8px 0;">
+      <div style="line-height:0;">
+        ${catalogImage({
+          mode,
+          imageKey: opts.imageKey,
+          altKey: opts.altKey,
+          urlKey: opts.urlKey,
+          imageUrl: drink.imageUrl,
+          imageAlt: drink.imageAlt,
+          href: drink.url,
+        })}
       </div>
+      <p style="margin: 20px 0 8px 0; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: #5F6F5E;">${text(mode, opts.labelKey, drink.label)}</p>
+      <h3 style="margin: 0 0 10px 0; font-family: ${EMAIL_SERIF}; font-size: 30px; color: #1C241B; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15;">${text(mode, opts.nameKey, drink.name)}</h3>
+      <p style="margin: 0 0 14px 0; font-size: 16px; color: #2C3628; line-height: 1.55;">${text(mode, opts.blurbKey, drink.blurb)}</p>
+      <p style="margin: 0 0 8px 0;"><a href="${attr(mode, opts.urlKey, drink.url)}" style="${EMAIL_LINK_CTA_STUDIO}">View recipe</a></p>
+      ${
+        drink.altName && drink.altUrl
+          ? `<p style="margin: 12px 0 0 0; font-size: 14px; color: #5F6F5E;">${text(mode, opts.altLeadKey, drink.altLead || "")} <a href="${attr(mode, opts.altUrlKey, drink.altUrl)}" style="color: #1C241B; font-weight: 600; text-decoration: none;">${text(mode, opts.altNameKey, drink.altName)}</a></p>`
+          : ""
+      }
     </div>
-  `;
+  `);
 }
 
 function creamDrinkCard(opts: {
@@ -318,40 +325,32 @@ function creamDrinkCard(opts: {
   altUrlKey: string;
 }): string {
   const { mode, drink } = opts;
-  return `
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 0 0 24px 0; background-color: #F9F7F2; border: 1px solid #E6EBE4; border-radius: 16px; overflow: hidden;">
-      <tr>
-        <td style="padding: 0;">
-          ${catalogImage({
-            mode,
-            imageKey: opts.imageKey,
-            altKey: opts.altKey,
-            urlKey: opts.urlKey,
-            imageUrl: drink.imageUrl,
-            imageAlt: drink.imageAlt,
-            href: drink.url,
-          })}
-        </td>
-      </tr>
-      <tr>
-        <td style="padding: 20px;">
-          <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E;">${text(mode, opts.labelKey, drink.label)}</p>
-          <h3 style="margin: 0 0 10px 0; font-family: ${EMAIL_SERIF}; font-size: 22px; color: #3A4D39;">
-            <a href="${attr(mode, opts.urlKey, drink.url)}" style="color: #3A4D39; text-decoration: none;">${text(mode, opts.nameKey, drink.name)}</a>
-          </h3>
-          <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6; color: #2C3628;">${text(mode, opts.blurbKey, drink.blurb)}</p>
-          <p style="margin: 0 0 8px 0;">
-            <a href="${attr(mode, opts.urlKey, drink.url)}" style="color: #BC5A45; text-decoration: none; font-weight: 600; font-size: 14px;">View Recipe →</a>
-          </p>
-          ${
-            drink.altName && drink.altUrl
-              ? `<p style="margin: 0; font-size: 13px; color: #5F6F5E;">${text(mode, opts.altLeadKey, drink.altLead || "")} <a href="${attr(mode, opts.altUrlKey, drink.altUrl)}" style="color: #3A4D39; font-weight: 600; text-decoration: none;">${text(mode, opts.altNameKey, drink.altName)}</a></p>`
-              : ""
-          }
-        </td>
-      </tr>
-    </table>
-  `;
+  return emailPad(`
+    <div style="margin: 28px 0 8px 0;">
+      <div style="line-height:0;">
+        ${catalogImage({
+          mode,
+          imageKey: opts.imageKey,
+          altKey: opts.altKey,
+          urlKey: opts.urlKey,
+          imageUrl: drink.imageUrl,
+          imageAlt: drink.imageAlt,
+          href: drink.url,
+        })}
+      </div>
+      <p style="margin: 20px 0 8px 0; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: #5F6F5E;">${text(mode, opts.labelKey, drink.label)}</p>
+      <h3 style="margin: 0 0 10px 0; font-family: ${EMAIL_SERIF}; font-size: 26px; color: #1C241B; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2;">
+        <a href="${attr(mode, opts.urlKey, drink.url)}" style="color: #1C241B; text-decoration: none;">${text(mode, opts.nameKey, drink.name)}</a>
+      </h3>
+      <p style="margin: 0 0 12px 0; font-size: 15px; line-height: 1.55; color: #2C3628;">${text(mode, opts.blurbKey, drink.blurb)}</p>
+      <p style="margin: 0 0 8px 0;"><a href="${attr(mode, opts.urlKey, drink.url)}" style="${EMAIL_LINK_CTA_STUDIO}">View recipe</a></p>
+      ${
+        drink.altName && drink.altUrl
+          ? `<p style="margin: 10px 0 0 0; font-size: 14px; color: #5F6F5E;">${text(mode, opts.altLeadKey, drink.altLead || "")} <a href="${attr(mode, opts.altUrlKey, drink.altUrl)}" style="color: #1C241B; font-weight: 600; text-decoration: none;">${text(mode, opts.altNameKey, drink.altName)}</a></p>`
+          : ""
+      }
+    </div>
+  `);
 }
 
 function extraRow(opts: {
@@ -367,23 +366,22 @@ function extraRow(opts: {
   const deliveryUrl = toPublicDeliveryUrl(extra.imageUrl, "emailThumb") || extra.imageUrl;
   return `
     <tr>
-      <td style="padding: 12px 16px; background-color: #F9F7F2; border-radius: 12px;">
+      <td style="padding: 16px 0; border-bottom: 1px solid #E6EBE4;">
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
           <tr>
-            <td width="72" valign="middle" style="width: 72px; padding-right: 14px;">
-              <a href="${attr(mode, opts.urlKey, extra.url)}" style="display: block; text-decoration: none;">
-                <img src="${attr(mode, opts.imageKey, deliveryUrl)}" alt="${attr(mode, opts.altKey, extra.imageAlt)}" width="72" height="72" style="display: block; width: 72px; height: 72px; object-fit: cover; border-radius: 12px; border: 0;" />
+            <td width="72" valign="top" style="width: 72px; padding-right: 16px;">
+              <a href="${attr(mode, opts.urlKey, extra.url)}" style="display: block; text-decoration: none; line-height: 0;">
+                <img src="${attr(mode, opts.imageKey, deliveryUrl)}" alt="${attr(mode, opts.altKey, extra.imageAlt)}" width="72" height="72" style="display: block; width: 72px; height: 72px; object-fit: cover; border: 0;" />
               </a>
             </td>
             <td valign="middle">
-              <a href="${attr(mode, opts.urlKey, extra.url)}" style="color: #3A4D39; text-decoration: none; font-weight: 600; font-size: 16px;">${text(mode, opts.nameKey, extra.name)}</a>
-              <p style="margin: 4px 0 0 0; font-size: 13px; color: #5F6F5E;">${text(mode, opts.blurbKey, extra.blurb)}</p>
+              <a href="${attr(mode, opts.urlKey, extra.url)}" style="color: #1C241B; text-decoration: none; font-weight: 600; font-size: 16px;">${text(mode, opts.nameKey, extra.name)}</a>
+              <p style="margin: 4px 0 0 0; font-size: 14px; color: #5F6F5E; line-height: 1.45;">${text(mode, opts.blurbKey, extra.blurb)}</p>
             </td>
           </tr>
         </table>
       </td>
     </tr>
-    <tr><td style="height: 8px;"></td></tr>
   `;
 }
 
@@ -401,44 +399,16 @@ export function weekendKickoffTemplate({
   unsubscribeUrl?: string;
 } = {}): EmailTemplate {
   const year = new Date().getFullYear();
-  const sentTo = footerEmail(mode, userEmail);
 
-  const html = `
-<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="x-apple-disable-message-reformatting">
-  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
-  <title>${escapeHtml(WEEKEND_KICKOFF_SUBJECT)}</title>
-  ${baseStyles}
-</head>
-<body>
-  ${getPreheaderHtml(WEEKEND_KICKOFF_PREVIEW)}
-  <div class="email-wrapper">
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" class="email-container" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.1); border: 1px solid #E6EBE4;">
-      
-      <!-- Header -->
-      <tr>
-        <td class="email-header" bgcolor="#3A4D39" style="background-color: #3A4D39; background: linear-gradient(135deg, #3A4D39 0%, #5F6F5E 100%); padding: 48px 40px; text-align: center;">
-          <h1 class="logo" style="font-family: ${EMAIL_SERIF}; font-size: 36px; font-weight: 700; color: #FFFFFF; margin: 0; letter-spacing: -0.5px;">
-            mixwise.
-          </h1>
-        </td>
-      </tr>
-      
-      <!-- Content -->
-      <tr>
-        <td class="email-content" style="padding: 48px 40px;">
-          <h2 style="font-family: ${EMAIL_SERIF}; font-size: 24px; color: #3A4D39; margin: 0 0 8px 0; font-weight: 400;">
-            Happy Friday, ${greetingName(mode, firstName)}! ☀️
+  const body = `
+          ${emailPad(`
+          <h2 style="font-family: ${EMAIL_SERIF}; font-size: 34px; color: #1C241B; margin: 0 0 14px 0; font-weight: 400; line-height: 1.15; letter-spacing: -0.02em;">
+            Happy Friday, ${greetingName(mode, firstName)}
           </h2>
-          
-          <p class="body-text" style="font-size: 16px; color: #2C3628; margin: 0 0 24px 0; line-height: 1.65;">
+          <p class="body-text" style="font-size: 17px; color: #2C3628; margin: 0 0 8px 0; line-height: 1.55;">
             If your AC is working overtime, your shaker should be too. A few cold ones for the next 48 hours.
           </p>
+          `)}
 
           ${featuredDrinkCard({
             mode,
@@ -482,10 +452,11 @@ export function weekendKickoffTemplate({
             altUrlKey: "DRINK3_ALT_URL",
           })}
 
-          <div style="margin-bottom: 32px;">
-            <h3 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E; margin: 0 0 16px 0;">
+          ${emailPad(`
+          <div style="margin: 20px 0 8px 0;">
+            <p style="font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: #5F6F5E; margin: 0 0 4px 0;">
               Also worth making
-            </h3>
+            </p>
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
               ${extraRow({
                 mode,
@@ -516,43 +487,29 @@ export function weekendKickoffTemplate({
               })}
             </table>
           </div>
-
-          <div class="button-wrapper" style="text-align: center; margin: 32px 0;">
-            <a href="${attr(mode, "CTA_URL", content.ctaUrl)}" class="btn-primary" style="display: inline-block; background-color: #BC5A45; background: linear-gradient(135deg, #BC5A45 0%, #A04532 100%); color: #FFFFFF; text-decoration: none; padding: 18px 40px; border-radius: 50px; font-weight: 600; font-size: 16px;">
-              See what you can mix →
+          <div class="button-wrapper" style="margin: 28px 0 8px;">
+            <a href="${attr(mode, "CTA_URL", content.ctaUrl)}" class="btn-primary" style="${EMAIL_BTN_STUDIO}">
+              See what you can mix
             </a>
           </div>
-          
-          <div class="divider" style="height: 1px; background: linear-gradient(90deg, transparent, #D1DAD0, transparent); margin: 32px 0;"></div>
-          
-          <p class="muted-text" style="font-size: 14px; color: #5F6F5E; margin: 0; line-height: 1.6; text-align: center;">
-            Cheers to a great weekend — Ethan at MixWise
+          <p class="muted-text" style="font-size: 15px; color: #5F6F5E; margin: 24px 0 0 0; line-height: 1.55;">
+            Cheers to a great weekend
           </p>
-        </td>
-      </tr>
-      
-      <!-- Footer -->
-      <tr>
-        <td class="email-footer" style="background-color: #E6EBE4; padding: 32px 40px; text-align: center; border-top: 1px solid #D1DAD0;">
-          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0 0 12px 0;">
-            This email was sent to <strong>${sentTo}</strong>
-          </p>
-          <p class="footer-text" style="font-size: 13px; color: #5F6F5E; margin: 0;">
-            © ${year} MixWise · A smarter way to make cocktails at home
-          </p>
-          <div class="footer-links" style="margin: 16px 0 0 0;">
-            <a href="https://www.getmixwise.com" style="color: #3A4D39; text-decoration: none; font-size: 13px; margin: 0 8px;">Visit MixWise</a>
-            <span style="color: #D1DAD0;">|</span>
-            <a href="${unsubscribeHref(mode, unsubscribeUrl)}" style="color: #5F6F5E; text-decoration: none; font-size: 13px; margin: 0 8px;">Unsubscribe</a>
-          </div>
-        </td>
-      </tr>
-      
-    </table>
-  </div>
-</body>
-</html>
-  `.trim();
+          <p style="margin: 12px 0 0 0; font-family: ${EMAIL_SERIF}; font-size: 17px; color: #1C241B;">— Ethan</p>
+          `)}`;
+
+  const html = emailDocument({
+    title: WEEKEND_KICKOFF_SUBJECT,
+    previewText: WEEKEND_KICKOFF_PREVIEW,
+    bodyHtml: body,
+    userEmail: mode === "literal" ? userEmail : footerEmail(mode, userEmail),
+    unsubscribeUrl:
+      mode === "literal"
+        ? unsubscribeUrl || `${SITE}/unsubscribe`
+        : unsubscribeHref(mode, unsubscribeUrl),
+    siteUrl: SITE,
+    theme: "studio",
+  });
 
   const textVersion = `
 Happy Friday, ${firstName || "there"}!

@@ -580,6 +580,7 @@ export async function POST(request: NextRequest) {
     const emailTemplate = confirmEmailTemplate({
       confirmUrl: safeConfirmUrl,
       userEmail: trimmedEmail,
+      displayName: fullName || trimmedFirstName || undefined,
     });
 
     // Send email via Resend

@@ -119,6 +119,25 @@ export async function hasCampaignSend(
   return Boolean(data?.id);
 }
 
+/** Lifetime send count for a campaign + recipient (any send_key). */
+export async function countCampaignSends(
+  campaign: CampaignSlug,
+  email: string
+): Promise<number> {
+  const supabase = createAdminClient();
+  const { count, error } = await supabase
+    .from("email_campaign_sends")
+    .select("id", { count: "exact", head: true })
+    .eq("campaign", campaign)
+    .eq("recipient_email", email.trim().toLowerCase());
+
+  if (error) {
+    console.error("[Email program] countCampaignSends failed:", error);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 export async function recordCampaignSend(input: {
   campaign: CampaignSlug;
   audience: "account" | "list";

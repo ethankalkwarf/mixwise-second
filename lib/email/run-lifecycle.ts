@@ -11,6 +11,7 @@ import {
 import {
   accountUnsub,
   assertCampaignSendsReady,
+  countCampaignSends,
   daysBetween,
   dispatchCampaignEmail,
   drinksYouCanMake,
@@ -156,6 +157,37 @@ export async function runEmailLifecycle(options?: {
       continue;
     }
 
+    // Shopping list: Saturdays, ≥28 days apart, max 2 lifetime (2nd uses follow-up copy).
+    if (utcDay === 6 && user.shoppingItems.length > 0) {
+      const priorSends = await countCampaignSends("shopping-list", user.email);
+      if (priorSends < 2) {
+        const monthAgo = new Date(
+          Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 28)
+        );
+        const recentMonth = await recentCampaignsForEmail(user.email, monthAgo.toISOString());
+        if (!recentMonth.has("shopping-list")) {
+          const highlightDrink = paloma ? toCampaignDrink(paloma) : readyDrinks[0];
+          const variant = priorSends === 0 ? 1 : 2;
+          await send(
+            "shopping-list",
+            shoppingListReminderDraftTemplate({
+              displayName: user.displayName,
+              userEmail: user.email,
+              unsubscribeUrl: unsub.url,
+              siteUrl,
+              items: user.shoppingItems.slice(0, 8),
+              highlight: highlightDrink
+                ? { drink: highlightDrink, missingItem: user.shoppingItems[0] }
+                : undefined,
+              variant,
+            }),
+            utcDateKey(now)
+          );
+          continue;
+        }
+      }
+    }
+
     if (marketingThisWeek >= 2) continue;
 
     if (
@@ -220,29 +252,6 @@ export async function runEmailLifecycle(options?: {
           siteUrl,
           hero: paloma ? toCampaignDrink(paloma) : daiquiri ? toCampaignDrink(daiquiri) : undefined,
         })
-      );
-      continue;
-    }
-
-    if (
-      utcDay === 6 &&
-      user.shoppingItems.length > 0 &&
-      !recent.has("friday-personalized")
-    ) {
-      const highlightDrink = paloma ? toCampaignDrink(paloma) : readyDrinks[0];
-      await send(
-        "shopping-list",
-        shoppingListReminderDraftTemplate({
-          displayName: user.displayName,
-          userEmail: user.email,
-          unsubscribeUrl: unsub.url,
-          siteUrl,
-          items: user.shoppingItems.slice(0, 8),
-          highlight: highlightDrink
-            ? { drink: highlightDrink, missingItem: user.shoppingItems[0] }
-            : undefined,
-        }),
-        utcDateKey(now)
       );
       continue;
     }

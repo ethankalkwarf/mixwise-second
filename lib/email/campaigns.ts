@@ -3,14 +3,13 @@
  */
 
 import type { EmailTemplate } from "@/lib/email/templates";
-import { escapeEmailHtml } from "@/lib/email/templates";
+import { emailPad, escapeEmailHtml } from "@/lib/email/templates";
 import {
   MIXWISE_EMAIL_SITE,
   bodyHtml,
   cocktailUrl,
   convertCardHtml,
   creamDrinkHtml,
-  dividerHtml,
   drinkListHtml,
   forestHeroHtml,
   greetingHtml,
@@ -124,7 +123,6 @@ export function accountWelcomeDraftTemplate({
         : ""
     }
     ${primaryCtaHtml(mixUrl, "Add my bottles")}
-    ${dividerHtml()}
     ${signoffHtml("Glad you showed up.")}
   `;
 
@@ -176,7 +174,6 @@ export function addIngredientsDraftTemplate({
         : ""
     }
     ${primaryCtaHtml(mixUrl, "Add my bottles")}
-    ${dividerHtml()}
     ${signoffHtml()}
   `;
 
@@ -232,8 +229,6 @@ export function activateAccountDraftTemplate({
         : ""
     }
     ${primaryCtaHtml(setupUrl, "Open MixWise")}
-    ${mutedHtml("If this wasn't you, ignore this. I won't send another.", "text-align:center;")}
-    ${dividerHtml()}
     ${signoffHtml()}
   `;
 
@@ -250,8 +245,6 @@ Add what's in the cabinet. MixWise matches recipes to those bottles. Heart the k
 
 ${hero ? `${hero.name}: ${hrefFor(hero, siteUrl)}\n` : ""}
 Open MixWise: ${setupUrl}
-
-If this wasn't you, ignore this. I won't send another.
 
 ${signoffText()}
   `.trim();
@@ -289,7 +282,6 @@ export function emptyBarLastNudgeDraftTemplate({
         : ""
     }
     ${primaryCtaHtml(mixUrl, "Add my bottles")}
-    ${dividerHtml()}
     ${signoffHtml()}
   `;
 
@@ -350,7 +342,6 @@ export function firstBarPayoffDraftTemplate({
     }
     ${drinkListHtml(shown.slice(1).map((drink) => asThumb(drink, siteUrl, drink.blurb || "Already in the cabinet.")))}
     ${primaryCtaHtml(mixUrl, readyCount > shown.length ? `See all ${readyCount}` : "Open Mix")}
-    ${dividerHtml()}
     ${signoffHtml("Go make one.")}
   `;
 
@@ -396,7 +387,6 @@ export function listConvertFollowUpDraftTemplate({
         : ""
     }
     ${primaryCtaHtml(convertUrl, "Create my free account")}
-    ${dividerHtml()}
     ${signoffHtml()}
   `;
 
@@ -464,9 +454,10 @@ export function thursdayFeaturedDraftTemplate({
     : "";
 
   const occasionHtml = occasion
-    ? mutedHtml(
-        `<a href="${escapeEmailHtml(occasionUrl(occasion.slug, siteUrl))}" style="color:#BC5A45;text-decoration:none;font-weight:600;">${escapeEmailHtml(occasion.label)}</a>`,
-        "text-align:center;"
+    ? emailPad(
+        `<p style="margin: 8px 0 0 0; font-size: 14px; color: #5F6F5E; line-height: 1.5;">
+          <a href="${escapeEmailHtml(occasionUrl(occasion.slug, siteUrl))}" style="color:#1C241B;text-decoration:none;font-weight:600;border-bottom:1px solid #1C241B;">${escapeEmailHtml(occasion.label)}</a>
+        </p>`
       )
     : "";
 
@@ -499,12 +490,17 @@ export function thursdayFeaturedDraftTemplate({
       ctaLabel,
     })}
     ${canMakeHtml}
-    ${related.length ? `<p style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E; margin: 24px 0 16px 0;">${escapeEmailHtml(relatedHeading)}</p>` : ""}
+    ${
+      related.length
+        ? emailPad(
+            `<p style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E; margin: 24px 0 8px 0;">${escapeEmailHtml(relatedHeading)}</p>`
+          )
+        : ""
+    }
     ${relatedHtml}
-    ${occasionHtml}
     ${primaryCtaHtml(featuredHref, ctaLabel)}
+    ${occasionHtml}
     ${convertHtml}
-    ${dividerHtml()}
     ${signoffHtml(signoff)}
   `;
 
@@ -557,35 +553,40 @@ export function fridayPersonalizedDraftTemplate({
 }): EmailTemplate {
   const name = firstName(displayName);
   const gap = almostThere[0];
+  const leadDrink = canMake[0]?.name;
   const resolvedSubject =
     subject ||
-    (gap
-      ? `${readyCount} ready. ${gap.missingIngredient} would make it ${readyCount + almostThere.length}.`
-      : `${readyCount} you can make without leaving the house`);
+    (gap && leadDrink
+      ? `Friday: a ${leadDrink}, or grab ${gap.missingIngredient}`
+      : leadDrink
+        ? `Friday starts with a ${leadDrink}`
+        : `${readyCount} Friday drinks already on your shelf`);
   const previewText =
     canMake[0] && gap
-      ? `${canMake[0].name} is a yes. ${gap.missingIngredient} is the only thing between you and a ${gap.name}.`
+      ? `${canMake[0].name} tonight. ${gap.missingIngredient} unlocks a ${gap.name} if you're heading out.`
       : canMake[0]
-        ? `${canMake[0].name} and friends, from bottles you already own.`
-        : "A short list from your bar.";
+        ? `${canMake[0].name} and ${Math.max(readyCount - 1, 0)} more you can pour before the weekend gets loud.`
+        : "Your bar already knows what Friday wants.";
   const mixUrl = `${siteUrl}/mix`;
   const shown = canMake.slice(0, 5);
   const resolvedHeadline = (
     headline ||
     (readyCount === 1
-      ? "1 drink you can make from your bar"
-      : `${readyCount} drinks you can make from your bar`)
+      ? `One drink ready for Friday, ${name}.`
+      : `Friday menu: ${readyCount} you can pour tonight.`)
   ).replace("{name}", name);
   const resolvedIntro =
     intro ||
     (gap
-      ? `${readyCount} you can make without leaving the house. A couple more if ${gap.missingIngredient} makes it home.`
-      : `${readyCount} you can make without leaving the house.`);
-  const resolvedSignoff = signoff || "Go put ice in something.";
+      ? `These match bottles you already logged. Weekend's coming — ${gap.missingIngredient} is the only errand between you and a couple more.`
+      : `These match bottles you already logged. No store run. Just ice and a glass.`);
+  const resolvedSignoff = signoff || "Happy Friday. Put ice in something.";
 
   const almostHtml = almostThere.length
     ? `
-        <p style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E; margin: 28px 0 16px 0;">One bottle short</p>
+        ${emailPad(
+          `<p style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #5F6F5E; margin: 28px 0 8px 0;">If you're already out</p>`
+        )}
         ${drinkListHtml(
           almostThere.slice(0, 2).map((drink) =>
             asThumb(drink, siteUrl, `Needs ${drink.missingIngredient}. That's it.`)
@@ -601,18 +602,16 @@ export function fridayPersonalizedDraftTemplate({
     ${
       readyCount > shown.length
         ? mutedHtml(
-            `<a href="${escapeEmailHtml(mixUrl)}" style="color:#BC5A45;text-decoration:none;font-weight:600;">The other ${readyCount - shown.length} are in Mix</a>`,
-            "text-align:center;"
+            `<a href="${escapeEmailHtml(mixUrl)}" style="color:#BC5A45;text-decoration:none;font-weight:600;">The other ${readyCount - shown.length} are waiting in Mix</a>`
           )
         : ""
     }
     ${almostHtml}
-    ${primaryCtaHtml(mixUrl, "See what else is ready")}
-    ${dividerHtml()}
+    ${primaryCtaHtml(mixUrl, "Pick tonight's drink")}
     ${signoffHtml(resolvedSignoff)}
   `;
   const almostText = almostThere.length
-    ? `\nONE BOTTLE SHORT\n${almostThere
+    ? `\nIF YOU'RE ALREADY OUT\n${almostThere
         .slice(0, 2)
         .map(
           (drink) =>
@@ -628,9 +627,9 @@ ${resolvedIntro}
 
 YOU CAN MAKE
 ${textDrinkList(shown, siteUrl)}
-${readyCount > shown.length ? `\nThe other ${readyCount - shown.length} are in Mix: ${mixUrl}\n` : ""}
+${readyCount > shown.length ? `\nThe other ${readyCount - shown.length} are waiting in Mix: ${mixUrl}\n` : ""}
 ${almostText}
-See what else is ready: ${mixUrl}
+Pick tonight's drink: ${mixUrl}
 
 ${signoffText(resolvedSignoff)}
   `.trim();
@@ -683,7 +682,6 @@ export function almostThereDraftTemplate({
     }
     ${drinkListHtml(drinks.slice(1, 4).map((drink) => asThumb(drink, siteUrl)))}
     ${primaryCtaHtml(mixUrl, `Add ${missingIngredient}`)}
-    ${dividerHtml()}
     ${signoffHtml()}
   `;
 
@@ -702,40 +700,69 @@ ${signoffText()}
   return wrap(subject, previewText, body, text, { userEmail, unsubscribeUrl, siteUrl });
 }
 
-/** Shopping list. Only if they have items. */
+/** Shopping list. Only if they have items. Max 2 lifetime; variant 2 is a sharper nudge. */
 export function shoppingListReminderDraftTemplate({
   displayName,
   userEmail,
   unsubscribeUrl,
   items,
   highlight,
+  variant = 1,
   siteUrl = MIXWISE_EMAIL_SITE,
 }: CampaignBase & {
   items: string[];
   highlight?: { drink: CampaignDrink; missingItem: string };
+  /** 1 = first nudge, 2 = last nudge (different copy). */
+  variant?: 1 | 2;
 }): EmailTemplate {
   const name = firstName(displayName);
   const listed = items.slice(0, 3).join(". ");
-  const subject = items.length <= 3 ? `${listed}. That's the list.` : `${listed}. And a few more.`;
-  const previewText = highlight
-    ? `The ${highlight.drink.name} is why ${highlight.missingItem} is on there.`
-    : "You saved these. Grab them before the weekend eats the list.";
   const listUrl = `${siteUrl}/shopping-list`;
+  const drinkName = highlight?.drink.name || "drink";
+  const isFollowUp = variant === 2;
+
+  const subject = isFollowUp
+    ? items.length <= 3
+      ? `${listed}. Still sitting there.`
+      : `${listed}. Still on the list.`
+    : items.length <= 3
+      ? `${listed}. That's the list.`
+      : `${listed}. And a few more.`;
+
+  const previewText = isFollowUp
+    ? highlight
+      ? `Last nudge. ${highlight.missingItem} is still between you and a ${highlight.drink.name}.`
+      : "Last nudge on this list. Then I'll leave it alone."
+    : highlight
+      ? `The ${highlight.drink.name} is why ${highlight.missingItem} is on there.`
+      : "You saved these. Grab them before the weekend eats the list.";
 
   const itemRows = items
     .slice(0, 8)
     .map(
-      (item) => `
+      (item, index) => `
         <tr>
-          <td style="padding: 10px 16px; background-color: #F9F7F2; border-radius: 12px; font-size: 15px; color: #2C3628;">${escapeEmailHtml(item)}</td>
-        </tr>
-        <tr><td style="height: 8px;"></td></tr>`
+          <td style="padding: 14px 0;${index < Math.min(items.length, 8) - 1 ? " border-bottom: 1px solid #E8E8E8;" : ""}">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr>
+                <td width="28" valign="middle" style="width:28px;padding-right:12px;">
+                  <div style="width:14px;height:14px;border:1.5px solid #111111;line-height:14px;font-size:1px;">&nbsp;</div>
+                </td>
+                <td valign="middle" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.4;color:#111111;font-weight:500;">
+                  ${escapeEmailHtml(item)}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`
     )
     .join("");
 
   const highlightHtml = highlight
     ? creamDrinkHtml({
-        label: `${highlight.missingItem} is the reason`,
+        label: isFollowUp
+          ? `${highlight.missingItem} is still the holdup`
+          : `${highlight.missingItem} is the reason`,
         name: highlight.drink.name,
         blurb: highlight.drink.blurb,
         href: hrefFor(highlight.drink, siteUrl),
@@ -744,32 +771,44 @@ export function shoppingListReminderDraftTemplate({
       })
     : "";
 
+  const greeting = isFollowUp
+    ? "That list is still waiting."
+    : "Your shopping list for the weekend";
+  const intro = isFollowUp
+    ? `Same list as before, ${escapeEmailHtml(name)}. One store stop and that ${escapeEmailHtml(drinkName)} is actually in the glass. I won't email about this again.`
+    : `You saved these, ${escapeEmailHtml(name)}. Grab them before Saturday if you want that ${escapeEmailHtml(drinkName)} in the glass.`;
+  const cta = isFollowUp ? "Finish the list" : "Open shopping list";
+  const closer = isFollowUp ? "Then we're done nagging." : "Don't forget the ice.";
+
   const body = `
-    ${greetingHtml("Your shopping list for the weekend")}
-    ${bodyHtml(`You saved these, ${escapeEmailHtml(name)}. Grab them before Saturday if you want that ${escapeEmailHtml(highlight?.drink.name || "drink")} in the glass.`)}
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 8px 0 24px 0;">
+    ${greetingHtml(greeting)}
+    ${bodyHtml(intro)}
+    ${emailPad(
+      `<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 4px 0 8px 0; border-top: 1px solid #E8E8E8; border-bottom: 1px solid #E8E8E8;">
       ${itemRows}
-    </table>
+    </table>`
+    )}
     ${highlightHtml}
-    ${primaryCtaHtml(listUrl, "Open shopping list")}
-    ${dividerHtml()}
-    ${signoffHtml("Don't forget the ice.")}
+    ${primaryCtaHtml(listUrl, cta)}
+    ${signoffHtml(closer)}
   `;
 
   const text = `
-Your shopping list for the weekend
+${greeting}
 
-You saved these, ${name}. Grab them before Saturday if you want that ${highlight?.drink.name || "drink"} in the glass.
+${isFollowUp
+  ? `Same list as before, ${name}. One store stop and that ${drinkName} is actually in the glass. I won't email about this again.`
+  : `You saved these, ${name}. Grab them before Saturday if you want that ${drinkName} in the glass.`}
 
 ${items.map((item) => `  • ${item}`).join("\n")}
 ${
   highlight
-    ? `\n${highlight.missingItem} is the reason: ${highlight.drink.name}\n${hrefFor(highlight.drink, siteUrl)}\n`
+    ? `\n${isFollowUp ? `${highlight.missingItem} is still the holdup` : `${highlight.missingItem} is the reason`}: ${highlight.drink.name}\n${hrefFor(highlight.drink, siteUrl)}\n`
     : ""
 }
-Open shopping list: ${listUrl}
+${cta}: ${listUrl}
 
-${signoffText("Don't forget the ice.")}
+${signoffText(closer)}
   `.trim();
 
   return wrap(subject, previewText, body, text, { userEmail, unsubscribeUrl, siteUrl });
@@ -816,7 +855,6 @@ export function winBackDraftTemplate({
         : ""
     }
     ${primaryCtaHtml(mixUrl, "Open MixWise")}
-    ${dividerHtml()}
     ${signoffHtml()}
   `;
 
@@ -862,7 +900,6 @@ export function staleBarDraftTemplate({
       )
     )}
     ${primaryCtaHtml(mixUrl, "Update my bar")}
-    ${dividerHtml()}
     ${signoffHtml()}
   `;
 

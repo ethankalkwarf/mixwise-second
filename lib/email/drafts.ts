@@ -19,6 +19,15 @@ import {
   winBackDraftTemplate,
   type CampaignDrink,
 } from "@/lib/email/campaigns";
+import {
+  confirmEmailTemplate,
+  emailListWelcomeTemplate,
+  finishAccountSetupTemplate,
+  resetPasswordTemplate,
+  thirstyThursdayWelcomeTemplate,
+  weeklyDigestTemplate,
+  welcomeEmailTemplate,
+} from "@/lib/email/templates";
 import { toPublicDeliveryUrl } from "@/lib/mediaDelivery";
 
 const EMAIL_IMG =
@@ -41,7 +50,7 @@ export const DRAFT_FALLBACK_IMAGES: Record<string, string> = {
   "virgin-mojito": `${EMAIL_IMG}/virgin-mojito-vk5TTDhrBn3ydPm5o7WW7uE9XooOdn.jpg`,
 };
 
-export type EmailDraftGroup = "lifecycle" | "weekly" | "events";
+export type EmailDraftGroup = "auth" | "lifecycle" | "weekly" | "events";
 
 export type EmailDraftMeta = {
   slug: string;
@@ -289,6 +298,101 @@ export function buildEmailDrafts(
     ),
   };
 
+  const auth: EmailDraft[] = [
+    pack("auth-confirm", "Confirm email", "auth", {
+      audience: "New signup, unconfirmed",
+      job: "Verify the address before the account is useful.",
+      sendWhen: "Triggered by Supabase Auth on signup (confirm email).",
+      email: confirmEmailTemplate({
+        confirmUrl: `${MIXWISE_EMAIL_SITE}/auth/confirm?token=draft`,
+        userEmail: SAMPLE.userEmail,
+        displayName: SAMPLE.displayName,
+      }),
+    }),
+    pack("auth-reset-password", "Reset password", "auth", {
+      audience: "Account that requested a password reset",
+      job: "Secure one-hour link to set a new password.",
+      sendWhen: "Triggered by Supabase Auth on forgot-password.",
+      email: resetPasswordTemplate({
+        resetUrl: `${MIXWISE_EMAIL_SITE}/auth/reset?token=draft`,
+        userEmail: SAMPLE.userEmail,
+      }),
+    }),
+    pack("auth-finish-setup", "Finish account setup (magic link)", "auth", {
+      audience: "Passwordless / intentional account creation",
+      job: "One click into the account; password optional later.",
+      sendWhen: "Triggered when we create/open an account via magic link.",
+      email: finishAccountSetupTemplate({
+        setupUrl: `${MIXWISE_EMAIL_SITE}/auth/callback?token=draft`,
+        userEmail: SAMPLE.userEmail,
+      }),
+    }),
+    pack("auth-welcome", "Welcome after confirm", "auth", {
+      audience: "New account, right after email confirm",
+      job: "Orient: bar, hearts, Thursday cadence.",
+      sendWhen: "Triggered once after successful email confirmation.",
+      email: welcomeEmailTemplate({
+        displayName: SAMPLE.displayName,
+        userEmail: SAMPLE.userEmail,
+        unsubscribeUrl: SAMPLE.unsubscribeUrl,
+      }),
+    }),
+    pack("auth-list-welcome", "List signup welcome", "auth", {
+      audience: "List-only signup (no account yet)",
+      job: "First Thursday drink + soft convert to set a password.",
+      sendWhen: "Triggered once on Thirsty Thursday / email list signup.",
+      email: emailListWelcomeTemplate({
+        userEmail: SAMPLE.userEmail,
+        convertUrl: `${MIXWISE_EMAIL_SITE}/join?email=ethan%40getmixwise.com&source=homepage&token=draft`,
+        unsubscribeUrl: SAMPLE.unsubscribeUrl,
+        featuredCocktail: {
+          name: d.daiquiri.name,
+          slug: d.daiquiri.slug,
+          description: d.daiquiri.blurb,
+          imageUrl: d.daiquiri.imageUrl,
+        },
+      }),
+    }),
+    pack("auth-thirsty-welcome", "Thirsty Thursday welcome", "auth", {
+      audience: "Thirsty Thursday list signup",
+      job: "Confirm they're on the list; show first featured drink.",
+      sendWhen: "Triggered once on thirsty-thursday signup.",
+      email: thirstyThursdayWelcomeTemplate({
+        userEmail: SAMPLE.userEmail,
+        unsubscribeUrl: SAMPLE.unsubscribeUrl,
+        displayName: SAMPLE.displayName,
+        featuredCocktail: {
+          name: d.daiquiri.name,
+          slug: d.daiquiri.slug,
+          description: d.daiquiri.blurb,
+          imageUrl: d.daiquiri.imageUrl,
+        },
+      }),
+    }),
+    pack("auth-weekly-digest", "Weekly digest (legacy)", "auth", {
+      audience: "Accounts with weekly_digest preference (legacy template)",
+      job: "Personalized ready list + featured drink.",
+      sendWhen: "Legacy digest path — prefer Friday personalized going forward.",
+      email: weeklyDigestTemplate({
+        displayName: SAMPLE.displayName,
+        userEmail: SAMPLE.userEmail,
+        unsubscribeUrl: SAMPLE.unsubscribeUrl,
+        barIngredientCount: 12,
+        cocktailsYouCanMake: [
+          { name: d.negroni.name, slug: d.negroni.slug, imageUrl: d.negroni.imageUrl },
+          { name: d.lastWord.name, slug: d.lastWord.slug, imageUrl: d.lastWord.imageUrl },
+          { name: d.daiquiri.name, slug: d.daiquiri.slug, imageUrl: d.daiquiri.imageUrl },
+        ],
+        featuredCocktail: {
+          name: d.smash.name,
+          slug: d.smash.slug,
+          description: d.smash.blurb,
+          imageUrl: d.smash.imageUrl,
+        },
+      }),
+    }),
+  ];
+
   const lifecycle: EmailDraft[] = [
     pack("account-welcome", "Welcome: add ingredients", "lifecycle", {
       audience: "New account, right after confirm",
@@ -339,9 +443,10 @@ export function buildEmailDrafts(
       }),
     }),
     pack("almost-there", "Almost-there (one bottle)", "lifecycle", {
-      audience: "Account with a bar, one high-leverage gap",
+      audience: "Account with a bar that can make zero drinks, but has 1+ one-bottle gaps",
       job: "Name the bottle. Name the drinks it unlocks.",
-      sendWhen: "Use as Friday when the gap is obvious, or a one-shot",
+      sendWhen:
+        "Friday substitute only when ready=0 (rare). Most Fridays use the personalized list; gaps there are a secondary section, not this email.",
       email: almostThereDraftTemplate({
         ...SAMPLE,
         missingIngredient: "Campari",
@@ -351,12 +456,24 @@ export function buildEmailDrafts(
     }),
     pack("shopping-list", "Shopping list before the weekend", "lifecycle", {
       audience: "Account with items on the list",
-      job: "Get them to the store. Cap at once a week.",
-      sendWhen: "Thu night / Fri morning, only if list has items",
+      job: "Get them to the store before the weekend.",
+      sendWhen:
+        "Saturdays (UTC). Max 2 lifetime, ≥28 days apart. 2nd send uses follow-up copy, then never again.",
       email: shoppingListReminderDraftTemplate({
         ...SAMPLE,
         items: ["Campari", "Grapefruit", "Fresh mint"],
         highlight: { drink: d.paloma, missingItem: "Grapefruit" },
+      }),
+    }),
+    pack("shopping-list-follow-up", "Shopping list (2nd / last nudge)", "lifecycle", {
+      audience: "Account with items still on the list after the first reminder",
+      job: "One sharper ask. Promise not to email about the list again.",
+      sendWhen: "2nd shopping-list send only (≥28 days after the first). Then capped.",
+      email: shoppingListReminderDraftTemplate({
+        ...SAMPLE,
+        items: ["Campari", "Grapefruit", "Fresh mint"],
+        highlight: { drink: d.paloma, missingItem: "Grapefruit" },
+        variant: 2,
       }),
     }),
     pack("win-back", "Win-back: come make one", "lifecycle", {
@@ -384,7 +501,8 @@ export function buildEmailDrafts(
     pack("thursday-featured", "Thursday featured (non-event week)", "weekly", {
       audience: "List + accounts (one send, no duplicates)",
       job: "One cocktail. Brand + list growth.",
-      sendWhen: "Every Thursday when there isn't a hosting weekend",
+      sendWhen:
+        "Every Thursday. Weeks without a calendar issue use the rotating fallback cocktail; event weeks (below) swap in that lineup.",
       email: thursdayFeaturedDraftTemplate({
         ...SAMPLE,
         headline: "Three ingredients. That's the whole argument.",
@@ -417,41 +535,20 @@ export function buildEmailDrafts(
     pack("friday-personalized", "Friday personalized list", "weekly", {
       audience: "Accounts with a bar",
       job: "3-5 you can make + 1-2 one-bottle-away. Product moat.",
-      sendWhen: "Every Friday. Skip if the bar is empty.",
+      sendWhen: "Every Friday. Skip if the bar is empty (and no almost-there gap).",
       email: fridayPersonalizedDraftTemplate({
         ...SAMPLE,
-        headline: "11 drinks you can make from your bar",
-        intro: "These match bottles you already logged. Two more if Campari makes it home.",
         readyCount: 11,
         canMake: [d.lastWord, d.negroni, d.daiquiri, d.paperPlane, d.smash],
         almostThere: [
           { ...d.boulevardier, missingIngredient: "Campari" },
           { ...d.jungleBird, missingIngredient: "Campari" },
         ],
-        signoff: "Go put ice in something.",
       }),
     }),
   ];
 
   const events: EmailDraft[] = [
-    pack("event-aug-20", "Aug 20: last stretch of heat", "events", {
-      audience: "List + accounts (this IS Thursday)",
-      job: "Highball weather before Labor Day. Not the Limoncello Spritz.",
-      sendWhen: "Thursday Aug 20, 2026",
-      email: thursdayFeaturedDraftTemplate({
-        ...SAMPLE,
-        headline: "Still too hot. Make a daiquiri.",
-        intro: "August has one job left and it's heat. A Strawberry Daiquiri is rum, berries, lime, and a pile of ice. Blitz it, pour it, sit back down.",
-        subject: "Still too hot. Make a daiquiri.",
-        previewText: "Berries, rum, lime, ice. Last-of-summer in a glass.",
-        featured: { ...d.strawberryDaiquiri, label: "Cold on purpose" },
-        related: [d.mule, d.smash],
-        relatedHeading: "If you'd rather skip the blender",
-        occasion: { slug: "summer", label: "More summer drinks" },
-        ctaLabel: "Get the recipe",
-        signoff: "Sit outside a little longer.",
-      }),
-    }),
     pack("event-aug-27", "Aug 27: last summer crowd", "events", {
       audience: "List + accounts (this IS Thursday)",
       job: "Labor Day weekend. Last chance at a summer pitcher.",
@@ -465,7 +562,7 @@ export function buildEmailDrafts(
         featured: { ...d.sangria, label: "The one pitcher" },
         related: [d.electric, d.virginMojito],
         relatedHeading: "Same weather, smaller glass",
-        occasion: { slug: "summer", label: "More summer drinks" },
+        occasion: { slug: "summer", label: "Browse all summer drinks" },
         ctaLabel: "Get the pitcher recipe",
         signoff: "Don't become the bartender.",
       }),
@@ -483,7 +580,7 @@ export function buildEmailDrafts(
         featured: { ...d.mule, label: "Built in the glass" },
         related: [d.smash, d.strawberryDaiquiri],
         relatedHeading: "More ice, same idea",
-        occasion: { slug: "summer", label: "More summer drinks" },
+        occasion: { slug: "summer", label: "Browse all summer drinks" },
         ctaLabel: "Get the recipe",
         signoff: "Take it outside.",
       }),
@@ -519,7 +616,7 @@ export function buildEmailDrafts(
         featured: { ...d.paloma, label: "Highball weather" },
         related: [d.ranch, d.margarita],
         relatedHeading: "Still tequila",
-        occasion: { slug: "summer", label: "More highballs" },
+        occasion: { slug: "summer", label: "Browse highballs" },
         ctaLabel: "I'll Paloma this",
         signoff: "Salt the rim if you must.",
       }),
@@ -580,7 +677,7 @@ export function buildEmailDrafts(
     }),
   ];
 
-  return [...lifecycle, ...weekly, ...events];
+  return [...auth, ...lifecycle, ...weekly, ...events];
 }
 
 function pack(
@@ -617,9 +714,10 @@ function extractPreview(html: string): string {
 
 export function emailDraftGroups(): { id: EmailDraftGroup; label: string }[] {
   return [
+    { id: "auth", label: "Auth & transactional" },
     { id: "lifecycle", label: "Account & list drip" },
     { id: "weekly", label: "Weekly cadence" },
-    { id: "events", label: "Event Thursdays (next 8 weeks)" },
+    { id: "events", label: "Event Thursdays (upcoming)" },
   ];
 }
 

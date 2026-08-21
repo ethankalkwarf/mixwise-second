@@ -76,17 +76,23 @@ export function EmailDraftBrowser({ drafts }: { drafts: EmailDraft[] }) {
           </div>
 
           <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
-            {active.sendWhen}
+            {active.html.includes("mixwise-lockup-cream")
+              ? "Forest Masthead"
+              : "Studio White"}
           </p>
           <h2 className="mt-1 font-display text-2xl text-forest sm:text-3xl">{active.name}</h2>
-          <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="text-sage">Audience</dt>
-              <dd className="text-charcoal">{active.audience}</dd>
+          <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+            <div className="sm:col-span-1">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-sage">When</dt>
+              <dd className="mt-0.5 font-medium text-forest">{active.sendWhen}</dd>
             </div>
             <div>
-              <dt className="text-sage">Job</dt>
-              <dd className="text-charcoal">{active.job}</dd>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-sage">Audience</dt>
+              <dd className="mt-0.5 text-charcoal">{active.audience}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-sage">Job</dt>
+              <dd className="mt-0.5 text-charcoal">{active.job}</dd>
             </div>
           </dl>
           <div className="mt-4 rounded-xl border border-stone bg-cream px-4 py-3">
@@ -171,8 +177,8 @@ function DraftGroup({
                 }`}
               >
                 <span className="block font-medium">{draft.name}</span>
-                <span className={`block truncate text-xs ${selected ? "text-mist" : "text-sage"}`}>
-                  {draft.subject}
+                <span className={`mt-0.5 block text-xs leading-snug ${selected ? "text-mist" : "text-sage"}`}>
+                  {draft.sendWhen}
                 </span>
               </button>
             </li>

@@ -125,9 +125,16 @@ export async function POST(request: NextRequest) {
 
     const safeConfirmUrl = buildSafeAuthUrl(confirmUrl, new URL(request.url));
 
+    const meta = linkData.user?.user_metadata as
+      | { first_name?: string; full_name?: string; display_name?: string }
+      | undefined;
+    const displayName =
+      meta?.first_name || meta?.full_name || meta?.display_name || undefined;
+
     const emailTemplate = confirmEmailTemplate({
       confirmUrl: safeConfirmUrl,
       userEmail: trimmedEmail,
+      displayName,
     });
 
     // Send email via Resend

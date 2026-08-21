@@ -19,27 +19,12 @@ export type ThursdayIssue = {
 
 export const THURSDAY_ISSUES: ThursdayIssue[] = [
   {
-    date: "2026-08-20",
-    featuredSlug: "strawberry-daiquiri",
-    featuredLabel: "Cold on purpose",
-    relatedSlugs: ["gin-gin-mule", "whiskey-smash"],
-    relatedHeading: "If you'd rather skip the blender",
-    occasion: { slug: "summer", label: "More summer drinks" },
-    headline: "Still too hot. Make a daiquiri.",
-    intro:
-      "August has one job left and it's heat. A Strawberry Daiquiri is rum, berries, lime, and a pile of ice. Blitz it, pour it, sit back down.",
-    subject: "Still too hot. Make a daiquiri.",
-    previewText: "Berries, rum, lime, ice. Last-of-summer in a glass.",
-    ctaLabel: "Get the recipe",
-    signoff: "Sit outside a little longer.",
-  },
-  {
     date: "2026-08-27",
     featuredSlug: "sangria",
     featuredLabel: "The one pitcher",
     relatedSlugs: ["electric-lemonade", "virgin-mojito"],
     relatedHeading: "Same weather, smaller glass",
-    occasion: { slug: "summer", label: "More summer drinks" },
+    occasion: { slug: "summer", label: "Browse all summer drinks" },
     headline: "Last big weekend of summer.",
     intro:
       "Labor Day is the last long weekend that still feels like July. Make one sangria. Wine, fruit, a pitcher. Fill glasses until the potato salad is gone. This is not the week to become the bartender.",
@@ -54,7 +39,7 @@ export const THURSDAY_ISSUES: ThursdayIssue[] = [
     featuredLabel: "Built in the glass",
     relatedSlugs: ["whiskey-smash", "strawberry-daiquiri"],
     relatedHeading: "More ice, same idea",
-    occasion: { slug: "summer", label: "More summer drinks" },
+    occasion: { slug: "summer", label: "Browse all summer drinks" },
     headline: "Labor Day. Last patio drinks of the year.",
     intro:
       "Monday is the holiday. After that the light changes and the drinks get quieter. A Gin Gin Mule is mint, ginger, lime, and gin over a lot of ice. Build it, take it outside, pretend it's still July.",
@@ -84,7 +69,7 @@ export const THURSDAY_ISSUES: ThursdayIssue[] = [
     featuredLabel: "Highball weather",
     relatedSlugs: ["ranch-water", "margarita"],
     relatedHeading: "Still tequila",
-    occasion: { slug: "summer", label: "More highballs" },
+    occasion: { slug: "summer", label: "Browse highballs" },
     headline: "Yesterday was a holiday. Today is a Paloma.",
     intro:
       "Mexican Independence Day was Wednesday. The correct follow-up is not a themed menu. It's tequila, grapefruit, and enough ice that the glass sweats. Ranch Water if you want even less work.",

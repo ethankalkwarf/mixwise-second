@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
           // Link to homepage for test - in production this would be a real auth callback
           confirmUrl: "https://www.getmixwise.com/dashboard",
           userEmail: email,
+          displayName: "Ethan",
         });
         break;
 
