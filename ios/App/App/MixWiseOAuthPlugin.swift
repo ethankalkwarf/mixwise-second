@@ -4,11 +4,13 @@ import Capacitor
 import UIKit
 
 /**
- * ASWebAuthenticationSession wrapper that:
- * 1. Keeps a strong reference for the full OAuth flow (required)
- * 2. Prefers iOS 17.4+ HTTPS callbacks (dismisses on getmixwise.com bridge — no Safari hop)
- * 3. Falls back to custom-scheme callbacks on older iOS
- * 4. Exposes cancel() so a deep-link handler can dismiss a leftover sheet
+ * ASWebAuthenticationSession wrapper.
+ *
+ * Always uses the custom URL scheme callback. Supabase redirects to the HTTPS
+ * bridge first; that route 302s to com.getmixwise.app://… which this session
+ * intercepts and dismisses. Do not use iOS 17.4 HTTPS callbacks until
+ * associated domains are confirmed live — a mismatched HTTPS callback leaves
+ * users on the bridge page and the custom-scheme hop escapes into Safari.
  */
 @objc(MixWiseOAuthPlugin)
 public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticationPresentationContextProviding {
@@ -29,8 +31,6 @@ public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticatio
         }
 
         let callbackScheme = call.getString("callbackScheme") ?? "com.getmixwise.app"
-        let httpsHost = call.getString("callbackHTTPSHost")
-        let httpsPath = call.getString("callbackHTTPSPath")
         let prefersEphemeral = call.getBool("prefersEphemeralWebBrowserSession") ?? false
 
         DispatchQueue.main.async {
@@ -43,7 +43,8 @@ public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticatio
 
             self.activeCall = call
 
-            let completion: ASWebAuthenticationSession.CompletionHandler = { [weak self] callbackURL, error in
+            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) {
+                [weak self] callbackURL, error in
                 guard let self else { return }
 
                 self.authSession = nil
@@ -66,24 +67,6 @@ public class MixWiseOAuthPlugin: CAPPlugin, CAPBridgedPlugin, ASWebAuthenticatio
                 }
 
                 pending?.resolve(["url": callbackURL.absoluteString])
-            }
-
-            let session: ASWebAuthenticationSession
-            if #available(iOS 17.4, *),
-               let httpsHost,
-               let httpsPath,
-               !httpsHost.isEmpty,
-               !httpsPath.isEmpty {
-                // Completes when Supabase lands on the HTTPS bridge — stays inside
-                // the auth session (never dumps the user into system Safari).
-                let callback = ASWebAuthenticationSession.Callback.https(host: httpsHost, path: httpsPath)
-                session = ASWebAuthenticationSession(url: url, callback: callback, completionHandler: completion)
-            } else {
-                session = ASWebAuthenticationSession(
-                    url: url,
-                    callbackURLScheme: callbackScheme,
-                    completionHandler: completion
-                )
             }
 
             session.prefersEphemeralWebBrowserSession = prefersEphemeral

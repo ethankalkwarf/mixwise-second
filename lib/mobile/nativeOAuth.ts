@@ -77,13 +77,9 @@ async function openWithMixwiseOAuth(url: string): Promise<void> {
   oauthUiOpen = true;
   mixwiseOAuthActive = true;
   try {
-    const bridge = new URL(NATIVE_OAUTH_BRIDGE_URL);
     const { url: redirectedUri } = await MixwiseOAuth.start({
       url,
       callbackScheme: NATIVE_OAUTH_SCHEME,
-      // iOS 17.4+: complete on the HTTPS bridge itself (no Safari custom-scheme hop).
-      callbackHTTPSHost: bridge.hostname,
-      callbackHTTPSPath: bridge.pathname,
     });
     mixwiseOAuthActive = false;
     oauthUiOpen = false;
