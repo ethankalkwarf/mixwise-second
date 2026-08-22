@@ -79,7 +79,7 @@ function FavoritesGrid({ favorites, initial = 8 }: { favorites: Fav[]; initial?:
             <AppLink
               key={c.id}
               href={href}
-              className="group overflow-hidden rounded-2xl bg-cream/50 ring-1 ring-mist transition hover:bg-cream hover:ring-olive/30"
+              className="native-card-link group overflow-hidden rounded-2xl bg-cream/50 ring-1 ring-mist transition hover:bg-cream hover:ring-olive/30"
             >
               <div className="relative aspect-[4/5] bg-mist">
                 {c.imageUrl?.startsWith("http") ? (

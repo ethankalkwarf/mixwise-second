@@ -226,11 +226,11 @@ function CocktailCard({ match, isAlmostThere, openInNewTab }: CocktailCardProps)
       {...(openInNewTab
         ? { target: "_blank", rel: "noopener noreferrer" }
         : {})}
-      className={`block p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group ${
-        isAlmostThere ? 'opacity-75' : ''
+      className={`native-card-link flex flex-col p-4 bg-cream/50 rounded-xl hover:bg-cream transition-colors border border-mist group ${
+        isAlmostThere ? "opacity-75" : ""
       }`}
     >
-      <div className="aspect-square relative mb-3 rounded-lg overflow-hidden bg-mist flex items-center justify-center">
+      <div className="aspect-square relative mb-3 w-full shrink-0 rounded-lg overflow-hidden bg-mist flex items-center justify-center">
         {cocktail.imageUrl && cocktail.imageUrl.startsWith('http') ? (
           <Image
             src={cocktail.imageUrl}
@@ -269,7 +269,7 @@ function CocktailCard({ match, isAlmostThere, openInNewTab }: CocktailCardProps)
           </span>
         )}
       </div>
-      <h4 className="font-semibold text-forest text-sm line-clamp-2 mb-1">
+      <h4 className="font-semibold text-forest text-sm leading-snug line-clamp-2 mb-1">
         {formatCocktailName(cocktail.name)}
       </h4>
       {cocktail.primarySpirit ? (

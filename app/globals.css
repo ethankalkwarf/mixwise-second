@@ -3446,7 +3446,9 @@ html.native-app body {
   justify-content: flex-start !important;
 }
 
-/* Touch Target Optimization - Minimum 44x44pt for iOS */
+/* Touch Target Optimization - Minimum 44x44pt for iOS.
+   Do NOT force justify-content:center on every anchor — that turns cocktail
+   cards into horizontal flex rows (name+spirit smashed together). */
 @media (hover: none) and (pointer: coarse) {
   button:not(.mw-inline-term):not(.mw-inline-expand):not(.native-hero-tile):not(.native-card-link):not(.native-flex-hit):not(.native-compact-cta):not(.native-menu-row),
   a:not(.mw-inline-term):not(.native-menu-row):not(.ingredient-meta-pill):not(.native-hero-tile):not(.native-card-link):not(.native-hero-hit):not(.native-flex-hit),
@@ -3456,6 +3458,13 @@ html.native-app body {
   .btn-ghost {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  /* Icon-only / compact controls still need centered content */
+  button:not(.mw-inline-term):not(.mw-inline-expand):not(.native-hero-tile):not(.native-card-link):not(.native-flex-hit):not(.native-compact-cta):not(.native-menu-row):not([class*="w-full"]):not([class*="flex-col"]),
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost {
     display: inline-flex;
     align-items: center;
     justify-content: center;
