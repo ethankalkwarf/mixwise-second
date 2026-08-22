@@ -24,10 +24,18 @@ export function pourMomentLabel(date = new Date()): "Today's pour" | "Tonight's 
 }
 
 const STICKER_W = 900;
+const STICKER_H = 640;
 const STICKER_PAD_X = 36;
+const STICKER_PAD_TOP = 48;
+const STICKER_PAD_BOTTOM = 44;
 const NAME_MAX_WIDTH = STICKER_W - STICKER_PAD_X * 2;
 const NAME_MAX_PX = 200;
 const NAME_MIN_PX = 64;
+const MOMENT_PX = 56;
+const MOMENT_LINE = 1.2;
+const FOOTER_PX = 32;
+const STACK_GAP = 14;
+const NAME_LINE = 1.08;
 const NAME_FONT = '"DM Serif Display", Georgia, "Times New Roman", serif';
 
 function measureTextWidth(text: string, fontSize: number): number {
@@ -41,14 +49,50 @@ function measureTextWidth(text: string, fontSize: number): number {
   return ctx.measureText(text).width;
 }
 
+/** How many lines the name needs at this size (wrap only at spaces). */
+function nameLineCount(name: string, fontSize: number, allowWrapAtSpaces: boolean): number {
+  if (!allowWrapAtSpaces) return 1;
+  const limit = NAME_MAX_WIDTH * 0.96;
+  const tokens = name.split(/\s+/).filter(Boolean);
+  let lines = 1;
+  let lineWidth = 0;
+  const spaceW = measureTextWidth(" ", fontSize);
+  for (const token of tokens) {
+    const tw = measureTextWidth(token, fontSize);
+    if (lineWidth === 0) {
+      lineWidth = tw;
+      continue;
+    }
+    if (lineWidth + spaceW + tw <= limit) {
+      lineWidth += spaceW + tw;
+    } else {
+      lines += 1;
+      lineWidth = tw;
+    }
+  }
+  return lines;
+}
+
 /**
- * Largest font size where every token (and the full name when nowrap) fits
- * inside the sticker — never mid-word wrap, never clipped letters.
+ * Largest font size where every token fits the sticker width and the full
+ * stack (moment + name + footer) fits the sticker height — never mid-word wrap,
+ * never clipped letters.
  */
 function fitDrinkNameSize(name: string, allowWrapAtSpaces: boolean): number {
   const tokens = allowWrapAtSpaces ? name.split(/\s+/).filter(Boolean) : [name];
   // Slightly under the box so shadows / antialias don't clip
-  const limit = NAME_MAX_WIDTH * 0.96;
+  const widthLimit = NAME_MAX_WIDTH * 0.96;
+  // Moment paddingTop (8) keeps serif ascenders / apostrophe inside the capture box
+  const momentBlock = 8 + MOMENT_PX * MOMENT_LINE;
+  const footerBlock = FOOTER_PX * 1.25;
+  // Two flex gaps: moment→name and name→footer
+  const heightBudget =
+    STICKER_H -
+    STICKER_PAD_TOP -
+    STICKER_PAD_BOTTOM -
+    momentBlock -
+    STACK_GAP * 2 -
+    footerBlock;
 
   let lo = NAME_MIN_PX;
   let hi = NAME_MAX_PX;
@@ -56,9 +100,12 @@ function fitDrinkNameSize(name: string, allowWrapAtSpaces: boolean): number {
 
   while (lo <= hi) {
     const mid = Math.floor((lo + hi) / 2);
-    const tokensFit = tokens.every((token) => measureTextWidth(token, mid) <= limit);
-    const fullFits = allowWrapAtSpaces || measureTextWidth(name, mid) <= limit;
-    if (tokensFit && fullFits) {
+    const tokensFit = tokens.every((token) => measureTextWidth(token, mid) <= widthLimit);
+    const fullFits = allowWrapAtSpaces || measureTextWidth(name, mid) <= widthLimit;
+    const lines = nameLineCount(name, mid, allowWrapAtSpaces);
+    const nameHeight = lines * mid * NAME_LINE;
+    const heightFits = nameHeight <= heightBudget;
+    if (tokensFit && fullFits && heightFits) {
       best = mid;
       lo = mid + 1;
     } else {
@@ -83,15 +130,15 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
     <div
       style={{
         width: STICKER_W,
-        height: 560,
+        height: STICKER_H,
         backgroundColor: "transparent",
         color: "#FFFFFF",
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-end",
         alignItems: "flex-start",
-        gap: 12,
-        padding: `32px ${STICKER_PAD_X}px 40px`,
+        gap: STACK_GAP,
+        padding: `${STICKER_PAD_TOP}px ${STICKER_PAD_X}px ${STICKER_PAD_BOTTOM}px`,
         boxSizing: "border-box",
         overflow: "visible",
       }}
@@ -99,11 +146,13 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
       <div
         style={{
           fontFamily: `var(--font-dm-serif), ${NAME_FONT}`,
-          fontSize: 56,
+          fontSize: MOMENT_PX,
           fontWeight: 400,
           letterSpacing: 0.6,
           color: "#FFFFFF",
-          lineHeight: 1.1,
+          lineHeight: MOMENT_LINE,
+          // Room for serif ascenders / apostrophe + shadow blur above the line
+          paddingTop: 8,
           textShadow,
         }}
       >
@@ -114,7 +163,7 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
           fontFamily: `var(--font-dm-serif), ${NAME_FONT}`,
           fontSize: nameSize,
           fontWeight: 400,
-          lineHeight: 1.05,
+          lineHeight: NAME_LINE,
           color: "#FFFFFF",
           textShadow,
           maxWidth: "100%",
@@ -129,9 +178,8 @@ function CocktailPourTextSticker({ cocktail }: { cocktail: Props["cocktail"] }) 
       </div>
       <div
         style={{
-          marginTop: 8,
           fontFamily: "var(--font-jost), Jost, system-ui, sans-serif",
-          fontSize: 32,
+          fontSize: FOOTER_PX,
           fontWeight: 500,
           letterSpacing: 2.2,
           textTransform: "uppercase",
@@ -167,7 +215,7 @@ export function CocktailStoriesShare({
       compact={compact}
       className={className}
       stickerWidth={STICKER_W}
-      stickerHeight={560}
+      stickerHeight={STICKER_H}
       // Capture pour in MixWise, then hand photo + text sticker to Stories
       cameraBackground
       sticker={<CocktailPourTextSticker cocktail={cocktail} />}
