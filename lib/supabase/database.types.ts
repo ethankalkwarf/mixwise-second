@@ -188,6 +188,41 @@ export interface Database {
           updated_at?: string;
         };
       };
+      profile_featured_drinks: {
+        Row: {
+          id: number;
+          user_id: string;
+          cocktail_id: string;
+          rank: number;
+          cocktail_name: string | null;
+          cocktail_slug: string | null;
+          cocktail_image_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          cocktail_id: string;
+          rank: number;
+          cocktail_name?: string | null;
+          cocktail_slug?: string | null;
+          cocktail_image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          cocktail_id?: string;
+          rank?: number;
+          cocktail_name?: string | null;
+          cocktail_slug?: string | null;
+          cocktail_image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       cocktail_notes: {
         Row: {
           id: number;

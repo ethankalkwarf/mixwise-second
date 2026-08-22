@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { getMixIngredients } from "@/lib/cocktails";
-import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
+import { formatCocktailName, formatIngredientName, isNewCocktail } from "@/lib/formatters";
 import type { MixCocktail, MixMatchResult, MixIngredient } from "@/lib/mixTypes";
 import { debugLog } from "@/lib/debugLog";
 import { useCocktailSkips } from "@/hooks/useCocktailSkips";
@@ -279,7 +279,7 @@ function CocktailCard({ match, isAlmostThere, openInNewTab }: CocktailCardProps)
       ) : null}
       {isAlmostThere && (
         <p className="text-terracotta text-xs">
-          Missing: {match.missingIngredientNames.slice(0, 2).join(", ")}
+          Missing: {match.missingIngredientNames.slice(0, 2).map(formatIngredientName).join(", ")}
           {match.missingIngredientNames.length > 2 && ` +${match.missingIngredientNames.length - 2} more`}
         </p>
       )}

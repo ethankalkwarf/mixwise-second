@@ -22,6 +22,7 @@ import { CollectionPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd"
 import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { NativeCollectionHero } from "@/components/mobile/NativeCollectionHero";
+import { CollectionBrowseTracker } from "@/components/onboarding/CollectionBrowseTracker";
 
 export const revalidate = 300;
 
@@ -68,6 +69,7 @@ export default async function OccasionDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-cream" data-native-collections-page data-native-collection-detail>
+      <CollectionBrowseTracker />
       <CollectionPageSchema
         name={`${occasion.name} Cocktail Recipes`}
         description={occasion.description}

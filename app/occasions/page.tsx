@@ -19,6 +19,7 @@ import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { CollectionPageSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG, generatePageMetadata } from "@/lib/seo";
 import { NativeCollectionsIntro } from "@/components/mobile/NativeCollectionsIntro";
+import { CollectionBrowseTracker } from "@/components/onboarding/CollectionBrowseTracker";
 
 export const revalidate = 300;
 
@@ -45,6 +46,7 @@ export default async function OccasionsPage() {
 
   return (
     <div className="min-h-screen bg-cream" data-native-collections-page>
+      <CollectionBrowseTracker />
       <CollectionPageSchema
         name="Cocktail Collections by Season & Style"
         description="Curated MixWise cocktail collections for seasons, holidays, and drink styles."

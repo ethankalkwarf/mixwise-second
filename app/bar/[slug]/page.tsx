@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@/lib/supabase/server";
-import { getUserBarIngredients, getMixCocktails, getStapleIngredientIds } from "@/lib/cocktails.server";
+import { getUserBarIngredients, getMixCocktails, getStapleIngredientIds, getUserFeaturedDrinks } from "@/lib/cocktails.server";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { BarProfile } from "@/components/bar/BarProfile";
 import { PublicBarJoinCta } from "@/components/bar/PublicBarJoinCta";
@@ -24,6 +24,7 @@ import { NativeBarChrome } from "@/components/bar/NativeBarChrome";
 import { OwnerListeningEditor } from "@/components/bar/OwnerListeningEditor";
 import { getPublicMixologistTier } from "@/lib/mixologistTier.server";
 import { optimizeAvatarUrl } from "@/lib/avatarUrl";
+import { ProfileFeaturedDrinks } from "@/components/bar/ProfileFeaturedDrinks";
 
 // Force dynamic rendering to ensure fresh data on every request
 // This ensures ingredients and favorites are always up-to-date
@@ -481,6 +482,8 @@ export default async function BarPage({ params }: Props) {
   };
   const sharePath = getBarSharePath(profile) || `/bar/${slug}`;
 
+  const featuredDrinks = await getUserFeaturedDrinks(profile.id);
+
   // Owner viewing their own public bar URL — offer Edit
   let isLoggedInOwner = false;
   try {
@@ -524,96 +527,100 @@ export default async function BarPage({ params }: Props) {
           </div>
 
           {/* Profile Header */}
-          <div className="card p-6 sm:p-8">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <div className="flex items-start gap-5 min-w-0 flex-1">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-full overflow-hidden bg-olive/20 ring-2 ring-mist flex items-center justify-center">
-                  {avatarUrl ? (
-                    <Image
-                      src={avatarUrl}
-                      alt={displayName}
-                      width={112}
-                      height={112}
-                      quality={90}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <UserCircleIcon className="w-12 h-12 text-olive" />
+          <div className="card p-5 sm:p-8">
+            <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-x-5">
+              <div className="row-start-1 col-start-1 w-[4.5rem] h-[4.5rem] sm:w-28 sm:h-28 shrink-0 rounded-full overflow-hidden bg-olive/20 ring-2 ring-mist flex items-center justify-center self-start">
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt={displayName}
+                    width={112}
+                    height={112}
+                    quality={90}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <UserCircleIcon className="w-12 h-12 text-olive" />
+                )}
+              </div>
+
+              <div className="row-start-1 col-start-2 min-w-0">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-3xl font-serif font-bold text-forest leading-tight">
+                      {displayName}&apos;s Bar
+                    </h1>
+                    {profile.username && (
+                      <p className="text-sage mt-0.5 text-sm">@{profile.username}</p>
+                    )}
+                  </div>
+                  {isLoggedInOwner && (
+                    <Link
+                      href="/account"
+                      className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-mist bg-cream/50 px-3 py-1.5 text-sm font-medium text-forest transition hover:border-olive/40 hover:bg-white"
+                    >
+                      <PencilSquareIcon className="h-4 w-4 text-olive" />
+                      Edit
+                    </Link>
                   )}
                 </div>
-                <div className="min-w-0 flex-1 pt-0.5">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h1 className="text-2xl sm:text-3xl font-serif font-bold text-forest">
-                        {displayName}&apos;s Bar
-                      </h1>
-                      {profile.username && (
-                        <p className="text-sage mt-0.5">@{profile.username}</p>
-                      )}
-                    </div>
-                    {isLoggedInOwner && (
-                      <Link
-                        href="/account"
-                        className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-mist bg-cream/50 px-3 py-1.5 text-sm font-medium text-forest transition hover:border-olive/40 hover:bg-white"
-                      >
-                        <PencilSquareIcon className="h-4 w-4 text-olive" />
-                        Edit
-                      </Link>
-                    )}
-                  </div>
-                  <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm text-sage">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-olive/10 px-2.5 py-0.5 font-medium text-olive">
-                      <span aria-hidden>{tier.emoji}</span>
-                      {tier.name}
-                    </span>
-                    <span className="text-mist" aria-hidden>
-                      ·
-                    </span>
-                    <span>
-                      {ingredients.length} ingredient{ingredients.length === 1 ? "" : "s"}
-                    </span>
-                    {makeableCount > 0 && (
-                      <>
-                        <span className="text-mist" aria-hidden>
-                          ·
-                        </span>
-                        <span>
-                          {makeableCount} drink{makeableCount === 1 ? "" : "s"} ready
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {profile.bio && (
-                    <p className="mt-3 max-w-xl text-forest/80 leading-relaxed">{profile.bio}</p>
-                  )}
-                  {profile.listening_deezer_id &&
-                    profile.listening_track_name &&
-                    profile.listening_track_artist && (
-                    <ListeningTrackPlayer
-                      className="mt-4"
-                      deezerId={profile.listening_deezer_id}
-                      trackName={profile.listening_track_name}
-                      trackArtist={profile.listening_track_artist}
-                    />
-                  )}
-                  {isLoggedInOwner ? (
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs sm:text-sm text-sage">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-olive/10 px-2.5 py-0.5 font-medium text-olive">
+                    <span aria-hidden>{tier.emoji}</span>
+                    {tier.name}
+                  </span>
+                  <span className="text-mist" aria-hidden>
+                    ·
+                  </span>
+                  <span>
+                    {ingredients.length} ingredient{ingredients.length === 1 ? "" : "s"}
+                  </span>
+                  {makeableCount > 0 && (
                     <>
-                      <OwnerListeningEditor
-                        initialDeezerId={profile.listening_deezer_id}
-                        initialTrackName={profile.listening_track_name}
-                        initialTrackArtist={profile.listening_track_artist}
-                      />
-                      <p data-web-owner-hint className="mt-4 text-sm text-sage">
-                        This is how your bar looks to friends.{" "}
-                        <Link href="/account" className="font-medium text-olive hover:text-olive-dark">
-                          Edit photo, bio & username
-                        </Link>
-                      </p>
+                      <span className="text-mist" aria-hidden>
+                        ·
+                      </span>
+                      <span>
+                        {makeableCount} drink{makeableCount === 1 ? "" : "s"} ready
+                      </span>
                     </>
-                  ) : (
-                    <FollowButton userId={profile.id} className="mt-4" />
                   )}
                 </div>
+              </div>
+
+              <div className="col-span-2 space-y-3">
+                {profile.bio && (
+                  <p className="max-w-xl text-sm sm:text-base text-forest/80 leading-relaxed">{profile.bio}</p>
+                )}
+                {(featuredDrinks.length > 0 || isLoggedInOwner) && (
+                  <ProfileFeaturedDrinks drinks={featuredDrinks} isOwner={isLoggedInOwner} />
+                )}
+                {profile.listening_deezer_id &&
+                  profile.listening_track_name &&
+                  profile.listening_track_artist && (
+                  <ListeningTrackPlayer
+                    deezerId={profile.listening_deezer_id}
+                    trackName={profile.listening_track_name}
+                    trackArtist={profile.listening_track_artist}
+                  />
+                )}
+                {isLoggedInOwner ? (
+                  <>
+                    <OwnerListeningEditor
+                      initialDeezerId={profile.listening_deezer_id}
+                      initialTrackName={profile.listening_track_name}
+                      initialTrackArtist={profile.listening_track_artist}
+                    />
+                    <p data-web-owner-hint className="text-sm text-sage">
+                      This is how your bar looks to friends.{" "}
+                      <Link href="/account" className="font-medium text-olive hover:text-olive-dark">
+                        Edit photo, bio & featured drinks
+                      </Link>
+                    </p>
+                  </>
+                ) : (
+                  <FollowButton userId={profile.id} />
+                )}
               </div>
             </div>
             <div className="mt-5 border-t border-mist/80 pt-5">

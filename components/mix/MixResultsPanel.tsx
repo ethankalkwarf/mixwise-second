@@ -9,9 +9,10 @@ import { HardNavLink } from "@/components/layout/HardNavLink";
 import Image from "next/image";
 import { COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { ComingSoonCocktailImage } from "@/components/cocktails/ComingSoonCocktailImage";
-import { isNewCocktail } from "@/lib/formatters";
+import { formatIngredientName, isNewCocktail } from "@/lib/formatters";
 import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
 import { trackEmptyStateSeen, trackMixResultClicked } from "@/lib/analytics";
+import { markChecklistMade } from "@/lib/onboardingChecklist";
 
 type Props = {
   inventoryIds: string[];
@@ -32,6 +33,12 @@ export function MixResultsPanel({
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const { ready, almostThere } = matchGroups;
+
+  useEffect(() => {
+    if (ready.length > 0) {
+      markChecklistMade();
+    }
+  }, [ready.length]);
 
   // Get available categories
   const availableCategories = useMemo(() => {
@@ -469,7 +476,7 @@ function CocktailCard({
                   className="inline-flex items-center gap-1 px-2 py-0.5 bg-terracotta/10 text-terracotta text-xs font-medium rounded-full max-w-full"
                 >
                   <XMarkIcon className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">{name}</span>
+                  <span className="truncate">{formatIngredientName(name)}</span>
                 </span>
               ))}
               {missingNames.length > 3 && (
@@ -479,7 +486,7 @@ function CocktailCard({
           )}
           
           <p className="text-sm text-sage line-clamp-2 mt-auto leading-relaxed break-words">
-            {cocktail.ingredients.map((i) => i.name).join(", ")}
+            {cocktail.ingredients.map((i) => formatIngredientName(i.name)).join(", ")}
           </p>
         </div>
       </div>

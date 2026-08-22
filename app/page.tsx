@@ -2,6 +2,8 @@ import { getCocktailsList } from "@/lib/cocktails.server";
 import { WebPageSchema } from "@/components/seo/JsonLd";
 import { SITE_CONFIG } from "@/lib/seo";
 import { Hero } from "@/components/home/Hero";
+import { GettingStartedChecklist } from "@/components/onboarding/GettingStartedChecklist";
+import { FriendsHomePromo } from "@/components/home/FriendsHomePromo";
 import { PlatformSection } from "@/components/home/PlatformSection";
 import { PersonalizedSections } from "@/components/home/PersonalizedSections";
 import { FeaturedCocktailsWrapper } from "@/components/home/FeaturedCocktailsWrapper";
@@ -84,6 +86,11 @@ export default async function HomePage() {
       <HomePageWrapper featuredCocktails={featuredCocktails} allCocktails={allCocktails}>
         <div data-web-home>
           <Hero />
+
+          <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+            <GettingStartedChecklist />
+            <FriendsHomePromo />
+          </div>
 
           <PersonalizedSections
             allCocktails={allCocktails}

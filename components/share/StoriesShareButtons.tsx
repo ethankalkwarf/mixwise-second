@@ -11,6 +11,7 @@ import { useUser } from "@/components/auth/UserProvider";
 import { ActionSheet } from "@/components/mobile/ActionSheet";
 import { MixwiseStories } from "@/lib/mobile/storiesSharePlugin";
 import { trackContentShared } from "@/lib/analytics";
+import { markChecklistShared } from "@/lib/onboardingChecklist";
 import { isNativeApp } from "@/lib/mobile/platform";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { awardSharingBadge } from "@/lib/badgeEngine";
@@ -109,6 +110,11 @@ async function normalizeStoryBackground(dataUrl: string): Promise<string> {
 }
 
 const FACEBOOK_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "";
+const SNAPCHAT_CLIENT_ID = process.env.NEXT_PUBLIC_SNAPCHAT_CLIENT_ID || "";
+
+function noteShared() {
+  markChecklistShared();
+}
 
 function InstagramGlyph({ className }: { className?: string }) {
   return (
@@ -122,6 +128,14 @@ function FacebookGlyph({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
+
+function SnapchatGlyph({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.67-.02 1.08.027 1.348.07.41.248.788.574 1.066.41.348.96.52 1.635.52.276 0 .54-.038.786-.115l.07-.023c.807-.27 1.84-.617 2.832-.617.852 0 1.54.214 2.047.636.575.477.86 1.18.86 2.094 0 .852-.214 1.54-.636 2.047-.477.575-1.18.86-2.094.86-.852 0-1.54-.214-2.047-.636-.41-.34-.72-.8-.93-1.37-.21-.57-.31-1.2-.31-1.89 0-.69.1-1.32.31-1.89.21-.57.52-1.03.93-1.37.507-.422 1.195-.636 2.047-.636.992 0 2.025.347 2.832.617l.07.023c.246.077.51.115.786.115.675 0 1.225-.172 1.635-.52.326-.278.504-.656.574-1.066.047-.268.039-.678.027-1.348l-.003-.06c-.104-1.628-.23-3.654.299-4.847C16.853 1.069 13.196.793 12.206.793z" />
     </svg>
   );
 }
@@ -216,20 +230,21 @@ export function StoriesShareButtons({
   const { user } = useUser();
   const supabase = getSupabaseClient();
   const stickerRef = useRef<HTMLDivElement>(null);
-  const [busy, setBusy] = useState<"ig" | "fb" | "share" | null>(null);
+  const [busy, setBusy] = useState<"ig" | "fb" | "sc" | "share" | null>(null);
   const [copied, setCopied] = useState(false);
   const [igAvailable, setIgAvailable] = useState(false);
   const [fbAvailable, setFbAvailable] = useState(false);
+  const [scAvailable, setScAvailable] = useState(false);
   const [native, setNative] = useState(false);
   const [availabilityReady, setAvailabilityReady] = useState(false);
   const [pourPicker, setPourPicker] = useState<{
-    platform: "ig" | "fb";
+    platform: "ig" | "fb" | "sc";
   } | null>(null);
   const pourResolveRef = useRef<((source: "camera" | "photos" | null) => void) | null>(
     null
   );
 
-  const pickPourSource = (platform: "ig" | "fb") =>
+  const pickPourSource = (platform: "ig" | "fb" | "sc") =>
     new Promise<"camera" | "photos" | null>((resolve) => {
       pourResolveRef.current = resolve;
       setPourPicker({ platform });
@@ -259,10 +274,14 @@ export function StoriesShareButtons({
       MixwiseStories.canShareToFacebookStories()
         .then((r) => r.available)
         .catch(() => false),
-    ]).then(([ig, fb]) => {
+      MixwiseStories.canShareToSnapchatStories()
+        .then((r) => r.available)
+        .catch(() => false),
+    ]).then(([ig, fb, sc]) => {
       if (cancelled) return;
       setIgAvailable(ig);
       setFbAvailable(fb);
+      setScAvailable(sc);
       setAvailabilityReady(true);
     });
     return () => {
@@ -362,6 +381,7 @@ export function StoriesShareButtons({
         await MixwiseStories.shareToFacebookStories(payload);
         void trackContentShared(entity, "facebook_stories", { url: shareUrl });
       }
+      noteShared();
       void maybeAwardStoryBadge();
     } catch (err) {
       console.error("Stories share failed:", err);
@@ -391,11 +411,70 @@ export function StoriesShareButtons({
     }
   };
 
+  const shareToSnapchat = async () => {
+    if (!SNAPCHAT_CLIENT_ID) {
+      toast.error("Snapchat sharing isn’t configured yet. Use Share or Copy link.");
+      return;
+    }
+    setBusy("sc");
+    try {
+      let capturedBackground: { path?: string; dataUrl?: string } | null = null;
+      if (cameraBackground) {
+        const source = await pickPourSource("sc");
+        if (!source) return;
+        await wait(450);
+        capturedBackground = await capturePourBackground(
+          source === "camera" ? CameraSource.Camera : CameraSource.Photos
+        );
+        if (!capturedBackground) return;
+      }
+
+      const stickerDataUrl = await renderStickerBase64();
+      if (!stickerDataUrl || stickerDataUrl.length < 100) {
+        throw new Error("Sticker render failed");
+      }
+
+      const payload: {
+        snapchatClientId: string;
+        stickerImageBase64: string;
+        backgroundImagePath?: string;
+        backgroundImageBase64?: string;
+        attachmentUrl?: string;
+      } = {
+        snapchatClientId: SNAPCHAT_CLIENT_ID,
+        stickerImageBase64: stickerDataUrl,
+        attachmentUrl: shareUrl,
+      };
+
+      if (capturedBackground?.path) {
+        payload.backgroundImagePath = capturedBackground.path;
+      } else if (capturedBackground?.dataUrl) {
+        payload.backgroundImageBase64 = capturedBackground.dataUrl;
+      } else if (backgroundImageUrl) {
+        const backgroundDataUrl = await imageUrlToDataUrl(backgroundImageUrl);
+        if (backgroundDataUrl) {
+          payload.backgroundImageBase64 = backgroundDataUrl;
+        }
+      }
+
+      await MixwiseStories.shareToSnapchatStories(payload);
+      void trackContentShared(entity, "snapchat_stories", { url: shareUrl });
+      noteShared();
+      void maybeAwardStoryBadge();
+    } catch (err) {
+      console.error("Snapchat share failed:", err);
+      toast.error("Couldn't open Snapchat. Try Share instead.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       void trackContentShared(entity, "copy_link", { url: shareUrl, from: "stories_actions" });
+      noteShared();
       toast.success("Link copied");
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -416,6 +495,7 @@ export function StoriesShareButtons({
           url: shareUrl,
           from: "stories_fallback",
         });
+        noteShared();
         return;
       }
       if (typeof navigator !== "undefined" && navigator.share) {
@@ -424,6 +504,7 @@ export function StoriesShareButtons({
           url: shareUrl,
           from: "stories_fallback",
         });
+        noteShared();
         return;
       }
       await handleCopy();
@@ -438,7 +519,8 @@ export function StoriesShareButtons({
 
   const showIg = native && igAvailable && !!FACEBOOK_APP_ID;
   const showFb = native && fbAvailable && !!FACEBOOK_APP_ID;
-  const showStories = showIg || showFb;
+  const showSc = native && scAvailable && !!SNAPCHAT_CLIENT_ID;
+  const showStories = showIg || showFb || showSc;
   // Always offer a link path on native — Stories buttons disappear when Meta apps aren't installed.
   const showLinkFallback = native;
 
@@ -446,7 +528,7 @@ export function StoriesShareButtons({
   // Compact recipe row: only render when Stories apps exist (copy lives elsewhere).
   if (compact && (!availabilityReady || !showStories)) return null;
 
-  const bothPlatforms = showIg && showFb;
+  const multiStories = [showIg, showFb, showSc].filter(Boolean).length > 1;
   const btnBase = compact
     ? "inline-flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium disabled:opacity-50 active:scale-[0.98]"
     : "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3.5 text-sm font-semibold tracking-tight disabled:opacity-50 active:scale-[0.98] transition-transform";
@@ -460,7 +542,7 @@ export function StoriesShareButtons({
           className={
             compact
               ? "flex flex-wrap gap-2"
-              : bothPlatforms
+              : multiStories
                 ? "grid grid-cols-2 gap-2"
                 : "grid grid-cols-1 gap-2"
           }
@@ -493,6 +575,22 @@ export function StoriesShareButtons({
               {!compact && (
                 <span className="min-w-0 truncate">
                   {busy === "fb" ? "Opening…" : "Facebook"}
+                </span>
+              )}
+            </button>
+          )}
+          {showSc && (
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => void shareToSnapchat()}
+              className={`${btnBase} bg-[#FFFC00] text-[#1a1a1a] shadow-sm`}
+              aria-label="Share to Snapchat Story"
+            >
+              <SnapchatGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+              {!compact && (
+                <span className="min-w-0 truncate">
+                  {busy === "sc" ? "Opening…" : "Snapchat"}
                 </span>
               )}
             </button>
@@ -557,7 +655,9 @@ export function StoriesShareButtons({
         title={
           pourPicker?.platform === "fb"
             ? "Share your pour with friends on Facebook"
-            : "Share your pour with friends on Instagram"
+            : pourPicker?.platform === "sc"
+              ? "Share your pour with friends on Snapchat"
+              : "Share your pour with friends on Instagram"
         }
         onClose={() => finishPourPick(null)}
         options={[

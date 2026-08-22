@@ -28,6 +28,7 @@ import {
 import { debugLog } from "@/lib/debugLog";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
+import { FeaturedDrinksPicker } from "@/components/bar/FeaturedDrinksPicker";
 import { AvatarUploader } from "@/components/account/AvatarUploader";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
@@ -759,6 +760,15 @@ export default function AccountPage() {
             </div>
           )}
           {profileFields}
+          <div id="featured-drinks" className="scroll-mt-24 border-t border-mist/70 pt-6">
+            <p className={rowTitleClass}>Featured drinks</p>
+            <p className={rowDescClass}>
+              Pin up to 3 saved favorites to show at the top of your public bar.
+            </p>
+            <div className="mt-3">
+              <FeaturedDrinksPicker />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -952,6 +962,7 @@ export default function AccountPage() {
             </p>
           </div>
         )}
+
       </div>
     </section>
   );

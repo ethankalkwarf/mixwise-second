@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { MixIngredient } from "@/lib/mixTypes";
+import { formatIngredientName } from "@/lib/formatters";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { PlusIcon } from "@heroicons/react/24/outline";
 
@@ -154,7 +155,7 @@ export function IngredientTile({
               isSelected ? "text-olive" : "text-forest group-hover:text-terracotta"
             }`}
           >
-            {ingredient.name}
+            {formatIngredientName(ingredient.name)}
           </h3>
         </div>
 

@@ -42,7 +42,7 @@ export const SUBSTITUTION_TIPS: SubstitutionTip[] = [
   },
   {
     id: "rye-bourbon",
-    have: "Rye",
+    have: "Rye whiskey",
     use: "Bourbon",
     note: "Bourbon is a little sweeter and softer if rye feels sharp.",
     patterns: ["rye whiskey", "rye"],

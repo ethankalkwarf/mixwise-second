@@ -14,6 +14,8 @@ import { NativeDrinkTile } from "@/components/mobile/NativeDrinkTile";
 import { HomeCollectionsRail } from "@/components/mobile/HomeCollectionsRail";
 import { HomeCinematicHero } from "@/components/mobile/HomeCinematicHero";
 import { NativeBadgeProgressCard } from "@/components/mobile/NativeBadgeProgressCard";
+import { GettingStartedChecklist } from "@/components/onboarding/GettingStartedChecklist";
+import { FriendsHomePromo } from "@/components/home/FriendsHomePromo";
 import { NativeNotificationPrompt } from "@/components/mobile/NativeNotificationPrompt";
 import { cacheCabinetReadyCount, readCabinetReadyCount, readHomeSessionHint, writeHomeSessionHint } from "@/lib/mobile/guestData";
 import { ShakePourOverlay, type ShakeOverlayMode } from "@/components/mobile/ShakePourOverlay";
@@ -527,6 +529,9 @@ export function MobileHomePage({
       />
 
       <div className="px-4 pt-7">
+        <GettingStartedChecklist compact />
+        <FriendsHomePromo compact />
+
         {pourRail.length > 0 ? (
           <section className="mb-10">
             <div className="mb-4 flex items-end justify-between">

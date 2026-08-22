@@ -53,6 +53,11 @@ body {
   html.native-app button:focus-visible {
     opacity: 0.92;
   }
+
+  html.native-app a:focus,
+  html.native-app button:focus {
+    outline: none;
+  }
   
   @keyframes focus-pulse {
     0% {

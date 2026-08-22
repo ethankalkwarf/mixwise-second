@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { MainContainer } from "@/components/layout/MainContainer";
-import { formatIngredientCategory } from "@/lib/formatters";
+import { formatIngredientCategory, formatIngredientName } from "@/lib/formatters";
 import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
 import { lookupIngredient } from "@/lib/ingredientMatching";
 import { searchMixIngredients } from "@/lib/search";
@@ -336,7 +336,7 @@ export function MixCabinet({
                       <div className={`font-medium text-sm leading-tight ${
                         isSelected || isJustAdded ? 'text-charcoal' : 'text-forest'
                       }`}>
-                        {ingredient.name}
+                        {formatIngredientName(ingredient.name)}
                       </div>
                       {isSelected && (
                         <CheckCircleIcon className="w-5 h-5 text-olive mx-auto mt-2" />
@@ -496,7 +496,7 @@ export function MixCabinet({
                       <div className={`font-medium text-sm leading-tight ${
                         isSelected || isJustAdded ? 'text-charcoal' : 'text-forest'
                       }`}>
-                        {ingredient.name}
+                        {formatIngredientName(ingredient.name)}
                       </div>
                       {isSelected && (
                         <CheckCircleIcon className="w-5 h-5 text-olive mx-auto mt-2" />

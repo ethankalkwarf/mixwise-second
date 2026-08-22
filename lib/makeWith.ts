@@ -140,7 +140,7 @@ const MAKE_WITH_GROUP_LABELS: Record<string, string> = {
   mezcal: "Mezcal",
   bourbon: "Bourbon",
   whiskey: "Whiskey",
-  "rye-whiskey": "Rye",
+  "rye-whiskey": "Rye Whiskey",
   cognac: "Cognac",
   pisco: "Pisco",
   amaretto: "Amaretto",

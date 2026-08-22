@@ -124,6 +124,18 @@ Native Stories share uses `StoriesSharePlugin` + `NEXT_PUBLIC_FACEBOOK_APP_ID`.
 
 Share surfaces: Share My Bar, cocktail recipe actions, “I mixed this” after logging a pour, Host Night on Mix results.
 
+## Snapchat Stories (Creative Kit)
+
+Native Snapchat share uses the same `StoriesSharePlugin` + `NEXT_PUBLIC_SNAPCHAT_CLIENT_ID`.
+
+1. Create a Snap Kit app at [developers.snap.com](https://developers.snap.com) and enable **Creative Kit**.
+2. Generate a **Public OAuth 2.0 Client ID** and add it to `.env.local` and Vercel as `NEXT_PUBLIC_SNAPCHAT_CLIENT_ID`.
+3. In **Configure App Setup**, add iOS bundle ID `com.getmixwise.app` (Staging).
+4. On the app version page, set **Attachment Link Domain** to `https://www.getmixwise.com`, upload a 1024×1024 icon, and **Submit For Review**.
+5. Ship a new TestFlight build — Snapchat Stories does not work in the simulator (needs Snapchat installed on device).
+
+Snapchat review can take a few days. Until approved, the yellow Snapchat button may not open Stories successfully.
+
 ## Supabase auth (dev web callback)
 
 When testing magic links against your local dev server, add your LAN callback:

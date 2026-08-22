@@ -1,3 +1,5 @@
+import { formatIngredientName } from "@/lib/formatters";
+
 /**
  * Pull display names from the cocktails.ingredients JSON payload
  * (string lines or nested { ingredient: { name } } objects).
@@ -8,7 +10,7 @@ export function extractCocktailIngredientNames(ingredients: unknown): string[] {
   for (const ing of ingredients) {
     if (typeof ing === "string") {
       const parsed = parseIngredientDisplayName(ing);
-      if (parsed) names.push(parsed);
+      if (parsed) names.push(formatIngredientName(parsed));
       continue;
     }
     if (!ing || typeof ing !== "object") continue;
@@ -24,7 +26,7 @@ export function extractCocktailIngredientNames(ingredients: unknown): string[] {
       (typeof record.text === "string" && record.text) ||
       null;
     const name = raw ? parseIngredientDisplayName(raw) : null;
-    if (name) names.push(name);
+    if (name) names.push(formatIngredientName(name));
   }
   return names;
 }

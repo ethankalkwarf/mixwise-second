@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
 import {
   BeakerIcon,
   ClockIcon,
@@ -16,7 +15,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { formatCocktailName, formatIngredientCategory } from "@/lib/formatters";
 import { FriendsActivityFeed } from "@/components/friends/FriendsActivityFeed";
-import { AppLink } from "@/components/mobile/AppLink";
+import { FavoriteDrinkRow } from "@/components/bar/FavoriteDrinkRow";
 
 type Fav = {
   id: string;
@@ -70,37 +69,19 @@ function FavoritesGrid({ favorites, initial = 8 }: { favorites: Fav[]; initial?:
   }
 
   return (
-    <div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {shown.map((c) => {
-          const slug = c.slug || c.id;
-          const href = slug ? `/cocktails/${encodeURIComponent(slug)}` : "/cocktails";
-          return (
-            <AppLink
-              key={c.id}
-              href={href}
-              className="native-card-link group overflow-hidden rounded-2xl bg-cream/50 ring-1 ring-mist transition hover:bg-cream hover:ring-olive/30"
-            >
-              <div className="relative aspect-[4/5] bg-mist">
-                {c.imageUrl?.startsWith("http") ? (
-                  <Image
-                    src={c.imageUrl}
-                    alt={c.name}
-                    fill
-                    className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                    sizes="(max-width:640px) 50vw, 25vw"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-3xl">🍸</div>
-                )}
-              </div>
-              <p className="px-3 py-2.5 text-sm font-semibold leading-snug text-forest line-clamp-2">
-                {formatCocktailName(c.name)}
-              </p>
-            </AppLink>
-          );
-        })}
-      </div>
+    <div className="space-y-2">
+      {shown.map((c) => {
+        const slug = c.slug || c.id;
+        const href = slug ? `/cocktails/${encodeURIComponent(slug)}` : "/cocktails";
+        return (
+          <FavoriteDrinkRow
+            key={c.id}
+            href={href}
+            name={formatCocktailName(c.name)}
+            imageUrl={c.imageUrl}
+          />
+        );
+      })}
       {remaining > 0 && (
         <button
           type="button"
@@ -186,35 +167,30 @@ export function PublicBarBrowse({
   const tabs: {
     id: Tab;
     label: string;
-    count: number | null;
     Outline: typeof HeartIcon;
     Solid: typeof HeartSolid;
   }[] = [
     {
       id: "highlights",
       label: "Favorite Drinks",
-      count: favorites.length,
       Outline: HeartIcon,
       Solid: HeartSolid,
     },
     {
       id: "activity",
       label: "Activity",
-      count: null,
       Outline: ClockIcon,
       Solid: ClockSolid,
     },
     {
       id: "cocktails",
       label: "Ready to Make",
-      count: cocktailCount,
       Outline: BeakerIcon,
       Solid: BeakerSolid,
     },
     {
       id: "bar",
       label: "Bar Inventory",
-      count: ingredients.length,
       Outline: Squares2X2Icon,
       Solid: SquaresSolid,
     },
@@ -248,15 +224,6 @@ export function PublicBarBrowse({
                 <span className="text-[10px] font-semibold leading-tight sm:text-sm">
                   {t.label}
                 </span>
-                {t.count != null && (
-                  <span
-                    className={`tabular-nums text-[10px] sm:text-xs ${
-                      active ? "font-semibold text-olive" : "text-sage/80"
-                    }`}
-                  >
-                    {t.count}
-                  </span>
-                )}
               </button>
             );
           })}

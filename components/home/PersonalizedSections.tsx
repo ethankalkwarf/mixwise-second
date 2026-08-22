@@ -11,7 +11,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { SectionHeader } from "@/components/common/SectionHeader";
 import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
-import { formatCocktailName, isNewCocktail } from "@/lib/formatters";
+import { formatCocktailName, formatIngredientName, isNewCocktail } from "@/lib/formatters";
 import { randomShuffle } from "@/lib/randomization";
 import { PlusCircleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import type { SanityCocktail, SanityImage } from "@/lib/sanityTypes";
@@ -441,7 +441,7 @@ function OneAwayCard({ cocktail, missingIngredient, onAddIngredient }: OneAwayCa
           </h4>
         </Link>
         <p className="text-sm text-sage mt-1">
-          Missing: <span className="text-forest">{missingIngredient.name}</span>
+          Missing: <span className="text-forest">{formatIngredientName(missingIngredient.name)}</span>
         </p>
         <button
           onClick={(e) => {

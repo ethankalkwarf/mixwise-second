@@ -22,6 +22,7 @@ import { resolveDailyCocktailSlug } from "./dailyCocktailCalendar.server";
 import { debugLog } from "@/lib/debugLog";
 import { extractCocktailIngredientNames } from "@/lib/cocktailIngredientNames";
 import { extractIngredientName, matchIngredientName } from "@/lib/ingredientMatching";
+import { formatIngredientName } from "@/lib/formatters";
 
 const COCKTAILS_CACHE_REVALIDATE_SECONDS = 300;
 
@@ -413,7 +414,9 @@ async function fetchCocktailsWithIngredients(): Promise<CocktailWithIngredientsR
               : null;
 
             const ingredientId = matchedIngredient ? String(matchedIngredient.id) : 'unknown';
-            const ingredientName = matchedIngredient ? matchedIngredient.name : ingredientText || fullText;
+            const ingredientName = formatIngredientName(
+              matchedIngredient ? matchedIngredient.name : ingredientText || fullText
+            );
             const textLooksOptional =
               Boolean(ing.isOptional) ||
               /\boptional\b/i.test(fullText) ||
@@ -433,7 +436,7 @@ async function fetchCocktailsWithIngredients(): Promise<CocktailWithIngredientsR
             if (Array.isArray(parsed)) {
               mappedIngredients = parsed.map((ing: any) => ({
                 id: String(ing.ingredient?.id || ing.id || 'unknown'),
-                name: ing.ingredient?.name || 'Unknown',
+                name: formatIngredientName(ing.ingredient?.name || 'Unknown'),
                 amount: ing.amount || ing.measure || null,
                 isOptional: ing.isOptional || false,
                 notes: ing.notes || null
@@ -780,6 +783,40 @@ export async function getUserFavorites(userId: string): Promise<Array<{
 
   if (error) {
     console.error("Error fetching user favorites:", error);
+    return [];
+  }
+
+  return (data || []) as any;
+}
+
+/**
+ * Get a user's featured drinks (up to 3) for public bar hero.
+ */
+export async function getUserFeaturedDrinks(userId: string): Promise<Array<{
+  cocktail_id: string;
+  cocktail_name: string | null;
+  cocktail_slug: string | null;
+  cocktail_image_url: string | null;
+}>> {
+  const supabase = createServerSupabaseClient();
+
+  const { data: pref, error: prefError } = await supabase
+    .from("user_preferences")
+    .select("public_bar_enabled")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (prefError || !pref?.public_bar_enabled) return [];
+
+  const { data, error } = await supabase
+    .from("profile_featured_drinks")
+    .select("cocktail_id, cocktail_name, cocktail_slug, cocktail_image_url")
+    .eq("user_id", userId)
+    .order("rank", { ascending: true })
+    .limit(3);
+
+  if (error) {
+    console.error("Error fetching featured drinks:", error);
     return [];
   }
 

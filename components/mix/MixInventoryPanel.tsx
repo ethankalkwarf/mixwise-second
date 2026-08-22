@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useRef, useCallback } from "react";
 import type { MixIngredient } from "@/lib/mixTypes";
+import { formatIngredientName } from "@/lib/formatters";
 import { MagnifyingGlassIcon, XMarkIcon, CheckIcon, FunnelIcon } from "@heroicons/react/20/solid";
 
 type Props = {
@@ -26,13 +27,6 @@ const CATEGORY_CONFIG: Record<string, { icon: string; color: string }> = {
 
 const FILTER_CATEGORIES = ["Spirit", "Liqueur", "Mixer", "Garnish", "Bitters", "Syrup", "Citrus"];
 
-// Normalize ingredient names for consistent display
-function normalizeIngredientName(name: string): string {
-  return name
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-}
 
 // Normalize string for accent-insensitive comparison
 // This handles variations like "Blue Curacao" vs "Blue Curaçao"
@@ -326,7 +320,7 @@ export function MixInventoryPanel({ ingredients, selectedIds, onChange, stapleId
                               isSelected ? "text-forest font-semibold" : "text-charcoal"
                             }`}
                           >
-                            {normalizeIngredientName(ing.name)}
+                            {formatIngredientName(ing.name)}
                           </div>
                           <div className="text-sm text-sage mt-0.5">
                             {ing.category || "Other"}

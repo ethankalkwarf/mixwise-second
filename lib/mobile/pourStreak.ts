@@ -98,6 +98,11 @@ export function hasMixedCocktail(slug: string): boolean {
   return Boolean(loadMixedSlugs()[slug]);
 }
 
+/** True if the user has marked any cocktail as mixed. */
+export function hasMixedAny(): boolean {
+  return Object.keys(loadMixedSlugs()).length > 0;
+}
+
 /**
  * Record that the user mixed this cocktail.
  * Streak still advances once per calendar day; mix state is per-slug.
@@ -119,6 +124,10 @@ export function markDrinkMade(slug: string): {
   const isNewForCocktail = mixed[slug] !== today;
   mixed[slug] = today;
   saveMixedSlugs(mixed);
+
+  void import("@/lib/onboardingChecklist").then(({ markChecklistMade }) => {
+    markChecklistMade();
+  });
 
   const streak = computeStreak(dates);
   if (typeof window !== "undefined") {

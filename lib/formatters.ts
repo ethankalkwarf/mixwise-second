@@ -19,28 +19,26 @@ export function isNewCocktail(
   return Date.now() - createdMs < days * 24 * 60 * 60 * 1000;
 }
 
-/**
- * Formats a cocktail name with proper title casing
- * Capitalizes every word except filler words (the, and, a, of) unless they're the first word.
- * Preserves all-caps acronyms from the source (e.g. VDC in "The Yoozh (aka VDC)").
- *
- * Examples:
- * - "tom collins" → "Tom Collins"
- * - "the last word" → "The Last Word"
- * - "gin and tonic" → "Gin and Tonic"
- * - "death of a salesman" → "Death of a Salesman"
- * - "The Yoozh (aka VDC)" → "The Yoozh (aka VDC)"
- */
-export function formatCocktailName(name: string): string {
-  if (!name) return name;
+const COCKTAIL_FILLER_WORDS = new Set(["the", "and", "a", "of", "aka"]);
+const INGREDIENT_FILLER_WORDS = new Set([
+  "the",
+  "and",
+  "a",
+  "of",
+  "de",
+  "di",
+  "du",
+  "au",
+  "with",
+]);
 
-  // Filler words that should remain lowercase (unless first word)
-  const fillerWords = new Set(['the', 'and', 'a', 'of', 'aka']);
+function formatTitleCaseName(name: string, fillerWords: Set<string>): string {
+  if (!name) return name;
 
   // Preserve source all-caps acronyms (2+ letters), ignoring surrounding punctuation
   const acronyms = new Set<string>();
   for (const token of name.split(/[\s-]+/)) {
-    const letters = token.replace(/[^A-Za-z]/g, '');
+    const letters = token.replace(/[^A-Za-z]/g, "");
     if (letters.length >= 2 && letters === letters.toUpperCase()) {
       acronyms.add(letters.toLowerCase());
     }
@@ -68,7 +66,32 @@ export function formatCocktailName(name: string): string {
 
       return prefix + letters + suffix;
     })
-    .join(' '); // Rejoin with spaces
+    .join(" "); // Rejoin with spaces
+}
+
+/**
+ * Formats a cocktail name with proper title casing
+ * Capitalizes every word except filler words (the, and, a, of) unless they're the first word.
+ * Preserves all-caps acronyms from the source (e.g. VDC in "The Yoozh (aka VDC)").
+ *
+ * Examples:
+ * - "tom collins" → "Tom Collins"
+ * - "the last word" → "The Last Word"
+ * - "gin and tonic" → "Gin and Tonic"
+ * - "death of a salesman" → "Death of a Salesman"
+ * - "The Yoozh (aka VDC)" → "The Yoozh (aka VDC)"
+ */
+export function formatCocktailName(name: string): string {
+  return formatTitleCaseName(name, COCKTAIL_FILLER_WORDS);
+}
+
+/**
+ * Formats an ingredient name with consistent title casing for UI lists/cards.
+ * Matched DB names and unmatched recipe fallbacks often differ in casing;
+ * this normalizes both (e.g. "ruby port" / "Orange Peel" → "Ruby Port" / "Orange Peel").
+ */
+export function formatIngredientName(name: string): string {
+  return formatTitleCaseName(name, INGREDIENT_FILLER_WORDS);
 }
 
 /**

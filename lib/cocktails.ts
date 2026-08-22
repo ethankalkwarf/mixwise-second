@@ -17,6 +17,7 @@ import type {
   MixIngredient,
   MixCocktailIngredient
 } from './mixTypes';
+import { formatIngredientName } from "@/lib/formatters";
 
 // =========================
 // CLIENT FUNCTIONS
@@ -230,7 +231,7 @@ async function loadMixIngredients(): Promise<MixIngredient[]> {
 
       return {
         id,
-        name: ingredient.name,
+        name: formatIngredientName(ingredient.name),
         category: (ingredient as { type?: string | null }).type || ingredient.category || 'other',
         imageUrl: ingredient.image_url || null,
         isStaple: ingredient.is_staple || false,
