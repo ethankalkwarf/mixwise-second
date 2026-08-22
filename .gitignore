@@ -11,6 +11,7 @@ node_modules/
 .DS_Store
 **/.DS_Store
 ios-build/
+ios/build/
 out/
 *.tsbuildinfo
 unused-ingredients-backup-*.json
