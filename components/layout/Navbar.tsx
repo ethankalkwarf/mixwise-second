@@ -207,18 +207,6 @@ export function Navbar({ megaMenu }: { megaMenu?: MegaMenuData }) {
             <div className={`hidden lg:flex items-center absolute left-1/2 -translate-x-1/2 ${isAuthenticated ? "gap-3 xl:gap-5" : "gap-4 xl:gap-6"}`}>
               {isAuthenticated && (
                 <HardNavLink
-                  href="/friends"
-                  className={`text-sm font-semibold rounded-full px-3 py-1.5 transition-colors ${
-                    isActive("/friends")
-                      ? "bg-olive/15 text-olive"
-                      : "text-sage hover:text-forest hover:bg-mist/50"
-                  }`}
-                >
-                  Friends
-                </HardNavLink>
-              )}
-              {isAuthenticated && (
-                <HardNavLink
                   href="/dashboard"
                   className={`text-sm font-semibold rounded-full px-3 py-1.5 transition-colors ${
                     isActive("/dashboard")
