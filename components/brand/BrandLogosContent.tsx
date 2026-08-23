@@ -58,7 +58,14 @@ export function BrandLogosContent() {
           </h1>
           <p className="max-w-xl [text-wrap:pretty] text-lg leading-relaxed text-sage">
             Approved lockups, boilerplate, and naming for articles, listings,
-            and partnerships.
+            and partnerships. See also our{" "}
+            <Link
+              href="/partners"
+              className="font-semibold text-forest underline decoration-mist underline-offset-4 hover:text-terracotta"
+            >
+              partners page
+            </Link>
+            .
           </p>
         </div>
 

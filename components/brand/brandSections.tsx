@@ -7,9 +7,18 @@ export function SectionEyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function SectionTitle({ children }: { children: React.ReactNode }) {
+export function SectionTitle({
+  children,
+  id,
+}: {
+  children: React.ReactNode;
+  id?: string;
+}) {
   return (
-    <h2 className="mb-4 [text-wrap:balance] font-display text-3xl leading-tight text-forest sm:text-4xl">
+    <h2
+      id={id}
+      className="mb-4 [text-wrap:balance] font-display text-3xl leading-tight text-forest sm:text-4xl"
+    >
       {children}
     </h2>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { useUser } from "./UserProvider";
 import { useAuthDialog } from "./AuthDialogProvider";
@@ -9,6 +10,9 @@ import { getPreferredAuthMode, preferredAuthCopy } from "@/lib/auth/returning-us
 const SESSION_KEY = "mixwise-signup-prompt-dismissed";
 const COOLDOWN_KEY = "mixwise-signup-prompt-until";
 const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+/** Marketing pages where engagement signup should not interrupt reading. */
+const SIGNUP_PROMPT_DISABLED_PREFIXES = ["/about", "/partners"];
 
 interface SignupPromptProps {
   /** Time on site before signup can open (default: 45s) */
@@ -50,9 +54,15 @@ export function SignupPrompt({
   scrollThreshold = 0.5,
   enabled = true,
 }: SignupPromptProps) {
+  const pathname = usePathname();
   const { isAuthenticated, isLoading } = useUser();
   const { isOpen: authOpen, openPreferredAuthDialog } = useAuthDialog();
   const [blocked, setBlocked] = useState(true);
+
+  const pathDisabled = SIGNUP_PROMPT_DISABLED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+  const promptEnabled = enabled && !pathDisabled;
 
   const openedRef = useRef(false);
   const openedByUsRef = useRef(false);
@@ -61,14 +71,14 @@ export function SignupPrompt({
   const timedOutRef = useRef(false);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!promptEnabled) return;
     if (typeof window === "undefined") return;
     if (Capacitor.isNativePlatform()) {
       setBlocked(true);
       return;
     }
     setBlocked(isCoolingDown());
-  }, [enabled]);
+  }, [promptEnabled]);
 
   const tryOpen = useCallback(() => {
     if (openedRef.current || blocked || isAuthenticated || isLoading || authOpen) {
@@ -97,7 +107,7 @@ export function SignupPrompt({
 
   // Time on site
   useEffect(() => {
-    if (!enabled || blocked || isAuthenticated || isLoading) return;
+    if (!promptEnabled || blocked || isAuthenticated || isLoading) return;
 
     const timer = window.setTimeout(() => {
       timedOutRef.current = true;
@@ -105,11 +115,11 @@ export function SignupPrompt({
     }, delayMs);
 
     return () => window.clearTimeout(timer);
-  }, [blocked, delayMs, enabled, isAuthenticated, isLoading, tryOpen]);
+  }, [blocked, delayMs, promptEnabled, isAuthenticated, isLoading, tryOpen]);
 
   // Clicks + scroll
   useEffect(() => {
-    if (!enabled || blocked || isAuthenticated || isLoading) return;
+    if (!promptEnabled || blocked || isAuthenticated || isLoading) return;
 
     const onClick = (e: MouseEvent) => {
       if (!isMeaningfulClick(e.target)) return;
@@ -135,7 +145,7 @@ export function SignupPrompt({
       window.removeEventListener("click", onClick, true);
       window.removeEventListener("scroll", onScroll);
     };
-  }, [blocked, enabled, isAuthenticated, isLoading, scrollThreshold, tryOpen]);
+  }, [blocked, promptEnabled, isAuthenticated, isLoading, scrollThreshold, tryOpen]);
 
   // When auth closes: cool down if we opened it; otherwise retry if engaged
   useEffect(() => {

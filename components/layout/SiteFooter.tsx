@@ -45,6 +45,7 @@ const FOOTER_COLUMNS: FooterColumn[] = [
     ariaLabel: "About MixWise",
     links: [
       { label: "About MixWise", href: "/about" },
+      { label: "Partners", href: "/partners" },
       { label: "Contact", href: "/contact" },
     ],
   },

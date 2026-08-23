@@ -5,14 +5,26 @@ import { Button } from "@/components/common/Button";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/components/auth/UserProvider";
 
-export function ContactForm() {
+export function ContactForm({
+  defaultMessage = "",
+}: {
+  defaultMessage?: string;
+}) {
   const toast = useToast();
   const { user, profile, isAuthenticated, isLoading } = useUser();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(defaultMessage);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasPopulatedRef = useRef(false);
+  const defaultMessageAppliedRef = useRef(false);
+
+  useEffect(() => {
+    if (defaultMessage && !defaultMessageAppliedRef.current) {
+      setMessage(defaultMessage);
+      defaultMessageAppliedRef.current = true;
+    }
+  }, [defaultMessage]);
 
   // Pre-populate email and name when user is authenticated
   useEffect(() => {
