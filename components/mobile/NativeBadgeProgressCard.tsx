@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { AppLink } from "@/components/mobile/AppLink";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
@@ -9,7 +10,7 @@ import { useUserBadges } from "@/hooks/useUserBadges";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getNextBadgeQuest } from "@/lib/mobile/badgeProgress";
-import { BADGE_LIST, RARITY_COLORS, type BadgeDefinition } from "@/lib/badges";
+import { BADGE_LIST, type BadgeDefinition } from "@/lib/badges";
 import { getMixologistTier, getNextMixologistTier } from "@/lib/mixologistTiers";
 
 type Props = {
@@ -19,7 +20,7 @@ type Props = {
 };
 
 /**
- * Home / Saved badge progress — editorial quest strip, not a SaaS widget card.
+ * Home / Saved badge progress — matches other native home sections.
  */
 export function NativeBadgeProgressCard({ compact = false, hidePreview = false }: Props) {
   const { isAuthenticated, isLoading: authLoading } = useUser();
@@ -48,7 +49,7 @@ export function NativeBadgeProgressCard({ compact = false, hidePreview = false }
       .sort((a, b) => new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime())
       .map((row) => byId.get(row.badge_id))
       .filter((badge): badge is BadgeDefinition => Boolean(badge));
-    return ordered.slice(0, 8);
+    return ordered.slice(0, 7);
   }, [earned, isAuthenticated, rows]);
 
   const tier = useMemo(
@@ -69,11 +70,17 @@ export function NativeBadgeProgressCard({ compact = false, hidePreview = false }
 
   return (
     <section className={margin}>
-      <div className="mb-5 flex items-baseline justify-between gap-3">
-        <h2 className="font-display text-[1.65rem] font-bold leading-none tracking-tight text-forest">
-          Badges
-        </h2>
-        <AppLink href="/badges" className="text-[13px] font-semibold text-terracotta">
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+            Your shelf
+          </p>
+          <h2 className="mt-1 font-display text-2xl font-bold text-forest">Badges</h2>
+        </div>
+        <AppLink
+          href="/badges"
+          className="shrink-0 pb-0.5 text-xs font-semibold tabular-nums text-terracotta"
+        >
           {earnedCount}/{BADGE_LIST.length}
         </AppLink>
       </div>
@@ -89,10 +96,8 @@ export function NativeBadgeProgressCard({ compact = false, hidePreview = false }
             return (
               <span
                 key={badge.id}
-                className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-lg ${
-                  unlocked
-                    ? `bg-gradient-to-br ${RARITY_COLORS[badge.rarity]} shadow-sm`
-                    : "bg-mist/70 opacity-55 grayscale"
+                className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-base ${
+                  unlocked ? "bg-cream" : "bg-mist/60 opacity-50 grayscale"
                 }`}
                 aria-hidden
               >
@@ -100,7 +105,7 @@ export function NativeBadgeProgressCard({ compact = false, hidePreview = false }
               </span>
             );
           })}
-          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-mist/80 text-xs font-bold text-sage">
+          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-mist/50 text-xs font-semibold text-sage">
             +{BADGE_LIST.length - previewBadges.length}
           </span>
         </AppLink>
@@ -122,7 +127,7 @@ export function NativeBadgeProgressCard({ compact = false, hidePreview = false }
                     subtitle: "Create a free account to earn badges and keep your bar in sync.",
                   })
                 }
-                className="text-left text-[13px] font-semibold text-cream/80 underline decoration-cream/25 underline-offset-4"
+                className="text-left text-xs font-semibold text-terracotta"
               >
                 Join free to keep progress
               </button>
@@ -134,6 +139,7 @@ export function NativeBadgeProgressCard({ compact = false, hidePreview = false }
           earnedCount={earnedCount}
           total={BADGE_LIST.length}
           tierName={tier.name}
+          tierEmoji={tier.emoji}
           nextTierName={nextTier?.name ?? null}
           badges={showcaseBadges}
         />
@@ -146,75 +152,64 @@ function CollectionBoard({
   earnedCount,
   total,
   tierName,
+  tierEmoji,
   nextTierName,
   badges,
 }: {
   earnedCount: number;
   total: number;
   tierName: string;
+  tierEmoji: string;
   nextTierName: string | null;
   badges: BadgeDefinition[];
 }) {
   const complete = earnedCount >= total;
+  const overflow = Math.max(0, earnedCount - badges.length);
 
   return (
-    <AppLink href="/badges" className="native-card-link block">
-      <div className="relative overflow-hidden rounded-[1.35rem] bg-forest px-5 py-5 text-cream">
-        <div
-          className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-amber-400/20 blur-2xl"
+    <AppLink
+      href="/badges"
+      className="native-card-link block overflow-hidden rounded-2xl bg-white shadow-sm"
+    >
+      <div className="flex items-center gap-3 px-4 py-4">
+        <span
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cream text-2xl"
           aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -bottom-14 left-4 h-32 w-32 rounded-full bg-terracotta/30 blur-2xl"
-          aria-hidden
-        />
-
-        <div className="relative">
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cream/55">
-              {complete ? "Collection" : "Your shelf"}
-            </p>
-            <p className="font-mono text-[11px] font-bold tabular-nums text-cream/55">
-              {earnedCount}/{total}
-            </p>
-          </div>
-
-          <h3 className="mt-3 font-display text-[1.85rem] font-bold leading-[1.05] tracking-tight text-cream">
-            {tierName}
-          </h3>
-          <p className="mt-2 max-w-[18rem] text-[15px] leading-snug text-cream/70">
+        >
+          {tierEmoji}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-semibold leading-tight text-forest">{tierName}</p>
+          <p className="mt-0.5 text-xs leading-snug text-sage">
             {complete
-              ? "Every badge unlocked — open the gallery anytime."
+              ? `All ${total} badges earned`
               : nextTierName
-                ? `${earnedCount} earned · next level: ${nextTierName}`
-                : `${earnedCount} badge${earnedCount === 1 ? "" : "s"} in your collection`}
-          </p>
-
-          {badges.length > 0 ? (
-            <div className="mt-5 flex flex-wrap gap-2" aria-hidden>
-              {badges.map((badge) => (
-                <span
-                  key={badge.id}
-                  className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-lg shadow-sm ${RARITY_COLORS[badge.rarity]}`}
-                  title={badge.name}
-                >
-                  {badge.icon}
-                </span>
-              ))}
-              {earnedCount > badges.length ? (
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-cream/20 bg-cream/10 text-xs font-bold text-cream/80">
-                  +{earnedCount - badges.length}
-                </span>
-              ) : null}
-            </div>
-          ) : null}
-
-          <p className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-cream">
-            Open gallery
-            <span aria-hidden>→</span>
+                ? `${earnedCount} of ${total} · Next: ${nextTierName}`
+                : `${earnedCount} of ${total} badges`}
           </p>
         </div>
+        <ChevronRightIcon className="h-4 w-4 shrink-0 text-sage/60" aria-hidden />
       </div>
+
+      {badges.length > 0 ? (
+        <div
+          className="flex items-center gap-2 border-t border-mist/70 px-4 py-3"
+          aria-hidden
+        >
+          {badges.map((badge) => (
+            <span
+              key={badge.id}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cream text-base"
+              title={badge.name}
+            >
+              {badge.icon}
+            </span>
+          ))}
+          {overflow > 0 ? (
+            <span className="px-1 text-xs font-semibold tabular-nums text-sage">+{overflow}</span>
+          ) : null}
+        </div>
+      ) : null}
     </AppLink>
   );
 }
@@ -231,49 +226,37 @@ function QuestBoard({
   secondaryAction?: ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-[1.35rem] bg-forest px-5 py-5 text-cream">
-      <div
-        className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-terracotta/25 blur-2xl"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -bottom-12 left-8 h-28 w-28 rounded-full bg-olive/20 blur-2xl"
-        aria-hidden
-      />
-
-      <div className="relative">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cream/55">Up next</p>
-          <p className="font-mono text-[11px] font-bold tabular-nums text-cream/55">
-            {quest.current}/{quest.target}
-          </p>
+    <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+      <AppLink href={href} className="native-card-link block px-4 py-4">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
+          Up next
+        </p>
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-xl font-bold leading-tight text-forest">
+              {quest.badge.name}
+            </h3>
+            <p className="mt-1 text-sm leading-snug text-sage">{quest.cta}</p>
+          </div>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cream text-xl">
+            {quest.badge.icon}
+          </span>
         </div>
 
-        <AppLink href={href} className="native-card-link mt-3 flex flex-col items-start gap-2">
-          <h3 className="font-display text-[1.85rem] font-bold leading-[1.05] tracking-tight text-cream">
-            {quest.badge.name}
-          </h3>
-          <p className="max-w-[18rem] text-[15px] leading-snug text-cream/70">{quest.cta}</p>
-        </AppLink>
-
-        <div className="mt-5 h-[3px] overflow-hidden rounded-full bg-cream/15">
+        <div className="mt-4 h-1 overflow-hidden rounded-full bg-mist">
           <div
             className="h-full rounded-full bg-terracotta transition-all duration-500"
             style={{ width: `${Math.max(pct, pct > 0 ? 4 : 0)}%` }}
           />
         </div>
+        <p className="mt-2 text-xs font-medium tabular-nums text-sage">
+          {quest.current} of {quest.target}
+        </p>
+      </AppLink>
 
-        <div className="mt-4 flex flex-col items-start gap-3">
-          <AppLink
-            href={href}
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-cream"
-          >
-            Continue
-            <span aria-hidden>→</span>
-          </AppLink>
-          {secondaryAction}
-        </div>
-      </div>
+      {secondaryAction ? (
+        <div className="border-t border-mist/70 px-4 py-3">{secondaryAction}</div>
+      ) : null}
     </div>
   );
 }
