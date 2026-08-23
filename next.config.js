@@ -89,6 +89,11 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/brand/press',
+        destination: '/brand/logos',
+        permanent: true,
+      },
+      {
         source: '/brand-preview',
         destination: '/about',
         permanent: true,

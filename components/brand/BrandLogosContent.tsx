@@ -39,7 +39,7 @@ function BoilerplateBlock({
   );
 }
 
-export function BrandPressKitContent() {
+export function BrandLogosContent() {
   return (
     <div className="bg-cream pb-20 pt-10 sm:pt-14 lg:pb-28">
       <MainContainer className="max-w-5xl">
@@ -52,13 +52,13 @@ export function BrandPressKitContent() {
               About MixWise
             </Link>
           </p>
-          <SectionEyebrow>Press & partners</SectionEyebrow>
+          <SectionEyebrow>Brand</SectionEyebrow>
           <h1 className="mb-3 [text-wrap:balance] font-display text-4xl leading-tight text-forest sm:text-5xl">
-            Brand resources
+            Logos
           </h1>
           <p className="max-w-xl [text-wrap:pretty] text-lg leading-relaxed text-sage">
-            Logos, boilerplate, and naming for articles, listings, and
-            partnerships.
+            Approved lockups, boilerplate, and naming for articles, listings,
+            and partnerships.
           </p>
         </div>
 
@@ -104,7 +104,7 @@ export function BrandPressKitContent() {
 
         <section>
           <SectionEyebrow>Downloads</SectionEyebrow>
-          <SectionTitle>Logos and assets</SectionTitle>
+          <SectionTitle>Logo files</SectionTitle>
           <p className="mb-6 max-w-2xl [text-wrap:pretty] text-sage">
             Approved lockups, app icon, and lime mark. SVG preferred; PNG
             included where helpful.

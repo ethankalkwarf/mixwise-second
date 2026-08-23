@@ -1,13 +1,13 @@
 import { generatePageMetadata } from "@/lib/seo";
 
 export const metadata = generatePageMetadata({
-  title: "Brand resources",
+  title: "Logos",
   description:
-    "MixWise brand resources — logos, boilerplate copy, and naming for press and partners.",
-  path: "/brand/press",
+    "MixWise logos and brand kit — approved lockups, boilerplate copy, and naming for partners.",
+  path: "/brand/logos",
 });
 
-export default function BrandPressLayout({
+export default function BrandLogosLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -246,10 +246,10 @@ export function AboutPageContent() {
           </div>
           <p className="mt-8 text-center">
             <Link
-              href="/brand/press"
+              href="/brand/logos"
               className="text-xs text-sage underline decoration-mist underline-offset-4 transition-colors hover:text-forest"
             >
-              Brand resources
+              Logos
             </Link>
           </p>
         </MainContainer>
