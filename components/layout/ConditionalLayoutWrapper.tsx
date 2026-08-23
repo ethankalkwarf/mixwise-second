@@ -23,7 +23,7 @@ export function ConditionalLayoutWrapper({
   const nativeShell = useNativeShell();
   const isNative = forceNative || nativeShell;
 
-  if (pathname.startsWith("/dev") || pathname.startsWith("/brand-preview")) {
+  if (pathname.startsWith("/dev")) {
     return <>{children}</>;
   }
 

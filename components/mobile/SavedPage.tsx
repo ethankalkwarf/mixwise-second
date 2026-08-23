@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -9,12 +9,12 @@ import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import { formatCocktailName } from "@/lib/formatters";
 import { trackEmptyStateSeen } from "@/lib/analytics";
+import { PrivateBarSetting } from "@/components/account/PrivateBarSetting";
 import { FavoriteDrinkRow } from "@/components/bar/FavoriteDrinkRow";
 import {
   HeartIcon,
   ClockIcon,
   ShoppingBagIcon,
-  UserCircleIcon,
   ArrowRightIcon,
   Cog6ToothIcon,
   TrophyIcon,
@@ -26,7 +26,6 @@ import {
   CalendarDaysIcon,
   SparklesIcon,
   Squares2X2Icon,
-  UserGroupIcon,
   ChatBubbleLeftRightIcon,
   EnvelopeIcon,
 } from "@heroicons/react/24/outline";
@@ -37,8 +36,7 @@ import { PullToRefreshContainer } from "@/components/mobile/PullToRefreshContain
 import { refreshNativeShellData } from "@/lib/mobile/refreshNativeData";
 import { AppLink } from "@/components/mobile/AppLink";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
-import { NativeFriendsPromoCard } from "@/components/friends/NativeFriendsPromoCard";
-import { NativePublicProfileCard } from "@/components/mobile/NativePublicProfileCard";
+import { NativeYouSocialSection } from "@/components/mobile/NativeYouSocialSection";
 import { useUser } from "@/components/auth/UserProvider";
 import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
 import { usePreferredAuthMode } from "@/lib/auth/returning-user";
@@ -117,31 +115,23 @@ function SavedPageContent() {
               </h1>
             </div>
           ) : (
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
-                  You
-                </p>
-                <h1 className="mt-1 font-display text-2xl font-bold text-forest">
-                  {givenName ? `Hi, ${givenName}` : activeTab === "favorites" ? "Favorites" : activeTab === "recent" ? "Recent" : "My Bar"}
-                </h1>
-                <p className="text-sm text-sage">
-                  {activeTab === "favorites"
-                    ? "Recipes you've saved"
-                    : activeTab === "recent"
-                      ? "Drinks you've opened"
-                      : "Bottles in your cabinet"}
-                </p>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="font-display text-2xl font-bold text-forest">You</h1>
+                {givenName ? (
+                  <p className="mt-0.5 text-sm text-sage">Hi, {givenName}</p>
+                ) : (
+                  <p className="mt-0.5 text-sm text-sage">Your saves, bar, and profile</p>
+                )}
               </div>
               {isAuthenticated ? (
                 <button
                   type="button"
                   onClick={() => setSettingsView("main")}
-                  className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-sm font-semibold text-forest shadow-sm"
-                  aria-label="Account settings"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-forest shadow-sm"
+                  aria-label="Settings"
                 >
-                  <Cog6ToothIcon className="h-4 w-4" />
-                  Settings
+                  <Cog6ToothIcon className="h-5 w-5" />
                 </button>
               ) : (
                 <button
@@ -166,7 +156,7 @@ function SavedPageContent() {
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                      native-compact-cta inline-flex items-center gap-2 px-4 py-2 rounded-2xl font-semibold text-sm whitespace-nowrap
+                      native-compact-cta inline-flex h-9 items-center gap-1.5 rounded-2xl px-3.5 text-sm font-semibold whitespace-nowrap
                       transition-colors outline-none focus:outline-none focus-visible:outline-none
                       ${
                         isActive
@@ -206,74 +196,81 @@ function SavedPageContent() {
           <>
             <NativeNamePrompt />
 
-            {isAuthenticated ? <NativePublicProfileCard /> : null}
-            {isAuthenticated ? <NativeFriendsPromoCard /> : null}
-
-            <div className="mb-6">
+            {/* Tab content first — so Favorites/Recent/My Bar match the selected chip */}
+            <div className="mb-8">
               {activeTab === "favorites" && <FavoritesTab favorites={favorites} loading={favsLoading} />}
               {activeTab === "recent" && <RecentTab recent={recentlyViewed} loading={recentLoading} />}
               {activeTab === "bar" && <BarTab />}
             </div>
 
-            <section className="mb-6 mt-2">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-terracotta">
-                Explore
-              </p>
-              <div className="divide-y divide-mist/70">
-                <ExploreRow
-                  href="/cocktail-of-the-day"
-                  icon={SparklesIcon}
-                  label="Drink of the Day"
-                  description="Today's featured pour"
-                />
-                <ExploreRow
-                  href="/cocktails?browse=collections"
-                  icon={CalendarDaysIcon}
-                  label="Collections"
-                  description="Seasons, holidays, and styles"
-                />
-                <ExploreRow
-                  href="/learn"
-                  icon={BookOpenIcon}
-                  label="Learn"
-                  description="Guides, methods, and courses"
-                />
-                <ExploreRow
-                  href="/ingredients"
-                  icon={BeakerIcon}
-                  label="Ingredients"
-                  description="Guides and bottle picks"
-                />
-                <ExploreRow
-                  href="/shopping-list"
-                  icon={ShoppingBagIcon}
-                  label="Shopping list"
-                  description="What to pick up next"
-                />
-                <ExploreRow
-                  href="/friends"
-                  icon={UserGroupIcon}
-                  label="Friends"
-                  description="Invite, follow, and activity"
-                />
-                <ExploreRow
-                  href="/badges"
-                  icon={TrophyIcon}
-                  label="Badges"
-                  description="See what you've earned"
-                />
-                <ExploreRow
-                  href="/contact"
-                  icon={ChatBubbleLeftRightIcon}
-                  label="Contact us"
-                  description="Questions, feedback, or ideas"
-                />
-              </div>
-            </section>
+            {/* Social — friends + public bar in one hub */}
+            {isAuthenticated ? <NativeYouSocialSection /> : null}
+
+            <YouGroupedSection title="Explore">
+              <ExploreRow
+                href="/cocktail-of-the-day"
+                icon={SparklesIcon}
+                label="Drink of the Day"
+                description="Today's featured pour"
+              />
+              <ExploreRow
+                href="/cocktails?browse=collections"
+                icon={CalendarDaysIcon}
+                label="Collections"
+                description="Seasons, holidays, and styles"
+              />
+              <ExploreRow
+                href="/learn"
+                icon={BookOpenIcon}
+                label="Learn"
+                description="Guides, methods, and courses"
+              />
+              <ExploreRow
+                href="/ingredients"
+                icon={BeakerIcon}
+                label="Ingredients"
+                description="Guides and bottle picks"
+              />
+              <ExploreRow
+                href="/shopping-list"
+                icon={ShoppingBagIcon}
+                label="Shopping list"
+                description="What to pick up next"
+              />
+              <ExploreRow
+                href="/badges"
+                icon={TrophyIcon}
+                label="Badges"
+                description="See what you've earned"
+              />
+              <ExploreRow
+                href="/contact"
+                icon={ChatBubbleLeftRightIcon}
+                label="Contact us"
+                description="Questions, feedback, or ideas"
+              />
+            </YouGroupedSection>
           </>
         )}
       </div>
     </PullToRefreshContainer>
+  );
+}
+
+function YouGroupedSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mb-6">
+      <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-widest text-sage">
+        {title}
+      </p>
+      <div className="overflow-hidden rounded-3xl bg-white shadow-sm">{children}</div>
+    </section>
   );
 }
 
@@ -291,16 +288,16 @@ function ExploreRow({
   return (
     <AppLink
       href={href}
-      className="native-menu-row flex w-full items-center gap-3 px-1 py-3.5 text-left outline-none focus:outline-none focus-visible:outline-none active:opacity-70"
+      className="native-menu-row flex w-full min-h-[3.25rem] items-center gap-3 border-t border-mist/70 px-4 py-3 text-left outline-none first:border-t-0 focus:outline-none focus-visible:outline-none active:bg-mist/30"
     >
-      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-cream text-forest">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cream text-forest">
         <Icon className="h-5 w-5" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block font-semibold text-forest">{label}</span>
-        <span className="block text-xs text-sage">{description}</span>
+        <span className="block text-[15px] font-semibold leading-tight text-forest">{label}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-sage">{description}</span>
       </span>
-      <ArrowRightIcon className="h-4 w-4 flex-shrink-0 text-sage" />
+      <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage/60" />
     </AppLink>
   );
 }
@@ -581,65 +578,85 @@ function SettingsScreen({ onOpenTabBar }: { onOpenTabBar: () => void }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-3xl bg-white px-4 py-4 shadow-sm">
+    <div className="space-y-6">
+      <div className="overflow-hidden rounded-3xl bg-white px-4 py-4 shadow-sm">
         <p className="font-display text-lg font-bold text-forest">{displayName}</p>
         <p className="truncate text-sm text-sage">{user?.email}</p>
-      </div>
-
-      <NotificationSettings />
-      <BiometricSettings />
-      <OfflineDataSettings />
-
-      <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
-        <button
-          type="button"
-          onClick={onOpenTabBar}
-          className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left"
-        >
-          <Squares2X2Icon className="h-5 w-5 flex-shrink-0 text-sage" />
-          <span className="min-w-0 flex-1">
-            <span className="block font-medium text-forest">Tab bar</span>
-            <span className="block text-xs text-sage">Customize bottom navigation</span>
-          </span>
-          <ArrowRightIcon className="h-4 w-4 flex-shrink-0 text-sage" />
-        </button>
-      </div>
-
-      <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
-        <AppLink href="/account" className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left">
-          <UserCircleIcon className="h-5 w-5 flex-shrink-0 text-sage" />
-          <span className="min-w-0 flex-1 font-medium text-forest">Account</span>
-          <ArrowRightIcon className="h-4 w-4 text-sage" />
-        </AppLink>
         <AppLink
-          href="/contact"
-          className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left"
+          href="/account"
+          className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-olive"
         >
-          <EnvelopeIcon className="h-5 w-5 flex-shrink-0 text-sage" />
-          <span className="min-w-0 flex-1 font-medium text-forest">Contact us</span>
-          <ArrowRightIcon className="h-4 w-4 text-sage" />
+          Edit profile & featured drinks
+          <ArrowRightIcon className="h-4 w-4" />
         </AppLink>
-        <ShareBarButton
-          variant="menu"
-          className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left text-[15px] font-medium text-forest"
-        />
-        <button
-          type="button"
-          onClick={() => replayNativeIntro()}
-          className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left"
-        >
-          <QuestionMarkCircleIcon className="h-5 w-5 flex-shrink-0 text-sage" />
-          <span className="min-w-0 flex-1 font-medium text-forest">How MixWise works</span>
-        </button>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left"
-        >
-          <ArrowRightOnRectangleIcon className="h-5 w-5 flex-shrink-0 text-terracotta" />
-          <span className="min-w-0 flex-1 font-medium text-terracotta">Sign out</span>
-        </button>
+      </div>
+
+      <div>
+        <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-widest text-sage">
+          Preferences
+        </p>
+        <div className="space-y-3">
+          <NotificationSettings />
+          <BiometricSettings />
+          <OfflineDataSettings />
+          <PrivateBarSetting className="rounded-3xl bg-white px-4 py-3.5 shadow-sm" />
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-widest text-sage">
+          App
+        </p>
+        <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+          <button
+            type="button"
+            onClick={onOpenTabBar}
+            className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left"
+          >
+            <Squares2X2Icon className="h-5 w-5 flex-shrink-0 text-sage" />
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium text-forest">Tab bar</span>
+              <span className="block text-xs text-sage">Customize bottom navigation</span>
+            </span>
+            <ArrowRightIcon className="h-4 w-4 flex-shrink-0 text-sage" />
+          </button>
+          <button
+            type="button"
+            onClick={() => replayNativeIntro()}
+            className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left"
+          >
+            <QuestionMarkCircleIcon className="h-5 w-5 flex-shrink-0 text-sage" />
+            <span className="min-w-0 flex-1 font-medium text-forest">How MixWise works</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-widest text-sage">
+          Support
+        </p>
+        <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+          <AppLink
+            href="/contact"
+            className="native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left"
+          >
+            <EnvelopeIcon className="h-5 w-5 flex-shrink-0 text-sage" />
+            <span className="min-w-0 flex-1 font-medium text-forest">Contact us</span>
+            <ArrowRightIcon className="h-4 w-4 text-sage" />
+          </AppLink>
+          <ShareBarButton
+            variant="menu"
+            className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left text-[15px] font-medium text-forest"
+          />
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="native-menu-row flex w-full items-center gap-3 border-t border-mist/70 px-4 py-3.5 text-left"
+          >
+            <ArrowRightOnRectangleIcon className="h-5 w-5 flex-shrink-0 text-terracotta" />
+            <span className="min-w-0 flex-1 font-medium text-terracotta">Sign out</span>
+          </button>
+        </div>
       </div>
     </div>
   );

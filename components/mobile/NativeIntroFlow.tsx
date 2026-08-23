@@ -474,8 +474,10 @@ export function NativePostAuthNudge() {
       email: user?.email,
     });
 
+  const needsUsername = isAuthenticated && !isLoading && !profile?.username;
+
   useEffect(() => {
-    if (!native || isLoading || !isAuthenticated || needsName) return;
+    if (!native || isLoading || !isAuthenticated || needsName || needsUsername) return;
     try {
       const key = "mixwise_native_post_auth_nudge";
       if (localStorage.getItem(key) === "1") return;
@@ -485,13 +487,15 @@ export function NativePostAuthNudge() {
     } catch {
       /* ignore */
     }
-  }, [native, isLoading, isAuthenticated, needsName]);
+  }, [native, isLoading, isAuthenticated, needsName, needsUsername]);
 
   if (!native || isLoading || !isAuthenticated) return null;
 
   if (needsName) {
     return <NativeNamePrompt variant="sheet" />;
   }
+
+  if (needsUsername) return null;
 
   if (!cabinetVisible) return null;
 

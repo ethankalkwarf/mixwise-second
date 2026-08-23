@@ -9,7 +9,6 @@ import { ListeningTrackPicker } from "@/components/account/ListeningTrackPicker"
 import { getMixologistTier } from "@/lib/mixologistTiers";
 import { listeningUnlocked } from "@/lib/listening";
 import { getBarSharePath } from "@/lib/barShare";
-import { getShareOrigin } from "@/lib/shareOrigin";
 import { optimizeAvatarUrl } from "@/lib/avatarUrl";
 import {
   UserCircleIcon,
@@ -18,7 +17,6 @@ import {
   ArrowLeftIcon,
   TrashIcon,
   GlobeAltIcon,
-  LockClosedIcon,
   EnvelopeIcon,
   TrophyIcon,
   UsersIcon,
@@ -30,6 +28,7 @@ import { usePreferredAuthMode } from "@/lib/auth/returning-user";
 import { ShareBarButton } from "@/components/bar/ShareBarButton";
 import { FeaturedDrinksPicker } from "@/components/bar/FeaturedDrinksPicker";
 import { AvatarUploader } from "@/components/account/AvatarUploader";
+import { PrivateBarSetting } from "@/components/account/PrivateBarSetting";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
@@ -572,13 +571,6 @@ export default function AccountPage() {
   const metaClass = "text-xs text-sage";
   const isDesktop = !nativeShell && layoutTier === "desktop";
 
-  const copyPublicBarLink = () => {
-    if (!publicBarPath) return;
-    const url = `${getShareOrigin()}${publicBarPath}`;
-    void navigator.clipboard.writeText(url);
-    toast.success("Public bar link copied");
-  };
-
   const identityDetails = (
     <>
       <p className="truncate text-xl font-semibold tracking-tight text-forest sm:text-2xl">
@@ -603,6 +595,19 @@ export default function AccountPage() {
           )}
         </p>
       </div>
+      {showPublicBarLink && !nativeShell && !isDesktop ? (
+        <AppLink
+          href={publicBarPath!}
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-olive"
+        >
+          <EyeIcon className="h-4 w-4" />
+          View public bar
+        </AppLink>
+      ) : !showPublicBarLink ? (
+        <p className="mt-3 text-xs text-sage">
+          Turn on your public bar in More so friends can find you.
+        </p>
+      ) : null}
     </>
   );
 
@@ -667,7 +672,7 @@ export default function AccountPage() {
         />
         <p className={`mt-1.5 ${metaClass}`}>
           {bioInput.length}/160 · Shown on your public bar
-          {!preferences?.public_bar_enabled && " (enable Public Bar below)"}
+          {!preferences?.public_bar_enabled && " (turn on in More below)"}
         </p>
       </div>
       <div id="account-soundtrack" className="border-t border-mist/70 pt-4 scroll-mt-24">
@@ -713,52 +718,10 @@ export default function AccountPage() {
           onUploaded={async () => {
             await refreshProfile().catch(() => undefined);
           }}
-          details={
-            <>
-              {identityDetails}
-              {showPublicBarLink ? (
-                <AppLink
-                  href={publicBarPath!}
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-olive/10 px-3 py-1.5 text-sm font-semibold text-olive transition hover:bg-olive/15"
-                >
-                  <EyeIcon className="h-4 w-4" />
-                  View my public bar
-                </AppLink>
-              ) : (
-                <p className="mt-3 text-xs text-sage">
-                  Turn on Public bar below so friends can find you.
-                </p>
-              )}
-            </>
-          }
+          details={identityDetails}
         />
 
         <div className="mt-6 space-y-4 border-t border-mist/70 pt-6">
-          {showPublicBarLink && !isDesktop && (
-            <div className="flex flex-col gap-2 rounded-xl border border-olive/20 bg-olive/[0.06] px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-forest">Your public bar</p>
-                <p className="mt-0.5 truncate font-mono text-xs text-sage">
-                  /bar/{shareableBarUrl}
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-2">
-                <AppLink
-                  href={publicBarPath!}
-                  className="inline-flex items-center justify-center rounded-xl bg-olive px-3 py-2 text-sm font-medium text-cream transition hover:bg-olive-dark"
-                >
-                  Open
-                </AppLink>
-                <button
-                  type="button"
-                  onClick={copyPublicBarLink}
-                  className="inline-flex items-center justify-center rounded-xl border border-mist bg-white px-3 py-2 text-sm font-medium text-forest transition hover:border-olive/40"
-                >
-                  Copy link
-                </button>
-              </div>
-            </div>
-          )}
           {profileFields}
           <div id="featured-drinks" className="scroll-mt-24 border-t border-mist/70 pt-6">
             <p className={rowTitleClass}>Featured drinks</p>
@@ -776,46 +739,35 @@ export default function AccountPage() {
 
   const desktopIdentityHero = (
     <section className={cardClass}>
-      <div className="flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:p-10">
-        <AvatarUploader
-          avatarUrl={avatarUrl}
-          displayName={displayName}
-          size="lg"
-          onUploaded={async () => {
-            await refreshProfile().catch(() => undefined);
-          }}
-          details={identityDetails}
-        />
-        <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end">
+      <div className="flex flex-col gap-6 p-8 lg:flex-row lg:items-start lg:justify-between lg:gap-10 lg:p-10">
+        <div className="min-w-0 flex-1">
+          <AvatarUploader
+            avatarUrl={avatarUrl}
+            displayName={displayName}
+            size="lg"
+            onUploaded={async () => {
+              await refreshProfile().catch(() => undefined);
+            }}
+            details={identityDetails}
+          />
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2 lg:justify-end lg:pt-1">
           {showPublicBarLink ? (
-            <>
-              <AppLink
-                href={publicBarPath!}
-                className="inline-flex items-center gap-2 rounded-xl bg-olive px-4 py-2.5 text-sm font-semibold text-cream transition hover:bg-olive-dark"
-              >
-                <EyeIcon className="h-4 w-4 shrink-0" />
-                View public bar
-              </AppLink>
-              <button
-                type="button"
-                onClick={copyPublicBarLink}
-                className="inline-flex items-center gap-2 rounded-xl border border-mist bg-white px-4 py-2.5 text-sm font-medium text-forest transition hover:border-olive/35"
-              >
-                Copy link
-              </button>
-            </>
+            <AppLink
+              href={publicBarPath!}
+              className="inline-flex items-center gap-2 rounded-xl bg-olive px-4 py-2.5 text-sm font-semibold text-cream transition hover:bg-olive-dark"
+            >
+              <EyeIcon className="h-4 w-4 shrink-0" />
+              View public bar
+            </AppLink>
           ) : (
             <p className="max-w-xs text-sm text-sage lg:text-right">
-              Turn on your public bar in Visibility to share a profile link.
+              Turn on your public bar in More to share a profile link.
             </p>
           )}
-          {ingredientIds.length > 0 && (
-            <ShareBarButton
-              variant="inline"
-              showPreview={false}
-              className="inline-flex items-center gap-2 rounded-xl border border-mist bg-white py-2.5 pl-[1.125rem] pr-4 text-sm font-medium text-forest transition hover:border-olive/35 disabled:opacity-50"
-            />
-          )}
+          {shareableBarUrl ? (
+            <ShareBarButton variant="icon" showPreview={false} />
+          ) : null}
         </div>
       </div>
     </section>
@@ -843,128 +795,6 @@ export default function AccountPage() {
       </span>
       <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
     </AppLink>
-  );
-
-  const publicBarSection = (
-    <section className={cardClass}>
-      <div className="border-b border-mist/70 px-5 py-4 sm:px-6">
-        <h2 className={sectionTitleClass}>Visibility</h2>
-        <p className={rowDescClass}>Who can see your cabinet and share link</p>
-      </div>
-
-      <div className="divide-y divide-mist/70">
-        <div className="flex items-start justify-between gap-4 px-5 py-4 sm:px-6">
-          <div className="flex min-w-0 items-start gap-3">
-            {preferences?.public_bar_enabled ? (
-              <GlobeAltIcon className="mt-0.5 h-5 w-5 shrink-0 text-olive" />
-            ) : (
-              <LockClosedIcon className="mt-0.5 h-5 w-5 shrink-0 text-sage" />
-            )}
-            <div className="min-w-0">
-              <p className={rowTitleClass}>Public bar profile</p>
-              <p className={rowDescClass}>
-                {preferences?.public_bar_enabled
-                  ? "Visible to anyone with the link"
-                  : "Private — only you can see your bar"}
-              </p>
-            </div>
-          </div>
-          <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
-            <input
-              type="checkbox"
-              className="peer sr-only"
-              checked={preferences?.public_bar_enabled || false}
-              onChange={(e) => handleTogglePublicBar(e.target.checked)}
-            />
-            <div className="peer h-6 w-11 rounded-full bg-stone/30 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-white after:bg-white after:transition-all after:content-[''] peer-checked:bg-terracotta peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-terracotta/25"></div>
-          </label>
-        </div>
-
-        {preferences?.public_bar_enabled && shareableBarUrl && (
-          <div className="space-y-3 bg-olive/[0.03] px-5 py-4 sm:px-6">
-            <p className="text-sm text-sage">Your share link</p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-              <code className="min-w-0 break-all rounded-xl border border-mist bg-cream/80 px-3 py-2 font-mono text-sm text-forest">
-                {typeof window !== "undefined"
-                  ? `${window.location.origin}/bar/${shareableBarUrl}`
-                  : `/bar/${shareableBarUrl}`}
-              </code>
-              <button
-                onClick={() => {
-                  const url = `${typeof window !== "undefined" ? window.location.origin : ""}/bar/${shareableBarUrl}`;
-                  navigator.clipboard.writeText(url);
-                  toast.success("Link copied to clipboard!");
-                }}
-                className="native-compact-cta shrink-0 rounded-xl bg-terracotta px-4 py-2 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark sm:self-center"
-              >
-                Copy
-              </button>
-            </div>
-            {!profile?.username && profile?.public_slug && profile?.display_name && (
-              <div className="space-y-3 border-t border-olive/15 pt-3">
-                <p className="text-sm leading-relaxed text-sage">
-                  <strong>Tip:</strong> Set a username from your display name for a cleaner link:
-                </p>
-                <code className="block min-w-0 break-all rounded-xl border border-mist bg-cream px-3 py-2 font-mono text-xs text-forest">
-                  /bar/{generateDefaultUsername() || "username"}
-                </code>
-                <button
-                  onClick={async () => {
-                    const suggestedUsername = generateDefaultUsername();
-                    if (!suggestedUsername) {
-                      toast.error("Unable to generate username from display name");
-                      return;
-                    }
-
-                    if (profile?.username?.toLowerCase() === suggestedUsername.toLowerCase()) {
-                      toast.success("You already have this username!");
-                      await refreshProfile();
-                      return;
-                    }
-
-                    setIsCheckingUsername(true);
-                    try {
-                      const result = await updateUsername(suggestedUsername);
-                      if (result.success) {
-                        toast.success("Username set! Your bar URL has been updated.");
-                        await refreshProfile();
-                      } else if (result.error?.includes("taken") || result.error?.includes("already")) {
-                        toast.error("This username is already taken. Please choose a different one.");
-                        setUsernameInput(suggestedUsername);
-                        setShowUsernameInput(true);
-                      } else {
-                        toast.error(result.error || "Failed to set username");
-                      }
-                    } catch (err) {
-                      console.error("Error setting username:", err);
-                      toast.error("An error occurred. Please try again.");
-                    } finally {
-                      setIsCheckingUsername(false);
-                    }
-                  }}
-                  disabled={isCheckingUsername}
-                  className="native-menu-row flex w-full items-center justify-center rounded-xl bg-olive/15 px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-olive/25 disabled:opacity-50"
-                >
-                  {isCheckingUsername
-                    ? "Setting..."
-                    : `Set username: ${generateDefaultUsername() || "username"}`}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {preferences?.public_bar_enabled && !shareableBarUrl && (
-          <div className="bg-amber-50/80 px-5 py-4 sm:px-6">
-            <h4 className={rowTitleClass}>Username required</h4>
-            <p className="mt-1 text-sm text-sage">
-              You need to set a username to make your bar fully public. Toggle again to set one.
-            </p>
-          </div>
-        )}
-
-      </div>
-    </section>
   );
 
   const emailSection = (
@@ -1083,25 +913,27 @@ export default function AccountPage() {
 
         {friendsLink}
 
-        <button
-          type="button"
-          onClick={() => {
-            const el = document.getElementById("account-soundtrack");
-            el?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }}
-          className={menuRowClass}
-        >
-          <MusicalNoteIcon className="h-5 w-5 shrink-0 text-olive" />
-          <span className="min-w-0 flex-1">
-            <span className={`block ${rowTitleClass}`}>Bar soundtrack</span>
-            <span className={`block ${rowDescClass}`}>
-              {profile?.listening_track_name
-                ? `${profile.listening_track_name} · ${profile.listening_track_artist}`
-                : "Add a song to your public bar"}
+        {layoutTier === "phone" ? (
+          <button
+            type="button"
+            onClick={() => {
+              const el = document.getElementById("account-soundtrack");
+              el?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
+            className={menuRowClass}
+          >
+            <MusicalNoteIcon className="h-5 w-5 shrink-0 text-olive" />
+            <span className="min-w-0 flex-1">
+              <span className={`block ${rowTitleClass}`}>Bar soundtrack</span>
+              <span className={`block ${rowDescClass}`}>
+                {profile?.listening_track_name
+                  ? `${profile.listening_track_name} · ${profile.listening_track_artist}`
+                  : "Add a song to your public bar"}
+              </span>
             </span>
-          </span>
-          <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
-        </button>
+            <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
+          </button>
+        ) : null}
 
         <AppLink href="/badges" className={menuRowClass}>
           <TrophyIcon className="h-5 w-5 shrink-0 text-olive" />
@@ -1125,9 +957,25 @@ export default function AccountPage() {
           <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
         </AppLink>
 
-        <button type="button" onClick={clearHistory} className={menuRowClass}>
+        <button
+          type="button"
+          onClick={() => {
+            if (
+              !window.confirm(
+                "Clear your recently viewed drinks? This only removes browsing history — favorites and your bar stay intact."
+              )
+            ) {
+              return;
+            }
+            void clearHistory();
+          }}
+          className={menuRowClass}
+        >
           <TrashIcon className="h-5 w-5 shrink-0 text-sage group-hover:text-forest" />
-          <span className={`min-w-0 flex-1 ${rowTitleClass}`}>Clear history</span>
+          <span className="min-w-0 flex-1">
+            <span className={`block ${rowTitleClass}`}>Clear history</span>
+            <span className={`block ${rowDescClass}`}>Remove recently viewed drinks</span>
+          </span>
           <ArrowRightIcon className="h-4 w-4 shrink-0 text-sage group-hover:text-forest" />
         </button>
 
@@ -1138,7 +986,16 @@ export default function AccountPage() {
         </button>
 
         {(nativeShell || layoutTier === "phone") && (
-          <div className="bg-cream/40">{emailQuietRow}</div>
+          <div className="divide-y divide-mist/50 bg-cream/40">
+            <PrivateBarSetting className="px-5 py-3.5 sm:px-6" />
+            {emailQuietRow}
+          </div>
+        )}
+
+        {!nativeShell && layoutTier !== "phone" && (
+          <div className="divide-y divide-mist/50 bg-cream/40">
+            <PrivateBarSetting className="px-5 py-3.5 sm:px-6" />
+          </div>
         )}
       </div>
     </section>
@@ -1226,11 +1083,15 @@ export default function AccountPage() {
                 <h1 className="font-display text-2xl font-bold text-forest">Account</h1>
                 <p className="text-sm text-sage">Profile and preferences</p>
               </div>
+              {shareableBarUrl ? (
+                <ShareBarButton variant="icon" showPreview={false} />
+              ) : (
+                <span className="h-10 w-10 shrink-0" aria-hidden />
+              )}
             </div>
           </div>
           <div className="space-y-4 px-4 pt-4">
             {profileSection}
-            {publicBarSection}
             {shortcutsSection}
           </div>
         </PullToRefreshContainer>
@@ -1241,12 +1102,14 @@ export default function AccountPage() {
 
   const phoneLayout = (
     <div className="mx-auto max-w-xl space-y-6">
-      <header className="pb-1">
-        <h1 className="font-serif text-3xl font-bold text-forest">Account</h1>
-        <p className="mt-1 text-sm text-sage">Profile, visibility, and preferences</p>
+      <header className="flex items-start justify-between gap-3 pb-1">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-forest">Account</h1>
+          <p className="mt-1 text-sm text-sage">Profile and preferences</p>
+        </div>
+        {shareableBarUrl ? <ShareBarButton variant="icon" showPreview={false} /> : null}
       </header>
       {profileSection}
-      {publicBarSection}
       {shortcutsSection}
     </div>
   );
@@ -1268,7 +1131,6 @@ export default function AccountPage() {
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)]">
           {profileDetailsCard}
           <aside className="space-y-5 lg:sticky lg:top-24">
-            {publicBarSection}
             {emailSection}
             {shortcutsSection}
           </aside>

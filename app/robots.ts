@@ -22,6 +22,8 @@ export default function robots(): MetadataRoute.Robots {
     "/shopping-list",
     "/dev",
     "/dev/",
+    "/brand/system",
+    "/brand/system/",
   ];
   if (!isLearnPublic()) {
     disallow.push("/learn", "/learn/");

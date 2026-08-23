@@ -820,7 +820,30 @@ export async function getUserFeaturedDrinks(userId: string): Promise<Array<{
     return [];
   }
 
-  return (data || []) as any;
+  const rows = (data || []) as Array<{
+    cocktail_id: string;
+    cocktail_name: string | null;
+    cocktail_slug: string | null;
+    cocktail_image_url: string | null;
+  }>;
+
+  if (rows.length === 0) return [];
+
+  // Prefer live catalog images — stored URLs can be null/stale
+  const ids = rows.map((r) => r.cocktail_id);
+  const { data: cocktails } = await supabase
+    .from("cocktails")
+    .select("id, image_url")
+    .in("id", ids);
+
+  const imageById = new Map(
+    (cocktails || []).map((c) => [c.id as string, (c.image_url as string | null) || null])
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    cocktail_image_url: imageById.get(row.cocktail_id) || row.cocktail_image_url,
+  }));
 }
 
 /**

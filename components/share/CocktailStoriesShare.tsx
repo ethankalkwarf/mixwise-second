@@ -208,10 +208,16 @@ export function CocktailStoriesShare({
     content: cocktail.slug,
   });
 
+  const shareText =
+    variant === "mixed"
+      ? `I just mixed a ${formatCocktailName(cocktail.name)} on MixWise —`
+      : `Check out this ${formatCocktailName(cocktail.name)} recipe on MixWise —`;
+
   return (
     <StoriesShareButtons
       entity="cocktail"
       shareUrl={shareUrl}
+      shareText={shareText}
       compact={compact}
       className={className}
       stickerWidth={STICKER_W}

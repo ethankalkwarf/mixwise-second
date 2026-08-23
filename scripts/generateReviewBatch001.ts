@@ -528,7 +528,7 @@ const drafts: Draft[] = [
       '1. Dry-shake pisco, lemon juice, simple syrup, and egg white without ice. 2. Add ice and shake again until cold. 3. Fine-strain into a chilled coupe. 4. Dot Angostura bitters on the foam.',
   },
   {
-    slug: 'vesper',
+    slug: 'vesper-martini',
     name: 'Vesper',
     short_description:
       'A shaken Martini variation of gin, vodka, and Lillet Blanc from Casino Royale.',
@@ -735,7 +735,7 @@ const drafts: Draft[] = [
       '1. Add gin, dry vermouth, maraschino, absinthe, and orange bitters to a mixing glass with ice. 2. Stir until well chilled. 3. Strain into a chilled coupe. 4. Garnish with a brandied cherry or lemon twist.',
   },
   {
-    slug: 'army-navy',
+    slug: 'army-and-navy',
     name: "Army & Navy",
     short_description:
       'A gin sour flavored with orgeat and lemon for almond richness.',

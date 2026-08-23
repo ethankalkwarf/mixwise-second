@@ -89,6 +89,16 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/brand-preview',
+        destination: '/about',
+        permanent: true,
+      },
+      {
+        source: '/brand',
+        destination: '/about',
+        permanent: true,
+      },
+      {
         source: '/account-benefits',
         destination: '/about',
         permanent: true,

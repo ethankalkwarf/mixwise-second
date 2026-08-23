@@ -107,6 +107,14 @@ function notificationIds(): Array<{ id: number }> {
   return Array.from({ length: FORECAST_DAYS }, (_, i) => ({ id: NOTIFICATION_ID_BASE + i }));
 }
 
+function hrefForDrinkNotification(extra: Record<string, unknown> | undefined): string {
+  const slug = typeof extra?.slug === "string" ? extra.slug.trim() : "";
+  if (slug && /^[a-z0-9-]+$/i.test(slug)) {
+    return `/cocktails/${encodeURIComponent(slug)}?daily=true`;
+  }
+  return "/cocktail-of-the-day";
+}
+
 function scheduleDateForDay(dateKey: string, hour: number, minute: number): Date | null {
   const parts = dateKey.split("-").map((part) => Number.parseInt(part, 10));
   if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return null;
@@ -374,7 +382,10 @@ export function registerNotificationDeepLinks(): () => void {
   void LocalNotifications.addListener("localNotificationActionPerformed", (event) => {
     const type = event.notification.extra?.type;
     if (type === "drink_of_the_day") {
-      requestInAppNavigation("/cocktail-of-the-day", "notification");
+      requestInAppNavigation(
+        hrefForDrinkNotification(event.notification.extra),
+        "notification"
+      );
     }
   }).then((handle) => {
     removeListener = () => handle.remove();

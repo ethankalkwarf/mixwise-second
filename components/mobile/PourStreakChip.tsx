@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Capacitor } from "@capacitor/core";
 import { FireIcon } from "@heroicons/react/24/solid";
 import { getPourStreak, POUR_STREAK_EVENT } from "@/lib/mobile/pourStreak";
 
@@ -9,12 +8,11 @@ type Props = {
   variant?: "light" | "dark";
 };
 
-/** Small streak indicator for the native home screen. */
+/** Streak indicator for home and recipe surfaces. */
 export function PourStreakChip({ variant = "light" }: Props) {
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
     setStreak(getPourStreak());
 
     const onUpdate = () => setStreak(getPourStreak());

@@ -34,6 +34,7 @@ import {
 import { debugLog } from "@/lib/debugLog";
 import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { getHomeHeroHeadline, greetingFirstName } from "@/lib/homeHeroHeadline";
+import { DashboardEngagementSidebar } from "@/components/home/WebEngagementSection";
 
 const PLACEHOLDER_IMAGE =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA1NiA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiBmaWxsPSIjRTZFQkU0Ii8+Cjx0ZXh0IHg9IjI4IiB5PSIzMCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNUY2RjVFIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7wn424PC90ZXh0Pgo8L3N2Zz4=";
@@ -736,6 +737,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="contents md:flex md:flex-col md:gap-6">
+              <DashboardEngagementSidebar />
               <section className="card overflow-hidden order-2 md:order-none">
                 <div className="flex items-center justify-between p-6 border-b border-mist">
                   <div className="flex items-center gap-3">

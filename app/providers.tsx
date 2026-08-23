@@ -9,6 +9,7 @@ import { CapacitorProvider } from "@/components/mobile/CapacitorProvider";
 import { PostHogProvider } from "@/components/analytics/PostHogProvider";
 import { InviteCapture } from "@/components/friends/InviteCapture";
 import { UsernamePrompt } from "@/components/friends/UsernamePrompt";
+import { EngagementSync } from "@/components/engagement/EngagementSync";
 
 export function SupabaseProvider({
   children,
@@ -25,6 +26,7 @@ export function SupabaseProvider({
               {children}
               <SignupPrompt />
               <SetPasswordPrompt />
+              <EngagementSync />
               <UsernamePrompt />
             </ToastProvider>
           </AuthDialogProvider>

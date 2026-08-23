@@ -381,6 +381,7 @@ export interface Database {
           onboarding_completed: boolean;
           onboarding_completed_at: string | null;
           public_bar_enabled: boolean;
+          engagement_json: Record<string, unknown>;
           created_at: string;
           updated_at: string;
         };
@@ -393,6 +394,7 @@ export interface Database {
           onboarding_completed?: boolean;
           onboarding_completed_at?: string | null;
           public_bar_enabled?: boolean;
+          engagement_json?: Record<string, unknown>;
           created_at?: string;
           updated_at?: string;
         };
@@ -405,6 +407,7 @@ export interface Database {
           onboarding_completed?: boolean;
           onboarding_completed_at?: string | null;
           public_bar_enabled?: boolean;
+          engagement_json?: Record<string, unknown>;
           created_at?: string;
           updated_at?: string;
         };

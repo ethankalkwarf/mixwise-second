@@ -1,7 +1,7 @@
 "use client";
 
-import { Fragment } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { Fragment, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ActionSheetOption {
   label: string;
@@ -19,10 +19,8 @@ interface ActionSheetProps {
 }
 
 /**
- * ActionSheet
- * 
- * iOS-style action sheet component for native app feel.
- * Slides up from bottom with options.
+ * iOS-style action sheet. Portaled to document.body so it isn't trapped by
+ * PullToRefreshContainer's transform (which breaks position:fixed).
  */
 export function ActionSheet({
   isOpen,
@@ -31,84 +29,89 @@ export function ActionSheet({
   options,
   cancelLabel = "Cancel",
 }: ActionSheetProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end"
+      className="fixed inset-0 z-[120] flex items-end"
       onClick={handleBackdropClick}
+      role="presentation"
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 
-      {/* Action Sheet */}
       <div
-        className="relative w-full bg-white rounded-t-3xl shadow-2xl safe-area-bottom"
-        style={{
-          paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
-        }}
+        className="relative w-full rounded-t-3xl bg-white shadow-2xl"
+        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-sage/30 rounded-full" />
+        <div className="flex justify-center pb-2 pt-3">
+          <div className="h-1.5 w-12 rounded-full bg-sage/30" />
         </div>
 
-        {/* Title */}
-        {title && (
-          <div className="px-4 py-3 border-b border-mist">
-            <h3 className="text-sm font-semibold text-forest text-center">
-              {title}
-            </h3>
+        {title ? (
+          <div className="border-b border-mist px-4 py-3">
+            <h3 className="text-center text-sm font-semibold text-forest">{title}</h3>
           </div>
-        )}
+        ) : null}
 
-        {/* Options */}
         <div className="py-2">
           {options.map((option, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                if (!option.disabled) {
+            <Fragment key={`${option.label}-${index}`}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (option.disabled) return;
                   option.action();
-                  // Only auto-close when the action didn't already dismiss (e.g. via parent state).
-                  // Callers that manage open state themselves still work; double-close is harmless.
                   onClose();
-                }
-              }}
-              disabled={option.disabled}
-              className={`
-                w-full px-4 py-3 text-left text-base
-                transition-colors
-                ${option.destructive
-                  ? "text-red-600 hover:bg-red-50"
-                  : "text-forest hover:bg-mist/50"
-                }
-                ${option.disabled ? "opacity-50 cursor-not-allowed" : ""}
-                ${index < options.length - 1 ? "border-b border-mist/50" : ""}
-              `}
-            >
-              {option.label}
-            </button>
+                }}
+                disabled={option.disabled}
+                className={`w-full px-4 py-3.5 text-left text-base transition-colors ${
+                  option.destructive
+                    ? "text-red-600 active:bg-red-50"
+                    : "text-forest active:bg-mist/50"
+                } ${option.disabled ? "cursor-not-allowed opacity-50" : ""} ${
+                  index < options.length - 1 ? "border-b border-mist/50" : ""
+                }`}
+              >
+                {option.label}
+              </button>
+            </Fragment>
           ))}
         </div>
 
-        {/* Cancel button */}
-        <div className="px-4 pt-2 pb-4 border-t border-mist">
+        <div className="border-t border-mist px-4 pb-4 pt-2">
           <button
+            type="button"
             onClick={onClose}
-            className="w-full py-3 text-center text-base font-semibold text-forest bg-mist/30 hover:bg-mist/50 rounded-xl transition-colors"
+            className="w-full rounded-xl bg-mist/30 py-3 text-center text-base font-semibold text-forest transition-colors active:bg-mist/50"
           >
             {cancelLabel}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

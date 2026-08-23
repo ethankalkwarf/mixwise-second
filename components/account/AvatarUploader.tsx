@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Cropper, { type Area } from "react-easy-crop";
 import { Capacitor } from "@capacitor/core";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
@@ -306,14 +307,14 @@ export function AvatarUploader({
     }
   };
 
-  const dim = size === "lg" ? 96 : 64;
+  const dim = size === "lg" ? 112 : 64;
   const avatarButton = (
     <button
       type="button"
       onClick={startPick}
       disabled={uploading}
       className={`group relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-olive/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-olive disabled:opacity-60 ${
-        size === "lg" ? "h-24 w-24" : "h-16 w-16"
+        size === "lg" ? "h-20 w-20 sm:h-28 sm:w-28" : "h-16 w-16"
       }`}
       aria-label="Change profile photo"
     >
@@ -345,7 +346,37 @@ export function AvatarUploader({
     </button>
   );
 
-  const uploadActions = (
+  const uploadActionsInline = (
+    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <button
+        type="button"
+        onClick={startPick}
+        disabled={uploading}
+        className="text-sm font-medium text-olive hover:text-olive-dark disabled:opacity-50"
+      >
+        {uploading ? "Uploading…" : shownUrl ? "Change photo" : "Upload photo"}
+      </button>
+      {(avatarUrl || preview) && !uploading && (
+        <>
+          <span className="text-sage/40" aria-hidden>
+            ·
+          </span>
+          <button
+            type="button"
+            onClick={() => void remove()}
+            className="text-sm text-sage hover:text-forest"
+          >
+            Remove
+          </button>
+        </>
+      )}
+      <span className="w-full text-xs text-sage sm:ml-1 sm:w-auto">
+        Square crop · up to 2MB
+      </span>
+    </div>
+  );
+
+  const uploadActionsStacked = (
     <div className="min-w-0 space-y-1">
       <div className="flex flex-wrap gap-x-3 gap-y-1">
         <button
@@ -366,7 +397,7 @@ export function AvatarUploader({
           </button>
         )}
       </div>
-      <p className="text-xs text-sage">Crop to a square · JPEG/PNG/WebP · up to 2MB</p>
+      <p className="text-xs text-sage">Square crop · up to 2MB</p>
     </div>
   );
 
@@ -387,83 +418,86 @@ export function AvatarUploader({
   return (
     <>
       {details ? (
-        <div className="space-y-3">
-          <div className="flex min-w-0 items-start gap-4">
-            {avatarButton}
-            <div className="min-w-0 flex-1 overflow-hidden">{details}</div>
+        <div className="flex min-w-0 items-start gap-4 sm:items-center sm:gap-5 lg:gap-6">
+          {avatarButton}
+          <div className="min-w-0 flex-1">
+            {details}
+            {uploadActionsInline}
           </div>
-          {uploadActions}
           {fileInput}
         </div>
       ) : (
         <div className="flex min-w-0 items-center gap-4">
           {avatarButton}
-          {uploadActions}
+          {uploadActionsStacked}
           {fileInput}
         </div>
       )}
 
-      {cropSrc && (
-        <div className="fixed inset-0 z-[90] flex flex-col bg-charcoal/80 sm:items-center sm:justify-center sm:p-6">
-          <div className="flex h-full w-full flex-col bg-cream sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-3xl sm:overflow-hidden">
-            <div className="flex items-center justify-between border-b border-mist px-4 py-3">
-              <h2 className="font-serif text-lg font-bold text-forest">Crop photo</h2>
-              <button
-                type="button"
-                onClick={closeCrop}
-                className="rounded-full p-2 text-sage hover:bg-mist hover:text-forest"
-                aria-label="Close"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="relative min-h-[280px] flex-1 bg-charcoal">
-              <Cropper
-                image={cropSrc}
-                crop={crop}
-                zoom={zoom}
-                aspect={1}
-                cropShape="round"
-                showGrid={false}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
-              />
-            </div>
-            <div className="space-y-4 border-t border-mist bg-white px-4 py-4">
-              <label className="block text-sm text-sage">
-                Zoom
-                <input
-                  type="range"
-                  min={1}
-                  max={3}
-                  step={0.05}
-                  value={zoom}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="mt-2 w-full accent-olive"
-                />
-              </label>
-              <div className="flex justify-end gap-2">
+      {cropSrc &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 z-[120] flex flex-col bg-charcoal/80 sm:items-center sm:justify-center sm:p-6">
+            <div className="flex h-full w-full flex-col bg-cream sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:overflow-hidden sm:rounded-3xl">
+              <div className="flex items-center justify-between border-b border-mist px-4 py-3">
+                <h2 className="font-serif text-lg font-bold text-forest">Crop photo</h2>
                 <button
                   type="button"
                   onClick={closeCrop}
-                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-forest hover:bg-mist"
+                  className="rounded-full p-2 text-sage hover:bg-mist hover:text-forest"
+                  aria-label="Close"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={uploading || !croppedArea}
-                  onClick={() => void applyCrop()}
-                  className="btn-primary disabled:opacity-50"
-                >
-                  {uploading ? "Saving…" : "Use photo"}
+                  <XMarkIcon className="h-5 w-5" />
                 </button>
               </div>
+              <div className="relative min-h-[280px] flex-1 bg-charcoal">
+                <Cropper
+                  image={cropSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="round"
+                  showGrid={false}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                />
+              </div>
+              <div className="space-y-4 border-t border-mist bg-white px-4 py-4">
+                <label className="block text-sm text-sage">
+                  Zoom
+                  <input
+                    type="range"
+                    min={1}
+                    max={3}
+                    step={0.05}
+                    value={zoom}
+                    onChange={(e) => setZoom(Number(e.target.value))}
+                    className="mt-2 w-full accent-olive"
+                  />
+                </label>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={closeCrop}
+                    className="rounded-xl px-4 py-2.5 text-sm font-medium text-forest hover:bg-mist"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={uploading || !croppedArea}
+                    onClick={() => void applyCrop()}
+                    className="btn-primary disabled:opacity-50"
+                  >
+                    {uploading ? "Saving…" : "Use photo"}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       <ActionSheet
         isOpen={pickerOpen}

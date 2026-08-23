@@ -20,8 +20,8 @@ const BUCKET = 'cocktail-images-fullsize';
 /** Exact filename aliases that fuzzy matching may miss or get wrong */
 const ALIASES: Record<string, string> = {
   'floridita-daiquiri': 'El Floridita Daiquiri.png',
-  vesper: 'Vesper Martini image.png',
-  'army-navy': 'Army & Navy.png',
+  'vesper-martini': 'Vesper Martini image.png',
+  'army-and-navy': 'Army & Navy.png',
   boulevardier: 'Boulevardier cocktail.png',
   bramble: 'Bramble.png',
   caipirinha: 'Caipirinha.png',

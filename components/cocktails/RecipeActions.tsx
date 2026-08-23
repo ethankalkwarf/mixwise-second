@@ -5,6 +5,7 @@ import { FavoriteButton } from "./FavoriteButton";
 import { NoteButton } from "./NoteButton";
 import { SkipButton } from "./SkipButton";
 import { ShareButtons } from "./ShareButtons";
+import { MixedThisButton } from "./MixedThisButton";
 import { CocktailStoriesShare } from "@/components/share/CocktailStoriesShare";
 import { useCocktailNotes } from "@/hooks/useCocktailNotes";
 import { useCocktailSkips } from "@/hooks/useCocktailSkips";
@@ -79,6 +80,7 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
 
   return (
     <div className="space-y-3">
+      <MixedThisButton slug={cocktail.slug} onMixed={() => setMixed(true)} />
       <div className="flex flex-wrap items-center gap-3">
         <FavoriteButton
           cocktail={{

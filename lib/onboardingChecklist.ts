@@ -88,6 +88,9 @@ function writeFlag(key: string): void {
   try {
     localStorage.setItem(key, "1");
     notifyChecklistUpdate();
+    void import("@/lib/engagement").then(({ scheduleEngagementSync }) => {
+      scheduleEngagementSync();
+    });
   } catch {
     /* ignore */
   }

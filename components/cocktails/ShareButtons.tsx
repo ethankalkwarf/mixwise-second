@@ -31,6 +31,7 @@ interface ShareButtonsProps {
   url: string;
   title: string;
   description?: string;
+  variant?: "icons" | "prominent";
 }
 
 function shareContentFromUrl(url: string): string | undefined {
@@ -43,7 +44,7 @@ function shareContentFromUrl(url: string): string | undefined {
   }
 }
 
-export function ShareButtons({ url, title, description }: ShareButtonsProps) {
+export function ShareButtons({ url, title, description, variant = "icons" }: ShareButtonsProps) {
   const toast = useToast();
   const [copied, setCopied] = useState(false);
   const isNative = typeof window !== "undefined" && Capacitor.isNativePlatform();
@@ -117,6 +118,22 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
       handleCopyLink();
     }
   };
+
+  if (variant === "prominent") {
+    const canNativeShare =
+      isNative || (typeof navigator !== "undefined" && typeof navigator.share === "function");
+
+    return (
+      <button
+        type="button"
+        onClick={() => void handleNativeShare()}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-mist bg-white px-4 py-3 text-sm font-semibold text-forest transition-colors hover:bg-mist/40 active:bg-mist"
+      >
+        <ShareIcon className="h-5 w-5" />
+        {canNativeShare ? "Share recipe" : copied ? "Link copied" : "Copy recipe link"}
+      </button>
+    );
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-2">

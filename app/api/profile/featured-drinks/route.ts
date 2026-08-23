@@ -39,7 +39,28 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ slots: data ?? [] });
+    const rows = data ?? [];
+    if (rows.length === 0) {
+      return NextResponse.json({ slots: [] });
+    }
+
+    const ids = rows.map((r) => r.cocktail_id as string);
+    const { data: cocktails } = await supabase
+      .from("cocktails")
+      .select("id, image_url")
+      .in("id", ids);
+
+    const imageById = new Map(
+      (cocktails || []).map((c) => [c.id as string, (c.image_url as string | null) || null])
+    );
+
+    const slots = rows.map((row) => ({
+      ...row,
+      cocktail_image_url:
+        imageById.get(row.cocktail_id as string) || row.cocktail_image_url || null,
+    }));
+
+    return NextResponse.json({ slots });
   } catch (error) {
     console.error("Featured drinks GET error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -105,6 +126,23 @@ export async function PUT(request: NextRequest) {
         { error: "Each featured drink must be unique" },
         { status: 400 }
       );
+    }
+
+    if (normalized.length > 0) {
+      const { data: cocktails } = await supabase
+        .from("cocktails")
+        .select("id, image_url")
+        .in(
+          "id",
+          normalized.map((r) => r.cocktail_id)
+        );
+      const imageById = new Map(
+        (cocktails || []).map((c) => [c.id as string, (c.image_url as string | null) || null])
+      );
+      for (const row of normalized) {
+        row.cocktail_image_url =
+          imageById.get(row.cocktail_id) || row.cocktail_image_url || null;
+      }
     }
 
     const { error: deleteError } = await supabase

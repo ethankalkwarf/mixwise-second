@@ -9,6 +9,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { SectionHeader } from "@/components/common/SectionHeader";
+import { HomeEngagementStrip } from "@/components/home/WebEngagementSection";
 import { getCocktailImageUrls } from "@/lib/cocktails.client";
 import { getImageUrl, COCKTAIL_BLUR_DATA_URL } from "@/lib/sanityImage";
 import { formatCocktailName, formatIngredientName, isNewCocktail } from "@/lib/formatters";
@@ -170,6 +171,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
     return (
       <section className="bg-cream py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <HomeEngagementStrip />
           <div className="flex flex-col gap-6 rounded-3xl border border-mist bg-white p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div className="max-w-xl">
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-2">
@@ -205,6 +207,7 @@ export function PersonalizedSections({ allCocktails, featuredCocktails }: Person
   return (
     <section className="bg-cream py-12 sm:py-16 lg:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <HomeEngagementStrip />
         <div className="space-y-16">
       {/* Cocktails You Can Make */}
       {hasBar && readyToMake.length > 0 && (

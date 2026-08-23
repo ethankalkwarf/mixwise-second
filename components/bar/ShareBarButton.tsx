@@ -23,7 +23,7 @@ import { isNativeApp } from "@/lib/mobile/platform";
 import { getShareOrigin } from "@/lib/shareOrigin";
 import { AppLink } from "@/components/mobile/AppLink";
 
-type ShareBarVariant = "cta" | "menu" | "inline";
+type ShareBarVariant = "cta" | "menu" | "inline" | "icon";
 
 interface ShareBarButtonProps {
   variant?: ShareBarVariant;
@@ -31,6 +31,8 @@ interface ShareBarButtonProps {
   onShared?: () => void;
   /** When false, skip the preview link next to the CTA. */
   showPreview?: boolean;
+  /** Optional subtitle for menu variant rows. */
+  menuDescription?: string;
   /** Optional counts for dynamic share copy. */
   stats?: BarShareStats;
 }
@@ -40,6 +42,7 @@ export function ShareBarButton({
   className,
   onShared,
   showPreview = true,
+  menuDescription,
   stats,
 }: ShareBarButtonProps) {
   const { user, profile, isAuthenticated, isLoading: authLoading } = useUser();
@@ -176,6 +179,19 @@ export function ShareBarButton({
   ]);
 
   if (authLoading || (isAuthenticated && preferencesLoading)) {
+    if (variant === "icon") {
+      return (
+        <span
+          className={
+            className ??
+            "flex h-10 w-10 items-center justify-center rounded-full bg-white text-sage shadow-sm"
+          }
+          aria-hidden
+        >
+          <ShareIcon className="h-5 w-5" />
+        </span>
+      );
+    }
     if (variant === "menu") {
       return (
         <span className={className ?? "native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm text-sage"}>
@@ -204,12 +220,38 @@ export function ShareBarButton({
         disabled={busy}
         className={
           className ??
-          "native-menu-row flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-medium text-forest hover:bg-mist/50 hover:text-terracotta disabled:opacity-50"
+          "native-menu-row flex w-full min-h-[3.25rem] items-center gap-3 px-4 py-3 text-left text-sm font-medium text-forest hover:bg-mist/50 hover:text-terracotta disabled:opacity-50"
         }
       >
-        <Icon className="h-5 w-5 shrink-0 text-olive" />
-        <span className="min-w-0 flex-1">{busy ? "Sharing..." : label}</span>
-        <ChevronRightIcon className="h-4 w-4 shrink-0 text-sage" />
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cream">
+          <Icon className="h-5 w-5 shrink-0 text-olive" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold leading-tight text-forest">
+            {busy ? "Sharing..." : label}
+          </span>
+          {menuDescription ? (
+            <span className="mt-0.5 block text-xs leading-snug text-sage">{menuDescription}</span>
+          ) : null}
+        </span>
+        <ChevronRightIcon className="h-4 w-4 shrink-0 text-sage/60" />
+      </button>
+    );
+  }
+
+  if (variant === "icon") {
+    return (
+      <button
+        type="button"
+        onClick={handleShare}
+        disabled={busy}
+        className={
+          className ??
+          "flex h-10 w-10 items-center justify-center rounded-full bg-white text-forest shadow-sm transition active:scale-[0.97] disabled:opacity-50"
+        }
+        aria-label={busy ? "Sharing your bar" : "Share your bar"}
+      >
+        <Icon className="h-5 w-5 shrink-0" />
       </button>
     );
   }

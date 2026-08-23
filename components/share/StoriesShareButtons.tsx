@@ -5,7 +5,7 @@ import { toPng } from "html-to-image";
 import { Capacitor } from "@capacitor/core";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Share } from "@capacitor/share";
-import { LinkIcon, CheckIcon, ShareIcon } from "@heroicons/react/24/outline";
+import { LinkIcon, CheckIcon, ShareIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/components/auth/UserProvider";
 import { ActionSheet } from "@/components/mobile/ActionSheet";
@@ -190,6 +190,8 @@ type Props = {
   entity: StoriesEntity;
   /** Absolute or path share URL (will be copied / attributed by caller). */
   shareUrl: string;
+  /** Prefilled SMS / iMessage body before the link. */
+  shareText?: string;
   /** Offscreen sticker content — prefer transparent text-only stickers. */
   sticker: ReactNode;
   stickerWidth?: number;
@@ -216,6 +218,7 @@ type Props = {
 export function StoriesShareButtons({
   entity,
   shareUrl,
+  shareText,
   sticker,
   stickerWidth = 720,
   stickerHeight = 900,
@@ -230,7 +233,7 @@ export function StoriesShareButtons({
   const { user } = useUser();
   const supabase = getSupabaseClient();
   const stickerRef = useRef<HTMLDivElement>(null);
-  const [busy, setBusy] = useState<"ig" | "fb" | "sc" | "share" | null>(null);
+  const [busy, setBusy] = useState<"ig" | "fb" | "sc" | "share" | "message" | null>(null);
   const [copied, setCopied] = useState(false);
   const [igAvailable, setIgAvailable] = useState(false);
   const [fbAvailable, setFbAvailable] = useState(false);
@@ -482,6 +485,28 @@ export function StoriesShareButtons({
     }
   };
 
+  const handleMessageShare = async () => {
+    setBusy("message");
+    try {
+      const text = shareText ? `${shareText} ${shareUrl}` : shareUrl;
+      const platform = Capacitor.getPlatform();
+
+      if (platform === "ios" || platform === "android") {
+        window.location.href = `sms:?&body=${encodeURIComponent(text)}`;
+        void trackContentShared(entity, "sms", { url: shareUrl });
+        noteShared();
+        return;
+      }
+
+      await handleSystemShare();
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return;
+      await handleCopy();
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const handleSystemShare = async () => {
     setBusy("share");
     try {
@@ -534,6 +559,63 @@ export function StoriesShareButtons({
     : "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3.5 text-sm font-semibold tracking-tight disabled:opacity-50 active:scale-[0.98] transition-transform";
 
   const showSystemShareFallback = availabilityReady && !showStories;
+
+  const linkActions = showLinkFallback ? (
+    <div
+      className={
+        compact
+          ? "inline-flex flex-wrap gap-2"
+          : showStories || showSystemShareFallback
+            ? "grid grid-cols-2 gap-2"
+            : "grid grid-cols-1 gap-2 sm:grid-cols-2"
+      }
+    >
+      {showSystemShareFallback ? (
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={() => void handleSystemShare()}
+          className={`${btnBase} bg-olive text-cream shadow-sm`}
+        >
+          <ShareIcon className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+          {!compact && (
+            <span className="min-w-0 truncate">
+              {busy === "share" ? "Sharing…" : "Share link"}
+            </span>
+          )}
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={() => void handleMessageShare()}
+          className={`${btnBase} bg-olive text-cream shadow-sm`}
+          aria-label="Text recipe link"
+        >
+          <ChatBubbleLeftRightIcon className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+          {!compact && (
+            <span className="min-w-0 truncate">
+              {busy === "message" ? "Opening…" : "Message"}
+            </span>
+          )}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => void handleCopy()}
+        disabled={busy !== null}
+        className={
+          compact
+            ? `${btnBase} border border-mist/80 bg-white/60 text-forest`
+            : "inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-mist/80 bg-white/60 px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-mist/50 active:scale-[0.98] disabled:opacity-50"
+        }
+        aria-label="Copy link"
+      >
+        {copied ? <CheckIcon className="h-4 w-4 text-forest" /> : <LinkIcon className="h-4 w-4 text-sage" />}
+        {!compact && (copied ? "Copied" : "Copy link")}
+      </button>
+    </div>
+  ) : null;
 
   return (
     <div className={className ?? (compact ? "inline-flex flex-wrap items-center gap-2" : "mt-0 space-y-2.5")}>
@@ -598,37 +680,9 @@ export function StoriesShareButtons({
         </div>
       ) : null}
 
-      {!compact && showLinkFallback ? (
-        <div
-          className={
-            showStories || !showSystemShareFallback
-              ? "space-y-2.5"
-              : "grid grid-cols-1 gap-2 sm:grid-cols-2"
-          }
-        >
-          {showSystemShareFallback ? (
-            <button
-              type="button"
-              disabled={busy !== null}
-              onClick={() => void handleSystemShare()}
-              className={`${btnBase} bg-olive text-cream shadow-sm`}
-            >
-              <ShareIcon className="h-[1.125rem] w-[1.125rem]" />
-              <span className="min-w-0 truncate">
-                {busy === "share" ? "Sharing…" : "Share link"}
-              </span>
-            </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => void handleCopy()}
-            className="inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-mist/80 bg-white/60 px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-mist/50 active:scale-[0.98]"
-          >
-            {copied ? <CheckIcon className="h-4 w-4 text-forest" /> : <LinkIcon className="h-4 w-4 text-sage" />}
-            {copied ? "Copied" : "Copy link"}
-          </button>
-        </div>
-      ) : null}
+      {!compact && linkActions}
+
+      {compact && linkActions}
 
       {showStories ? (
         <div

@@ -1,146 +1,258 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { AutoplayVideo } from "@/components/media/AutoplayVideo";
+import Link from "next/link";
+import { SectionEyebrow, SectionTitle } from "@/components/brand/brandSections";
+import { MainContainer } from "@/components/layout/MainContainer";
+import {
+  BRAND_COMPANION,
+  BRAND_GALLERY,
+  BRAND_HERO,
+  BRAND_LEARN,
+  BRAND_PILLARS,
+  BRAND_SOCIAL,
+  BRAND_STORY,
+} from "@/lib/brand/kit";
 
-const STEPS = [
-  {
-    title: "Browse the library",
-    body: "Hundreds of recipes with clear measures — sorted by spirit, style, or whatever sounds good\u00A0tonight.",
-  },
-  {
-    title: "Stock your cabinet",
-    body: "Add the bottles you already own. MixWise shows what you can make now, and what one more ingredient unlocks.",
-  },
-  {
-    title: "Pour with confidence",
-    body: "Save favorites, jot tasting notes, skip drinks you won\u2019t remake, and treat home bartending like a craft \u2014 not a scavenger hunt.",
-  },
-];
+function FeatureSection({
+  eyebrow,
+  title,
+  body,
+  highlights,
+  image,
+  href,
+  imageOnRight = false,
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  highlights: string[];
+  image: { src: string; alt: string };
+  href: string;
+  imageOnRight?: boolean;
+}) {
+  const textCol = (
+    <div>
+      <SectionEyebrow>{eyebrow}</SectionEyebrow>
+      <SectionTitle>{title}</SectionTitle>
+      <p className="mb-6 [text-wrap:pretty] text-lg leading-relaxed text-sage">
+        {body}
+      </p>
+      <ul className="mb-6 space-y-3">
+        {highlights.map((item) => (
+          <li
+            key={item}
+            className="flex gap-3 text-sm leading-relaxed text-sage sm:text-base"
+          >
+            <span
+              className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-terracotta"
+              aria-hidden
+            />
+            {item}
+          </li>
+        ))}
+      </ul>
+      <Link
+        href={href}
+        className="inline-flex items-center text-sm font-semibold text-forest underline decoration-mist underline-offset-4 transition-colors hover:text-terracotta hover:decoration-terracotta/40"
+      >
+        Explore {eyebrow.toLowerCase()}
+      </Link>
+    </div>
+  );
+
+  const imageCol = (
+    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-mist sm:aspect-[5/6]">
+      <Image
+        src={image.src}
+        alt={image.alt}
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 100vw, 40vw"
+      />
+    </div>
+  );
+
+  return (
+    <div className="grid items-center gap-10 md:grid-cols-2 md:gap-14">
+      {imageOnRight ? (
+        <>
+          {textCol}
+          {imageCol}
+        </>
+      ) : (
+        <>
+          {imageCol}
+          {textCol}
+        </>
+      )}
+    </div>
+  );
+}
 
 export function AboutPageContent() {
   return (
     <div className="bg-cream">
-      {/* 1. Full-bleed opener */}
-      <section className="relative isolate min-h-[85vh] overflow-hidden bg-charcoal">
+      <section className="relative isolate min-h-[72vh] overflow-hidden bg-charcoal sm:min-h-[78vh]">
         <Image
           src="/media/kitchen-bartender-man.webp"
-          alt="Man pouring a cocktail at a bright home kitchen counter"
+          alt="Pouring a cocktail at a bright home kitchen counter"
           fill
           priority
           sizes="100vw"
           className="object-cover object-[center_30%]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/75 to-charcoal/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-charcoal/80 via-charcoal/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/75 to-charcoal/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-charcoal/75 via-charcoal/25 to-transparent" />
 
-        <div className="relative z-10 flex min-h-[85vh] items-end">
-          <div className="mx-auto w-full max-w-7xl px-4 pb-16 pt-28 sm:px-6 sm:pb-20 lg:px-8">
-            <h1 className="mb-5 max-w-2xl [text-wrap:balance] font-display text-4xl font-bold leading-[1.05] text-cream sm:text-5xl lg:text-6xl">
-              Home mixology,{" "}
-              <span className="font-medium">kept&nbsp;simple</span>
-            </h1>
-            <p className="max-w-md [text-wrap:pretty] text-lg leading-relaxed text-mist">
-              One place for the recipes you want, the bottles you have, and a
-              memory of what you&apos;d actually pour again.
+        <div className="relative z-10 flex min-h-[72vh] items-end sm:min-h-[78vh]">
+          <MainContainer className="pb-14 pt-28 sm:pb-20 sm:pt-32">
+            <p className="mb-4 font-mono text-xs font-bold uppercase tracking-widest text-terracotta">
+              About
             </p>
-          </div>
+            <h1 className="mb-5 max-w-2xl [text-wrap:balance] font-display text-4xl font-bold leading-[1.05] text-cream sm:text-5xl lg:text-6xl">
+              {BRAND_HERO.title}
+            </h1>
+            <p className="max-w-xl [text-wrap:pretty] text-lg leading-relaxed text-mist">
+              {BRAND_HERO.subtitle}
+            </p>
+          </MainContainer>
         </div>
       </section>
 
-      {/* 2. Origin */}
+      {BRAND_STORY.map((block, i) => (
+        <section
+          key={block.title}
+          className={
+            i % 2 === 0 ? "py-20 lg:py-28" : "bg-mist/40 py-20 lg:py-28"
+          }
+        >
+          <MainContainer className="max-w-5xl">
+            <div className="grid items-center gap-10 md:grid-cols-2 md:gap-14">
+              <div className={i % 2 === 1 ? "md:order-2" : ""}>
+                <SectionEyebrow>{block.eyebrow}</SectionEyebrow>
+                <SectionTitle>{block.title}</SectionTitle>
+                <p className="[text-wrap:pretty] text-lg leading-relaxed text-sage">
+                  {block.body}
+                </p>
+              </div>
+              <div
+                className={`relative aspect-[4/5] overflow-hidden rounded-2xl bg-mist sm:aspect-[5/6] ${
+                  i % 2 === 1 ? "md:order-1" : ""
+                }`}
+              >
+                <Image
+                  src={block.image.src}
+                  alt={block.image.alt}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                />
+              </div>
+            </div>
+          </MainContainer>
+        </section>
+      ))}
+
       <section className="py-20 lg:py-28">
-        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
-          <p className="mb-6 font-mono text-xs font-bold uppercase tracking-widest text-terracotta">
-            Why we built it
-          </p>
-          <h2 className="mb-8 [text-wrap:balance] font-display text-3xl leading-tight text-forest sm:text-4xl lg:text-5xl">
-            What can I make with&nbsp;these?
-          </h2>
-          <p className="[text-wrap:pretty] text-lg leading-relaxed text-sage">
-            Friends would point at the couple of bottles on their counter and
-            ask Ethan what they could pour tonight. He built MixWise around that
-            question — a curated way to get better at home mixology with what
-            you already own, without making it&nbsp;complicated.
-          </p>
-        </div>
-      </section>
+        <MainContainer className="max-w-5xl">
+          <div className="grid items-start gap-12 md:grid-cols-2 md:gap-14">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-mist sm:aspect-[5/6] md:sticky md:top-28">
+              <Image
+                src={BRAND_COMPANION.image.src}
+                alt={BRAND_COMPANION.image.alt}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 40vw"
+              />
+            </div>
 
-      {/* 3. How it works — steps + hotel video beside */}
-      <section className="bg-mist/40 py-20 lg:py-28">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid items-start gap-12 md:grid-cols-12 md:gap-14">
-            <div className="md:col-span-5">
-              <p className="mb-4 font-mono text-xs font-bold uppercase tracking-widest text-terracotta">
-                How it works
+            <div>
+              <SectionEyebrow>{BRAND_COMPANION.eyebrow}</SectionEyebrow>
+              <SectionTitle>{BRAND_COMPANION.title}</SectionTitle>
+              <p className="mb-10 [text-wrap:pretty] text-lg leading-relaxed text-sage sm:mb-12">
+                {BRAND_COMPANION.intro}
               </p>
-              <h2 className="mb-12 [text-wrap:balance] font-display text-3xl leading-tight text-forest sm:text-4xl lg:mb-14 lg:text-5xl">
-                Browse, stock, and&nbsp;pour.
-              </h2>
 
-              <ul className="space-y-10">
-                {STEPS.map((step) => (
-                  <li key={step.title} className="border-t border-forest/15 pt-6">
-                    <h3 className="mb-3 font-display text-2xl text-forest">
-                      {step.title}
+              <ul>
+                {BRAND_PILLARS.map((pillar, index) => (
+                  <li
+                    key={pillar.title}
+                    className="border-t border-forest/15 py-8 first:border-t-0 first:pt-0 last:pb-0"
+                  >
+                    <p
+                      className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-terracotta"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <h3 className="mb-3 font-display text-2xl leading-tight text-forest sm:text-3xl">
+                      {pillar.title}
                     </h3>
-                    <p className="max-w-sm [text-wrap:pretty] leading-relaxed text-sage">
-                      {step.body}
+                    <p className="max-w-md [text-wrap:pretty] leading-relaxed text-sage">
+                      {pillar.body}
                     </p>
                   </li>
                 ))}
               </ul>
             </div>
-
-            <div className="md:col-span-7 md:sticky md:top-28">
-              <AutoplayVideo
-                src="/media/hotel-cocktails.mp4"
-                poster="/media/hotel-cocktails-poster.webp"
-                className="aspect-[4/5] sm:aspect-[5/6] lg:aspect-[4/5]"
-                alt="Fruit cocktails on a hotel bar"
-              />
-            </div>
           </div>
-        </div>
+        </MainContainer>
       </section>
 
-      {/* 4. Closing visual + CTA */}
-      <section className="relative isolate min-h-[70vh] overflow-hidden bg-charcoal">
-        <Image
-          src="/media/three-cocktails-dark.webp"
-          alt="Three cocktails against a dark backdrop"
-          fill
-          sizes="100vw"
-          className="object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/70 to-charcoal/35" />
+      <section className="bg-mist/40 py-20 lg:py-28">
+        <MainContainer className="max-w-5xl">
+          <FeatureSection
+            eyebrow={BRAND_LEARN.eyebrow}
+            title={BRAND_LEARN.title}
+            body={BRAND_LEARN.body}
+            highlights={BRAND_LEARN.highlights}
+            image={BRAND_LEARN.image}
+            href={BRAND_LEARN.href}
+            imageOnRight
+          />
+        </MainContainer>
+      </section>
 
-        <div className="relative z-10 flex min-h-[70vh] items-end">
-          <div className="mx-auto w-full max-w-3xl px-4 pb-16 pt-28 text-center sm:px-6 sm:pb-20 lg:px-8">
-            <h2 className="mb-6 [text-wrap:balance] font-display text-3xl leading-tight text-cream sm:text-5xl">
-              Tonight&apos;s drink starts&nbsp;here
-            </h2>
-            <p className="mx-auto mb-10 max-w-lg [text-wrap:pretty] text-lg text-mist">
-              Start with a recipe, or start with what&apos;s already in
-              the&nbsp;cabinet.
-            </p>
-            <div className="flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                href="/mix"
-                className="inline-flex items-center justify-center rounded-full bg-terracotta px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-terracotta-dark"
+      <section className="py-20 lg:py-28">
+        <MainContainer className="max-w-5xl">
+          <FeatureSection
+            eyebrow={BRAND_SOCIAL.eyebrow}
+            title={BRAND_SOCIAL.title}
+            body={BRAND_SOCIAL.body}
+            highlights={BRAND_SOCIAL.highlights}
+            image={BRAND_SOCIAL.image}
+            href={BRAND_SOCIAL.href}
+          />
+        </MainContainer>
+      </section>
+
+      <section className="bg-mist/40 pb-14 pt-16 lg:pb-16 lg:pt-20">
+        <MainContainer className="max-w-5xl">
+          <div className="grid gap-3 sm:grid-cols-3">
+            {BRAND_GALLERY.map((img) => (
+              <div
+                key={img.src}
+                className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-mist sm:aspect-[4/5]"
               >
-                Open your cabinet
-              </Link>
-              <Link
-                href="/cocktails"
-                className="inline-flex items-center justify-center rounded-full border-2 border-cream px-8 py-3.5 text-sm font-medium text-cream transition-colors hover:bg-cream hover:text-forest"
-              >
-                Browse recipes
-              </Link>
-            </div>
+                <Image
+                  src={img.src}
+                  alt={img.alt}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
+              </div>
+            ))}
           </div>
-        </div>
+          <p className="mt-8 text-center">
+            <Link
+              href="/brand/press"
+              className="text-xs text-sage underline decoration-mist underline-offset-4 transition-colors hover:text-forest"
+            >
+              Brand resources
+            </Link>
+          </p>
+        </MainContainer>
       </section>
     </div>
   );

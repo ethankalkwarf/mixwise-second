@@ -26,7 +26,7 @@ const mustHaves = [
   'hemingway-daiquiri', 'hot-toddy', 'irish-coffee', 'japanese-cocktail', 'last-word',
   'mai-tai', 'manhattan', 'margarita', 'martinez', 'mint-julep', 'mojito', 'negroni',
   'old-fashioned', 'paloma', 'paper-plane', 'penicillin', 'pisco-sour', 'ramos-gin-fizz',
-  'rusty-nail', 'sazerac', 'sidecar', 'singapore-sling', 'tom-collins', 'vesper',
+  'rusty-nail', 'sazerac', 'sidecar', 'singapore-sling', 'tom-collins', 'vesper-martini',
   'whiskey-sour', 'white-lady', 'zombie', 'amaretto-sour', 'aperol-spritz',
   'espresso-martini', 'gin-fizz', 'moscow-mule', 'pina-colada', 'tequila-sunrise',
   'cosmopolitan', 'bellini', 'mimosa', 'screwdriver', 'cuba-libre', 'gin-and-tonic',
@@ -37,7 +37,7 @@ const mustHaves = [
   'john-collins', 'kir', 'long-island-iced-tea', 'rose', 'sea-breeze',
   'sex-on-the-beach', 'vodka-martini', 'bee-s-knees', 'bees-knees', 'gold-rush',
   'naked-and-famous', 'final-word', 'trinidad-sour', 'jungle-bird', 'corn-n-oil',
-  'ti-punch', 'daiquiri-no-3', 'air-mail', 'army-navy', 'remember-the-maine',
+  'ti-punch', 'daiquiri-no-3', 'air-mail', 'army-and-navy', 'remember-the-maine',
   'vodka-gimlet', 'mezcal-negroni', 'blanco-margarita', 'espresso-martini',
 ];
 

@@ -137,6 +137,9 @@ export function markDrinkMade(slug: string): {
         void trackPourStreakUpdated(streak);
       });
     }
+    void import("@/lib/engagement").then(({ scheduleEngagementSync }) => {
+      scheduleEngagementSync();
+    });
   }
   return { streak, isNewToday, isNewForCocktail };
 }

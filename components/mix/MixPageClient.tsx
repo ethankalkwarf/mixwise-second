@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { MixSkeleton } from "@/components/mix/MixSkeleton";
 import { ClearBarConfirmDialog } from "@/components/mix/ClearBarConfirmDialog";
 import { MixCabinet } from "@/components/mix/MixCabinet";
@@ -12,9 +12,6 @@ import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { useUser } from "@/components/auth/UserProvider";
-import { useAuthDialog } from "@/components/auth/AuthDialogProvider";
-import { getPreferredAuthMode, preferredAuthCopy } from "@/lib/auth/returning-user";
-import { navigateInApp } from "@/lib/mobile/navigate";
 import { useCocktailSkips } from "@/hooks/useCocktailSkips";
 import { SaveBarPrompt } from "@/components/auth/SaveBarPrompt";
 import type { MixIngredient, MixCocktail, MixMatchGroups } from "@/lib/mixTypes";
@@ -62,11 +59,6 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
   }, [isNativeShell]);
 
   const { isAuthenticated, isLoading: authLoading, user } = useUser();
-  const { openAuthDialog, closeAuthDialog, isOpen: authDialogOpen } = useAuthDialog();
-  const router = useRouter();
-  const skippedMixAuth = useRef(false);
-  const openedMixGate = useRef(false);
-  const mixTrackedForStep = useRef(false);
   const { skipIds } = useCocktailSkips();
   const {
     ingredientIds,
@@ -79,6 +71,7 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
 
   const searchParams = useSearchParams();
   const haveAppliedRef = useRef<string | null>(null);
+  const mixTrackedForStep = useRef(false);
 
   // Pick initial pane once the bar loads: drinks-first when stocked, cabinet when empty.
   // Respect ?step=menu|cabinet and ?shelf=1 deep links.
@@ -185,60 +178,7 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
   }, []);
 
 
-
-
-
-  // Native Mix: blur the cabinet behind a signup-first dialog. No X / backdrop dismiss.
-  useEffect(() => {
-    if (!nativeShell || authLoading || isAuthenticated) return;
-    if (skippedMixAuth.current || authDialogOpen) return;
-
-    const mode = getPreferredAuthMode();
-    const copy = preferredAuthCopy(mode);
-    openAuthDialog({
-      gate: "mix_native_gate",
-      mode,
-      dismissible: false,
-      title: mode === "login" ? "Sign in to mix" : copy.title,
-      subtitle:
-        mode === "login"
-          ? "Your cabinet is right behind this. Sign in to save bottles and see what you can pour."
-          : "Your cabinet is right behind this. Create a free account to stock bottles, unlock drinks, and keep them on this phone.",
-      escapeLabel: "Browse recipes instead",
-      onEscape: () => {
-        skippedMixAuth.current = true;
-        openedMixGate.current = false;
-        navigateInApp(router, "/cocktails");
-      },
-    });
-    openedMixGate.current = true;
-  }, [
-    nativeShell,
-    authLoading,
-    isAuthenticated,
-    authDialogOpen,
-    openAuthDialog,
-    router,
-  ]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      skippedMixAuth.current = false;
-      openedMixGate.current = false;
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!nativeShell) return;
-    return () => {
-      if (openedMixGate.current) {
-        openedMixGate.current = false;
-        closeAuthDialog(true);
-      }
-    };
-  }, [nativeShell, closeAuthDialog]);
-
-  // Show save prompt for anonymous users after threshold (web Mix only — native uses the gate above)
+  // Show save prompt for anonymous users after they stock a few bottles
   useEffect(() => {
     if (
       !isAuthenticated &&
@@ -385,7 +325,7 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
     const menuParam = searchParams?.get("step") === "menu";
 
     return (
-      <div className={`px-4 pb-4 pt-4 ${authDialogOpen && !isAuthenticated ? "pointer-events-none select-none" : ""}`}>
+      <div className="px-4 pb-4 pt-4">
         <NativeMixView
           allIngredients={allIngredients}
           ingredientIds={ingredientIds}
@@ -405,6 +345,9 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
           onConfirm={handleConfirmClear}
           onCancel={handleCancelClear}
         />
+        {showSavePrompt && !isAuthenticated && (
+          <SaveBarPrompt onDismiss={handleDismissPrompt} />
+        )}
       </div>
     );
   }

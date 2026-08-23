@@ -5,6 +5,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useUser } from "@/components/auth/UserProvider";
 import { useToast } from "@/components/ui/toast";
 import { isNativeApp } from "@/lib/mobile/platform";
+import { profileNeedsGivenName } from "@/lib/homeHeroHeadline";
 
 /**
  * Soft prompt for signed-in users without a username — key for friend discovery.
@@ -21,6 +22,15 @@ export function UsernamePrompt() {
 
   useEffect(() => {
     if (!isAuthenticated || !user || dismissed) return;
+    if (
+      profileNeedsGivenName({
+        firstName: profile?.first_name,
+        displayName: profile?.display_name,
+        email: user.email,
+      })
+    ) {
+      return;
+    }
     if (profile && !profile.username) {
       const key = `mixwise_username_prompt_dismissed_${user.id}`;
       try {
@@ -128,7 +138,8 @@ export function UsernamePrompt() {
           Choose a username
         </h2>
         <p className="mt-2 text-sm text-sage">
-          Friends find you with @{username || "yourname"}. You can set this later in Account.
+          Friends find you with @{username || "yourname"}. Your bar is public by default — you can
+          make it private anytime in Settings.
         </p>
         <div className="mt-4">
           <label htmlFor="username-prompt-input" className="label-botanical mb-1.5">
