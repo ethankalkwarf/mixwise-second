@@ -211,6 +211,172 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
         "Blanco keeps bright agave and pepper. Añejo leans oak and dessert; mixtos flatten the drink with other sugars.",
     },
   ],
+  "spirit-primer-whiskey": [
+    {
+      id: "spw-1",
+      prompt: "You’re stirring a classic Manhattan. Which whiskey keeps sweet vermouth from turning the drink into dessert?",
+      options: [
+        "A heavily peated Islay malt",
+        "US rye (or a high-rye bourbon if you must)",
+        "A light Irish blend at 40% ABV",
+        "Any bottle labeled whiskey — they’re interchangeable",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Rye’s dry spice was written for vermouth drinks. Bourbon softens them; peat and timid blends change the template.",
+    },
+    {
+      id: "spw-2",
+      prompt: "A recipe says only “whiskey.” What’s the usual home-bar default in the American cocktail tradition?",
+      options: [
+        "Blended Scotch",
+        "Bourbon or rye",
+        "Japanese whisky exclusively",
+        "Whatever is cheapest behind the bar",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Unspecified whiskey in American classics usually means bourbon or rye. Scotch and Irish keep their own named drinks.",
+    },
+    {
+      id: "spw-3",
+      prompt: "Why did rye nearly disappear from American bars after Prohibition?",
+      options: [
+        "Rye was banned while bourbon was allowed",
+        "Bourbon’s corn economics and distribution made it the default supermarket whiskey",
+        "Rye cannot be aged in new oak",
+        "Manhattans went out of fashion forever",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Corn-driven bourbon filled the shelf; rye stayed scarce until the cocktail revival needed its dryness again.",
+    },
+  ],
+  "spirit-labels-intro": [
+    {
+      id: "sli-1",
+      prompt: "Which label phrase is most likely a regulated category, not marketing?",
+      options: [
+        "Ultra-premium reserve",
+        "Hand-selected small batch",
+        "Bourbon",
+        "Master distiller’s choice",
+      ],
+      correctIndex: 2,
+      explanation:
+        "Bourbon is a US legal standard with mash and barrel rules. The other phrases are usually decoration.",
+    },
+    {
+      id: "sli-2",
+      prompt: "A bottle says “Aged 12 Years” on a Scotch label. What does 12 guarantee?",
+      options: [
+        "Average age of all casks",
+        "Age of the oldest whisky included",
+        "Age of the youngest whisky in the bottle",
+        "Time since the distillery opened",
+      ],
+      correctIndex: 2,
+      explanation:
+        "On Scotch, a printed age is a legal floor: every drop is at least that old. It is not an average, and older whisky in the blend does not raise the number.",
+    },
+  ],
+  "spirit-labels-whiskey": [
+    {
+      id: "wll-1",
+      prompt: "Which label phrase is a hard US legal standard, not just marketing?",
+      options: [
+        "Small batch",
+        "Craft reserve",
+        "Bottled-in-bond",
+        "Master distiller’s selection",
+      ],
+      correctIndex: 2,
+      explanation:
+        "Bottled-in-bond means 100 proof, 4+ years, one distillery, one season. Small batch and craft are mostly sales language.",
+    },
+    {
+      id: "wll-3",
+      prompt: "True or false: bourbon must be made in Kentucky.",
+      options: [
+        "True — Kentucky is required by law",
+        "False — it must be made in the United States; Kentucky is tradition, not a legal requirement",
+        "True only for straight bourbon",
+        "False — any country can label whiskey “bourbon”",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Bourbon is a US product with mash and barrel rules. Kentucky is heritage marketing, not the legal geography.",
+    },
+    {
+      id: "wll-4",
+      prompt: "You want US straight rye for a Manhattan. A Canadian bottle says “rye whisky.” What should you assume?",
+      options: [
+        "It matches US straight rye mash rules automatically",
+        "It may be a milder blended whisky — read the back label and taste before trusting it in a rye spec",
+        "Canadian rye is always peatier than bourbon",
+        "Rye on any label means ≥51% rye grain worldwide",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Canadian “rye” is often a historical nickname, not US straight rye. Category and origin lines matter.",
+    },
+  ],
+  "spirit-labels-agave": [
+    {
+      id: "sla-1",
+      prompt: "Which tequila label line matters most for a bright Margarita?",
+      options: [
+        "Gold medal sticker on the front",
+        "100% de agave",
+        "Añejo",
+        "Extra smooth",
+      ],
+      correctIndex: 1,
+      explanation:
+        "100% de agave keeps other sugars out of the sour. Añejo is an age tier — often too oaky for a bright lime drink.",
+    },
+    {
+      id: "sla-2",
+      prompt: "What does the NOM number on a tequila bottle identify?",
+      options: [
+        "The bartender who recommended it",
+        "The permitted producer / distillery tied to that bottle",
+        "Proof of organic certification",
+        "How many years the agave grew",
+      ],
+      correctIndex: 1,
+      explanation:
+        "NOM (Norma Oficial Mexicana) IDs the CRT-authorized producer — traceability, not a quality score.",
+    },
+  ],
+  "spirit-labels-scotch": [
+    {
+      id: "sls-1",
+      prompt: "A Scotch bottle says “12 Years.” What does that number guarantee?",
+      options: [
+        "The average age of every whisky in the blend",
+        "The age of the oldest cask used",
+        "The age of the youngest whisky in the bottle",
+        "How long the bottle has been on the shelf",
+      ],
+      correctIndex: 2,
+      explanation:
+        "The number is a legal floor: every drop is at least 12 years old. Older whisky may be included; younger may not.",
+    },
+    {
+      id: "sls-2",
+      prompt: "You’re building a Penicillin. Which label strategy matches the classic?",
+      options: [
+        "One expensive peated single malt for everything",
+        "Blended Scotch in the shaker, peated malt as aroma on top",
+        "Single grain Scotch only",
+        "No label reading — proof is all that matters",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The Penicillin splits roles: mild blend for the sour body, smoky malt for perfume — two label categories.",
+    },
+  ],
   "zero-proof-mindset": [
     {
       id: "zpm-1",
@@ -224,6 +390,306 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       correctIndex: 1,
       explanation:
         "NA drinks still need cocktail architecture. Juice is missing bitter structure, dilution discipline, and often texture.",
+    },
+    {
+      id: "zpm-2",
+      prompt: "A guest’s “mocktail” tastes like sweet limeade. What’s the most useful missing job?",
+      options: [
+        "More non-alcoholic “gin” branding",
+        "Bitter, spice, tannin, or salt — structure ethanol usually helped provide",
+        "A taller glass only",
+        "Less ice so it tastes stronger",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Without ethanol’s grip and aroma carry, you must rebuild bitter/spice/texture on purpose. More juice rarely fixes flatness.",
+    },
+  ],
+  "spirit-primer-gin": [
+    {
+      id: "gin-1",
+      prompt: "You’re making Negronis for a table. Which gin choice is the safest default?",
+      options: [
+        "A soft floral contemporary gin you only drink with tonic",
+        "A juniper-forward London dry that still tastes like gin next to Campari",
+        "Navy-strength gin poured at the same ounces as a 40% bottle with no adjustment",
+        "Any clear spirit — Negronis hide botanicals",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Campari is loud. A classic London dry keeps juniper audible in equal parts. Soft floral gins often disappear.",
+    },
+    {
+      id: "gin-2",
+      prompt: "A Martini tastes like cold perfume water after two sips of vermouth fade. What’s the likely bottle issue?",
+      options: [
+        "The gin is too juniper-heavy",
+        "The gin is soft/floral and can’t carry a nearly-all-gin drink",
+        "You should have shaken it",
+        "Tonic water was required",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Martinis are mostly gin. If the bottle only shines in a G&T, it may lack structure for stirred, spirit-forward drinks.",
+    },
+    {
+      id: "gin-3",
+      prompt: "True or false: “London dry” means the gin must be distilled in London.",
+      options: [
+        "True — geography is required",
+        "False — it’s a production style (dry, botanical-distilled, minimal post-sweetening), not a city requirement",
+        "True only for export bottles",
+        "False — London dry means barrel-aged gin",
+      ],
+      correctIndex: 1,
+      explanation:
+        "London dry is about how it’s made, not a protected London address. Many excellent London dry gins are made elsewhere.",
+    },
+  ],
+  "spirit-primer-rum": [
+    {
+      id: "rum-1",
+      prompt: "Your classic Daiquiri tastes like banana candy and solvent. What’s the best first diagnosis?",
+      options: [
+        "You needed more sugar",
+        "A high-ester “funky” rum is dominating a template that wants clean lime",
+        "Lime should have been lemon",
+        "You under-shook — always shake one full minute",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Funky Jamaican-style rums are aromatic tools. In a standard Daiquiri they can overwhelm lime. Start cleaner; add funk as a fraction.",
+    },
+    {
+      id: "rum-2",
+      prompt: "A dark rum pours almost black. What does the color guarantee?",
+      options: [
+        "At least 8 years in oak",
+        "Nothing by itself — color can be oak, caramel, or both",
+        "It is automatically better in Daiquiris",
+        "It is agricole by law",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Rum lacks a single global aging label rule like Scotch age statements. Color is a weak signal — taste and producer notes matter more.",
+    },
+    {
+      id: "rum-3",
+      prompt: "You’re stocking a first rum shelf for MixWise classics. Best pair?",
+      options: [
+        "Five tiki bottles before any white rum",
+        "One clean white mixing rum and one solid aged rum",
+        "Only spiced rum",
+        "Only overproof",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Clean white covers Daiquiri/Mojito; aged covers richer builds. Tiki depth can wait.",
+    },
+  ],
+  "batching-and-hosting": [
+    {
+      id: "batch-1",
+      prompt: "You’re batching Negronis at 4pm for an 8pm dinner. What’s the smartest move?",
+      options: [
+        "Skip dilution — ice in the pitcher will handle it later",
+        "Measure equal parts, add intentional cold-water dilution, chill hard, taste before guests arrive",
+        "Add the vermouth tomorrow morning so it “stays fresh” on the counter",
+        "Shake the whole pitcher with ice now and leave it out",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Stirred batches need planned dilution and cold. Leaving dilution to a warm pitcher of ice is how you get hot, then watery drinks.",
+    },
+    {
+      id: "batch-2",
+      prompt: "Why is a pitcher of Margaritas juiced at noon risky for an evening party?",
+      options: [
+        "Tequila expires in four hours",
+        "Citrus aroma and brightness fade; acid-heavy batches lose their peak",
+        "Salt rims legally require fresh juice at service",
+        "Batches cannot include orange liqueur",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Spirit + syrup can wait. Citrus is the fragile part — juice close to service when you can.",
+    },
+    {
+      id: "batch-3",
+      prompt: "Egg-white Whiskey Sours for twelve guests. Best hosting strategy?",
+      options: [
+        "Dry-shake a gallon in advance and re-froth by stirring",
+        "Batch the whiskey+syrup+lemon base; shake foam drinks in small waves (or offer foam as a special)",
+        "Skip ice entirely so foam lasts",
+        "Use the blender on the whole batch once",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Foam doesn’t wait politely in a pitcher. Batch the base; execute foam in waves.",
+    },
+  ],
+  "equal-parts-bitters": [
+    {
+      id: "eq-1",
+      prompt: "A Negroni tastes candy-hot and thick, not refreshing. Most likely cause?",
+      options: [
+        "Too much orange peel",
+        "Under-dilution — equal parts still need a proper stir on ice",
+        "The gin was London dry",
+        "You used a rocks glass",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Equal parts is not “no water.” Stirring supplies the weak/dilution that makes bitterness drinkable.",
+    },
+    {
+      id: "eq-2",
+      prompt: "You swap Aperol for Campari in a Negroni and keep every other ounce identical. What happened?",
+      options: [
+        "Nothing — they are interchangeable bitters",
+        "You made a sweeter, less bitter drink that deserves an honest name",
+        "It becomes a Boulevardier",
+        "It becomes an Americano automatically",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Aperol is lighter and sweeter. Same template bones, different bitter intensity — don’t call it a Negroni by default.",
+    },
+    {
+      id: "eq-3",
+      prompt: "Dusty, nutty Negroni with good gin and Campari. First suspect?",
+      options: [
+        "The orange peel",
+        "Oxidized sweet vermouth stored warm",
+        "Stirring too long",
+        "Using a large ice cube",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Vermouth is wine. Warm, old rosso is the classic “this cocktail is bad” false alarm.",
+    },
+  ],
+  "citrus-and-syrups": [
+    {
+      id: "cit-1",
+      prompt: "A Daiquiri smells flat even though the ratios look right. Best first check?",
+      options: [
+        "Buy more expensive rum immediately",
+        "Juice age / bottled lime — aroma dies before sweetness looks wrong",
+        "Add egg white",
+        "Switch to demerara syrup only",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Bottled or tired citrus supplies acid without perfume. Fresh juice is the aromatic half of the sour.",
+    },
+    {
+      id: "cit-2",
+      prompt: "You replace 1:1 simple with rich 2:1 at the same barspoon count. What changes?",
+      options: [
+        "Nothing",
+        "The drink gets sweeter (and slightly less watery from the syrup itself)",
+        "The drink gets more sour",
+        "ABV doubles",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Rich syrup packs more sugar per volume. Same “spoon count” is not the same sweetness.",
+    },
+    {
+      id: "cit-3",
+      prompt: "A recipe says lemon; you only have lime. What’s the honest framing?",
+      options: [
+        "Identical acids — silent swap",
+        "Aromatic variation — different drink family cues; taste and rename if needed",
+        "Always better",
+        "Illegal in cocktails",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Lemon and lime are different aromas and balances. Swapping can be delicious — it isn’t invisible.",
+    },
+  ],
+  "glassware-and-service": [
+    {
+      id: "gl-1",
+      prompt: "You shook a perfect Daiquiri into a room-temp coupe. What did you just undo?",
+      options: [
+        "Nothing — glass temperature is irrelevant",
+        "Hard-won chill — warm glassware raises drink temperature on contact",
+        "The garnish only",
+        "The lime’s acidity",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Chilling the glass is part of service for drinks served up. Warm crystal erases shake work.",
+    },
+    {
+      id: "gl-2",
+      prompt: "Why pack a highball with ice instead of “a few cubes for elegance”?",
+      options: [
+        "It looks busier on camera",
+        "Sparse ice melts faster and warms the lengthener — the drink dies in minutes",
+        "Laws require it",
+        "It reduces ABV to zero",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Packed ice keeps long drinks cold. Sparse ice is a dilution and temperature failure mode.",
+    },
+    {
+      id: "gl-3",
+      prompt: "Best glass for an Old Fashioned you want to sip slowly?",
+      options: [
+        "Warm coupe filled to the brim",
+        "Rocks glass with a large cube sized to the glass",
+        "Flute",
+        "Highball with crushed ice only",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Rocks + large ice manages melt for spirit-forward drinks. Crushed ice is a different template.",
+    },
+  ],
+  "swap-with-intent": [
+    {
+      id: "sw-1",
+      prompt: "You want to “improve” a Margarita by switching to mezcal, honey syrup, and lemon at once. What should you do instead?",
+      options: [
+        "Do all three — more changes mean better drinks",
+        "Change one variable, taste, then decide the next move",
+        "Abandon templates entirely",
+        "Only change the glassware",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Multiple silent swaps hide causality. One knob at a time is how you learn.",
+    },
+    {
+      id: "sw-2",
+      prompt: "Whiskey in a Negroni spec. Honest name?",
+      options: [
+        "Still a Negroni",
+        "Boulevardier (same equal-parts idea, different spirit)",
+        "Americano",
+        "Old Fashioned",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Boulevardier is the whiskey cousin. Honest naming sets expectations.",
+    },
+    {
+      id: "sw-3",
+      prompt: "A peated Scotch “Old Fashioned” tastes like a campfire. Smartest fix path?",
+      options: [
+        "Add more sugar until smoke disappears",
+        "Treat peat as intensity — reduce the peated portion or use it as a rinse/float, don’t assume 1:1 bourbon swap",
+        "Shake it with lemon",
+        "Serve warmer",
+      ],
+      correctIndex: 1,
+      explanation:
+        "High-intensity bottles aren’t silent substitutions. Dose peat like seasoning.",
     },
   ],
 };
@@ -257,6 +723,19 @@ export const METHOD_CHECKS: Record<string, LearnCheck[]> = {
       explanation:
         "The cue is the tin, not the clock. Soft home ice can get there faster — extra time after that is mostly melt.",
     },
+    {
+      id: "m-shake-3",
+      prompt: "You packed the tin with only four soft freezer cubes. What’s the likely result?",
+      options: [
+        "Colder drink, less water — sparse ice is more efficient",
+        "Warm, watery drink — sparse soft ice melts before it chills",
+        "No effect if you shake longer",
+        "Better foam automatically",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Pack the tin. Sparse soft ice dumps water and never gets the drink properly cold.",
+    },
   ],
   stir: [
     {
@@ -279,6 +758,19 @@ export const METHOD_CHECKS: Record<string, LearnCheck[]> = {
       correctIndex: 2,
       explanation:
         "Manhattans are all spirits — stir for clarity and silk. The others have citrus and want a shake.",
+    },
+    {
+      id: "m-stir-3",
+      prompt: "You stirred a Martini for a full minute on wet, cloudy freezer ice. It tastes thin. What went wrong?",
+      options: [
+        "You needed more vermouth",
+        "Soft ice over-diluted before the drink was properly structured — use harder ice and taste sooner",
+        "Martinis must be shaken",
+        "The glass was too cold",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Clock-worship on bad ice waters a stirred drink. Harder cubes and tasting beat a long automatic stir.",
     },
   ],
   build: [
@@ -374,6 +866,32 @@ export const TECHNIQUE_CHECKS: Record<string, LearnCheck[]> = {
       explanation:
         "Dry shake builds foam; wet shake sets temperature and dilution. Skip the second half and you serve warm meringue.",
     },
+    {
+      id: "t-ds-2",
+      prompt: "You dry-shook hard, then forgot the wet shake. What lands in the glass?",
+      options: [
+        "Perfect foam and perfect chill",
+        "Foam structure without enough cold or dilution — often warm and thick-capped",
+        "A clear stirred drink",
+        "No foam at all",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Dry shake is only half the job. Ice still has to chill and dilute before you strain.",
+    },
+    {
+      id: "t-ds-3",
+      prompt: "Why do many bartenders prefer dry-then-wet over reverse (wet then dry)?",
+      options: [
+        "It uses less egg",
+        "Building foam first, then chilling, usually gives a more stable cap without over-diluting early",
+        "It’s required by law",
+        "Wet-first always ruins foam",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Dry-first is the common home/bar habit because foam forms before melt water fights it. Reverse dry-shake is a valid alternate — not the beginner default.",
+    },
   ],
   "fine-strain": [
     {
@@ -388,6 +906,32 @@ export const TECHNIQUE_CHECKS: Record<string, LearnCheck[]> = {
       correctIndex: 1,
       explanation:
         "Up drinks have nowhere for chips to hide. The mesh catches the shards that would keep melting in the glass.",
+    },
+    {
+      id: "t-fs-2",
+      prompt: "You fine-strained a Daiquiri and it still watered out in two minutes. Likely cause?",
+      options: [
+        "Fine-straining always ruins drinks",
+        "The coupe was warm, or tiny chips still got through — chill the glass and keep the mesh tight",
+        "You needed more sugar",
+        "White rum can’t be fine-strained",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Fine-strain helps, but warm glassware and a loose pour still leave melt in the bowl.",
+    },
+    {
+      id: "t-fs-3",
+      prompt: "When is skipping the fine-strain usually fine?",
+      options: [
+        "Never — always double-strain",
+        "Drinks served on fresh ice (highballs, rocks) where chips don’t keep watering an empty bowl",
+        "Only Martinis",
+        "Only when using crushed ice in a coupe",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Up drinks care most. On-ice serves already manage dilution differently.",
     },
   ],
   express: [
@@ -495,10 +1039,13 @@ export const TECHNIQUE_CHECKS: Record<string, LearnCheck[]> = {
         "Lengtheners last, fridge-cold, brief stir. Built drinks die from heat and agitation, not from the spirit.",
     },
   ],
+
 };
 
 export function getGuideChecks(slug: string): LearnCheck[] {
-  return GUIDE_CHECKS[slug] ?? [];
+  const resolved =
+    slug === "whiskey-labels-and-law" ? "spirit-labels-whiskey" : slug;
+  return GUIDE_CHECKS[resolved] ?? [];
 }
 
 export function getMethodChecks(slug: string): LearnCheck[] {

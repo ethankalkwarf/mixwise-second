@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   MagnifyingGlassIcon,
   BookOpenIcon,
@@ -29,10 +30,11 @@ import { useLearnProgress } from "@/hooks/useLearnProgress";
 import { LearnTechniqueIndex } from "@/components/learn/LearnTechniqueIndex";
 import { LearnSwapIndex } from "@/components/learn/LearnSwapIndex";
 
-type BrowseTab = "guides" | "methods" | "techniques" | "swaps";
+type HubMode = "paths" | "lessons";
+type LessonTab = "guides" | "methods" | "techniques" | "swaps";
 
-const TABS: {
-  id: BrowseTab;
+const LESSON_TABS: {
+  id: LessonTab;
   label: string;
   hint: string;
   Icon: typeof BookOpenIcon;
@@ -63,13 +65,7 @@ const TABS: {
   },
 ];
 
-function PathStartCard({
-  path,
-  recommended = false,
-}: {
-  path: LearnPath;
-  recommended?: boolean;
-}) {
+function PathStarterBand({ path }: { path: LearnPath }) {
   const { pathStats, isAuthenticated } = useLearnProgress();
   const stats = pathStats.find((item) => item.path.slug === path.slug);
   const pct = stats?.pct ?? 0;
@@ -80,34 +76,80 @@ function PathStartCard({
     <NativeLearnCardShell
       href={`/learn/paths/${path.slug}`}
       ariaLabel={path.title}
-      className="group flex flex-col overflow-hidden rounded-3xl border border-mist bg-white transition-all hover:-translate-y-0.5 hover:border-terracotta/30 hover:shadow-card-hover"
+      className="group grid overflow-hidden rounded-3xl border border-mist bg-white transition-all hover:border-terracotta/30 hover:shadow-card-hover md:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)]"
     >
-      <div className="native-learn-card__photo native-learn-card__photo--path relative aspect-[16/10] overflow-hidden bg-mist md:aspect-[5/3]">
+      <div className="native-learn-card__photo native-learn-card__photo--path relative aspect-[16/10] overflow-hidden bg-mist md:aspect-auto md:min-h-[220px]">
         <LearnCoverImage
           src={path.coverImage}
           alt=""
-          priority={recommended}
+          priority
           fill
-          className="pointer-events-none object-[center_22%] transition-transform duration-700 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, 50vw"
+          className="pointer-events-none object-cover object-[center_22%] transition-transform duration-700 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, 42vw"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest/50 to-transparent" />
-        {recommended && (
-          <span className="absolute top-3 left-3 rounded-full bg-terracotta px-3 py-1 text-[11px] font-semibold !text-cream">
-            Start here
-          </span>
-        )}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest/40 to-transparent md:bg-gradient-to-r md:from-transparent md:to-transparent" />
+        <span className="absolute top-3 left-3 rounded-full bg-terracotta px-3 py-1 text-[11px] font-semibold !text-cream">
+          Start here
+        </span>
       </div>
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-col justify-center p-5 sm:p-7">
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-terracotta font-bold mb-1.5">
-          Course · {path.steps.length} lessons · ~{path.estimatedMinutes} min
+          {path.eyebrow} · {path.steps.length} lessons · ~{path.estimatedMinutes} min
           {isAuthenticated && done > 0 ? ` · ${done}/${total}` : ""}
         </p>
-        <h3 className="font-display text-xl font-bold text-forest group-hover:text-terracotta transition-colors">
+        <h3 className="font-display text-2xl font-bold text-forest group-hover:text-terracotta transition-colors">
           {path.title}
         </h3>
+        <p className="mt-2 text-sm text-sage leading-relaxed line-clamp-3">{path.summary}</p>
         {isAuthenticated && (
-          <div className="mt-4 h-1 rounded-full bg-mist overflow-hidden">
+          <div className="mt-4 h-1 max-w-xs rounded-full bg-mist overflow-hidden">
+            <div
+              className="h-full rounded-full bg-olive transition-all duration-500"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        )}
+        <span className="mt-5 inline-flex w-fit text-sm font-semibold text-terracotta">
+          Open path →
+        </span>
+      </div>
+    </NativeLearnCardShell>
+  );
+}
+
+function PathMediaRow({ path }: { path: LearnPath }) {
+  const { pathStats, isAuthenticated } = useLearnProgress();
+  const stats = pathStats.find((item) => item.path.slug === path.slug);
+  const pct = stats?.pct ?? 0;
+  const done = stats?.done ?? 0;
+  const total = stats?.total ?? path.steps.length;
+
+  return (
+    <NativeLearnCardShell
+      href={`/learn/paths/${path.slug}`}
+      ariaLabel={path.title}
+      className="group flex gap-4 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
+    >
+      <div className="native-learn-card__photo relative h-[4.75rem] w-28 shrink-0 overflow-hidden rounded-xl bg-mist sm:h-24 sm:w-36">
+        <LearnCoverImage
+          src={path.coverImage}
+          alt=""
+          fill
+          className="pointer-events-none object-cover object-[center_25%] transition-transform duration-500 group-hover:scale-105"
+          sizes="144px"
+        />
+      </div>
+      <div className="min-w-0 flex flex-1 flex-col justify-center py-0.5 pr-1">
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta font-bold">
+          {path.eyebrow} · {path.steps.length} lessons · ~{path.estimatedMinutes} min
+          {isAuthenticated && done > 0 ? ` · ${done}/${total}` : ""}
+        </p>
+        <h3 className="font-display text-lg font-bold text-forest group-hover:text-terracotta transition-colors mt-0.5">
+          {path.title}
+        </h3>
+        <p className="text-xs text-sage line-clamp-1 mt-1">{path.summary}</p>
+        {isAuthenticated && done > 0 && (
+          <div className="mt-2 h-1 max-w-[10rem] rounded-full bg-mist overflow-hidden">
             <div
               className="h-full rounded-full bg-olive transition-all duration-500"
               style={{ width: `${pct}%` }}
@@ -119,7 +161,7 @@ function PathStartCard({
   );
 }
 
-function GuideRow({ guide }: { guide: LearnGuide }) {
+function GuidePhotoRow({ guide }: { guide: LearnGuide }) {
   const { isComplete, isAuthenticated } = useLearnProgress();
   const done = isAuthenticated && isComplete("guide", guide.slug);
 
@@ -127,27 +169,27 @@ function GuideRow({ guide }: { guide: LearnGuide }) {
     <NativeLearnCardShell
       href={`/learn/guides/${guide.slug}`}
       ariaLabel={guide.title}
-      className="group flex gap-4 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
+      className="group flex gap-3 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
     >
-      <div className="native-learn-card__photo relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
+      <div className="native-learn-card__photo relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-mist">
         <LearnCoverImage
           src={guide.coverImage}
           alt=""
           fill
           className="transition-transform duration-500 group-hover:scale-105 pointer-events-none"
-          sizes="96px"
+          sizes="80px"
         />
         {done && (
-          <span className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-olive text-forest">
-            <CheckIcon className="h-3.5 w-3.5" />
+          <span className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-olive text-forest">
+            <CheckIcon className="h-3 w-3" />
           </span>
         )}
       </div>
-      <div className="min-w-0 flex flex-col justify-center py-1 pr-2">
+      <div className="min-w-0 flex flex-col justify-center py-0.5 pr-1">
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta font-bold mb-0.5">
           {guide.eyebrow} · {guide.readingMinutes} min
         </p>
-        <h3 className="font-display text-lg font-bold text-forest group-hover:text-terracotta transition-colors">
+        <h3 className="font-display text-base font-bold text-forest group-hover:text-terracotta transition-colors">
           {guide.title}
         </h3>
         <p className="text-xs text-sage line-clamp-2 mt-1">{guide.summary}</p>
@@ -156,7 +198,7 @@ function GuideRow({ guide }: { guide: LearnGuide }) {
   );
 }
 
-function MethodChip({ method }: { method: LearnMethod }) {
+function MethodPhotoRow({ method }: { method: LearnMethod }) {
   const { isComplete, isAuthenticated } = useLearnProgress();
   const done = isAuthenticated && isComplete("method", method.slug);
 
@@ -166,7 +208,7 @@ function MethodChip({ method }: { method: LearnMethod }) {
       ariaLabel={method.label}
       className="group flex gap-3 overflow-hidden rounded-2xl border border-mist bg-white p-3 transition-all hover:border-terracotta/30 hover:shadow-soft"
     >
-      <div className="native-learn-card__photo relative h-[4.75rem] w-[5.5rem] sm:h-20 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
+      <div className="native-learn-card__photo relative h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-mist">
         <LearnCoverImage
           src={method.coverImage}
           alt={method.coverAlt}
@@ -184,7 +226,7 @@ function MethodChip({ method }: { method: LearnMethod }) {
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta font-bold">
           {method.cue}
         </p>
-        <p className="font-display text-lg font-bold text-forest group-hover:text-terracotta transition-colors mt-0.5">
+        <p className="font-display text-base font-bold text-forest group-hover:text-terracotta transition-colors mt-0.5">
           {method.label}
         </p>
         <p className="text-xs text-sage line-clamp-1 mt-1">{method.summary}</p>
@@ -194,18 +236,43 @@ function MethodChip({ method }: { method: LearnMethod }) {
 }
 
 export function LearnLibraryClient() {
-  const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<BrowseTab>("guides");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const nativeShell = useNativeShell();
+
+  const mode: HubMode = searchParams.get("tab") === "lessons" ? "lessons" : "paths";
+  const [lessonTab, setLessonTab] = useState<LessonTab>("guides");
+  const [query, setQuery] = useState("");
+
   const techniques = getAllTechniqueLearnEntries();
   const starterPath = LEARN_PATHS[0];
-  const tabCounts: Record<BrowseTab, number> = {
+  const otherPaths = useMemo(
+    () => LEARN_PATHS.filter((p) => p.slug !== starterPath.slug),
+    [starterPath.slug]
+  );
+
+  const setMode = useCallback(
+    (next: HubMode) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next === "lessons") {
+        params.set("tab", "lessons");
+      } else {
+        params.delete("tab");
+      }
+      const q = params.toString();
+      router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const lessonTabCounts: Record<LessonTab, number> = {
     guides: LEARN_GUIDES.length,
     methods: LEARN_LIBRARY_METHODS.length,
     techniques: techniques.length,
     swaps: SUBSTITUTION_TIPS.length,
   };
-  const activeTab = TABS.find((item) => item.id === tab) ?? TABS[0];
+  const activeLessonTab = LESSON_TABS.find((item) => item.id === lessonTab) ?? LESSON_TABS[0];
 
   const filtered = useMemo(() => {
     if (!query.trim()) {
@@ -242,143 +309,183 @@ export function LearnLibraryClient() {
   const searching = Boolean(query.trim());
 
   return (
-    <div className={nativeShell ? "native-learn-library space-y-8" : "space-y-16"}>
-      {/* Courses — playlists of library lessons */}
-      <section>
-        <div className="mb-6 max-w-2xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
-            Courses
-          </p>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
-            Start a course
-          </h2>
-          <LibraryContinueStrip />
-        </div>
-        <div className={nativeShell ? "grid gap-4 md:grid-cols-2" : "grid gap-5 md:grid-cols-3"}>
-          {LEARN_PATHS.map((path) => (
-            <PathStartCard
-              key={path.slug}
-              path={path}
-              recommended={path.slug === starterPath.slug}
-            />
-          ))}
-        </div>
-      </section>
+    <div className={nativeShell ? "native-learn-library space-y-6" : "space-y-8"}>
+      <div
+        className="inline-flex rounded-full border border-mist bg-white p-1"
+        role="tablist"
+        aria-label="Learn modes"
+      >
+        {(
+          [
+            { id: "paths" as const, label: "Paths" },
+            { id: "lessons" as const, label: "Lessons" },
+          ] as const
+        ).map((item) => {
+          const active = mode === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setMode(item.id)}
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
+                active
+                  ? "bg-forest text-cream"
+                  : "text-forest hover:bg-mist/60"
+              }`}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
 
-      {/* Lesson library */}
-      <section id="lessons">
-        <div className="mb-5 max-w-2xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-terracotta font-bold mb-1">
-            Lessons
-          </p>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
-            Or open one lesson
-          </h2>
-        </div>
+      <LibraryContinueStrip />
 
-        <div className="relative max-w-xl mb-5">
-          <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search templates, ice, shake, vermouth…"
-            className="w-full rounded-2xl border border-mist bg-white py-3.5 pl-12 pr-4 text-sm text-forest placeholder:text-sage/70 focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta"
-          />
-        </div>
-
-        {!searching && (
-          <div
-            className="flex flex-wrap gap-2 mb-3 border-b border-mist pb-4"
-            role="tablist"
-            aria-label="Library sections"
-          >
-            {TABS.map((item) => {
-              const active = tab === item.id;
-              const Icon = item.Icon;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setTab(item.id)}
-                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                    active
-                      ? "bg-forest text-cream"
-                      : "bg-white text-forest border border-mist hover:border-terracotta/40"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" aria-hidden />
-                  {item.label}
-                  <span className={active ? "text-cream/70" : "text-sage"}>{tabCounts[item.id]}</span>
-                </button>
-              );
-            })}
+      {mode === "paths" ? (
+        <section aria-label="Paths">
+          <div className="mb-6 max-w-2xl">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
+              Follow a path
+            </h2>
+            <p className="mt-2 text-sm text-sage max-w-xl">
+              Guided sequences — follow step by step.
+            </p>
           </div>
-        )}
-        {!searching && (
-          <p className="text-sm text-sage mb-6">{activeTab.hint}</p>
-        )}
 
-        {searching ? (
-          <div className="space-y-10">
-            {filtered.guides.length > 0 && (
-              <BrowseBlock title="Guides">
+          <PathStarterBand path={starterPath} />
+
+          <div className="mt-8 space-y-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sage font-bold mb-3">
+              All paths · {otherPaths.length}
+            </p>
+            {otherPaths.map((path) => (
+              <PathMediaRow key={path.slug} path={path} />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section aria-label="Lessons">
+          <div className="mb-5 max-w-2xl">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-forest">
+              Look up a lesson
+            </h2>
+            <p className="mt-2 text-sm text-sage max-w-xl">
+              Single topics — look up what you need.
+            </p>
+          </div>
+
+          <div className="relative max-w-xl mb-5">
+            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-sage" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search templates, ice, shake, vermouth…"
+              className="w-full rounded-2xl border border-mist bg-white py-3.5 pl-12 pr-4 text-sm text-forest placeholder:text-sage/70 focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta"
+            />
+          </div>
+
+          {!searching && (
+            <div
+              className="flex flex-wrap gap-2 mb-3 border-b border-mist pb-4"
+              role="tablist"
+              aria-label="Lesson types"
+            >
+              {LESSON_TABS.map((item) => {
+                const active = lessonTab === item.id;
+                const Icon = item.Icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setLessonTab(item.id)}
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                      active
+                        ? "bg-forest text-cream"
+                        : "bg-white text-forest border border-mist hover:border-terracotta/40"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden />
+                    {item.label}
+                    <span className={active ? "text-cream/70" : "text-sage"}>
+                      {lessonTabCounts[item.id]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {!searching && (
+            <p className="text-sm text-sage mb-6">{activeLessonTab.hint}</p>
+          )}
+
+          {searching ? (
+            <div className="space-y-10">
+              {filtered.guides.length > 0 && (
+                <BrowseBlock title="Guides">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {filtered.guides.map((g) => (
+                      <GuidePhotoRow key={g.slug} guide={g} />
+                    ))}
+                  </div>
+                </BrowseBlock>
+              )}
+              {filtered.methods.length > 0 && (
+                <BrowseBlock title="Methods">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {filtered.methods.map((m) => (
+                      <MethodPhotoRow key={m.slug} method={m} />
+                    ))}
+                  </div>
+                </BrowseBlock>
+              )}
+              {filtered.techniques.length > 0 && (
+                <BrowseBlock title="Techniques">
+                  <LearnTechniqueIndex techniques={filtered.techniques} />
+                </BrowseBlock>
+              )}
+              {filtered.swaps.length > 0 && (
+                <BrowseBlock title="Swaps">
+                  <LearnSwapIndex tips={filtered.swaps} />
+                </BrowseBlock>
+              )}
+              {filtered.guides.length === 0 &&
+                filtered.methods.length === 0 &&
+                filtered.techniques.length === 0 &&
+                filtered.swaps.length === 0 && (
+                  <p className="text-sm text-sage">Nothing matches that search.</p>
+                )}
+            </div>
+          ) : (
+            <>
+              {lessonTab === "guides" && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {filtered.guides.map((g) => (
-                    <GuideRow key={g.slug} guide={g} />
+                    <GuidePhotoRow key={g.slug} guide={g} />
                   ))}
                 </div>
-              </BrowseBlock>
-            )}
-            {filtered.methods.length > 0 && (
-              <BrowseBlock title="Methods">
+              )}
+              {lessonTab === "methods" && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {filtered.methods.map((m) => (
-                    <MethodChip key={m.slug} method={m} />
+                    <MethodPhotoRow key={m.slug} method={m} />
                   ))}
                 </div>
-              </BrowseBlock>
-            )}
-            {filtered.techniques.length > 0 && (
-              <BrowseBlock title="Techniques">
-                <LearnTechniqueIndex techniques={filtered.techniques} />
-              </BrowseBlock>
-            )}
-            {filtered.swaps.length > 0 && (
-              <BrowseBlock title="Swaps">
-                <LearnSwapIndex tips={filtered.swaps} />
-              </BrowseBlock>
-            )}
-            {filtered.guides.length === 0 &&
-              filtered.methods.length === 0 &&
-              filtered.techniques.length === 0 &&
-              filtered.swaps.length === 0 && (
-                <p className="text-sm text-sage">Nothing matches that search.</p>
               )}
-          </div>
-        ) : (
-          <>
-            {tab === "guides" && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {filtered.guides.map((g) => (
-                  <GuideRow key={g.slug} guide={g} />
-                ))}
-              </div>
-            )}
-            {tab === "methods" && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {filtered.methods.map((m) => (
-                  <MethodChip key={m.slug} method={m} />
-                ))}
-              </div>
-            )}
-            {tab === "techniques" && <LearnTechniqueIndex techniques={filtered.techniques} />}
-            {tab === "swaps" && <LearnSwapIndex tips={filtered.swaps} showAllLink />}
-          </>
-        )}
-      </section>
+              {lessonTab === "techniques" && (
+                <LearnTechniqueIndex techniques={filtered.techniques} />
+              )}
+              {lessonTab === "swaps" && (
+                <LearnSwapIndex tips={filtered.swaps} showAllLink />
+              )}
+            </>
+          )}
+        </section>
+      )}
     </div>
   );
 }
@@ -401,7 +508,7 @@ function LibraryContinueStrip() {
   return (
     <Link
       href={nextHref || "/learn"}
-      className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-terracotta/25 bg-white px-4 py-3 hover:border-terracotta/50 transition-colors"
+      className="flex items-center justify-between gap-3 rounded-2xl border border-mist bg-white px-4 py-3 hover:border-terracotta/40 transition-colors"
     >
       <p className="text-sm text-forest">{formatLearnProgressLine(level, lessonsDone, lessonsTotal)}</p>
       <span className="text-sm font-semibold text-terracotta shrink-0">

@@ -264,7 +264,7 @@ function useLearnProgressState(): LearnProgressApi {
       toast.success("Lesson complete — saved to your progress");
       for (const pathSlug of newlyFinishedPaths) {
         const path = LEARN_PATHS.find((p) => p.slug === pathSlug);
-        toast.success(`Course complete${path ? `: ${path.title}` : ""}`);
+        toast.success(`Path complete${path ? `: ${path.title}` : ""}`);
       }
       for (const badge of result.awarded) {
         toast.success(`Badge unlocked: ${badge.name}`);

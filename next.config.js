@@ -89,6 +89,11 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/learn/guides/whiskey-labels-and-law',
+        destination: '/learn/guides/spirit-labels-whiskey',
+        permanent: true,
+      },
+      {
         source: '/brand/press',
         destination: '/brand/logos',
         permanent: true,

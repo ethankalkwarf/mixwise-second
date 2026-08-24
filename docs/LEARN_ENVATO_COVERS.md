@@ -2,9 +2,11 @@
 
 Keep **Home bar fundamentals** on `/media/kitchen-shelf.webp`.
 
+For source priority (Envato vs Commons vs shoot vs AI), see **`docs/LEARN_VISUALS.md`**.
+
 Download **Photos** (not illustrations). Prefer daylight / soft kitchen or home-bar light — same vibe as MixWise cocktail shots.
 
-Save into `public/learn/{slug}.webp`, then point `coverImage` in `lib/learnLibrary.ts`.
+Save into `public/learn/{slug}.webp`, then point `coverImage` in `lib/learnLibrary.ts` / `lib/learnGuides.ts`.
 
 | Guide | Envato search | What “good” looks like | Avoid |
 |-------|---------------|------------------------|--------|

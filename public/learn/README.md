@@ -21,7 +21,41 @@
 | `garnish-with-intent.webp` | Garnish with intent |
 | `vermouth-and-modifiers.webp` | Vermouth & modifiers (generated) |
 | `spirit-primer-agave.webp` | Agave primer |
-| `zero-proof-mindset.webp` | Zero-proof mindset |
+| `spirit-primer-whiskey.webp` | Whiskey primer (rickhouse barrels) |
+| `spirit-primer-gin.webp` | Gin primer (G&T — CC photo; see ATTRIBUTION.md) |
+| `spirit-primer-rum.webp` | Rum primer (Daiquiri — CC photo; see ATTRIBUTION.md) |
+| `whiskey-deep-dive.webp` | Whiskey primer path (Old Fashioned) |
+| `learn-whiskey-manhattan.webp` | Whiskey primer — Manhattan slide (CC photo; see ATTRIBUTION.md) |
+| `learn-whiskey-sour.webp` | Whiskey primer — Whiskey Sour slide (CC photo; see ATTRIBUTION.md) |
+| `equal-parts-bitters.webp` | Equal parts & bitter drinks (Negroni — CC photo; see ATTRIBUTION.md) |
+| `batching-and-hosting.webp` | Batching for guests (CC photo; see ATTRIBUTION.md) |
+| `citrus-and-syrups.webp` | Citrus & syrups (CC photo; see ATTRIBUTION.md) |
+| `glassware-and-service.webp` | Glassware & service (CC photo; see ATTRIBUTION.md) |
+| `zero-proof-hosting.webp` | Zero-proof hosting path (CC photo; see ATTRIBUTION.md) |
+| `zero-proof-mindset.webp` | Zero-proof mindset guide (same mint highball as path) |
+| `spirit-labels-decoded.webp` | Spirit labels decoded path |
+| `spirit-labels-intro.webp` | Labels intro guide + figure pager (Evan Williams BIB vs standard) |
+| `spirit-labels-whiskey.webp` | American whiskey labels module (Wild Turkey Rare Breed) |
+| `spirit-labels-agave.webp` | Agave labels module (Corralejo blanco — 100% de agave) |
+| `spirit-labels-scotch.webp` | Scotch labels module (Laphroaig 10 — age statement) |
+
+## Spirit labels decoded (course)
+Path: `/learn/paths/spirit-labels-decoded` — intro → American whiskey → agave → Scotch.
+
+**Diagrams (SVG in LearnFigure):** `label-trust`, `whiskey-labels`, `agave-labels`, `scotch-labels`, photo pagers `label-reading` (category/proof) and `age-on-label` (Scotch age floor).
+
+**Real label photos:** Intro, whiskey, agave, and Scotch module covers are cropped Wikimedia bottle shots — see [`ATTRIBUTION.md`](./ATTRIBUTION.md) for credits and licenses. Path hero `spirit-labels-decoded.webp` remains generated (shelf mood).
+
+### Optional upgrades (Envato or shoot)
+| Need | Why |
+|------|-----|
+| **Back-label zone map** (US TTB typography) | Annotated figure — style word, proof, distilled-in line |
+| **Bottled-in-bond green strip** | Real tax strip close-up (Evan Williams cover already shows bonded front label) |
+| **Tequila NOM line macro** | CRT / Hecho en México on back label (Corralejo cover shows front category) |
+| **Vermouth / wine modifier labels** | Future module: DOP, abv, fridge date |
+
+We intentionally avoid **readable brand logos** in generated art. Module covers use real Wikimedia label photos for education; see `ATTRIBUTION.md`.
+
 
 ## Methods & techniques (generated)
 | File | Topic |

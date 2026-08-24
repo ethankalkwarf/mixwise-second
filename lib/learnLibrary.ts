@@ -433,10 +433,10 @@ export const LEARN_PATHS: LearnPath[] = [
   {
     slug: "first-month-home",
     title: "Your first month at home",
-    eyebrow: "Beginner path",
+    eyebrow: "Beginner",
     summary:
       "Stock a small kit, learn the sour and old-fashioned templates, shake a Daiquiri, stir a Manhattan or Negroni, then taste for balance.",
-    estimatedMinutes: 50,
+    estimatedMinutes: 15,
     coverImage: "/media/kitchen-gathering.webp",
     coverAlt: "Friends measuring and mixing cocktails in a home kitchen",
     steps: [
@@ -470,10 +470,10 @@ export const LEARN_PATHS: LearnPath[] = [
   {
     slug: "sours-mastery",
     title: "Sours mastery",
-    eyebrow: "Technique path",
+    eyebrow: "Technique",
     summary:
       "Own the 2:1:1 skeleton, a hard shake, egg-white foam, a clean coupe, and the fixes for thin, sweet, or lifeless citrus drinks.",
-    estimatedMinutes: 40,
+    estimatedMinutes: 15,
     coverImage: "/learn/cocktail-templates.webp",
     coverAlt: "Three template drinks: a sour, an old fashioned, and a highball",
     steps: [
@@ -506,11 +506,11 @@ export const LEARN_PATHS: LearnPath[] = [
   },
   {
     slug: "agave-deep-dive",
-    title: "Agave deep dive",
-    eyebrow: "Spirits path",
+    title: "Agave primer: tequila & mezcal",
+    eyebrow: "Spirits",
     summary:
       "Choose blanco or mezcal, shake a Margarita, express citrus, then build a Paloma — garnish with intent, not extra fruit.",
-    estimatedMinutes: 40,
+    estimatedMinutes: 15,
     coverImage: "/learn/spirit-primer-agave.webp",
     coverAlt: "Agave fields for tequila and mezcal",
     steps: [
@@ -541,6 +541,400 @@ export const LEARN_PATHS: LearnPath[] = [
       },
     ],
   },
+  {
+    slug: "whiskey-deep-dive",
+    title: "Whiskey primer: bourbon, rye & beyond",
+    eyebrow: "Spirits",
+    summary:
+      "Bourbon vs rye, then three drinks that teach the category: Old Fashioned, Manhattan (with fresh vermouth), and Whiskey Sour — finished with citrus oil.",
+    estimatedMinutes: 15,
+    coverImage: "/learn/whiskey-deep-dive.webp",
+    coverAlt: "An Old Fashioned in a rocks glass with a large ice cube and orange peel",
+    steps: [
+      {
+        type: "guide",
+        slug: "spirit-primer-whiskey",
+        why: "Bourbon for round oak, rye for spice — and why American cocktail history still picks your bottle.",
+      },
+      {
+        type: "method",
+        slug: "stir",
+        why: "An Old Fashioned or Manhattan should be clear, cold, and slightly softened — not watery or hot.",
+      },
+      {
+        type: "guide",
+        slug: "vermouth-and-modifiers",
+        why: "Sweet vermouth is half the Manhattan. Fridge it, date it, and taste it before you blame the whiskey.",
+      },
+      {
+        type: "method",
+        slug: "shake",
+        why: "A Whiskey Sour is still a sour — hard shake, fresh lemon, stop when the tin hurts.",
+      },
+      {
+        type: "technique",
+        slug: "express",
+        why: "Orange oil over an Old Fashioned or Manhattan beats a muddled fruit salad in the glass.",
+      },
+    ],
+  },
+  {
+    slug: "stirred-classics",
+    title: "Stirred classics",
+    eyebrow: "Technique",
+    summary:
+      "Keep vermouth cold, know when to stir, chill a Manhattan or Negroni clear and silky, then finish with citrus oil — not a fruit salad.",
+    estimatedMinutes: 15,
+    coverImage: "/learn/vermouth-and-modifiers.webp",
+    coverAlt: "Vermouth and modifier bottles stored cold on a refrigerator shelf",
+    steps: [
+      {
+        type: "guide",
+        slug: "vermouth-and-modifiers",
+        why: "Half the drink is wine. Fridge it, finish it, and stop blaming the gin or whiskey.",
+      },
+      {
+        type: "guide",
+        slug: "shake-vs-stir",
+        why: "All-spirit drinks want a stir. Shaking clouds them and adds more water than the template asks for.",
+      },
+      {
+        type: "method",
+        slug: "stir",
+        why: "Hard cubes, full glass, taste for silk — stop before it turns thin.",
+      },
+      {
+        type: "guide",
+        slug: "ice-and-dilution",
+        why: "Soft freezer ice ruins Manhattans before the spoon does. Match ice to the method.",
+      },
+      {
+        type: "technique",
+        slug: "express",
+        why: "Orange or lemon oil on the surface is the last seasoning — not a muddled orange wheel.",
+      },
+    ],
+  },
+  {
+    slug: "highballs-and-builds",
+    title: "Highballs & lengthened drinks",
+    eyebrow: "Technique",
+    summary:
+      "Pack the glass with ice, build spirit and modifiers, then add a cold lengthener last — and garnish for aroma, not clutter.",
+    estimatedMinutes: 12,
+    coverImage: "/learn/method-build.webp",
+    coverAlt: "A highball glass packed with ice and a cold lengthened drink",
+    steps: [
+      {
+        type: "guide",
+        slug: "ice-and-dilution",
+        why: "Sparse ice is why highballs die in two minutes. Pack the glass on purpose.",
+      },
+      {
+        type: "method",
+        slug: "build",
+        why: "Ice first, spirit and modifiers next, cold soda or ginger beer last — brief stir only.",
+      },
+      {
+        type: "guide",
+        slug: "cocktail-templates",
+        why: "Highballs are the lengthened family. Know the skeleton so you can swap spirit and soda without inventing chaos.",
+      },
+      {
+        type: "guide",
+        slug: "garnish-with-intent",
+        why: "Lime, mint, or nothing — match the aroma to the lengthener, don’t bury the glass in fruit.",
+      },
+      {
+        type: "guide",
+        slug: "balance-and-taste",
+        why: "Thin, sweet, or flat? Fix ice, measure, or acid before you abandon the bottle.",
+      },
+    ],
+  },
+  {
+    slug: "spirit-labels-decoded",
+    title: "Spirit labels decoded",
+    eyebrow: "Shopping",
+    summary:
+      "Learn which words on a bottle are law vs marketing — then read American whiskey, agave, and Scotch labels like a bartender shopping for Manhattans and Margaritas.",
+    estimatedMinutes: 20,
+    coverImage: "/learn/spirit-labels-decoded.webp",
+    coverAlt: "Home bar shelf with several spirit bottles at soft angles",
+    steps: [
+      {
+        type: "guide",
+        slug: "spirit-labels-intro",
+        why: "Proof, age, origin, and the two languages every label speaks — before you pick a spirit family.",
+      },
+      {
+        type: "guide",
+        slug: "spirit-labels-whiskey",
+        why: "Bourbon, rye, straight, bonded — and why Canadian “rye” is not US rye.",
+      },
+      {
+        type: "guide",
+        slug: "spirit-labels-agave",
+        why: "100% de agave, NOM, CRT tiers — the Margarita shopping checklist.",
+      },
+      {
+        type: "guide",
+        slug: "spirit-labels-scotch",
+        why: "Single malt vs blend, what “12 Years” means, peat as intensity — for Rob Roys and Penicillins.",
+      },
+    ],
+  },
+  {
+    slug: "gin-primer",
+    title: "Gin primer: botanicals & classics",
+    eyebrow: "Spirits",
+    summary:
+      "Choose a gin that still tastes like gin under tonic or vermouth, stir a Martini or Negroni, build a G&T, then finish with citrus oil.",
+    estimatedMinutes: 15,
+    coverImage: "/learn/spirit-primer-gin.webp",
+    coverAlt: "A gin and tonic with ice and lime, gin bottle softly blurred behind",
+    steps: [
+      {
+        type: "guide",
+        slug: "spirit-primer-gin",
+        why: "London dry vs contemporary — pick botanicals for the template, not the bottle art.",
+      },
+      {
+        type: "method",
+        slug: "stir",
+        why: "Martini or Negroni: clear, cold, and diluted on purpose.",
+      },
+      {
+        type: "method",
+        slug: "build",
+        why: "A G&T is a highball — packed ice, cold tonic last.",
+      },
+      {
+        type: "technique",
+        slug: "express",
+        why: "Lemon or grapefruit oil over gin drinks beats drowning the glass in wedges.",
+      },
+    ],
+  },
+  {
+    slug: "rum-primer",
+    title: "Rum primer: from Daiquiri to Mojito",
+    eyebrow: "Spirits",
+    summary:
+      "Pick clean white vs aged rum, shake a Daiquiri, muddle a Mojito without shredding mint, then build a ginger highball.",
+    estimatedMinutes: 15,
+    coverImage: "/learn/spirit-primer-rum.webp",
+    coverAlt: "A classic Daiquiri in a stemmed cocktail glass on dark wood",
+    steps: [
+      {
+        type: "guide",
+        slug: "spirit-primer-rum",
+        why: "Clean rum for citrus, aged for body, funk as seasoning — not always the whole pour.",
+      },
+      {
+        type: "method",
+        slug: "shake",
+        why: "The Daiquiri is the rum sour. Hard shake, fresh lime, stop when the tin hurts.",
+      },
+      {
+        type: "technique",
+        slug: "muddle",
+        why: "Press mint for perfume — shredding it tastes like lawn.",
+      },
+      {
+        type: "method",
+        slug: "build",
+        why: "Dark ’n’ Stormy family: ice, rum, cold ginger beer last.",
+      },
+    ],
+  },
+  {
+    slug: "zero-proof-hosting",
+    title: "Zero-proof hosting",
+    eyebrow: "Hosting",
+    summary:
+      "Build non-alcoholic drinks with real cocktail architecture — then balance, lengthen, and garnish so guests never get the consolation-prize glass.",
+    estimatedMinutes: 12,
+    coverImage: "/learn/zero-proof-hosting.webp",
+    coverAlt: "A mint highball packed with crushed ice and fresh mint",
+    steps: [
+      {
+        type: "guide",
+        slug: "zero-proof-mindset",
+        why: "Acid, bitter, texture, length — rebuild what ethanol was doing.",
+      },
+      {
+        type: "guide",
+        slug: "cocktail-templates",
+        why: "Borrow sour, highball, and old-fashioned skeletons instead of inventing from soda.",
+      },
+      {
+        type: "guide",
+        slug: "balance-and-taste",
+        why: "If it tastes like juice, name the missing job — usually bitter, spice, or dilution.",
+      },
+      {
+        type: "method",
+        slug: "build",
+        why: "Many NA hosts live as highballs: packed ice, cold lengthener last.",
+      },
+      {
+        type: "guide",
+        slug: "garnish-with-intent",
+        why: "Same glass and garnish standard as the alcoholic menu.",
+      },
+    ],
+  },
+  {
+    slug: "batching-for-guests",
+    title: "Batching for guests",
+    eyebrow: "Hosting",
+    summary:
+      "Scale a Negroni or sour for a table — pre-dilute stirred drinks, protect citrus, and set a service station so you are not stuck shaking all night.",
+    estimatedMinutes: 12,
+    coverImage: "/learn/batching-and-hosting.webp",
+    coverAlt: "Several guest cocktails and a pitcher on a bright kitchen table",
+    steps: [
+      {
+        type: "guide",
+        slug: "batching-and-hosting",
+        why: "Ratio × dilution × chill. Spirit-forward batches first; citrus close to service.",
+      },
+      {
+        type: "guide",
+        slug: "ice-and-dilution",
+        why: "Pre-dilution replaces the shake/stir — get the water intentional.",
+      },
+      {
+        type: "guide",
+        slug: "vermouth-and-modifiers",
+        why: "Batched Negronis die on oxidized vermouth. Fridge and finish.",
+      },
+      {
+        type: "guide",
+        slug: "glassware-and-service",
+        why: "Cold glassware and a garnish tray finish a batch like a bar, not a buffet.",
+      },
+    ],
+  },
+  {
+    slug: "equal-parts-workshop",
+    title: "Equal parts & bitter drinks",
+    eyebrow: "Templates",
+    summary:
+      "Own the Negroni family: equal-parts math, Campari vs Aperol, fresh vermouth, a proper stir, and orange oil — plus the Americano as a lengthened cousin.",
+    estimatedMinutes: 15,
+    coverImage: "/learn/equal-parts-bitters.webp",
+    coverAlt: "A Negroni in a rocks glass with orange peel",
+    steps: [
+      {
+        type: "guide",
+        slug: "equal-parts-bitters",
+        why: "Equal parts is a skeleton — bitter intensity and dilution decide if it sings.",
+      },
+      {
+        type: "guide",
+        slug: "vermouth-and-modifiers",
+        why: "Half the Negroni is wine. Counter vermouth is the usual villain.",
+      },
+      {
+        type: "method",
+        slug: "stir",
+        why: "Silk and cold — shaking a Negroni is the wrong kind of texture.",
+      },
+      {
+        type: "technique",
+        slug: "express",
+        why: "Orange oil is the finish; a muddled wheel is not.",
+      },
+      {
+        type: "method",
+        slug: "build",
+        why: "Americano: same bitter-sweet idea, lengthened with cold soda.",
+      },
+    ],
+  },
+  {
+    slug: "citrus-syrup-lab",
+    title: "Citrus & syrup lab",
+    eyebrow: "Ingredients",
+    summary:
+      "A compact lab: fresh juice vs bottled, 1:1 vs rich syrup, then shake a sour and taste for thin, sweet, or dull — fixing the smallest lever.",
+    estimatedMinutes: 10,
+    coverImage: "/learn/citrus-and-syrups.webp",
+    coverAlt: "A whole lemon and lime on a light surface",
+    steps: [
+      {
+        type: "guide",
+        slug: "citrus-and-syrups",
+        why: "Acid and sugar are ingredients with aroma and strength — not afterthoughts.",
+      },
+      {
+        type: "method",
+        slug: "shake",
+        why: "Make one sour with fresh citrus. The tin teaches dilution; the juice teaches brightness.",
+      },
+      {
+        type: "guide",
+        slug: "balance-and-taste",
+        why: "Name the fault (sweet, sharp, thin, dull) and move one dial.",
+      },
+    ],
+  },
+  {
+    slug: "glassware-service",
+    title: "Glassware & service",
+    eyebrow: "Service",
+    summary:
+      "Pick coupe, rocks, or highball on purpose, chill what is served up, pack ice for long drinks, and garnish to the glass — not the Instagram prop table.",
+    estimatedMinutes: 10,
+    coverImage: "/learn/glassware-and-service.webp",
+    coverAlt: "Rows of chilled cocktail glasses ready for service on a bar",
+    steps: [
+      {
+        type: "guide",
+        slug: "glassware-and-service",
+        why: "The vessel is equipment — temperature, aroma, and melt depend on it.",
+      },
+      {
+        type: "guide",
+        slug: "ice-and-dilution",
+        why: "Rocks and highballs are ice systems as much as glass shapes.",
+      },
+      {
+        type: "guide",
+        slug: "garnish-with-intent",
+        why: "Scale the garnish to the bowl. Perfume beats clutter.",
+      },
+    ],
+  },
+  {
+    slug: "smart-swaps-course",
+    title: "Swap with intent",
+    eyebrow: "Improvisation",
+    summary:
+      "Learn to change one variable inside a template, taste what happened, then use Smart swaps to explore catalog-aware options without breaking the drink.",
+    estimatedMinutes: 12,
+    coverImage: "/learn/cocktail-templates.webp",
+    coverAlt: "Template drinks representing cocktail families",
+    steps: [
+      {
+        type: "guide",
+        slug: "cocktail-templates",
+        why: "Name the family before you swap — sour, old fashioned, equal parts, highball.",
+      },
+      {
+        type: "guide",
+        slug: "swap-with-intent",
+        why: "One knob at a time. Open Smart swaps from the lesson when you want catalog-aware options.",
+      },
+      {
+        type: "guide",
+        slug: "balance-and-taste",
+        why: "If the swap broke, fix sweet/acid/dilution before adding another bottle.",
+      },
+    ],
+  },
 ];
 
 export function getLearnMethodByTechniqueKey(technique: string | null | undefined): LearnMethod | undefined {
@@ -561,6 +955,25 @@ export const LEARN_LIBRARY_METHODS: LearnMethod[] = LEARN_METHODS.filter(
 
 export function getLearnPath(slug: string): LearnPath | undefined {
   return LEARN_PATHS.find((p) => p.slug === slug);
+}
+
+/** Hub featured paths — keep this short so desktop doesn’t open as a wall of cards. */
+export const LEARN_FEATURED_PATH_SLUGS = [
+  "first-month-home",
+  "sours-mastery",
+  "agave-deep-dive",
+  "whiskey-deep-dive",
+] as const;
+
+export function getFeaturedLearnPaths(): LearnPath[] {
+  return LEARN_FEATURED_PATH_SLUGS.map((slug) =>
+    LEARN_PATHS.find((p) => p.slug === slug)
+  ).filter((p): p is LearnPath => Boolean(p));
+}
+
+export function getMoreLearnPaths(): LearnPath[] {
+  const featured = new Set<string>(LEARN_FEATURED_PATH_SLUGS);
+  return LEARN_PATHS.filter((p) => !featured.has(p.slug));
 }
 
 
@@ -659,15 +1072,17 @@ export function pathStepMedia(step: LearnPathStep): {
         href,
       };
     }
-    case "swaps":
+    case "swaps": {
+      const g = getLearnGuide("swap-with-intent");
       return {
         title: "Smart swaps",
         blurb: step.why ?? "Bottle substitutions when you’re mid-shop or mid-mix.",
         kind: "Reference",
-        image: "/media/kitchen-shelf.webp",
-        imageAlt: "Bar bottles on a shelf",
+        image: g?.coverImage ?? "/media/kitchen-shelf.webp",
+        imageAlt: g?.coverAlt ?? "Bar bottles on a shelf",
         href,
       };
+    }
   }
 }
 
