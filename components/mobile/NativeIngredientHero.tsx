@@ -3,6 +3,7 @@
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import { AppLink } from "@/components/mobile/AppLink";
 import { useNativeShell } from "@/hooks/useIsNativeApp";
+import { useNativeStatusBar } from "@/hooks/useNativeStatusBar";
 import { nativePhotoUrl } from "@/lib/mobile/nativeImage";
 
 type Props = {
@@ -34,6 +35,7 @@ export function NativeIngredientHero({
   cocktailCount,
 }: Props) {
   const nativeShell = useNativeShell();
+  useNativeStatusBar("cream");
   if (!nativeShell) return null;
 
   const bottleSrc = heroImageUrl
@@ -42,6 +44,10 @@ export function NativeIngredientHero({
   const coverSrc = coverImageUrl
     ? nativePhotoUrl(coverImageUrl, 1080, 85) || coverImageUrl
     : null;
+
+  const scrollToCocktails = () => {
+    document.getElementById("cocktails")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <section className="native-ingredient-hero">
@@ -72,9 +78,13 @@ export function NativeIngredientHero({
             <div className="mw-pill-row native-ingredient-hero__meta">
               {abv ? <span className="mw-pill mw-pill--meta">{abv} ABV</span> : null}
               {cocktailCount > 0 ? (
-                <AppLink href="#cocktails" className="mw-pill mw-pill--meta">
+                <button
+                  type="button"
+                  className="mw-pill mw-pill--meta"
+                  onClick={scrollToCocktails}
+                >
                   Used in {cocktailCount} cocktail{cocktailCount === 1 ? "" : "s"}
-                </AppLink>
+                </button>
               ) : (
                 <span className="mw-pill mw-pill--meta">No matched cocktails yet</span>
               )}

@@ -38,12 +38,12 @@ import {
   markFirstPourShareSeen,
 } from "@/lib/mobile/firstPourShare";
 import { useEffect, useRef, useState } from "react";
-import { StatusBar, Style } from "@capacitor/status-bar";
 import type { MatchedIngredient } from "@/lib/ingredientMatching";
 import { findWholePhraseIndex } from "@/lib/ingredientMatching";
 import { withShareUtm } from "@/lib/analytics/utm";
 import { CocktailStoriesShare } from "@/components/share/CocktailStoriesShare";
 import { FirstPourShareSpotlight } from "@/components/mobile/FirstPourShareSpotlight";
+import { useNativeStatusBar } from "@/hooks/useNativeStatusBar";
 
 interface NativeRecipeViewProps {
   cocktail: {
@@ -142,14 +142,7 @@ export function NativeRecipeView({
     setShowShareSpotlight(false);
   }, [cocktail.slug]);
 
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-    // Recipe hero photo sits under the status bar — white icons.
-    void StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-    return () => {
-      void StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-    };
-  }, []);
+  useNativeStatusBar("photo");
 
   useEffect(() => {
     if (!showShareSpotlight) return;

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
-import { StatusBar, Style } from "@capacitor/status-bar";
+import { useNativeStatusBar } from "@/hooks/useNativeStatusBar";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
 import { getMixCocktailsClient } from "@/lib/cocktails";
@@ -215,14 +215,7 @@ export function MobileHomePage({
       });
   }, []);
 
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-    // Home cinematic hero is dark photo — white status icons. Cream pages need dark icons.
-    void StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-    return () => {
-      void StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-    };
-  }, []);
+  useNativeStatusBar("photo");
 
   useEffect(() => {
     return () => {

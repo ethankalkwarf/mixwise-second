@@ -1,11 +1,13 @@
 "use client";
 
 import { useNativeShell } from "@/hooks/useIsNativeApp";
+import { useNativeStatusBar } from "@/hooks/useNativeStatusBar";
 
 const HERO_SRC = "/ingredients/origins/juniper.jpg";
 
 export function NativeIngredientsIntro({ count }: { count: number }) {
   const nativeShell = useNativeShell();
+  useNativeStatusBar("cream");
   if (!nativeShell) return null;
 
   return (
