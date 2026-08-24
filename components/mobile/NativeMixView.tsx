@@ -15,7 +15,7 @@ import { NativeDrinkTile } from "@/components/mobile/NativeDrinkTile";
 import { NativePageHero } from "@/components/mobile/NativePageHero";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useInfiniteVisibleCount } from "@/hooks/useInfiniteVisibleCount";
-import { formatIngredientCategory } from "@/lib/formatters";
+import { formatCocktailName, formatIngredientCategory } from "@/lib/formatters";
 import { lookupIngredient } from "@/lib/ingredientMatching";
 import { searchMixIngredients } from "@/lib/search";
 import type { MixCocktail, MixIngredient, MixMatchGroups } from "@/lib/mixTypes";
@@ -396,7 +396,7 @@ function TonightPane({
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-display text-[15px] font-bold text-forest">
-                      {match.cocktail.name}
+                      {formatCocktailName(match.cocktail.name)}
                     </p>
                     <p className="truncate text-xs text-sage">Needs {missing.name}</p>
                   </div>
