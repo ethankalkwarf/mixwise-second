@@ -217,9 +217,10 @@ export function MobileHomePage({
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    void StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+    // Home cinematic hero is dark photo — white status icons. Cream pages need dark icons.
+    void StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
     return () => {
-      void StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+      void StatusBar.setStyle({ style: Style.Light }).catch(() => {});
     };
   }, []);
 
