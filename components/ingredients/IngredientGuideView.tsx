@@ -113,6 +113,8 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
         alsoCalled={guide.alsoCalled}
         heroImageUrl={ingredient.heroImageUrl}
         heroImageAlt={ingredient.heroImageAlt}
+        coverImageUrl={cover?.src}
+        coverImageAlt={cover?.alt}
         abv={guide.abv}
         cocktailCount={ingredient.cocktailCount}
       />

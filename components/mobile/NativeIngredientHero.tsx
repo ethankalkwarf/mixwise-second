@@ -13,11 +13,13 @@ type Props = {
   alsoCalled?: string | null;
   heroImageUrl?: string | null;
   heroImageAlt?: string;
+  coverImageUrl?: string | null;
+  coverImageAlt?: string;
   abv?: string | null;
   cocktailCount: number;
 };
 
-/** Native ingredient header — large bottle photo, no website breadcrumbs or cream wash. */
+/** Native ingredient header — origin photo stage with bottle, no website chrome. */
 export function NativeIngredientHero({
   title,
   name,
@@ -26,13 +28,20 @@ export function NativeIngredientHero({
   alsoCalled,
   heroImageUrl,
   heroImageAlt,
+  coverImageUrl,
+  coverImageAlt,
   abv,
   cocktailCount,
 }: Props) {
   const nativeShell = useNativeShell();
   if (!nativeShell) return null;
 
-  const src = heroImageUrl ? nativePhotoUrl(heroImageUrl, 640, 85) || heroImageUrl : null;
+  const bottleSrc = heroImageUrl
+    ? nativePhotoUrl(heroImageUrl, 640, 85) || heroImageUrl
+    : null;
+  const coverSrc = coverImageUrl
+    ? nativePhotoUrl(coverImageUrl, 1080, 85) || coverImageUrl
+    : null;
 
   return (
     <section className="native-ingredient-hero">
@@ -42,16 +51,31 @@ export function NativeIngredientHero({
       </AppLink>
 
       <div className="native-ingredient-hero__stage">
-        {src ? (
+        {coverSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="native-ingredient-hero__bottle" src={src} alt={heroImageAlt || name} />
+          <img
+            className="native-ingredient-hero__cover"
+            src={coverSrc}
+            alt={coverImageAlt || ""}
+          />
+        ) : (
+          <div className="native-ingredient-hero__cover-fallback" aria-hidden />
+        )}
+        <div className="native-ingredient-hero__shade" aria-hidden />
+        {bottleSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className="native-ingredient-hero__bottle"
+            src={bottleSrc}
+            alt={heroImageAlt || name}
+          />
         ) : (
           <div className="native-ingredient-hero__fallback">{name.charAt(0)}</div>
         )}
       </div>
 
       <div className="native-ingredient-hero__copy">
-        <p className="native-ingredient-hero__eyebrow">{sectionTitle}</p>
+        <p className="native-ingredient-hero__eyebrow font-mono">{sectionTitle}</p>
         <h1 className="native-ingredient-hero__title">{title}</h1>
         <p className="native-ingredient-hero__description">{description}</p>
         {alsoCalled ? <p className="native-ingredient-hero__also">{alsoCalled}</p> : null}
