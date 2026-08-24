@@ -44,18 +44,14 @@ body {
     animation: focus-pulse 0.3s ease-out;
   }
 
+  /* Native shell: keep a clear focus ring for VoiceOver / keyboard / switch control */
   html.native-app :focus-visible {
-    outline: none;
-    box-shadow: none;
+    outline: 2px solid theme("colors.terracotta");
+    outline-offset: 2px;
   }
 
-  html.native-app a:focus-visible,
-  html.native-app button:focus-visible {
-    opacity: 0.92;
-  }
-
-  html.native-app a:focus,
-  html.native-app button:focus {
+  html.native-app a:focus:not(:focus-visible),
+  html.native-app button:focus:not(:focus-visible) {
     outline: none;
   }
   

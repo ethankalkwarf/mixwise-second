@@ -42,7 +42,7 @@ export function FriendsTabBar({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(t.id)}
-            className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors outline-none focus:outline-none focus-visible:outline-none ${
+            className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta ${
               active
                 ? variant === "native"
                   ? "bg-white text-forest shadow-sm"

@@ -1,6 +1,7 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useId } from "react";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -12,7 +13,7 @@ interface BottomSheetProps {
 
 /**
  * BottomSheet
- * 
+ *
  * iOS-style bottom sheet modal that slides up from bottom.
  * Perfect for forms, details, or additional content.
  */
@@ -23,17 +24,8 @@ export function BottomSheet({
   children,
   maxHeight = "90vh",
 }: BottomSheetProps) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  const titleId = useId();
+  const dialogRef = useDialogA11y({ isOpen, onClose });
 
   if (!isOpen) return null;
 
@@ -47,37 +39,38 @@ export function BottomSheet({
     <div
       className="fixed inset-0 z-50 flex items-end"
       onClick={handleBackdropClick}
+      role="presentation"
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 
-      {/* Bottom Sheet */}
       <div
-        className="relative w-full bg-white rounded-t-3xl shadow-2xl safe-area-bottom overflow-hidden flex flex-col"
+        ref={(node) => {
+          dialogRef.current = node;
+        }}
+        className="relative flex w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl safe-area-bottom"
         style={{
           maxHeight,
           paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
         }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={title ? undefined : "Sheet"}
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
-          <div className="w-12 h-1.5 bg-sage/30 rounded-full" />
+        <div className="flex flex-shrink-0 justify-center pb-2 pt-3">
+          <div className="h-1.5 w-12 rounded-full bg-sage/30" />
         </div>
 
-        {/* Title */}
-        {title && (
-          <div className="px-4 py-3 border-b border-mist flex-shrink-0">
-            <h3 className="text-lg font-serif font-bold text-forest">
+        {title ? (
+          <div className="flex-shrink-0 border-b border-mist px-4 py-3">
+            <h3 id={titleId} className="font-serif text-lg font-bold text-forest">
               {title}
             </h3>
           </div>
-        )}
+        ) : null}
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

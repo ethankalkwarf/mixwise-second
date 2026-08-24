@@ -274,7 +274,7 @@ function PaneButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`relative rounded-xl py-2.5 text-sm font-semibold transition-colors outline-none focus:outline-none focus-visible:outline-none ${
+      className={`relative rounded-xl py-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta ${
         active ? "bg-white text-forest shadow-sm" : "text-sage"
       } ${disabled ? "opacity-40" : ""}`}
     >

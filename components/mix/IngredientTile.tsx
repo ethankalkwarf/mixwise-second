@@ -97,9 +97,18 @@ export function IngredientTile({
   const ingredientKey = ingredient.name?.toLowerCase().replace(/\s+/g, '');
   const icon = ingredientEmojis[ingredientKey] || categoryIcons[ingredient.category || "Garnish"] || "🍒";
 
+  const displayName = formatIngredientName(ingredient.name);
+
   return (
     <button
+      type="button"
       onClick={handleClick}
+      aria-pressed={isSelected}
+      aria-label={
+        isSelected
+          ? `${displayName}, in your bar`
+          : `Add ${displayName} to your bar`
+      }
       className={`group relative p-4 rounded-2xl border-2 transition-all duration-300 transform h-full flex flex-col ${
         isSelected
           ? "border-olive bg-olive/5 shadow-lg scale-105"
@@ -155,7 +164,7 @@ export function IngredientTile({
               isSelected ? "text-olive" : "text-forest group-hover:text-terracotta"
             }`}
           >
-            {formatIngredientName(ingredient.name)}
+            {displayName}
           </h3>
         </div>
 

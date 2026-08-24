@@ -146,11 +146,16 @@ http://192.168.x.x:3000/auth/callback
 
 Replace `x.x` with your Mac IP (`npm run mobile:sync:dev` auto-detects it). Production builds use `https://www.getmixwise.com/auth/callback`.
 
-## App Store checklist (later)
+## App Store checklist
 
 1. `npm run mobile:sync:prod`
 2. In Xcode: set signing team, bump version, Archive
 3. Upload to App Store Connect
+4. **Age rating:** Alcohol / tobacco / controlled substances content → typically **17+**. Answer the questionnaire honestly for alcohol-related content.
+5. **App Privacy:** Match `ios/App/App/PrivacyInfo.xcprivacy` and your privacy policy — MixWise collects account email/name, product interaction (PostHog analytics), photos for Stories, and user content (notes/bar). Tracking is **off**.
+6. **Account deletion:** Available in Account → Delete my account (Guideline 5.1.1). Verify on a TestFlight build before submit.
+7. **Subtitle / description:** Make alcohol / cocktail purpose clear so reviewers and users set expectations.
+8. Screenshots + preview video should match the live native shell (tab bar, Mix, Home).
 
 ## Troubleshooting
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { XMarkIcon, HandThumbDownIcon } from "@heroicons/react/24/outline";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 type Props = {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function SkipDrinkDialog({
   onRestore,
 }: Props) {
   const [saving, setSaving] = useState(false);
+  const dialogRef = useDialogA11y({ isOpen, onClose });
 
   if (!isOpen) return null;
 
@@ -49,8 +51,12 @@ export function SkipDrinkDialog({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={onClose}
+      role="presentation"
     >
       <div
+        ref={(node) => {
+          dialogRef.current = node;
+        }}
         className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden"
         role="dialog"
         aria-modal="true"

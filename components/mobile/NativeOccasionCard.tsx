@@ -18,9 +18,11 @@ export function NativeOccasionCard({ occasion, count, cover }: Props) {
   const imageUrl = occasion.staticCoverPath || cover?.image_url || null;
   const href = `/occasions/${occasion.slug}`;
 
+  const accessLabel = `${occasion.name}, ${count} drink${count === 1 ? "" : "s"}`;
+
   return (
     <div className="native-occasion-row">
-      <div className="native-occasion-row__thumb">
+      <div className="native-occasion-row__thumb" aria-hidden="true">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -33,7 +35,7 @@ export function NativeOccasionCard({ occasion, count, cover }: Props) {
           <div className={`native-occasion-row__fallback bg-gradient-to-br ${occasion.accentClass}`} />
         )}
       </div>
-      <div className="native-occasion-row__body">
+      <div className="native-occasion-row__body" aria-hidden="true">
         <p className="native-occasion-row__name">{occasion.name}</p>
         {occasion.headline ? (
           <p className="native-occasion-row__headline">{occasion.headline}</p>
@@ -43,7 +45,7 @@ export function NativeOccasionCard({ occasion, count, cover }: Props) {
         </p>
       </div>
       <ChevronRightIcon className="native-occasion-row__chevron" aria-hidden />
-      <AppLink href={href} aria-label={occasion.name} className="native-occasion-row__hit">
+      <AppLink href={href} aria-label={accessLabel} className="native-occasion-row__hit">
         <span aria-hidden="true" />
       </AppLink>
     </div>

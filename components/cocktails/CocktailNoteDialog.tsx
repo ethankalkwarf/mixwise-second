@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { XMarkIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 type Props = {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export function CocktailNoteDialog({
   const [notes, setNotes] = useState(initialNotes || "");
   const [saving, setSaving] = useState(false);
   const hasExisting = Boolean(initialNotes?.trim());
+  const dialogRef = useDialogA11y({ isOpen, onClose });
 
   useEffect(() => {
     if (isOpen) setNotes(initialNotes || "");
@@ -53,38 +55,43 @@ export function CocktailNoteDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={onClose}
+      role="presentation"
     >
       <div
-        className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden"
+        ref={(node) => {
+          dialogRef.current = node;
+        }}
+        className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cocktail-note-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-mist">
-          <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="border-b border-mist p-6">
+          <div className="mb-3 flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-forest/10 rounded-xl flex items-center justify-center">
-                <PencilSquareIcon className="w-5 h-5 text-forest" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest/10">
+                <PencilSquareIcon className="h-5 w-5 text-forest" />
               </div>
               <h2
                 id="cocktail-note-title"
-                className="text-xl font-display font-bold text-forest"
+                className="font-display text-xl font-bold text-forest"
               >
                 Your note
               </h2>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 text-sage hover:text-forest transition-colors rounded-full hover:bg-mist"
+              className="rounded-full p-2 text-sage transition-colors hover:bg-mist hover:text-forest"
               aria-label="Close"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
-          <p className="text-sage leading-relaxed">
+          <p className="leading-relaxed text-sage">
             Private tasting notes for {cocktailName}. Only you can see these.
           </p>
         </div>
@@ -104,28 +111,31 @@ export function CocktailNoteDialog({
           />
         </div>
 
-        <div className="p-6 border-t border-mist bg-mist/30 flex flex-col-reverse sm:flex-row gap-3">
+        <div className="flex flex-col-reverse gap-3 border-t border-mist bg-mist/30 p-6 sm:flex-row">
           {hasExisting && onDelete ? (
             <button
+              type="button"
               onClick={handleDelete}
               disabled={saving}
-              className="flex-1 px-4 py-3 text-sage font-medium rounded-2xl border border-mist bg-white hover:bg-mist transition-all disabled:opacity-60"
+              className="flex-1 rounded-2xl border border-mist bg-white px-4 py-3 font-medium text-sage transition-all hover:bg-mist disabled:opacity-60"
             >
               Delete note
             </button>
           ) : (
             <button
+              type="button"
               onClick={onClose}
               disabled={saving}
-              className="flex-1 px-4 py-3 text-sage font-medium rounded-2xl border border-mist bg-white hover:bg-mist transition-all disabled:opacity-60"
+              className="flex-1 rounded-2xl border border-mist bg-white px-4 py-3 font-medium text-sage transition-all hover:bg-mist disabled:opacity-60"
             >
               Cancel
             </button>
           )}
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving || !notes.trim()}
-            className="flex-1 px-4 py-3 bg-forest text-cream font-bold rounded-2xl hover:bg-olive transition-all disabled:opacity-60"
+            className="flex-1 rounded-2xl bg-forest px-4 py-3 font-bold text-cream transition-all hover:bg-olive disabled:opacity-60"
           >
             Save note
           </button>

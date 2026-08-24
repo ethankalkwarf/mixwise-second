@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface ActionSheetOption {
   label: string;
@@ -30,19 +31,11 @@ export function ActionSheet({
   cancelLabel = "Cancel",
 }: ActionSheetProps) {
   const [mounted, setMounted] = useState(false);
+  const dialogRef = useDialogA11y({ isOpen, onClose });
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [isOpen]);
 
   if (!isOpen || !mounted) return null;
 
@@ -59,12 +52,15 @@ export function ActionSheet({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 
       <div
+        ref={(node) => {
+          dialogRef.current = node;
+        }}
         className="relative w-full rounded-t-3xl bg-white shadow-2xl"
         style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={title || "Actions"}
       >
         <div className="flex justify-center pb-2 pt-3">
           <div className="h-1.5 w-12 rounded-full bg-sage/30" />
