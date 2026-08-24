@@ -553,100 +553,73 @@ export function StoriesShareButtons({
   // Compact recipe row: only render when Stories apps exist (copy lives elsewhere).
   if (compact && (!availabilityReady || !showStories)) return null;
 
-  const storyAppCount = [showIg, showFb, showSc].filter(Boolean).length;
-  const storiesGridClass =
-    storyAppCount >= 3
-      ? "grid grid-cols-3 gap-2"
-      : storyAppCount === 2
-        ? "grid grid-cols-2 gap-2"
-        : "grid grid-cols-1 gap-2";
-  const btnBase = compact
-    ? "inline-flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium disabled:opacity-50 active:scale-[0.98]"
-    : "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3.5 text-sm font-semibold tracking-tight disabled:opacity-50 active:scale-[0.98] transition-transform";
+  const iconBtnSize = compact ? "h-10 w-10" : "h-11 w-11";
+  const iconSize = compact ? "h-[1.125rem] w-[1.125rem]" : "h-5 w-5";
+  const iconBtnBase = `inline-flex shrink-0 items-center justify-center rounded-xl transition-transform disabled:opacity-50 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${iconBtnSize}`;
 
   const showSystemShareFallback = availabilityReady && !showStories;
 
   const linkActions = showLinkFallback ? (
-    <div
-      className={
-        compact
-          ? "inline-flex flex-wrap gap-2"
-          : showStories || showSystemShareFallback
-            ? "grid grid-cols-2 gap-2"
-            : "grid grid-cols-1 gap-2 sm:grid-cols-2"
-      }
-    >
+    <>
       {showSystemShareFallback ? (
         <button
           type="button"
           disabled={busy !== null}
           onClick={() => void handleSystemShare()}
-          className={`${btnBase} bg-olive text-cream shadow-sm`}
+          className={`${iconBtnBase} bg-olive text-cream shadow-sm focus-visible:ring-olive/40`}
+          aria-label={busy === "share" ? "Sharing link" : "Share link"}
+          title="Share link"
         >
-          <ShareIcon className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
-          {!compact && (
-            <span className="min-w-0 truncate">
-              {busy === "share" ? "Sharing…" : "Share link"}
-            </span>
-          )}
+          <ShareIcon className={iconSize} />
         </button>
       ) : (
         <button
           type="button"
           disabled={busy !== null}
           onClick={() => void handleMessageShare()}
-          className={`${btnBase} bg-olive text-cream shadow-sm`}
-          aria-label="Text recipe link"
+          className={`${iconBtnBase} bg-olive text-cream shadow-sm focus-visible:ring-olive/40`}
+          aria-label={busy === "message" ? "Opening Messages" : "Text recipe link"}
+          title="Text link"
         >
-          <ChatBubbleLeftRightIcon className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
-          {!compact && (
-            <span className="min-w-0 truncate">
-              {busy === "message" ? "Opening…" : "Message"}
-            </span>
-          )}
+          <ChatBubbleLeftRightIcon className={iconSize} />
         </button>
       )}
       <button
         type="button"
         onClick={() => void handleCopy()}
         disabled={busy !== null}
-        className={
-          compact
-            ? `${btnBase} border border-mist/80 bg-white/60 text-forest`
-            : "inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-mist/80 bg-white/60 px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-mist/50 active:scale-[0.98] disabled:opacity-50"
-        }
-        aria-label="Copy link"
+        className={`${iconBtnBase} border border-mist/80 bg-white/60 text-forest hover:bg-mist/50 focus-visible:ring-forest/30`}
+        aria-label={copied ? "Link copied" : "Copy link"}
+        title={copied ? "Copied" : "Copy link"}
       >
-        {copied ? <CheckIcon className="h-4 w-4 text-forest" /> : <LinkIcon className="h-4 w-4 text-sage" />}
-        {!compact && (copied ? "Copied" : "Copy link")}
+        {copied ? (
+          <CheckIcon className={`${iconSize} text-forest`} />
+        ) : (
+          <LinkIcon className={`${iconSize} text-sage`} />
+        )}
       </button>
-    </div>
+    </>
   ) : null;
 
   return (
-    <div className={className ?? (compact ? "inline-flex flex-wrap items-center gap-2" : "mt-0 space-y-2.5")}>
+    <div
+      className={
+        className ??
+        (compact ? "inline-flex flex-wrap items-center gap-2" : "flex flex-wrap items-center gap-2")
+      }
+    >
       {showStories ? (
-        <div
-          className={
-            compact
-              ? "flex flex-wrap gap-2"
-              : storiesGridClass
-          }
-        >
+        <>
           {showIg && (
             <button
               type="button"
               disabled={busy !== null}
               onClick={() => void shareToStories("ig")}
-              className={`${btnBase} bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white shadow-sm shadow-[#FD1D1D]/25`}
-              aria-label="Share to Instagram Story"
+              className={`${iconBtnBase} bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white shadow-sm shadow-[#FD1D1D]/25 focus-visible:ring-[#FD1D1D]/40`}
+              aria-label={busy === "ig" ? "Opening Instagram Stories" : "Share to Instagram Story"}
+              title="Instagram Story"
             >
-              <InstagramGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
-              {!compact && (
-                <span className="min-w-0 truncate">
-                  {busy === "ig" ? "Opening…" : "Instagram"}
-                </span>
-              )}
+              <InstagramGlyph className={iconSize} />
             </button>
           )}
           {showFb && (
@@ -654,15 +627,11 @@ export function StoriesShareButtons({
               type="button"
               disabled={busy !== null}
               onClick={() => void shareToStories("fb")}
-              className={`${btnBase} bg-[#1877F2] text-white shadow-sm shadow-[#1877F2]/30`}
-              aria-label="Share to Facebook Story"
+              className={`${iconBtnBase} bg-[#1877F2] text-white shadow-sm shadow-[#1877F2]/30 focus-visible:ring-[#1877F2]/40`}
+              aria-label={busy === "fb" ? "Opening Facebook Stories" : "Share to Facebook Story"}
+              title="Facebook Story"
             >
-              <FacebookGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
-              {!compact && (
-                <span className="min-w-0 truncate">
-                  {busy === "fb" ? "Opening…" : "Facebook"}
-                </span>
-              )}
+              <FacebookGlyph className={iconSize} />
             </button>
           )}
           {showSc && (
@@ -670,23 +639,21 @@ export function StoriesShareButtons({
               type="button"
               disabled={busy !== null}
               onClick={() => void shareToSnapchat()}
-              className={`${btnBase} bg-[#FFFC00] text-[#1a1a1a] shadow-sm`}
-              aria-label="Share to Snapchat Story"
+              className={`${iconBtnBase} bg-[#FFFC00] text-[#1a1a1a] shadow-sm focus-visible:ring-[#FFFC00]/60`}
+              aria-label={busy === "sc" ? "Opening Snapchat" : "Share to Snapchat Story"}
+              title="Snapchat Story"
             >
-              <SnapchatGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
-              {!compact && (
-                <span className="min-w-0 truncate">
-                  {busy === "sc" ? "Opening…" : "Snapchat"}
-                </span>
-              )}
+              <SnapchatGlyph className={iconSize} />
             </button>
           )}
-        </div>
+        </>
       ) : null}
 
-      {!compact && linkActions}
+      {showStories && linkActions ? (
+        <div className="mx-0.5 hidden h-8 w-px shrink-0 bg-mist/80 sm:block" aria-hidden />
+      ) : null}
 
-      {compact && linkActions}
+      {linkActions}
 
       {showStories ? (
         <div

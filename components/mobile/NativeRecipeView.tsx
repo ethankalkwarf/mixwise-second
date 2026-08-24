@@ -350,6 +350,7 @@ export function NativeRecipeView({
                   </p>
                   <CocktailStoriesShare
                     variant="mixed"
+                    className="justify-center"
                     cocktail={{
                       name: cocktail.name,
                       slug: cocktail.slug,
