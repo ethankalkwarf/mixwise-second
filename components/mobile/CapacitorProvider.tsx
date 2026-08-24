@@ -37,7 +37,8 @@ export function CapacitorProvider({ children }: { children: React.ReactNode }) {
       try {
         if (Capacitor.getPlatform() === "ios") {
           await StatusBar.setOverlaysWebView({ overlay: true });
-          await StatusBar.setStyle({ style: Style.Dark });
+          // Style.Light = dark icons — MixWise chrome is cream; Style.Dark is white text.
+          await StatusBar.setStyle({ style: Style.Light });
         }
 
         // Keep the splash up until the first paint, then hide. Auto-hide on a
