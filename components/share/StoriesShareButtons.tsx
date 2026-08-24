@@ -641,11 +641,11 @@ export function StoriesShareButtons({
               type="button"
               disabled={busy !== null}
               onClick={() => void shareToSnapchat()}
-              className={`${iconBtnBase} bg-[#FFFC00] text-white shadow-sm focus-visible:ring-[#FFFC00]/60`}
+              className={`${iconBtnBase} bg-[#FFFC00] text-[#1a1a1a] shadow-sm ring-1 ring-black/10 focus-visible:ring-black/20`}
               aria-label={busy === "sc" ? "Opening Snapchat" : "Share to Snapchat Story"}
               title="Snapchat Story"
             >
-              <SnapchatGlyph className={`${iconSize} text-white`} />
+              <SnapchatGlyph className={iconSize} />
             </button>
           )}
         </>
