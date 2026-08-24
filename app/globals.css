@@ -2076,6 +2076,21 @@ a.mw-pill:active {
   color: #bc5a45 !important;
 }
 
+/* Related-ingredient / nav chips — same locked height, slightly larger for tap. */
+.mw-pill--chip {
+  height: 1.75rem !important;
+  min-height: 1.75rem !important;
+  max-height: 1.75rem !important;
+  padding: 0 0.7rem !important;
+  font-size: 0.75rem !important;
+  color: #1a3a2a !important;
+}
+
+a.mw-pill--chip:hover {
+  border-color: rgba(188, 90, 69, 0.45) !important;
+  color: #bc5a45 !important;
+}
+
 @media (min-width: 1024px) {
   .mw-pill--filter {
     background: transparent !important;
