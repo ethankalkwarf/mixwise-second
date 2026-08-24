@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps) {
   const layers = getTechniqueLessonLayers(slug);
   if (!term) return {};
   return generatePageMetadata({
-    title: `${formatTechniqueLabel(term.label)} — Cocktail Technique`,
+    title: `${formatTechniqueLabel(term.label)} — Cocktail Skill`,
     description: layers?.bigIdea ?? term.explanation,
     path: `/learn/techniques/${slug}`,
   });
@@ -80,7 +80,7 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
     <div className="min-h-screen bg-cream" data-native-learn-lesson>
       <NativeLearnLessonHero
         title={formatTechniqueLabel(term.label)}
-        eyebrow="Technique"
+        eyebrow="Skill"
         summary={term.explanation}
         imageSrc={cover.src}
         imageAlt={cover.alt}
@@ -91,7 +91,7 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
         <LearnHero
           imageSrc={cover.src}
           imageAlt={cover.alt}
-          eyebrow="Technique"
+          eyebrow="Skill"
           title={formatTechniqueLabel(term.label)}
           summary={term.explanation}
           backHref="/learn"
@@ -99,7 +99,7 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
       </div>
 
       <MainContainer className="native-learn-lesson__body py-10 sm:py-14 max-w-3xl">
-        <LearnContentGate gateId={`technique:${slug}`} teaserLabel="Keep learning this technique">
+        <LearnContentGate gateId={`technique:${slug}`} teaserLabel="Keep learning this skill">
           <LearnLessonArticle
             layers={layers}
             techniqueSlug={slug}
@@ -130,7 +130,7 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
                     <span className="font-display text-2xl !text-charcoal group-hover:text-terracotta transition-colors tracking-tight">
                       {relatedMethod.label}
                     </span>
-                    <span className="text-[13px] !text-charcoal/50 shrink-0">Method</span>
+                    <span className="text-[13px] !text-charcoal/50 shrink-0">Skill</span>
                   </Link>
                 </li>
               )}
@@ -147,7 +147,7 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
                       <span className="font-display text-2xl !text-charcoal group-hover:text-terracotta transition-colors tracking-tight">
                         {formatTechniqueLabel(item.label)}
                       </span>
-                      <span className="text-[13px] !text-charcoal/50 shrink-0">Technique</span>
+                      <span className="text-[13px] !text-charcoal/50 shrink-0">Skill</span>
                     </Link>
                   </li>
                 );

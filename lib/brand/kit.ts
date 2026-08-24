@@ -145,11 +145,11 @@ export const BRAND_COMPANION = {
 
 export const BRAND_LEARN = {
   eyebrow: "Learn",
-  title: "Paths, methods, and technique",
+  title: "Paths, skills, and technique",
   body:
     "MixWise Learn is built for people who want to improve, not just browse. Follow structured paths from your first pour to confident classics. Study shake vs. stir, muddling, dilution, templates, and smart swaps when you’re missing a bottle.",
   highlights: [
-    "Learning paths that sequence guides, methods, and techniques",
+    "Learning paths that sequence guides and skills",
     "Deep dives on shaking, stirring, building, and garnish",
     "Smart swaps when a recipe calls for something you don’t have",
   ],

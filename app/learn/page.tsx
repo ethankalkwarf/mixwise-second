@@ -42,7 +42,7 @@ export default function LearnPage() {
           imageAlt="Friends mixing cocktails together in a bright home kitchen"
           eyebrow="Education"
           title="Learn to make better drinks"
-          summary="Practical mixology for the home bar — templates, methods, and the small habits that change a drink."
+          summary="Practical mixology for the home bar — templates, skills, and the small habits that change a drink."
         >
           <div className="flex flex-wrap gap-3">
             <Link

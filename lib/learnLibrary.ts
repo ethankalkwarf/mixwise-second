@@ -630,9 +630,9 @@ export function pathStepMedia(step: LearnPathStep): {
       return {
         title: m?.label ?? step.slug,
         blurb: step.why ?? m?.summary ?? m?.tip ?? "",
-        kind: "Core method",
+        kind: "Skill",
         image: m?.coverImage ?? "/learn/method-shake.webp",
-        imageAlt: m?.coverAlt ?? m?.label ?? "Method",
+        imageAlt: m?.coverAlt ?? m?.label ?? "Skill",
         href,
       };
     }
@@ -652,8 +652,8 @@ export function pathStepMedia(step: LearnPathStep): {
       };
       return {
         title: formatTechniqueLabel(term?.label ?? step.slug),
-        blurb: step.why ?? blurbs[step.slug] ?? "A focused technique — then practice on a recipe.",
-        kind: "Technique",
+        blurb: step.why ?? blurbs[step.slug] ?? "A focused skill — then practice on a recipe.",
+        kind: "Skill",
         image: cover?.src ?? "/learn/method-shake.webp",
         imageAlt: cover?.alt ?? step.slug,
         href,

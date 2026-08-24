@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps) {
   const method = getLearnMethod(slug);
   if (!method) return {};
   return generatePageMetadata({
-    title: `${method.label} — Cocktail Method`,
+    title: `${method.label} — Cocktail Skill`,
     description: method.summary,
     path: `/learn/methods/${slug}`,
     ogImage: method.coverImage,
@@ -57,7 +57,7 @@ export default async function LearnMethodPage({ params }: PageProps) {
     <div className="min-h-screen bg-cream" data-native-learn-lesson>
       <NativeLearnLessonHero
         title={method.label}
-        eyebrow={`Core method · ${method.cue}`}
+        eyebrow={`Skill · ${method.cue}`}
         summary={method.summary}
         imageSrc={method.coverImage}
         imageAlt={method.coverAlt}
@@ -68,7 +68,7 @@ export default async function LearnMethodPage({ params }: PageProps) {
         <LearnHero
           imageSrc={method.coverImage}
           imageAlt={method.coverAlt}
-          eyebrow={`Core method · ${method.cue}`}
+          eyebrow={`Skill · ${method.cue}`}
           title={method.label}
           summary={method.summary}
           backHref="/learn"
@@ -76,7 +76,7 @@ export default async function LearnMethodPage({ params }: PageProps) {
       </div>
 
       <MainContainer className="native-learn-lesson__body py-10 sm:py-14 max-w-3xl">
-        <LearnContentGate gateId={`method:${slug}`} teaserLabel="Keep learning this method">
+        <LearnContentGate gateId={`method:${slug}`} teaserLabel="Keep learning this skill">
           <LearnLessonArticle
             layers={layers}
             afterCore={
@@ -117,7 +117,7 @@ export default async function LearnMethodPage({ params }: PageProps) {
                       <span className="font-display text-2xl !text-charcoal group-hover:text-terracotta transition-colors tracking-tight">
                         {formatTechniqueLabel(term.label)}
                       </span>
-                      <span className="text-[13px] !text-charcoal/50 shrink-0">Technique</span>
+                      <span className="text-[13px] !text-charcoal/50 shrink-0">Skill</span>
                     </Link>
                   </li>
                 ) : null

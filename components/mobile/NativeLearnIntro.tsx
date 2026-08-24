@@ -11,7 +11,7 @@ export function NativeLearnIntro() {
     <NativePageHero
       eyebrow="Education"
       title="Learn to make better drinks"
-      description="Practical mixology for the home bar — templates, methods, and the small habits that change a drink."
+      description="Practical mixology for the home bar — templates, skills, and the small habits that change a drink."
       className="px-1 pt-1"
     />
   );
