@@ -54,13 +54,15 @@ export function ingredientMetaDescription(name: string, existing?: string): stri
 
 export function ingredientHeadings(name: string) {
   return {
+    // Page H1 — keep the question form for SEO and the hero.
     h1: `What is ${name}?`,
-    what: `What ${name} is`,
-    taste: `What ${name} tastes like`,
-    history: `${name} origin and history`,
-    use: `How to use ${name} in cocktails`,
-    pairs: `What pairs with ${name}`,
-    drinks: `Cocktails you can make with ${name}`,
+    // Body H2s — advance the story; don't restate the hero question.
+    what: "The basics",
+    taste: "How it tastes",
+    history: "Where it comes from",
+    use: "How to use it",
+    pairs: "What pairs with it",
+    drinks: `Cocktails with ${name}`,
   };
 }
 
