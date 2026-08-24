@@ -10,7 +10,7 @@ import { LEARN_PATHS } from "@/lib/learnLibrary";
 export const metadata = generatePageMetadata({
   title: "Learn Mixology",
   description:
-    "Mixology courses plus a library of guides, methods, techniques, and swaps.",
+    "Mixology paths plus a library of guides, methods, techniques, and swaps.",
   path: "/learn",
   keywords: [
     "learn mixology",
@@ -27,7 +27,7 @@ export default function LearnPage() {
     <div className="min-h-screen bg-cream" data-native-learn-page>
       <WebPageSchema
         title="Learn Mixology"
-        description="Mixology courses plus a library of guides, methods, techniques, and swaps."
+        description="Mixology paths plus a library of guides, methods, techniques, and swaps."
         url={`${SITE_CONFIG.url}/learn`}
       />
       <BreadcrumbSchema
@@ -49,7 +49,7 @@ export default function LearnPage() {
               href={`/learn/paths/${starter.slug}`}
               className="inline-flex items-center justify-center rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-cream hover:bg-terracotta/90 transition-colors"
             >
-              Start the beginner course →
+              Start the beginner path →
             </Link>
             <a
               href="#lessons"

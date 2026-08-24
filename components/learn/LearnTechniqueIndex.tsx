@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { LearnCoverImage } from "@/components/learn/LearnCoverImage";
 import { NativeLearnCardShell } from "@/components/mobile/NativeLearnCardShell";
 import { useNativeShell } from "@/hooks/useIsNativeApp";
@@ -30,7 +30,13 @@ const GROUPS: { title: string; blurb: string; slugs: string[] }[] = [
   },
 ];
 
-export function LearnTechniqueIndex({ techniques }: { techniques: Technique[] }) {
+type Props = {
+  techniques: Technique[];
+  /** Hub index: text rows. Default keeps photo cards for other surfaces. */
+  variant?: "cards" | "directory";
+};
+
+export function LearnTechniqueIndex({ techniques, variant = "cards" }: Props) {
   const bySlug = new Map(techniques.map((term) => [term.slug, term]));
   const grouped = GROUPS.map((group) => ({
     ...group,
@@ -50,22 +56,74 @@ export function LearnTechniqueIndex({ techniques }: { techniques: Technique[] })
 
   if (techniques.length === 0) return null;
 
+  const directory = variant === "directory";
+
   return (
-    <div className="space-y-8">
+    <div className={directory ? "space-y-6" : "space-y-8"}>
       {grouped.map((group) => (
         <div key={group.title}>
-          <div className="mb-3">
-            <h3 className="font-display text-lg font-bold text-forest">{group.title}</h3>
+          <div className={directory ? "mb-2" : "mb-3"}>
+            <h3
+              className={`font-display font-bold text-forest ${
+                directory ? "text-base" : "text-lg"
+              }`}
+            >
+              {group.title}
+            </h3>
             <p className="text-sm text-sage mt-0.5">{group.blurb}</p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {group.items.map((term) => (
-              <TechniqueCard key={term.slug} term={term} />
-            ))}
-          </div>
+          {directory ? (
+            <div className="border-t border-mist grid sm:grid-cols-2 sm:gap-x-10">
+              {group.items.map((term) => (
+                <TechniqueDirectoryRow key={term.slug} term={term} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {group.items.map((term) => (
+                <TechniqueCard key={term.slug} term={term} />
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>
+  );
+}
+
+function TechniqueDirectoryRow({ term }: { term: Technique }) {
+  const { isComplete, isAuthenticated } = useLearnProgress();
+  const done = isAuthenticated && isComplete("technique", term.slug);
+  const href = `/learn/techniques/${term.slug}`;
+  const title = formatTechniqueLabel(term.label);
+  const summary = term.why || term.explanation;
+
+  return (
+    <NativeLearnCardShell
+      href={href}
+      ariaLabel={title}
+      className="group flex items-start gap-3 border-b border-mist/70 py-3 last:border-b-0 hover:bg-white/50 -mx-1 px-1 transition-colors"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-sage font-semibold">
+          Technique
+        </p>
+        <p className="mt-0.5 text-[15px] font-semibold text-forest group-hover:text-terracotta transition-colors leading-snug">
+          {title}
+        </p>
+        <p className="mt-0.5 text-xs text-sage line-clamp-1 leading-relaxed">{summary}</p>
+      </div>
+      {done ? (
+        <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-olive/80 text-forest">
+          <CheckIcon className="h-3 w-3" />
+        </span>
+      ) : (
+        <ChevronRightIcon
+          className="mt-1 h-4 w-4 shrink-0 text-sage/40 group-hover:text-terracotta transition-colors"
+          aria-hidden
+        />
+      )}
+    </NativeLearnCardShell>
   );
 }
 

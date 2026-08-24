@@ -85,7 +85,8 @@ export function stepLessonRef(step: LearnPathStep): { kind: LearnLessonKind; slu
     case "technique":
       return { kind: "technique", slug: step.slug };
     case "swaps":
-      return { kind: "guide", slug: "swaps" };
+      // Smart swaps reference page; progress tracks the paired guide lesson.
+      return { kind: "guide", slug: "swap-with-intent" };
   }
 }
 

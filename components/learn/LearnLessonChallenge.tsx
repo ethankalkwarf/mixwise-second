@@ -219,7 +219,7 @@ export function LearnLessonChallengeButton() {
             onClick={() =>
               openSignupDialog({
                 title: "Save your progress",
-                subtitle: "Keep lesson completions, courses, and badges.",
+                subtitle: "Keep lesson completions, paths, and badges.",
               })
             }
             className="inline-flex flex-1 min-w-[8rem] items-center justify-center rounded-full bg-terracotta px-5 py-2.5 font-semibold text-cream"
@@ -544,7 +544,7 @@ function LearnLessonPassCelebration({
           </h2>
           <p className="learn-quiz-celebration__copy">
             {needsAuth
-              ? "You nailed the quiz. Sign in to save this win and keep your course progress."
+              ? "You nailed the quiz. Sign in to save this win and keep your path progress."
               : perfect
                 ? "Every answer correct on the first try — saved to your progress."
                 : passScore
@@ -559,7 +559,7 @@ function LearnLessonPassCelebration({
                 onClick={() =>
                   openSignupDialog({
                     title: "Save your progress",
-                    subtitle: "Keep lesson completions, courses, and badges.",
+                    subtitle: "Keep lesson completions, paths, and badges.",
                   })
                 }
                 className="learn-quiz-celebration__cta"
