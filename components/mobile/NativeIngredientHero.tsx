@@ -45,11 +45,6 @@ export function NativeIngredientHero({
 
   return (
     <section className="native-ingredient-hero">
-      <AppLink href="/ingredients" className="native-ingredient-hero__back">
-        <ChevronLeftIcon aria-hidden />
-        <span>Ingredients</span>
-      </AppLink>
-
       <div className="native-ingredient-hero__stage">
         {coverSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -62,6 +57,11 @@ export function NativeIngredientHero({
           <div className="native-ingredient-hero__cover-fallback" aria-hidden />
         )}
         <div className="native-ingredient-hero__shade" aria-hidden />
+
+        <AppLink href="/ingredients" className="native-ingredient-hero__back">
+          <ChevronLeftIcon aria-hidden />
+          <span>Ingredients</span>
+        </AppLink>
 
         <div className="native-ingredient-hero__layout">
           <div className="native-ingredient-hero__copy">
