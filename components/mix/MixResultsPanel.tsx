@@ -116,6 +116,7 @@ export function MixResultsPanel({
           id,
           name: ing.name,
           category: ing.category,
+          imageUrl: ing.imageUrl,
           count: data.count,
           drinks: data.drinks
         };
@@ -124,6 +125,11 @@ export function MixResultsPanel({
       .sort((a, b) => (b?.count || 0) - (a?.count || 0))
       .slice(0, 6);
   }, [almostThere, allIngredients]);
+
+  const unlockTotal = useMemo(
+    () => unlockPotential.reduce((sum, item) => sum + (item?.count || 0), 0),
+    [unlockPotential]
+  );
 
   return (
     <section className="space-y-10 pb-24 min-w-0" aria-label="Cocktail results">
@@ -265,112 +271,109 @@ export function MixResultsPanel({
       </div>
 
 
-      {/* Smart Additions - Enhanced Recipe Boosters */}
+      {/* Smart additions — one bottle away */}
       {!showAllRecipes && unlockPotential.length > 0 && (
         <div className="border-t border-mist pt-12 min-w-0" aria-labelledby="smart-additions-title">
-          <div className="mb-8">
-            <div className="flex items-center gap-4 mb-3 min-w-0">
-              <div className="w-12 h-12 flex-shrink-0 bg-terracotta/20 rounded-2xl flex items-center justify-center border border-terracotta/30">
-                <span className="text-2xl">🚀</span>
-              </div>
-              <div className="min-w-0">
-                <h2 id="smart-additions-title" className="text-2xl sm:text-3xl font-display font-bold text-forest">
-                  Strategic Acquisitions
-                </h2>
-                <p className="text-base text-sage">Curated additions to unlock new realms of possibility</p>
-              </div>
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2 min-w-0">
+              <h2
+                id="smart-additions-title"
+                className="text-2xl sm:text-3xl font-display font-bold text-forest truncate"
+              >
+                Worth adding
+              </h2>
+              {unlockTotal > 0 && (
+                <span
+                  className="flex-shrink-0 px-3 py-1 rounded-full text-base font-bold font-mono border bg-terracotta/10 border-terracotta/20 text-terracotta"
+                  aria-label={`${unlockTotal} cocktails within reach`}
+                >
+                  +{unlockTotal}
+                </span>
+              )}
             </div>
-
-            {/* Impact Summary */}
-            <div className="bg-gradient-to-r from-terracotta/5 to-olive/5 border border-terracotta/20 rounded-2xl p-4 mb-6">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-terracotta font-bold">+{unlockPotential.reduce((sum, item) => sum + (item?.count || 0), 0)}</span>
-                  <span className="text-sage">additional masterpieces</span>
-                </div>
-                <div className="hidden sm:block text-sage">•</div>
-                <div className="flex items-center gap-2">
-                  <span className="text-olive font-bold">{unlockPotential.length}</span>
-                  <span className="text-sage">curated selections</span>
-                </div>
-              </div>
-            </div>
+            <p className="text-sage text-sm sm:text-base leading-relaxed max-w-xl">
+              One more bottle unlocks drinks you&apos;re already close to making.
+            </p>
           </div>
 
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 min-w-0" role="list">
-            {unlockPotential.slice(0, 9).map((item, index) => (
-              item && (
-              <div
-                key={item.id}
-                className={`group flex flex-col p-5 rounded-3xl bg-white border transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 min-w-0 overflow-hidden ${
-                  index === 0
-                    ? "border-terracotta/30 bg-gradient-to-br from-terracotta/5 to-transparent shadow-lg"
-                    : "border-mist hover:border-terracotta/30"
-                }`}
-                role="listitem"
-              >
-                {/* Priority badge for top recommendation */}
-                {index === 0 && (
-                  <div className="flex justify-end mb-2">
-                    <div className="bg-terracotta text-cream text-xs font-bold px-2 py-1 rounded-full">
-                      ⭐ TOP PICK
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 min-w-0" role="list">
+            {unlockPotential.slice(0, 9).map(
+              (item, index) =>
+                item && (
+                  <div
+                    key={item.id}
+                    className={`group flex gap-4 p-4 rounded-2xl border bg-white transition-all min-w-0 overflow-hidden ${
+                      index === 0
+                        ? "border-terracotta/35 hover:border-terracotta/50 hover:shadow-soft"
+                        : "border-mist hover:border-terracotta/30 hover:shadow-soft"
+                    }`}
+                    role="listitem"
+                  >
+                    <div className="relative flex-shrink-0 h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-xl bg-mist">
+                      {item.imageUrl ? (
+                        <Image
+                          src={item.imageUrl}
+                          alt=""
+                          fill
+                          sizes="96px"
+                          className="object-cover"
+                          quality={75}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full flex-col items-center justify-center bg-terracotta/5 px-2">
+                          <span className="font-display text-xl font-bold leading-none text-terracotta">
+                            +{item.count}
+                          </span>
+                          <span className="mt-1 font-mono text-[9px] font-bold uppercase tracking-wide text-sage">
+                            drinks
+                          </span>
+                        </div>
+                      )}
+                      {item.imageUrl && (
+                        <div className="absolute bottom-1.5 left-1.5 rounded-full bg-white/95 px-2 py-0.5 font-mono text-[10px] font-bold text-terracotta shadow-sm">
+                          +{item.count}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
+                      {index === 0 && (
+                        <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-terracotta">
+                          Best unlock
+                        </p>
+                      )}
+                      {item.category && (
+                        <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-sage">
+                          {item.category}
+                        </p>
+                      )}
+                      <h3 className="font-display text-lg font-bold leading-tight text-forest break-words">
+                        {formatIngredientName(item.name)}
+                      </h3>
+                      {item.drinks.length > 0 && (
+                        <p className="mt-1 text-sm leading-relaxed text-sage line-clamp-2">
+                          Unlocks {item.drinks.join(", ")}
+                          {item.count > item.drinks.length ? ` +${item.count - item.drinks.length} more` : ""}
+                        </p>
+                      )}
+                      <button
+                        onClick={() => onAddToInventory(item.id)}
+                        className="mt-2.5 inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-terracotta transition-colors hover:text-terracotta-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta/50 rounded-lg"
+                        aria-label={`Add ${item.name} to unlock ${item.count} more cocktails`}
+                      >
+                        <PlusIcon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                        Add to bar
+                      </button>
                     </div>
                   </div>
-                )}
-
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="flex-shrink-0 w-20 h-16 bg-terracotta/10 rounded-2xl flex flex-col items-center justify-center border border-terracotta/20 px-2">
-                    <span className="text-xl font-bold text-terracotta leading-none">
-                      +{item.count}
-                    </span>
-                    <span className="font-mono text-[9px] font-bold text-sage uppercase mt-1 tracking-wide text-center leading-tight">
-                      More Drinks
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col min-w-0 pt-1 flex-1">
-                    <h4 className="font-bold text-forest text-lg leading-tight break-words">
-                      {item.name}
-                    </h4>
-                    <span className="font-mono text-xs font-bold text-sage uppercase tracking-wider mt-1">
-                      {item.category}
-                    </span>
-                    {item.drinks.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-xs font-bold text-sage uppercase tracking-wider mb-1">
-                          Unlocks these drinks:
-                        </p>
-                        <p className="text-sm text-forest font-medium line-clamp-2">
-                          {item.drinks.join(", ")}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => onAddToInventory(item.id)}
-                  className={`mt-auto w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border transition-all font-bold text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-terracotta/50 min-w-0 ${
-                    index === 0
-                      ? "bg-terracotta text-cream border-terracotta hover:bg-terracotta-dark hover:border-terracotta-dark shadow-lg shadow-terracotta/20"
-                      : "bg-terracotta/10 text-terracotta border-terracotta/20 hover:bg-terracotta hover:text-cream hover:border-terracotta"
-                  }`}
-                  aria-label={`Add ${item.name} to unlock ${item.count} more cocktails`}
-                >
-                  <PlusIcon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                  <span className="truncate">Add & Unlock {item.count} More</span>
-                </button>
-              </div>
-              )
-            ))}
+                )
+            )}
           </div>
 
           {unlockPotential.length > 9 && (
-            <div className="text-center mt-6">
-              <p className="text-sm text-sage">
-                Plus {unlockPotential.length - 9} additional selections waiting to elevate your repertoire...
-              </p>
-            </div>
+            <p className="mt-5 text-center text-sm text-sage">
+              Plus {unlockPotential.length - 9} more bottles that unlock additional drinks
+            </p>
           )}
         </div>
       )}
