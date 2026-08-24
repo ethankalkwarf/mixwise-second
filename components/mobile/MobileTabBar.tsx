@@ -57,7 +57,7 @@ export function MobileTabBar() {
               key={`${tab.id}-${tab.path}`}
               type="button"
               onClick={() => handlePress(tab)}
-              className="group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 outline-none focus:outline-none focus-visible:outline-none"
+              className="group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
               aria-label={tab.label}
               aria-current={isActive ? "page" : undefined}
             >

@@ -24,6 +24,7 @@ import { replayNativeIntro } from "@/lib/mobile/nativeIntro";
 import { getBarSharePath } from "@/lib/barShare";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { optimizeAvatarUrl } from "@/lib/avatarUrl";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 type MoreRow = {
   href: string;
@@ -87,6 +88,7 @@ export function MobileMoreSheet() {
   const { preferences } = useUserPreferences();
   const { openAuthDialog } = useAuthDialog();
   const preferredAuthMode = usePreferredAuthMode();
+  const dialogRef = useDialogA11y({ isOpen: moreOpen, onClose: closeMore });
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
   const avatarUrl = optimizeAvatarUrl(
@@ -127,16 +129,24 @@ export function MobileMoreSheet() {
         onClick={closeMore}
       />
       <div
+        ref={(node) => {
+          dialogRef.current = node;
+        }}
         className="absolute bottom-0 left-0 right-0 flex max-h-[88vh] flex-col overflow-hidden rounded-t-[28px] bg-cream shadow-2xl shadow-charcoal/20"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 5rem)" }}
         role="dialog"
         aria-modal="true"
-        aria-label="More"
+        aria-labelledby="mobile-more-title"
       >
         <div className="flex-shrink-0 px-5 pt-3 pb-2">
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-mist" aria-hidden />
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-2xl font-bold text-forest">More</h2>
+            <h2
+              id="mobile-more-title"
+              className="font-display text-2xl font-bold text-forest"
+            >
+              More
+            </h2>
             <button
               type="button"
               onClick={closeMore}

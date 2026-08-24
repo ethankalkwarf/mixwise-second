@@ -30,6 +30,7 @@ export function NativeDrinkTile({
   className?: string;
 }) {
   const title = formatCocktailName(name);
+  const accessLabel = spirit ? `${title}, ${spirit}` : title;
   const router = useRouter();
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export function NativeDrinkTile({
 
   return (
     <div className={`native-drink-tile ${className}`.trim()}>
-      <div className="native-drink-tile__photo" style={{ height: photoHeight }}>
+      <div className="native-drink-tile__photo" style={{ height: photoHeight }} aria-hidden="true">
         {imageUrl ? (
           // Native shell loads remote catalog URLs directly; next/image fill breaks this layout in WKWebView.
           // eslint-disable-next-line @next/next/no-img-element
@@ -50,12 +51,18 @@ export function NativeDrinkTile({
           <span className="native-drink-tile__new">NEW</span>
         ) : null}
       </div>
-      <p className="native-drink-tile__name">{title}</p>
-      {spirit ? <p className="native-drink-tile__spirit">{spirit}</p> : null}
+      <p className="native-drink-tile__name" aria-hidden="true">
+        {title}
+      </p>
+      {spirit ? (
+        <p className="native-drink-tile__spirit" aria-hidden="true">
+          {spirit}
+        </p>
+      ) : null}
       <AppLink
         href={href}
         onClick={onNavigate}
-        aria-label={title}
+        aria-label={accessLabel}
         className="native-drink-tile__hit"
       >
         <span aria-hidden="true" />

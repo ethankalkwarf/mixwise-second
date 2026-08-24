@@ -157,7 +157,7 @@ function SavedPageContent() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`
                       native-compact-cta inline-flex h-9 items-center gap-1.5 rounded-2xl px-3.5 text-sm font-semibold whitespace-nowrap
-                      transition-colors outline-none focus:outline-none focus-visible:outline-none
+                      transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta
                       ${
                         isActive
                           ? "bg-terracotta text-cream"
@@ -288,7 +288,7 @@ function ExploreRow({
   return (
     <AppLink
       href={href}
-      className="native-menu-row flex w-full min-h-[3.25rem] items-center gap-3 border-t border-mist/70 px-4 py-3 text-left outline-none first:border-t-0 focus:outline-none focus-visible:outline-none active:bg-mist/30"
+      className="native-menu-row flex w-full min-h-[3.25rem] items-center gap-3 border-t border-mist/70 px-4 py-3 text-left first:border-t-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta active:bg-mist/30"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cream text-forest">
         <Icon className="h-5 w-5" />

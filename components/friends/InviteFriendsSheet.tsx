@@ -14,6 +14,7 @@ import { isNativeApp } from "@/lib/mobile/platform";
 import { getShareOrigin } from "@/lib/shareOrigin";
 import { buildInviteUrl, shareInviteLink } from "@/lib/inviteShare";
 import { trackContentShared } from "@/lib/analytics";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 function suggestUsername(profile: {
   display_name?: string | null;
@@ -42,6 +43,7 @@ export function InviteFriendsSheet({
   const [savingUsername, setSavingUsername] = useState(false);
   const [sharing, setSharing] = useState(false);
   const native = isNativeApp();
+  const dialogRef = useDialogA11y({ isOpen: open, onClose });
 
   const username = profile?.username ?? null;
   const inviteUrl = useMemo(
@@ -151,14 +153,18 @@ export function InviteFriendsSheet({
           ? "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)"
           : undefined,
       }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="invite-title"
+      role="presentation"
       onClick={onClose}
     >
       <div
+        ref={(node) => {
+          dialogRef.current = node;
+        }}
         className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl"
         style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="invite-title"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">

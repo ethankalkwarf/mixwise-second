@@ -50,7 +50,7 @@ function BrowseTabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl py-2.5 text-sm font-semibold transition-colors outline-none focus:outline-none focus-visible:outline-none ${
+      className={`rounded-xl py-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta ${
         active ? "bg-white text-forest shadow-sm" : "text-sage active:text-forest"
       }`}
     >

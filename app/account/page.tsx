@@ -29,6 +29,7 @@ import { ShareBarButton } from "@/components/bar/ShareBarButton";
 import { FeaturedDrinksPicker } from "@/components/bar/FeaturedDrinksPicker";
 import { AvatarUploader } from "@/components/account/AvatarUploader";
 import { PrivateBarSetting } from "@/components/account/PrivateBarSetting";
+import { DeleteAccountSection } from "@/components/account/DeleteAccountSection";
 import { MainContainer } from "@/components/layout/MainContainer";
 import { useUser } from "@/components/auth/UserProvider";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
@@ -989,12 +990,14 @@ export default function AccountPage() {
           <div className="divide-y divide-mist/50 bg-cream/40">
             <PrivateBarSetting className="px-5 py-3.5 sm:px-6" />
             {emailQuietRow}
+            <DeleteAccountSection compact className="px-5 py-3.5 sm:px-6" />
           </div>
         )}
 
         {!nativeShell && layoutTier !== "phone" && (
           <div className="divide-y divide-mist/50 bg-cream/40">
             <PrivateBarSetting className="px-5 py-3.5 sm:px-6" />
+            <DeleteAccountSection compact className="px-5 py-3.5 sm:px-6" />
           </div>
         )}
       </div>
