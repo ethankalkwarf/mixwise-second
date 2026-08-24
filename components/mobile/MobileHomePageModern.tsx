@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Capacitor } from "@capacitor/core";
+import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { useNativeStatusBar } from "@/hooks/useNativeStatusBar";
 import { useUser } from "@/components/auth/UserProvider";
 import { useBarIngredients } from "@/hooks/useBarIngredients";
