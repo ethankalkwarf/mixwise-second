@@ -80,8 +80,13 @@ export function RecipeActions({ cocktail }: RecipeActionsProps) {
 
   return (
     <div className="space-y-3">
-      <MixedThisButton slug={cocktail.slug} onMixed={() => setMixed(true)} />
       <div className="flex flex-wrap items-center gap-3">
+        <MixedThisButton
+          slug={cocktail.slug}
+          compact
+          className="flex-shrink-0"
+          onMixed={() => setMixed(true)}
+        />
         <FavoriteButton
           cocktail={{
             id: cocktail.id,

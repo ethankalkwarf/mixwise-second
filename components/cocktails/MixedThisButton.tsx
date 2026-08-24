@@ -11,10 +11,17 @@ import {
 type Props = {
   slug: string;
   className?: string;
+  /** Compact pill sized for the recipe action row (heart, notes, share). */
+  compact?: boolean;
   onMixed?: () => void;
 };
 
-export function MixedThisButton({ slug, className = "", onMixed }: Props) {
+export function MixedThisButton({
+  slug,
+  className = "",
+  compact = false,
+  onMixed,
+}: Props) {
   const toast = useToast();
   const [mixed, setMixed] = useState(false);
 
@@ -45,7 +52,11 @@ export function MixedThisButton({ slug, className = "", onMixed }: Props) {
     <button
       type="button"
       onClick={handleClick}
-      className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-colors ${
+      className={`flex items-center justify-center gap-1.5 font-semibold transition-colors ${
+        compact
+          ? "rounded-lg px-3 py-2 text-xs"
+          : "w-full rounded-2xl py-3.5 text-sm font-bold"
+      } ${
         mixed
           ? "bg-forest/10 text-forest"
           : "bg-terracotta text-cream active:scale-[0.98] hover:bg-terracotta-dark"
