@@ -248,14 +248,14 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
             )}
 
             {(ingredient.related ?? []).length > 0 && (
-              <section className="space-y-4">
+              <section className="space-y-3">
                 <h2 className="font-display text-2xl font-bold text-forest">{headings.pairs}</h2>
-                <div className="flex flex-wrap gap-2">
+                <div className="mw-pill-row">
                   {(ingredient.related ?? []).map((item) => (
                     <Link
                       key={item.id}
                       href={`/ingredients/${item.slug}`}
-                      className="px-3 py-2 rounded-full bg-white border border-mist text-sm text-forest hover:border-terracotta hover:text-terracotta transition-colors"
+                      className="mw-pill mw-pill--chip"
                     >
                       {item.name}
                     </Link>
