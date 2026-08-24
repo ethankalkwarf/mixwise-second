@@ -2013,34 +2013,49 @@ html.native-app .learn-quiz-inline-cta {
   color: rgba(44, 54, 40, 0.55);
 }
 
-/* Shared compact pills — filters, meta tags, recipe labels (native + web). */
-.mw-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
+/* Shared compact pills — identical box for span / button / a. */
+.mw-pill,
+button.mw-pill,
+a.mw-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
   flex-shrink: 0;
-  height: 1.375rem;
-  min-height: 1.375rem;
-  max-height: 1.375rem;
-  padding: 0 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.625rem;
-  font-weight: 600;
-  line-height: 1.375rem;
+  width: auto;
+  height: 1.375rem !important;
+  min-height: 1.375rem !important;
+  max-height: 1.375rem !important;
+  margin: 0 !important;
+  padding: 0 0.5rem !important;
+  border: 1px solid #e8e2d6 !important;
+  border-radius: 9999px !important;
+  background: #ffffff !important;
+  font-family: inherit !important;
+  font-size: 0.625rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
   letter-spacing: 0.01em;
+  color: rgba(44, 54, 40, 0.68) !important;
   white-space: nowrap;
+  text-decoration: none !important;
   vertical-align: middle;
-  text-decoration: none;
+  appearance: none;
+  -webkit-appearance: none;
   -webkit-tap-highlight-color: transparent;
+  cursor: default;
 }
 
+button.mw-pill,
 a.mw-pill {
   cursor: pointer;
 }
 
+button.mw-pill:active,
 a.mw-pill:active {
   opacity: 0.92;
+  border-color: rgba(188, 90, 69, 0.45) !important;
+  color: #bc5a45 !important;
 }
 
 .mw-pill-row {
@@ -2050,47 +2065,39 @@ a.mw-pill:active {
   gap: 0.35rem;
 }
 
-.mw-pill--meta {
-  border: 1px solid #e8e2d6;
-  background: #ffffff;
-  color: rgba(44, 54, 40, 0.68);
-}
-
-a.mw-pill--meta:active {
-  border-color: rgba(188, 90, 69, 0.45);
-  color: #bc5a45;
-}
-
 .mw-pill--filter {
-  border: 1px solid #e8e2d6;
-  background: rgba(255, 255, 255, 0.88);
-  color: #1a3a2a;
+  background: rgba(255, 255, 255, 0.88) !important;
+  color: #1a3a2a !important;
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 
 .mw-pill--filter:active {
-  border-color: rgba(188, 90, 69, 0.45);
-  color: #bc5a45;
+  border-color: rgba(188, 90, 69, 0.45) !important;
+  color: #bc5a45 !important;
 }
 
 @media (min-width: 1024px) {
   .mw-pill--filter {
-    background: transparent;
+    background: transparent !important;
   }
 
   .mw-pill--filter:hover {
-    color: #bc5a45;
+    color: #bc5a45 !important;
   }
 }
 
-/* Ingredient detail — index-style wash, copy left / bottle right (native). */
+/* Ingredient detail — full-bleed under status bar. */
 .native-ingredient-hero {
   margin: 0 -1rem 0;
 }
 
+html.native-app .native-ingredient-hero {
+  margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+}
+
 .native-ingredient-hero__stage {
   position: relative;
-  min-height: 14rem;
+  min-height: calc(13.5rem + env(safe-area-inset-top, 0px));
   overflow: hidden;
   background: #1c1814;
 }
@@ -2127,17 +2134,18 @@ a.mw-pill--meta:active {
 
 .native-ingredient-hero__back {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 0.45rem);
+  top: calc(env(safe-area-inset-top, 0px) + 0.55rem);
   left: 1rem;
   z-index: 4;
   display: inline-flex;
   align-items: center;
-  gap: 0.1rem;
+  gap: 0.15rem;
   height: 2rem;
-  padding: 0 0.65rem 0 0.4rem;
+  margin: 0;
+  padding: 0 0.7rem 0 0.45rem;
   border-radius: 999px;
   border: 1px solid rgba(232, 226, 214, 0.95);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 1px 3px rgba(28, 24, 20, 0.06);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -2152,7 +2160,6 @@ a.mw-pill--meta:active {
   width: 1rem;
   height: 1rem;
   flex-shrink: 0;
-  margin-left: -0.05rem;
 }
 
 .native-ingredient-hero__back:active {
@@ -2167,8 +2174,8 @@ a.mw-pill--meta:active {
   grid-template-columns: minmax(0, 1fr) min(34vw, 6.75rem);
   gap: 0.5rem;
   align-items: end;
-  min-height: 14rem;
-  padding: calc(env(safe-area-inset-top, 0px) + 2.85rem) 1rem 1rem;
+  min-height: calc(13.5rem + env(safe-area-inset-top, 0px));
+  padding: calc(env(safe-area-inset-top, 0px) + 3rem) 1rem 1.05rem;
 }
 
 .native-ingredient-hero__copy {
@@ -2218,7 +2225,7 @@ a.mw-pill--meta:active {
 }
 
 .native-ingredient-hero__meta {
-  margin-top: 0.5rem;
+  margin-top: 0.55rem;
 }
 
 .native-ingredient-hero__bottle-col {
@@ -2277,7 +2284,7 @@ html.native-app [data-native-ingredient-detail] [data-ingredient-actions] button
   font-size: 0.8125rem;
 }
 
-html.native-app [data-native-ingredient-detail] .md\\:col-span-8 > section:first-child h2 {
+html.native-app [data-native-ingredient-detail] .md\:col-span-8 > section:first-child h2 {
   margin-top: 0;
 }
 
