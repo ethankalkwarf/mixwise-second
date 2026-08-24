@@ -2088,7 +2088,9 @@ a.mw-pill:active {
 
 /* Ingredient detail — full-bleed under status bar. */
 .native-ingredient-hero {
-  margin: 0 -1rem 0;
+  /* Outside MainContainer — do NOT use -1rem horizontal breakout or copy drifts left of body. */
+  margin: 0;
+  position: relative;
 }
 
 html.native-app .native-ingredient-hero {
