@@ -107,9 +107,9 @@ function IngredientLine({
 
 function SpecCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white px-3.5 py-3">
-      <dt className="text-[10px] font-bold uppercase tracking-[0.16em] text-sage">{label}</dt>
-      <dd className="mt-1 font-display text-sm font-bold text-forest">{value}</dd>
+    <div className="rounded-xl bg-white px-3 py-2">
+      <dt className="text-[10px] font-bold uppercase tracking-[0.14em] text-sage">{label}</dt>
+      <dd className="mt-0.5 font-display text-sm font-bold leading-snug text-forest">{value}</dd>
     </div>
   );
 }
@@ -350,7 +350,7 @@ export function NativeRecipeView({
                   </p>
                   <CocktailStoriesShare
                     variant="mixed"
-                    className="justify-center"
+                    className="flex w-full flex-wrap items-center justify-evenly gap-2"
                     cocktail={{
                       name: cocktail.name,
                       slug: cocktail.slug,

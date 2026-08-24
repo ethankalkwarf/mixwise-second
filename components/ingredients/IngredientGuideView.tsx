@@ -73,7 +73,7 @@ function MetaPill({
   href?: string;
 }) {
   const className =
-    "ingredient-meta-pill inline-flex items-center rounded-full border border-mist bg-white/80 px-3 py-1.5 text-xs leading-snug text-sage backdrop-blur-sm";
+    "ingredient-meta-pill inline-flex items-center rounded-full border border-mist bg-white/80 px-2.5 py-1 text-[11px] leading-none text-sage backdrop-blur-sm";
 
   if (href) {
     return (

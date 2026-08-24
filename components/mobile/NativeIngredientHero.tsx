@@ -19,7 +19,10 @@ type Props = {
   cocktailCount: number;
 };
 
-/** Native ingredient header — origin photo stage with bottle, no website chrome. */
+/**
+ * Native ingredient header — origin photo with bottle breaking the frame.
+ * Title stays below for readability; long copy on busy field photos is hard to read.
+ */
 export function NativeIngredientHero({
   title,
   name,
@@ -50,18 +53,22 @@ export function NativeIngredientHero({
         <span>Ingredients</span>
       </AppLink>
 
-      <div className="native-ingredient-hero__stage">
-        {coverSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            className="native-ingredient-hero__cover"
-            src={coverSrc}
-            alt={coverImageAlt || ""}
-          />
-        ) : (
-          <div className="native-ingredient-hero__cover-fallback" aria-hidden />
-        )}
-        <div className="native-ingredient-hero__shade" aria-hidden />
+      <div className="native-ingredient-hero__frame">
+        <div className="native-ingredient-hero__stage">
+          {coverSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className="native-ingredient-hero__cover"
+              src={coverSrc}
+              alt={coverImageAlt || ""}
+            />
+          ) : (
+            <div className="native-ingredient-hero__cover-fallback" aria-hidden />
+          )}
+          <div className="native-ingredient-hero__shade" aria-hidden />
+          <p className="native-ingredient-hero__chip font-mono">{sectionTitle}</p>
+        </div>
+
         {bottleSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -70,12 +77,13 @@ export function NativeIngredientHero({
             alt={heroImageAlt || name}
           />
         ) : (
-          <div className="native-ingredient-hero__fallback">{name.charAt(0)}</div>
+          <div className="native-ingredient-hero__fallback" aria-hidden>
+            {name.charAt(0)}
+          </div>
         )}
       </div>
 
       <div className="native-ingredient-hero__copy">
-        <p className="native-ingredient-hero__eyebrow font-mono">{sectionTitle}</p>
         <h1 className="native-ingredient-hero__title">{title}</h1>
         <p className="native-ingredient-hero__description">{description}</p>
         {alsoCalled ? <p className="native-ingredient-hero__also">{alsoCalled}</p> : null}
