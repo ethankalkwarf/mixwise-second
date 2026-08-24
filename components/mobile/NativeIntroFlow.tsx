@@ -151,8 +151,8 @@ const INTRO_SLIDES = [
     tab: "learn" as const,
     kicker: "Learn",
     title: "Shake with confidence.",
-    body: "Techniques, bottle guides, and short courses — so every pour tastes like you meant it.",
-    hint: "Guides, methods, and courses",
+    body: "Techniques, bottle guides, and short paths — so every pour tastes like you meant it.",
+    hint: "Guides, methods, and paths",
   },
 ] as const;
 

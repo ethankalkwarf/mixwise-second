@@ -36,7 +36,7 @@ const FOOTER_COLUMNS: FooterColumn[] = [
     ariaLabel: "Learn mixology",
     links: [
       { label: "Learn Mixology", href: "/learn", learnOnly: true },
-      { label: "Beginner Course", href: "/learn/paths/first-month-home", learnOnly: true },
+      { label: "Beginner path", href: "/learn/paths/first-month-home", learnOnly: true },
       { label: "Smart Swaps", href: "/learn/swaps", learnOnly: true },
     ],
   },

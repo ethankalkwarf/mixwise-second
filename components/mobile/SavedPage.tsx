@@ -223,7 +223,7 @@ function SavedPageContent() {
                 href="/learn"
                 icon={BookOpenIcon}
                 label="Learn"
-                description="Guides, methods, and courses"
+                description="Guides, methods, and paths"
               />
               <ExploreRow
                 href="/ingredients"
