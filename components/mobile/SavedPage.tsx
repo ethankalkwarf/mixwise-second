@@ -345,8 +345,11 @@ function resolveCocktailImageUrl(
   return liveTrimmed || storedTrimmed;
 }
 
+const FAVORITES_PREVIEW = 8;
+
 function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boolean }) {
   const liveImageUrls = useLiveCocktailImages(favorites, loading);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (!loading && favorites.length === 0) {
@@ -374,9 +377,15 @@ function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boole
     );
   }
 
+  const shown =
+    expanded || favorites.length <= FAVORITES_PREVIEW
+      ? favorites
+      : favorites.slice(0, FAVORITES_PREVIEW);
+  const hiddenCount = favorites.length - shown.length;
+
   return (
     <div className="space-y-2">
-      {favorites.map((fav) => (
+      {shown.map((fav) => (
         <FavoriteDrinkRow
           key={fav.cocktail_id}
           href={`/cocktails/${fav.cocktail_slug || fav.cocktail_id}`}
@@ -389,6 +398,25 @@ function FavoritesTab({ favorites, loading }: { favorites: any[]; loading: boole
           subtitle="Saved favorite"
         />
       ))}
+      {hiddenCount > 0 ? (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="flex w-full items-center justify-center gap-1 rounded-2xl border border-mist bg-white px-4 py-3 text-sm font-semibold text-terracotta"
+        >
+          View all {favorites.length} favorites
+          <ArrowRightIcon className="h-4 w-4" />
+        </button>
+      ) : null}
+      {expanded && favorites.length > FAVORITES_PREVIEW ? (
+        <button
+          type="button"
+          onClick={() => setExpanded(false)}
+          className="flex w-full items-center justify-center rounded-2xl px-4 py-2 text-sm font-medium text-sage"
+        >
+          Show less
+        </button>
+      ) : null}
     </div>
   );
 }

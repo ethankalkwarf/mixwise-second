@@ -553,7 +553,13 @@ export function StoriesShareButtons({
   // Compact recipe row: only render when Stories apps exist (copy lives elsewhere).
   if (compact && (!availabilityReady || !showStories)) return null;
 
-  const multiStories = [showIg, showFb, showSc].filter(Boolean).length > 1;
+  const storyAppCount = [showIg, showFb, showSc].filter(Boolean).length;
+  const storiesGridClass =
+    storyAppCount >= 3
+      ? "grid grid-cols-3 gap-2"
+      : storyAppCount === 2
+        ? "grid grid-cols-2 gap-2"
+        : "grid grid-cols-1 gap-2";
   const btnBase = compact
     ? "inline-flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium disabled:opacity-50 active:scale-[0.98]"
     : "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3.5 text-sm font-semibold tracking-tight disabled:opacity-50 active:scale-[0.98] transition-transform";
@@ -624,9 +630,7 @@ export function StoriesShareButtons({
           className={
             compact
               ? "flex flex-wrap gap-2"
-              : multiStories
-                ? "grid grid-cols-2 gap-2"
-                : "grid grid-cols-1 gap-2"
+              : storiesGridClass
           }
         >
           {showIg && (

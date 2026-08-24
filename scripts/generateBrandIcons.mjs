@@ -38,10 +38,10 @@ function pngToIco(images) {
 }
 
 async function main() {
-  const markSvg = fs.readFileSync(path.join(brandDir, "mixwise-mark.svg"));
+  const markSvg = fs.readFileSync(path.join(brandDir, "mixwise-app-icon.svg"));
   const wordmarkSvg = fs.readFileSync(path.join(brandDir, "mixwise-wordmark-cream.svg"));
 
-  fs.copyFileSync(path.join(brandDir, "mixwise-mark.svg"), path.join(publicDir, "icon.svg"));
+  fs.copyFileSync(path.join(brandDir, "mixwise-app-icon.svg"), path.join(publicDir, "icon.svg"));
 
   const raster = async (size) =>
     sharp(markSvg, { density: 384 }).resize(size, size).png().toBuffer();

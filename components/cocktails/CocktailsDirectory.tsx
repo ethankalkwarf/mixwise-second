@@ -28,6 +28,7 @@ import {
 import { NativeDrinkTile } from "@/components/mobile/NativeDrinkTile";
 import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { MIXWISE_FOCUS_SEARCH } from "@/lib/mobile/navConfig";
+import { CollectionBrowseTracker } from "@/components/onboarding/CollectionBrowseTracker";
 import { trackSearch } from "@/lib/analytics";
 
 type SortOption = "default" | "name-asc" | "name-desc" | "popular";
@@ -441,7 +442,10 @@ export function CocktailsDirectory({
               )}
             </>
           ) : (
-            <NativeCollectionsGrid shuffleSeed={browseSeed} />
+            <>
+              <CollectionBrowseTracker />
+              <NativeCollectionsGrid shuffleSeed={browseSeed} />
+            </>
           )}
         </div>
       </PullToRefreshContainer>

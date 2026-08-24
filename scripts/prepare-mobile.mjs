@@ -10,7 +10,8 @@ import sharp from "sharp";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "out");
 const indexPath = join(outDir, "index.html");
-const iconSrc = join(root, "public", "icon-512.png");
+const iconSrc = join(root, "public", "brand", "mixwise-app-icon.png");
+const iconSrcFallback = join(root, "public", "icon-512.png");
 /** Text wordmark only — no lime period overlay. */
 const wordmarkSrc = join(root, "public", "brand", "mixwise-wordmark-v7-text-forest.png");
 const wordmarkFallback = join(root, "public", "brand", "mixwise-wordmark-forest.svg");
@@ -31,17 +32,20 @@ if (!existsSync(indexPath)) {
 }
 
 async function refreshBrandingAssets() {
-  if (!existsSync(iconSrc)) {
-    console.warn("public/icon-512.png not found — skipping icon/splash update");
+  const resolvedIconSrc = existsSync(iconSrc) ? iconSrc : iconSrcFallback;
+  if (!existsSync(resolvedIconSrc)) {
+    console.warn("mixwise-app-icon.png / icon-512.png not found — skipping icon/splash update");
     return;
   }
 
-  await sharp(iconSrc)
+  await sharp(resolvedIconSrc)
     .resize(1024, 1024, { fit: "contain", background: CREAM })
     .flatten({ background: CREAM })
     .png()
     .toFile(iconDest);
-  console.log("Updated iOS app icon (1024×1024, no alpha) from public/icon-512.png");
+  console.log(
+    `Updated iOS app icon (1024×1024, no alpha) from ${resolvedIconSrc === iconSrc ? "mixwise-app-icon.png" : "icon-512.png"}`
+  );
 
   mkdirSync(splashDir, { recursive: true });
 
@@ -55,7 +59,7 @@ async function refreshBrandingAssets() {
     ? wordmarkSrc
     : existsSync(wordmarkFallback)
       ? wordmarkFallback
-      : iconSrc;
+      : resolvedIconSrc;
 
   for (const { name, size } of splashSizes) {
     const markWidth = Math.round(size * 0.42);

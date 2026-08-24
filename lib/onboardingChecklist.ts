@@ -26,7 +26,7 @@ export const CHECKLIST_ITEMS: ChecklistItem[] = [
     id: "collection",
     title: "Browse a collection",
     description: "Explore seasonal and themed drink lists.",
-    href: "/occasions",
+    href: "/cocktails?browse=collections",
   },
   {
     id: "save",

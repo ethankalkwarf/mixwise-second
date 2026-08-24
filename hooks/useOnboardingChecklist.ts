@@ -58,7 +58,7 @@ export function useOnboardingChecklist() {
         startedLesson: hasStarted,
         mixedAny,
       }),
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- tick refreshes localStorage flags
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- tick refreshes localStorage flags
     [recentlyViewed.length, favorites.length, hasStarted, mixedAny, tick]
   );
 
@@ -66,13 +66,15 @@ export function useOnboardingChecklist() {
   const complete = useMemo(() => isChecklistComplete(completion), [completion]);
   const canDismiss = useMemo(() => canDismissChecklist(completion), [completion]);
 
+  // Keep a celebration card visible after completion until the user dismisses.
   const visible = !dismissed && !complete;
+  const showCelebration = !dismissed && complete;
 
   const dismiss = useCallback(() => {
-    if (!canDismiss) return;
+    if (!complete && !canDismiss) return;
     dismissChecklist(user?.id);
     setDismissed(true);
-  }, [canDismiss, user?.id]);
+  }, [canDismiss, complete, user?.id]);
 
   const completedCount = CHECKLIST_ITEMS.length - incomplete.length;
 
@@ -80,8 +82,9 @@ export function useOnboardingChecklist() {
     completion,
     incomplete,
     complete,
-    canDismiss,
+    canDismiss: canDismiss || complete,
     visible,
+    showCelebration,
     dismiss,
     completedCount,
     totalCount: CHECKLIST_ITEMS.length,

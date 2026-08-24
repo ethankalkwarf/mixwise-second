@@ -17,19 +17,20 @@ const NATIVE_QUESTS: Array<{
   cta: string;
   progress: (ctx: { barCount: number; favoriteCount: number }) => number;
 }> = [
-  {
-    id: "bar_builder",
-    target: 10,
-    href: "/mix?shelf=1",
-    cta: "Add bottles",
-    progress: (ctx) => ctx.barCount,
-  },
+  // Soft first quest after getting started — save a few drinks, then stock the bar.
   {
     id: "starter_mixer",
     target: 3,
     href: "/cocktails",
     cta: "Save a drink",
     progress: (ctx) => ctx.favoriteCount,
+  },
+  {
+    id: "bar_builder",
+    target: 10,
+    href: "/mix?shelf=1",
+    cta: "Add bottles",
+    progress: (ctx) => ctx.barCount,
   },
   {
     id: "well_stocked",

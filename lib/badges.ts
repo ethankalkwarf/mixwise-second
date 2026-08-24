@@ -20,11 +20,11 @@ export const BADGES: Record<string, BadgeDefinition> = {
   home_bartender: {
     id: "home_bartender",
     name: "Home Bartender",
-    description: "Completed the onboarding process",
+    description: "Completed getting started",
     icon: "🏠",
     category: "milestone",
     rarity: "common",
-    criteria: "Complete the onboarding wizard",
+    criteria: "Finish the getting started checklist or onboarding wizard",
   },
   starter_mixer: {
     id: "starter_mixer",

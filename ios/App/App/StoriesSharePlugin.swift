@@ -88,6 +88,16 @@ public class StoriesSharePlugin: CAPPlugin, CAPBridgedPlugin {
 
             if let sticker = stickerBase64, let data = self.decodeImageData(sticker) {
                 pasteboardItems["com.snapchat.creativekit.stickerImage"] = data
+                // Lower-third placement — Creative Kit stickers aren't user-draggable after share.
+                pasteboardItems["com.snapchat.creativekit.payloadMetadata"] = [
+                    "stickerMetadata": [
+                        "posX": 0.5,
+                        "posY": 0.72,
+                        "rotation": 0,
+                        "widthDp": 280,
+                        "heightDp": 200
+                    ]
+                ]
             }
 
             if let attachmentUrl = attachmentUrl, !attachmentUrl.isEmpty {
