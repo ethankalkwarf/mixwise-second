@@ -80,7 +80,7 @@ export const MOBILE_TAB_DESTINATIONS: Record<MobileTabDestinationId, MobileTabDe
     path: "/learn",
     icon: AcademicCapIcon,
     iconSolid: AcademicCapIconSolid,
-    description: "Guides, methods, and courses",
+    description: "Guides, methods, and paths",
   },
   you: {
     id: "you",

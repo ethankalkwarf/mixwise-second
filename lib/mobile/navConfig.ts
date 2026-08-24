@@ -43,7 +43,7 @@ export const MOBILE_EXPLORE_LINKS: MobileExploreLink[] = [
   {
     href: "/learn",
     label: "Learn",
-    description: "Guides, methods & courses",
+    description: "Guides, methods & paths",
     emoji: "📚",
     gradient: "from-forest to-charcoal",
   },
