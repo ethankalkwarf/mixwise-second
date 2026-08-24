@@ -392,12 +392,9 @@ export function NativeRecipeView({
             {bestFor && bestFor.length > 0 && (
               <div>
                 <h2 className="mb-2 font-display text-lg font-bold text-forest">Best for</h2>
-                <div className="flex flex-wrap gap-2">
+                <div className="mw-pill-row flex flex-wrap gap-2">
                   {bestFor.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-forest"
-                    >
+                    <span key={tag} className="mw-pill mw-pill--meta">
                       {tag}
                     </span>
                   ))}

@@ -72,8 +72,7 @@ function MetaPill({
   children: ReactNode;
   href?: string;
 }) {
-  const className =
-    "ingredient-meta-pill inline-flex items-center rounded-full border border-mist bg-white/80 px-2.5 py-1 text-[11px] leading-none text-sage backdrop-blur-sm";
+  const className = "mw-pill mw-pill--meta ingredient-meta-pill";
 
   if (href) {
     return (
@@ -185,7 +184,7 @@ export function IngredientGuideView({ ingredient, guide, wayfinder }: Props) {
                 {guide.dek}
               </p>
               {guide.alsoCalled && <p className="mt-2 text-sm text-sage/80">{guide.alsoCalled}</p>}
-              <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4">
+              <div className="mw-pill-row mt-3 sm:mt-4">
                 {guide.abv ? <MetaPill>{guide.abv} ABV</MetaPill> : null}
                 {ingredient.cocktailCount > 0 ? (
                   <MetaPill href="#cocktails">

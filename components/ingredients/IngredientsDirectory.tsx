@@ -101,10 +101,7 @@ export function IngredientsDirectory({ ingredients }: Props) {
 
 function JumpChip({ href, children }: { href: string; children: string }) {
   return (
-    <a
-      href={href}
-      className="ingredient-jump-chip shrink-0 rounded-full border border-mist bg-white/70 px-2.5 py-1 text-xs text-forest active:border-terracotta/40 active:text-terracotta sm:px-3 sm:py-1.5 sm:text-sm lg:bg-transparent lg:hover:text-terracotta"
-    >
+    <a href={href} className="mw-pill mw-pill--filter shrink-0">
       {children}
     </a>
   );
