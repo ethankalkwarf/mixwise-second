@@ -19,10 +19,7 @@ type Props = {
   cocktailCount: number;
 };
 
-/**
- * Native ingredient header — origin photo with bottle breaking the frame.
- * Title stays below for readability; long copy on busy field photos is hard to read.
- */
+/** Native ingredient header — index-style wash, copy left, bottle right. */
 export function NativeIngredientHero({
   title,
   name,
@@ -53,49 +50,51 @@ export function NativeIngredientHero({
         <span>Ingredients</span>
       </AppLink>
 
-      <div className="native-ingredient-hero__frame">
-        <div className="native-ingredient-hero__stage">
-          {coverSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              className="native-ingredient-hero__cover"
-              src={coverSrc}
-              alt={coverImageAlt || ""}
-            />
-          ) : (
-            <div className="native-ingredient-hero__cover-fallback" aria-hidden />
-          )}
-          <div className="native-ingredient-hero__shade" aria-hidden />
-          <p className="native-ingredient-hero__chip font-mono">{sectionTitle}</p>
-        </div>
-
-        {bottleSrc ? (
+      <div className="native-ingredient-hero__stage">
+        {coverSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            className="native-ingredient-hero__bottle"
-            src={bottleSrc}
-            alt={heroImageAlt || name}
+            className="native-ingredient-hero__cover"
+            src={coverSrc}
+            alt={coverImageAlt || ""}
           />
         ) : (
-          <div className="native-ingredient-hero__fallback" aria-hidden>
-            {name.charAt(0)}
-          </div>
+          <div className="native-ingredient-hero__cover-fallback" aria-hidden />
         )}
-      </div>
+        <div className="native-ingredient-hero__shade" aria-hidden />
 
-      <div className="native-ingredient-hero__copy">
-        <h1 className="native-ingredient-hero__title">{title}</h1>
-        <p className="native-ingredient-hero__description">{description}</p>
-        {alsoCalled ? <p className="native-ingredient-hero__also">{alsoCalled}</p> : null}
-        <div className="native-ingredient-hero__meta">
-          {abv ? <span className="native-ingredient-hero__pill">{abv} ABV</span> : null}
-          {cocktailCount > 0 ? (
-            <AppLink href="#cocktails" className="native-ingredient-hero__pill">
-              Used in {cocktailCount} cocktail{cocktailCount === 1 ? "" : "s"}
-            </AppLink>
-          ) : (
-            <span className="native-ingredient-hero__pill">No matched cocktails yet</span>
-          )}
+        <div className="native-ingredient-hero__layout">
+          <div className="native-ingredient-hero__copy">
+            <p className="native-ingredient-hero__eyebrow font-mono">{sectionTitle}</p>
+            <h1 className="native-ingredient-hero__title">{title}</h1>
+            <p className="native-ingredient-hero__description">{description}</p>
+            {alsoCalled ? <p className="native-ingredient-hero__also">{alsoCalled}</p> : null}
+            <div className="mw-pill-row native-ingredient-hero__meta">
+              {abv ? <span className="mw-pill mw-pill--meta">{abv} ABV</span> : null}
+              {cocktailCount > 0 ? (
+                <AppLink href="#cocktails" className="mw-pill mw-pill--meta">
+                  Used in {cocktailCount} cocktail{cocktailCount === 1 ? "" : "s"}
+                </AppLink>
+              ) : (
+                <span className="mw-pill mw-pill--meta">No matched cocktails yet</span>
+              )}
+            </div>
+          </div>
+
+          <div className="native-ingredient-hero__bottle-col">
+            {bottleSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="native-ingredient-hero__bottle"
+                src={bottleSrc}
+                alt={heroImageAlt || name}
+              />
+            ) : (
+              <div className="native-ingredient-hero__fallback" aria-hidden>
+                {name.charAt(0)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>
