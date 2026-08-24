@@ -2018,16 +2018,16 @@ html.native-app .learn-quiz-inline-cta {
   color: rgba(44, 54, 40, 0.55);
 }
 
-/* Ingredient detail — large bottle hero (native). */
+/* Ingredient detail — origin photo with bottle breakout (native). */
 .native-ingredient-hero {
-  padding: 0.35rem 1rem 1.25rem;
+  padding: 0.35rem 1rem 1rem;
 }
 
 .native-ingredient-hero__back {
   display: inline-flex;
   align-items: center;
   gap: 0.15rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
   padding: 0.35rem 0.5rem 0.35rem 0.15rem;
   border-radius: 999px;
   font-size: 0.8125rem;
@@ -2045,15 +2045,18 @@ html.native-app .learn-quiz-inline-cta {
   color: #bc5a45;
 }
 
+.native-ingredient-hero__frame {
+  position: relative;
+  margin-bottom: 0.35rem;
+  /* Room for the bottle to hang below the rounded stage */
+  padding-bottom: 2.75rem;
+}
+
 .native-ingredient-hero__stage {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-height: 15rem;
-  height: 42vw;
-  max-height: 18rem;
-  margin-bottom: 1rem;
+  min-height: 13.5rem;
+  height: 38vw;
+  max-height: 16.5rem;
   overflow: hidden;
   border-radius: 1.25rem;
   background: #1c1814;
@@ -2085,37 +2088,61 @@ html.native-app .learn-quiz-inline-cta {
   inset: 0;
   z-index: 1;
   pointer-events: none;
+  /* Lighter wash so the origin photo reads; keep a soft floor for the bottle */
   background-image:
-    linear-gradient(to top, rgba(249, 247, 242, 0.94) 0%, rgba(249, 247, 242, 0.55) 42%, rgba(249, 247, 242, 0.18) 100%),
-    linear-gradient(to right, rgba(249, 247, 242, 0.35) 0%, transparent 55%);
+    linear-gradient(to top, rgba(249, 247, 242, 0.55) 0%, rgba(249, 247, 242, 0.12) 38%, transparent 68%),
+    linear-gradient(to right, rgba(28, 24, 20, 0.18) 0%, transparent 45%);
+}
+
+.native-ingredient-hero__chip {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.85rem;
+  z-index: 3;
+  margin: 0;
+  border-radius: 999px;
+  background: rgba(249, 247, 242, 0.92);
+  padding: 0.28rem 0.65rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #bc5a45;
+  box-shadow: 0 1px 6px rgba(28, 24, 20, 0.08);
 }
 
 .native-ingredient-hero__bottle {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
   z-index: 2;
   display: block !important;
-  max-height: 92%;
-  max-width: min(68vw, 11rem);
+  max-height: min(17.5rem, calc(38vw + 2.5rem));
+  max-width: min(58vw, 10rem);
   width: auto !important;
   height: auto !important;
+  transform: translateX(-50%);
   object-fit: contain;
   object-position: bottom;
-  filter: drop-shadow(0 16px 28px rgba(28, 24, 20, 0.28));
+  filter: drop-shadow(0 18px 28px rgba(28, 24, 20, 0.32));
+  pointer-events: none;
 }
 
 .native-ingredient-hero__fallback {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 5rem;
-  height: 5rem;
-  margin-bottom: 1.5rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  transform: translateX(-50%);
   border-radius: 999px;
-  background: rgba(249, 247, 242, 0.85);
+  background: rgba(249, 247, 242, 0.92);
   font-family: var(--font-dm-serif), ui-serif, serif;
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: rgba(44, 54, 40, 0.35);
 }
@@ -2124,17 +2151,8 @@ html.native-app .learn-quiz-inline-cta {
   padding: 0;
 }
 
-.native-ingredient-hero__eyebrow {
-  margin: 0;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #bc5a45;
-}
-
 .native-ingredient-hero__title {
-  margin: 0.35rem 0 0;
+  margin: 0;
   font-family: var(--font-dm-serif), ui-serif, serif;
   font-size: clamp(1.75rem, 7vw, 2.15rem);
   font-weight: 700;
@@ -2143,14 +2161,14 @@ html.native-app .learn-quiz-inline-cta {
 }
 
 .native-ingredient-hero__description {
-  margin: 0.55rem 0 0;
+  margin: 0.5rem 0 0;
   font-size: 0.9375rem;
   line-height: 1.5;
   color: rgba(44, 54, 40, 0.82);
 }
 
 .native-ingredient-hero__also {
-  margin: 0.45rem 0 0;
+  margin: 0.4rem 0 0;
   font-size: 0.8125rem;
   color: rgba(44, 54, 40, 0.55);
 }
@@ -2158,24 +2176,27 @@ html.native-app .learn-quiz-inline-cta {
 .native-ingredient-hero__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-top: 0.85rem;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
 }
 
+/* Match recipe tag / Mix chip height — compact pill, not a tall chip */
 .native-ingredient-hero__pill {
   display: inline-flex;
   align-items: center;
+  min-height: 1.5rem;
   border-radius: 999px;
   border: 1px solid #e8e2d6;
   background: #ffffff;
-  padding: 0.3rem 0.65rem;
+  padding: 0.2rem 0.6rem;
   font-size: 0.6875rem;
   font-weight: 600;
+  line-height: 1.2;
   color: rgba(44, 54, 40, 0.72);
 }
 
 html.native-app [data-native-ingredient-detail] .native-ingredient-detail__body {
-  padding-top: 0.75rem !important;
+  padding-top: 0.5rem !important;
   padding-bottom: 2rem !important;
 }
 

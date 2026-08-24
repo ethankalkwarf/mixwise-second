@@ -133,9 +133,10 @@ function FacebookGlyph({ className }: { className?: string }) {
 }
 
 function SnapchatGlyph({ className }: { className?: string }) {
+  // Simple Icons Snapchat ghost — previous path was truncated and clipped in the button.
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.67-.02 1.08.027 1.348.07.41.248.788.574 1.066.41.348.96.52 1.635.52.276 0 .54-.038.786-.115l.07-.023c.807-.27 1.84-.617 2.832-.617.852 0 1.54.214 2.047.636.575.477.86 1.18.86 2.094 0 .852-.214 1.54-.636 2.047-.477.575-1.18.86-2.094.86-.852 0-1.54-.214-2.047-.636-.41-.34-.72-.8-.93-1.37-.21-.57-.31-1.2-.31-1.89 0-.69.1-1.32.31-1.89.21-.57.52-1.03.93-1.37.507-.422 1.195-.636 2.047-.636.992 0 2.025.347 2.832.617l.07.023c.246.077.51.115.786.115.675 0 1.225-.172 1.635-.52.326-.278.504-.656.574-1.066.047-.268.039-.678.027-1.348l-.003-.06c-.104-1.628-.23-3.654.299-4.847C16.853 1.069 13.196.793 12.206.793z" />
+      <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.028.503-.028.75 0 .192.098.349.306.349.204 0 .522-.116.922-.116.38 0 .63.216.63.52 0 .306-.244.524-.57.524-.282 0-.414-.076-.593-.076-.491 0-.908.322-.908.871 0 .172.053.928.053 1.11 0 2.48-1.235 3.765-3.318 4.506-.193.068-.314.126-.314.236 0 .114.162.22.379.331l.414.21c1.005.508 1.811 1.411 1.811 2.865 0 .202-.021.4-.057.59-.124.66-.605 1.04-1.292 1.04-.52 0-.954-.246-1.356-.714-.392-.456-.78-.702-1.232-.702-.416 0-.79.23-1.16.702-.41.52-.87.714-1.41.714-.678 0-1.156-.38-1.28-1.04a2.85 2.85 0 0 1-.057-.59c0-1.454.806-2.357 1.811-2.865l.414-.21c.217-.111.379-.217.379-.331 0-.11-.121-.168-.314-.236-2.083-.741-3.318-2.026-3.318-4.506 0-.182.053-.938.053-1.11 0-.549-.417-.871-.908-.871-.179 0-.311.076-.593.076-.326 0-.57-.218-.57-.524 0-.304.25-.52.63-.52.4 0 .718.116.922.116.208 0 .306-.157.306-.349 0-.247-.016-.57-.028-.75l-.003-.06c-.104-1.628-.23-3.654.299-4.847C7.447 1.069 10.804.793 11.794.793h.412z" />
     </svg>
   );
 }
@@ -553,9 +554,9 @@ export function StoriesShareButtons({
   // Compact recipe row: only render when Stories apps exist (copy lives elsewhere).
   if (compact && (!availabilityReady || !showStories)) return null;
 
-  const iconBtnSize = compact ? "h-10 w-10" : "h-11 w-11";
-  const iconSize = compact ? "h-[1.125rem] w-[1.125rem]" : "h-5 w-5";
-  const iconBtnBase = `inline-flex shrink-0 items-center justify-center rounded-xl transition-transform disabled:opacity-50 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${iconBtnSize}`;
+  const iconBtnSize = compact ? "h-9 w-9" : "h-10 w-10";
+  const iconSize = compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]";
+  const iconBtnBase = `inline-flex shrink-0 items-center justify-center overflow-visible rounded-xl transition-transform disabled:opacity-50 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${iconBtnSize}`;
 
   const showSystemShareFallback = availabilityReady && !showStories;
 
@@ -588,7 +589,7 @@ export function StoriesShareButtons({
         type="button"
         onClick={() => void handleCopy()}
         disabled={busy !== null}
-        className={`${iconBtnBase} border border-mist/80 bg-white/60 text-forest hover:bg-mist/50 focus-visible:ring-forest/30`}
+        className={`${iconBtnBase} border border-mist/80 bg-white text-forest hover:bg-mist/50 focus-visible:ring-forest/30`}
         aria-label={copied ? "Link copied" : "Copy link"}
         title={copied ? "Copied" : "Copy link"}
       >
@@ -605,7 +606,9 @@ export function StoriesShareButtons({
     <div
       className={
         className ??
-        (compact ? "inline-flex flex-wrap items-center gap-2" : "flex flex-wrap items-center gap-2")
+        (compact
+          ? "inline-flex flex-wrap items-center gap-2"
+          : "flex w-full flex-wrap items-center justify-evenly gap-2")
       }
     >
       {showStories ? (
@@ -647,10 +650,6 @@ export function StoriesShareButtons({
             </button>
           )}
         </>
-      ) : null}
-
-      {showStories && linkActions ? (
-        <div className="mx-0.5 hidden h-8 w-px shrink-0 bg-mist/80 sm:block" aria-hidden />
       ) : null}
 
       {linkActions}
