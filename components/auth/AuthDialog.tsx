@@ -854,10 +854,15 @@ export function AuthDialog({
                     </div>
 
                     <p className="mt-4 text-xs text-sage text-center">
-                      By continuing, you agree to our Terms of Service and{" "}
+                      By continuing, you agree to our{" "}
+                      <a href="/terms" className="text-terracotta hover:text-terracotta-dark underline">
+                        Terms of Service
+                      </a>{" "}
+                      and{" "}
                       <a href="/privacy" className="text-terracotta hover:text-terracotta-dark underline">
                         Privacy Policy
-                      </a>.
+                      </a>
+                      .
                     </p>
 
                     {showEscape ? (

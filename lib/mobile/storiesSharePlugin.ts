@@ -13,22 +13,11 @@ export type StoriesShareOptions = {
   backgroundBottomColor?: string;
 };
 
-export type SnapchatStoriesShareOptions = {
-  /** Snap Kit Client ID from developers.snap.com */
-  snapchatClientId: string;
-  backgroundImagePath?: string;
-  backgroundImageBase64?: string;
-  stickerImageBase64?: string;
-  attachmentUrl?: string;
-};
-
 export type MixwiseStoriesPlugin = {
   canShareToInstagramStories(): Promise<{ available: boolean }>;
   canShareToFacebookStories(): Promise<{ available: boolean }>;
-  canShareToSnapchatStories(): Promise<{ available: boolean }>;
   shareToInstagramStories(options: StoriesShareOptions): Promise<{ shared: boolean }>;
   shareToFacebookStories(options: StoriesShareOptions): Promise<{ shared: boolean }>;
-  shareToSnapchatStories(options: SnapchatStoriesShareOptions): Promise<{ shared: boolean }>;
 };
 
 export const MixwiseStories = registerPlugin<MixwiseStoriesPlugin>("MixwiseStories");

@@ -16,10 +16,8 @@ public class StoriesSharePlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "canShareToInstagramStories", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "canShareToFacebookStories", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "canShareToSnapchatStories", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "shareToInstagramStories", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "shareToFacebookStories", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "shareToSnapchatStories", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "shareToFacebookStories", returnType: CAPPluginReturnPromise)
     ]
 
     @objc func canShareToInstagramStories(_ call: CAPPluginCall) {
@@ -36,97 +34,12 @@ public class StoriesSharePlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    @objc func canShareToSnapchatStories(_ call: CAPPluginCall) {
-        DispatchQueue.main.async {
-            let canOpen = UIApplication.shared.canOpenURL(URL(string: "snapchat://")!)
-            call.resolve(["available": canOpen])
-        }
-    }
-
     @objc func shareToInstagramStories(_ call: CAPPluginCall) {
         shareToStories(call, scheme: "instagram-stories://share", pasteboardAppKey: "com.instagram.sharedSticker")
     }
 
     @objc func shareToFacebookStories(_ call: CAPPluginCall) {
         shareToStories(call, scheme: "facebook-stories://share", pasteboardAppKey: "com.facebook.sharedSticker")
-    }
-
-    @objc func shareToSnapchatStories(_ call: CAPPluginCall) {
-        shareToSnapchat(call)
-    }
-
-    private func shareToSnapchat(_ call: CAPPluginCall) {
-        guard let clientId = call.getString("snapchatClientId"), !clientId.isEmpty else {
-            call.reject("snapchatClientId is required")
-            return
-        }
-
-        let backgroundPath = call.getString("backgroundImagePath")
-        let backgroundBase64 = call.getString("backgroundImageBase64")
-        let stickerBase64 = call.getString("stickerImageBase64")
-        let attachmentUrl = call.getString("attachmentUrl")
-
-        if backgroundPath == nil && backgroundBase64 == nil && stickerBase64 == nil {
-            call.reject("Provide backgroundImagePath, backgroundImageBase64, and/or stickerImageBase64")
-            return
-        }
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            var pasteboardItems: [String: Any] = [
-                "com.snapchat.creativekit.clientID": clientId
-            ]
-
-            if let path = backgroundPath, let jpeg = self.storyJPEG(fromFilePath: path) {
-                pasteboardItems["com.snapchat.creativekit.backgroundImage"] = jpeg
-            } else if let bg = backgroundBase64, let data = self.decodeImageData(bg) {
-                if let image = UIImage(data: data), let jpeg = self.storyJPEG(from: image) {
-                    pasteboardItems["com.snapchat.creativekit.backgroundImage"] = jpeg
-                } else {
-                    pasteboardItems["com.snapchat.creativekit.backgroundImage"] = data
-                }
-            }
-
-            if let sticker = stickerBase64, let data = self.decodeImageData(sticker) {
-                pasteboardItems["com.snapchat.creativekit.stickerImage"] = data
-                // Lower-third placement — Creative Kit stickers aren't user-draggable after share.
-                pasteboardItems["com.snapchat.creativekit.payloadMetadata"] = [
-                    "stickerMetadata": [
-                        "posX": 0.5,
-                        "posY": 0.72,
-                        "rotation": 0,
-                        "widthDp": 280,
-                        "heightDp": 200
-                    ]
-                ]
-            }
-
-            if let attachmentUrl = attachmentUrl, !attachmentUrl.isEmpty {
-                pasteboardItems["com.snapchat.creativekit.attachmentURL"] = attachmentUrl
-            }
-
-            DispatchQueue.main.async {
-                let expiration = Date().addingTimeInterval(60 * 5)
-                UIPasteboard.general.setItems([pasteboardItems], options: [
-                    .expirationDate: expiration,
-                    .localOnly: false
-                ])
-
-                guard let openURL = URL(string: "snapchat://creativekit/preview/1") else {
-                    call.reject("Invalid Snapchat URL")
-                    return
-                }
-
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    UIApplication.shared.open(openURL, options: [:]) { success in
-                        if success {
-                            call.resolve(["shared": true])
-                        } else {
-                            call.reject("Could not open Snapchat")
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private func shareToStories(_ call: CAPPluginCall, scheme: String, pasteboardAppKey: String) {

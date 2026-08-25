@@ -110,7 +110,6 @@ async function normalizeStoryBackground(dataUrl: string): Promise<string> {
 }
 
 const FACEBOOK_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "";
-const SNAPCHAT_CLIENT_ID = process.env.NEXT_PUBLIC_SNAPCHAT_CLIENT_ID || "";
 
 function noteShared() {
   markChecklistShared();
@@ -128,14 +127,6 @@ function FacebookGlyph({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-    </svg>
-  );
-}
-
-function SnapchatGlyph({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.15-.055-.225-.015-.243.165-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.224-.645.119-.869-.195-.434-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z" />
     </svg>
   );
 }
@@ -233,21 +224,20 @@ export function StoriesShareButtons({
   const { user } = useUser();
   const supabase = getSupabaseClient();
   const stickerRef = useRef<HTMLDivElement>(null);
-  const [busy, setBusy] = useState<"ig" | "fb" | "sc" | "share" | "message" | null>(null);
+  const [busy, setBusy] = useState<"ig" | "fb" | "share" | "message" | null>(null);
   const [copied, setCopied] = useState(false);
   const [igAvailable, setIgAvailable] = useState(false);
   const [fbAvailable, setFbAvailable] = useState(false);
-  const [scAvailable, setScAvailable] = useState(false);
   const [native, setNative] = useState(false);
   const [availabilityReady, setAvailabilityReady] = useState(false);
   const [pourPicker, setPourPicker] = useState<{
-    platform: "ig" | "fb" | "sc";
+    platform: "ig" | "fb";
   } | null>(null);
   const pourResolveRef = useRef<((source: "camera" | "photos" | null) => void) | null>(
     null
   );
 
-  const pickPourSource = (platform: "ig" | "fb" | "sc") =>
+  const pickPourSource = (platform: "ig" | "fb") =>
     new Promise<"camera" | "photos" | null>((resolve) => {
       pourResolveRef.current = resolve;
       setPourPicker({ platform });
@@ -277,14 +267,10 @@ export function StoriesShareButtons({
       MixwiseStories.canShareToFacebookStories()
         .then((r) => r.available)
         .catch(() => false),
-      MixwiseStories.canShareToSnapchatStories()
-        .then((r) => r.available)
-        .catch(() => false),
-    ]).then(([ig, fb, sc]) => {
+    ]).then(([ig, fb]) => {
       if (cancelled) return;
       setIgAvailable(ig);
       setFbAvailable(fb);
-      setScAvailable(sc);
       setAvailabilityReady(true);
     });
     return () => {
@@ -414,64 +400,6 @@ export function StoriesShareButtons({
     }
   };
 
-  const shareToSnapchat = async () => {
-    if (!SNAPCHAT_CLIENT_ID) {
-      toast.error("Snapchat sharing isn’t configured yet. Use Share or Copy link.");
-      return;
-    }
-    setBusy("sc");
-    try {
-      let capturedBackground: { path?: string; dataUrl?: string } | null = null;
-      if (cameraBackground) {
-        const source = await pickPourSource("sc");
-        if (!source) return;
-        await wait(450);
-        capturedBackground = await capturePourBackground(
-          source === "camera" ? CameraSource.Camera : CameraSource.Photos
-        );
-        if (!capturedBackground) return;
-      }
-
-      const stickerDataUrl = await renderStickerBase64();
-      if (!stickerDataUrl || stickerDataUrl.length < 100) {
-        throw new Error("Sticker render failed");
-      }
-
-      const payload: {
-        snapchatClientId: string;
-        stickerImageBase64: string;
-        backgroundImagePath?: string;
-        backgroundImageBase64?: string;
-        attachmentUrl?: string;
-      } = {
-        snapchatClientId: SNAPCHAT_CLIENT_ID,
-        stickerImageBase64: stickerDataUrl,
-        attachmentUrl: shareUrl,
-      };
-
-      if (capturedBackground?.path) {
-        payload.backgroundImagePath = capturedBackground.path;
-      } else if (capturedBackground?.dataUrl) {
-        payload.backgroundImageBase64 = capturedBackground.dataUrl;
-      } else if (backgroundImageUrl) {
-        const backgroundDataUrl = await imageUrlToDataUrl(backgroundImageUrl);
-        if (backgroundDataUrl) {
-          payload.backgroundImageBase64 = backgroundDataUrl;
-        }
-      }
-
-      await MixwiseStories.shareToSnapchatStories(payload);
-      void trackContentShared(entity, "snapchat_stories", { url: shareUrl });
-      noteShared();
-      void maybeAwardStoryBadge();
-    } catch (err) {
-      console.error("Snapchat share failed:", err);
-      toast.error("Couldn't open Snapchat. Try Share instead.");
-    } finally {
-      setBusy(null);
-    }
-  };
-
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -544,8 +472,7 @@ export function StoriesShareButtons({
 
   const showIg = native && igAvailable && !!FACEBOOK_APP_ID;
   const showFb = native && fbAvailable && !!FACEBOOK_APP_ID;
-  const showSc = native && scAvailable && !!SNAPCHAT_CLIENT_ID;
-  const showStories = showIg || showFb || showSc;
+  const showStories = showIg || showFb;
   // Always offer a link path on native — Stories buttons disappear when Meta apps aren't installed.
   const showLinkFallback = native;
 
@@ -553,75 +480,90 @@ export function StoriesShareButtons({
   // Compact recipe row: only render when Stories apps exist (copy lives elsewhere).
   if (compact && (!availabilityReady || !showStories)) return null;
 
-  const iconBtnSize = compact ? "h-9 w-9" : "h-10 w-10";
-  const iconSize = compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]";
-  const iconBtnBase = `inline-flex shrink-0 items-center justify-center overflow-visible rounded-xl transition-transform disabled:opacity-50 active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${iconBtnSize}`;
+  const storyAppCount = [showIg, showFb].filter(Boolean).length;
+  const storiesGridClass =
+    storyAppCount === 2 ? "grid grid-cols-2 gap-2" : "grid grid-cols-1 gap-2";
+  const btnBase = compact
+    ? "inline-flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-medium disabled:opacity-50 active:scale-[0.98]"
+    : "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-3 py-3.5 text-sm font-semibold tracking-tight disabled:opacity-50 active:scale-[0.98] transition-transform";
 
   const showSystemShareFallback = availabilityReady && !showStories;
 
   const linkActions = showLinkFallback ? (
-    <>
+    <div
+      className={
+        compact
+          ? "inline-flex flex-wrap gap-2"
+          : showStories || showSystemShareFallback
+            ? "grid grid-cols-2 gap-2"
+            : "grid grid-cols-1 gap-2 sm:grid-cols-2"
+      }
+    >
       {showSystemShareFallback ? (
         <button
           type="button"
           disabled={busy !== null}
           onClick={() => void handleSystemShare()}
-          className={`${iconBtnBase} bg-olive text-cream shadow-sm focus-visible:ring-olive/40`}
-          aria-label={busy === "share" ? "Sharing link" : "Share link"}
-          title="Share link"
+          className={`${btnBase} bg-olive text-cream shadow-sm`}
         >
-          <ShareIcon className={iconSize} />
+          <ShareIcon className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+          {!compact && (
+            <span className="min-w-0 truncate">
+              {busy === "share" ? "Sharing…" : "Share link"}
+            </span>
+          )}
         </button>
       ) : (
         <button
           type="button"
           disabled={busy !== null}
           onClick={() => void handleMessageShare()}
-          className={`${iconBtnBase} bg-olive text-cream shadow-sm focus-visible:ring-olive/40`}
-          aria-label={busy === "message" ? "Opening Messages" : "Text recipe link"}
-          title="Text link"
+          className={`${btnBase} bg-olive text-cream shadow-sm`}
+          aria-label="Text recipe link"
         >
-          <ChatBubbleLeftRightIcon className={iconSize} />
+          <ChatBubbleLeftRightIcon className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+          {!compact && (
+            <span className="min-w-0 truncate">
+              {busy === "message" ? "Opening…" : "Message"}
+            </span>
+          )}
         </button>
       )}
       <button
         type="button"
         onClick={() => void handleCopy()}
         disabled={busy !== null}
-        className={`${iconBtnBase} border border-mist/80 bg-white text-forest hover:bg-mist/50 focus-visible:ring-forest/30`}
-        aria-label={copied ? "Link copied" : "Copy link"}
-        title={copied ? "Copied" : "Copy link"}
+        className={
+          compact
+            ? `${btnBase} border border-mist/80 bg-white/60 text-forest`
+            : "inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-mist/80 bg-white/60 px-3 py-2.5 text-sm font-medium text-forest transition-colors hover:bg-mist/50 active:scale-[0.98] disabled:opacity-50"
+        }
+        aria-label="Copy link"
       >
-        {copied ? (
-          <CheckIcon className={`${iconSize} text-forest`} />
-        ) : (
-          <LinkIcon className={`${iconSize} text-sage`} />
-        )}
+        {copied ? <CheckIcon className="h-4 w-4 text-forest" /> : <LinkIcon className="h-4 w-4 text-sage" />}
+        {!compact && (copied ? "Copied" : "Copy link")}
       </button>
-    </>
+    </div>
   ) : null;
 
   return (
-    <div
-      className={
-        className ??
-        (compact
-          ? "inline-flex flex-wrap items-center gap-2"
-          : "flex w-full flex-wrap items-center justify-evenly gap-2")
-      }
-    >
+    <div className={className ?? (compact ? "inline-flex flex-wrap items-center gap-2" : "mt-0 space-y-2.5")}>
       {showStories ? (
-        <>
+        <div className={compact ? "flex flex-wrap gap-2" : storiesGridClass}>
           {showIg && (
             <button
               type="button"
               disabled={busy !== null}
               onClick={() => void shareToStories("ig")}
-              className={`${iconBtnBase} bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white shadow-sm shadow-[#FD1D1D]/25 focus-visible:ring-[#FD1D1D]/40`}
-              aria-label={busy === "ig" ? "Opening Instagram Stories" : "Share to Instagram Story"}
-              title="Instagram Story"
+              className={`${btnBase} bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white shadow-sm shadow-[#FD1D1D]/25`}
+              aria-label="Share to Instagram Story"
             >
-              <InstagramGlyph className={iconSize} />
+              <InstagramGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+              {!compact && (
+                <span className="min-w-0 truncate">
+                  {busy === "ig" ? "Opening…" : "Instagram"}
+                </span>
+              )}
             </button>
           )}
           {showFb && (
@@ -629,29 +571,22 @@ export function StoriesShareButtons({
               type="button"
               disabled={busy !== null}
               onClick={() => void shareToStories("fb")}
-              className={`${iconBtnBase} bg-[#1877F2] text-white shadow-sm shadow-[#1877F2]/30 focus-visible:ring-[#1877F2]/40`}
-              aria-label={busy === "fb" ? "Opening Facebook Stories" : "Share to Facebook Story"}
-              title="Facebook Story"
+              className={`${btnBase} bg-[#1877F2] text-white shadow-sm shadow-[#1877F2]/30`}
+              aria-label="Share to Facebook Story"
             >
-              <FacebookGlyph className={iconSize} />
+              <FacebookGlyph className={compact ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} />
+              {!compact && (
+                <span className="min-w-0 truncate">
+                  {busy === "fb" ? "Opening…" : "Facebook"}
+                </span>
+              )}
             </button>
           )}
-          {showSc && (
-            <button
-              type="button"
-              disabled={busy !== null}
-              onClick={() => void shareToSnapchat()}
-              className={`${iconBtnBase} bg-[#FFFC00] text-[#1a1a1a] shadow-sm ring-1 ring-black/10 focus-visible:ring-black/20`}
-              aria-label={busy === "sc" ? "Opening Snapchat" : "Share to Snapchat Story"}
-              title="Snapchat Story"
-            >
-              <SnapchatGlyph className={iconSize} />
-            </button>
-          )}
-        </>
+        </div>
       ) : null}
 
-      {linkActions}
+      {!compact && linkActions}
+      {compact && linkActions}
 
       {showStories ? (
         <div
@@ -678,9 +613,7 @@ export function StoriesShareButtons({
         title={
           pourPicker?.platform === "fb"
             ? "Share your pour with friends on Facebook"
-            : pourPicker?.platform === "sc"
-              ? "Share your pour with friends on Snapchat"
-              : "Share your pour with friends on Instagram"
+            : "Share your pour with friends on Instagram"
         }
         onClose={() => finishPourPick(null)}
         options={[

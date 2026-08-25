@@ -2,7 +2,7 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { generatePageMetadata } from "@/lib/seo";
 import Link from "next/link";
 
-const LAST_UPDATED = "August 12, 2026";
+const LAST_UPDATED = "August 24, 2026";
 
 export const metadata = generatePageMetadata({
   title: "Terms of Service",
@@ -92,7 +92,14 @@ export default function TermsPage() {
             <section className="mb-8">
               <h2 className="text-xl font-display font-bold text-forest mb-4">9. Contact</h2>
               <p className="text-charcoal/80">
-                Questions about these terms: use our{" "}
+                Questions about these terms: email{" "}
+                <a
+                  href="mailto:hello@getmixwise.com"
+                  className="text-terracotta hover:text-terracotta-dark underline"
+                >
+                  hello@getmixwise.com
+                </a>{" "}
+                or use our{" "}
                 <Link href="/contact" className="text-terracotta hover:text-terracotta-dark underline">
                   contact page
                 </Link>
