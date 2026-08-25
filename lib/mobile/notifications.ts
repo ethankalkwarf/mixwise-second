@@ -15,7 +15,7 @@ import {
   type CabinetNotificationContext,
   type DailyDrinkContext,
 } from "@/lib/mobile/dailyNotificationCopy";
-import { getUtcDateString } from "@/lib/dailyCocktail";
+import { getDotdDateString } from "@/lib/dailyCocktail";
 import { getMixCocktailsClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 
@@ -23,8 +23,8 @@ const BAR_STORAGE_KEY = "mixwise-bar-inventory";
 
 const NOTIFICATION_ID_BASE = 1001;
 const FORECAST_DAYS = 30;
-/** Extra UTC days so western evening times (e.g. 5pm PDT = next UTC day) stay covered. */
-const FORECAST_BUFFER_DAYS = 2;
+/** Small buffer for devices far ahead of Pacific when mapping fire → DOTD date. */
+const FORECAST_BUFFER_DAYS = 1;
 const PREFERENCE_KEY = "drinkNotificationTime";
 const NOTIFICATION_ENABLED_KEY = "drinkNotificationEnabled";
 const LAST_SCHEDULED_DATE_KEY = "drinkNotificationScheduledDate";
@@ -265,10 +265,10 @@ export async function cancelDrinkNotification(): Promise<void> {
 /**
  * Pre-schedule the next 30 days of Drink of the Day notifications.
  *
- * Drink of the Day is keyed by UTC date. Fire times use the device-local clock
- * (e.g. 5pm). For US Pacific, 5pm local is exactly UTC midnight — so we must
- * pick the drink for the UTC date at the *fire* instant, not the local calendar
- * date string. Otherwise the notification announces yesterday's cocktail.
+ * Drink of the Day flips at US Pacific midnight. Fire times use the device
+ * clock (e.g. 5pm local). We attach the drink for the Pacific date at the
+ * fire instant so East Coast, Hawaii, and Pacific all announce the same
+ * shared daily cocktail — and evening reminders never hit a day boundary.
  */
 export async function scheduleDrinkNotification(hour: number, minute: number): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
@@ -286,7 +286,7 @@ export async function scheduleDrinkNotification(hour: number, minute: number): P
     const forecast = await fetchDailyForecast(FORECAST_DAYS + FORECAST_BUFFER_DAYS);
     const forecastByDate = new Map(forecast.map((item) => [item.dateKey, item]));
     const now = new Date();
-    const todayUtc = getUtcDateString(now);
+    const todayKey = getDotdDateString(now);
     const fireTimes = upcomingLocalFireTimes(hour, minute, FORECAST_DAYS, now);
 
     await cancelDrinkNotification();
@@ -314,16 +314,16 @@ export async function scheduleDrinkNotification(hour: number, minute: number): P
           ],
         });
       }
-      await setLastScheduledDate(todayUtc);
+      await setLastScheduledDate(todayKey);
       debugLog("[Notifications] Scheduled fallback daily notification");
       return;
     }
 
-    const firstDrink = forecastByDate.get(getUtcDateString(fireTimes[0]));
+    const firstDrink = forecastByDate.get(getDotdDateString(fireTimes[0]));
     const cabinet = firstDrink ? await getCabinetContext(firstDrink) : undefined;
 
     const notifications = fireTimes.flatMap((at, index) => {
-      const dateKey = getUtcDateString(at);
+      const dateKey = getDotdDateString(at);
       const drink = forecastByDate.get(dateKey);
       if (!drink) return [];
 
@@ -354,11 +354,11 @@ export async function scheduleDrinkNotification(hour: number, minute: number): P
       await LocalNotifications.schedule({ notifications });
     }
 
-    await setLastScheduledDate(todayUtc);
+    await setLastScheduledDate(todayKey);
     debugLog(
       `[Notifications] Scheduled ${notifications.length} drink notifications at ${hour}:${minute
         .toString()
-        .padStart(2, "0")} (UTC-at-fire)`
+        .padStart(2, "0")} (Pacific DOTD)`
     );
   } catch (error) {
     console.error("[Notifications] Error scheduling notification:", error);
@@ -374,7 +374,7 @@ export async function refreshDailyNotificationIfNeeded(force = false): Promise<v
   const enabled = await isNotificationEnabled();
   if (!enabled) return;
 
-  const today = getUtcDateString();
+  const today = getDotdDateString();
   const lastScheduled = await getLastScheduledDate();
   if (!force && lastScheduled === today) {
     return;

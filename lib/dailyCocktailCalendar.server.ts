@@ -1,15 +1,23 @@
 /**
  * Persistent Drink of the Day calendar.
  *
- * Assignments are locked per UTC date so adding cocktails to the catalog
- * does not reshuffle days that were already chosen (or pre-scheduled).
+ * Assignments are locked per Pacific (America/Los_Angeles) calendar date so
+ * adding cocktails to the catalog does not reshuffle days that were already
+ * chosen (or pre-scheduled). Everyone shares the same drink; the day flips at
+ * Pacific midnight (overnight for the continental US).
  */
 
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import { getDailyIndexFromCount, getCurrentLocalDateString } from "@/lib/dailyCocktail";
+import {
+  addDotdDateDays,
+  getCurrentLocalDateString,
+  getDailyIndexForDateKey,
+} from "@/lib/dailyCocktail";
 import fs from "node:fs/promises";
 import path from "node:path";
+
+export { addDotdDateDays, addUtcDateDays } from "@/lib/dailyCocktail";
 
 function createServerSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -23,15 +31,6 @@ function createServerSupabaseClient() {
   }
 
   return createClient<Database>(supabaseUrl, supabaseKey);
-}
-
-export function addUtcDateDays(dateKey: string, days: number): string {
-  const date = new Date(`${dateKey}T12:00:00.000Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 async function listCatalogSlugs(): Promise<string[]> {
@@ -82,7 +81,7 @@ async function listCatalogSlugs(): Promise<string[]> {
 
 function pickSlugForDate(slugs: string[], dateKey: string): string | null {
   if (!slugs.length) return null;
-  const index = getDailyIndexFromCount(slugs.length, new Date(`${dateKey}T00:00:00.000Z`));
+  const index = getDailyIndexForDateKey(slugs.length, dateKey);
   return slugs[index] || null;
 }
 
@@ -130,7 +129,7 @@ async function lockAssignments(
 }
 
 /**
- * Resolve (and lock) Drink of the Day slugs for the given UTC date keys.
+ * Resolve (and lock) Drink of the Day slugs for the given Pacific date keys.
  * Existing calendar rows win; missing days are computed from the current catalog then persisted.
  */
 export async function resolveDailyCocktailSlugs(
@@ -194,7 +193,7 @@ export async function getDailyCocktailForecast(
 ): Promise<DailyCocktailForecastItem[]> {
   const count = Math.max(1, Math.min(60, Math.floor(days)));
   const today = getCurrentLocalDateString();
-  const dateKeys = Array.from({ length: count }, (_, i) => addUtcDateDays(today, i));
+  const dateKeys = Array.from({ length: count }, (_, i) => addDotdDateDays(today, i));
 
   const slugByDate = await resolveDailyCocktailSlugs(dateKeys);
   const slugs = Array.from(new Set(Array.from(slugByDate.values())));
