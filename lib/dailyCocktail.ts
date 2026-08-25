@@ -67,12 +67,19 @@ export function isTodaysDailyCocktail(cocktailId: string, cocktails: CocktailWit
 }
 
 /**
- * Get a formatted local date string for debugging
+ * UTC YYYY-MM-DD for a given instant.
+ *
+ * Drink of the Day is locked per UTC date so every user sees the same cocktail
+ * for the same worldwide day. Named historically as "local" but intentionally UTC.
  */
-export function getCurrentLocalDateString(): string {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(now.getUTCDate()).padStart(2, "0");
+export function getUtcDateString(date: Date = new Date()): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+/** @deprecated Prefer getUtcDateString — this is UTC, not the device-local calendar day. */
+export function getCurrentLocalDateString(): string {
+  return getUtcDateString(new Date());
 }

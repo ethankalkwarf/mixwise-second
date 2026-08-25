@@ -15,7 +15,7 @@ import {
   type CabinetNotificationContext,
   type DailyDrinkContext,
 } from "@/lib/mobile/dailyNotificationCopy";
-import { getCurrentLocalDateString } from "@/lib/dailyCocktail";
+import { getUtcDateString } from "@/lib/dailyCocktail";
 import { getMixCocktailsClient } from "@/lib/cocktails";
 import { getMixMatchGroups } from "@/lib/mixMatching";
 
@@ -23,6 +23,8 @@ const BAR_STORAGE_KEY = "mixwise-bar-inventory";
 
 const NOTIFICATION_ID_BASE = 1001;
 const FORECAST_DAYS = 30;
+/** Extra UTC days so western evening times (e.g. 5pm PDT = next UTC day) stay covered. */
+const FORECAST_BUFFER_DAYS = 2;
 const PREFERENCE_KEY = "drinkNotificationTime";
 const NOTIFICATION_ENABLED_KEY = "drinkNotificationEnabled";
 const LAST_SCHEDULED_DATE_KEY = "drinkNotificationScheduledDate";
@@ -115,13 +117,26 @@ function hrefForDrinkNotification(extra: Record<string, unknown> | undefined): s
   return "/cocktail-of-the-day";
 }
 
-function scheduleDateForDay(dateKey: string, hour: number, minute: number): Date | null {
-  const parts = dateKey.split("-").map((part) => Number.parseInt(part, 10));
-  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return null;
-  const [year, month, day] = parts as [number, number, number];
-  const at = new Date(year, month - 1, day, hour, minute, 0, 0);
-  if (Number.isNaN(at.getTime())) return null;
-  return at;
+/**
+ * Next `count` local wall-clock times at hour:minute (device timezone).
+ * Skips any that are already in the past.
+ */
+function upcomingLocalFireTimes(hour: number, minute: number, count: number, now = new Date()): Date[] {
+  const times: Date[] = [];
+  for (let offset = 0; offset < count + 1 && times.length < count; offset++) {
+    const at = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + offset,
+      hour,
+      minute,
+      0,
+      0
+    );
+    if (Number.isNaN(at.getTime()) || at.getTime() <= now.getTime()) continue;
+    times.push(at);
+  }
+  return times;
 }
 
 /**
@@ -249,6 +264,11 @@ export async function cancelDrinkNotification(): Promise<void> {
 
 /**
  * Pre-schedule the next 30 days of Drink of the Day notifications.
+ *
+ * Drink of the Day is keyed by UTC date. Fire times use the device-local clock
+ * (e.g. 5pm). For US Pacific, 5pm local is exactly UTC midnight — so we must
+ * pick the drink for the UTC date at the *fire* instant, not the local calendar
+ * date string. Otherwise the notification announces yesterday's cocktail.
  */
 export async function scheduleDrinkNotification(hour: number, minute: number): Promise<void> {
   if (!Capacitor.isNativePlatform()) {
@@ -263,15 +283,17 @@ export async function scheduleDrinkNotification(hour: number, minute: number): P
       return;
     }
 
-    const forecast = await fetchDailyForecast(FORECAST_DAYS);
-    const today = getCurrentLocalDateString();
+    const forecast = await fetchDailyForecast(FORECAST_DAYS + FORECAST_BUFFER_DAYS);
+    const forecastByDate = new Map(forecast.map((item) => [item.dateKey, item]));
     const now = new Date();
+    const todayUtc = getUtcDateString(now);
+    const fireTimes = upcomingLocalFireTimes(hour, minute, FORECAST_DAYS, now);
 
     await cancelDrinkNotification();
 
-    if (!forecast.length) {
-      const fallbackAt = scheduleDateForDay(today, hour, minute);
-      if (fallbackAt && fallbackAt.getTime() > now.getTime()) {
+    if (!forecast.length || !fireTimes.length) {
+      const fallbackAt = fireTimes[0];
+      if (fallbackAt) {
         await LocalNotifications.schedule({
           notifications: [
             {
@@ -292,20 +314,20 @@ export async function scheduleDrinkNotification(hour: number, minute: number): P
           ],
         });
       }
-      await setLastScheduledDate(today);
+      await setLastScheduledDate(todayUtc);
       debugLog("[Notifications] Scheduled fallback daily notification");
       return;
     }
 
-    const todayDrink = forecast.find((item) => item.dateKey === today) || forecast[0];
-    const cabinet = todayDrink ? await getCabinetContext(todayDrink) : undefined;
+    const firstDrink = forecastByDate.get(getUtcDateString(fireTimes[0]));
+    const cabinet = firstDrink ? await getCabinetContext(firstDrink) : undefined;
 
-    const notifications = forecast.flatMap((drink, index) => {
-      const at = scheduleDateForDay(drink.dateKey, hour, minute);
-      if (!at || at.getTime() <= now.getTime()) return [];
+    const notifications = fireTimes.flatMap((at, index) => {
+      const dateKey = getUtcDateString(at);
+      const drink = forecastByDate.get(dateKey);
+      if (!drink) return [];
 
-      const isToday = drink.dateKey === today;
-      const copy = buildDailyNotificationCopy(drink, isToday ? cabinet : undefined);
+      const copy = buildDailyNotificationCopy(drink, index === 0 ? cabinet : undefined);
 
       return [
         {
@@ -322,7 +344,7 @@ export async function scheduleDrinkNotification(hour: number, minute: number): P
           extra: {
             type: "drink_of_the_day",
             slug: drink.slug,
-            dateKey: drink.dateKey,
+            dateKey,
           },
         },
       ];
@@ -332,11 +354,11 @@ export async function scheduleDrinkNotification(hour: number, minute: number): P
       await LocalNotifications.schedule({ notifications });
     }
 
-    await setLastScheduledDate(today);
+    await setLastScheduledDate(todayUtc);
     debugLog(
       `[Notifications] Scheduled ${notifications.length} drink notifications at ${hour}:${minute
         .toString()
-        .padStart(2, "0")}`
+        .padStart(2, "0")} (UTC-at-fire)`
     );
   } catch (error) {
     console.error("[Notifications] Error scheduling notification:", error);
@@ -352,7 +374,7 @@ export async function refreshDailyNotificationIfNeeded(force = false): Promise<v
   const enabled = await isNotificationEnabled();
   if (!enabled) return;
 
-  const today = getCurrentLocalDateString();
+  const today = getUtcDateString();
   const lastScheduled = await getLastScheduledDate();
   if (!force && lastScheduled === today) {
     return;
