@@ -260,7 +260,7 @@ export function NativeRecipeView({
         />
 
         <div
-          className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4"
+          className="native-recipe-hero__toolbar absolute inset-x-0 top-0 z-10 flex items-center justify-between"
           style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.5rem)" }}
         >
           <button
@@ -293,7 +293,7 @@ export function NativeRecipeView({
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-6">
+        <div className="native-recipe-hero__copy absolute inset-x-0 bottom-0 z-10 pb-6">
           {isNewCocktail(cocktail.created_at) && (
             <span className="mb-2 inline-flex rounded-full bg-terracotta px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-cream">
               New
@@ -305,7 +305,7 @@ export function NativeRecipeView({
         </div>
       </header>
 
-      <div className="native-recipe-body px-5 pt-5 pb-8">
+      <div className="native-recipe-body native-frame pt-5 pb-8">
         {cocktail.short_description && (
           <p className="mb-4 text-[17px] font-medium leading-snug text-forest">
             {cocktail.short_description}

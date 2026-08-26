@@ -158,7 +158,7 @@ export function HomeCinematicHero({
         ) : null}
 
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 z-[2] flex items-center justify-between px-5"
+          className="native-home-hero__chrome pointer-events-none absolute inset-x-0 top-0 z-[2] flex items-center justify-between"
           style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.55rem)" }}
         >
           <BrandLogo
@@ -188,7 +188,7 @@ export function HomeCinematicHero({
         </div>
       </div>
 
-      <div className="grid grid-cols-2">
+      <div className="native-home-hero__tiles grid grid-cols-2 gap-2.5 md:gap-0">
         <button
           type="button"
           onClick={onShake}

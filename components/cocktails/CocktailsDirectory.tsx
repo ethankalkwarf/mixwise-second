@@ -344,7 +344,7 @@ export function CocktailsDirectory({
 
     return (
       <PullToRefreshContainer onRefresh={handleBrowseRefresh}>
-        <div className="-mx-4 px-4 pt-4">
+        <div className="native-frame pt-4">
           <NativePageHero
             eyebrow="Browse"
             title="Search"

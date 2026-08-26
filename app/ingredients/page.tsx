@@ -60,7 +60,7 @@ export default async function IngredientsPage() {
           </MainContainer>
         </section>
 
-        <MainContainer className="py-6 sm:py-14 native-ingredients__main">
+        <MainContainer className="py-6 sm:py-14 native-ingredients__main native-frame native-frame-wide">
           <NativeIngredientsIntro count={ingredients.length} />
           {ingredients.length > 0 ? (
             <IngredientsDirectory ingredients={ingredients} />

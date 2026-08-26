@@ -325,7 +325,7 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
     const menuParam = searchParams?.get("step") === "menu";
 
     return (
-      <div className="px-4 pb-4 pt-4">
+      <div className="native-frame pb-4 pt-4">
         <NativeMixView
           allIngredients={allIngredients}
           ingredientIds={ingredientIds}

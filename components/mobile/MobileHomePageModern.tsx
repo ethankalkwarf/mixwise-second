@@ -522,7 +522,7 @@ export function MobileHomePage({
         dailyImageUrl={dailyImageUrl}
       />
 
-      <div className="px-4 pt-7">
+      <div className="native-frame pt-7">
         <GettingStartedChecklist compact />
         <FriendsHomePromo compact />
 

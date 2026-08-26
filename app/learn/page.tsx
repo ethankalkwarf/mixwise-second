@@ -61,7 +61,7 @@ export default function LearnPage() {
         </LearnHero>
       </section>
 
-      <MainContainer className="py-10 sm:py-14 max-w-5xl native-learn__main">
+      <MainContainer className="py-10 sm:py-14 max-w-5xl native-learn__main native-frame native-frame-wide">
         <NativeLearnIntro />
         <div id="library">
           <LearnLibraryClient />

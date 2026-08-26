@@ -21,7 +21,7 @@ export function NativePageHero({
   className = "",
 }: Props) {
   return (
-    <header className={`mb-5 px-0.5 ${className}`.trim()}>
+    <header className={`native-page-hero mb-5 px-0.5 ${className}`.trim()}>
       <div className={action ? "flex items-start justify-between gap-3" : undefined}>
         <div className="min-w-0">
           {eyebrow ? (

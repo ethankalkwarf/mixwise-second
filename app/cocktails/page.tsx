@@ -63,7 +63,7 @@ export default async function CocktailsPage({
       className={`bg-cream min-h-screen ${native ? "pb-8" : "py-10"}`}
       data-native-recipes-page
     >
-      <MainContainer>
+      <MainContainer className={native ? "native-recipes-shell" : undefined}>
         {/* Web-only marketing header — native Search tab uses NativePageHero instead. */}
         {!native ? (
           <WebPageHero
