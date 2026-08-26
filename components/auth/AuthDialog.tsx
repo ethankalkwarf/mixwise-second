@@ -339,13 +339,19 @@ export function AuthDialog({
         }
 
         if (data.ok) {
-          setSignupSuccess(true);
-          setIsEmailLoading(false);
-          if (data.emailSent) {
-            toast.success("Account created! Check your email to confirm.");
-          } else {
-            toast.info(data.message || "Account created. Please check your email.");
+          const signInResult = await signInWithPassword(email.trim(), password.trim());
+          if (signInResult.error) {
+            setError(signInResult.error);
+            toast.error(signInResult.error);
+            setIsEmailLoading(false);
+            return;
           }
+          markHasAccount(email.trim());
+          toast.success("Welcome to MixWise!");
+          resetForm();
+          onClose();
+          setIsEmailLoading(false);
+          return;
         } else {
           setError(data.error || "Failed to create account. Please try again.");
           toast.error(data.error || "Failed to create account");

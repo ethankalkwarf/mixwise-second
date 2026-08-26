@@ -218,6 +218,20 @@ export function NativeRecipeView({
   };
 
   const goBack = () => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("mixwise-cocktails-filters");
+        if (saved) {
+          const state = JSON.parse(saved) as { browseTab?: string };
+          if (state.browseTab === "recipes") {
+            router.push("/cocktails?browse=recipes");
+            return;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
       return;
@@ -226,11 +240,8 @@ export function NativeRecipeView({
   };
 
   return (
-    <article
-      data-native-recipe
-      className="relative -mx-4 -mt-[calc(2rem+env(safe-area-inset-top,0px))] sm:-mx-6"
-    >
-      <header className="relative h-[58vh] min-h-[22rem] max-h-[36rem] overflow-hidden bg-charcoal">
+    <article data-native-recipe className="native-recipe-root relative -mx-4 sm:-mx-6">
+      <header className="native-recipe-hero relative overflow-hidden bg-charcoal">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -242,7 +253,11 @@ export function NativeRecipeView({
         ) : (
           <ComingSoonCocktailImage name={name} />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/50 to-black/15" />
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/50 to-black/20" />
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-32 bg-gradient-to-b from-black/70 via-black/35 to-transparent md:h-36"
+          aria-hidden
+        />
 
         <div
           className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4"
@@ -290,7 +305,7 @@ export function NativeRecipeView({
         </div>
       </header>
 
-      <div className="px-5 pt-5 pb-8">
+      <div className="native-recipe-body px-5 pt-5 pb-8">
         {cocktail.short_description && (
           <p className="mb-4 text-[17px] font-medium leading-snug text-forest">
             {cocktail.short_description}

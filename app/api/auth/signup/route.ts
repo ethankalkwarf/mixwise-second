@@ -1,26 +1,14 @@
 /**
  * Server-Side Signup API Route
  *
- * Creates a new user using Supabase Admin API and sends custom confirmation email via Resend.
- * This replaces client-side signUp() to avoid Supabase's default email flow.
- * 
- * Flow:
- * 1. Validate email and password
- * 2. Check if user already exists
- * 3. Generate signup confirmation link (this creates user + generates link)
- * 4. Ensure profile exists
- * 5. Send custom confirmation email via Resend
+ * Creates a confirmed user via Supabase Admin API so email/password sign-up
+ * can sign in immediately (no confirmation email gate).
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createResendClient, MIXWISE_FROM_EMAIL } from "@/lib/email/resend";
-import { confirmEmailTemplate } from "@/lib/email/templates";
-import { getAuthCallbackUrl } from "@/lib/site";
-import { buildSafeAuthUrl } from "@/lib/email/auth-links";
 import { sendSignupNotification } from "@/lib/email/signup-notification";
 import { debugLog } from "@/lib/debugLog";
-import { resolvePostAuthPath } from "@/lib/auth/return-to";
 
 // Rate limiting: simple in-memory store (resets on server restart)
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -136,10 +124,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // RESEND_API_KEY is optional - if not set, we'll create the user but skip email sending
+    // RESEND_API_KEY optional — used for internal signup notifications only
     const resendApiKey = process.env.RESEND_API_KEY;
     if (!resendApiKey) {
-      console.warn("[Signup API] RESEND_API_KEY not set - emails will be skipped (dev mode)");
+      console.warn("[Signup API] RESEND_API_KEY not set - admin signup notifications will be skipped");
     }
 
     debugLog("[Signup API] Environment variables validated, creating admin client...");
@@ -157,66 +145,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate signup confirmation link
-    // This creates the user AND generates the confirmation link in one step
-    const requestUrl = new URL(request.url);
-    const redirectTo = `${getAuthCallbackUrl(requestUrl)}?next=${encodeURIComponent(
-      resolvePostAuthPath(typeof rawNextPath === "string" ? rawNextPath : "/", { isNewUser: true })
-    )}`;
-    debugLog(`[Signup API] Generating signup link with redirect: ${redirectTo}`);
+    debugLog(`[Signup API] Creating confirmed user for: ${trimmedEmail}`);
 
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "signup",
+    const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: trimmedEmail,
-      password: password,
-      options: {
-        redirectTo,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+        first_name: trimmedFirstName,
+        last_name: trimmedLastName,
       },
     });
 
-    if (linkError) {
-      console.error("[Signup API] Failed to generate signup link:", {
-        message: linkError.message,
-        status: linkError.status,
-        name: linkError.name,
-        code: (linkError as any).code,
-        error: JSON.stringify(linkError, Object.getOwnPropertyNames(linkError)),
+    if (createError) {
+      console.error("[Signup API] Failed to create user:", {
+        message: createError.message,
+        status: createError.status,
+        name: createError.name,
       });
 
-      // Handle specific error cases
-      if (linkError.message?.includes("already been registered") || 
-          linkError.message?.includes("already exists")) {
-        // Self-heal: user may exist in auth.users but be missing a profiles row (trigger not installed/failed or profile deleted).
-        // Attempt to find the user and ensure a profile exists.
+      if (
+        createError.message?.includes("already been registered") ||
+        createError.message?.includes("already exists") ||
+        createError.message?.includes("already registered")
+      ) {
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: listData, error: listError } = await (supabaseAdmin.auth.admin as any).listUsers({
             email: trimmedEmail,
           });
 
-          if (listError) {
-            console.error("[Signup API] Failed to list users for existing-email case (non-fatal):", listError);
-          } else {
+          if (!listError) {
             const existingUser = listData?.users?.[0];
             if (existingUser?.id) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const { error: existingProfileUpsertError } = await (supabaseAdmin.from("profiles") as any)
-                .upsert(
-                  {
-                    id: existingUser.id,
-                    email: trimmedEmail,
-                    display_name: trimmedEmail.split("@")[0],
-                    role: "free" as const,
-                    preferences: {},
-                  },
-                  { onConflict: "id" }
-                );
-
-              if (existingProfileUpsertError) {
-                console.error("[Signup API] Failed to upsert profile for existing user (non-fatal):", existingProfileUpsertError);
-              } else {
-                debugLog(`[Signup API] Ensured profile exists for existing user: ${existingUser.id}`);
-              }
+              await (supabaseAdmin.from("profiles") as any).upsert(
+                {
+                  id: existingUser.id,
+                  email: trimmedEmail,
+                  display_name: trimmedEmail.split("@")[0],
+                  role: "free" as const,
+                  preferences: {},
+                },
+                { onConflict: "id" }
+              );
             }
           }
         } catch (healError) {
@@ -230,10 +203,12 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: linkError.message || "Failed to create account. Please try again." },
+        { error: createError.message || "Failed to create account. Please try again." },
         { status: 500 }
       );
     }
+
+    const linkData = createData?.user ? { user: createData.user } : null;
 
     if (!linkData?.user) {
       console.error("[Signup API] No user data returned from generateLink");
@@ -244,17 +219,6 @@ export async function POST(request: NextRequest) {
     }
 
     debugLog(`[Signup API] User created successfully: ${linkData.user.id}`);
-
-    const confirmUrl = linkData.properties?.action_link;
-
-    if (!confirmUrl) {
-      console.error("[Signup API] No action_link in generated link data:", linkData);
-      return NextResponse.json({
-        ok: true,
-        emailSent: false,
-        message: "Account created but no confirmation URL. Please try logging in.",
-      });
-    }
 
     // CRITICAL: Verify user exists in auth.users before attempting profile creation
     // This prevents foreign key constraint violations (23503)
@@ -538,7 +502,6 @@ export async function POST(request: NextRequest) {
 
     // Store full name on the auth user as well (helps welcome email + future UX)
     try {
-      // supabase-js supports updateUserById on the admin API
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const adminAny: any = supabaseAdmin.auth.admin as any;
       if (typeof adminAny.updateUserById === "function") {
@@ -557,88 +520,6 @@ export async function POST(request: NextRequest) {
       console.error("[Signup API] Auth user metadata update failed (non-fatal):", metaError);
     }
 
-    // Debug logging (only in development)
-    if (process.env.AUTH_EMAIL_DEBUG === "true" && process.env.NODE_ENV === "development") {
-      debugLog(`[Signup API] Generated confirmation URL: ${confirmUrl}`);
-    }
-
-    // Skip email sending if RESEND_API_KEY is not configured
-    if (!resendApiKey) {
-      debugLog(`[Signup API] Skipping email - RESEND_API_KEY not configured`);
-      debugLog(`[Signup API] In production, please set RESEND_API_KEY`);
-      // In dev mode without Resend, return success but note email wasn't sent
-      return NextResponse.json({
-        ok: true,
-        emailSent: false,
-        message: "Account created! In development mode, confirmation email was skipped. Please click the confirmation link manually or configure RESEND_API_KEY.",
-        ...(process.env.NODE_ENV === "development" && { confirmUrl }), // Include URL in dev for testing
-      });
-    }
-
-    const safeConfirmUrl = buildSafeAuthUrl(confirmUrl, new URL(request.url));
-
-    const emailTemplate = confirmEmailTemplate({
-      confirmUrl: safeConfirmUrl,
-      userEmail: trimmedEmail,
-      displayName: fullName || trimmedFirstName || undefined,
-    });
-
-    // Send email via Resend
-    let resend;
-    try {
-      resend = createResendClient();
-      debugLog("[Signup API] Resend client created successfully");
-    } catch (resendError) {
-      const resendErrorMsg = resendError instanceof Error ? resendError.message : String(resendError);
-      console.error("[Signup API] Failed to create Resend client:", resendErrorMsg);
-      return NextResponse.json(
-        {
-          error:
-            "Your account was created, but we couldn't send the confirmation email. Please use Resend Confirmation on the sign-in page or contact support.",
-          emailSent: false,
-        },
-        { status: 503 }
-      );
-    }
-
-    debugLog(`[Signup API] Sending confirmation email via Resend to: ${trimmedEmail}`);
-
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: MIXWISE_FROM_EMAIL,
-      replyTo: "hello@getmixwise.com", // Use a real reply-to for better deliverability
-      to: trimmedEmail,
-      subject: emailTemplate.subject,
-      html: emailTemplate.html,
-      text: emailTemplate.text,
-      headers: {
-        "X-Entity-Ref-ID": linkData.user.id, // Unique identifier for tracking
-        "List-Unsubscribe": "<mailto:unsubscribe@getmixwise.com>", // Required for anti-spam
-      },
-      tags: [
-        { name: "category", value: "account_confirmation" },
-        { name: "environment", value: process.env.NODE_ENV || "production" },
-      ],
-    });
-
-    if (emailError) {
-      console.error("[Signup API] Failed to send email via Resend:", {
-        message: emailError.message,
-        name: emailError.name,
-      });
-      
-      return NextResponse.json(
-        {
-          error: `We couldn't send your confirmation email (${emailError.message}). Please try again in a few minutes or use Resend Confirmation.`,
-          emailSent: false,
-        },
-        { status: 503 }
-      );
-    }
-
-    debugLog(`[Signup API] Confirmation email sent successfully. Resend ID: ${emailData?.id}`);
-
-    // Send notification email to hello@getmixwise.com (non-blocking)
-    // Call the function directly instead of making an HTTP request for better reliability
     sendSignupNotification({
       userId: linkData.user.id,
       userEmail: trimmedEmail,
@@ -655,14 +536,13 @@ export async function POST(request: NextRequest) {
         }
       })
       .catch((err) => {
-        // Don't fail the signup if notification email fails
         console.error("[Signup API] Failed to send notification email (non-fatal):", err);
       });
 
     return NextResponse.json({
       ok: true,
-      emailSent: true,
-      message: "Account created! Check your email to confirm your account.",
+      autoSignIn: true,
+      message: "Account created!",
     });
 
   } catch (error) {

@@ -43,6 +43,7 @@ interface FilterState {
   filterSpirit: string | null;
   filterGlass: string | null;
   showFilters: boolean;
+  browseTab: NativeBrowseTab;
 }
 
 // Category display configuration - Botanical theme
@@ -157,6 +158,9 @@ export function CocktailsDirectory({
         setFilterSpirit(state.filterSpirit);
         setFilterGlass(state.filterGlass);
         setShowFilters(state.showFilters || false);
+        if (state.browseTab === "recipes" || state.browseTab === "collections") {
+          setBrowseTab(state.browseTab);
+        }
       }
     } catch (e) {
       console.error("Error restoring filter state:", e);
@@ -196,13 +200,14 @@ export function CocktailsDirectory({
       filterSpirit,
       filterGlass,
       showFilters,
+      browseTab,
     };
     try {
       sessionStorage.setItem(FILTER_STATE_KEY, JSON.stringify(state));
     } catch (e) {
       console.error("Error saving filter state:", e);
     }
-  }, [isInitialized, searchQuery, sortBy, filterSpirit, filterGlass, showFilters]);
+  }, [isInitialized, searchQuery, sortBy, filterSpirit, filterGlass, showFilters, browseTab]);
 
   // Save scroll position before navigating to a cocktail.
   // Do not preventDefault — intercepted client navigation was hanging the tab.

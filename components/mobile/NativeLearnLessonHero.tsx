@@ -5,7 +5,9 @@ import { AppLink } from "@/components/mobile/AppLink";
 import { LearnCoverImage } from "@/components/learn/LearnCoverImage";
 import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { useLearnProgress } from "@/hooks/useLearnProgress";
+import { learnLibraryHref, readLearnLibraryState } from "@/lib/learnLibraryNavigation";
 import type { LearnLessonKind } from "@/lib/learnProgress";
+import { useMemo } from "react";
 
 type Props = {
   title: string;
@@ -31,12 +33,13 @@ export function NativeLearnLessonHero({
   const nativeShell = useNativeShell();
   const { isAuthenticated, isComplete } = useLearnProgress();
   const done = kind && slug && isAuthenticated ? isComplete(kind, slug) : false;
+  const backHref = useMemo(() => learnLibraryHref(readLearnLibraryState()), []);
 
   if (!nativeShell) return null;
 
   return (
     <section className="native-learn-lesson-hero">
-      <AppLink href="/learn" className="native-learn-lesson-hero__back">
+      <AppLink href={backHref} className="native-learn-lesson-hero__back">
         <ChevronLeftIcon aria-hidden />
         <span>Learn</span>
       </AppLink>

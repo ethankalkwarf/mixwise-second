@@ -11,6 +11,7 @@ import { OfflineBanner } from "./OfflineBanner";
 import { NativeNavigationBridge } from "./NativeNavigationBridge";
 import { BiometricGate } from "./BiometricGate";
 import { isNativeApp } from "@/lib/mobile/platform";
+import { nativeBleedsTop } from "@/lib/mobile/nativeBleedTop";
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -21,7 +22,7 @@ interface MobileLayoutProps {
  */
 export function MobileLayout({ children }: MobileLayoutProps) {
   const pathname = usePathname();
-  const bleedTop = pathname === "/" || pathname === "/saved";
+  const bleedTop = nativeBleedsTop(pathname);
 
   // forceNative can SSR this shell from the cookie before the head script runs —
   // ensure html.native-app (and session flag) are set for AppLink / CSS hides.

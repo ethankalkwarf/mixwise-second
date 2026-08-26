@@ -529,6 +529,66 @@ html.native-app [data-native-recipes-page] {
   padding-top: 0 !important;
 }
 
+/* Recipe detail — edge-to-edge hero under the status bar (native + iPad). */
+html.native-app main:has([data-native-recipe]) {
+  padding-top: 0 !important;
+}
+
+html.native-app main:has([data-native-ingredient-detail]) {
+  padding-top: 0 !important;
+}
+
+html.native-app .native-recipe-hero {
+  position: relative;
+  min-height: calc(22rem + env(safe-area-inset-top, 0px));
+  height: clamp(22rem, 58vh, 36rem);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Native tablet — wider side margins + readable measure for body copy (heroes stay full bleed). */
+@media (min-width: 768px) {
+  html.native-app {
+    --native-read-inline: clamp(2rem, 7vw, 4.5rem);
+    --native-read-max: 44rem;
+  }
+
+  html.native-app .native-recipe-body {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: calc(var(--native-read-max) + 2 * var(--native-read-inline));
+    margin-inline: auto;
+    padding-inline: var(--native-read-inline);
+  }
+
+  html.native-app [data-native-ingredient-detail] .native-ingredient-detail__body {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: min(56rem, 100%) !important;
+    margin-inline: auto;
+    padding-inline: var(--native-read-inline) !important;
+  }
+
+  html.native-app [data-native-learn-lesson] .native-learn-lesson__body {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: calc(var(--native-read-max) + 2 * var(--native-read-inline));
+    margin-inline: auto;
+    padding-inline: var(--native-read-inline);
+  }
+
+  html.native-app .native-learn-lesson-hero {
+    box-sizing: border-box;
+    width: calc(100% - 2 * var(--native-read-inline));
+    max-width: calc(var(--native-read-max) + 2rem);
+    margin-inline: auto;
+  }
+
+  html.native-app .native-recipe-hero {
+    min-height: calc(26rem + env(safe-area-inset-top, 0px));
+    height: clamp(26rem, 52vh, 40rem);
+  }
+}
+
 html.native-app .mix-skeleton-root {
   padding-top: 1rem !important;
   padding-bottom: 1rem !important;
@@ -616,6 +676,10 @@ html.native-app .native-learn-library > section {
 .native-learn-lesson-hero {
   position: relative;
   margin: 0.5rem 1rem 0.75rem;
+}
+
+html.native-app .native-learn-lesson-hero {
+  margin: calc(env(safe-area-inset-top, 0px) + 0.5rem) 1rem 0.75rem;
 }
 
 .native-learn-lesson-hero__back {
@@ -2143,10 +2207,6 @@ a.ingredient-pair-chip:active {
   /* Outside MainContainer — do NOT use -1rem horizontal breakout or copy drifts left of body. */
   margin: 0;
   position: relative;
-}
-
-html.native-app .native-ingredient-hero {
-  margin-top: calc(-1 * env(safe-area-inset-top, 0px));
 }
 
 .native-ingredient-hero__stage {

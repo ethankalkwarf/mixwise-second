@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -29,9 +29,16 @@ import { normalizeSearchText, searchLearnItems } from "@/lib/search";
 import { useLearnProgress } from "@/hooks/useLearnProgress";
 import { LearnTechniqueIndex } from "@/components/learn/LearnTechniqueIndex";
 import { LearnSwapIndex } from "@/components/learn/LearnSwapIndex";
+import {
+  isLearnLessonTab,
+  LEARN_FILTER_STATE_KEY,
+  type LearnHubMode,
+  type LearnLessonTab,
+  writeLearnLibraryState,
+} from "@/lib/learnLibraryNavigation";
 
-type HubMode = "paths" | "lessons";
-type LessonTab = "guides" | "methods" | "techniques" | "swaps";
+type HubMode = LearnHubMode;
+type LessonTab = LearnLessonTab;
 
 const LESSON_TABS: {
   id: LessonTab;
@@ -242,8 +249,12 @@ export function LearnLibraryClient() {
   const nativeShell = useNativeShell();
 
   const mode: HubMode = searchParams.get("tab") === "lessons" ? "lessons" : "paths";
-  const [lessonTab, setLessonTab] = useState<LessonTab>("guides");
+  const sectionParam = searchParams.get("section");
+  const [lessonTab, setLessonTab] = useState<LessonTab>(() =>
+    isLearnLessonTab(sectionParam) ? sectionParam : "guides"
+  );
   const [query, setQuery] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const techniques = getAllTechniqueLearnEntries();
   const starterPath = LEARN_PATHS[0];
@@ -252,16 +263,72 @@ export function LearnLibraryClient() {
     [starterPath.slug]
   );
 
+  useEffect(() => {
+    if (isLearnLessonTab(sectionParam)) {
+      setLessonTab(sectionParam);
+    }
+  }, [sectionParam]);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(LEARN_FILTER_STATE_KEY);
+      if (!saved) {
+        setIsInitialized(true);
+        return;
+      }
+      const state = JSON.parse(saved) as { mode?: HubMode; lessonTab?: LessonTab };
+      if (!searchParams.get("tab") && state.mode === "lessons") {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", "lessons");
+        if (isLearnLessonTab(state.lessonTab) && state.lessonTab !== "guides") {
+          params.set("section", state.lessonTab);
+        }
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      } else if (!sectionParam && isLearnLessonTab(state.lessonTab)) {
+        setLessonTab(state.lessonTab);
+      }
+    } catch {
+      /* ignore */
+    }
+    setIsInitialized(true);
+  }, [pathname, router, searchParams, sectionParam]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    writeLearnLibraryState({ mode, lessonTab });
+  }, [isInitialized, mode, lessonTab]);
+
   const setMode = useCallback(
     (next: HubMode) => {
       const params = new URLSearchParams(searchParams.toString());
       if (next === "lessons") {
         params.set("tab", "lessons");
+        if (lessonTab !== "guides") {
+          params.set("section", lessonTab);
+        } else {
+          params.delete("section");
+        }
       } else {
         params.delete("tab");
+        params.delete("section");
       }
       const q = params.toString();
       router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    },
+    [lessonTab, pathname, router, searchParams]
+  );
+
+  const setLessonTabPersisted = useCallback(
+    (next: LessonTab) => {
+      setLessonTab(next);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", "lessons");
+      if (next === "guides") {
+        params.delete("section");
+      } else {
+        params.set("section", next);
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [pathname, router, searchParams]
   );
@@ -402,7 +469,7 @@ export function LearnLibraryClient() {
                     type="button"
                     role="tab"
                     aria-selected={active}
-                    onClick={() => setLessonTab(item.id)}
+                    onClick={() => setLessonTabPersisted(item.id)}
                     className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                       active
                         ? "bg-forest text-cream"
