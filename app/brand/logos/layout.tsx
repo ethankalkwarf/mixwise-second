@@ -1,9 +1,9 @@
 import { generatePageMetadata } from "@/lib/seo";
 
 export const metadata = generatePageMetadata({
-  title: "Logos",
+  title: "Brand kit",
   description:
-    "MixWise logos and brand kit — approved lockups, boilerplate copy, and naming for partners.",
+    "MixWise brand kit — Botanical Garden colors with hex codes, approved lockups, boilerplate copy, and naming for partners.",
   path: "/brand/logos",
 });
 

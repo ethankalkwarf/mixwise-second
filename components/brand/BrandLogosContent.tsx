@@ -9,6 +9,7 @@ import {
   BOILERPLATE,
   BRAND_KIT_ZIP,
   BRAND_VOICE,
+  DESIGN_COLORS,
   PRESS_VOICE_SUMMARY,
 } from "@/lib/brand/kit";
 
@@ -39,6 +40,36 @@ function BoilerplateBlock({
   );
 }
 
+function ColorSwatch({
+  name,
+  hex,
+  role,
+}: {
+  name: string;
+  hex: string;
+  role: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-mist bg-white">
+      <div
+        className="h-20 border-b border-mist/60"
+        style={{ backgroundColor: hex }}
+        aria-hidden
+      />
+      <div className="p-4">
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <div>
+            <p className="font-display text-lg capitalize text-forest">{name}</p>
+            <p className="font-mono text-xs text-sage">{hex}</p>
+          </div>
+          <CopyTextButton text={hex} label="Hex" />
+        </div>
+        <p className="text-sm leading-relaxed text-sage">{role}</p>
+      </div>
+    </div>
+  );
+}
+
 export function BrandLogosContent() {
   return (
     <div className="bg-cream pb-20 pt-10 sm:pt-14 lg:pb-28">
@@ -54,11 +85,11 @@ export function BrandLogosContent() {
           </p>
           <SectionEyebrow>Brand</SectionEyebrow>
           <h1 className="mb-3 [text-wrap:balance] font-display text-4xl leading-tight text-forest sm:text-5xl">
-            Logos
+            Brand kit
           </h1>
           <p className="max-w-xl [text-wrap:pretty] text-lg leading-relaxed text-sage">
-            Approved lockups, boilerplate, and naming for articles, listings,
-            and partnerships. See also our{" "}
+            Colors, approved lockups, boilerplate, and naming for articles,
+            listings, and partnerships. See also our{" "}
             <Link
               href="/partners"
               className="font-semibold text-forest underline decoration-mist underline-offset-4 hover:text-terracotta"
@@ -68,6 +99,20 @@ export function BrandLogosContent() {
             .
           </p>
         </div>
+
+        <section className="mb-16 sm:mb-20">
+          <SectionEyebrow>Color</SectionEyebrow>
+          <SectionTitle>Botanical Garden palette</SectionTitle>
+          <p className="mb-8 max-w-2xl [text-wrap:pretty] text-sage">
+            Cream pages, forest type, terracotta for action. Copy any hex for
+            press kits, decks, or partner materials.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {DESIGN_COLORS.map((c) => (
+              <ColorSwatch key={c.name} name={c.name} hex={c.hex} role={c.role} />
+            ))}
+          </div>
+        </section>
 
         <section className="mb-16 sm:mb-20">
           <SectionEyebrow>Voice</SectionEyebrow>

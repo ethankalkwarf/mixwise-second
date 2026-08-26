@@ -105,7 +105,7 @@ const nextConfig = {
       },
       {
         source: '/brand',
-        destination: '/about',
+        destination: '/brand/logos',
         permanent: true,
       },
       {
