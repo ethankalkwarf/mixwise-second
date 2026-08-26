@@ -93,7 +93,7 @@ export default async function LearnGuidePage({ params }: PageProps) {
         />
       </div>
 
-      <MainContainer className="native-learn-lesson__body py-10 sm:py-14 max-w-3xl space-y-14">
+      <MainContainer className="native-learn-lesson__body native-frame py-8 sm:py-10 max-w-3xl space-y-14">
         <LearnContentGate gateId={`guide:${slug}`} teaserLabel="Keep reading this lesson">
           <LearnLessonArticle
             layers={guide}

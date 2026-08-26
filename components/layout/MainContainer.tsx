@@ -7,11 +7,14 @@ interface MainContainerProps {
 }
 
 export function MainContainer({ children, className }: MainContainerProps) {
-  const hasMaxWidth = className?.split(/\s+/).some((token) => token.startsWith("max-w-"));
+  const tokens = className?.split(/\s+/).filter(Boolean) ?? [];
+  const hasMaxWidth = tokens.some((token) => token.startsWith("max-w-"));
+  const usesNativeFrame = tokens.includes("native-frame");
   return (
     <div
       className={clsx(
-        "mx-auto px-4 sm:px-6 lg:px-8",
+        "mx-auto",
+        !usesNativeFrame && "px-4 sm:px-6 lg:px-8",
         !hasMaxWidth && "max-w-7xl",
         className
       )}

@@ -98,7 +98,7 @@ export default async function TechniqueLearnPage({ params }: PageProps) {
         />
       </div>
 
-      <MainContainer className="native-learn-lesson__body py-10 sm:py-14 max-w-3xl">
+      <MainContainer className="native-learn-lesson__body native-frame py-8 sm:py-10 max-w-3xl">
         <LearnContentGate gateId={`technique:${slug}`} teaserLabel="Keep learning this skill">
           <LearnLessonArticle
             layers={layers}

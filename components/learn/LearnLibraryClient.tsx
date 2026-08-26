@@ -73,6 +73,7 @@ const LESSON_TABS: {
 ];
 
 function PathStarterBand({ path }: { path: LearnPath }) {
+  const nativeShell = useNativeShell();
   const { pathStats, isAuthenticated } = useLearnProgress();
   const stats = pathStats.find((item) => item.path.slug === path.slug);
   const pct = stats?.pct ?? 0;
@@ -83,7 +84,11 @@ function PathStarterBand({ path }: { path: LearnPath }) {
     <NativeLearnCardShell
       href={`/learn/paths/${path.slug}`}
       ariaLabel={path.title}
-      className="group grid overflow-hidden rounded-3xl border border-mist bg-white transition-all hover:border-terracotta/30 hover:shadow-card-hover md:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)]"
+      className={`group grid overflow-hidden rounded-3xl border border-mist bg-white transition-all hover:border-terracotta/30 hover:shadow-card-hover ${
+        nativeShell
+          ? "native-learn-path-starter"
+          : "md:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)]"
+      }`}
     >
       <div className="native-learn-card__photo native-learn-card__photo--path relative aspect-[16/10] overflow-hidden bg-mist md:aspect-auto md:min-h-[220px]">
         <LearnCoverImage
@@ -374,6 +379,7 @@ export function LearnLibraryClient() {
   }, [query, techniques]);
 
   const searching = Boolean(query.trim());
+  const lessonGridClass = nativeShell ? "grid gap-3" : "grid gap-3 sm:grid-cols-2";
 
   return (
     <div className={nativeShell ? "native-learn-library space-y-6" : "space-y-8"}>
@@ -494,7 +500,7 @@ export function LearnLibraryClient() {
             <div className="space-y-10">
               {filtered.guides.length > 0 && (
                 <BrowseBlock title="Guides">
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className={lessonGridClass}>
                     {filtered.guides.map((g) => (
                       <GuidePhotoRow key={g.slug} guide={g} />
                     ))}
@@ -503,7 +509,7 @@ export function LearnLibraryClient() {
               )}
               {filtered.methods.length > 0 && (
                 <BrowseBlock title="Methods">
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className={lessonGridClass}>
                     {filtered.methods.map((m) => (
                       <MethodPhotoRow key={m.slug} method={m} />
                     ))}
@@ -530,14 +536,14 @@ export function LearnLibraryClient() {
           ) : (
             <>
               {lessonTab === "guides" && (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className={lessonGridClass}>
                   {filtered.guides.map((g) => (
                     <GuidePhotoRow key={g.slug} guide={g} />
                   ))}
                 </div>
               )}
               {lessonTab === "methods" && (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className={lessonGridClass}>
                   {filtered.methods.map((m) => (
                     <MethodPhotoRow key={m.slug} method={m} />
                   ))}

@@ -529,6 +529,12 @@ html.native-app [data-native-recipes-page] {
   padding-top: 0 !important;
 }
 
+html.native-app [data-native-learn-page],
+html.native-app [data-native-learn-path],
+html.native-app [data-native-learn-swaps] {
+  padding-top: 0 !important;
+}
+
 /* Recipe detail — edge-to-edge hero under the status bar (native + iPad). */
 html.native-app main:has([data-native-recipe]) {
   padding-top: 0 !important;
@@ -584,7 +590,9 @@ html.native-app .native-recipe-hero {
 
   html.native-app .native-recipe-body,
   html.native-app [data-native-ingredient-detail] .native-ingredient-detail__body,
-  html.native-app [data-native-learn-lesson] .native-learn-lesson__body {
+  html.native-app [data-native-learn-lesson] .native-learn-lesson__body.native-frame,
+  html.native-app [data-native-learn-path] .native-learn-path__body.native-frame,
+  html.native-app [data-native-learn-swaps] .native-learn-swaps__body.native-frame {
     box-sizing: border-box;
     width: 100%;
     max-width: calc(var(--native-frame-max) + 2 * var(--native-frame-inline));
@@ -655,16 +663,22 @@ html.native-app .native-recipe-hero {
     left: max(var(--native-frame-inline), calc((100% - 56rem) / 2 + var(--native-frame-inline)));
   }
 
-  html.native-app .native-learn-lesson-hero {
+  html.native-app .native-learn-lesson-hero,
+  html.native-app .native-learn-path-hero {
     box-sizing: border-box;
-    width: calc(100% - 2 * var(--native-frame-inline));
-    max-width: calc(var(--native-frame-max) + 2rem);
+    width: 100%;
+    max-width: calc(var(--native-frame-max) + 2 * var(--native-frame-inline));
     margin-inline: auto;
+    margin-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+    margin-bottom: 0.75rem;
+    padding-inline: var(--native-frame-inline);
   }
 
   html.native-app [data-native-recipes-page] .native-recipes-shell,
   html.native-app [data-native-learn-page] .native-learn__main,
-  html.native-app [data-native-ingredients-page] .native-ingredients__main {
+  html.native-app [data-native-ingredients-page] .native-ingredients__main,
+  html.native-app [data-native-learn-path] .native-learn-path__body,
+  html.native-app [data-native-learn-swaps] .native-learn-swaps__body {
     padding-inline: 0 !important;
     max-width: none !important;
   }
@@ -704,6 +718,29 @@ html.native-app .native-recipe-hero {
   }
 }
 
+html.native-app [data-native-learn-lesson] .learn-lesson-stack .sm\:grid-cols-2 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html.native-app [data-native-learn-lesson] .learn-lesson-intro .font-display {
+  font-size: clamp(1.65rem, 4.5vw, 2rem);
+}
+
+html.native-app .native-learn-library .font-display.text-2xl {
+  font-size: clamp(1.35rem, 3.5vw, 1.625rem);
+}
+
+html.native-app .native-learn-lesson-actions {
+  display: flex;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  html.native-app .native-learn-lesson-actions button {
+    max-width: var(--native-frame-max);
+  }
+}
+
 html.native-app .mix-skeleton-root {
   padding-top: 1rem !important;
   padding-bottom: 1rem !important;
@@ -711,6 +748,25 @@ html.native-app .mix-skeleton-root {
 
 html.native-app [data-native-learn-page] .native-learn__main {
   padding-top: 0.75rem;
+}
+
+html.native-app .native-learn-path-starter {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html.native-app .native-learn-path-starter .native-learn-card__photo--path {
+  aspect-ratio: 16 / 10;
+  min-height: 11.5rem;
+}
+
+@media (min-width: 768px) {
+  html.native-app .native-learn-path-starter .native-learn-card__photo--path {
+    min-height: 13rem;
+  }
+}
+
+html.native-app .native-learn-path-hero__cta:active {
+  transform: scale(0.98);
 }
 
 /* Learn library — native single-column cards. */
@@ -790,11 +846,14 @@ html.native-app .native-learn-library > section {
 /* Learn lesson — inset hero + card reading flow (native). */
 .native-learn-lesson-hero {
   position: relative;
-  margin: 0.5rem 1rem 0.75rem;
+  margin: 0.5rem 0 0.75rem;
 }
 
-html.native-app .native-learn-lesson-hero {
-  margin: calc(env(safe-area-inset-top, 0px) + 0.5rem) 1rem 0.75rem;
+html.native-app .native-learn-lesson-hero,
+html.native-app .native-learn-path-hero {
+  margin: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0 0.75rem;
+  padding-inline: var(--native-frame-inline);
+  box-sizing: border-box;
 }
 
 .native-learn-lesson-hero__back {
@@ -921,7 +980,6 @@ html.native-app .native-learn-lesson-hero {
 
 html.native-app [data-native-learn-lesson] .native-learn-lesson__body {
   padding-top: 0.75rem;
-  padding-inline: 1rem;
   padding-bottom: 5.5rem;
   max-width: none;
 }
@@ -1481,7 +1539,7 @@ html.native-app [data-native-learn-lesson] .learn-photo-pager__note {
   right: 0;
   bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
   z-index: 45;
-  padding: 0.65rem 1rem 0.75rem;
+  padding: 0.65rem var(--native-frame-inline, 1.25rem) 0.75rem;
   background: linear-gradient(
     to top,
     rgba(249, 247, 242, 0.98) 0%,
@@ -1511,6 +1569,9 @@ html.learn-quiz-active .native-learn-lesson-actions {
 
 .native-learn-lesson-actions button {
   width: 100%;
+  max-width: var(--native-frame-max, none);
+  margin-inline: auto;
+  display: flex;
 }
 
 /* Learn quiz — full-screen on native; blurred modal on web/desktop */

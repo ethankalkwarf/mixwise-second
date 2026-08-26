@@ -11,6 +11,7 @@ import {
 } from "@/lib/learnLibrary";
 import { LearnPathProgress } from "@/components/learn/LearnPathProgress";
 import { LearnJoinCta } from "@/components/learn/LearnJoinCta";
+import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { useLearnProgress } from "@/hooks/useLearnProgress";
 import { isStepComplete, pathProgress, stepLessonRef } from "@/lib/learnProgress";
 
@@ -87,8 +88,9 @@ function PathStepCard({
   canToggle: boolean;
   onToggle: () => void;
 }) {
+  const nativeShell = useNativeShell();
   const meta = pathStepMedia(step);
-  const minH = "min-h-[280px] sm:min-h-[320px]";
+  const minH = nativeShell ? "min-h-[220px]" : "min-h-[280px] sm:min-h-[320px]";
   const cta = done ? "Review lesson" : isNext ? "Continue here" : "Open lesson";
 
   if (featured) {
@@ -163,7 +165,9 @@ function PathStepCard({
 
   return (
     <article
-      className={`group relative flex flex-col sm:flex-row overflow-hidden rounded-3xl border bg-white transition-all hover:shadow-soft ${
+      className={`group relative flex flex-col overflow-hidden rounded-3xl border bg-white transition-all hover:shadow-soft ${
+        nativeShell ? "" : "sm:flex-row"
+      } ${
         done
           ? "border-olive/35 bg-cream/40"
           : isNext
@@ -176,7 +180,11 @@ function PathStepCard({
         className="absolute inset-0 z-10"
         aria-label={`${cta}: ${meta.title}`}
       />
-      <div className="pointer-events-none relative sm:w-44 md:w-52 h-40 sm:h-auto shrink-0 bg-mist min-h-[10rem]">
+      <div
+        className={`pointer-events-none relative shrink-0 bg-mist min-h-[10rem] ${
+          nativeShell ? "h-44 w-full" : "sm:w-44 md:w-52 h-40 sm:h-auto"
+        }`}
+      >
         <Image
           src={meta.image}
           alt=""
