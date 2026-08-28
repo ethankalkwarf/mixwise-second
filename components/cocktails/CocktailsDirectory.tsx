@@ -46,6 +46,30 @@ interface FilterState {
   browseTab: NativeBrowseTab;
 }
 
+type ScrollRestore = {
+  y: number;
+  visibleCount?: number;
+};
+
+function readScrollRestore(): ScrollRestore | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SCROLL_STATE_KEY);
+    if (!raw) return null;
+    // Legacy: plain pixel string
+    if (/^\d+(\.\d+)?$/.test(raw)) {
+      return { y: Number(raw) };
+    }
+    const parsed = JSON.parse(raw) as ScrollRestore;
+    if (typeof parsed?.y === "number" && Number.isFinite(parsed.y)) {
+      return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 // Category display configuration - Botanical theme
 const CATEGORY_CONFIG: Record<string, { label: string; emoji: string; color: string }> = {
   tiki: { label: "Tiki", emoji: "🏝️", color: "bg-terracotta/20 text-terracotta border-terracotta/30" },
@@ -117,6 +141,7 @@ export function CocktailsDirectory({
   );
   const [browseSeed, setBrowseSeed] = useState(() => getCocktailsRandomizationSeed());
   const [isInitialized, setIsInitialized] = useState(false);
+  const [scrollRestore, setScrollRestore] = useState<ScrollRestore | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -140,15 +165,17 @@ export function CocktailsDirectory({
     }
   }, [searchParams]);
 
-  // Restore filter state from sessionStorage on mount (URL params win)
+  // Restore filter + scroll targets from sessionStorage on mount (URL params win)
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    setScrollRestore(readScrollRestore());
 
     if (initialSpirit || initialFilter || initialQuery) {
       setIsInitialized(true);
       return;
     }
-    
+
     try {
       const saved = sessionStorage.getItem(FILTER_STATE_KEY);
       if (saved) {
@@ -168,27 +195,38 @@ export function CocktailsDirectory({
     setIsInitialized(true);
   }, [initialSpirit, initialFilter, initialQuery]);
 
-  // Restore scroll position after filters are applied
+  // Restore scroll after filters + enough list rows are on screen.
   useEffect(() => {
-    if (!isInitialized || typeof window === "undefined") return;
-    
-    try {
-      const savedScroll = sessionStorage.getItem(SCROLL_STATE_KEY);
-      if (savedScroll) {
-        const scrollY = parseInt(savedScroll, 10);
-        // Use requestAnimationFrame to ensure DOM is ready
-        requestAnimationFrame(() => {
-          if (typeof window !== "undefined") {
-            window.scrollTo(0, scrollY);
-          }
-        });
-        // Clear the saved scroll after restoring
-        sessionStorage.removeItem(SCROLL_STATE_KEY);
-      }
-    } catch (e) {
-      console.error("Error restoring scroll position:", e);
+    if (!isInitialized || typeof window === "undefined" || !scrollRestore) return;
+
+    const targetY = scrollRestore.y;
+    if (!Number.isFinite(targetY) || targetY <= 0) {
+      sessionStorage.removeItem(SCROLL_STATE_KEY);
+      return;
     }
-  }, [isInitialized]);
+
+    let attempts = 0;
+    let raf = 0;
+    const maxAttempts = 45;
+
+    const tryRestore = () => {
+      attempts += 1;
+      const maxScroll = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+      // Wait until layout can reach the saved offset (images / Load more rows).
+      if (maxScroll + 8 >= targetY || attempts >= maxAttempts) {
+        window.scrollTo(0, Math.min(targetY, maxScroll));
+        sessionStorage.removeItem(SCROLL_STATE_KEY);
+        return;
+      }
+      raf = window.requestAnimationFrame(tryRestore);
+    };
+
+    raf = window.requestAnimationFrame(tryRestore);
+    return () => window.cancelAnimationFrame(raf);
+  }, [isInitialized, scrollRestore]);
 
   // Save filter state to sessionStorage when it changes
   useEffect(() => {
@@ -208,16 +246,6 @@ export function CocktailsDirectory({
       console.error("Error saving filter state:", e);
     }
   }, [isInitialized, searchQuery, sortBy, filterSpirit, filterGlass, showFilters, browseTab]);
-
-  // Save scroll position before navigating to a cocktail.
-  // Do not preventDefault — intercepted client navigation was hanging the tab.
-  const handleCocktailClick = useCallback(() => {
-    try {
-      sessionStorage.setItem(SCROLL_STATE_KEY, window.scrollY.toString());
-    } catch (e) {
-      console.error("Error saving scroll position:", e);
-    }
-  }, []);
 
   // Extract unique filter options from data
   const filterOptions = useMemo(() => {
@@ -318,11 +346,25 @@ export function CocktailsDirectory({
     return () => window.clearTimeout(timer);
   }, [searchQuery, filteredCocktails.length, filterSpirit, filterGlass, sortBy]);
 
-  const { visibleItems: visibleCocktails, hasMore, loadMore } = useInfiniteVisibleCount(
-    filteredCocktails,
-    ITEMS_PER_PAGE,
-    { mode: "manual" }
-  );
+  const { visibleItems: visibleCocktails, hasMore, loadMore, visibleCount } =
+    useInfiniteVisibleCount(filteredCocktails, ITEMS_PER_PAGE, {
+      mode: "manual",
+      initialVisibleCount: scrollRestore?.visibleCount,
+    });
+
+  // Save scroll + visible row count before navigating to a cocktail.
+  // Do not preventDefault — intercepted client navigation was hanging the tab.
+  const handleCocktailClick = useCallback(() => {
+    try {
+      const payload: ScrollRestore = {
+        y: window.scrollY,
+        visibleCount,
+      };
+      sessionStorage.setItem(SCROLL_STATE_KEY, JSON.stringify(payload));
+    } catch (e) {
+      console.error("Error saving scroll position:", e);
+    }
+  }, [visibleCount]);
 
   const activeFilterCount = [filterSpirit, filterGlass].filter(Boolean).length;
 

@@ -223,13 +223,14 @@ export function NativeRecipeView({
         ? new URLSearchParams(window.location.search).get("from")
         : null;
 
-    // Mix tags recipe links with ?from=mix. Honor that before Search restore,
-    // otherwise a prior /cocktails visit in sessionStorage hijacks Back.
+    // Prefer history so Search keeps scroll/pagination and Mix keeps pane state.
+    // Do not router.push() over a prior /cocktails visit — that remounts at top.
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
     if (from === "mix") {
-      if (typeof window !== "undefined" && window.history.length > 1) {
-        router.back();
-        return;
-      }
       router.push("/mix");
       return;
     }
@@ -239,8 +240,8 @@ export function NativeRecipeView({
         const saved = sessionStorage.getItem("mixwise-cocktails-filters");
         if (saved) {
           const state = JSON.parse(saved) as { browseTab?: string };
-          if (state.browseTab === "recipes") {
-            router.push("/cocktails?browse=recipes");
+          if (state.browseTab === "recipes" || state.browseTab === "collections") {
+            router.push(`/cocktails?browse=${state.browseTab}`, { scroll: false });
             return;
           }
         }
@@ -248,11 +249,7 @@ export function NativeRecipeView({
         /* ignore */
       }
     }
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push("/cocktails");
+    router.push("/cocktails", { scroll: false });
   };
 
   return (

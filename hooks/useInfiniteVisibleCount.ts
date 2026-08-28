@@ -8,6 +8,8 @@ const LOAD_LOCK_MS = 300;
 type Options = {
   /** `infinite` auto-loads via IntersectionObserver; `manual` requires `loadMore()`. */
   mode?: "infinite" | "manual";
+  /** One-shot restore (e.g. returning to Search after viewing a recipe). */
+  initialVisibleCount?: number;
 };
 
 /**
@@ -20,10 +22,31 @@ export function useInfiniteVisibleCount<T>(
   options: Options = {}
 ) {
   const mode = options.mode ?? "infinite";
+  const restoreCount = options.initialVisibleCount;
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const pendingRestoreRef = useRef<number | null>(
+    restoreCount != null && restoreCount > pageSize ? restoreCount : null
+  );
+
+  // Pick up restore targets that arrive after mount (sessionStorage read in useEffect).
+  useEffect(() => {
+    if (restoreCount == null || restoreCount <= pageSize) return;
+    pendingRestoreRef.current = restoreCount;
+    setVisibleCount((prev) => Math.max(prev, restoreCount));
+  }, [restoreCount, pageSize]);
 
   useEffect(() => {
+    if (pendingRestoreRef.current != null) {
+      const target = pendingRestoreRef.current;
+      if (items.length === 0) {
+        setVisibleCount(Math.max(pageSize, target));
+        return;
+      }
+      setVisibleCount(Math.min(Math.max(pageSize, target), items.length));
+      pendingRestoreRef.current = null;
+      return;
+    }
     setVisibleCount(pageSize);
   }, [items, pageSize]);
 
