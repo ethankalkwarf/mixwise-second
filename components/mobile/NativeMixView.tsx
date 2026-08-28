@@ -33,7 +33,6 @@ import {
   peekMixPourSession,
   refreshMixPourSeed,
   resetMixPourSession,
-  saveMixPourFocus,
   saveMixPourOrder,
 } from "@/lib/mobile/mixPourSession";
 import { refreshNativeShellData } from "@/lib/mobile/refreshNativeData";
@@ -183,6 +182,22 @@ export function NativeMixView({
   });
   const restoringFocus = useRef(false);
 
+  // If Mix stayed mounted (history.back), pick up focus that was only written to storage.
+  useEffect(() => {
+    const syncFocusFromStorage = () => {
+      const session = peekMixPourSession();
+      if (session?.focusSlug) {
+        setFocusSlug((prev) => prev ?? session.focusSlug ?? null);
+      }
+    };
+    window.addEventListener("popstate", syncFocusFromStorage);
+    window.addEventListener("pageshow", syncFocusFromStorage);
+    return () => {
+      window.removeEventListener("popstate", syncFocusFromStorage);
+      window.removeEventListener("pageshow", syncFocusFromStorage);
+    };
+  }, []);
+
   useEffect(() => {
     if (ready || barLoading) return;
     if (initialPane) {
@@ -243,12 +258,16 @@ export function NativeMixView({
   useEffect(() => {
     if (pane !== "tonight" || readyDrinks.length === 0) return;
     if (pinnedOrderIds?.length) {
+      const existing = peekMixPourSession();
       saveMixPourOrder({
         seed: tonightSeed,
         orderedIds: pinnedOrderIds,
         orderedSlugs: pinnedOrderSlugs ?? readyDrinks.map((d) => d.slug),
-        focusSlug: focusSlug ?? undefined,
-        visibleCount: restoreVisibleCount,
+        // Keep any focus saved for Back restore; don't clobber it with null state.
+        focusId: existing?.focusId,
+        focusSlug: focusSlug ?? existing?.focusSlug,
+        visibleCount: restoreVisibleCount ?? existing?.visibleCount,
+        y: existing?.y,
       });
       return;
     }
@@ -278,8 +297,10 @@ export function NativeMixView({
 
     restoringFocus.current = true;
     const targetSlug = focusSlug;
+    const savedY = initialPour?.y ?? 0;
     let attempts = 0;
     let raf = 0;
+    let settleTimer = 0;
     let cancelled = false;
     const maxAttempts = 180;
 
@@ -287,6 +308,17 @@ export function NativeMixView({
       clearMixPourFocus();
       setFocusSlug(null);
       restoringFocus.current = false;
+    };
+
+    const scrollToTarget = (node: HTMLElement) => {
+      // Prefer the exact scroll we saved on tap; fall back to centering the tile.
+      if (savedY > 0) {
+        window.scrollTo(0, savedY);
+        const scrolling = document.scrollingElement;
+        if (scrolling) scrolling.scrollTop = savedY;
+        return;
+      }
+      node.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
     };
 
     const tryRestore = () => {
@@ -301,8 +333,17 @@ export function NativeMixView({
       ) as HTMLElement | null;
 
       if (node) {
-        node.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
-        finish();
+        scrollToTarget(node);
+        // Async cocktail reload used to collapse the grid after first scroll —
+        // re-apply once layout settles, then clear focus.
+        settleTimer = window.setTimeout(() => {
+          if (cancelled) return;
+          const again = document.querySelector(
+            `[data-mix-drink-slug="${safeSlug}"]`
+          ) as HTMLElement | null;
+          if (again) scrollToTarget(again);
+          finish();
+        }, 450);
         return;
       }
 
@@ -317,9 +358,10 @@ export function NativeMixView({
     return () => {
       cancelled = true;
       window.cancelAnimationFrame(raf);
+      window.clearTimeout(settleTimer);
       restoringFocus.current = false;
     };
-  }, [pane, focusSlug, readyDrinks.length, drinkPager.visibleCount]);
+  }, [pane, focusSlug, readyDrinks.length, drinkPager.visibleCount, initialPour?.y]);
 
   const popular = useMemo(() => {
     const next: MixIngredient[] = [];
@@ -358,23 +400,20 @@ export function NativeMixView({
     const focusIndex = readyDrinks.findIndex((drink) => drink.id === drinkId);
     const orderedIds = readyDrinks.map((drink) => drink.id);
     const orderedSlugs = readyDrinks.map((drink) => drink.slug);
+    const visibleCount = Math.max(drinkPager.visibleCount, focusIndex + 1, 24);
+    const y = window.scrollY || document.scrollingElement?.scrollTop || 0;
     setPinnedOrderIds(orderedIds);
     setPinnedOrderSlugs(orderedSlugs);
-    setFocusSlug(drinkSlug);
+    // Do not setFocusSlug here — that runs restore while still on Mix and
+    // clears the saved focus before we navigate to the recipe.
     saveMixPourOrder({
       seed: tonightSeed,
       orderedIds,
       orderedSlugs,
       focusId: drinkId,
       focusSlug: drinkSlug,
-      visibleCount: Math.max(drinkPager.visibleCount, focusIndex + 1, 24),
-      y: window.scrollY || document.scrollingElement?.scrollTop || 0,
-    });
-    saveMixPourFocus({
-      focusId: drinkId,
-      focusSlug: drinkSlug,
-      visibleCount: Math.max(drinkPager.visibleCount, focusIndex + 1, 24),
-      y: window.scrollY || document.scrollingElement?.scrollTop || 0,
+      visibleCount,
+      y,
     });
   };
 

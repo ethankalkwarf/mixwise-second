@@ -148,7 +148,17 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
       try {
         const ingredients = await getMixIngredients();
         if (cancelled) return;
-        setAllIngredients(ingredients || []);
+        setAllIngredients((prev) => {
+          const next = ingredients || [];
+          if (
+            prev.length === next.length &&
+            prev.length > 0 &&
+            prev.every((item, index) => item.id === next[index]?.id)
+          ) {
+            return prev;
+          }
+          return next;
+        });
         setDataLoading(false);
       } catch (error) {
         if (cancelled) return;
@@ -169,7 +179,17 @@ function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
       try {
         const cocktails = await getMixCocktailsClient();
         if (cancelled) return;
-        setAllCocktails(validCocktails(cocktails || []));
+        setAllCocktails((prev) => {
+          const next = validCocktails(cocktails || []);
+          if (
+            prev.length === next.length &&
+            prev.length > 0 &&
+            prev.every((item, index) => item.id === next[index]?.id)
+          ) {
+            return prev;
+          }
+          return next;
+        });
       } catch (error) {
         if (cancelled) return;
         console.error("Failed to load cocktails:", error);

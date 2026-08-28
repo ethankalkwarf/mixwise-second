@@ -226,6 +226,11 @@ export function NativeRecipeView({
     const browse = params?.get("browse");
 
     if (from === "mix") {
+      // Prefer history so Mix keeps React state + document scroll when possible.
+      if (typeof window !== "undefined" && window.history.length > 1) {
+        router.back();
+        return;
+      }
       router.push("/mix?step=menu", { scroll: false });
       return;
     }
