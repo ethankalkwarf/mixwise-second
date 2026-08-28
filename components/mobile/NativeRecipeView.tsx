@@ -17,6 +17,7 @@ import { cacheRecipeDetail } from "@/lib/mobile/offlineSync";
 import { NativeDrinkTile } from "@/components/mobile/NativeDrinkTile";
 import { AppLink } from "@/components/mobile/AppLink";
 import { navigateInApp } from "@/lib/mobile/navigate";
+import { consumeMixRecipeReturn, peekMixRecipeReturn } from "@/lib/mobile/mixPourSession";
 import { FavoriteButton } from "@/components/cocktails/FavoriteButton";
 import { NoteButton } from "@/components/cocktails/NoteButton";
 import { SkipButton } from "@/components/cocktails/SkipButton";
@@ -224,14 +225,13 @@ export function NativeRecipeView({
         : null;
     const from = params?.get("from");
     const browse = params?.get("browse");
+    const fromMix = from === "mix" || peekMixRecipeReturn();
 
-    if (from === "mix") {
-      // Prefer history so Mix keeps React state + document scroll when possible.
-      if (typeof window !== "undefined" && window.history.length > 1) {
-        router.back();
-        return;
-      }
-      router.push("/mix?step=menu", { scroll: false });
+    if (fromMix) {
+      // Always go to Mix explicitly — history.back() often returns to Search
+      // when Search was visited earlier in the WebView session.
+      consumeMixRecipeReturn();
+      router.replace("/mix?step=menu", { scroll: false });
       return;
     }
 

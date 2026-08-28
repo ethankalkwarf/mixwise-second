@@ -19,6 +19,8 @@ export type MixPourSession = {
 const LIVE_KEY = "mixwise_mix_live";
 const ORDER_KEY = "mixwise_mix_pour_order";
 const SEED_KEY = "mixwise_mix_pour_seed";
+/** Set when leaving Mix for a recipe — Back should return to Mix even if ?from= is lost. */
+const RETURN_KEY = "mixwise_mix_recipe_return";
 
 let memory: MixPourSession | null = null;
 
@@ -116,12 +118,43 @@ export function clearMixPourFocus() {
   saveMixPourOrder(next);
 }
 
+/** Mark that the open recipe should Back to Mix (not Search history). */
+export function markMixRecipeReturn() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(RETURN_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+export function peekMixRecipeReturn(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(RETURN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function consumeMixRecipeReturn(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const hit = sessionStorage.getItem(RETURN_KEY) === "1";
+    if (hit) sessionStorage.removeItem(RETURN_KEY);
+    return hit;
+  } catch {
+    return false;
+  }
+}
+
 /** Full reset — pull-to-refresh or app cold start. */
 export function resetMixPourSession() {
   memory = null;
   try {
     localStorage.removeItem(ORDER_KEY);
     localStorage.removeItem(SEED_KEY);
+    sessionStorage.removeItem(RETURN_KEY);
   } catch {
     /* ignore */
   }

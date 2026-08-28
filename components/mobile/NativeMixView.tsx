@@ -30,6 +30,7 @@ import {
   clearMixPourFocus,
   consumeMixColdStart,
   getMixPourSeed,
+  markMixRecipeReturn,
   peekMixPourSession,
   refreshMixPourSeed,
   resetMixPourSession,
@@ -297,12 +298,11 @@ export function NativeMixView({
 
     restoringFocus.current = true;
     const targetSlug = focusSlug;
-    const savedY = initialPour?.y ?? 0;
     let attempts = 0;
     let raf = 0;
     let settleTimer = 0;
     let cancelled = false;
-    const maxAttempts = 180;
+    const maxAttempts = 300;
 
     const finish = () => {
       clearMixPourFocus();
@@ -311,6 +311,7 @@ export function NativeMixView({
     };
 
     const scrollToTarget = (node: HTMLElement) => {
+      const savedY = peekMixPourSession()?.y ?? initialPour?.y ?? 0;
       // Prefer the exact scroll we saved on tap; fall back to centering the tile.
       if (savedY > 0) {
         window.scrollTo(0, savedY);
@@ -343,7 +344,7 @@ export function NativeMixView({
           ) as HTMLElement | null;
           if (again) scrollToTarget(again);
           finish();
-        }, 450);
+        }, 500);
         return;
       }
 
@@ -406,6 +407,7 @@ export function NativeMixView({
     setPinnedOrderSlugs(orderedSlugs);
     // Do not setFocusSlug here — that runs restore while still on Mix and
     // clears the saved focus before we navigate to the recipe.
+    markMixRecipeReturn();
     saveMixPourOrder({
       seed: tonightSeed,
       orderedIds,

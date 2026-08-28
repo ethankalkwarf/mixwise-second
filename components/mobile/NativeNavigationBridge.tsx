@@ -73,8 +73,12 @@ export function NativeNavigationBridge() {
       navigateInApp(router, path);
     };
 
-    document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
+    // Bubble phase (not capture): AppLink / React onClick must run first so
+    // side effects like Mix pour-place save actually fire. Capture + stop
+    // was swallowing those handlers and navigating with an empty restore.
+    // Skip when defaultPrevented — AppLink and next/link already handled it.
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
   }, [router]);
 
   return null;
