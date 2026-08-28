@@ -218,6 +218,22 @@ export function NativeRecipeView({
   };
 
   const goBack = () => {
+    const from =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("from")
+        : null;
+
+    // Mix tags recipe links with ?from=mix. Honor that before Search restore,
+    // otherwise a prior /cocktails visit in sessionStorage hijacks Back.
+    if (from === "mix") {
+      if (typeof window !== "undefined" && window.history.length > 1) {
+        router.back();
+        return;
+      }
+      router.push("/mix");
+      return;
+    }
+
     if (typeof window !== "undefined") {
       try {
         const saved = sessionStorage.getItem("mixwise-cocktails-filters");
