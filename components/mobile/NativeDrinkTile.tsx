@@ -19,6 +19,7 @@ export function NativeDrinkTile({
   onNavigate,
   photoHeight = 210,
   className = "",
+  drinkId,
 }: {
   href: string;
   name: string;
@@ -28,6 +29,8 @@ export function NativeDrinkTile({
   onNavigate?: () => void;
   photoHeight?: number;
   className?: string;
+  /** Stable id for Mix scroll restore (`data-mix-drink-id`). */
+  drinkId?: string;
 }) {
   const title = formatCocktailName(name);
   const accessLabel = spirit ? `${title}, ${spirit}` : title;
@@ -38,7 +41,10 @@ export function NativeDrinkTile({
   }, [href, router]);
 
   return (
-    <div className={`native-drink-tile ${className}`.trim()}>
+    <div
+      className={`native-drink-tile ${className}`.trim()}
+      data-mix-drink-id={drinkId || undefined}
+    >
       <div className="native-drink-tile__photo" style={{ height: photoHeight }} aria-hidden="true">
         {imageUrl ? (
           // Native shell loads remote catalog URLs directly; next/image fill breaks this layout in WKWebView.
