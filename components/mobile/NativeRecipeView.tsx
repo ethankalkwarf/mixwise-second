@@ -218,20 +218,46 @@ export function NativeRecipeView({
   };
 
   const goBack = () => {
-    const from =
+    const params =
       typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search).get("from")
+        ? new URLSearchParams(window.location.search)
         : null;
+    const from = params?.get("from");
+    const browse = params?.get("browse");
 
-    // Prefer history so Search keeps scroll/pagination and Mix keeps pane state.
-    // Do not router.push() over a prior /cocktails visit — that remounts at top.
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
+    if (from === "mix") {
+      if (typeof window !== "undefined" && window.history.length > 1) {
+        router.back();
+        return;
+      }
+      router.push("/mix");
       return;
     }
 
-    if (from === "mix") {
-      router.push("/mix");
+    if (from === "search") {
+      const tab =
+        browse === "collections" || browse === "recipes"
+          ? browse
+          : (() => {
+              try {
+                const saved = sessionStorage.getItem("mixwise-cocktails-filters");
+                if (saved) {
+                  const state = JSON.parse(saved) as { browseTab?: string };
+                  if (state.browseTab === "recipes" || state.browseTab === "collections") {
+                    return state.browseTab;
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
+              return "recipes";
+            })();
+      router.push(`/cocktails?browse=${tab}`, { scroll: false });
+      return;
+    }
+
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
       return;
     }
 

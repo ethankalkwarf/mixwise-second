@@ -3483,11 +3483,14 @@ html.native-app .input-botanical {
   gap: 0.15rem;
   margin: 0 0 0.65rem;
   padding: 0.35rem 0.5rem 0.35rem 0.15rem;
+  border: 0;
   border-radius: 999px;
+  background: transparent;
   font-size: 0.8125rem;
   font-weight: 600;
   color: #1a3a2a;
   transition: color 0.2s ease;
+  cursor: pointer;
 }
 
 .native-collection-hero__back svg {
@@ -4233,6 +4236,18 @@ button, a, [role="button"] {
   animation: mw-pour-fill 4.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+.mw-pour-glass--loading .mw-pour-svg {
+  animation: none;
+}
+
+.mw-pour-glass--loading .mw-pour-fill {
+  animation: mw-pour-fill-loop 2.2s ease-in-out infinite;
+}
+
+.mw-pour-glass--loading .mw-pour-stream {
+  animation: mw-pour-stream 0.9s ease-in-out infinite;
+}
+
 .mw-pour-glass--poured .mw-pour-fill {
   transform: scaleY(1);
 }
@@ -4286,6 +4301,11 @@ button, a, [role="button"] {
   100% { transform: scaleY(0.92); }
 }
 
+@keyframes mw-pour-fill-loop {
+  0%, 100% { transform: scaleY(0.14); }
+  50% { transform: scaleY(0.9); }
+}
+
 @keyframes mw-pour-stream {
   0%, 100% { opacity: 0.15; transform: scaleY(0.82); }
   50% { opacity: 0.9; transform: scaleY(1); }
@@ -4306,17 +4326,21 @@ button, a, [role="button"] {
   .mw-pour-glass--filling .mw-pour-fill,
   .mw-pour-glass--filling .mw-pour-stream,
   .mw-pour-glass--filling .mw-pour-twist,
+  .mw-pour-glass--loading .mw-pour-fill,
+  .mw-pour-glass--loading .mw-pour-stream,
   .mw-pour-bubble {
     animation: none;
   }
 
   .mw-pour-glass--filling .mw-pour-fill,
+  .mw-pour-glass--loading .mw-pour-fill,
   .mw-pour-glass--idle .mw-pour-fill {
     transform: scaleY(0.72);
   }
 
   .mw-pour-glass--filling .mw-pour-stream,
-  .mw-pour-glass--filling .mw-pour-twist {
+  .mw-pour-glass--filling .mw-pour-twist,
+  .mw-pour-glass--loading .mw-pour-stream {
     opacity: 0.85;
   }
 }

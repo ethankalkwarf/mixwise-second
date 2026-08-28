@@ -115,6 +115,7 @@ function CollectionGridSection({
   covers,
   href,
   linkLabel,
+  onNavigate,
 }: {
   title: string;
   subtitle?: string;
@@ -122,6 +123,7 @@ function CollectionGridSection({
   covers: Record<string, string | null>;
   href?: string;
   linkLabel?: string;
+  onNavigate?: () => void;
 }) {
   if (items.length === 0) return null;
 
@@ -133,7 +135,11 @@ function CollectionGridSection({
           {subtitle ? <p className="mt-0.5 text-sm text-sage">{subtitle}</p> : null}
         </div>
         {href && linkLabel ? (
-          <AppLink href={href} className="shrink-0 text-xs font-semibold text-terracotta">
+          <AppLink
+            href={href}
+            className="shrink-0 text-xs font-semibold text-terracotta"
+            onClick={onNavigate}
+          >
             {linkLabel}
           </AppLink>
         ) : null}
@@ -148,6 +154,7 @@ function CollectionGridSection({
             occasion={occasion}
             variant="grid"
             coverImageUrl={covers[occasion.slug]}
+            onNavigate={onNavigate}
           />
         ))}
       </div>
@@ -155,7 +162,13 @@ function CollectionGridSection({
   );
 }
 
-export function NativeCollectionsGrid({ shuffleSeed }: { shuffleSeed?: string }) {
+export function NativeCollectionsGrid({
+  shuffleSeed,
+  onNavigate,
+}: {
+  shuffleSeed?: string;
+  onNavigate?: () => void;
+}) {
   const { seasons, holidays } = getSearchCollectionSections();
   const seed = shuffleSeed ?? getCocktailsRandomizationSeed();
   const shuffledSeasons = useMemo(
@@ -179,6 +192,7 @@ export function NativeCollectionsGrid({ shuffleSeed }: { shuffleSeed?: string })
         subtitle="Summer pours, classics, tiki, brunch, and more."
         items={shuffledSeasons}
         covers={covers}
+        onNavigate={onNavigate}
       />
       <CollectionGridSection
         title="Holiday cocktails"
@@ -187,6 +201,7 @@ export function NativeCollectionsGrid({ shuffleSeed }: { shuffleSeed?: string })
         covers={covers}
         href="/occasions/holidays"
         linkLabel="Holiday hub"
+        onNavigate={onNavigate}
       />
     </div>
   );

@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { nativePhotoUrl } from "@/lib/mobile/nativeImage";
 
-export type ShakePourPhase = "idle" | "filling" | "poured";
+export type ShakePourPhase = "idle" | "filling" | "loading" | "poured";
 
 type Props = {
   phase: ShakePourPhase;
@@ -50,7 +50,7 @@ export function ShakePourGlass({ phase, imageUrl, className = "" }: Props) {
 
         <ellipse cx="120" cy="318" rx="52" ry="7" fill="#0c0a08" opacity="0.55" />
 
-        {phase === "filling" ? (
+        {phase === "filling" || phase === "loading" ? (
           <rect
             className="mw-pour-stream"
             x="117.5"

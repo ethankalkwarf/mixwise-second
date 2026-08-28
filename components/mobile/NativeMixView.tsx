@@ -27,6 +27,7 @@ import {
 import { useUser } from "@/components/auth/UserProvider";
 import { readCabinetReadyCount, readHomeSessionHint } from "@/lib/mobile/guestData";
 import { randomShuffle } from "@/lib/randomization";
+import { ShakePourGlass } from "@/components/mobile/ShakePourGlass";
 
 type Pane = "tonight" | "shelf";
 
@@ -228,6 +229,7 @@ export function NativeMixView({
           loadMoreRef={drinkPager.loadMoreRef}
           canMake={matchCounts.canMake}
           cocktailsLoading={cocktailsLoading}
+          barLoading={barLoading}
           almost={almost}
           allIngredients={allIngredients}
           onAddIngredient={onAddIngredient}
@@ -288,24 +290,14 @@ function PaneButton({
   );
 }
 
-function EmptyTonight({
-  cocktailsLoading,
-  onOpenShelf,
-}: {
-  cocktailsLoading: boolean;
-  onOpenShelf: () => void;
-}) {
+function EmptyTonight({ onOpenShelf }: { onOpenShelf: () => void }) {
   useEffect(() => {
-    if (!cocktailsLoading) {
-      void trackEmptyStateSeen("mix_tonight");
-    }
-  }, [cocktailsLoading]);
+    void trackEmptyStateSeen("mix_tonight");
+  }, []);
 
   return (
     <div className="rounded-3xl bg-white px-5 py-12 text-center">
-      <p className="font-display text-xl font-bold text-forest">
-        {cocktailsLoading ? "Matching drinks…" : "Nothing you can pour yet"}
-      </p>
+      <p className="font-display text-xl font-bold text-forest">Nothing you can pour yet</p>
       <p className="mt-2 text-sm text-sage">
         Add a mixer or citrus — lime juice and simple syrup unlock a lot.
       </p>
@@ -320,12 +312,30 @@ function EmptyTonight({
   );
 }
 
+function TonightLoading() {
+  return (
+    <div
+      className="rounded-3xl bg-white px-5 py-14 text-center"
+      aria-busy="true"
+      aria-live="polite"
+      aria-label="Matching drinks to your cabinet"
+    >
+      <div className="mx-auto mb-5 h-44 w-32">
+        <ShakePourGlass phase="loading" />
+      </div>
+      <p className="font-display text-xl font-bold text-forest">Pouring your menu…</p>
+      <p className="mt-2 text-sm text-sage">Matching drinks to what’s on your shelf.</p>
+    </div>
+  );
+}
+
 function TonightPane({
   drinks,
   hasMore,
   loadMoreRef,
   canMake,
   cocktailsLoading,
+  barLoading,
   almost,
   allIngredients,
   onAddIngredient,
@@ -336,18 +346,18 @@ function TonightPane({
   loadMoreRef: RefObject<HTMLDivElement | null>;
   canMake: number;
   cocktailsLoading: boolean;
+  barLoading: boolean;
   almost: MixMatchGroups["almostThere"];
   allIngredients: MixIngredient[];
   onAddIngredient: (id: string) => void;
   onOpenShelf: () => void;
 }) {
+  if (canMake === 0 && (barLoading || cocktailsLoading)) {
+    return <TonightLoading />;
+  }
+
   if (canMake === 0) {
-    return (
-      <EmptyTonight
-        cocktailsLoading={cocktailsLoading}
-        onOpenShelf={onOpenShelf}
-      />
-    );
+    return <EmptyTonight onOpenShelf={onOpenShelf} />;
   }
 
   return (

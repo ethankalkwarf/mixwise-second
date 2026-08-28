@@ -44,12 +44,25 @@ interface FilterState {
   filterGlass: string | null;
   showFilters: boolean;
   browseTab: NativeBrowseTab;
+  browseSeed?: string;
 }
 
 type ScrollRestore = {
   y: number;
   visibleCount?: number;
 };
+
+function readScrollY(): number {
+  if (typeof window === "undefined") return 0;
+  const scrolling = document.scrollingElement;
+  return window.scrollY || scrolling?.scrollTop || document.documentElement.scrollTop || 0;
+}
+
+function writeScrollY(y: number) {
+  const scrolling = document.scrollingElement;
+  if (scrolling) scrolling.scrollTop = y;
+  window.scrollTo(0, y);
+}
 
 function readScrollRestore(): ScrollRestore | null {
   if (typeof window === "undefined") return null;
@@ -139,7 +152,21 @@ export function CocktailsDirectory({
       ? initialBrowse
       : "collections"
   );
-  const [browseSeed, setBrowseSeed] = useState(() => getCocktailsRandomizationSeed());
+  const [browseSeed, setBrowseSeed] = useState(() => {
+    if (typeof window === "undefined") return getCocktailsRandomizationSeed();
+    try {
+      const saved = sessionStorage.getItem(FILTER_STATE_KEY);
+      if (saved) {
+        const state = JSON.parse(saved) as FilterState;
+        if (typeof state.browseSeed === "string" && state.browseSeed.length > 0) {
+          return state.browseSeed;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    return getCocktailsRandomizationSeed();
+  });
   const [isInitialized, setIsInitialized] = useState(false);
   const [scrollRestore, setScrollRestore] = useState<ScrollRestore | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -188,6 +215,9 @@ export function CocktailsDirectory({
         if (state.browseTab === "recipes" || state.browseTab === "collections") {
           setBrowseTab(state.browseTab);
         }
+        if (typeof state.browseSeed === "string" && state.browseSeed.length > 0) {
+          setBrowseSeed(state.browseSeed);
+        }
       }
     } catch (e) {
       console.error("Error restoring filter state:", e);
@@ -217,7 +247,7 @@ export function CocktailsDirectory({
       );
       // Wait until layout can reach the saved offset (images / Load more rows).
       if (maxScroll + 8 >= targetY || attempts >= maxAttempts) {
-        window.scrollTo(0, Math.min(targetY, maxScroll));
+        writeScrollY(Math.min(targetY, maxScroll));
         sessionStorage.removeItem(SCROLL_STATE_KEY);
         return;
       }
@@ -239,13 +269,14 @@ export function CocktailsDirectory({
       filterGlass,
       showFilters,
       browseTab,
+      browseSeed,
     };
     try {
       sessionStorage.setItem(FILTER_STATE_KEY, JSON.stringify(state));
     } catch (e) {
       console.error("Error saving filter state:", e);
     }
-  }, [isInitialized, searchQuery, sortBy, filterSpirit, filterGlass, showFilters, browseTab]);
+  }, [isInitialized, searchQuery, sortBy, filterSpirit, filterGlass, showFilters, browseTab, browseSeed]);
 
   // Extract unique filter options from data
   const filterOptions = useMemo(() => {
@@ -263,10 +294,12 @@ export function CocktailsDirectory({
   const nativeShell = useNativeShell();
 
   const catalogOrder = useMemo(() => {
+    // Stable input order so the same seed always yields the same browse grid.
+    const stable = [...cocktails].sort((a, b) => a._id.localeCompare(b._id));
     if (sortBy === "default") {
-      return deterministicShuffle(cocktails, browseSeed);
+      return deterministicShuffle(stable, browseSeed);
     }
-    return cocktails;
+    return stable;
   }, [cocktails, browseSeed, sortBy]);
 
   const handleBrowseRefresh = useCallback(async () => {
@@ -357,7 +390,7 @@ export function CocktailsDirectory({
   const handleCocktailClick = useCallback(() => {
     try {
       const payload: ScrollRestore = {
-        y: window.scrollY,
+        y: readScrollY(),
         visibleCount,
       };
       sessionStorage.setItem(SCROLL_STATE_KEY, JSON.stringify(payload));
@@ -365,6 +398,15 @@ export function CocktailsDirectory({
       console.error("Error saving scroll position:", e);
     }
   }, [visibleCount]);
+
+  const handleCollectionNavigate = useCallback(() => {
+    try {
+      const payload: ScrollRestore = { y: readScrollY() };
+      sessionStorage.setItem(SCROLL_STATE_KEY, JSON.stringify(payload));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const activeFilterCount = [filterSpirit, filterGlass].filter(Boolean).length;
 
@@ -464,7 +506,7 @@ export function CocktailsDirectory({
                       return (
                         <NativeDrinkTile
                           key={cocktail._id}
-                          href={`/cocktails/${slug}`}
+                          href={`/cocktails/${slug}?from=search&browse=${browseTab}`}
                           name={cocktail.name}
                           spirit={cocktail.primarySpirit}
                           imageUrl={imageUrl}
@@ -491,7 +533,10 @@ export function CocktailsDirectory({
           ) : (
             <>
               <CollectionBrowseTracker />
-              <NativeCollectionsGrid shuffleSeed={browseSeed} />
+              <NativeCollectionsGrid
+                shuffleSeed={browseSeed}
+                onNavigate={handleCollectionNavigate}
+              />
             </>
           )}
         </div>

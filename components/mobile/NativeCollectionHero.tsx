@@ -1,7 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
-import { AppLink } from "@/components/mobile/AppLink";
 import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { nativePhotoUrl } from "@/lib/mobile/nativeImage";
 
@@ -25,20 +25,34 @@ export function NativeCollectionHero({
   parentName,
   parentSlug,
 }: Props) {
+  const router = useRouter();
   const nativeShell = useNativeShell();
   if (!nativeShell) return null;
 
   const src = nativePhotoUrl(imageUrl, 1080, 85) || imageUrl || null;
   const drinks = `${count} drink${count === 1 ? "" : "s"}`;
-  const backHref = parentSlug ? `/occasions/${parentSlug}` : "/occasions";
-  const backLabel = parentSlug && parentName ? parentName : "Collections";
+  const backLabel = parentSlug && parentName ? parentName : "Search";
+
+  const goBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    if (parentSlug) {
+      router.push(`/occasions/${parentSlug}`);
+      return;
+    }
+
+    router.push("/cocktails?browse=collections", { scroll: false });
+  };
 
   return (
     <section className="native-collection-hero">
-      <AppLink href={backHref} className="native-collection-hero__back">
+      <button type="button" onClick={goBack} className="native-collection-hero__back">
         <ChevronLeftIcon aria-hidden />
         <span>{backLabel}</span>
-      </AppLink>
+      </button>
       <div className="native-collection-hero__stage">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element

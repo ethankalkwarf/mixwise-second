@@ -10,6 +10,7 @@ type Props = {
   variant?: "portrait" | "grid" | "stack";
   coverImageUrl?: string | null;
   className?: string;
+  onNavigate?: () => void;
 };
 
 /**
@@ -21,11 +22,12 @@ export function NativeCollectionTile({
   variant = "grid",
   coverImageUrl,
   className = "",
+  onNavigate,
 }: Props) {
   const [imageFailed, setImageFailed] = useState(false);
   const imageUrl = coverImageUrl || occasion.staticCoverPath;
   const label = occasion.navName || occasion.name;
-  const href = `/occasions/${occasion.slug}`;
+  const href = `/occasions/${occasion.slug}?from=search`;
 
   return (
     <div className={`native-collection-tile native-collection-tile--${variant} ${className}`.trim()}>
@@ -57,7 +59,12 @@ export function NativeCollectionTile({
       {variant === "portrait" ? (
         <p className="native-collection-tile__caption">{label}</p>
       ) : null}
-      <AppLink href={href} aria-label={label} className="native-collection-tile__hit">
+      <AppLink
+        href={href}
+        aria-label={label}
+        className="native-collection-tile__hit"
+        onClick={onNavigate}
+      >
         <span aria-hidden="true" />
       </AppLink>
     </div>
