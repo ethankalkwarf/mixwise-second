@@ -27,40 +27,21 @@ import {
 import { useUser } from "@/components/auth/UserProvider";
 import { readCabinetReadyCount, readHomeSessionHint } from "@/lib/mobile/guestData";
 import {
-  clearMixPourSession,
+  clearMixPourFocus,
+  consumeMixColdStart,
+  getMixPourSeed,
   peekMixPourSession,
-  saveMixPourSession,
-  type MixPourSession,
+  refreshMixPourSeed,
+  resetMixPourSession,
+  saveMixPourFocus,
+  saveMixPourOrder,
 } from "@/lib/mobile/mixPourSession";
+import { refreshNativeShellData } from "@/lib/mobile/refreshNativeData";
 import { seededRandom } from "@/lib/randomization";
 import { ShakePourGlass } from "@/components/mobile/ShakePourGlass";
+import { PullToRefreshContainer } from "@/components/mobile/PullToRefreshContainer";
 
 type Pane = "tonight" | "shelf";
-
-const MIX_TONIGHT_SEED_KEY = "mixwise-mix-tonight-seed";
-
-function getOrCreateTonightSeed(): string {
-  if (typeof window === "undefined") return "mix-tonight";
-  try {
-    const saved = sessionStorage.getItem(MIX_TONIGHT_SEED_KEY);
-    if (saved) return saved;
-    const seed = `mix-tonight-${Date.now()}`;
-    sessionStorage.setItem(MIX_TONIGHT_SEED_KEY, seed);
-    return seed;
-  } catch {
-    return `mix-tonight-${Date.now()}`;
-  }
-}
-
-function refreshTonightSeed(): string {
-  const seed = `mix-tonight-${Date.now()}`;
-  try {
-    sessionStorage.setItem(MIX_TONIGHT_SEED_KEY, seed);
-  } catch {
-    /* ignore */
-  }
-  return seed;
-}
 
 function seededDrinkOrder<T extends { id: string }>(drinks: T[], seed: string): T[] {
   return [...drinks].sort((a, b) => {
@@ -71,21 +52,36 @@ function seededDrinkOrder<T extends { id: string }>(drinks: T[], seed: string): 
   });
 }
 
-function applyPinnedOrder<T extends { id: string }>(
+function applyPinnedOrder<T extends { id: string; slug: string }>(
   drinks: T[],
   pinnedIds: string[] | null | undefined,
+  pinnedSlugs: string[] | null | undefined,
   seed: string
 ): T[] {
-  if (!pinnedIds?.length) return seededDrinkOrder(drinks, seed);
-  const byId = new Map(drinks.map((drink) => [drink.id, drink]));
-  const ordered: T[] = [];
-  for (const id of pinnedIds) {
-    const drink = byId.get(id);
-    if (drink) {
-      ordered.push(drink);
-      byId.delete(id);
-    }
+  if (!pinnedIds?.length && !pinnedSlugs?.length) {
+    return seededDrinkOrder(drinks, seed);
   }
+
+  const byId = new Map(drinks.map((drink) => [drink.id, drink]));
+  const bySlug = new Map(drinks.map((drink) => [drink.slug, drink]));
+  const ordered: T[] = [];
+  const used = new Set<string>();
+
+  const pushDrink = (drink: T | undefined) => {
+    if (!drink || used.has(drink.id)) return;
+    ordered.push(drink);
+    used.add(drink.id);
+    byId.delete(drink.id);
+    bySlug.delete(drink.slug);
+  };
+
+  if (pinnedIds?.length) {
+    for (const id of pinnedIds) pushDrink(byId.get(id));
+  }
+  if (pinnedSlugs?.length) {
+    for (const slug of pinnedSlugs) pushDrink(bySlug.get(slug));
+  }
+
   if (byId.size === 0) return ordered;
   return [...ordered, ...seededDrinkOrder([...byId.values()], seed)];
 }
@@ -159,16 +155,31 @@ export function NativeMixView({
   const mixTracked = useRef(false);
   const [category, setCategory] = useState<string | null>(null);
   const { favorites } = useFavorites();
-  const [tonightSeed, setTonightSeed] = useState(getOrCreateTonightSeed);
+
+  const [tonightSeed, setTonightSeed] = useState(() => {
+    if (typeof window === "undefined") return "mix-tonight";
+    if (consumeMixColdStart()) {
+      resetMixPourSession();
+      return refreshMixPourSeed();
+    }
+    return getMixPourSeed();
+  });
   const [initialPour] = useState(() => peekMixPourSession());
   const [pinnedOrderIds, setPinnedOrderIds] = useState<string[] | null>(
     () => initialPour?.orderedIds ?? null
   );
-  const [focusId, setFocusId] = useState<string | null>(() => initialPour?.focusId ?? null);
+  const [pinnedOrderSlugs, setPinnedOrderSlugs] = useState<string[] | null>(
+    () => initialPour?.orderedSlugs ?? null
+  );
+  const [focusSlug, setFocusSlug] = useState<string | null>(
+    () => initialPour?.focusSlug ?? null
+  );
   const [restoreVisibleCount] = useState(() => {
-    if (!initialPour) return undefined;
-    const focusIndex = initialPour.orderedIds.indexOf(initialPour.focusId);
-    return Math.max(initialPour.visibleCount, focusIndex + 1, 24);
+    if (!initialPour?.focusSlug || !initialPour.orderedSlugs?.length) {
+      return initialPour?.visibleCount;
+    }
+    const focusIndex = initialPour.orderedSlugs.indexOf(initialPour.focusSlug);
+    return Math.max(initialPour.visibleCount ?? 24, focusIndex + 1, 24);
   });
   const restoringFocus = useRef(false);
 
@@ -222,48 +233,71 @@ export function NativeMixView({
       applyPinnedOrder(
         mixMatches.ready.map((match) => match.cocktail),
         pinnedOrderIds,
-        initialPour?.seed || tonightSeed
+        pinnedOrderSlugs,
+        tonightSeed
       ),
-    [mixMatches.ready, pinnedOrderIds, initialPour?.seed, tonightSeed]
+    [mixMatches.ready, pinnedOrderIds, pinnedOrderSlugs, tonightSeed]
   );
 
-  // Lock the pour order for this Mix visit so remounts/skips can't reshuffle it.
+  // Persist pour order until pull-to-refresh or app cold start — never on tab switch.
   useEffect(() => {
-    if (pane !== "tonight" || pinnedOrderIds || readyDrinks.length === 0) return;
-    setPinnedOrderIds(readyDrinks.map((drink) => drink.id));
-  }, [pane, pinnedOrderIds, readyDrinks]);
+    if (pane !== "tonight" || readyDrinks.length === 0) return;
+    if (pinnedOrderIds?.length) {
+      saveMixPourOrder({
+        seed: tonightSeed,
+        orderedIds: pinnedOrderIds,
+        orderedSlugs: pinnedOrderSlugs ?? readyDrinks.map((d) => d.slug),
+        focusSlug: focusSlug ?? undefined,
+        visibleCount: restoreVisibleCount,
+      });
+      return;
+    }
+    const ids = readyDrinks.map((drink) => drink.id);
+    const slugs = readyDrinks.map((drink) => drink.slug);
+    setPinnedOrderIds(ids);
+    setPinnedOrderSlugs(slugs);
+    saveMixPourOrder({ seed: tonightSeed, orderedIds: ids, orderedSlugs: slugs });
+  }, [
+    pane,
+    readyDrinks,
+    pinnedOrderIds,
+    pinnedOrderSlugs,
+    tonightSeed,
+    focusSlug,
+    restoreVisibleCount,
+  ]);
 
   const drinkPager = useInfiniteVisibleCount(readyDrinks, 24, {
     initialVisibleCount: restoreVisibleCount,
   });
 
-  // Put the opened drink back in view after the pinned grid paints.
+  // Scroll the opened drink back into view after Back.
   useEffect(() => {
-    if (pane !== "tonight" || !focusId || typeof window === "undefined") return;
+    if (pane !== "tonight" || !focusSlug || typeof window === "undefined") return;
     if (readyDrinks.length === 0 || restoringFocus.current) return;
 
     restoringFocus.current = true;
-    const targetId = focusId;
+    const targetSlug = focusSlug;
     let attempts = 0;
     let raf = 0;
     let cancelled = false;
-    const maxAttempts = 60;
+    const maxAttempts = 180;
 
     const finish = () => {
-      clearMixPourSession();
-      setFocusId(null);
+      clearMixPourFocus();
+      setFocusSlug(null);
       restoringFocus.current = false;
     };
 
     const tryRestore = () => {
       if (cancelled) return;
       attempts += 1;
-      const safeId =
+      const safeSlug =
         typeof CSS !== "undefined" && typeof CSS.escape === "function"
-          ? CSS.escape(targetId)
-          : targetId.replace(/"/g, '\\"');
+          ? CSS.escape(targetSlug)
+          : targetSlug.replace(/"/g, '\\"');
       const node = document.querySelector(
-        `[data-mix-drink-id="${safeId}"]`
+        `[data-mix-drink-slug="${safeSlug}"]`
       ) as HTMLElement | null;
 
       if (node) {
@@ -285,7 +319,7 @@ export function NativeMixView({
       window.cancelAnimationFrame(raf);
       restoringFocus.current = false;
     };
-  }, [pane, focusId, readyDrinks.length, drinkPager.visibleCount]);
+  }, [pane, focusSlug, readyDrinks.length, drinkPager.visibleCount]);
 
   const popular = useMemo(() => {
     const next: MixIngredient[] = [];
@@ -306,29 +340,46 @@ export function NativeMixView({
   };
 
   const openTonight = () => {
-    if (pane !== "tonight") {
-      clearMixPourSession();
-      setFocusId(null);
-      setPinnedOrderIds(null);
-      setTonightSeed(refreshTonightSeed());
-    }
     setPane("tonight");
   };
 
-  const savePourPlace = (drinkId: string) => {
+  const reshuffleTonight = async () => {
+    resetMixPourSession();
+    const seed = refreshMixPourSeed();
+    setTonightSeed(seed);
+    setPinnedOrderIds(null);
+    setPinnedOrderSlugs(null);
+    setFocusSlug(null);
+    await refreshNativeShellData();
+    window.scrollTo(0, 0);
+  };
+
+  const savePourPlace = (drinkId: string, drinkSlug: string) => {
     const focusIndex = readyDrinks.findIndex((drink) => drink.id === drinkId);
-    const session: MixPourSession = {
-      y: window.scrollY || document.scrollingElement?.scrollTop || 0,
-      visibleCount: Math.max(drinkPager.visibleCount, focusIndex + 1, 24),
-      orderedIds: readyDrinks.map((drink) => drink.id),
+    const orderedIds = readyDrinks.map((drink) => drink.id);
+    const orderedSlugs = readyDrinks.map((drink) => drink.slug);
+    setPinnedOrderIds(orderedIds);
+    setPinnedOrderSlugs(orderedSlugs);
+    setFocusSlug(drinkSlug);
+    saveMixPourOrder({
+      seed: tonightSeed,
+      orderedIds,
+      orderedSlugs,
       focusId: drinkId,
-      seed: initialPour?.seed || tonightSeed,
-    };
-    saveMixPourSession(session);
-    setPinnedOrderIds(session.orderedIds);
+      focusSlug: drinkSlug,
+      visibleCount: Math.max(drinkPager.visibleCount, focusIndex + 1, 24),
+      y: window.scrollY || document.scrollingElement?.scrollTop || 0,
+    });
+    saveMixPourFocus({
+      focusId: drinkId,
+      focusSlug: drinkSlug,
+      visibleCount: Math.max(drinkPager.visibleCount, focusIndex + 1, 24),
+      y: window.scrollY || document.scrollingElement?.scrollTop || 0,
+    });
   };
 
   return (
+    <PullToRefreshContainer onRefresh={reshuffleTonight}>
     <div>
       <NativePageHero
         eyebrow="Your cabinet"
@@ -407,6 +458,7 @@ export function NativeMixView({
         />
       )}
     </div>
+    </PullToRefreshContainer>
   );
 }
 
@@ -504,7 +556,7 @@ function TonightPane({
   allIngredients: MixIngredient[];
   onAddIngredient: (id: string) => void;
   onOpenShelf: () => void;
-  onDrinkNavigate: (focusId: string) => void;
+  onDrinkNavigate: (focusId: string, focusSlug: string) => void;
 }) {
   if (canMake === 0 && (barLoading || cocktailsLoading)) {
     return <TonightLoading />;
@@ -529,13 +581,14 @@ function TonightPane({
           <NativeDrinkTile
             key={cocktail.id}
             drinkId={cocktail.id}
+            drinkSlug={cocktail.slug}
             href={`/cocktails/${cocktail.slug}?from=mix`}
             name={cocktail.name}
             spirit={cocktail.primarySpirit}
             imageUrl={cocktail.imageUrl}
             createdAt={cocktail.createdAt}
             onNavigate={() => {
-              onDrinkNavigate(cocktail.id);
+              onDrinkNavigate(cocktail.id, cocktail.slug);
               void trackMixResultClicked(cocktail.slug, "tonight");
             }}
           />

@@ -20,6 +20,7 @@ export function NativeDrinkTile({
   photoHeight = 210,
   className = "",
   drinkId,
+  drinkSlug,
 }: {
   href: string;
   name: string;
@@ -31,6 +32,8 @@ export function NativeDrinkTile({
   className?: string;
   /** Stable id for Mix scroll restore (`data-mix-drink-id`). */
   drinkId?: string;
+  /** Stable slug for Mix scroll restore (`data-mix-drink-slug`). */
+  drinkSlug?: string;
 }) {
   const title = formatCocktailName(name);
   const accessLabel = spirit ? `${title}, ${spirit}` : title;
@@ -44,6 +47,7 @@ export function NativeDrinkTile({
     <div
       className={`native-drink-tile ${className}`.trim()}
       data-mix-drink-id={drinkId || undefined}
+      data-mix-drink-slug={drinkSlug || undefined}
     >
       <div className="native-drink-tile__photo" style={{ height: photoHeight }} aria-hidden="true">
         {imageUrl ? (

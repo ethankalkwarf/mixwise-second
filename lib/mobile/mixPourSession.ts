@@ -1,57 +1,127 @@
 /**
- * Survives Mix → recipe → Mix remounts in the Capacitor WebView.
- * Memory first (same JS realm), sessionStorage as backup.
+ * Mix "You can pour" order + back-restore.
+ *
+ * Order lives in localStorage for the app session.
+ * A sessionStorage "live" flag detects cold start (app closed) → new shuffle.
+ * Pull-to-refresh also clears order. Tab switches do not.
  */
 
 export type MixPourSession = {
-  y: number;
-  visibleCount: number;
-  orderedIds: string[];
-  focusId: string;
   seed: string;
+  orderedIds: string[];
+  orderedSlugs: string[];
+  focusId?: string;
+  focusSlug?: string;
+  visibleCount?: number;
+  y?: number;
 };
 
-const STORAGE_KEY = "mixwise-mix-pour-session";
+const LIVE_KEY = "mixwise_mix_live";
+const ORDER_KEY = "mixwise_mix_pour_order";
+const SEED_KEY = "mixwise_mix_pour_seed";
 
-let memorySession: MixPourSession | null = null;
+let memory: MixPourSession | null = null;
 
-export function saveMixPourSession(session: MixPourSession) {
-  memorySession = session;
+function readJson<T>(storage: Storage, key: string): T | null {
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    const raw = storage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
   } catch {
-    /* private mode */
+    return null;
   }
 }
 
-export function peekMixPourSession(): MixPourSession | null {
-  if (memorySession?.orderedIds?.length && memorySession.focusId) {
-    return memorySession;
-  }
-  if (typeof window === "undefined") return null;
+/** True when the WebView/app process just started (sessionStorage empty). */
+export function consumeMixColdStart(): boolean {
+  if (typeof window === "undefined") return false;
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as MixPourSession;
-    if (
-      parsed &&
-      typeof parsed.focusId === "string" &&
-      Array.isArray(parsed.orderedIds) &&
-      parsed.orderedIds.length > 0
-    ) {
-      memorySession = parsed;
-      return parsed;
-    }
+    if (sessionStorage.getItem(LIVE_KEY)) return false;
+    sessionStorage.setItem(LIVE_KEY, "1");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getMixPourSeed(): string {
+  if (typeof window === "undefined") return "mix-tonight";
+  try {
+    const existing = localStorage.getItem(SEED_KEY);
+    if (existing) return existing;
+    const seed = `mix-tonight-${Date.now()}`;
+    localStorage.setItem(SEED_KEY, seed);
+    return seed;
+  } catch {
+    return `mix-tonight-${Date.now()}`;
+  }
+}
+
+export function refreshMixPourSeed(): string {
+  const seed = `mix-tonight-${Date.now()}`;
+  try {
+    localStorage.setItem(SEED_KEY, seed);
   } catch {
     /* ignore */
+  }
+  return seed;
+}
+
+export function peekMixPourSession(): MixPourSession | null {
+  if (memory?.orderedIds?.length) return memory;
+  if (typeof window === "undefined") return null;
+  const stored = readJson<MixPourSession>(localStorage, ORDER_KEY);
+  if (stored?.orderedIds?.length) {
+    memory = stored;
+    return stored;
   }
   return null;
 }
 
-export function clearMixPourSession() {
-  memorySession = null;
+export function saveMixPourOrder(session: MixPourSession) {
+  memory = session;
   try {
-    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(ORDER_KEY, JSON.stringify(session));
+    if (session.seed) localStorage.setItem(SEED_KEY, session.seed);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function saveMixPourFocus(focus: {
+  focusId: string;
+  focusSlug: string;
+  visibleCount: number;
+  y: number;
+}) {
+  const current = peekMixPourSession();
+  if (!current?.orderedIds?.length) return;
+  saveMixPourOrder({
+    ...current,
+    ...focus,
+  });
+}
+
+export function clearMixPourFocus() {
+  const current = peekMixPourSession();
+  if (!current) {
+    memory = null;
+    return;
+  }
+  const next: MixPourSession = {
+    seed: current.seed,
+    orderedIds: current.orderedIds,
+    orderedSlugs: current.orderedSlugs,
+  };
+  saveMixPourOrder(next);
+}
+
+/** Full reset — pull-to-refresh or app cold start. */
+export function resetMixPourSession() {
+  memory = null;
+  try {
+    localStorage.removeItem(ORDER_KEY);
+    localStorage.removeItem(SEED_KEY);
   } catch {
     /* ignore */
   }
