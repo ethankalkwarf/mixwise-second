@@ -6,7 +6,7 @@ import { MixSkeleton } from "@/components/mix/MixSkeleton";
 import { ClearBarConfirmDialog } from "@/components/mix/ClearBarConfirmDialog";
 import { MixCabinet } from "@/components/mix/MixCabinet";
 import { MixMenu } from "@/components/mix/MixMenu";
-import { getMixCocktailsClient, getMixIngredients } from "@/lib/cocktails";
+import { getMixCocktailsClient, getMixIngredients, peekMixCocktailsCache, peekMixIngredientsCache } from "@/lib/cocktails";
 import { NativeMixView } from "@/components/mobile/NativeMixView";
 import { useNativeShell } from "@/hooks/useIsNativeApp";
 import { getMixMatchGroups } from "@/lib/mixMatching";
@@ -26,15 +26,25 @@ const PROMPT_THRESHOLD = 3;
 
 type MixPane = "cabinet" | "menu";
 
+function initialMixIngredients(): MixIngredient[] {
+  if (typeof window === "undefined") return [];
+  return peekMixIngredientsCache() ?? [];
+}
+
+function initialMixCocktails(): MixCocktail[] {
+  if (typeof window === "undefined") return [];
+  return peekMixCocktailsCache() ?? [];
+}
+
 /**
  * Inner component that uses useSearchParams().
  * Must be a separate component to avoid "useSearchParams without Suspense" error.
  */
 function MixPageContent({ forceNative = false }: { forceNative?: boolean }) {
-  const [allIngredients, setAllIngredients] = useState<MixIngredient[]>([]);
-  const [allCocktails, setAllCocktails] = useState<MixCocktail[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
-  const [cocktailsLoading, setCocktailsLoading] = useState(true);
+  const [allIngredients, setAllIngredients] = useState<MixIngredient[]>(initialMixIngredients);
+  const [allCocktails, setAllCocktails] = useState<MixCocktail[]>(initialMixCocktails);
+  const [dataLoading, setDataLoading] = useState(() => initialMixIngredients().length === 0);
+  const [cocktailsLoading, setCocktailsLoading] = useState(() => initialMixCocktails().length === 0);
   const [dataError, setDataError] = useState<string | null>(null);
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [promptDismissed, setPromptDismissed] = useState(false);

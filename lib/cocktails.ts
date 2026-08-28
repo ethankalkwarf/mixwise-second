@@ -165,6 +165,15 @@ export function invalidateMixClientCaches(): void {
   mixCocktailsInflight = null;
 }
 
+/** Sync peek for remounts — avoid empty Mix flash when caches are warm. */
+export function peekMixIngredientsCache(): MixIngredient[] | null {
+  return mixIngredientsCache && mixIngredientsCache.length > 0 ? mixIngredientsCache : null;
+}
+
+export function peekMixCocktailsCache(): MixCocktail[] | null {
+  return mixCocktailsCache && mixCocktailsCache.length > 0 ? mixCocktailsCache : null;
+}
+
 /**
  * Fetch ingredients for mix logic (client-side).
  * Cached for the session so Home can prefetch and Mix can paint immediately.

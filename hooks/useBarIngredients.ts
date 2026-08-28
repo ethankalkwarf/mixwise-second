@@ -93,8 +93,20 @@ export function useBarIngredients(): UseBarIngredientsResult {
   const supabase = getSupabaseClient();
   const { openAuthDialog } = useAuthDialog();
   const toast = useToast();
-  const [ingredientIds, setIngredientIds] = useState<string[]>([]);
+  const [ingredientIds, setIngredientIds] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((id): id is string => typeof id === "string" && id.length > 0);
+    } catch {
+      return [];
+    }
+  });
   const [ingredientNameMap, setIngredientNameMap] = useState<Map<string, string | null>>(new Map());
+  // Local ids above let Mix paint immediately; still sync from server in the background.
   const [isLoading, setIsLoading] = useState(true);
   const [serverIngredients, setServerIngredients] = useState<BarIngredient[]>([]);
   

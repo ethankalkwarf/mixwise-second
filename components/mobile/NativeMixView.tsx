@@ -26,10 +26,67 @@ import {
 } from "@/lib/analytics";
 import { useUser } from "@/components/auth/UserProvider";
 import { readCabinetReadyCount, readHomeSessionHint } from "@/lib/mobile/guestData";
-import { randomShuffle } from "@/lib/randomization";
+import { seededRandom } from "@/lib/randomization";
 import { ShakePourGlass } from "@/components/mobile/ShakePourGlass";
 
 type Pane = "tonight" | "shelf";
+
+const MIX_TONIGHT_SEED_KEY = "mixwise-mix-tonight-seed";
+const MIX_SCROLL_KEY = "mixwise-mix-scroll";
+
+type MixScrollRestore = {
+  y: number;
+  visibleCount?: number;
+  pane?: Pane;
+};
+
+function readScrollY(): number {
+  if (typeof window === "undefined") return 0;
+  const scrolling = document.scrollingElement;
+  return window.scrollY || scrolling?.scrollTop || document.documentElement.scrollTop || 0;
+}
+
+function writeScrollY(y: number) {
+  const scrolling = document.scrollingElement;
+  if (scrolling) scrolling.scrollTop = y;
+  window.scrollTo(0, y);
+}
+
+function readMixScrollRestore(): MixScrollRestore | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(MIX_SCROLL_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as MixScrollRestore;
+    if (typeof parsed?.y === "number" && Number.isFinite(parsed.y)) return parsed;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function getOrCreateTonightSeed(): string {
+  if (typeof window === "undefined") return "mix-tonight";
+  try {
+    const saved = sessionStorage.getItem(MIX_TONIGHT_SEED_KEY);
+    if (saved) return saved;
+    const seed = `mix-tonight-${Date.now()}`;
+    sessionStorage.setItem(MIX_TONIGHT_SEED_KEY, seed);
+    return seed;
+  } catch {
+    return `mix-tonight-${Date.now()}`;
+  }
+}
+
+function refreshTonightSeed(): string {
+  const seed = `mix-tonight-${Date.now()}`;
+  try {
+    sessionStorage.setItem(MIX_TONIGHT_SEED_KEY, seed);
+  } catch {
+    /* ignore */
+  }
+  return seed;
+}
 
 const POPULAR = [
   "Vodka",
@@ -100,13 +157,9 @@ export function NativeMixView({
   const mixTracked = useRef(false);
   const [category, setCategory] = useState<string | null>(null);
   const { favorites } = useFavorites();
-  const [readyEpoch, setReadyEpoch] = useState(0);
-
-  useEffect(() => {
-    if (pane === "tonight") {
-      setReadyEpoch((n) => n + 1);
-    }
-  }, [pane]);
+  const [tonightSeed, setTonightSeed] = useState(getOrCreateTonightSeed);
+  const [scrollRestore, setScrollRestore] = useState(() => readMixScrollRestore());
+  const restoringScroll = useRef(false);
 
   useEffect(() => {
     if (ready || barLoading) return;
@@ -154,10 +207,67 @@ export function NativeMixView({
 
   const { visibleItems, hasMore, loadMoreRef } = useInfiniteVisibleCount(filtered, 40);
   const readyDrinks = useMemo(() => {
-    void readyEpoch;
-    return randomShuffle(mixMatches.ready.map((match) => match.cocktail));
-  }, [mixMatches.ready, readyEpoch]);
-  const drinkPager = useInfiniteVisibleCount(readyDrinks, 24);
+    // Seeded per-id order so skips/loading subset changes don't reshuffle neighbors.
+    return mixMatches.ready
+      .map((match) => match.cocktail)
+      .slice()
+      .sort((a, b) => {
+        const ka = seededRandom(tonightSeed, a.id);
+        const kb = seededRandom(tonightSeed, b.id);
+        if (ka !== kb) return ka - kb;
+        return a.id.localeCompare(b.id);
+      });
+  }, [mixMatches.ready, tonightSeed]);
+  const drinkPager = useInfiniteVisibleCount(readyDrinks, 24, {
+    initialVisibleCount: scrollRestore?.visibleCount,
+  });
+
+  // Restore scroll once after the pour grid can reach the saved offset.
+  useEffect(() => {
+    if (pane !== "tonight" || !scrollRestore || typeof window === "undefined") return;
+    if (readyDrinks.length === 0 || restoringScroll.current) return;
+
+    const targetY = scrollRestore.y;
+    if (!Number.isFinite(targetY) || targetY <= 0) {
+      sessionStorage.removeItem(MIX_SCROLL_KEY);
+      setScrollRestore(null);
+      return;
+    }
+
+    restoringScroll.current = true;
+    let attempts = 0;
+    let raf = 0;
+    let cancelled = false;
+    const maxAttempts = 45;
+
+    const finish = (y: number) => {
+      writeScrollY(y);
+      sessionStorage.removeItem(MIX_SCROLL_KEY);
+      setScrollRestore(null);
+      restoringScroll.current = false;
+    };
+
+    const tryRestore = () => {
+      if (cancelled) return;
+      attempts += 1;
+      const maxScroll = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+      if (maxScroll + 8 >= targetY || attempts >= maxAttempts) {
+        finish(Math.min(targetY, maxScroll));
+        return;
+      }
+      raf = window.requestAnimationFrame(tryRestore);
+    };
+
+    raf = window.requestAnimationFrame(tryRestore);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(raf);
+      restoringScroll.current = false;
+    };
+  }, [pane, scrollRestore, readyDrinks.length, drinkPager.visibleCount]);
 
   const popular = useMemo(() => {
     const next: MixIngredient[] = [];
@@ -175,6 +285,26 @@ export function NativeMixView({
   const toggle = (id: string) => {
     if (ingredientIds.includes(id)) onRemoveIngredient(id);
     else onAddIngredient(id);
+  };
+
+  const openTonight = () => {
+    if (pane !== "tonight") {
+      setTonightSeed(refreshTonightSeed());
+    }
+    setPane("tonight");
+  };
+
+  const savePourScroll = () => {
+    try {
+      const payload: MixScrollRestore = {
+        y: readScrollY(),
+        visibleCount: drinkPager.visibleCount,
+        pane: "tonight",
+      };
+      sessionStorage.setItem(MIX_SCROLL_KEY, JSON.stringify(payload));
+    } catch {
+      /* ignore */
+    }
   };
 
   return (
@@ -213,7 +343,7 @@ export function NativeMixView({
           active={pane === "tonight"}
           disabled={ingredientIds.length === 0}
           badge={matchCounts.canMake || undefined}
-          onClick={() => setPane("tonight")}
+          onClick={openTonight}
         />
         <PaneButton
           label="Cabinet"
@@ -234,6 +364,7 @@ export function NativeMixView({
           allIngredients={allIngredients}
           onAddIngredient={onAddIngredient}
           onOpenShelf={() => setPane("shelf")}
+          onDrinkNavigate={savePourScroll}
         />
       ) : (
         <ShelfPane
@@ -251,7 +382,7 @@ export function NativeMixView({
           canMake={matchCounts.canMake}
           onToggle={toggle}
           onClearAll={onClearAll}
-          onSeeTonight={() => setPane("tonight")}
+          onSeeTonight={openTonight}
         />
       )}
     </div>
@@ -340,6 +471,7 @@ function TonightPane({
   allIngredients,
   onAddIngredient,
   onOpenShelf,
+  onDrinkNavigate,
 }: {
   drinks: MixCocktail[];
   hasMore: boolean;
@@ -351,6 +483,7 @@ function TonightPane({
   allIngredients: MixIngredient[];
   onAddIngredient: (id: string) => void;
   onOpenShelf: () => void;
+  onDrinkNavigate: () => void;
 }) {
   if (canMake === 0 && (barLoading || cocktailsLoading)) {
     return <TonightLoading />;
@@ -380,6 +513,7 @@ function TonightPane({
             imageUrl={cocktail.imageUrl}
             createdAt={cocktail.createdAt}
             onNavigate={() => {
+              onDrinkNavigate();
               void trackMixResultClicked(cocktail.slug, "tonight");
             }}
           />

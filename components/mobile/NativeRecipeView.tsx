@@ -226,11 +226,7 @@ export function NativeRecipeView({
     const browse = params?.get("browse");
 
     if (from === "mix") {
-      if (typeof window !== "undefined" && window.history.length > 1) {
-        router.back();
-        return;
-      }
-      router.push("/mix");
+      router.push("/mix?step=menu", { scroll: false });
       return;
     }
 
