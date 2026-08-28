@@ -556,6 +556,13 @@ html.native-app .native-frame {
   padding-inline: var(--native-frame-inline);
 }
 
+/* Search nests .native-frame inside MainContainer — drop the shell gutters so
+   phone doesn't stack px-4 + frame inset (iPad already zeroed these). */
+html.native-app [data-native-recipes-page] .native-recipes-shell {
+  padding-inline: 0 !important;
+  max-width: none !important;
+}
+
 html.native-app .native-recipe-hero__copy,
 html.native-app .native-recipe-hero__toolbar {
   padding-inline: var(--native-frame-inline);
@@ -674,7 +681,6 @@ html.native-app .native-recipe-hero {
     padding-inline: var(--native-frame-inline);
   }
 
-  html.native-app [data-native-recipes-page] .native-recipes-shell,
   html.native-app [data-native-learn-page] .native-learn__main,
   html.native-app [data-native-ingredients-page] .native-ingredients__main,
   html.native-app [data-native-learn-path] .native-learn-path__body,
