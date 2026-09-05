@@ -3,6 +3,7 @@
  */
 
 import type { LearnPracticeDrink, LearnSection, LearnSource } from "@/lib/learnTypes";
+import { GIN_CURRICULUM_GUIDES } from "@/lib/learnGuidesGin";
 import { RUM_CURRICULUM_GUIDES } from "@/lib/learnGuidesRum";
 import { WHISKEY_CURRICULUM_GUIDES } from "@/lib/learnGuidesWhiskey";
 
@@ -1399,116 +1400,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
     ],
   },
 
-  {
-    slug: "spirit-primer-gin",
-    title: "Gin primer: botanicals & classics",
-    eyebrow: "Spirits",
-    summary:
-      "London dry vs contemporary gin, why botanicals matter in Martinis and Negronis, and how to pick a bottle that still tastes like gin after tonic or vermouth.",
-    readingMinutes: 5,
-    topics: ["gin", "botanicals", "martini", "negroni", "g&t"],
-    coverImage: "/learn/spirit-primer-gin.webp",
-    coverAlt: "A gin and tonic with ice and lime, gin bottle softly blurred behind",
-    accentClass: "from-olive/25 via-cream to-forest/15",
-    practice: [
-      {
-        slug: "gin-and-tonic",
-        notice:
-          "London dry wants a dry tonic and a lean garnish. If the gin tastes soapy or candy-sweet neat, tonic will amplify it — not hide it.",
-      },
-      {
-        slug: "martini",
-        notice:
-          "Stir cold and dense. A juniper-forward gin keeps vermouth from turning the drink into perfume water.",
-      },
-      {
-        slug: "negroni",
-        notice:
-          "Equal parts. A soft contemporary gin can disappear under Campari; a classic London dry holds the bitter.",
-      },
-      {
-        slug: "last-word",
-        notice:
-          "Equal-parts sour with green Chartreuse. Loud gin is fine — the template already has volume.",
-      },
-    ],
-    bigIdea:
-      "Gin is a flavored spirit with a juniper legal spine — choose a bottle for how its botanicals behave under tonic, vermouth, or citrus, not for the prettiest bottle art.",
-    keyTakeaways: [
-      "Juniper must be perceptible for it to be gin; everything else is house style.",
-      "London dry is the reliable cocktail default — dry, juniper-led, no post-distillation sweetening.",
-      "Contemporary / new-wave gins can be citrus- or floral-forward — great neat or in G&Ts, riskier in Negronis.",
-      "Tonic is a lengthener with bitterness; it reveals gin character instead of covering flaws.",
-      "For Martinis and Negronis, buy a gin you like with a whisper of vermouth — not only with soda.",
-    ],
-    sections: [
-      {
-        heading: "What the law actually requires",
-        kind: "rule",
-        figure: "gin-styles",
-        body: [
-          "Gin is a distilled spirit flavored so that juniper is the predominant botanical character. That is the load-bearing rule — not “clear” and not “tastes like Christmas.”",
-          "Beyond juniper, producers build a botanical recipe: coriander, citrus peel, angelica, orris, and dozens of others. Those choices decide whether the gin reads piney, citrusy, floral, spicy, or soft.",
-        ],
-      },
-      {
-        heading: "London dry vs contemporary",
-        body: [
-          "London dry is a production style (not a geography requirement): distilled with botanicals, no sweetening after distillation beyond a tiny allowance, and a dry profile. It is the usual home pour for Martinis, Negronis, and classic G&Ts.",
-          "Contemporary gins often push citrus, cucumber, floral, or spice notes. They can make a brilliant highball and a muddy Negroni. Taste neat with a drop of water before you commit a whole bottle to equal-parts drinks.",
-        ],
-      },
-      {
-        heading: "Match the bottle to the template",
-        figure: "gin-drinks",
-        body: [
-          "Highball (G&T): almost any good gin works if tonic is cold and ice is packed. Soft gins need a leaner tonic; juniper bombs can handle a fuller one.",
-          "Martini family: juniper and structure matter — you are mostly tasting gin and a little wine. Soft floral gins can taste like cold cologne once vermouth is gone.",
-          "Negroni family: Campari is loud. Choose a gin that still reads as gin after equal parts bitter and sweet vermouth.",
-        ],
-      },
-      {
-        heading: "Common mistakes",
-        kind: "mistakes",
-        body: [
-          "Buying gin only for the G&T, then wondering why the Martini tastes hollow.",
-          "Treating “craft” or “small batch” as a quality score — those words are marketing, not London dry.",
-          "Using warm tonic and three cubes, then blaming the gin for a flat highball.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Old Tom, navy strength, and genever (useful footnotes)",
-        kind: "tip",
-        body: [
-          "Old Tom is a slightly sweeter historic style — useful in older recipes that assume a softer gin. Navy strength / overproof gin (often ~57% ABV) holds citrus and sugar in sours; it is not a silent swap for 40% London dry by the ounce.",
-          "Genever (Dutch) is malt-forward and closer to whiskey in some stirred drinks. It is a cousin, not a 1:1 London dry substitute.",
-        ],
-      },
-      {
-        heading: "Tonic is not neutral water",
-        body: [
-          "Quinine bitterness and sweetness vary wildly by brand. A “bad G&T” is often mismatched tonic or warm soda — not a bad gin. Taste tonic alone once so you know what you are lengthening with.",
-        ],
-      },
-    ],
-    sources: [
-      {
-        label: "Dave Broom, Gin: The Manual",
-        note: "Style maps and tasting language for modern gin.",
-      },
-      {
-        label: "Jim Meehan, Meehan's Bartender Manual",
-        note: "Gin in classic templates — Martini, Negroni, sour applications.",
-      },
-      {
-        label: "Difford's Guide — Gin",
-        note: "Category overview and cocktail applications.",
-        href: "https://www.diffordsguide.com/",
-      },
-    ],
-  },
+  ...GIN_CURRICULUM_GUIDES,
   ...RUM_CURRICULUM_GUIDES,
   {
     slug: "batching-and-hosting",
@@ -2135,6 +2027,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
 
 const LEARN_GUIDE_ALIASES: Record<string, string> = {
   "whiskey-labels-and-law": "spirit-labels-whiskey",
+  "spirit-primer-gin": "gin-family-buying",
   "spirit-primer-rum": "rum-family-buying",
   "spirit-primer-whiskey": "whiskey-family-buying",
 };

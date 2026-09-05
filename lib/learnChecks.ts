@@ -634,9 +634,251 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
         "Without ethanol’s grip and aroma carry, you must rebuild bitter/spice/texture on purpose. More juice rarely fixes flatness.",
     },
   ],
-  "spirit-primer-gin": [
+  "gin-family-buying": [
     {
-      id: "gin-1",
+      id: "gfb-1",
+      prompt: "True or false: “London dry” means the gin must be distilled in London.",
+      options: [
+        "True — geography is required",
+        "False — it’s a production style (dry, botanical-distilled, minimal post-sweetening), not a city requirement",
+        "True only for export bottles",
+        "False — London dry means barrel-aged gin",
+      ],
+      correctIndex: 1,
+      explanation:
+        "London dry is about how it’s made, not a protected London address. Many excellent London dry gins are made elsewhere.",
+    },
+    {
+      id: "gfb-2",
+      prompt: "You’re stocking a first gin for MixWise classics. Best move?",
+      options: [
+        "Five contemporary bottles before any London dry",
+        "One solid London dry you like with a whisper of vermouth — not only with soda",
+        "Only navy strength — it covers every template",
+        "Whatever has the prettiest bottle art",
+      ],
+      correctIndex: 1,
+      explanation:
+        "One London dry covers Martinis, Negronis, Last Words, and most G&Ts. Contemporary bottles wait until you want a brighter highball.",
+    },
+    {
+      id: "gfb-3",
+      prompt: "A contemporary gin you love in a G&T is going into tonight’s Negronis. What’s the risk?",
+      options: [
+        "None — tonic success guarantees equal-parts success",
+        "Soft citrus or floral gins can disappear under Campari",
+        "Campari will hide any botanical flaw",
+        "Contemporary gin is legally banned from Negronis",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Tonic reveals character. Campari buries a soft bottle. Taste neat before you commit the whole pour.",
+    },
+    {
+      id: "gfb-4",
+      prompt: "What does the law actually require of gin?",
+      options: [
+        "It must be clear and taste like Christmas",
+        "Juniper must be the predominant botanical character — everything else is house style",
+        "It must be distilled in London",
+        "It cannot be mixed with vermouth",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Juniper is the legal spine. Coriander, citrus, floral, and spice notes are producer choices.",
+    },
+  ],
+  "gin-how-its-made": [
+    {
+      id: "ghm-1",
+      prompt: "Why can two gins at the same proof drink so differently in a Martini?",
+      options: [
+        "They can’t — proof erases production",
+        "Base spirit, botanical recipe, and still choices — vapor infusion vs steeping — show up under vermouth",
+        "The vermouth brand is the only variable",
+        "All gin starts as genever",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A clean column base plus a juniper-led distillate is a different drink than a malt-forward or floral vapor gin.",
+    },
+    {
+      id: "ghm-2",
+      prompt: "What does London dry production actually forbid?",
+      options: [
+        "Distilling anywhere but London",
+        "Flavoring after distillation — botanicals must be distilled; sweetening only within a tiny allowance",
+        "Using citrus peel",
+        "Bottling above 40% ABV",
+      ],
+      correctIndex: 1,
+      explanation:
+        "London dry is a rulebook, not a postcode. That is why it tastes dry in the glass, not candied.",
+    },
+    {
+      id: "ghm-3",
+      prompt: "Navy-strength gin in a Last Word, same ounces as a 40% bottle. What’s the production story?",
+      options: [
+        "Navy strength is just a darker label",
+        "ABV is a density tool — near 57% holds citrus and Chartreuse; it is not a silent ounce-for-ounce swap",
+        "Navy strength is legally sweeter",
+        "Proof does not change a shaken sour",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Higher proof holds sugar and acid. Cut the pour or accept more heat.",
+    },
+    {
+      id: "ghm-4",
+      prompt: "Old Tom or genever in a recipe written for London dry. Honest read?",
+      options: [
+        "Silent swaps — gin is gin",
+        "Cousins, not 1:1 swaps — Old Tom is sweeter; genever is malt-forward, closer to whiskey",
+        "Both are just navy strength under another name",
+        "They are illegal in Martinis",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Call the pour what it is. A dry Martini and a genever Martinez are different drinks.",
+    },
+  ],
+  "gin-history-in-glass": [
+    {
+      id: "ghi-1",
+      prompt: "A classic recipe says only “gin.” Which history leftover should you pour?",
+      options: [
+        "Whatever cucumber gin is newest",
+        "The drier English / London dry style — not malt-forward genever and not a floral boom bottle",
+        "Genever, always — it is older, so it is correct",
+        "Vodka — the Martini era assumed it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Genever traveled; column stills made a drier export gin. That is the usual unnamed pour.",
+    },
+    {
+      id: "ghi-2",
+      prompt: "What should you take from Martini origin stories when you stir one?",
+      options: [
+        "The hotel that invented it, so you can cite the statue",
+        "The template — gin plus vermouth, cold — hotel stories are legend around a documented judgment",
+        "It must be shaken, because of Prohibition",
+        "It was always vodka",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Invention tales do not agree. Juniper and structure are the era’s leftover.",
+    },
+    {
+      id: "ghi-3",
+      prompt: "Why did contemporary-boom Negronis get weird?",
+      options: [
+        "Campari changed its recipe in 2000",
+        "Citrus and floral gins that shine in a G&T often vanish under equal-parts bitter",
+        "Negronis legally require genever",
+        "Tonic belongs in a Negroni now",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The 2000s gin boom filled highball shelves. Equal parts were written for a juniper-led spine.",
+    },
+    {
+      id: "ghi-4",
+      prompt: "When does gin history earn a place in Learn?",
+      options: [
+        "Whenever there is a famous drinker to quote",
+        "Only when it changes the pour",
+        "Only if you can recite Gin Lane",
+        "Never — production is the only lesson",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Genever vs London dry, vermouth judgment, bitter equal parts, tonic matching. A timeline for its own sake does not.",
+    },
+  ],
+  "gin-learn-to-taste": [
+    {
+      id: "glt-1",
+      prompt: "What’s the tasting order this lesson wants?",
+      options: [
+        "Name the style from the label, then sip to confirm",
+        "Smell first, taste, write two words, then name the style",
+        "Mix it into a G&T first so you can taste faster",
+        "Score it out of 100 before you smell it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Guessing early just trains you to confirm what the label already told you.",
+    },
+    {
+      id: "glt-2",
+      prompt: "You wrote “juniper, dry” before you looked at the label. What did you likely find?",
+      options: [
+        "A soft contemporary gin",
+        "London dry",
+        "Genever, always",
+        "Old Tom, always",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Those two words are more useful than a botanist paragraph. London dry is the cocktail default.",
+    },
+    {
+      id: "glt-3",
+      prompt: "Mini-lab B: the same whisper of vermouth, two gins. What are you training?",
+      options: [
+        "How to hide tired vermouth",
+        "Hearing which gin stayed structured instead of turning into cologne",
+        "Whether clearer gin is older",
+        "How to skip the vermouth",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Same wine, two pours. Name which one kept the drink from perfume water.",
+    },
+    {
+      id: "glt-4",
+      prompt: "A G&T tastes soapy. You already tasted the tonic alone and it was fine. What’s the move?",
+      options: [
+        "Add more tonic until the gin disappears",
+        "The gin’s botanical bill is the mismatch — tonic reveals character; it does not hide a soapy bottle",
+        "Shake the highball",
+        "It will taste like London dry once it’s warm",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Lab C splits the suspects. If tonic is innocent, the bottle is the story — or the ice is sparse.",
+    },
+  ],
+  "gin-four-classics": [
+    {
+      id: "gfc-1",
+      prompt: "Your G&T dies in two minutes. The gin is a solid London dry. What’s the first move?",
+      options: [
+        "Buy a more expensive gin",
+        "Packed ice and fridge-cold tonic — warm, sparse ice is not a bad gin",
+        "Switch to a floral contemporary",
+        "Shake it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Tonic and ice reveal the bottle. They also ruin it when they are warm and thin.",
+    },
+    {
+      id: "gfc-2",
+      prompt: "Tonight’s Martini tastes like cold cologne. What’s the likely bottle issue?",
+      options: [
+        "The gin is too juniper-heavy",
+        "A soft floral gin can’t carry a nearly-all-gin drink",
+        "You should have shaken it",
+        "Tonic water was required",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Martinis are mostly gin. Juniper and structure keep vermouth from turning the glass into perfume.",
+    },
+    {
+      id: "gfc-3",
       prompt: "You’re making Negronis for a table. Which gin choice is the safest default?",
       options: [
         "A soft floral contemporary gin you only drink with tonic",
@@ -649,30 +891,17 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
         "Campari is loud. A classic London dry keeps juniper audible in equal parts. Soft floral gins often disappear.",
     },
     {
-      id: "gin-2",
-      prompt: "A Martini tastes like cold perfume water after two sips of vermouth fade. What’s the likely bottle issue?",
+      id: "gfc-4",
+      prompt: "A Last Word tastes like Chartreuse and lime with no spine. What’s the gin lesson?",
       options: [
-        "The gin is too juniper-heavy",
-        "The gin is soft/floral and can’t carry a nearly-all-gin drink",
-        "You should have shaken it",
-        "Tonic water was required",
+        "Use less Chartreuse until the gin vanishes too",
+        "This template is already loud — gin can have volume; a shy floral 40% bottle will not read",
+        "Last Words require vodka",
+        "Stir it so the gin disappears",
       ],
       correctIndex: 1,
       explanation:
-        "Martinis are mostly gin. If the bottle only shines in a G&T, it may lack structure for stirred, spirit-forward drinks.",
-    },
-    {
-      id: "gin-3",
-      prompt: "True or false: “London dry” means the gin must be distilled in London.",
-      options: [
-        "True — geography is required",
-        "False — it’s a production style (dry, botanical-distilled, minimal post-sweetening), not a city requirement",
-        "True only for export bottles",
-        "False — London dry means barrel-aged gin",
-      ],
-      correctIndex: 1,
-      explanation:
-        "London dry is about how it’s made, not a protected London address. Many excellent London dry gins are made elsewhere.",
+        "Equal-parts sour with green Chartreuse. A louder, even navy-strength gin is allowed here.",
     },
   ],
   "rum-family-buying": [
@@ -1504,11 +1733,13 @@ export function getGuideChecks(slug: string): LearnCheck[] {
   const resolved =
     slug === "whiskey-labels-and-law"
       ? "spirit-labels-whiskey"
-      : slug === "spirit-primer-rum"
-        ? "rum-family-buying"
-        : slug === "spirit-primer-whiskey"
-          ? "whiskey-family-buying"
-          : slug;
+      : slug === "spirit-primer-gin"
+        ? "gin-family-buying"
+        : slug === "spirit-primer-rum"
+          ? "rum-family-buying"
+          : slug === "spirit-primer-whiskey"
+            ? "whiskey-family-buying"
+            : slug;
   return GUIDE_CHECKS[resolved] ?? [];
 }
 

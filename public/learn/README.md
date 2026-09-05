@@ -22,7 +22,7 @@
 | `vermouth-and-modifiers.webp` | Vermouth & modifiers (generated) |
 | `spirit-primer-agave.webp` | Agave primer |
 | `spirit-primer-whiskey.webp` | Whiskey path lessons 1–2 (rickhouse barrels) |
-| `spirit-primer-gin.webp` | Gin primer (G&T — CC photo; see ATTRIBUTION.md) |
+| `spirit-primer-gin.webp` | Gin path + lessons 1, 2, and 5 (G&T — CC photo; see ATTRIBUTION.md) |
 | `spirit-primer-rum.webp` | Rum path + lessons 1 and 5 (Daiquiri — CC photo; see ATTRIBUTION.md) |
 | `rum-how-its-made.webp` | How rum is made (Foursquare warehouse — CC photo; see ATTRIBUTION.md) |
 | `rum-learn-to-taste.webp` | Learn to taste (side-by-side tot pour — OGL; see ATTRIBUTION.md) |
@@ -37,7 +37,7 @@
 | `zero-proof-hosting.webp` | Zero-proof hosting path (CC photo; see ATTRIBUTION.md) |
 | `zero-proof-mindset.webp` | Zero-proof mindset guide (same mint highball as path) |
 | `spirit-labels-decoded.webp` | Spirit labels decoded path |
-| `spirit-labels-intro.webp` | Labels intro + whiskey tasting lesson cover (two bottles side by side) |
+| `spirit-labels-intro.webp` | Labels intro + whiskey/gin tasting lesson covers (two bottles side by side) |
 | `spirit-labels-whiskey.webp` | American whiskey labels module (Wild Turkey Rare Breed) |
 | `spirit-labels-agave.webp` | Agave labels module (Corralejo blanco — 100% de agave) |
 | `spirit-labels-scotch.webp` | Scotch labels module (Laphroaig 10 — age statement) |
@@ -48,6 +48,13 @@ Path: `/learn/paths/whiskey-deep-dive` — family & buying → how it’s made �
 **Diagrams (SVG in LearnFigure):** `whiskey-styles`, `whiskey-production` (mash → bottle), `whiskey-tasting-protocol` (nose → name). Photo pagers: `whiskey-drinks` (OF, Manhattan, Sour, Boulevardier family) and `whiskey-history`.
 
 Old URL `/learn/guides/spirit-primer-whiskey` redirects to the path.
+
+## Gin: from bottle to classics (course)
+Path: `/learn/paths/gin-primer` — family & buying → how it’s made → history in the glass → learn to taste → four classics.
+
+**Diagrams (SVG in LearnFigure):** `gin-styles`, `gin-production` (base → botanicals → distill → bottle), `gin-tasting-protocol` (nose → name). Photo pagers: `gin-drinks` (G&T, Martini, Negroni, Last Word) and `gin-history`.
+
+Old URL `/learn/guides/spirit-primer-gin` redirects to the path.
 
 ## Spirit labels decoded (course)
 Path: `/learn/paths/spirit-labels-decoded` — intro → American whiskey → agave → Scotch.

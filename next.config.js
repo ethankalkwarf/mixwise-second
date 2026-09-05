@@ -94,6 +94,11 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: '/learn/guides/spirit-primer-gin',
+        destination: '/learn/paths/gin-primer',
+        permanent: true,
+      },
+      {
         source: '/learn/guides/spirit-primer-rum',
         destination: '/learn/paths/rum-primer',
         permanent: true,

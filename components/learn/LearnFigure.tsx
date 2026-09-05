@@ -312,6 +312,60 @@ function WhiskeyProductionDiagram() {
   );
 }
 
+function GinProductionDiagram() {
+  const steps = [
+    { n: "1", t: "Base", d: "Neutral grain — or a malt-forward cousin." },
+    { n: "2", t: "Botanicals", d: "Juniper first. The rest is house style." },
+    { n: "3", t: "Distill", d: "Steep or vapor — how aroma is pulled." },
+    { n: "4", t: "Bottle", d: "Water to proof. London dry stops here." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        The still and the botanical bill show up in a Martini more honestly than the label art.
+      </p>
+    </div>
+  );
+}
+
+function GinTastingProtocolDiagram() {
+  const steps = [
+    { n: "1", t: "Nose", d: "Smell it first — no sip yet." },
+    { n: "2", t: "Sip", d: "A little, then air." },
+    { n: "3", t: "Two words", d: "Write what you found." },
+    { n: "4", t: "Name", d: "London dry or contemporary." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        Old Tom and genever are footnotes. Guessing the style first just trains you to confirm the label.
+      </p>
+    </div>
+  );
+}
+
 function WhiskeyTastingProtocolDiagram() {
   const steps = [
     { n: "1", t: "Nose", d: "Smell it first — no sip yet." },
@@ -700,25 +754,55 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
   },
   "gin-drinks": {
     kicker: "Gin templates",
-    title: "Three glasses that teach the category",
+    title: "Four glasses that teach the category",
     slides: [
       {
         src: "/learn/spirit-primer-gin.webp",
         alt: "A gin and tonic in a highball with packed ice and lime",
         label: "G&T",
-        note: "Highball — tonic reveals the gin",
+        note: "Highball — tonic and ice reveal the gin",
       },
       {
         src: "/learn/method-stir.webp",
         alt: "Mixing glass with ice and a bar spoon for stirred drinks",
-        label: "Martini / Negroni",
-        note: "Stir — vermouth and bitter need silk",
+        label: "Martini",
+        note: "Juniper and structure — mostly gin, a little wine",
       },
       {
         src: "/learn/equal-parts-bitters.webp",
         alt: "A Negroni in a rocks glass with orange peel",
         label: "Negroni",
-        note: "Equal parts — gin must still read",
+        note: "Equal parts — gin must still read under Campari",
+      },
+      {
+        src: "/learn/method-shake.webp",
+        alt: "Hands shaking a cocktail tin — the Last Word is a shaken equal-parts sour",
+        label: "Last Word",
+        note: "Loud template — gin can have volume",
+      },
+    ],
+  },
+  "gin-history": {
+    kicker: "In the glass",
+    title: "History that changes what you pour",
+    slides: [
+      {
+        src: "/learn/method-stir.webp",
+        alt: "Mixing glass with ice and a bar spoon for a Martini-family stir",
+        label: "Genever → London dry",
+        note: "When a classic says only “gin,” it usually means the drier English style",
+      },
+      {
+        src: "/learn/equal-parts-bitters.webp",
+        alt: "A Negroni in a rocks glass with orange peel",
+        label: "Equal-parts frame",
+        note: "Martini is vermouth judgment; Negroni needs gin that still reads under Campari",
+      },
+      {
+        src: "/learn/spirit-primer-gin.webp",
+        alt: "A gin and tonic in a highball with packed ice and lime",
+        label: "Tonic matching",
+        note: "Colonial highball habit, reframed: ice and tonic brand reveal the bottle",
       },
     ],
   },
@@ -1055,6 +1139,16 @@ const DIAGRAMS: Record<string, DiagramSpec> = {
     kicker: "Gin",
     title: "Styles that change Martini and Negroni behavior",
     node: <GinStylesDiagram />,
+  },
+  "gin-production": {
+    kicker: "How gin is made",
+    title: "Four levers from base to bottle",
+    node: <GinProductionDiagram />,
+  },
+  "gin-tasting-protocol": {
+    kicker: "How to taste",
+    title: "Nose → sip → two words → name",
+    node: <GinTastingProtocolDiagram />,
   },
   "rum-styles": {
     kicker: "Rum",
