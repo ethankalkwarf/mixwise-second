@@ -23,7 +23,10 @@
 | `spirit-primer-agave.webp` | Agave primer |
 | `spirit-primer-whiskey.webp` | Whiskey primer (rickhouse barrels) |
 | `spirit-primer-gin.webp` | Gin primer (G&T — CC photo; see ATTRIBUTION.md) |
-| `spirit-primer-rum.webp` | Rum primer (Daiquiri — CC photo; see ATTRIBUTION.md) |
+| `spirit-primer-rum.webp` | Rum path + lessons 1 and 5 (Daiquiri — CC photo; see ATTRIBUTION.md) |
+| `rum-how-its-made.webp` | How rum is made (Foursquare warehouse — CC photo; see ATTRIBUTION.md) |
+| `rum-learn-to-taste.webp` | Learn to taste (side-by-side tot pour — OGL; see ATTRIBUTION.md) |
+| `rum-history-in-glass.webp` | Rum history (Floridita sign — CC photo; see ATTRIBUTION.md) |
 | `whiskey-deep-dive.webp` | Whiskey primer path (Old Fashioned) |
 | `learn-whiskey-manhattan.webp` | Whiskey primer — Manhattan slide (CC photo; see ATTRIBUTION.md) |
 | `learn-whiskey-sour.webp` | Whiskey primer — Whiskey Sour slide (CC photo; see ATTRIBUTION.md) |
