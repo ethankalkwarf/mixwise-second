@@ -24,4 +24,11 @@ Real bottle and drink photos used in Learn. MixWise uses brand bottles for educa
 | `glassware-and-service.webp` | [Bar glassware (2312701410)](https://commons.wikimedia.org/wiki/File:Bar_glassware_(2312701410).jpg) | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/) | Jeff Kubina — derivative crop/resize |
 | `zero-proof-hosting.webp` / `zero-proof-mindset.webp` | [Fresh Mojito Premium](https://commons.wikimedia.org/wiki/File:Fresh_Mojito_Premium.jpg) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | Rjcastillo — derivative crop/resize |
 
+| `whiskey-how-its-made.webp` | [Pulteney Distillery - Whisky Mash](https://commons.wikimedia.org/wiki/File:Pulteney_Distillery_-_Whisky_Mash.jpg) | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) | Erik Charlton — derivative crop/resize |
+| `whiskey-history-in-glass.webp` | [H.A. Thomas & Wylie's interior view of the Hoffman House bar](https://commons.wikimedia.org/wiki/File:H.A._Thomas_%26_Wylie%27s_interior_view_of_the_Hoffman_House_bar_LCCN2004669131.jpg) | Public domain (US, published before 1930) | H.A. Thomas & Wylie / Library of Congress — derivative crop/resize |
+| `whiskey-learn-to-taste.webp` | [Glencairn Glasses and Water Jug](https://commons.wikimedia.org/wiki/File:Glencairn_Glasses_and_Water_Jug.jpg) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) | Lord van Tasm — derivative crop/resize |
+| `figure-whiskey-boulevardier.webp` | [Society Lounge - Boulevardier](https://commons.wikimedia.org/wiki/File:Society_Lounge_-_Boulevardier_-_16164913902.jpg) | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/) | Edsel Little — derivative crop/resize |
+| `figure-whiskey-saloon-1900.webp` | [Inside the Yellow Aster Saloon, Randsburg, ca. 1900](https://commons.wikimedia.org/wiki/File:Inside_the_Yellow_Aster_Saloon,_Randsburg,_California,_ca.1900_(CHS-1798).jpg) | Public domain | California Historical Society / CHS-1798 — derivative crop/resize |
+| `figure-whiskey-rickhouse.webp` | [Woodford Reserve Distillery rickhouse](https://commons.wikimedia.org/wiki/File:Woodford_Reserve_Distillery-27527-4.jpg) | Public domain (author release) | Ken Thomas — derivative crop/resize |
+
 Lifestyle and remaining covers: MixWise-generated or Envato-licensed — see `docs/LEARN_ENVATO_COVERS.md` and `docs/LEARN_VISUALS.md`.

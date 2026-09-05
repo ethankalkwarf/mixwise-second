@@ -284,58 +284,68 @@ function RumTastingProtocolDiagram() {
   );
 }
 
-function WhiskeyProductionDiagram() {
-  const steps = [
-    { n: "1", t: "Mash", d: "Corn, rye, malt — the grain you taste later." },
-    { n: "2", t: "Ferment", d: "Wash for the still." },
-    { n: "3", t: "Still", d: "Pot keeps character; column refines." },
-    { n: "4", t: "Cask", d: "New charred oak vs used barrels." },
-    { n: "5", t: "Bottle", d: "Proof, filter, then the glass." },
-  ];
+function ProcessRail({
+  steps,
+  footer,
+}: {
+  steps: { n: string; t: string; d: string }[];
+  footer: string;
+}) {
+  const cols =
+    steps.length === 5 ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4";
   return (
     <div>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        {steps.map((s) => (
-          <div key={s.n} className="text-center px-1">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+      <div className={`grid ${cols} gap-2 sm:gap-3`}>
+        {steps.map((s, i) => (
+          <div
+            key={s.n}
+            className="relative rounded-2xl border border-forest/15 bg-cream/90 px-2.5 py-3 text-center"
+          >
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta text-cream font-mono text-sm font-bold mb-2">
               {s.n}
             </span>
             <PanelLabel>{s.t}</PanelLabel>
             <PanelNote>{s.d}</PanelNote>
+            {i < steps.length - 1 ? (
+              <span
+                className="pointer-events-none absolute right-[-0.45rem] top-7 hidden h-px w-3 bg-terracotta/35 sm:block"
+                aria-hidden
+              />
+            ) : null}
           </div>
         ))}
       </div>
-      <p className="text-xs text-sage text-center mt-3 leading-snug">
-        New charred oak is the vanilla split. Used casks leave grain and peat more visible.
-      </p>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">{footer}</p>
     </div>
   );
 }
 
-function WhiskeyTastingProtocolDiagram() {
-  const steps = [
-    { n: "1", t: "Nose", d: "Smell it first — no sip yet." },
-    { n: "2", t: "Sip", d: "A little, then air." },
-    { n: "3", t: "Two words", d: "Write what you found." },
-    { n: "4", t: "Name", d: "Then name the style." },
-  ];
+function WhiskeyProductionDiagram() {
   return (
-    <div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {steps.map((s) => (
-          <div key={s.n} className="text-center px-1">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
-              {s.n}
-            </span>
-            <PanelLabel>{s.t}</PanelLabel>
-            <PanelNote>{s.d}</PanelNote>
-          </div>
-        ))}
-      </div>
-      <p className="text-xs text-sage text-center mt-3 leading-snug">
-        Guessing the style first just trains you to confirm the label.
-      </p>
-    </div>
+    <ProcessRail
+      steps={[
+        { n: "1", t: "Mash", d: "Corn, rye, malt — the grain you taste later." },
+        { n: "2", t: "Ferment", d: "Wash for the still." },
+        { n: "3", t: "Still", d: "Pot keeps character; column refines." },
+        { n: "4", t: "Cask", d: "New charred oak vs used barrels." },
+        { n: "5", t: "Bottle", d: "Proof, filter, then the glass." },
+      ]}
+      footer="New charred oak is the vanilla split. Used casks leave grain and peat more visible."
+    />
+  );
+}
+
+function WhiskeyTastingProtocolDiagram() {
+  return (
+    <ProcessRail
+      steps={[
+        { n: "1", t: "Nose", d: "Smell it first — no sip yet." },
+        { n: "2", t: "Sip", d: "A little, then air." },
+        { n: "3", t: "Two words", d: "Write what you found." },
+        { n: "4", t: "Name", d: "Then name the style." },
+      ]}
+      footer="Guessing the style first just trains you to confirm the label."
+    />
   );
 }
 
@@ -667,8 +677,8 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
         note: "Spirit + lemon + sweet — bourbon or Irish",
       },
       {
-        src: "/learn/equal-parts-bitters.webp",
-        alt: "A Campari equal-parts drink in a rocks glass with orange peel — the Boulevardier is this template on whiskey",
+        src: "/learn/figure-whiskey-boulevardier.webp",
+        alt: "A Boulevardier in a rocks glass with a large ice cube and orange peel",
         label: "Boulevardier",
         note: "Equal parts whiskey, Campari, vermouth — bourbon softens, rye stays lean",
       },
@@ -679,22 +689,22 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
     title: "History that changes what you pour",
     slides: [
       {
-        src: "/learn/learn-whiskey-manhattan.webp",
-        alt: "A Manhattan in a coupe with a cherry on a pick",
-        label: "Rye bars",
-        note: "Nineteenth-century American bars poured mostly rye — the Manhattan still wants that snap",
+        src: "/learn/whiskey-history-in-glass.webp",
+        alt: "Hoffman House bar, New York, about 1882 — bartenders pouring at a long mahogany bar",
+        label: "Rye-era New York",
+        note: "Hoffman House, ca. 1882 — the city and decade of the Manhattan. American bars poured mostly rye.",
       },
       {
-        src: "/learn/whiskey-deep-dive.webp",
-        alt: "An Old Fashioned in a rocks glass with a large ice cube and orange peel",
-        label: "Bourbon default",
-        note: "After Prohibition, supermarket “whiskey” often meant bourbon",
+        src: "/learn/figure-whiskey-saloon-1900.webp",
+        alt: "Interior of the Yellow Aster Saloon in Randsburg, California, about 1900 — bottles on the back bar, men at tables",
+        label: "The bar Prohibition emptied",
+        note: "Yellow Aster Saloon, about 1900. Not a speakeasy — the ordinary American back bar that went dark after 1920.",
       },
       {
-        src: "/learn/spirit-labels-scotch.webp",
-        alt: "Laphroaig bottle showing Islay single malt Scotch whisky",
-        label: "Separate families",
-        note: "Scotch and Irish keep their own drinks — not silent swaps for American whiskey",
+        src: "/learn/figure-whiskey-rickhouse.webp",
+        alt: "Bourbon barrels aging in a wooden rickhouse at Woodford Reserve, Kentucky",
+        label: "Bourbon in the rickhouse",
+        note: "After repeal, corn whiskey filled the supermarket. New-oak barrels are why “whiskey” started tasting like bourbon.",
       },
     ],
   },

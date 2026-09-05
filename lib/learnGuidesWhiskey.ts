@@ -126,8 +126,8 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
       "Grain, still, and cask explain sweetness, spice, and smoke better than the font on the label.",
     readingMinutes: 7,
     topics: ["whiskey", "production", "mash bill", "oak", "peat", "still"],
-    coverImage: "/learn/spirit-primer-whiskey.webp",
-    coverAlt: "Charred oak whiskey barrels stacked in a quiet aging warehouse",
+    coverImage: "/learn/whiskey-how-its-made.webp",
+    coverAlt: "Looking down into a mash tun — grain and water under a steel rake",
     accentClass: whiskeyAccent,
     practice: [
       {
@@ -257,8 +257,9 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
       "A few true stories explain why a recipe wants rye, bourbon, or a different family — not a timeline for its own sake.",
     readingMinutes: 6,
     topics: ["whiskey", "history", "rye", "prohibition", "manhattan", "sazerac"],
-    coverImage: "/learn/learn-whiskey-manhattan.webp",
-    coverAlt: "A Manhattan in a coupe with a cherry on a pick",
+    coverImage: "/learn/whiskey-history-in-glass.webp",
+    coverAlt:
+      "Hoffman House bar, New York, 1880s — a Gilded Age American bar where rye was the usual pour",
     accentClass: whiskeyAccent,
     practice: [
       {
@@ -363,9 +364,9 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
     summary: "Styles are easiest to learn with your nose. A short protocol beats another shelf chart.",
     readingMinutes: 6,
     topics: ["whiskey", "tasting", "bourbon", "rye", "peat", "irish"],
-    coverImage: "/learn/spirit-labels-intro.webp",
+    coverImage: "/learn/whiskey-learn-to-taste.webp",
     coverAlt:
-      "Two bourbon bottles side by side — a tasting comparison starts with two glasses, not a chart",
+      "Two Glencairn tasting glasses with different-colored whiskey pours and a water jug between them",
     accentClass: whiskeyAccent,
     practice: [
       {
