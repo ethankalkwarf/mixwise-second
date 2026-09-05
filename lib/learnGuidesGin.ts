@@ -312,7 +312,7 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "A hotel Martini story changed your pour → keep the template: Beefeater or Tanqueray, measured vermouth, stirred cold. Origin names are legend.",
+          "A hotel Martini story changed your pour → keep the template: Beefeater or Tanqueray, measured vermouth, stirred cold — origin names are legend.",
           "G&T history lesson, flat drink → pack the ice and match the tonic (dry for London dry, leaner for Hendrick’s) before you reread the quinine story.",
           "Negroni from a newer floral bottle tastes hollow → pour a juniper-led London dry; Hendrick’s-style boom gins belong in the G&T, not equal parts.",
         ],
@@ -401,8 +401,8 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "You named the style from the label first → smell, sip, write two words, then look. Guessing early just confirms the sticker.",
-          "You called an aromatic gin “craft” → describe the bill instead: juniper-led (Beefeater / Tanqueray) vs cucumber-floral (Hendrick’s). Aroma is not a quality score.",
+          "You named the style from the label first → smell, sip, write two words, then look — guessing early just confirms the sticker.",
+          "You called an aromatic gin “craft” → describe the bill instead: juniper-led (Beefeater / Tanqueray) vs cucumber-floral (Hendrick’s) — aroma is not a quality score.",
           "Six bottles, no leftover → taste two pours (London dry vs Hendrick’s), write two words each, then stop.",
         ],
       },
