@@ -22,22 +22,22 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         slug: "old-fashioned",
         notice:
-          "Bourbon for round oak; rye when you want spice. Measure sugar and bitters — taste before the peel.",
+          "Buffalo Trace or Maker’s Mark — or similar ~45% bourbon — for round oak. Rye when you want spice. Taste before the peel.",
       },
       {
         slug: "manhattan",
         notice:
-          "Rye is the snap against sweet vermouth. Bourbon works; the drink reads sweeter. Fridge the vermouth.",
+          "Rittenhouse Bonded or Wild Turkey 101 Rye for the snap. Bourbon works; the drink reads sweeter. Fridge the vermouth.",
       },
       {
         slug: "whiskey-sour",
         notice:
-          "Bourbon or a soft Irish blend. Fresh lemon. If it tastes thin, check citrus and shake before the whiskey.",
+          "Bourbon or Jameson. Fresh lemon. If it tastes thin, check citrus and shake before the whiskey.",
       },
       {
         slug: "boulevardier",
         notice:
-          "Equal parts whiskey, Campari, sweet vermouth. Bourbon softens; rye stays lean. Stir cold.",
+          "Equal parts. Bourbon softens; Rittenhouse or similar rye stays lean. Stir cold.",
       },
     ],
     bigIdea:
@@ -47,7 +47,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
       "Bourbon is corn plus new charred oak — round vanilla for Old Fashioneds and many sours.",
       "Rye is drier and spicier — the classic Manhattan spine.",
       "Scotch and Irish are their own mixing families, not silent swaps for American whiskey.",
-      "Mix around 45–50% ABV. One solid bourbon first; add rye when Manhattans become a habit.",
+      "Mix around 45–50% ABV. Buffalo Trace or Maker’s Mark (or similar) first; Rittenhouse or Wild Turkey 101 Rye when Manhattans start.",
     ],
     sections: [
       {
@@ -55,10 +55,10 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "rule",
         figure: "whiskey-styles",
         body: [
-          "Bourbon is at least 51% corn, aged in new charred oak. Vanilla, caramel, corn sweetness. It is the usual home pour for Old Fashioneds and whiskey sours. It may be made anywhere in the United States. Kentucky is tradition, not a legal requirement.",
-          "Rye is at least 51% rye grain. Pepper, baking spice, a drier finish. Manhattans and Boulevardiers were written for that snap. Bourbon softens them. US rye also ages in new charred oak, so it shares bourbon’s vanilla frame with a leaner grain center.",
-          "Scotch must be distilled and aged in Scotland — at least three years in oak. Blended Scotch is the cocktail workhorse: highballs, Rob Roy, the body of a Penicillin. Heavily peated malt is seasoning — a float or rinse — unless the recipe wants smoke up front.",
-          "Irish whiskey is often lighter and softer, especially everyday blends. Single pot still — malted and unmalted barley, unique to Ireland — carries more body for stirred drinks. Light blends shine in highballs and gentle sours.",
+          "Bourbon is at least 51% corn, aged in new charred oak. Vanilla, caramel, corn sweetness. It is the usual home pour for Old Fashioneds and whiskey sours. Buffalo Trace or Maker’s Mark — or another solid ~45% bourbon you like neat — will do that job. Maker’s is a little softer (wheat in the mash). Both mix. Bourbon may be made anywhere in the United States. Kentucky is tradition, not a legal requirement.",
+          "Rye is at least 51% rye grain. Pepper, baking spice, a drier finish. Manhattans and Boulevardiers were written for that snap. Rittenhouse Bonded or Wild Turkey 101 Rye, or similar, is the snap. Bourbon softens them. US rye also ages in new charred oak, so it shares bourbon’s vanilla frame with a leaner grain center.",
+          "Scotch must be distilled and aged in Scotland — at least three years in oak. Blended Scotch is the cocktail workhorse: highballs, Rob Roy, the body of a Penicillin. Famous Grouse or Monkey Shoulder — or similar mixing Scotches — cover that job. Heavily peated malt is seasoning. Laphroaig 10 or Ardbeg 10 belong as a float or rinse, not as a silent swap for bourbon.",
+          "Irish whiskey is often lighter and softer, especially everyday blends. Jameson is the soft highball and gentle sour. Single pot still — malted and unmalted barley, unique to Ireland — carries more body for stirred drinks. Reach for Redbreast, or similar, when the blend goes slack.",
         ],
       },
       {
@@ -74,7 +74,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "tip",
         body: [
           "Mixing whiskey around 45–50% ABV holds up when sugar, citrus, or vermouth enter the glass. A shy 40% pour can taste thin the moment you add sweetener.",
-          "You do not need a whiskey library to start. One solid bourbon you enjoy neat covers Old Fashioneds and sours. Add rye when Manhattans become a habit. Scotch and Irish can wait until a recipe names them.",
+          "You do not need a whiskey library to start. One solid bourbon you enjoy neat — Buffalo Trace, Maker’s Mark, or similar around 45% — covers Old Fashioneds and sours. Add rye when Manhattans become a habit: Rittenhouse Bonded or Wild Turkey 101 Rye, or similar. Famous Grouse or Jameson can wait until a recipe names them. Peated malt waits longer.",
         ],
       },
       {
@@ -184,7 +184,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "tip",
         body: [
           "Time in wood is work, not a score. US straight whiskey has a two-year floor. Scotch and Irish have a three-year floor. More years can mean more oak — or just a quieter spirit that lost more to the air.",
-          "Peat is aroma, not proof. The smoke is in the malted barley, dried over a peat fire, before the still ever runs. A 40% peated malt can shout louder than a 50% bourbon. Dose it like seasoning.",
+          "Peat is aroma, not proof. The smoke is in the malted barley, dried over a peat fire, before the still ever runs. A 40% peated malt can shout louder than a 50% bourbon. Laphroaig 10 or Ardbeg 10 will do that job. Dose them like seasoning — not as a silent bourbon.",
           "Many bottles are chill-filtered so they stay bright when you add ice or water. That can strip a little texture. It is not a quality verdict. ABV on the label is the more honest mixing number — around 45–50% still holds sugar and citrus.",
         ],
       },
@@ -204,15 +204,15 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "tip",
         body: [
           "Single malt: one distillery, malted barley, pot stills. Beautiful neat. In cocktails it can dominate unless the recipe wants that character.",
-          "Blended Scotch: malt whisky for flavor plus column-distilled grain whisky for lightness — the practical mixing pour for highballs and most vermouth drinks on Scotch.",
-          "Peat phenols are aromatic intensity, not a legal age or a proof. The Penicillin (Sam Ross) shakes lemon and honey-ginger with a gentler whisky, then floats a smoky malt so smoke is perfume, not the entire palate.",
+          "Blended Scotch: malt whisky for flavor plus column-distilled grain whisky for lightness — the practical mixing pour for highballs and most vermouth drinks on Scotch. Famous Grouse or Monkey Shoulder, or similar mixing Scotches, cover that job.",
+          "Peat phenols are aromatic intensity, not a legal age or a proof. The Penicillin (Sam Ross) shakes lemon and honey-ginger with a gentler whisky, then floats a smoky malt — Laphroaig 10 or Ardbeg 10 — so smoke is perfume, not the entire palate.",
         ],
       },
       {
         heading: "Irish pot still vs the soft blend",
         body: [
-          "Unmalted barley in the mash is the sensory signature of Irish single pot still whiskey — oilier, spicier, closer to a mixing whiskey that can stand up in stirred drinks.",
-          "Everyday Irish blends are often the lightest whiskey on a home shelf. They excel in highballs and gentle sours. They go slack in a rye Manhattan unless you choose a richer pot-still bottle.",
+          "Unmalted barley in the mash is the sensory signature of Irish single pot still whiskey — oilier, spicier, closer to a mixing whiskey that can stand up in stirred drinks. Redbreast, or similar, is that body.",
+          "Everyday Irish blends are often the lightest whiskey on a home shelf. Jameson excels in highballs and gentle sours. It goes slack in a rye Manhattan unless you choose a richer pot-still bottle.",
         ],
       },
       {
@@ -305,7 +305,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         heading: "Rye’s near-death and return",
         body: [
-          "Rye stayed scarce through the late twentieth century. The cocktail revival of the 2000s brought it back because Manhattans and Sazeracs taste flabby when corn sweetness is the only whiskey in the glass.",
+          "Rye stayed scarce through the late twentieth century. The cocktail revival of the 2000s brought it back because Manhattans and Sazeracs taste flabby when corn sweetness is the only whiskey in the glass. Rittenhouse Bonded is one of the bottles that made that snap easy to buy again.",
           "Reading a recipe’s era is often enough to choose a bottle. An 1880s Manhattan wants rye. A mid-century “whiskey” sour will forgive bourbon. A modern spec that names rye means it.",
         ],
       },
@@ -410,16 +410,16 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
           "Rye: pepper, baking spice, a drier finish. If the drink feels leaner in the same glass, believe it.",
           "Blended Scotch: light malt, easy to mix. A Rob Roy should still taste like whisky, not like a shy bourbon.",
           "Peated malt: smoke first. Phenol, not proof. Two words beat a paragraph — “smoke, iodine” is more useful than a campfire essay.",
-          "Irish blend vs pot still: the blend is soft and light; pot still is oilier, with unmalted barley body. If it feels thin in a stirred drink, you probably grabbed the blend.",
+          "Irish blend vs pot still: Jameson is soft and light; Redbreast, or similar pot still, is oilier, with unmalted barley body. If it feels thin in a stirred drink, you probably grabbed the blend.",
         ],
       },
       {
         heading: "Mini labs",
         kind: "tip",
         body: [
-          "A: Bourbon vs rye, neat. Same splash, same glass shape. Two words each. Then name the style.",
+          "A: Bourbon vs rye, neat — Buffalo Trace against Rittenhouse if you have them, or similar. Same splash, same glass shape. Two words each. Then name the style.",
           "B: Same Manhattan spec, two pours — bourbon then rye. Name which vermouth stayed in its place.",
-          "C, optional: a Penicillin-logic float. Shake a gentle whisky sour, then a barspoon of peated malt on top. Smoke should be perfume, not the whole sip.",
+          "C, optional: a Penicillin-logic float. Shake a gentle whisky sour, then a barspoon of Laphroaig 10 or Ardbeg 10 on top. Smoke should be perfume, not the whole sip.",
         ],
       },
       {
@@ -466,22 +466,22 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         slug: "old-fashioned",
         notice:
-          "Bourbon round vs rye snap. If it tastes like fruit salad, you muddled the structure away.",
+          "Default: Buffalo Trace or Maker’s Mark, or similar. Rye if you want snap. If it tastes like fruit salad, you muddled the structure away.",
       },
       {
         slug: "manhattan",
         notice:
-          "Rye vs bourbon vs the vermouth. If it’s dusty, fridge the wine — don’t blame the whiskey first.",
+          "Default: Rittenhouse Bonded or Wild Turkey 101 Rye. Bourbon is the softer cousin. If it’s dusty, fridge the wine first.",
       },
       {
         slug: "whiskey-sour",
         notice:
-          "Bourbon or Irish. Lemon should lead. If smoke is the first thing you taste, you left the template.",
+          "Default: Buffalo Trace or Jameson. Lemon should lead. If smoke is the first thing you taste, you left the template.",
       },
       {
         slug: "boulevardier",
         notice:
-          "Equal parts. Bourbon softens the bitter; rye keeps it lean. Stir until it’s cold, not candy-hot.",
+          "Default: rye to stay lean — Rittenhouse or similar. Buffalo Trace or Maker’s Mark softens the bitter. Stir cold.",
       },
     ],
     bigIdea: "Each classic trains a different whiskey judgment.",
@@ -492,27 +492,27 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         figure: "whiskey-drinks",
         body: [
           "Spirit, sugar, bitters, ice. Stir until the heat drops. The whiskey should still be the point.",
-          "Bourbon makes it round. Rye makes it snap. Both are correct. Fruit muddled in the glass is a later habit — not the lesson.",
+          "Default bottle: a solid mixing bourbon — Buffalo Trace, Maker’s Mark, or similar around 45%. Bourbon makes it round. Reach for rye when you want snap. Both are correct. Fruit muddled in the glass is a later habit — not the lesson.",
         ],
       },
       {
         heading: "Manhattan — rye, bourbon, and the fridge",
         body: [
-          "Whiskey, sweet vermouth, bitters. Rye keeps vermouth from turning the drink into dessert. Bourbon is a legitimate softer cousin. Call it what it is.",
+          "Whiskey, sweet vermouth, bitters. Default bottle: rye — Rittenhouse Bonded or Wild Turkey 101 Rye, or similar. That snap keeps vermouth from turning the drink into dessert. Bourbon is a legitimate softer cousin. Call it what it is.",
           "Half the drink is wine. Fridge the vermouth. Date it. If tonight’s Manhattan tastes dusty and nutty, open a fresher bottle before you change the whiskey.",
         ],
       },
       {
         heading: "Whiskey Sour — lemon leads",
         body: [
-          "Spirit, lemon, sugar. Shake hard. Bourbon or a friendly Irish blend both fit. Lemon should still be the loudest thing in the glass.",
-          "Peated Scotch will usually bury the citrus unless you are building a Penicillin-style drink on purpose. If it tastes thin, check the juice and the shake before you blame the bottle.",
+          "Spirit, lemon, sugar. Shake hard. Default bottle: Buffalo Trace, or Jameson if you want a softer Irish sour. Lemon should still be the loudest thing in the glass.",
+          "Laphroaig 10 or Ardbeg 10 will usually bury the citrus unless you are building a Penicillin-style drink on purpose. If it tastes thin, check the juice and the shake before you blame the bottle.",
         ],
       },
       {
         heading: "Boulevardier — equal parts, two temperaments",
         body: [
-          "Equal parts whiskey, Campari, sweet vermouth. Same bones as a Negroni. Bourbon softens the bitter. Rye keeps it lean.",
+          "Equal parts whiskey, Campari, sweet vermouth. Same bones as a Negroni. Default bottle: rye if you want it lean — Rittenhouse or similar. Buffalo Trace or Maker’s Mark softens the bitter.",
           "Stir cold. The Sazerac lives in the history lesson — cognac first, then rye — not as this fourth classic. Tonight is equal parts.",
         ],
       },
@@ -521,7 +521,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "tip",
         body: [
           "Pour bourbon or rye unless the notes say otherwise. Scotch and Irish keep their own named drinks.",
-          "Old Fashioned and sour: bourbon is the usual home default. Manhattan and Boulevardier: rye if you have it. Then taste, and keep the pour that fits the glass.",
+          "Old Fashioned and sour: bourbon is the usual home default — Buffalo Trace, Maker’s Mark, or similar. Manhattan and Boulevardier: rye if you have it. Then taste, and keep the pour that fits the glass.",
         ],
       },
       {
@@ -538,7 +538,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         heading: "Rob Roy is not a silent Manhattan",
         body: [
-          "Same vermouth idea, Scotch instead of rye. The grain and the used cask change the drink. Name it honestly.",
+          "Same vermouth idea, Scotch instead of rye. Famous Grouse or Monkey Shoulder, or similar, will do the job. The grain and the used cask change the drink. Name it honestly.",
         ],
       },
       {
