@@ -19,7 +19,7 @@ export type LearnGuide = {
   bigIdea: string;
   keyTakeaways?: string[];
   sections: LearnSection[];
-  deepDive: LearnSection[];
+  deepDive?: LearnSection[];
   sources: LearnSource[];
 };
 

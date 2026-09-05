@@ -64,15 +64,17 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         figure: "rum-color-myth",
         body: [
           "A lot of the big mixing whites — Bacardi Superior included — spend time in oak, then get filtered until they look clear. Clear means filtered, not young. That light aging is why a good mixing white still feels soft under lime instead of sharp and thin.",
+          "Not every white is oak-then-filter. Agricole blanc is usually unaged — grassy cane, not charcoal-stripped oak — so Rhum Clément Blanc or similar is a different Daiquiri than a Spanish-style mixing white. Puerto Rican mixing rum often meets a one-year oak minimum, then many brands filter for a clear bottle.",
           "Gold and dark are weaker signals. The color might be years in wood, a dose of caramel, heavy molasses character, or all three. Rum doesn’t police age statements the way Scotch does. If a near-black bottle mostly tastes like sweet syrup and heat, it will bully a dry Daiquiri no matter how serious the label looks.",
-          "Spiced rum is its own product — vanilla, spice, often sugar. Use it when you want those flavors. Don’t treat it as your aged Mai Tai bottle.",
+          "Spiced rum is its own product — vanilla, spice, often sugar. Captain Morgan and Sailor Jerry are the usual shelf examples: use them when you want those flavors. Don’t treat them as your aged Mai Tai bottle.",
         ],
       },
       {
         heading: "Two bottles to start",
         kind: "tip",
         body: [
-          "Start with one clean white mixing rum you like in a Daiquiri, plus one solid aged rum you like neat or in a ginger highball. That pair covers most MixWise rum recipes. Agricole, overproof, and Jamaican-style bottles are worth adding when recipes start asking for them.",
+          "Start with one clean Spanish-style mixing white you like in a Daiquiri — Bacardi Superior, Havana Club 3 where you can find it, or a similar filtered white — plus one solid aged rum you like neat or in a ginger highball. Flor de Caña 4 or 7, Mount Gay Eclipse, or Doorly’s are the usual aged frames. That pair covers most MixWise rum recipes.",
+          "Add a job when recipes ask, not a trophy: Appleton Estate Signature for friendlier Jamaican oak; Smith & Cross or Wray & Nephew Overproof when you want funk as a tool; El Dorado 5 or 8 for Demerara weight; Rhum Clément Blanc or similar for grassy unaged cane.",
           "Around 40% ABV can taste thin once sugar and citrus arrive. A notch higher holds a Daiquiri better.",
         ],
       },
@@ -80,19 +82,9 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "Shopping by color as if it were a legal age grade.",
-          "Treating spiced rum as aged rum. Spice blends are a flavored product.",
-          "Pouring a heavy ester rum into a standard Daiquiri and blaming the lime.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Not every white is oak-then-filter",
-        kind: "tip",
-        body: [
-          "Agricole blanc is usually unaged — grassy cane, not charcoal-stripped oak. It is a different Daiquiri than a Spanish-style mixing white.",
-          "Puerto Rican mixing rum often meets a one-year oak minimum, then many brands filter for a clear bottle. That is why “white” is not a synonym for “young.”",
+          "Shopping by color as if it were a legal age grade → smell the rum, or read still / age / dosage if the producer prints it.",
+          "Treating Captain Morgan or Sailor Jerry as aged rum → those are flavored products; pick Flor de Caña 7, Mount Gay Eclipse, or similar for oak and body.",
+          "Daiquiri tastes like banana or solvent → switch to a cleaner white (or 3:1 clean to funky) before you add more sugar.",
         ],
       },
     ],
@@ -165,7 +157,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Molasses vs cane juice",
         body: [
           "Most rum starts as molasses, the leftover of sugar-making. It can be clean and versatile, or rich and sticky, depending on everything that follows.",
-          "Rhum agricole starts as fresh cane juice. It often reads grassy, olive, and bright. Beautiful — and a different Daiquiri than a Spanish-style mixing white.",
+          "Rhum agricole starts as fresh cane juice. It often reads grassy, olive, and bright — Rhum Clément Blanc or similar is the usual bottle for that job. Beautiful, and a different Daiquiri than a Spanish-style mixing white.",
         ],
       },
       {
@@ -173,13 +165,14 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         body: [
           "Yeast and time make aroma. Short, controlled ferments stay quiet. Long, wilder ferments build esters. Pot stills keep more of that aroma; column stills can refine toward a clean mixing rum. Many bottles are a blend of both.",
           "Push them hard and you get banana, pineapple, or a sharp solvent note. That smell was meant to carry across a punch bowl. In a Daiquiri, it usually buries the lime.",
+          "A high-ester Jamaican like Smith & Cross is that punch-bowl tool — not a silent swap for Bacardi Superior. If the producer prints still type, ester marks, age, or dosage, that sheet is more honest than gold foil.",
         ],
       },
       {
         heading: "Oak, climate, and what’s added",
         kind: "tip",
         body: [
-          "Heat and humidity in the tropics pull more from oak, faster, and lose more to the angels. A few years in Barbados is not a few years in a cooler warehouse.",
+          "Heat and humidity in the tropics pull more from oak, faster, and lose more to the angels. A few years in Barbados is not a few years in a cooler warehouse. The number on the label is not a flavor score.",
           "Some producers add caramel or a little sugar after aging — dosage. That can read as softness or as syrup. If a “dark” rum tastes mostly sweet, believe your tongue.",
         ],
       },
@@ -187,24 +180,9 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "Reading color as a production story.",
-          "Treating every white rum as unaged agricole.",
-          "Using a high-ester pot-still rum as a silent swap in a 2:1:1 Daiquiri.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Tech sheets beat neck tags",
-        body: [
-          "If the producer publishes still type, ester marks, age, or dosage, that is more honest than gold foil. Use it when you are choosing a second bottle, not when you are buying the first.",
-        ],
-      },
-      {
-        heading: "Tropical vs continental aging",
-        kind: "tip",
-        body: [
-          "Same years, different work. Tropical warehouses move faster and lose more volume. Continental warehouses keep more spirit and a slower oak conversation. The number on the label is not a flavor score.",
+          "Reading color as a production story → taste whether the weight is oak or sugar, and check still / age / dosage if they print it.",
+          "Treating every white rum as unaged agricole → Spanish-style mixing whites are often oak-then-filter; Clément Blanc or similar is the grassy unaged job.",
+          "High-ester pot-still rum in a 2:1:1 Daiquiri tastes like banana or solvent → cut it 3:1 with a clean white, or save Smith & Cross for punch and Mai Tai fractions.",
         ],
       },
     ],
@@ -264,7 +242,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         figure: "rum-history",
         body: [
           "The usual documented start is Jennings Cox, an American engineer near the Daiquirí mines in Cuba, around the turn of the twentieth century: rum, lime, and sugar as a practical sour. Later retellings fill in details the contemporary record does not always lock down. The template is what survived.",
-          "Constantino Ribalaigua Vert at El Floridita did not invent lime and rum. He refined the shake, the freeze, and the service until the Daiquiri became a house signature. That is the bottle test you still use: clean rum, bright lime.",
+          "Constantino Ribalaigua Vert at El Floridita did not invent lime and rum. He refined the shake, the freeze, and the service until the Daiquiri became a house signature. Cox is the usual cited start; Floridita’s role in popularizing the shaken Daiquiri is on firmer ground. Separate those two chapters when you choose a bottle: clean rum, bright lime.",
         ],
       },
       {
@@ -277,14 +255,14 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         heading: "Navy strength still matters",
         body: [
-          "The Royal Navy issued rum for centuries. The useful leftover is strength: navy-proof rum sits near 57% ABV and holds ginger, sugar, and ice without going thin.",
-          "The story that gunpowder would still light if the rum was strong enough is folklore around an older proof system. Use the proof. Don’t treat the legend as a tasting method.",
+          "The Royal Navy issued rum for centuries. The useful leftover is strength: navy-proof rum sits near 57% ABV (about 54.5% overproof on the old British scale) and holds ginger, sugar, and ice without going thin.",
+          "The story that gunpowder would still light if the rum was strong enough is folklore around that older proof system. Use the proof. Don’t treat the legend as a tasting method.",
         ],
       },
       {
         heading: "Jamaica punch and tiki blends",
         body: [
-          "Jamaican pot-still rum was built to carry across a punch bowl — high aroma, high ester, not a shy backbone.",
+          "Jamaican pot-still rum was built to carry across a punch bowl — high aroma, high ester, not a shy backbone. Smith & Cross is the usual modern bottle for that job — not a silent Daiquiri swap.",
           "Mid-century tiki treated rum like a kitchen: blend a clean or aged frame with a funky fraction. The Mai Tai is that idea in a rocks glass.",
         ],
       },
@@ -300,24 +278,9 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "Treating Hemingway as a primary source for the Daiquiri.",
-          "Using “navy rum” as a synonym for any dark bottle.",
-          "Pouring one tiki blend bottle as if it replaced a thought-out rum mix.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Daiquiri origins — documented and debated",
-        body: [
-          "Cox is the usual cited start; contemporary documentation is thinner than later retellings. Floridita’s role in popularizing the shaken Daiquiri is on firmer ground. Separate those two chapters when you choose a bottle.",
-        ],
-      },
-      {
-        heading: "Navy strength vs gunpowder folklore",
-        kind: "tip",
-        body: [
-          "British navy rum was standardized around 54.5% overproof — about 57% ABV. The gunpowder test is a later explanatory legend, not a method for choosing a bottle.",
+          "Treating Hemingway as the inventor of the Daiquiri → pour a clean mixing white and a hard shake; the bar refined the drink, it did not author lime and rum.",
+          "Using “navy rum” as any dark bottle → you want ~57% ABV and real body that holds ginger, not a darker tint.",
+          "One tiki-blend bottle in a Mai Tai → start with an aged frame, then add a Jamaican fraction until the lime still reads.",
         ],
       },
     ],
@@ -385,7 +348,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         body: [
           "Clean mixing white: quiet cane, maybe a hint of oak that was filtered away. Lime should still be the loudest thing in a Daiquiri.",
           "Aged: wood, caramel, dried fruit, more weight. Taste whether that weight is oak or sugar.",
-          "Funky Jamaican-style: esters first. If you smell the punch bowl, you found it.",
+          "Funky Jamaican-style: esters first — aroma compounds from fermentation, a Jamaican tradition, not a defect. If you smell the punch bowl, you found it. Two words beat a paragraph of tasting-note poetry: “banana, solvent” is more useful than “tropical sunset.”",
           "Agricole: fresh cane and herbs. If it smells like a field, believe it.",
         ],
       },
@@ -402,17 +365,9 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "Guessing the style from the label before you smell the glass.",
-          "Calling every aromatic rum “spiced.”",
-          "Tasting six bottles in a rush and remembering none.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Esters are a tool, not a defect",
-        body: [
-          "Esters are aroma compounds from fermentation. High-ester marks are a Jamaican tradition. Two words beat a paragraph of tasting-note poetry — “banana, solvent” is more useful than “tropical sunset.”",
+          "Guessing the style from the label before you smell the glass → nose first, two words, then name it.",
+          "Calling every aromatic rum “spiced” → spice blends smell like vanilla and baking spice; esters smell like banana, pineapple, or solvent.",
+          "Tasting six bottles in a rush and remembering none → two rums, same glass, write two words each.",
         ],
       },
     ],
@@ -466,14 +421,14 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Daiquiri diagnostic",
         figure: "rum-drinks",
         body: [
-          "2:1:1 rum, lime, sugar is a diagnostic. Shake hard, taste cold.",
-          "Banana candy or varnish means esters took the drink. Thin and hot means weak rum or a short shake. Soft and dull means old lime.",
+          "2:1:1 rum, lime, sugar is a diagnostic. Shake hard, taste cold. Bacardi Superior or a similar clean mixing white is the default bottle.",
+          "Banana candy or varnish means esters took the drink — switch rum (or cut 3:1 clean to funky) before you change the spec. Thin and hot means weak rum or a short shake. Soft and dull means old lime.",
         ],
       },
       {
         heading: "Mojito — lengthen without muddying",
         body: [
-          "Same acid-sweet idea, built long with mint and soda.",
+          "Same acid-sweet idea, built long with mint and soda. Use the same clean white as the Daiquiri.",
           "Press mint. Don’t shred it. A clean rum keeps the lengthener bright; a heavy funk rum can taste muddy once soda is in.",
         ],
       },
@@ -481,14 +436,14 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Dark ’n’ Stormy — weight in a highball",
         body: [
           "Packed ice, rum with enough body, cold ginger beer last.",
-          "Gosling’s Black Seal is the trademarked rum for the named drink. If you pour another aged or navy-weight rum, you have a ginger highball that teaches the same lesson — call it honestly.",
+          "Gosling’s Black Seal is the trademarked rum for the named drink. For the highball lesson at home, El Dorado 5 or 8 — or similar Demerara weight — teaches the same ginger test. Call it honestly if it is not Gosling’s.",
         ],
       },
       {
         heading: "Mai Tai — blend on purpose",
         body: [
           "Orgeat, lime, orange liqueur, and rum. The rum is usually a blend because one bottle rarely has both frame and perfume.",
-          "Start with a solid aged rum. Add a funky fraction until the lime still reads. Five tiki bottles can wait.",
+          "Start with an aged Barbados or Spanish-style frame — Mount Gay Eclipse, Flor de Caña 7, or similar — then a Jamaican splash (Appleton Estate Signature, or Smith & Cross if you want more perfume) until the lime still reads. A house blend lets you tune esters; a single “tiki rum” locks the ratio. Five extra bottles can wait.",
         ],
       },
       {
@@ -503,24 +458,9 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "One bottle for every rum drink on the list.",
-          "Shredding mint, then blaming the rum.",
-          "Buying a “tiki rum” instead of learning to blend.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Trademark vs template",
-        body: [
-          "Dark ’n’ Stormy is a registered drink with a specified rum. The highball structure — weight plus ginger — is what you practice at home with whatever honest aged rum you own.",
-        ],
-      },
-      {
-        heading: "Why blends beat the tiki bottle",
-        kind: "tip",
-        body: [
-          "A house blend lets you tune esters independently. A single flavored “tiki rum” locks the ratio. Start simple; add funk as a fraction.",
+          "One bottle for every rum drink on the list → clean white for Daiquiri and Mojito; aged weight for ginger; aged frame plus a Jamaican splash for Mai Tai.",
+          "Shredding mint, then blaming the rum → press the leaves, keep the mixing white clean, and taste before you change bottles.",
+          "Buying a “tiki rum” instead of blending → aged Barbados or Spanish-style frame, then funk as a fraction until the lime still reads.",
         ],
       },
     ],
