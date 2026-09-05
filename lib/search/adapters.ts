@@ -100,7 +100,7 @@ export function learnGuideToSearchDocument(
     name: guide.title,
     description: guide.summary,
     tags: guide.topics,
-    aliases: [guide.eyebrow, ...guide.keyTakeaways.slice(0, 3)],
+    aliases: [guide.eyebrow, ...(guide.keyTakeaways ?? []).slice(0, 3)],
     learn: {
       id: guide.slug,
       kind: "guide",

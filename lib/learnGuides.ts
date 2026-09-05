@@ -17,7 +17,7 @@ export type LearnGuide = {
   accentClass: string;
   practice: LearnPracticeDrink[];
   bigIdea: string;
-  keyTakeaways: string[];
+  keyTakeaways?: string[];
   sections: LearnSection[];
   deepDive: LearnSection[];
   sources: LearnSource[];

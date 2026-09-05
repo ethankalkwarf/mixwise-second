@@ -150,13 +150,6 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
     ],
     bigIdea:
       "Production choices — base, ferment, still, oak, and sugar — show up in the glass more honestly than the color on the label.",
-    keyTakeaways: [
-      "Molasses rum and cane-juice agricole start from different raw materials — and smell like it.",
-      "Long ferments and pot stills keep esters; column stills can strip toward a clean mixing spine.",
-      "Push esters hard and you get banana, pineapple, or a sharp solvent note. That smell was meant to carry across a punch bowl. In a Daiquiri, it usually buries the lime.",
-      "Tropical warehouses work oak faster; some bottles also add sugar or caramel after the cask.",
-      "Taste what changed when you swap one lever — base, still, or oak — not when you swap the label color.",
-    ],
     sections: [
       {
         heading: "From cane to glass",
@@ -264,13 +257,6 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
       },
     ],
     bigIdea: "Rum history earns a place in Learn only when it changes what you pour.",
-    keyTakeaways: [
-      "The Daiquiri has two useful chapters: a camp sour, then a Havana bar that taught the world a clean shaken rum drink.",
-      "Prohibition sent thirsty Americans to Cuba — the drinks that survived were the ones that traveled.",
-      "Navy-strength rum is about proof that holds sugar and spice, not a gunpowder campfire story.",
-      "Jamaican punch and tiki blends exist because one rum rarely does every job.",
-      "Island sugar economies diverged — that is why “rum” is a family.",
-    ],
     sections: [
       {
         heading: "Two chapters of the Daiquiri",
@@ -382,13 +368,6 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
       },
     ],
     bigIdea: "Learn rum styles by smelling and tasting on purpose — then name what you found.",
-    keyTakeaways: [
-      "Smell first. Then sip. Write two words before you name the style.",
-      "Clean white: lime-ready, quiet, sometimes oak-then-filter.",
-      "Aged: vanilla, oak, weight — useful when ginger or orgeat needs a frame.",
-      "Funky: banana, pineapple, solvent — seasoning, or a punch, not a default Daiquiri.",
-      "Agricole: cane, grass, olive — a different citrus drink.",
-    ],
     sections: [
       {
         heading: "A tasting protocol",
@@ -481,13 +460,6 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
       },
     ],
     bigIdea: "Pour the classics as lessons: each one trains a different kind of rum judgment.",
-    keyTakeaways: [
-      "Daiquiri: if the rum fights the lime, change the rum — not the template.",
-      "Mojito: same sour skeleton, lengthened. Clean rum keeps mint bright.",
-      "Dark ’n’ Stormy: ginger needs weight. Gosling’s is the trademarked name; the template still teaches the pour.",
-      "Mai Tai: start with an aged frame, then add funk as a fraction.",
-      "When a recipe only says “rum,” pick the job the glass is doing.",
-    ],
     sections: [
       {
         heading: "Daiquiri diagnostic",
