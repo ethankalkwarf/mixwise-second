@@ -1,0 +1,571 @@
+/**
+ * MixWise whiskey curriculum — five layered guides that replace spirit-primer-whiskey.
+ */
+
+import type { LearnGuide } from "@/lib/learnGuides";
+
+const whiskeyAccent = "from-terracotta/25 via-cream to-olive/15";
+
+export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
+  {
+    slug: "whiskey-family-buying",
+    title: "Whiskey: family & buying myth",
+    eyebrow: "Spirits",
+    summary:
+      "Whiskey styles are not interchangeable seasoning. Mash, cask, and history decide what goes in the glass.",
+    readingMinutes: 5,
+    topics: ["whiskey", "bourbon", "rye", "scotch", "irish", "buying"],
+    coverImage: "/learn/spirit-primer-whiskey.webp",
+    coverAlt: "Charred oak whiskey barrels stacked in a quiet aging warehouse",
+    accentClass: whiskeyAccent,
+    practice: [
+      {
+        slug: "old-fashioned",
+        notice:
+          "Bourbon for round oak; rye when you want spice. Measure sugar and bitters — taste before the peel.",
+      },
+      {
+        slug: "manhattan",
+        notice:
+          "Rye is the snap against sweet vermouth. Bourbon works; the drink reads sweeter. Fridge the vermouth.",
+      },
+      {
+        slug: "whiskey-sour",
+        notice:
+          "Bourbon or a soft Irish blend. Fresh lemon. If it tastes thin, check citrus and shake before the whiskey.",
+      },
+      {
+        slug: "boulevardier",
+        notice:
+          "Equal parts whiskey, Campari, sweet vermouth. Bourbon softens; rye stays lean. Stir cold.",
+      },
+    ],
+    bigIdea:
+      "Whiskey styles aren’t interchangeable seasoning — mash, cask, and history decide what goes in the glass.",
+    keyTakeaways: [
+      "When a US recipe says only “whiskey,” it usually means bourbon or rye.",
+      "Bourbon is corn plus new charred oak — round vanilla for Old Fashioneds and many sours.",
+      "Rye is drier and spicier — the classic Manhattan spine.",
+      "Scotch and Irish are their own mixing families, not silent swaps for American whiskey.",
+      "Mix around 45–50% ABV. One solid bourbon first; add rye when Manhattans become a habit.",
+    ],
+    sections: [
+      {
+        heading: "Four styles that matter at home",
+        kind: "rule",
+        figure: "whiskey-styles",
+        body: [
+          "Bourbon is at least 51% corn, aged in new charred oak. Vanilla, caramel, corn sweetness. It is the usual home pour for Old Fashioneds and whiskey sours. It may be made anywhere in the United States. Kentucky is tradition, not a legal requirement.",
+          "Rye is at least 51% rye grain. Pepper, baking spice, a drier finish. Manhattans and Boulevardiers were written for that snap. Bourbon softens them. US rye also ages in new charred oak, so it shares bourbon’s vanilla frame with a leaner grain center.",
+          "Scotch must be distilled and aged in Scotland — at least three years in oak. Blended Scotch is the cocktail workhorse: highballs, Rob Roy, the body of a Penicillin. Heavily peated malt is seasoning — a float or rinse — unless the recipe wants smoke up front.",
+          "Irish whiskey is often lighter and softer, especially everyday blends. Single pot still — malted and unmalted barley, unique to Ireland — carries more body for stirred drinks. Light blends shine in highballs and gentle sours.",
+        ],
+      },
+      {
+        heading: "Shopping myths",
+        body: [
+          "Darker is not older, and older is not automatically better in a cocktail. Color can be char, time, or caramel. The drink cares about grain, cask, and proof.",
+          "The legal words — bourbon, rye, straight, bottled-in-bond — live on the American whiskey labels lesson, in the Spirit labels decoded path. This lesson is about what you pour.",
+          "A famous bottle you like neat is not always the bottle the template wants. Save the allocated pour for a glass. Mix with something solid you will open again.",
+        ],
+      },
+      {
+        heading: "Proof and a starter shelf",
+        kind: "tip",
+        body: [
+          "Mixing whiskey around 45–50% ABV holds up when sugar, citrus, or vermouth enter the glass. A shy 40% pour can taste thin the moment you add sweetener.",
+          "You do not need a whiskey library to start. One solid bourbon you enjoy neat covers Old Fashioneds and sours. Add rye when Manhattans become a habit. Scotch and Irish can wait until a recipe names them.",
+        ],
+      },
+      {
+        heading: "Common mistakes",
+        kind: "mistakes",
+        body: [
+          "Pouring peated Scotch into a standard whiskey sour. Smoke fights lemon unless you are building a Penicillin-style drink on purpose.",
+          "Trusting a Canadian bottle labeled “rye” as US straight rye. Canadian “rye” is often a milder grain blend — read the back label and taste before a Manhattan.",
+          "Treating a fruit-muddled Old Fashioned as the structure. Spirit, sugar, bitters, ice. Orange and cherry in the glass are a later restaurant habit.",
+        ],
+      },
+    ],
+    deepDive: [
+      {
+        heading: "The letter on the label",
+        body: [
+          "Ireland and the United States usually spell whiskey. Scotland — and often Canada and Japan — use whisky. The letter does not decide the cocktail. Mash bill and cask do.",
+          "Japanese whisky and other world whiskeys can be excellent neat. For MixWise classics, start with the style the recipe’s era assumes. Experiment once the template tastes right.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "American whiskey labels",
+        note: "Bourbon, rye, straight, bottled-in-bond — the shopping words this lesson leaves to the labels path.",
+        href: "/learn/guides/spirit-labels-whiskey",
+      },
+      {
+        label: "Spirit labels decoded",
+        note: "The full labels path — proof and age, then whiskey, agave, and Scotch.",
+        href: "/learn/paths/spirit-labels-decoded",
+      },
+      {
+        label: "Jim Meehan, Meehan's Bartender Manual",
+        note: "Whiskey selection for stirred and shaken classics.",
+      },
+      {
+        label: "Difford's Guide — Whisky & whiskey",
+        note: "Category overviews and cocktail applications.",
+        href: "https://www.diffordsguide.com/",
+      },
+    ],
+  },
+  {
+    slug: "whiskey-how-its-made",
+    title: "How whiskey is made",
+    eyebrow: "Spirits",
+    summary:
+      "Grain, still, and cask explain sweetness, spice, and smoke better than the font on the label.",
+    readingMinutes: 7,
+    topics: ["whiskey", "production", "mash bill", "oak", "peat", "still"],
+    coverImage: "/learn/spirit-primer-whiskey.webp",
+    coverAlt: "Charred oak whiskey barrels stacked in a quiet aging warehouse",
+    accentClass: whiskeyAccent,
+    practice: [
+      {
+        slug: "old-fashioned",
+        notice:
+          "Taste the whiskey neat first. New charred oak is the vanilla you will still hear under sugar and bitters.",
+      },
+      {
+        slug: "manhattan",
+        notice:
+          "Rye grain is the dry snap. If the drink goes dessert, the mash bill — or the vermouth — did that, not the stir.",
+      },
+      {
+        slug: "whiskey-sour",
+        notice:
+          "Bourbon’s corn and new oak soften lemon. A peated malt will not silently do the same job.",
+      },
+      {
+        slug: "boulevardier",
+        notice:
+          "Campari is loud. Grain and cask still show — bourbon rounds the bitter; rye keeps an edge.",
+      },
+    ],
+    bigIdea:
+      "Grain, still, and cask explain sweetness, spice, and smoke better than the label font.",
+    keyTakeaways: [],
+    sections: [
+      {
+        heading: "From mash to glass",
+        kind: "rule",
+        figure: "whiskey-production",
+        body: [
+          "A few production choices sit between the grain and the glass: what you mash, how you distill it, what cask you fill, how long it sits, and how you bottle it.",
+          "Those levers show up more honestly than the typeface on the neck tag. Learn them, and a new bottle is a set of choices you can taste.",
+        ],
+      },
+      {
+        heading: "Mash bill and still",
+        body: [
+          "Mash bill is the grain recipe. Corn reads sweet. Rye reads spice and dry. Malted barley reads bread and, if it was dried over peat, smoke. Wheat reads soft. The legal floors — 51% corn for bourbon, 51% rye for rye — are the start of the flavor, not the whole story. The rest of the mash still matters.",
+          "Pot stills keep more of that grain character. Column stills can refine toward a lighter, cleaner spirit. Many bottles are a conversation between the two — especially blends.",
+        ],
+      },
+      {
+        heading: "New charred oak vs used casks",
+        body: [
+          "Bourbon and US rye must age in new charred oak. The char and fresh wood pull vanillin, caramelized sugars, and toast into the spirit. That is why American whiskey so often tastes of vanilla before you add anything.",
+          "Scotch and much Irish whiskey typically age in used barrels — often ex-bourbon, sometimes sherry. Oak reads softer. Grain and peat, if any, stay more visible.",
+          "A bourbon Old Fashioned and a Scotch Rob Roy share a template. They are not the same drink. Same bones, different wood and grain.",
+        ],
+      },
+      {
+        heading: "Age, peat, and the bottle",
+        kind: "tip",
+        body: [
+          "Time in wood is work, not a score. US straight whiskey has a two-year floor. Scotch and Irish have a three-year floor. More years can mean more oak — or just a quieter spirit that lost more to the air.",
+          "Peat is aroma, not proof. The smoke is in the malted barley, dried over a peat fire, before the still ever runs. A 40% peated malt can shout louder than a 50% bourbon. Dose it like seasoning.",
+          "Many bottles are chill-filtered so they stay bright when you add ice or water. That can strip a little texture. It is not a quality verdict. ABV on the label is the more honest mixing number — around 45–50% still holds sugar and citrus.",
+        ],
+      },
+      {
+        heading: "Common mistakes",
+        kind: "mistakes",
+        body: [
+          "Reading the label font as a production story.",
+          "Treating peat as strength. Smoke is perfume. Proof is proof.",
+          "Pouring a used-cask Scotch as if it were new-oak bourbon in an Old Fashioned and expecting the same vanilla.",
+        ],
+      },
+    ],
+    deepDive: [
+      {
+        heading: "Scotch categories, usefully",
+        kind: "tip",
+        body: [
+          "Single malt: one distillery, malted barley, pot stills. Beautiful neat. In cocktails it can dominate unless the recipe wants that character.",
+          "Blended Scotch: malt whisky for flavor plus column-distilled grain whisky for lightness — the practical mixing pour for highballs and most vermouth drinks on Scotch.",
+          "Peat phenols are aromatic intensity, not a legal age or a proof. The Penicillin (Sam Ross) shakes lemon and honey-ginger with a gentler whisky, then floats a smoky malt so smoke is perfume, not the entire palate.",
+        ],
+      },
+      {
+        heading: "Irish pot still vs the soft blend",
+        body: [
+          "Unmalted barley in the mash is the sensory signature of Irish single pot still whiskey — oilier, spicier, closer to a mixing whiskey that can stand up in stirred drinks.",
+          "Everyday Irish blends are often the lightest whiskey on a home shelf. They excel in highballs and gentle sours. They go slack in a rye Manhattan unless you choose a richer pot-still bottle.",
+        ],
+      },
+      {
+        heading: "The labels path, if you want the legal words",
+        body: [
+          "Mash floors, bonded whiskey, and what “straight” guarantees are shopping law. They live on American whiskey labels, in Spirit labels decoded. Come back here when you want the glass, not the statute.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "American whiskey labels",
+        note: "Mash floors, straight, bottled-in-bond — law on the bottle, not this lesson’s job.",
+        href: "/learn/guides/spirit-labels-whiskey",
+      },
+      {
+        label: "Scotch labels",
+        note: "Single malt vs blend, and what a printed age guarantees.",
+        href: "/learn/guides/spirit-labels-scotch",
+      },
+      {
+        label: "Spirit labels decoded",
+        note: "The full labels path — start with proof and age, then the spirit families.",
+        href: "/learn/paths/spirit-labels-decoded",
+      },
+      {
+        label: "Jim Meehan, Meehan's Bartender Manual",
+        note: "How production shows up in classic whiskey drinks.",
+      },
+      {
+        label: "Difford's Guide — whisky production",
+        note: "Category overviews and still/aging notes.",
+        href: "https://www.diffordsguide.com/",
+      },
+    ],
+  },
+  {
+    slug: "whiskey-history-in-glass",
+    title: "Whiskey history in your glass",
+    eyebrow: "Spirits",
+    summary:
+      "A few true stories explain why a recipe wants rye, bourbon, or a different family — not a timeline for its own sake.",
+    readingMinutes: 6,
+    topics: ["whiskey", "history", "rye", "prohibition", "manhattan", "sazerac"],
+    coverImage: "/learn/learn-whiskey-manhattan.webp",
+    coverAlt: "A Manhattan in a coupe with a cherry on a pick",
+    accentClass: whiskeyAccent,
+    practice: [
+      {
+        slug: "manhattan",
+        notice:
+          "This is the rye chapter. If history made you reach for a soft blend, pour again.",
+      },
+      {
+        slug: "old-fashioned",
+        notice:
+          "Spirit, sugar, bitters, ice — the 19th-century whiskey cocktail. Fruit in the glass is a later habit.",
+      },
+      {
+        slug: "whiskey-sour",
+        notice:
+          "Same era’s sour template. Bourbon became the usual pour after rye left the shelf.",
+      },
+      {
+        slug: "boulevardier",
+        notice:
+          "A later equal-parts cousin. The whiskey judgment is still the 19th-century one: spice or round.",
+      },
+    ],
+    bigIdea: "Recipe era often tells you which bottle to pour.",
+    keyTakeaways: [],
+    sections: [
+      {
+        heading: "Nineteenth-century rye bars",
+        figure: "whiskey-history",
+        body: [
+          "American bars in the late 1800s poured mostly rye. The Manhattan — New York, 1870s–80s — is whiskey, sweet vermouth, and bitters built on that spice. Invention stories attached to hotels and banquets came later. The useful leftover is the pour: rye against vermouth.",
+          "The Sazerac starts as a New Orleans cognac drink, named for a brand of cognac, not a whiskey. Rye became the usual pour as cognac supply and American taste shifted. Treat that as a careful succession, not a founding myth. Peychaud’s and an absinthe rinse are the documented seasoning. Cognac Sazeracs still exist; rye is the modern default.",
+          "The whiskey cocktail that became the Old Fashioned — spirit, sugar, bitters, water or ice — and the whiskey sour are the same era’s templates. Structure first. Fruit muddled in the glass is a later restaurant habit.",
+        ],
+      },
+      {
+        heading: "After Prohibition, bourbon became “whiskey”",
+        body: [
+          "When the United States went dry, the legal whiskey trade collapsed. After repeal, corn economics and broader distribution made bourbon the supermarket default. Rye nearly left the back bar.",
+          "Mid-century American recipes that say only “whiskey” often silently assume bourbon. That is a shelf fact, not a law. If you are reading a 1950s spec, corn-and-oak is the likely pour.",
+        ],
+      },
+      {
+        heading: "Rye’s near-death and return",
+        body: [
+          "Rye stayed scarce through the late twentieth century. The cocktail revival of the 2000s brought it back because Manhattans and Sazeracs taste flabby when corn sweetness is the only whiskey in the glass.",
+          "Reading a recipe’s era is often enough to choose a bottle. An 1880s Manhattan wants rye. A mid-century “whiskey” sour will forgive bourbon. A modern spec that names rye means it.",
+        ],
+      },
+      {
+        heading: "Scotch and Irish stay their own families",
+        kind: "tip",
+        body: [
+          "Scotch and Irish whiskey did not wait for the American revival to exist. They have always been separate mixing families, with their own law and their own drinks.",
+          "A Rob Roy is a Manhattan idea on Scotch — same bones, different grain and cask. Irish coffee and a gentle Irish sour are their own chapter. Do not fold those bottles into the American “whiskey” line unless the recipe says so.",
+        ],
+      },
+      {
+        heading: "Common mistakes",
+        kind: "mistakes",
+        body: [
+          "Treating a hotel banquet story as a primary source for the Manhattan.",
+          "Calling every Sazerac a rye drink from the first pour — cognac was first; rye is the later default.",
+          "Hearing “whiskey” in a 19th-century recipe and reaching for peated Scotch.",
+        ],
+      },
+    ],
+    deepDive: [
+      {
+        heading: "Sazerac — documented succession",
+        body: [
+          "The name points to Sazerac de Forge cognac and a New Orleans coffee house. Rye took over as the house pour later. When you teach the drink, say that out loud. Then pour rye unless you mean the older cognac version.",
+        ],
+      },
+      {
+        heading: "Old Fashioned — the call, not the fruit",
+        kind: "tip",
+        body: [
+          "“Old-fashioned” began as a call for the whiskey cocktail the old way — spirit, sugar, bitters — against later fancy builds. Robert Simonson’s history is the useful shelf book. Muddled orange and cherry are a 20th-century service habit, not the structure.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "David Wondrich, Imbibe!",
+        note: "Nineteenth-century American bar: Manhattan, whiskey cocktail, sour templates — documented vs later legend.",
+      },
+      {
+        label: "Robert Simonson, The Old-Fashioned",
+        note: "How the whiskey cocktail became the Old Fashioned — structure over fruit salad.",
+      },
+      {
+        label: "Jim Meehan, Meehan's Bartender Manual",
+        note: "Sazerac succession and modern default pours.",
+      },
+    ],
+  },
+  {
+    slug: "whiskey-learn-to-taste",
+    title: "Learn to taste the difference",
+    eyebrow: "Spirits",
+    summary: "Styles are easiest to learn with your nose. A short protocol beats another shelf chart.",
+    readingMinutes: 6,
+    topics: ["whiskey", "tasting", "bourbon", "rye", "peat", "irish"],
+    coverImage: "/learn/spirit-labels-intro.webp",
+    coverAlt:
+      "Two bourbon bottles side by side — a tasting comparison starts with two glasses, not a chart",
+    accentClass: whiskeyAccent,
+    practice: [
+      {
+        slug: "old-fashioned",
+        notice:
+          "Mini-lab A, in a drink: same spec, bourbon then rye. Name which one stayed round.",
+      },
+      {
+        slug: "manhattan",
+        notice:
+          "Mini-lab B: same vermouth and bitters, two whiskeys. Name which one kept the drink from dessert.",
+      },
+      {
+        slug: "whiskey-sour",
+        notice:
+          "Smell the whiskey before the lemon goes in. If it already smells like a campfire, this is not a standard sour.",
+      },
+      {
+        slug: "boulevardier",
+        notice:
+          "Campari is loud. Two words for the whiskey first — then taste whether it softened or stayed lean.",
+      },
+    ],
+    bigIdea: "Learn styles with a short protocol, not a shelf chart.",
+    keyTakeaways: [],
+    sections: [
+      {
+        heading: "A tasting protocol",
+        kind: "rule",
+        figure: "whiskey-tasting-protocol",
+        body: [
+          "Smell first. Taste. Two words — then name the style. Guessing early just trains you to confirm what the label already told you.",
+          "Neat, or with a few drops of water if it is hot. Same glass shape if you can. You are training a comparison, not hosting a party.",
+        ],
+      },
+      {
+        heading: "What to listen for",
+        figure: "whiskey-styles",
+        body: [
+          "Bourbon: vanilla, corn sweet, round. If the oak is the first thing you smell, you found new charred wood.",
+          "Rye: pepper, baking spice, a drier finish. If the drink feels leaner in the same glass, believe it.",
+          "Blended Scotch: light malt, easy to mix. A Rob Roy should still taste like whisky, not like a shy bourbon.",
+          "Peated malt: smoke first. Phenol, not proof. Two words beat a paragraph — “smoke, iodine” is more useful than a campfire essay.",
+          "Irish blend vs pot still: the blend is soft and light; pot still is oilier, with unmalted barley body. If it feels thin in a stirred drink, you probably grabbed the blend.",
+        ],
+      },
+      {
+        heading: "Mini labs",
+        kind: "tip",
+        body: [
+          "A: Bourbon vs rye, neat. Same splash, same glass shape. Two words each. Then name the style.",
+          "B: Same Manhattan spec, two pours — bourbon then rye. Name which vermouth stayed in its place.",
+          "C, optional: a Penicillin-logic float. Shake a gentle whisky sour, then a barspoon of peated malt on top. Smoke should be perfume, not the whole sip.",
+        ],
+      },
+      {
+        heading: "Common mistakes",
+        kind: "mistakes",
+        body: [
+          "Naming the style from the label before you smell the glass.",
+          "Calling every smoky whisky “Islay” — peat is a production choice, not a region quiz.",
+          "Tasting six bottles in a rush and remembering none.",
+        ],
+      },
+    ],
+    deepDive: [
+      {
+        heading: "Two words beat tasting-note poetry",
+        body: [
+          "“Vanilla, round” or “pepper, dry” will still help you at the shelf next month. A stack of fruit names will not. Write the words. Then look at the label.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Jim Meehan, Meehan's Bartender Manual",
+        note: "Matching what you smell to what the drink can hold.",
+      },
+      {
+        label: "Dave Broom, The World Atlas of Whisky",
+        note: "Tasting language for whiskey families without purple notes.",
+      },
+    ],
+  },
+  {
+    slug: "whiskey-four-classics",
+    title: "Four classics, four lessons",
+    eyebrow: "Spirits",
+    summary:
+      "Each classic trains a different whiskey judgment — round vs snap, vermouth, lemon, and equal-parts bitter.",
+    readingMinutes: 7,
+    topics: ["whiskey", "old-fashioned", "manhattan", "whiskey-sour", "boulevardier"],
+    coverImage: "/learn/whiskey-deep-dive.webp",
+    coverAlt: "An Old Fashioned in a rocks glass with a large ice cube and orange peel",
+    accentClass: whiskeyAccent,
+    practice: [
+      {
+        slug: "old-fashioned",
+        notice:
+          "Bourbon round vs rye snap. If it tastes like fruit salad, you muddled the structure away.",
+      },
+      {
+        slug: "manhattan",
+        notice:
+          "Rye vs bourbon vs the vermouth. If it’s dusty, fridge the wine — don’t blame the whiskey first.",
+      },
+      {
+        slug: "whiskey-sour",
+        notice:
+          "Bourbon or Irish. Lemon should lead. If smoke is the first thing you taste, you left the template.",
+      },
+      {
+        slug: "boulevardier",
+        notice:
+          "Equal parts. Bourbon softens the bitter; rye keeps it lean. Stir until it’s cold, not candy-hot.",
+      },
+    ],
+    bigIdea: "Each classic trains a different whiskey judgment.",
+    keyTakeaways: [],
+    sections: [
+      {
+        heading: "Old Fashioned — structure, not fruit",
+        figure: "whiskey-drinks",
+        body: [
+          "Spirit, sugar, bitters, ice. Stir until the heat drops. The whiskey should still be the point.",
+          "Bourbon makes it round. Rye makes it snap. Both are correct. Fruit muddled in the glass is a later habit — not the lesson.",
+        ],
+      },
+      {
+        heading: "Manhattan — rye, bourbon, and the fridge",
+        body: [
+          "Whiskey, sweet vermouth, bitters. Rye keeps vermouth from turning the drink into dessert. Bourbon is a legitimate softer cousin. Call it what it is.",
+          "Half the drink is wine. Fridge the vermouth. Date it. If tonight’s Manhattan tastes dusty and nutty, open a fresher bottle before you change the whiskey.",
+        ],
+      },
+      {
+        heading: "Whiskey Sour — lemon leads",
+        body: [
+          "Spirit, lemon, sugar. Shake hard. Bourbon or a friendly Irish blend both fit. Lemon should still be the loudest thing in the glass.",
+          "Peated Scotch will usually bury the citrus unless you are building a Penicillin-style drink on purpose. If it tastes thin, check the juice and the shake before you blame the bottle.",
+        ],
+      },
+      {
+        heading: "Boulevardier — equal parts, two temperaments",
+        body: [
+          "Equal parts whiskey, Campari, sweet vermouth. Same bones as a Negroni. Bourbon softens the bitter. Rye keeps it lean.",
+          "Stir cold. The Sazerac lives in the history lesson — cognac first, then rye — not as this fourth classic. Tonight is equal parts.",
+        ],
+      },
+      {
+        heading: "When the recipe only says whiskey",
+        kind: "tip",
+        body: [
+          "Pour bourbon or rye unless the notes say otherwise. Scotch and Irish keep their own named drinks.",
+          "Old Fashioned and sour: bourbon is the usual home default. Manhattan and Boulevardier: rye if you have it. Then taste, and keep the pour that fits the glass.",
+        ],
+      },
+      {
+        heading: "Common mistakes",
+        kind: "mistakes",
+        body: [
+          "One bottle for every whiskey drink on the list.",
+          "Muddling orange and cherry, then blaming the bourbon.",
+          "Hearing “whiskey” and reaching for peat.",
+        ],
+      },
+    ],
+    deepDive: [
+      {
+        heading: "Rob Roy is not a silent Manhattan",
+        body: [
+          "Same vermouth idea, Scotch instead of rye. The grain and the used cask change the drink. Name it honestly.",
+        ],
+      },
+      {
+        heading: "Why Sazerac is not classic #4 here",
+        kind: "tip",
+        body: [
+          "The Sazerac teaches succession and a rinse — history, not equal parts. Practice it after the history lesson. Keep this set to four judgments: structure, vermouth, lemon, bitter.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        label: "Robert Simonson, The Old-Fashioned",
+        note: "Structure over fruit salad.",
+      },
+      {
+        label: "David Wondrich, Imbibe!",
+        note: "Manhattan and sour templates in the American bar.",
+      },
+      {
+        label: "Jim Meehan, Meehan's Bartender Manual",
+        note: "Boulevardier as the whiskey equal-parts drink; vermouth care.",
+      },
+      {
+        label: "Difford's Guide — whiskey classics",
+        note: "Named drinks vs the word “whiskey” on a spec.",
+        href: "https://www.diffordsguide.com/",
+      },
+    ],
+  },
+];

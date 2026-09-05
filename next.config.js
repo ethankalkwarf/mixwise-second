@@ -94,6 +94,21 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: '/learn/guides/spirit-primer-gin',
+        destination: '/learn/paths/gin-primer',
+        permanent: true,
+      },
+      {
+        source: '/learn/guides/spirit-primer-rum',
+        destination: '/learn/paths/rum-primer',
+        permanent: true,
+      },
+      {
+        source: '/learn/guides/spirit-primer-whiskey',
+        destination: '/learn/paths/whiskey-deep-dive',
+        permanent: true,
+      },
+      {
         source: '/brand/press',
         destination: '/brand/logos',
         permanent: true,

@@ -4,7 +4,7 @@ import { MainContainer } from "@/components/layout/MainContainer";
 import { LearnHero } from "@/components/learn/LearnHero";
 import { LearnPathCurriculum } from "@/components/learn/LearnPathCurriculum";
 import { NativeLearnPathHero } from "@/components/mobile/NativeLearnPathHero";
-import { LEARN_PATHS, getLearnPath, pathStepHref } from "@/lib/learnLibrary";
+import { LEARN_PATHS, LEARN_PATH_ALIASES, getLearnPath, pathStepHref } from "@/lib/learnLibrary";
 import { generatePageMetadata } from "@/lib/seo";
 
 type PageProps = {
@@ -12,7 +12,8 @@ type PageProps = {
 };
 
 export function generateStaticParams() {
-  return LEARN_PATHS.map((p) => ({ slug: p.slug }));
+  const aliasSlugs = Object.keys(LEARN_PATH_ALIASES);
+  return [...LEARN_PATHS.map((p) => p.slug), ...aliasSlugs].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: PageProps) {
