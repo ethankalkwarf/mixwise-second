@@ -21,12 +21,21 @@
 | `garnish-with-intent.webp` | Garnish with intent |
 | `vermouth-and-modifiers.webp` | Vermouth & modifiers (generated) |
 | `spirit-primer-agave.webp` | Agave primer |
-| `spirit-primer-whiskey.webp` | Whiskey primer (rickhouse barrels) |
+| `spirit-primer-whiskey.webp` | Whiskey path lesson 1 (rickhouse barrels) |
 | `spirit-primer-gin.webp` | Gin primer (G&T — CC photo; see ATTRIBUTION.md) |
-| `spirit-primer-rum.webp` | Rum primer (Daiquiri — CC photo; see ATTRIBUTION.md) |
-| `whiskey-deep-dive.webp` | Whiskey primer path (Old Fashioned) |
-| `learn-whiskey-manhattan.webp` | Whiskey primer — Manhattan slide (CC photo; see ATTRIBUTION.md) |
-| `learn-whiskey-sour.webp` | Whiskey primer — Whiskey Sour slide (CC photo; see ATTRIBUTION.md) |
+| `spirit-primer-rum.webp` | Rum path + lessons 1 and 5 (Daiquiri — CC photo; see ATTRIBUTION.md) |
+| `rum-how-its-made.webp` | How rum is made (Foursquare warehouse — CC photo; see ATTRIBUTION.md) |
+| `rum-learn-to-taste.webp` | Learn to taste (side-by-side tot pour — OGL; see ATTRIBUTION.md) |
+| `rum-history-in-glass.webp` | Rum history (Floridita sign — CC photo; see ATTRIBUTION.md) |
+| `whiskey-how-its-made.webp` | How whiskey is made (Pulteney mash tun — CC photo; see ATTRIBUTION.md) |
+| `whiskey-history-in-glass.webp` | Whiskey history cover + rye-era slide (Hoffman House bar, 1880s — PD; see ATTRIBUTION.md) |
+| `whiskey-learn-to-taste.webp` | Learn to taste (two Glencairn pours — CC photo; see ATTRIBUTION.md) |
+| `whiskey-deep-dive.webp` | Whiskey path + lesson 5 (Old Fashioned) |
+| `learn-whiskey-manhattan.webp` | Whiskey drinks figure — Manhattan slide (CC photo; see ATTRIBUTION.md) |
+| `learn-whiskey-sour.webp` | Whiskey drinks figure — Whiskey Sour slide (CC photo; see ATTRIBUTION.md) |
+| `figure-whiskey-boulevardier.webp` | Whiskey drinks figure — Boulevardier (CC photo; see ATTRIBUTION.md) |
+| `figure-whiskey-saloon-1900.webp` | History pager — Yellow Aster Saloon ca. 1900 (PD; see ATTRIBUTION.md) |
+| `figure-whiskey-rickhouse.webp` | History pager — Woodford Reserve rickhouse (PD; see ATTRIBUTION.md) |
 | `equal-parts-bitters.webp` | Equal parts & bitter drinks (Negroni — CC photo; see ATTRIBUTION.md) |
 | `batching-and-hosting.webp` | Batching for guests (CC photo; see ATTRIBUTION.md) |
 | `citrus-and-syrups.webp` | Citrus & syrups (CC photo; see ATTRIBUTION.md) |
@@ -38,6 +47,13 @@
 | `spirit-labels-whiskey.webp` | American whiskey labels module (Wild Turkey Rare Breed) |
 | `spirit-labels-agave.webp` | Agave labels module (Corralejo blanco — 100% de agave) |
 | `spirit-labels-scotch.webp` | Scotch labels module (Laphroaig 10 — age statement) |
+
+## Whiskey: from bottle to classics (course)
+Path: `/learn/paths/whiskey-deep-dive` — family & buying → how it’s made → history in the glass → learn to taste → four classics.
+
+**Diagrams (SVG in LearnFigure):** `whiskey-styles`, `whiskey-production` (mash → bottle rail), `whiskey-tasting-protocol` (nose → name rail). Photo pagers: `whiskey-drinks` (OF, Manhattan, Sour, Boulevardier) and `whiskey-history` (Hoffman House · Yellow Aster saloon · Woodford rickhouse).
+
+Old URL `/learn/guides/spirit-primer-whiskey` redirects to the path.
 
 ## Spirit labels decoded (course)
 Path: `/learn/paths/spirit-labels-decoded` — intro → American whiskey → agave → Scotch.
