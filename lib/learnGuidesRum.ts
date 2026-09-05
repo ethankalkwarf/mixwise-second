@@ -61,6 +61,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
       },
       {
         heading: "White, gold, dark — what color does not guarantee",
+        figure: "rum-color-myth",
         body: [
           "A lot of the big mixing whites — Bacardi Superior included — spend time in oak, then get filtered until they look clear. Clear means filtered, not young. That light aging is why a good mixing white still feels soft under lime instead of sharp and thin.",
           "Gold and dark are weaker signals. The color might be years in wood, a dose of caramel, heavy molasses character, or all three. Rum doesn’t police age statements the way Scotch does. If a near-black bottle mostly tastes like sweet syrup and heat, it will bully a dry Daiquiri no matter how serious the label looks.",
@@ -434,8 +435,8 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
       "Each classic teaches a different rum skill — clean spine, mint and length, weight in a highball, and blending on purpose.",
     readingMinutes: 7,
     topics: ["rum", "daiquiri", "mojito", "dark-n-stormy", "mai-tai"],
-    coverImage: "/learn/spirit-primer-rum.webp",
-    coverAlt: "A classic Daiquiri in a coupe with a lime wheel",
+    coverImage: "/learn/rum-four-classics.webp",
+    coverAlt: "A Mojito packed with crushed ice and mint, photographed poolside",
     accentClass: rumAccent,
     practice: [
       {

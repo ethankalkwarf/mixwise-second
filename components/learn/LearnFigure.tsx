@@ -661,9 +661,39 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
       },
       {
         src: "/learn/figure-rum-mai-tai.webp",
-        alt: "A Mai Tai in a rocks glass with ice and lime",
+        alt: "A Mai Tai in a rocks glass with Jamaican rum, agricole, orgeat, and lime",
         label: "Mai Tai",
         note: "Aged frame, then a funky fraction",
+      },
+    ],
+  },
+  "rum-color-myth": {
+    kicker: "Color is not a grade",
+    title: "Clear, gold, and dark are not age statements",
+    slides: [
+      {
+        src: "/learn/figure-rum-color-lineup.webp",
+        alt: "Seven Havana Club bottles on a shelf, from dark amber to filtered clear",
+        label: "Same house",
+        note: "Color runs the range. It still is not a legal age grade.",
+      },
+      {
+        src: "/learn/figure-rum-color-clear.webp",
+        alt: "A bottle of Bacardi Carta Blanca Superior white rum lying on a wooden table",
+        label: "Clear",
+        note: "Filtered after oak — clear means filtered, not young.",
+      },
+      {
+        src: "/learn/figure-rum-color-gold.webp",
+        alt: "Three Appleton Estate aged rums in the sand, gold to mahogany",
+        label: "Gold",
+        note: "Oak, caramel, or both. Gold is a weaker signal than the nose.",
+      },
+      {
+        src: "/learn/figure-rum-color-dark.webp",
+        alt: "Two dark Zacapa bottles and a tasting glass on a tiled bar",
+        label: "Dark",
+        note: "Near-black can be years in wood — or color and sugar. Taste it.",
       },
     ],
   },
@@ -688,6 +718,12 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
         alt: "Royal Navy sailors lining up for the daily rum ration aboard HMS King George V in 1940",
         label: "Navy weight",
         note: "Proof that holds ginger and sugar — not a gunpowder campfire story",
+      },
+      {
+        src: "/learn/figure-rum-sugarcane.webp",
+        alt: "Stone sugar-mill windmills at Betty's Hope plantation in Antigua, one still carrying sail arms",
+        label: "Cane and molasses",
+        note: "Mills crushed cane for sugar. Molasses was left to ferment. This is the sugar economy — not a tasting note, and not a brand.",
       },
     ],
   },
