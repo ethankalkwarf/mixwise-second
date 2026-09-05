@@ -73,8 +73,8 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Two bottles to start",
         kind: "tip",
         body: [
-          "Start with one clean Spanish-style mixing white you like in a Daiquiri — Bacardi Superior, Havana Club 3 where you can find it, or a similar filtered white — plus one solid aged rum you like neat or in a ginger highball. Flor de Caña 4 or 7, Mount Gay Eclipse, or Doorly’s are the usual aged frames. That pair covers most MixWise rum recipes.",
-          "Add a job when recipes ask, not a trophy: Appleton Estate Signature for friendlier Jamaican oak; Smith & Cross or Wray & Nephew Overproof when you want funk as a tool; El Dorado 5 or 8 for Demerara weight; Rhum Clément Blanc or similar for grassy unaged cane.",
+          "Start with one clean Spanish-style mixing white you like in a Daiquiri — Bacardi Superior, Havana Club 3 where Cuban rum is sold, or a similar filtered white — plus one solid aged rum you like neat or in a ginger highball. Flor de Caña 4 or 7 is the usual soft Spanish-style oak frame; Mount Gay Eclipse or Doorly’s is the approachable Barbados one. That pair covers most MixWise rum recipes.",
+          "Add a job when recipes ask, not a trophy. Appleton Estate Signature is the friendlier Jamaican aged rum — oak and a little funk without blowing the glass. Smith & Cross or Wray & Nephew Overproof is funk as a tool, not a daily mixer. El Dorado 5 or 8 gives Demerara weight in a ginger highball. Rhum Clément Blanc or similar is the grassy unaged cane bottle.",
           "Around 40% ABV can taste thin once sugar and citrus arrive. A notch higher holds a Daiquiri better.",
         ],
       },
@@ -356,7 +356,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Mini labs",
         kind: "tip",
         body: [
-          "A: Same Daiquiri, two whites — clean vs agricole. Name which lime survived.",
+          "A: Same Daiquiri, two whites — a clean mixing white versus Clément Blanc or similar agricole. Name which lime survived.",
           "B: Same highball, two aged rums — one dry, one sweet. Ginger tells you which has real weight.",
           "C: Split a Mai Tai — all aged vs aged-plus-a-barspoon of funk. The second drink is the lesson.",
         ],
@@ -428,7 +428,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         heading: "Mojito — lengthen without muddying",
         body: [
-          "Same acid-sweet idea, built long with mint and soda. Use the same clean white as the Daiquiri.",
+          "Same acid-sweet idea, built long with mint and soda. Default bottle is the same clean mixing white as the Daiquiri — Bacardi Superior or similar.",
           "Press mint. Don’t shred it. A clean rum keeps the lengthener bright; a heavy funk rum can taste muddy once soda is in.",
         ],
       },
@@ -450,7 +450,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "When the recipe only says rum",
         kind: "tip",
         body: [
-          "Citrus-up: clean white. Ginger highball: aged or navy-weight. Orgeat and tiki: aged frame, funk on purpose.",
+          "Citrus-up: a clean mixing white (Bacardi Superior or similar). Ginger highball: aged or navy-weight — El Dorado 5 or 8 for the template, Gosling’s if you are making the named drink. Orgeat and tiki: aged Barbados or Spanish-style frame, then a Jamaican splash on purpose.",
           "Spiced rum is a different product. Don’t hear “rum” and reach for spice.",
         ],
       },
