@@ -23,32 +23,32 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         slug: "gin-and-tonic",
         notice:
-          "London dry wants a dry tonic and a lean garnish. If the gin tastes soapy or candy-sweet neat, tonic will amplify it — not hide it.",
+          "Beefeater or Tanqueray with a dry tonic. Hendrick’s wants a leaner one. If the gin tastes soapy or candy-sweet neat, tonic will amplify it — not hide it.",
       },
       {
         slug: "martini",
         notice:
-          "Stir cold and dense. A juniper-forward gin keeps vermouth from turning the drink into perfume water.",
+          "Beefeater or Tanqueray. A juniper-led London dry keeps vermouth from turning the drink into perfume water.",
       },
       {
         slug: "negroni",
         notice:
-          "Equal parts. A soft contemporary gin can disappear under Campari; a classic London dry holds the bitter.",
+          "Beefeater or Tanqueray. Hendrick’s can disappear under Campari — name that honestly.",
       },
       {
         slug: "last-word",
         notice:
-          "Equal-parts sour with green Chartreuse. Loud gin is fine — the template already has volume.",
+          "Same London dry, or Plymouth Navy Strength / Tanqueray export strength if you want more density. Loud gin is allowed.",
       },
     ],
     bigIdea:
       "Gin is a flavored spirit with a juniper legal spine — buy for how botanicals behave under tonic, vermouth, or citrus, not bottle art.",
     keyTakeaways: [
       "Juniper must be perceptible for it to be gin; everything else is house style.",
-      "London dry is the reliable cocktail default — dry, juniper-led, no post-distillation sweetening.",
-      "Contemporary gins can be citrus- or floral-forward — great in G&Ts, riskier in a Negroni.",
+      "London dry is the cocktail default — Beefeater, Tanqueray, or another juniper-led bottle you like.",
+      "Hendrick’s and similar contemporaries can be citrus- or floral-forward — great in G&Ts, riskier in a Negroni.",
       "Tonic is a lengthener with bitterness; it reveals gin character instead of covering flaws.",
-      "Buy a gin you like with a whisper of vermouth — not only with soda.",
+      "Buy a London dry you like with a whisper of vermouth — not only with soda.",
     ],
     sections: [
       {
@@ -63,35 +63,33 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         heading: "London dry vs contemporary",
         body: [
-          "London dry is a production style, not a geography requirement: distilled with botanicals, no sweetening after distillation beyond a tiny allowance, and a dry profile. It is the usual home pour for Martinis, Negronis, and classic G&Ts.",
-          "Contemporary gins often push citrus, cucumber, floral, or spice notes. They can make a brilliant highball and a muddy Negroni. Taste neat with a drop of water before you commit a whole bottle to equal-parts drinks.",
+          "London dry is a production style, not a geography requirement: distilled with botanicals, no sweetening after distillation beyond a tiny allowance, and a dry profile. Beefeater and Tanqueray are the usual juniper-led home defaults — Martinis, Negronis, classic G&Ts. Another juniper-led London dry you already like does the same job.",
+          "Contemporary gins often push citrus, cucumber, floral, or spice notes. Hendrick’s is the familiar cucumber-floral example: brilliant in a G&T, riskier in a Negroni. Name the job honestly. Taste neat with a drop of water before you commit a whole bottle to equal-parts drinks.",
         ],
       },
       {
         heading: "A starter bottle",
         kind: "tip",
         body: [
-          "You do not need a gin library. One solid London dry you like with a whisper of dry vermouth covers Martinis, Negronis, Last Words, and most G&Ts.",
-          "Add a contemporary bottle when you want a brighter highball — not as a silent swap for the cocktail default. Navy strength and Old Tom can wait until a recipe or a sour asks.",
+          "You do not need a gin library. One solid London dry — Beefeater, Tanqueray, or similar juniper-led — that you like with a whisper of dry vermouth covers Martinis, Negronis, Last Words, and most G&Ts.",
+          "Add Hendrick’s, or another cucumber-floral contemporary, when you want a brighter highball — not as a silent swap for the cocktail default. Navy strength and Old Tom can wait until a recipe or a sour asks.",
+        ],
+      },
+      {
+        heading: "Old Tom, navy strength, and genever — shopping footnotes",
+        kind: "tip",
+        body: [
+          "Old Tom is a slightly sweeter historic style — Hayman’s Old Tom is the usual shopping example. Useful in older recipes that assume a softer gin. Navy strength (often ~57% ABV) holds citrus and sugar in sours; Plymouth Navy Strength is a measured tool, not a flex. Tanqueray bottled at export strength (~47%) is a smaller density step — still not a silent swap for 40% by the ounce.",
+          "Genever is malt-forward and closer to whiskey in some stirred drinks. Bols Genever is the familiar cousin on a shelf. It is not a 1:1 London dry substitute. Production and history lessons unpack both.",
         ],
       },
       {
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "Buying gin only for the G&T, then wondering why the Martini tastes hollow.",
-          "Treating “craft” or “small batch” as a quality score — those words are marketing, not London dry.",
-          "Using warm tonic and three cubes, then blaming the gin for a flat highball.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Old Tom, navy strength, and genever — shopping footnotes",
-        kind: "tip",
-        body: [
-          "Old Tom is a slightly sweeter historic style — useful in older recipes that assume a softer gin. Navy strength (often ~57% ABV) holds citrus and sugar in sours; it is not a silent swap for 40% London dry by the ounce.",
-          "Genever is malt-forward and closer to whiskey in some stirred drinks. It is a cousin, not a 1:1 London dry substitute. Production and history lessons unpack both.",
+          "Martini tastes hollow after you shopped only for a G&T → start with a juniper-led London dry (Beefeater, Tanqueray, or similar) you like with a whisper of vermouth; add Hendrick’s later for the highball fork.",
+          "Label says “craft” or “small batch” and you treated that as quality → ignore those words; shop London dry vs contemporary by how the botanicals behave under vermouth or tonic.",
+          "G&T goes flat in two minutes → pack the glass with ice and use fridge-cold tonic before you change the gin.",
         ],
       },
     ],
@@ -132,12 +130,12 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         slug: "negroni",
         notice:
-          "Campari is loud. A juniper-led distillate still reads; a soft floral steep often does not.",
+          "Campari is loud. Beefeater or Tanqueray still reads; Hendrick’s, or another soft floral steep, often does not.",
       },
       {
         slug: "last-word",
         notice:
-          "Navy strength holds Chartreuse and lime. A shy 40% pour can taste thin in the same ounces.",
+          "Plymouth Navy Strength or Tanqueray export strength holds Chartreuse and lime. A shy 40% pour can taste thin in the same ounces.",
       },
       {
         slug: "gin-and-tonic",
@@ -169,7 +167,7 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Vapor infusion vs steeping",
         body: [
           "Steeping — maceration — soaks botanicals in spirit before the still runs. It can pull deeper, rounder, sometimes earthier notes. Leave them too long and the gin tastes stewed.",
-          "Vapor infusion hangs botanicals in a basket. Steam picks up aroma as it rises. The result often reads brighter and more perfume-forward — citrus and floral notes sit on top instead of in the body.",
+          "Vapor infusion hangs botanicals in a basket. Steam picks up aroma as it rises. The result often reads brighter and more perfume-forward — citrus and floral notes sit on top instead of in the body. That is why a cucumber-floral contemporary such as Hendrick’s can smell like a garden before vermouth arrives.",
           "Many houses do both. The useful leftover is not a brand story. It is why one gin smells like pine and another like a flower stall before you add vermouth.",
         ],
       },
@@ -185,32 +183,30 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "tip",
         body: [
           "London dry is a production rulebook, not a postcode. Botanicals must be distilled. No flavoring after distillation. Sweetening only within a tiny allowance. Water to bottle strength. That is why a London dry tastes dry in the glass, not candied.",
-          "ABV is a density tool. Around 40% can taste thin once vermouth, citrus, or sugar enter. Navy strength — often near 57% — holds a Last Word or a sour without going slack. It is not a silent ounce-for-ounce swap for a standard bottle.",
+          "ABV is a density tool. Around 40% can taste thin once vermouth, citrus, or sugar enter. Plymouth Navy Strength — near 57% — holds a Last Word or a sour without going slack. Tanqueray at export strength (~47%) is a smaller step. Neither is a silent ounce-for-ounce swap for a standard bottle.",
         ],
       },
-      {
-        heading: "Common mistakes",
-        kind: "mistakes",
-        body: [
-          "Reading the label art as a production story.",
-          "Treating vapor-infused floral gin as a silent London dry in a Negroni.",
-          "Pouring navy strength at the same ounces as a 40% bottle and blaming the recipe for heat.",
-        ],
-      },
-    ],
-    deepDive: [
       {
         heading: "Old Tom and genever — cousins, not swaps",
         kind: "tip",
         body: [
-          "Old Tom is a slightly sweeter historic style. Older recipes that assume it — a Tom Collins, some Martinez specs — will taste lean if you pour a bone-dry London dry without adjusting sugar.",
-          "Genever starts closer to whiskey: a malt-wine base, then juniper. It can stir beautifully. It will not silently do a dry Martini’s job. Call the pour what it is.",
+          "Hayman’s Old Tom is a slightly sweeter historic style. Older recipes that assume it — a Tom Collins, some Martinez specs — will taste lean if you pour a bone-dry London dry without adjusting sugar.",
+          "Bols Genever starts closer to whiskey: a malt-wine base, then juniper. It can stir beautifully. It will not silently do a dry Martini’s job. Call the pour what it is.",
         ],
       },
       {
         heading: "What “compound” gin is doing",
         body: [
           "Some inexpensive gins are flavored after distillation — essence in a neutral spirit, no second still run. Legal in some markets. They often taste flat or soapy once tonic or vermouth arrives. If the bottle never mentions distillation with botanicals, believe the gap.",
+        ],
+      },
+      {
+        heading: "Common mistakes",
+        kind: "mistakes",
+        body: [
+          "You bought from the illustration → read production clues instead: distilled botanicals, London dry rules, and proof.",
+          "Negroni tastes like Campari and wine → switch to a juniper-led London dry (Beefeater, Tanqueray, or similar); a vapor-infused floral such as Hendrick’s often disappears in equal parts.",
+          "Navy-strength Last Word tastes hot → cut the pour or accept the extra density; Plymouth Navy Strength or Tanqueray export strength is not a silent 40% swap.",
         ],
       },
     ],
@@ -246,12 +242,12 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         slug: "martini",
         notice:
-          "This is the vermouth-judgment chapter. If history made you reach for a floral G&T gin, pour again.",
+          "Beefeater or Tanqueray, measured vermouth, stirred cold. If history made you reach for Hendrick’s, pour again.",
       },
       {
         slug: "negroni",
         notice:
-          "Equal parts, Florence-era bones. The leftover is the pour: gin that still reads under Campari.",
+          "Equal parts, Florence-era bones. The leftover is Beefeater or Tanqueray — gin that still reads under Campari.",
       },
       {
         slug: "gin-and-tonic",
@@ -272,28 +268,36 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         figure: "gin-history",
         body: [
           "Genever is the older Dutch cousin — malt wine flavored with juniper. It traveled to England, where cheaper grain spirit and, later, column stills made a drier, cleaner gin. London dry became the nineteenth-century export style: unsweetened, botanically assertive, built for bars that mixed.",
-          "The useful leftover is the pour. When a classic says only “gin,” it usually means that drier English style, not a malt-forward genever and not a cucumber-led contemporary bottle.",
+          "The useful leftover is the pour. When a classic says only “gin,” it usually means that drier English style — Beefeater, Tanqueray, or similar — not Bols Genever and not a cucumber-led contemporary such as Hendrick’s.",
         ],
       },
       {
         heading: "The Martini is a gin-and-vermouth judgment",
         body: [
-          "The Martini settled in the late 1800s as gin and vermouth. Hotel, bartender, and city origin stories came later and do not agree. Treat them as legend around a documented template.",
-          "What survived is the judgment: mostly gin, a measured wine, stirred cold. Soft floral gins can taste like cold cologne once the vermouth fades. Juniper and structure are the era’s leftover.",
+          "The Martini settled in the late 1800s as gin and vermouth. Martinez, Manhattan, and hotel-bar stories compete in print. Treat them as legend around a documented template. None of them change the glass as much as the ratio and the bottle.",
+          "What survived is the judgment: mostly gin, a measured wine, stirred cold. Hendrick’s, or another soft floral, can taste like cold cologne once the vermouth fades. Juniper and structure — Beefeater, Tanqueray, or similar — are the era’s leftover.",
         ],
       },
       {
         heading: "Negroni — bitter equal parts",
         body: [
           "The usual telling is Florence, around 1919–20: a Count Negroni asking a café to stiffen an Americano with gin. Contemporary paperwork is thinner than later retellings. The template is what we can teach.",
-          "Equal parts gin, Campari, sweet vermouth. The bitter frame is the point. Gin must still read. That is why a contemporary boom bottle that only shines in a G&T can make a Negroni taste like Campari and wine.",
+          "Equal parts gin, Campari, sweet vermouth. The bitter frame is the point. Gin must still read. That is why a Hendrick’s-style bottle that only shines in a G&T can make a Negroni taste like Campari and wine.",
         ],
       },
       {
         heading: "G&T — tonic matching, not a medicine story",
         body: [
           "British officers in malaria country drank quinine tonic. Gin joined the glass. That colonial highball habit is the usual origin sketch. Quinine doses in modern tonic are not a treatment, and the story is not a tasting method.",
-          "Reframe it as skill. Tonic is a bitter lengthener with its own sugar. Packed ice and a fridge-cold bottle reveal the gin. Warm soda and three cubes flatten any bottle. Match the tonic to the botanicals — dry tonic for a juniper-led gin, a gentler one for a soft contemporary.",
+          "Reframe it as skill. Tonic is a bitter lengthener with its own sugar. Packed ice and a fridge-cold bottle reveal the gin. Warm soda and three cubes flatten any bottle. Match the tonic to the botanicals — dry tonic for Beefeater or Tanqueray, a leaner one for Hendrick’s.",
+        ],
+      },
+      {
+        heading: "Last Word — a later equal-parts chapter",
+        kind: "tip",
+        body: [
+          "The Last Word is documented at the Detroit Athletic Club in the 1920s and revived in the early 2000s. It is not a nineteenth-century London dry story. It teaches volume: gin can be loud when Chartreuse and lime already are.",
+          "Stay on the same Beefeater / Tanqueray default, or step up density with Plymouth Navy Strength or Tanqueray export strength if you want more spine. A shy floral 40% bottle will taste like herbs and lime.",
         ],
       },
       {
@@ -308,24 +312,9 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "Treating a hotel Martini story as a primary source for the pour.",
-          "Hearing “gin and tonic” history and ignoring ice and tonic brand.",
-          "Pouring a contemporary boom gin into a Negroni because the bottle is newer.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Martini origins — documented vs legend",
-        body: [
-          "Martinez, Manhattan, and hotel-bar stories compete in print. None of them change the glass as much as the ratio and the bottle. Separate the template — gin, vermouth, cold — from the statue.",
-        ],
-      },
-      {
-        heading: "Last Word — a later equal-parts chapter",
-        kind: "tip",
-        body: [
-          "The Last Word is documented at the Detroit Athletic Club in the 1920s and revived in the early 2000s. It is not a nineteenth-century London dry story. It teaches volume: gin can be loud when Chartreuse and lime already are.",
+          "A hotel Martini story changed your pour → keep the template: Beefeater or Tanqueray, measured vermouth, stirred cold. Origin names are legend.",
+          "G&T history lesson, flat drink → pack the ice and match the tonic (dry for London dry, leaner for Hendrick’s) before you reread the quinine story.",
+          "Negroni from a newer floral bottle tastes hollow → pour a juniper-led London dry; Hendrick’s-style boom gins belong in the G&T, not equal parts.",
         ],
       },
     ],
@@ -385,25 +374,25 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "rule",
         figure: "gin-tasting-protocol",
         body: [
-          "Smell first. Taste. Two words — then name the style. Guessing early just trains you to confirm what the label already told you.",
-          "Name London dry vs contemporary first. Old Tom and genever are footnotes: sweeter, or malt-forward. Write the words. Then look at the bottle.",
+          "Smell first. Taste. Two words — then name the style. Guessing early just trains you to confirm what the label already told you. “Juniper, dry” or “floral, soft” will still help you at the shelf next month. A stack of botanist names will not.",
+          "Name London dry vs contemporary first. Old Tom and genever are footnotes: Hayman’s (sweeter) or Bols (malt-forward). Write the words. Then look at the bottle.",
         ],
       },
       {
         heading: "What to listen for",
         figure: "gin-styles",
         body: [
-          "London dry: juniper, peel, a dry finish. If pine and citrus pith are the first things you smell, you found the cocktail default.",
-          "Contemporary: citrus candy, cucumber, florals, or spice in front. If the nose is a garden and juniper is a rumor, believe it.",
-          "Old Tom: softer, a little sweet. Useful in older specs. Not a silent dry Martini pour.",
-          "Genever: malt, bread, oil under the juniper. Closer to whiskey in a stirred drink. Call it a cousin.",
+          "London dry: juniper, peel, a dry finish. Beefeater or Tanqueray if you need a named glass. If pine and citrus pith are the first things you smell, you found the cocktail default.",
+          "Contemporary: citrus candy, cucumber, florals, or spice in front. Hendrick’s is the usual cucumber-floral example. If the nose is a garden and juniper is a rumor, believe it.",
+          "Old Tom: softer, a little sweet — Hayman’s is the shopping footnote. Useful in older specs. Not a silent dry Martini pour.",
+          "Genever: malt, bread, oil under the juniper — Bols is the familiar cousin. Closer to whiskey in a stirred drink.",
         ],
       },
       {
         heading: "Mini labs",
         kind: "tip",
         body: [
-          "A: London dry vs contemporary, neat. Same splash, same glass shape. Two words each. Then name the style.",
+          "A: A juniper-led London dry (Beefeater or Tanqueray) vs a contemporary such as Hendrick’s, neat. Same splash, same glass shape. Two words each. Then name the style.",
           "B: The same tiny vermouth taste — a barspoon in each gin. Name which one stayed structured.",
           "C: Tonic alone, then a G&T with each gin. If the highball tastes soapy or flat, decide whether the gin or the tonic did that. Warm soda is a third suspect.",
         ],
@@ -412,17 +401,9 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "Naming the style from the label before you smell the glass.",
-          "Calling every aromatic gin “craft” — aroma is a botanical bill, not a quality score.",
-          "Tasting six bottles in a rush and remembering none.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Two words beat tasting-note poetry",
-        body: [
-          "“Juniper, dry” or “floral, soft” will still help you at the shelf next month. A stack of botanist names will not. Write the words. Then look at the label.",
+          "You named the style from the label first → smell, sip, write two words, then look. Guessing early just confirms the sticker.",
+          "You called an aromatic gin “craft” → describe the bill instead: juniper-led (Beefeater / Tanqueray) vs cucumber-floral (Hendrick’s). Aroma is not a quality score.",
+          "Six bottles, no leftover → taste two pours (London dry vs Hendrick’s), write two words each, then stop.",
         ],
       },
     ],
@@ -452,22 +433,22 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         slug: "gin-and-tonic",
         notice:
-          "Packed ice, fridge-cold tonic last. If it dies in two minutes, you under-iced it — that is not a bad gin.",
+          "Beefeater or Tanqueray, packed ice, fridge-cold dry tonic. Hendrick’s is an honest floral G&T — match a leaner tonic. Warm sparse ice is not a bad gin.",
       },
       {
         slug: "martini",
         notice:
-          "Juniper and structure. If it tastes like cold cologne, the bottle is too soft — not the stir.",
+          "Beefeater or Tanqueray. If it tastes like cold cologne, you probably poured a soft contemporary — not a stir problem.",
       },
       {
         slug: "negroni",
         notice:
-          "Equal parts. The gin must still read under Campari. Soft contemporary bottles often vanish.",
+          "Beefeater or Tanqueray. Hendrick’s often vanishes under Campari. The gin must still read.",
       },
       {
         slug: "last-word",
         notice:
-          "Loud template. Gin can have volume here. A shy bottle will taste like Chartreuse and lime.",
+          "Same London dry, or Plymouth Navy Strength / Tanqueray export strength for density. A shy floral 40% bottle will taste like Chartreuse and lime.",
       },
     ],
     bigIdea: "Each classic trains a different gin judgment.",
@@ -477,61 +458,46 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "G&T — tonic and ice reveal",
         figure: "gin-drinks",
         body: [
-          "Packed ice, gin, fridge-cold tonic last, a brief stir. Tonic is a bitter lengthener. It shows the botanical bill; it does not hide a soapy one.",
-          "Warm tonic and three cubes go flat in two minutes. That is service, not a bad gin. Soft contemporary bottles want a leaner tonic. Juniper-led London dry can handle a fuller one.",
+          "Default: Beefeater or Tanqueray. Packed ice, fridge-cold dry tonic last, a brief stir. Tonic is a bitter lengthener. It shows the botanical bill; it does not hide a soapy one.",
+          "Hendrick’s is an honest G&T pour if you want cucumber and floral — match it with a leaner tonic. Quinine bitterness and sweetness vary by tonic brand; taste the soda alone once so you know what you are lengthening with. Warm tonic and three cubes go flat in two minutes — that is service, not a bad gin.",
         ],
       },
       {
         heading: "Martini — juniper and structure",
         body: [
-          "Mostly gin, a measured vermouth, stirred cold. You are tasting the bottle. Juniper and a dry spine keep the drink from turning into perfume water.",
-          "Floral soft gins can taste like cold cologne once the vermouth is gone. Fridge the wine. If tonight’s Martini is dusty, open a fresher vermouth before you change the gin.",
+          "Default: Beefeater or Tanqueray. Mostly gin, a measured vermouth, stirred cold. You are tasting the bottle. Juniper and a dry spine keep the drink from turning into perfume water.",
+          "Hendrick’s, or another soft floral contemporary, can taste like cold cologne once the vermouth is gone. Fridge the wine. If tonight’s Martini is dusty, open a fresher vermouth before you change the gin.",
         ],
       },
       {
         heading: "Negroni — gin must still read",
         body: [
-          "Equal parts gin, Campari, sweet vermouth. Campari is loud. Choose a gin that still tastes like gin after the bitter and the wine.",
-          "A London dry is the reliable default. A contemporary bottle you only love with tonic is the usual reason a home Negroni tastes like Campari and regret.",
+          "Default: Beefeater or Tanqueray. Equal parts gin, Campari, sweet vermouth. Campari is loud. Choose a gin that still tastes like gin after the bitter and the wine.",
+          "Hendrick’s — or another contemporary you only love with tonic — is the usual reason a home Negroni tastes like Campari and regret. That is a job mismatch, not a bad bottle.",
         ],
       },
       {
         heading: "Last Word — a loud template",
         body: [
-          "Equal parts gin, green Chartreuse, maraschino, lime. Shaken. The template already has volume. Gin can be juniper-forward, even navy strength.",
-          "A shy, floral 40% gin will taste like herbs and lime with no spine. This is the lesson where a louder bottle is not a mistake.",
+          "Default: the same London dry, or step up density with Plymouth Navy Strength or Tanqueray export strength (~47%). Equal parts gin, green Chartreuse, maraschino, lime. Shaken. The template already has volume.",
+          "A shy, floral 40% gin will taste like herbs and lime with no spine. This is the lesson where a louder bottle is not a mistake — volume after three quieter judgments (highball reveal, vermouth structure, bitter equal parts).",
         ],
       },
       {
         heading: "When the recipe only says gin",
         kind: "tip",
         body: [
-          "Pour London dry unless the notes say otherwise. Highball: almost any good gin if the tonic is cold and the ice is packed. Martini and Negroni: structure first. Last Word: volume is allowed.",
-          "Genever and Old Tom keep their own named drinks. Don’t hear “gin” and reach for the cucumber bottle.",
+          "Pour Beefeater, Tanqueray, or another juniper-led London dry unless the notes say otherwise. Highball: almost any good gin if the tonic is cold and the ice is packed. Martini and Negroni: structure first. Last Word: volume is allowed.",
+          "Bols Genever and Hayman’s Old Tom keep their own named drinks. If the spec only says gin, stay on London dry unless you chose the Hendrick’s G&T fork.",
         ],
       },
       {
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "One bottle for every gin drink on the list.",
-          "Blaming the gin for a warm, sparse G&T.",
-          "Hearing “gin” and reaching for the floral highball bottle in a Negroni.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Tonic is not neutral water",
-        body: [
-          "Quinine bitterness and sweetness vary wildly by brand. Taste tonic alone once so you know what you are lengthening with. A “bad G&T” is often mismatched tonic or warm soda.",
-        ],
-      },
-      {
-        heading: "Why Last Word is classic #4 here",
-        kind: "tip",
-        body: [
-          "The Last Word teaches volume after three quieter judgments — highball reveal, vermouth structure, bitter equal parts. It is a later drink than the Martini. Keep it in this set so a loud gin has somewhere honest to go.",
+          "Every gin drink asked the same bottle to do every job → pick a default per classic: Beefeater / Tanqueray for Martini and Negroni; Hendrick’s is an honest G&T fork; navy or export strength only when the Last Word wants density.",
+          "G&T dies in two minutes on a solid London dry → pack the ice and fridge the tonic before you change Beefeater or Tanqueray.",
+          "Negroni tastes only of Campari → switch to a juniper-led London dry (Beefeater / Tanqueray or similar); Hendrick’s and other soft contemporaries often disappear in equal parts.",
         ],
       },
     ],

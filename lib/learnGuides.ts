@@ -21,7 +21,8 @@ export type LearnGuide = {
   bigIdea: string;
   keyTakeaways: string[];
   sections: LearnSection[];
-  deepDive: LearnSection[];
+  /** Omit on spirit curricula that keep everything in `sections`. */
+  deepDive?: LearnSection[];
   sources: LearnSource[];
 };
 

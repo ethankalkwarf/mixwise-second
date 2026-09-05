@@ -652,27 +652,27 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       id: "gfb-2",
       prompt: "You’re stocking a first gin for MixWise classics. Best move?",
       options: [
-        "Five contemporary bottles before any London dry",
-        "One solid London dry you like with a whisper of vermouth — not only with soda",
-        "Only navy strength — it covers every template",
+        "Five contemporaries such as Hendrick’s before any London dry",
+        "One solid London dry — Beefeater, Tanqueray, or similar — that you like with a whisper of vermouth",
+        "Only Plymouth Navy Strength — it covers every template",
         "Whatever has the prettiest bottle art",
       ],
       correctIndex: 1,
       explanation:
-        "One London dry covers Martinis, Negronis, Last Words, and most G&Ts. Contemporary bottles wait until you want a brighter highball.",
+        "Beefeater, Tanqueray, or a similar juniper-led London dry covers Martinis, Negronis, Last Words, and most G&Ts. Hendrick’s waits until you want a brighter highball.",
     },
     {
       id: "gfb-3",
-      prompt: "A contemporary gin you love in a G&T is going into tonight’s Negronis. What’s the risk?",
+      prompt: "Hendrick’s is a great G&T gin. Why is it a riskier Negroni?",
       options: [
         "None — tonic success guarantees equal-parts success",
-        "Soft citrus or floral gins can disappear under Campari",
+        "Cucumber and floral notes can disappear under Campari — name the job mismatch",
         "Campari will hide any botanical flaw",
-        "Contemporary gin is legally banned from Negronis",
+        "Hendrick’s is legally banned from Negronis",
       ],
       correctIndex: 1,
       explanation:
-        "Tonic reveals character. Campari buries a soft bottle. Taste neat before you commit the whole pour.",
+        "Tonic reveals character. Campari buries a soft contemporary. Taste neat before you commit the whole pour.",
     },
     {
       id: "gfb-4",
@@ -717,29 +717,29 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
     },
     {
       id: "ghm-3",
-      prompt: "Navy-strength gin in a Last Word, same ounces as a 40% bottle. What’s the production story?",
+      prompt: "Plymouth Navy Strength in a Last Word, same ounces as a 40% bottle. What’s the production story?",
       options: [
         "Navy strength is just a darker label",
-        "ABV is a density tool — near 57% holds citrus and Chartreuse; it is not a silent ounce-for-ounce swap",
+        "ABV is a density tool — Plymouth Navy Strength (~57%) or Tanqueray export strength (~47%) holds citrus and Chartreuse; not a silent 40% swap",
         "Navy strength is legally sweeter",
         "Proof does not change a shaken sour",
       ],
       correctIndex: 1,
       explanation:
-        "Higher proof holds sugar and acid. Cut the pour or accept more heat.",
+        "Higher proof holds sugar and acid. Cut the pour or accept more heat. Neither bottle is a silent ounce-for-ounce swap.",
     },
     {
       id: "ghm-4",
-      prompt: "Old Tom or genever in a recipe written for London dry. Honest read?",
+      prompt: "Hayman’s Old Tom or Bols Genever in a recipe written for London dry. Honest read?",
       options: [
         "Silent swaps — gin is gin",
-        "Cousins, not 1:1 swaps — Old Tom is sweeter; genever is malt-forward, closer to whiskey",
+        "Cousins, not 1:1 swaps — Hayman’s is sweeter; Bols is malt-forward, closer to whiskey",
         "Both are just navy strength under another name",
         "They are illegal in Martinis",
       ],
       correctIndex: 1,
       explanation:
-        "Call the pour what it is. A dry Martini and a genever Martinez are different drinks.",
+        "Call the pour what it is. A Beefeater Martini and a Bols Martinez are different drinks.",
     },
   ],
   "gin-history-in-glass": [
@@ -747,14 +747,14 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       id: "ghi-1",
       prompt: "A classic recipe says only “gin.” Which history leftover should you pour?",
       options: [
-        "Whatever cucumber gin is newest",
-        "The drier English / London dry style — not malt-forward genever and not a floral boom bottle",
-        "Genever, always — it is older, so it is correct",
+        "Hendrick’s, because cucumber gins are newest",
+        "Beefeater, Tanqueray, or a similar London dry — not Bols Genever and not a floral boom bottle",
+        "Bols Genever, always — it is older, so it is correct",
         "Vodka — the Martini era assumed it",
       ],
       correctIndex: 1,
       explanation:
-        "Genever traveled; column stills made a drier export gin. That is the usual unnamed pour.",
+        "Genever traveled; column stills made a drier export gin. Beefeater or Tanqueray is the usual unnamed pour.",
     },
     {
       id: "ghi-2",
@@ -774,7 +774,7 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       prompt: "Why did contemporary-boom Negronis get weird?",
       options: [
         "Campari changed its recipe in 2000",
-        "Citrus and floral gins that shine in a G&T often vanish under equal-parts bitter",
+        "Hendrick’s-style citrus and floral gins that shine in a G&T often vanish under equal-parts bitter",
         "Negronis legally require genever",
         "Tonic belongs in a Negroni now",
       ],
@@ -814,14 +814,14 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       id: "glt-2",
       prompt: "You wrote “juniper, dry” before you looked at the label. What did you likely find?",
       options: [
-        "A soft contemporary gin",
-        "London dry",
-        "Genever, always",
-        "Old Tom, always",
+        "Hendrick’s, or another soft contemporary",
+        "A London dry such as Beefeater or Tanqueray",
+        "Bols Genever, always",
+        "Hayman’s Old Tom, always",
       ],
       correctIndex: 1,
       explanation:
-        "Those two words are more useful than a botanist paragraph. London dry is the cocktail default.",
+        "Those two words are more useful than a botanist paragraph. Beefeater / Tanqueray is the cocktail default.",
     },
     {
       id: "glt-3",
@@ -853,55 +853,55 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
   "gin-four-classics": [
     {
       id: "gfc-1",
-      prompt: "Your G&T dies in two minutes. The gin is a solid London dry. What’s the first move?",
+      prompt: "Your G&T dies in two minutes. The gin is Beefeater or Tanqueray. What’s the first move?",
       options: [
         "Buy a more expensive gin",
-        "Packed ice and fridge-cold tonic — warm, sparse ice is not a bad gin",
-        "Switch to a floral contemporary",
+        "Packed ice and fridge-cold tonic — warm, sparse ice is not a bad London dry",
+        "Switch to Hendrick’s",
         "Shake it",
       ],
       correctIndex: 1,
       explanation:
-        "Tonic and ice reveal the bottle. They also ruin it when they are warm and thin.",
+        "Tonic and ice reveal the bottle. They also ruin Beefeater or Tanqueray when they are warm and thin.",
     },
     {
       id: "gfc-2",
       prompt: "Tonight’s Martini tastes like cold cologne. What’s the likely bottle issue?",
       options: [
-        "The gin is too juniper-heavy",
-        "A soft floral gin can’t carry a nearly-all-gin drink",
+        "Beefeater is too juniper-heavy",
+        "Hendrick’s, or another soft floral, can’t carry a nearly-all-gin drink",
         "You should have shaken it",
         "Tonic water was required",
       ],
       correctIndex: 1,
       explanation:
-        "Martinis are mostly gin. Juniper and structure keep vermouth from turning the glass into perfume.",
+        "Default is Beefeater or Tanqueray. Juniper and structure keep vermouth from turning the glass into perfume.",
     },
     {
       id: "gfc-3",
       prompt: "You’re making Negronis for a table. Which gin choice is the safest default?",
       options: [
-        "A soft floral contemporary gin you only drink with tonic",
-        "A juniper-forward London dry that still tastes like gin next to Campari",
-        "Navy-strength gin poured at the same ounces as a 40% bottle with no adjustment",
+        "Hendrick’s — you only drink it with tonic, but gin is gin",
+        "Beefeater, Tanqueray, or a similar juniper-led London dry that still reads next to Campari",
+        "Plymouth Navy Strength poured at the same ounces as a 40% bottle with no adjustment",
         "Any clear spirit — Negronis hide botanicals",
       ],
       correctIndex: 1,
       explanation:
-        "Campari is loud. A classic London dry keeps juniper audible in equal parts. Soft floral gins often disappear.",
+        "Campari is loud. Beefeater or Tanqueray keeps juniper audible in equal parts. Hendrick’s often disappears.",
     },
     {
       id: "gfc-4",
       prompt: "A Last Word tastes like Chartreuse and lime with no spine. What’s the gin lesson?",
       options: [
         "Use less Chartreuse until the gin vanishes too",
-        "This template is already loud — gin can have volume; a shy floral 40% bottle will not read",
+        "This template is already loud — stay on the London dry or step up to Plymouth Navy Strength / Tanqueray export strength",
         "Last Words require vodka",
         "Stir it so the gin disappears",
       ],
       correctIndex: 1,
       explanation:
-        "Equal-parts sour with green Chartreuse. A louder, even navy-strength gin is allowed here.",
+        "Equal-parts sour with green Chartreuse. The same Beefeater / Tanqueray default works; navy or export strength is a measured density tool, not a silent 40% swap.",
     },
   ],
   "rum-family-buying": [
