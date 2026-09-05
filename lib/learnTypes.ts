@@ -1,6 +1,6 @@
 /**
  * Shared layered-lesson types for MixWise Learn.
- * Structure: big idea → core → go deeper → sources.
+ * Structure: big idea → sections → sources. Optional `deepDive` remains for older spirit modules.
  */
 
 export type LearnSection = {

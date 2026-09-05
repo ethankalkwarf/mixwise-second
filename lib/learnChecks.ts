@@ -40,6 +40,19 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       explanation:
         "Hard ice and enough of it does more than the tenth bottle. Soft freezer cubes water drinks before they chill.",
     },
+    {
+      id: "hbf-3",
+      prompt: "You’re buying the first gin, whiskey, tequila, and modifiers. What’s the useful rule?",
+      options: [
+        "One viral liqueur per weekend recipe",
+        "One mixing bottle per job — Beefeater or Tanqueray, a bonded bourbon, Altos or Espolón, then fridge vermouth, Cointreau, Angostura",
+        "Three vodkas and a blender",
+        "Skip vermouth until you own ten spirits",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Buy for sour, highball, and old-fashioned templates. A short named shelf covers the first month; novelty bottles wait.",
+    },
   ],
   "cocktail-templates": [
     {
@@ -167,6 +180,32 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       explanation:
         "Expression is perfume — oils on the surface. Thick pith and juice muddy a delicate stirred drink.",
     },
+    {
+      id: "gwi-2",
+      prompt: "A Mojito smells like lawn clippings. What went wrong?",
+      options: [
+        "You used too little mint",
+        "The leaves were shredded — press in syrup and slap a sprig for the garnish",
+        "The rum was white",
+        "You forgot soda",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Crushing mint releases bitter chlorophyll. A few gentle presses and a slapped garnish perfume the nose without the grass note.",
+    },
+    {
+      id: "gwi-3",
+      prompt: "Which peel matches a Negroni?",
+      options: [
+        "Lemon — gin always wants lemon",
+        "Orange — it flatters whiskey-adjacent wine and Campari",
+        "Grapefruit — bitter drinks need more pith",
+        "No peel ever — equal parts are served naked",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Orange oil flatters sweet vermouth and Campari. Lemon lifts dry gin profiles; grapefruit suits agave highballs.",
+    },
   ],
   "vermouth-and-modifiers": [
     {
@@ -202,13 +241,39 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       prompt: "You want a bright, peppery Margarita. Which bottle belongs in the tin?",
       options: [
         "Añejo",
-        "Blanco 100% agave (or a restrained mezcal)",
+        "Blanco 100% agave — Altos Plata or Espolón Blanco",
         "Mixto tequila — the mix makes it mix better",
         "Cream liqueur",
       ],
       correctIndex: 1,
       explanation:
         "Blanco keeps bright agave and pepper. Añejo leans oak and dessert; mixtos flatten the drink with other sugars.",
+    },
+    {
+      id: "spa-2",
+      prompt: "A mezcal Margarita is all smoke. Smartest next pour?",
+      options: [
+        "More lime until the smoke disappears",
+        "Start with Espadín (Vida or Unión), or split with blanco tequila",
+        "Switch to añejo tequila",
+        "Shake twice as long",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Loud mezcal is intensity, not a silent blanco swap. Espadín is the cocktail starting point; splits beat chasing with acid.",
+    },
+    {
+      id: "spa-3",
+      prompt: "The label only says “tequila,” with no “100% de agave.” What should you assume?",
+      options: [
+        "It’s automatically 100% — the word tequila is enough",
+        "Treat it as mixto until the back label proves otherwise",
+        "It’s mezcal",
+        "It’s always reposado",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Mixto only needs 51% agave sugars. Lime exposes the rest. If 100% isn’t printed, don’t guess.",
     },
   ],
   "whiskey-family-buying": [
@@ -632,6 +697,19 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       correctIndex: 1,
       explanation:
         "Without ethanol’s grip and aroma carry, you must rebuild bitter/spice/texture on purpose. More juice rarely fixes flatness.",
+    },
+    {
+      id: "zpm-3",
+      prompt: "You’re hosting mixed company. How should the NA option show up?",
+      options: [
+        "A warm can from the fridge door, different glass, no garnish",
+        "Same card, same glass family, packed ice, matched garnish — pantry highball or a tasted NA bottle",
+        "Only if someone asks twice",
+        "Skip ice so it tastes “stronger”",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The vessel is hospitality. Fever-Tree ginger beer and a real highball beat a consolation soda. NA spirits are optional and need tasting, not a 1:1 gin assumption.",
     },
   ],
   "gin-family-buying": [
