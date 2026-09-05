@@ -13,7 +13,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
     eyebrow: "Spirits",
     summary:
       "Rum is a family, not one flavor. Stop shopping by bottle color — start with what the drink needs.",
-    readingMinutes: 6,
+    readingMinutes: 5,
     topics: ["rum", "buying", "color", "white rum", "aged rum", "spiced rum"],
     coverImage: "/learn/spirit-primer-rum.webp",
     coverAlt: "A classic Daiquiri in a coupe with a lime wheel",
@@ -121,7 +121,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
     eyebrow: "Spirits",
     summary:
       "A few production levers explain most of what you smell and taste. Learn those, and bottle choice stops feeling like guesswork.",
-    readingMinutes: 8,
+    readingMinutes: 6,
     topics: ["rum", "production", "molasses", "agricole", "esters", "aging"],
     coverImage: "/learn/rum-how-its-made.webp",
     coverAlt: "Oak rum barrels stacked in a distillery warehouse",
@@ -236,7 +236,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
     eyebrow: "Spirits",
     summary:
       "A few true stories explain why classics call for clean white, navy-weight rum, or a funky blend — not a timeline for its own sake.",
-    readingMinutes: 7,
+    readingMinutes: 6,
     topics: ["rum", "history", "daiquiri", "navy", "tiki", "cuba"],
     coverImage: "/learn/rum-history-in-glass.webp",
     coverAlt: "El Floridita neon sign in Havana, home of the Daiquiri",
@@ -323,14 +323,14 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
       {
         heading: "Daiquiri origins — documented and debated",
         body: [
-          "Cox is widely cited; contemporary documentation is thinner than later retellings. Floridita’s role in popularizing the shaken Daiquiri is solid. Separate those two chapters when you choose a bottle.",
+          "Cox is the usual cited start; contemporary documentation is thinner than later retellings. Floridita’s role in popularizing the shaken Daiquiri is on firmer ground. Separate those two chapters when you choose a bottle.",
         ],
       },
       {
         heading: "Navy strength vs gunpowder folklore",
         kind: "tip",
         body: [
-          "British navy rum was standardized around 54.5% overproof — about 57% ABV. The gunpowder test is a later explanatory legend, not a lab method you should trust.",
+          "British navy rum was standardized around 54.5% overproof — about 57% ABV. The gunpowder test is a later explanatory legend, not a method for choosing a bottle.",
         ],
       },
     ],
@@ -354,7 +354,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
     title: "Learn to taste the difference",
     eyebrow: "Spirits",
     summary: "Styles are easiest to learn with your nose. A short tasting protocol beats another chart.",
-    readingMinutes: 8,
+    readingMinutes: 6,
     topics: ["rum", "tasting", "styles", "esters", "agricole"],
     coverImage: "/learn/rum-learn-to-taste.webp",
     coverAlt: "Small tasting glasses of rum being poured side by side",
@@ -453,7 +453,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
     eyebrow: "Spirits",
     summary:
       "Each classic teaches a different rum skill — clean spine, mint and length, weight in a highball, and blending on purpose.",
-    readingMinutes: 9,
+    readingMinutes: 7,
     topics: ["rum", "daiquiri", "mojito", "dark-n-stormy", "mai-tai"],
     coverImage: "/learn/spirit-primer-rum.webp",
     coverAlt: "A classic Daiquiri in a coupe with a lime wheel",

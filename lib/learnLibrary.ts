@@ -721,8 +721,8 @@ export const LEARN_PATHS: LearnPath[] = [
     title: "Rum: from bottle to classics",
     eyebrow: "Spirits",
     summary:
-      "Five short lessons — buying myths, how rum’s made, history that matters, tasting styles, and four classics that teach.",
-    estimatedMinutes: 38,
+      "Five short lessons — buying myths, how rum’s made, history that matters, tasting styles, and four classics that teach. About 20 minutes.",
+    estimatedMinutes: 20,
     coverImage: "/learn/spirit-primer-rum.webp",
     coverAlt: "A classic Daiquiri in a coupe with a lime wheel",
     steps: [
