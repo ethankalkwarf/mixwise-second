@@ -211,35 +211,130 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
         "Blanco keeps bright agave and pepper. Añejo leans oak and dessert; mixtos flatten the drink with other sugars.",
     },
   ],
-  "spirit-primer-whiskey": [
+  "whiskey-family-buying": [
     {
-      id: "spw-1",
-      prompt: "You’re stirring a classic Manhattan. Which whiskey keeps sweet vermouth from turning the drink into dessert?",
-      options: [
-        "A heavily peated Islay malt",
-        "US rye (or a high-rye bourbon if you must)",
-        "A light Irish blend at 40% ABV",
-        "Any bottle labeled whiskey — they’re interchangeable",
-      ],
-      correctIndex: 1,
-      explanation:
-        "Rye’s dry spice was written for vermouth drinks. Bourbon softens them; peat and timid blends change the template.",
-    },
-    {
-      id: "spw-2",
+      id: "wfb-1",
       prompt: "A recipe says only “whiskey.” What’s the usual home-bar default in the American cocktail tradition?",
       options: [
         "Blended Scotch",
         "Bourbon or rye",
         "Japanese whisky exclusively",
-        "Whatever is cheapest behind the bar",
+        "Whatever is darkest on the shelf",
       ],
       correctIndex: 1,
       explanation:
         "Unspecified whiskey in American classics usually means bourbon or rye. Scotch and Irish keep their own named drinks.",
     },
     {
-      id: "spw-3",
+      id: "wfb-2",
+      prompt: "You’re stocking a first whiskey shelf for MixWise classics. Best move?",
+      options: [
+        "Five allocated bottles before any mixing bourbon",
+        "One solid bourbon you like neat; add rye when Manhattans become a habit",
+        "Only peated Scotch — it covers sours and stirred drinks",
+        "Only 40% Canadian “rye”",
+      ],
+      correctIndex: 1,
+      explanation:
+        "One bourbon covers Old Fashioneds and sours. Rye waits until vermouth drinks are a habit. Scotch and Irish can wait until a recipe names them.",
+    },
+    {
+      id: "wfb-3",
+      prompt: "You pour a peated Scotch into a standard whiskey sour. What happened?",
+      options: [
+        "A clever silent upgrade",
+        "Smoke fighting lemon — unless you meant a Penicillin-style drink",
+        "The lemon will hide the peat",
+        "Peat is just proof, so the sour gets stronger",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Peat is aroma, not a bourbon substitute. A standard sour wants lemon in front.",
+    },
+    {
+      id: "wfb-4",
+      prompt: "A Canadian bottle says “rye whisky.” You want US straight rye for a Manhattan. What should you assume?",
+      options: [
+        "It matches US straight rye mash rules automatically",
+        "It may be a milder blended whisky — read the back label and taste before trusting it in a rye spec",
+        "Canadian rye is always peatier than bourbon",
+        "Rye on any label means ≥51% rye grain worldwide",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Canadian “rye” is often a historical nickname, not US straight rye. Category and origin lines matter.",
+    },
+  ],
+  "whiskey-how-its-made": [
+    {
+      id: "whm-1",
+      prompt: "Why do bourbon and US rye so often taste of vanilla before you add anything?",
+      options: [
+        "They are legally required to add vanilla extract",
+        "New charred oak pulls vanillin and toast into the spirit",
+        "Corn always tastes like vanilla, even unaged",
+        "Chill filtration adds vanilla",
+      ],
+      correctIndex: 1,
+      explanation:
+        "New charred oak is load-bearing for American whiskey. Used casks — typical for Scotch and much Irish — read softer.",
+    },
+    {
+      id: "whm-2",
+      prompt: "A bourbon Old Fashioned and a Scotch Rob Roy share a template. Why don’t they taste like the same drink?",
+      options: [
+        "They do — templates erase production",
+        "Same bones, different grain and cask — new charred oak vs used barrels",
+        "Rob Roy is shaken, so the whiskey disappears",
+        "Scotch cannot legally go in a vermouth drink",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The template is shared. The wood and grain are not. Taste what the cask did.",
+    },
+    {
+      id: "whm-3",
+      prompt: "A 40% peated malt shouts louder than a 50% bourbon. What’s the production story?",
+      options: [
+        "Peat is proof — the malt is secretly stronger",
+        "Peat is aroma from malt dried over a peat fire, not a proof number",
+        "All Scotch is higher proof than bourbon",
+        "Chill filtration adds smoke",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smoke is in the malt before the still runs. Dose peat like seasoning.",
+    },
+    {
+      id: "whm-4",
+      prompt: "Which set of choices explains a bottle more honestly than the font on the label?",
+      options: [
+        "The price and the neck tag",
+        "Mash, still, cask, age, and how it’s bottled",
+        "Whether the glass is green or clear",
+        "The number of awards on the front",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Grain, still, and cask show up in the glass more honestly than the typeface.",
+    },
+  ],
+  "whiskey-history-in-glass": [
+    {
+      id: "whi-1",
+      prompt: "You’re stirring a Manhattan from an 1880s-style spec. Which bottle matches the era?",
+      options: [
+        "A heavily peated Islay malt",
+        "US rye — nineteenth-century American bars poured mostly rye",
+        "A light Irish blend at 40%",
+        "Whatever is cheapest — history doesn’t change the pour",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The useful leftover from the Manhattan’s New York chapter is rye against vermouth. Hotel banquet stories can wait.",
+    },
+    {
+      id: "whi-2",
       prompt: "Why did rye nearly disappear from American bars after Prohibition?",
       options: [
         "Rye was banned while bourbon was allowed",
@@ -249,7 +344,141 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       ],
       correctIndex: 1,
       explanation:
-        "Corn-driven bourbon filled the shelf; rye stayed scarce until the cocktail revival needed its dryness again.",
+        "Corn-driven bourbon filled the shelf. Rye stayed scarce until the cocktail revival needed its dryness again.",
+    },
+    {
+      id: "whi-3",
+      prompt: "What’s the careful Sazerac story?",
+      options: [
+        "It was always rye, named for a rye brand",
+        "Cognac first — the name is a cognac house — then rye as the later default",
+        "Peychaud invented whiskey in New Orleans",
+        "It is just a Manhattan with absinthe",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Treat the cognac-to-rye shift as a succession, not a founding myth. Rye is the modern default.",
+    },
+    {
+      id: "whi-4",
+      prompt: "When does whiskey history earn a place in Learn?",
+      options: [
+        "Whenever there is a famous drinker to quote",
+        "When the recipe’s era changes which bottle you pour",
+        "Only if you can recite a full timeline",
+        "Never — production is the only lesson",
+      ],
+      correctIndex: 1,
+      explanation:
+        "An 1880s Manhattan wants rye. A mid-century “whiskey” sour will forgive bourbon. A timeline for its own sake does not.",
+    },
+  ],
+  "whiskey-learn-to-taste": [
+    {
+      id: "wlt-1",
+      prompt: "What’s the tasting order this lesson wants?",
+      options: [
+        "Name the style from the label, then sip to confirm",
+        "Smell first, taste, write two words, then name the style",
+        "Mix it into an Old Fashioned first so you can taste faster",
+        "Score it out of 100 before you smell it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Guessing early just trains you to confirm what the label already told you.",
+    },
+    {
+      id: "wlt-2",
+      prompt: "You wrote “pepper, dry” before you looked at the label. What did you likely find?",
+      options: [
+        "A round bourbon",
+        "Rye",
+        "An Irish blend",
+        "Peated malt, always",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Those two words are more useful than a spice-rack paragraph. Rye reads leaner in the same glass.",
+    },
+    {
+      id: "wlt-3",
+      prompt: "Mini-lab B: the same Manhattan spec, bourbon then rye. What are you training?",
+      options: [
+        "How to hide tired vermouth",
+        "Hearing which whiskey keeps vermouth from turning the drink into dessert",
+        "Whether darker whiskey is older",
+        "How to skip the bitters",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Same vermouth, two pours. Name which one kept the drink from dessert.",
+    },
+    {
+      id: "wlt-4",
+      prompt: "A whiskey sour already smells like a campfire before the lemon goes in. What’s the move?",
+      options: [
+        "Add more sugar until the smoke disappears",
+        "This is not a standard sour — peat is perfume; save it for a float or a Penicillin-style drink",
+        "Shake longer to hide the phenol",
+        "It will taste like bourbon once it’s cold",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smell first. If smoke is already the story, you left the standard sour template.",
+    },
+  ],
+  "whiskey-four-classics": [
+    {
+      id: "wfc-1",
+      prompt: "Your Old Fashioned tastes like fruit salad. What’s the first move?",
+      options: [
+        "Buy a more expensive bourbon",
+        "Return to spirit, sugar, bitters, ice — fruit muddled in the glass is not the structure",
+        "Switch to peated Scotch",
+        "Shake it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Bourbon makes it round. Rye makes it snap. Muddled orange and cherry are a later habit.",
+    },
+    {
+      id: "wfc-2",
+      prompt: "Tonight’s Manhattan tastes dusty and nutty. The whiskey is fine. What’s the likely culprit?",
+      options: [
+        "You should have shaken it",
+        "Tired sweet vermouth — fridge it, date it, open a fresher bottle",
+        "The cherry garnish",
+        "You used rye instead of bourbon",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Half the drink is wine. Check the vermouth before you change the whiskey.",
+    },
+    {
+      id: "wfc-3",
+      prompt: "A recipe only says “whiskey.” How do you choose?",
+      options: [
+        "Whatever is darkest",
+        "Bourbon or rye unless the notes say otherwise — Scotch and Irish keep their own named drinks",
+        "Always peated malt",
+        "Always the most expensive bottle",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Old Fashioned and sour: bourbon is the usual home default. Manhattan and Boulevardier: rye if you have it.",
+    },
+    {
+      id: "wfc-4",
+      prompt: "Equal-parts whiskey, Campari, sweet vermouth. Bourbon vs rye — what changes?",
+      options: [
+        "Nothing — they’re interchangeable seasoning",
+        "Bourbon softens the bitter; rye keeps it lean",
+        "Rye makes it a Negroni",
+        "Bourbon legally cannot go in a Boulevardier",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Same template, two temperaments. Stir cold either way.",
     },
   ],
   "spirit-labels-intro": [
@@ -1277,7 +1506,9 @@ export function getGuideChecks(slug: string): LearnCheck[] {
       ? "spirit-labels-whiskey"
       : slug === "spirit-primer-rum"
         ? "rum-family-buying"
-        : slug;
+        : slug === "spirit-primer-whiskey"
+          ? "whiskey-family-buying"
+          : slug;
   return GUIDE_CHECKS[resolved] ?? [];
 }
 

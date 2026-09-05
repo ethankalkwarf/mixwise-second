@@ -284,6 +284,61 @@ function RumTastingProtocolDiagram() {
   );
 }
 
+function WhiskeyProductionDiagram() {
+  const steps = [
+    { n: "1", t: "Mash", d: "Corn, rye, malt — the grain you taste later." },
+    { n: "2", t: "Ferment", d: "Wash for the still." },
+    { n: "3", t: "Still", d: "Pot keeps character; column refines." },
+    { n: "4", t: "Cask", d: "New charred oak vs used barrels." },
+    { n: "5", t: "Bottle", d: "Proof, filter, then the glass." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        New charred oak is the vanilla split. Used casks leave grain and peat more visible.
+      </p>
+    </div>
+  );
+}
+
+function WhiskeyTastingProtocolDiagram() {
+  const steps = [
+    { n: "1", t: "Nose", d: "Smell it first — no sip yet." },
+    { n: "2", t: "Sip", d: "A little, then air." },
+    { n: "3", t: "Two words", d: "Write what you found." },
+    { n: "4", t: "Name", d: "Then name the style." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        Guessing the style first just trains you to confirm the label.
+      </p>
+    </div>
+  );
+}
+
 function EqualPartsDiagram() {
   const parts = [
     { label: "1 · Spirit", sub: "Gin or whiskey", color: FOREST },
@@ -591,13 +646,13 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
   },
   "whiskey-drinks": {
     kicker: "Whiskey templates",
-    title: "Three glasses that teach the category",
+    title: "Four glasses that teach the category",
     slides: [
       {
         src: "/learn/whiskey-deep-dive.webp",
         alt: "An Old Fashioned in a rocks glass with a large ice cube and orange peel",
         label: "Old Fashioned",
-        note: "Spirit + sugar + bitters — bourbon or rye",
+        note: "Spirit + sugar + bitters — bourbon round or rye snap",
       },
       {
         src: "/learn/learn-whiskey-manhattan.webp",
@@ -609,7 +664,37 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
         src: "/learn/learn-whiskey-sour.webp",
         alt: "A Whiskey Sour served up in a coupe with an egg-white foam head",
         label: "Whiskey Sour",
-        note: "Spirit + lemon + sweet — shake hard",
+        note: "Spirit + lemon + sweet — bourbon or Irish",
+      },
+      {
+        src: "/learn/equal-parts-bitters.webp",
+        alt: "A Campari equal-parts drink in a rocks glass with orange peel — the Boulevardier is this template on whiskey",
+        label: "Boulevardier",
+        note: "Equal parts whiskey, Campari, vermouth — bourbon softens, rye stays lean",
+      },
+    ],
+  },
+  "whiskey-history": {
+    kicker: "In the glass",
+    title: "History that changes what you pour",
+    slides: [
+      {
+        src: "/learn/learn-whiskey-manhattan.webp",
+        alt: "A Manhattan in a coupe with a cherry on a pick",
+        label: "Rye bars",
+        note: "Nineteenth-century American bars poured mostly rye — the Manhattan still wants that snap",
+      },
+      {
+        src: "/learn/whiskey-deep-dive.webp",
+        alt: "An Old Fashioned in a rocks glass with a large ice cube and orange peel",
+        label: "Bourbon default",
+        note: "After Prohibition, supermarket “whiskey” often meant bourbon",
+      },
+      {
+        src: "/learn/spirit-labels-scotch.webp",
+        alt: "Laphroaig bottle showing Islay single malt Scotch whisky",
+        label: "Separate families",
+        note: "Scotch and Irish keep their own drinks — not silent swaps for American whiskey",
       },
     ],
   },
@@ -985,6 +1070,16 @@ const DIAGRAMS: Record<string, DiagramSpec> = {
     kicker: "How to taste",
     title: "Nose → sip → two words → name",
     node: <RumTastingProtocolDiagram />,
+  },
+  "whiskey-production": {
+    kicker: "How whiskey is made",
+    title: "Five levers from mash to glass",
+    node: <WhiskeyProductionDiagram />,
+  },
+  "whiskey-tasting-protocol": {
+    kicker: "How to taste",
+    title: "Nose → sip → two words → name",
+    node: <WhiskeyTastingProtocolDiagram />,
   },
   "equal-parts-grid": {
     kicker: "Equal parts",

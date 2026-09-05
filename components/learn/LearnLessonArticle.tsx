@@ -45,7 +45,7 @@ export function LearnLessonArticle({ layers, midFigure, techniqueSlug, afterCore
             steps={layers.keyTakeaways.map((item) => ({ title: "", body: item }))}
             variant="takeaway"
           />
-        ) : (
+        ) : layers.keyTakeaways.length === 1 ? (
           <div>
             <p className={LEARN_LABEL}>Take with you</p>
             <ol className="space-y-3">
@@ -59,7 +59,7 @@ export function LearnLessonArticle({ layers, midFigure, techniqueSlug, afterCore
               ))}
             </ol>
           </div>
-        )}
+        ) : null}
       </header>
 
       {/* Core lesson — open flow, not a nested panel of panels */}

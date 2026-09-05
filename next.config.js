@@ -99,6 +99,11 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: '/learn/guides/spirit-primer-whiskey',
+        destination: '/learn/paths/whiskey-deep-dive',
+        permanent: true,
+      },
+      {
         source: '/brand/press',
         destination: '/brand/logos',
         permanent: true,
