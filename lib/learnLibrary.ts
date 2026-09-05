@@ -1111,7 +1111,7 @@ export function searchLearnLibrary(query: string): {
       g.eyebrow,
       g.bigIdea,
       ...g.topics,
-      ...g.keyTakeaways,
+      ...(g.keyTakeaways ?? []),
       ...g.sections.flatMap((s) => [s.heading, ...s.body]),
       ...(g.deepDive ?? []).flatMap((s) => [s.heading, ...s.body]),
     ]

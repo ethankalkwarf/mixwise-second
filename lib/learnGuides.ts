@@ -19,7 +19,7 @@ export type LearnGuide = {
   accentClass: string;
   practice: LearnPracticeDrink[];
   bigIdea: string;
-  keyTakeaways: string[];
+  keyTakeaways?: string[];
   sections: LearnSection[];
   /** Omit on spirit curricula that keep everything in `sections`. */
   deepDive?: LearnSection[];
