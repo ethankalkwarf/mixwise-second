@@ -196,50 +196,400 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
         "Aperol is sweeter and less bitter. It’s a related aperitivo, not a stealth Campari. Taste and, if needed, trim the sweet vermouth.",
     },
   ],
-  "spirit-primer-agave": [
+  "agave-family-buying": [
     {
-      id: "spa-1",
-      prompt: "You want a bright, peppery Margarita. Which bottle belongs in the tin?",
+      id: "afb-1",
+      prompt: "The front label only says “tequila.” What should you assume until the back proves otherwise?",
       options: [
-        "Añejo",
-        "Blanco 100% agave (or a restrained mezcal)",
-        "Mixto tequila — the mix makes it mix better",
-        "Cream liqueur",
+        "It is automatically 100% agave",
+        "Assume mixto — 100% agave must be labeled; mixto can be as little as 51% agave sugars",
+        "It is mezcal by default",
+        "Color tells you the age grade",
       ],
       correctIndex: 1,
       explanation:
-        "Blanco keeps bright agave and pepper. Añejo leans oak and dessert; mixtos flatten the drink with other sugars.",
+        "If the bottle skips “100% agave,” treat it as mixto. Lime exposes other sugars fast.",
+    },
+    {
+      id: "afb-2",
+      prompt: "You’re stocking a first agave bottle for MixWise classics. Best move?",
+      options: [
+        "Five añejos before any blanco",
+        "One 100% agave blanco — Espolòn, Olmeca Altos, or similar — that you like in a Tommy’s",
+        "Only a wild-agave mezcal — it covers every template",
+        "Whatever has the most gold medals on the neck",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A solid 100% agave blanco covers Margaritas, Palomas, and Tommy’s. Reposado and mezcal wait until a recipe asks.",
+    },
+    {
+      id: "afb-3",
+      prompt: "A reposado Margarita tastes like dessert. What’s the honest read?",
+      options: [
+        "Reposado is always a silent upgrade",
+        "Oak is a job — blanco keeps a bright sour; reposado is for when you want softness",
+        "The lime will hide the oak",
+        "Añejo would be brighter",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Aging words are jobs, not prestige. Blanco is the cocktail default.",
+    },
+    {
+      id: "afb-4",
+      prompt: "You bought mezcal as “smoky tequila.” What’s the shelf correction?",
+      options: [
+        "They are the same denomination with a smoke switch",
+        "Mezcal is its own family — start with Espadín (Del Maguey Vida or similar), not a wild-agave trophy",
+        "All mezcal is illegal in Margaritas",
+        "Smoke means it is automatically better in a Paloma",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Different plant rules and process. Espadín is the cocktail workhorse.",
     },
   ],
-  "spirit-primer-whiskey": [
+  "agave-how-its-made": [
     {
-      id: "spw-1",
-      prompt: "You’re stirring a classic Manhattan. Which whiskey keeps sweet vermouth from turning the drink into dessert?",
+      id: "ahm-1",
+      prompt: "Why can two blancos at the same proof drink so differently in a Tommy’s?",
       options: [
-        "A heavily peated Islay malt",
-        "US rye (or a high-rye bourbon if you must)",
-        "A light Irish blend at 40% ABV",
-        "Any bottle labeled whiskey — they’re interchangeable",
+        "They can’t — proof erases production",
+        "Plant, cook, crush, ferment, and still — plus any additives — show up under lime",
+        "The salt rim is the only variable",
+        "All tequila is cooked in a pit",
       ],
       correctIndex: 1,
       explanation:
-        "Rye’s dry spice was written for vermouth drinks. Bourbon softens them; peat and timid blends change the template.",
+        "The piña, the oven, and the still are most of what you still hear under lime and agave syrup.",
     },
     {
-      id: "spw-2",
+      id: "ahm-2",
+      prompt: "Where does most mezcal smoke actually come from?",
+      options: [
+        "A drop of liquid smoke after distillation",
+        "The pit roast — piñas cooked in an earthen oven, often under soil and leaves",
+        "Oak barrels, same as añejo tequila",
+        "Grapefruit soda",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Traditional mezcal often roasts in a pit. Tequila usually cooks above ground. Smoke is a cook, not a tequila setting.",
+    },
+    {
+      id: "ahm-3",
+      prompt: "A blanco smells like vanilla candy before it has seen a barrel. What’s the production story?",
+      options: [
+        "All blanco is aged in new oak",
+        "Permitted additives can add smoothness and aroma — fine legally; shaky in a Tommy’s if the plant disappears",
+        "Candy smell means it is automatically 100% agave",
+        "The still always adds vanilla",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Awareness, not paranoia. If perfume beats cooked agave, pick a more plant-forward bottle for sours.",
+    },
+    {
+      id: "ahm-4",
+      prompt: "Tequila cooked in a brick oven vs an autoclave. Honest leftover?",
+      options: [
+        "Autoclaves are illegal",
+        "Ovens often keep more roasted depth; autoclaves can taste cleaner — and sometimes thinner — in the glass",
+        "Both are pit roasts",
+        "Cook method never shows up under lime",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Above-ground cook is the tequila default. Speed and vessel change how much roasted agave you still taste.",
+    },
+  ],
+  "agave-history-in-glass": [
+    {
+      id: "ahi-1",
+      prompt: "A classic recipe says only “tequila.” Which history leftover should you pour?",
+      options: [
+        "Añejo, because older is always correct",
+        "A 100% agave blanco — Espolòn, Olmeca Altos, or similar — not mixto and not a wild mezcal",
+        "Whatever the Margarita founding-statue story names",
+        "Vodka — mid-century bars assumed it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Origin tales compete. Lime and salt pushed bars toward 100% agave blanco.",
+    },
+    {
+      id: "ahi-2",
+      prompt: "What should you take from Paloma history when you build one?",
+      options: [
+        "It is a skinny Margarita, so skip the ice",
+        "Mexico’s everyday tequila highball — packed ice, cold grapefruit lengthener last",
+        "It must be mezcal, because smoke is traditional",
+        "Shake it like a sour",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A highball habit, not a diet sour. Service changes the pour more than a founder story.",
+    },
+    {
+      id: "ahi-3",
+      prompt: "Why did Tommy’s stick as a home-bar lesson?",
+      options: [
+        "It is the 1930s original Margarita",
+        "Agave syrup instead of orange liqueur — a later correction that leaves the bottle nowhere to hide",
+        "It legally requires mixto",
+        "Salt must go in the tin",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Julio Bermejo’s spec is a purity test. Mixto and perfume-sweet blancos fail here first.",
+    },
+    {
+      id: "ahi-4",
+      prompt: "When does agave history earn a place in Learn?",
+      options: [
+        "Whenever there is a famous drinker to quote",
+        "Only when it changes the pour",
+        "Only if you can recite every Tijuana founding myth",
+        "Never — production is the only lesson",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Margarita sour habit, Paloma highball, Tommy’s purity test, mezcal’s bar-era rise. A timeline for its own sake does not.",
+    },
+  ],
+  "agave-learn-to-taste": [
+    {
+      id: "alt-1",
+      prompt: "What’s the tasting order this lesson wants?",
+      options: [
+        "Name the style from the label, then sip to confirm",
+        "Smell first, taste, write two words, then name the style",
+        "Mix it into a Margarita first so you can taste faster",
+        "Score it out of 100 before you smell it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Guessing early just trains you to confirm what the label already told you.",
+    },
+    {
+      id: "alt-2",
+      prompt: "You wrote “pepper, bright” before you looked at the label. What did you likely find?",
+      options: [
+        "A dessert-leaning reposado",
+        "A blanco such as Espolòn or Olmeca Altos",
+        "Añejo, always",
+        "A wild mezcal, always",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Those two words are more useful than a spice-rack paragraph. Blanco is the cocktail default.",
+    },
+    {
+      id: "alt-3",
+      prompt: "Mini-lab B: the same tiny sour, blanco then reposado. What are you training?",
+      options: [
+        "How to hide tired lime",
+        "Hearing which bottle stayed bright instead of turning into dessert",
+        "Whether darker tequila is older",
+        "How to skip the salt",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Same lime, two pours. Name which one kept the drink from oak-dessert.",
+    },
+    {
+      id: "alt-4",
+      prompt: "An Espadín already smells like a campfire before the lime goes in. What’s the move?",
+      options: [
+        "Add more citrus until the smoke disappears",
+        "Write it down — then decide if the sour can hold it, or split with blanco",
+        "Shake longer to hide the phenol",
+        "It will taste like blanco once it’s cold",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smell first. If smoke is already the whole story, more lime will not outrun the pit.",
+    },
+  ],
+  "agave-four-classics": [
+    {
+      id: "afc-1",
+      prompt: "Your Paloma dies in two minutes. The tequila is Espolòn or Olmeca Altos. What’s the first move?",
+      options: [
+        "Buy a more expensive tequila",
+        "Packed ice and fridge-cold grapefruit soda — warm, sparse ice is not a bad blanco",
+        "Switch to añejo",
+        "Shake it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Lengthener and ice reveal the bottle. They also ruin a solid blanco when they are warm and thin.",
+    },
+    {
+      id: "afc-2",
+      prompt: "Tonight’s Tommy’s tastes like perfume and sugar. Lime is fresh. What’s the likely bottle issue?",
+      options: [
+        "Espolòn is too agave-forward",
+        "Mixto or a candy-sweet additive bill — the spec has nowhere to hide",
+        "You should have used orange liqueur",
+        "Salt in the tin was required",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Tommy’s is the purity test. Change the 100% agave blanco before you rewrite the lime.",
+    },
+    {
+      id: "afc-3",
+      prompt: "You’re making Margaritas for a table. Which bottle is the safest default?",
+      options: [
+        "Añejo — guests expect oak",
+        "Espolòn, Olmeca Altos, or a similar 100% agave blanco",
+        "A wild mezcal poured at the same ounces with no adjustment",
+        "Mixto — orange liqueur will hide it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Orange liqueur is a flavor, not a cover. Blanco 100% agave is the sour default.",
+    },
+    {
+      id: "afc-4",
+      prompt: "A Mezcal Margarita tastes only of campfire. What’s the mezcal lesson?",
+      options: [
+        "Use less lime until the smoke vanishes too",
+        "This template is already loud — stay on cocktail-weight Espadín (Del Maguey Vida or similar) or split with blanco",
+        "Mezcal Margaritas require añejo tequila",
+        "Stir it so the smoke disappears",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smoke on purpose, after three quieter judgments. More citrus will not outrun the pit.",
+    },
+  ],
+  "whiskey-family-buying": [
+    {
+      id: "wfb-1",
       prompt: "A recipe says only “whiskey.” What’s the usual home-bar default in the American cocktail tradition?",
       options: [
         "Blended Scotch",
         "Bourbon or rye",
         "Japanese whisky exclusively",
-        "Whatever is cheapest behind the bar",
+        "Whatever is darkest on the shelf",
       ],
       correctIndex: 1,
       explanation:
         "Unspecified whiskey in American classics usually means bourbon or rye. Scotch and Irish keep their own named drinks.",
     },
     {
-      id: "spw-3",
+      id: "wfb-2",
+      prompt: "You’re stocking a first whiskey shelf for MixWise classics. Best move?",
+      options: [
+        "Five allocated bottles before any mixing bourbon",
+        "One solid bourbon you like neat; add rye when Manhattans become a habit",
+        "Only peated Scotch — it covers sours and stirred drinks",
+        "Only 40% Canadian “rye”",
+      ],
+      correctIndex: 1,
+      explanation:
+        "One bourbon covers Old Fashioneds and sours. Rye waits until vermouth drinks are a habit. Scotch and Irish can wait until a recipe names them.",
+    },
+    {
+      id: "wfb-3",
+      prompt: "You pour a peated Scotch into a standard whiskey sour. What happened?",
+      options: [
+        "A clever silent upgrade",
+        "Smoke fighting lemon — unless you meant a Penicillin-style drink",
+        "The lemon will hide the peat",
+        "Peat is just proof, so the sour gets stronger",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Peat is aroma, not a bourbon substitute. A standard sour wants lemon in front.",
+    },
+    {
+      id: "wfb-4",
+      prompt: "A Canadian bottle says “rye whisky.” You want US straight rye for a Manhattan. What should you assume?",
+      options: [
+        "It matches US straight rye mash rules automatically",
+        "It may be a milder blended whisky — read the back label and taste before trusting it in a rye spec",
+        "Canadian rye is always peatier than bourbon",
+        "Rye on any label means ≥51% rye grain worldwide",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Canadian “rye” is often a historical nickname, not US straight rye. Category and origin lines matter.",
+    },
+  ],
+  "whiskey-how-its-made": [
+    {
+      id: "whm-1",
+      prompt: "Why do bourbon and US rye so often taste of vanilla before you add anything?",
+      options: [
+        "They are legally required to add vanilla extract",
+        "New charred oak pulls vanillin and toast into the spirit",
+        "Corn always tastes like vanilla, even unaged",
+        "Chill filtration adds vanilla",
+      ],
+      correctIndex: 1,
+      explanation:
+        "New charred oak is load-bearing for American whiskey. Used casks — typical for Scotch and much Irish — read softer.",
+    },
+    {
+      id: "whm-2",
+      prompt: "A bourbon Old Fashioned and a Scotch Rob Roy share a template. Why don’t they taste like the same drink?",
+      options: [
+        "They do — templates erase production",
+        "Same bones, different grain and cask — new charred oak vs used barrels",
+        "Rob Roy is shaken, so the whiskey disappears",
+        "Scotch cannot legally go in a vermouth drink",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The template is shared. The wood and grain are not. Taste what the cask did.",
+    },
+    {
+      id: "whm-3",
+      prompt: "A 40% peated malt shouts louder than a 50% bourbon. What’s the production story?",
+      options: [
+        "Peat is proof — the malt is secretly stronger",
+        "Peat is aroma from malt dried over a peat fire, not a proof number",
+        "All Scotch is higher proof than bourbon",
+        "Chill filtration adds smoke",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smoke is in the malt before the still runs. Dose peat like seasoning.",
+    },
+    {
+      id: "whm-4",
+      prompt: "Which set of choices explains a bottle more honestly than the font on the label?",
+      options: [
+        "The price and the neck tag",
+        "Mash, still, cask, age, and how it’s bottled",
+        "Whether the glass is green or clear",
+        "The number of awards on the front",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Grain, still, and cask show up in the glass more honestly than the typeface.",
+    },
+  ],
+  "whiskey-history-in-glass": [
+    {
+      id: "whi-1",
+      prompt: "You’re stirring a Manhattan from an 1880s-style spec. Which bottle matches the era?",
+      options: [
+        "A heavily peated Islay malt",
+        "US rye — nineteenth-century American bars poured mostly rye",
+        "A light Irish blend at 40%",
+        "Whatever is cheapest — history doesn’t change the pour",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The useful leftover from the Manhattan’s New York chapter is rye against vermouth. Hotel banquet stories can wait.",
+    },
+    {
+      id: "whi-2",
       prompt: "Why did rye nearly disappear from American bars after Prohibition?",
       options: [
         "Rye was banned while bourbon was allowed",
@@ -249,7 +599,141 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       ],
       correctIndex: 1,
       explanation:
-        "Corn-driven bourbon filled the shelf; rye stayed scarce until the cocktail revival needed its dryness again.",
+        "Corn-driven bourbon filled the shelf. Rye stayed scarce until the cocktail revival needed its dryness again.",
+    },
+    {
+      id: "whi-3",
+      prompt: "What’s the careful Sazerac story?",
+      options: [
+        "It was always rye, named for a rye brand",
+        "Cognac first — the name is a cognac house — then rye as the later default",
+        "Peychaud invented whiskey in New Orleans",
+        "It is just a Manhattan with absinthe",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Treat the cognac-to-rye shift as a succession, not a founding myth. Rye is the modern default.",
+    },
+    {
+      id: "whi-4",
+      prompt: "When does whiskey history earn a place in Learn?",
+      options: [
+        "Whenever there is a famous drinker to quote",
+        "When the recipe’s era changes which bottle you pour",
+        "Only if you can recite a full timeline",
+        "Never — production is the only lesson",
+      ],
+      correctIndex: 1,
+      explanation:
+        "An 1880s Manhattan wants rye. A mid-century “whiskey” sour will forgive bourbon. A timeline for its own sake does not.",
+    },
+  ],
+  "whiskey-learn-to-taste": [
+    {
+      id: "wlt-1",
+      prompt: "What’s the tasting order this lesson wants?",
+      options: [
+        "Name the style from the label, then sip to confirm",
+        "Smell first, taste, write two words, then name the style",
+        "Mix it into an Old Fashioned first so you can taste faster",
+        "Score it out of 100 before you smell it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Guessing early just trains you to confirm what the label already told you.",
+    },
+    {
+      id: "wlt-2",
+      prompt: "You wrote “pepper, dry” before you looked at the label. What did you likely find?",
+      options: [
+        "A round bourbon",
+        "Rye",
+        "An Irish blend",
+        "Peated malt, always",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Those two words are more useful than a spice-rack paragraph. Rye reads leaner in the same glass.",
+    },
+    {
+      id: "wlt-3",
+      prompt: "Mini-lab B: the same Manhattan spec, bourbon then rye. What are you training?",
+      options: [
+        "How to hide tired vermouth",
+        "Hearing which whiskey keeps vermouth from turning the drink into dessert",
+        "Whether darker whiskey is older",
+        "How to skip the bitters",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Same vermouth, two pours. Name which one kept the drink from dessert.",
+    },
+    {
+      id: "wlt-4",
+      prompt: "A whiskey sour already smells like a campfire before the lemon goes in. What’s the move?",
+      options: [
+        "Add more sugar until the smoke disappears",
+        "This is not a standard sour — peat is perfume; save it for a float or a Penicillin-style drink",
+        "Shake longer to hide the phenol",
+        "It will taste like bourbon once it’s cold",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smell first. If smoke is already the story, you left the standard sour template.",
+    },
+  ],
+  "whiskey-four-classics": [
+    {
+      id: "wfc-1",
+      prompt: "Your Old Fashioned tastes like fruit salad. What’s the first move?",
+      options: [
+        "Buy a more expensive bourbon",
+        "Return to spirit, sugar, bitters, ice — fruit muddled in the glass is not the structure",
+        "Switch to peated Scotch",
+        "Shake it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Bourbon makes it round. Rye makes it snap. Muddled orange and cherry are a later habit.",
+    },
+    {
+      id: "wfc-2",
+      prompt: "Tonight’s Manhattan tastes dusty and nutty. The whiskey is fine. What’s the likely culprit?",
+      options: [
+        "You should have shaken it",
+        "Tired sweet vermouth — fridge it, date it, open a fresher bottle",
+        "The cherry garnish",
+        "You used rye instead of bourbon",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Half the drink is wine. Check the vermouth before you change the whiskey.",
+    },
+    {
+      id: "wfc-3",
+      prompt: "A recipe only says “whiskey.” How do you choose?",
+      options: [
+        "Whatever is darkest",
+        "Bourbon or rye unless the notes say otherwise — Scotch and Irish keep their own named drinks",
+        "Always peated malt",
+        "Always the most expensive bottle",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Old Fashioned and sour: bourbon is the usual home default. Manhattan and Boulevardier: rye if you have it.",
+    },
+    {
+      id: "wfc-4",
+      prompt: "Equal-parts whiskey, Campari, sweet vermouth. Bourbon vs rye — what changes?",
+      options: [
+        "Nothing — they’re interchangeable seasoning",
+        "Bourbon softens the bitter; rye keeps it lean",
+        "Rye makes it a Negroni",
+        "Bourbon legally cannot go in a Boulevardier",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Same template, two temperaments. Stir cold either way.",
     },
   ],
   "spirit-labels-intro": [
@@ -405,35 +889,9 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
         "Without ethanol’s grip and aroma carry, you must rebuild bitter/spice/texture on purpose. More juice rarely fixes flatness.",
     },
   ],
-  "spirit-primer-gin": [
+  "gin-family-buying": [
     {
-      id: "gin-1",
-      prompt: "You’re making Negronis for a table. Which gin choice is the safest default?",
-      options: [
-        "A soft floral contemporary gin you only drink with tonic",
-        "A juniper-forward London dry that still tastes like gin next to Campari",
-        "Navy-strength gin poured at the same ounces as a 40% bottle with no adjustment",
-        "Any clear spirit — Negronis hide botanicals",
-      ],
-      correctIndex: 1,
-      explanation:
-        "Campari is loud. A classic London dry keeps juniper audible in equal parts. Soft floral gins often disappear.",
-    },
-    {
-      id: "gin-2",
-      prompt: "A Martini tastes like cold perfume water after two sips of vermouth fade. What’s the likely bottle issue?",
-      options: [
-        "The gin is too juniper-heavy",
-        "The gin is soft/floral and can’t carry a nearly-all-gin drink",
-        "You should have shaken it",
-        "Tonic water was required",
-      ],
-      correctIndex: 1,
-      explanation:
-        "Martinis are mostly gin. If the bottle only shines in a G&T, it may lack structure for stirred, spirit-forward drinks.",
-    },
-    {
-      id: "gin-3",
+      id: "gfb-1",
       prompt: "True or false: “London dry” means the gin must be distilled in London.",
       options: [
         "True — geography is required",
@@ -445,24 +903,266 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       explanation:
         "London dry is about how it’s made, not a protected London address. Many excellent London dry gins are made elsewhere.",
     },
-  ],
-  "spirit-primer-rum": [
     {
-      id: "rum-1",
-      prompt: "Your classic Daiquiri tastes like banana candy and solvent. What’s the best first diagnosis?",
+      id: "gfb-2",
+      prompt: "You’re stocking a first gin for MixWise classics. Best move?",
       options: [
-        "You needed more sugar",
-        "A high-ester “funky” rum is dominating a template that wants clean lime",
-        "Lime should have been lemon",
-        "You under-shook — always shake one full minute",
+        "Five contemporaries such as Hendrick’s before any London dry",
+        "One solid London dry — Beefeater, Tanqueray, or similar — that you like with a whisper of vermouth",
+        "Only Plymouth Navy Strength — it covers every template",
+        "Whatever has the prettiest bottle art",
       ],
       correctIndex: 1,
       explanation:
-        "Funky Jamaican-style rums are aromatic tools. In a standard Daiquiri they can overwhelm lime. Start cleaner; add funk as a fraction.",
+        "Beefeater, Tanqueray, or a similar juniper-led London dry covers Martinis, Negronis, Last Words, and most G&Ts. Hendrick’s waits until you want a brighter highball.",
     },
     {
-      id: "rum-2",
-      prompt: "A dark rum pours almost black. What does the color guarantee?",
+      id: "gfb-3",
+      prompt: "Hendrick’s is a great G&T gin. Why is it a riskier Negroni?",
+      options: [
+        "None — tonic success guarantees equal-parts success",
+        "Cucumber and floral notes can disappear under Campari — name the job mismatch",
+        "Campari will hide any botanical flaw",
+        "Hendrick’s is legally banned from Negronis",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Tonic reveals character. Campari buries a soft contemporary. Taste neat before you commit the whole pour.",
+    },
+    {
+      id: "gfb-4",
+      prompt: "What does the law actually require of gin?",
+      options: [
+        "It must be clear and taste like Christmas",
+        "Juniper must be the predominant botanical character — everything else is house style",
+        "It must be distilled in London",
+        "It cannot be mixed with vermouth",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Juniper is the legal spine. Coriander, citrus, floral, and spice notes are producer choices.",
+    },
+  ],
+  "gin-how-its-made": [
+    {
+      id: "ghm-1",
+      prompt: "Why can two gins at the same proof drink so differently in a Martini?",
+      options: [
+        "They can’t — proof erases production",
+        "Base spirit, botanical recipe, and still choices — vapor infusion vs steeping — show up under vermouth",
+        "The vermouth brand is the only variable",
+        "All gin starts as genever",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A clean column base plus a juniper-led distillate is a different drink than a malt-forward or floral vapor gin.",
+    },
+    {
+      id: "ghm-2",
+      prompt: "What does London dry production actually forbid?",
+      options: [
+        "Distilling anywhere but London",
+        "Flavoring after distillation — botanicals must be distilled; sweetening only within a tiny allowance",
+        "Using citrus peel",
+        "Bottling above 40% ABV",
+      ],
+      correctIndex: 1,
+      explanation:
+        "London dry is a rulebook, not a postcode. That is why it tastes dry in the glass, not candied.",
+    },
+    {
+      id: "ghm-3",
+      prompt: "Plymouth Navy Strength in a Last Word, same ounces as a 40% bottle. What’s the production story?",
+      options: [
+        "Navy strength is just a darker label",
+        "ABV is a density tool — Plymouth Navy Strength (~57%) or Tanqueray export strength (~47%) holds citrus and Chartreuse; not a silent 40% swap",
+        "Navy strength is legally sweeter",
+        "Proof does not change a shaken sour",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Higher proof holds sugar and acid. Cut the pour or accept more heat. Neither bottle is a silent ounce-for-ounce swap.",
+    },
+    {
+      id: "ghm-4",
+      prompt: "Hayman’s Old Tom or Bols Genever in a recipe written for London dry. Honest read?",
+      options: [
+        "Silent swaps — gin is gin",
+        "Cousins, not 1:1 swaps — Hayman’s is sweeter; Bols is malt-forward, closer to whiskey",
+        "Both are just navy strength under another name",
+        "They are illegal in Martinis",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Call the pour what it is. A Beefeater Martini and a Bols Martinez are different drinks.",
+    },
+  ],
+  "gin-history-in-glass": [
+    {
+      id: "ghi-1",
+      prompt: "A classic recipe says only “gin.” Which history leftover should you pour?",
+      options: [
+        "Hendrick’s, because cucumber gins are newest",
+        "Beefeater, Tanqueray, or a similar London dry — not Bols Genever and not a floral boom bottle",
+        "Bols Genever, always — it is older, so it is correct",
+        "Vodka — the Martini era assumed it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Genever traveled; column stills made a drier export gin. Beefeater or Tanqueray is the usual unnamed pour.",
+    },
+    {
+      id: "ghi-2",
+      prompt: "What should you take from Martini origin stories when you stir one?",
+      options: [
+        "The hotel that invented it, so you can cite the statue",
+        "The template — gin plus vermouth, cold — hotel stories are legend around a documented judgment",
+        "It must be shaken, because of Prohibition",
+        "It was always vodka",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Invention tales do not agree. Juniper and structure are the era’s leftover.",
+    },
+    {
+      id: "ghi-3",
+      prompt: "Why did contemporary-boom Negronis get weird?",
+      options: [
+        "Campari changed its recipe in 2000",
+        "Hendrick’s-style citrus and floral gins that shine in a G&T often vanish under equal-parts bitter",
+        "Negronis legally require genever",
+        "Tonic belongs in a Negroni now",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The 2000s gin boom filled highball shelves. Equal parts were written for a juniper-led spine.",
+    },
+    {
+      id: "ghi-4",
+      prompt: "When does gin history earn a place in Learn?",
+      options: [
+        "Whenever there is a famous drinker to quote",
+        "Only when it changes the pour",
+        "Only if you can recite Gin Lane",
+        "Never — production is the only lesson",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Genever vs London dry, vermouth judgment, bitter equal parts, tonic matching. A timeline for its own sake does not.",
+    },
+  ],
+  "gin-learn-to-taste": [
+    {
+      id: "glt-1",
+      prompt: "What’s the tasting order this lesson wants?",
+      options: [
+        "Name the style from the label, then sip to confirm",
+        "Smell first, taste, write two words, then name the style",
+        "Mix it into a G&T first so you can taste faster",
+        "Score it out of 100 before you smell it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Guessing early just trains you to confirm what the label already told you.",
+    },
+    {
+      id: "glt-2",
+      prompt: "You wrote “juniper, dry” before you looked at the label. What did you likely find?",
+      options: [
+        "Hendrick’s, or another soft contemporary",
+        "A London dry such as Beefeater or Tanqueray",
+        "Bols Genever, always",
+        "Hayman’s Old Tom, always",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Those two words are more useful than a botanist paragraph. Beefeater / Tanqueray is the cocktail default.",
+    },
+    {
+      id: "glt-3",
+      prompt: "Mini-lab B: the same whisper of vermouth, two gins. What are you training?",
+      options: [
+        "How to hide tired vermouth",
+        "Hearing which gin stayed structured instead of turning into cologne",
+        "Whether clearer gin is older",
+        "How to skip the vermouth",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Same wine, two pours. Name which one kept the drink from perfume water.",
+    },
+    {
+      id: "glt-4",
+      prompt: "A G&T tastes soapy. You already tasted the tonic alone and it was fine. What’s the move?",
+      options: [
+        "Add more tonic until the gin disappears",
+        "The gin’s botanical bill is the mismatch — tonic reveals character; it does not hide a soapy bottle",
+        "Shake the highball",
+        "It will taste like London dry once it’s warm",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Lab C splits the suspects. If tonic is innocent, the bottle is the story — or the ice is sparse.",
+    },
+  ],
+  "gin-four-classics": [
+    {
+      id: "gfc-1",
+      prompt: "Your G&T dies in two minutes. The gin is Beefeater or Tanqueray. What’s the first move?",
+      options: [
+        "Buy a more expensive gin",
+        "Packed ice and fridge-cold tonic — warm, sparse ice is not a bad London dry",
+        "Switch to Hendrick’s",
+        "Shake it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Tonic and ice reveal the bottle. They also ruin Beefeater or Tanqueray when they are warm and thin.",
+    },
+    {
+      id: "gfc-2",
+      prompt: "Tonight’s Martini tastes like cold cologne. What’s the likely bottle issue?",
+      options: [
+        "Beefeater is too juniper-heavy",
+        "Hendrick’s, or another soft floral, can’t carry a nearly-all-gin drink",
+        "You should have shaken it",
+        "Tonic water was required",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Default is Beefeater or Tanqueray. Juniper and structure keep vermouth from turning the glass into perfume.",
+    },
+    {
+      id: "gfc-3",
+      prompt: "You’re making Negronis for a table. Which gin choice is the safest default?",
+      options: [
+        "Hendrick’s — you only drink it with tonic, but gin is gin",
+        "Beefeater, Tanqueray, or a similar juniper-led London dry that still reads next to Campari",
+        "Plymouth Navy Strength poured at the same ounces as a 40% bottle with no adjustment",
+        "Any clear spirit — Negronis hide botanicals",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Campari is loud. Beefeater or Tanqueray keeps juniper audible in equal parts. Hendrick’s often disappears.",
+    },
+    {
+      id: "gfc-4",
+      prompt: "A Last Word tastes like Chartreuse and lime with no spine. What’s the gin lesson?",
+      options: [
+        "Use less Chartreuse until the gin vanishes too",
+        "This template is already loud — stay on the London dry or step up to Plymouth Navy Strength / Tanqueray export strength",
+        "Last Words require vodka",
+        "Stir it so the gin disappears",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Equal-parts sour with green Chartreuse. The same Beefeater / Tanqueray default works; navy or export strength is a measured density tool, not a silent 40% swap.",
+    },
+  ],
+  "rum-family-buying": [
+    {
+      id: "rfb-1",
+      prompt: "A rum pours almost black. What does the color guarantee?",
       options: [
         "At least 8 years in oak",
         "Nothing by itself — color can be oak, caramel, or both",
@@ -471,10 +1171,23 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       ],
       correctIndex: 1,
       explanation:
-        "Rum lacks a single global aging label rule like Scotch age statements. Color is a weak signal — taste and producer notes matter more.",
+        "White, gold, and dark are not reliable age grades. Color can come from oak, caramel, or both.",
     },
     {
-      id: "rum-3",
+      id: "rfb-2",
+      prompt: "A mixing white looks crystal clear. What does that usually mean?",
+      options: [
+        "It was never in a barrel",
+        "Clear means filtered, not young — many big mixing whites, Bacardi Superior included, spend time in oak then get filtered",
+        "It is agricole blanc by definition",
+        "It is automatically too old for a Daiquiri",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A lot of the big mixing whites — Bacardi Superior included — spend time in oak, then get filtered until they look clear.",
+    },
+    {
+      id: "rfb-3",
       prompt: "You’re stocking a first rum shelf for MixWise classics. Best pair?",
       options: [
         "Five tiki bottles before any white rum",
@@ -484,7 +1197,236 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       ],
       correctIndex: 1,
       explanation:
-        "Clean white covers Daiquiri/Mojito; aged covers richer builds. Tiki depth can wait.",
+        "Clean white covers Daiquiri and Mojito; aged covers Dark ’n’ Stormy and Mai Tai. Funk and agricole can wait.",
+    },
+    {
+      id: "rfb-4",
+      prompt: "A recipe calls for aged rum. You only have a spiced rum. What’s the honest read?",
+      options: [
+        "Spiced rum is just aged rum with a better label",
+        "Spiced rum is a flavored product, not a synonym for aged rum",
+        "Spice automatically means navy strength",
+        "Use twice as much — the vanilla will act like oak",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Spiced rum is flavored. It will not silently do the job of an aged mixing rum.",
+    },
+  ],
+  "rum-how-its-made": [
+    {
+      id: "rhm-1",
+      prompt: "A Daiquiri smells like banana and solvent. What’s the production story?",
+      options: [
+        "The lime was Meyer instead of Persian",
+        "A high-ester ferment and pot-still rum is dominating a template that wants clean lime",
+        "You needed more sugar to hide the rum",
+        "All molasses rum tastes like that",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Push esters hard and you get banana, pineapple, or a sharp solvent note. That smell was meant to carry across a punch bowl. In a Daiquiri, it usually buries the lime.",
+    },
+    {
+      id: "rhm-2",
+      prompt: "Molasses rum vs rhum agricole — what actually changes in the glass?",
+      options: [
+        "Nothing — both are just rum",
+        "Agricole starts as cane juice and often reads grassy and bright; molasses rum is a different raw material",
+        "Agricole is legally darker",
+        "Molasses rum cannot be aged",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The base you ferment shows up later. Agricole blanc is usually unaged cane; a Spanish-style white is often a different drink.",
+    },
+    {
+      id: "rhm-3",
+      prompt: "Why can a few years in the tropics taste like more oak than the same years in a cooler warehouse?",
+      options: [
+        "Tropical labels lie about age",
+        "Heat and humidity pull more from oak, faster, and lose more to the angels",
+        "Caribbean barrels are always new charred oak, like bourbon",
+        "Cooler warehouses add caramel by law",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Climate is a production lever. The number of years is not a flavor score.",
+    },
+    {
+      id: "rhm-4",
+      prompt: "Which set of choices explains a bottle more honestly than “gold” on the label?",
+      options: [
+        "The price and the neck tag",
+        "Base, ferment, still, oak, and what’s added at bottling",
+        "Whether the glass is green or clear",
+        "The number of awards on the front",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Production choices show up in the glass more honestly than the color on the label.",
+    },
+  ],
+  "rum-history-in-glass": [
+    {
+      id: "rhi-1",
+      prompt: "Why does a classic Daiquiri still want a clean mixing white?",
+      options: [
+        "Hemingway invented it that way",
+        "The useful chapters are a camp sour, then a Havana bar that taught a clean shaken rum drink — lime first",
+        "Floridita used only agricole",
+        "White rum was cheaper during Prohibition",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Cox’s sour and Floridita’s refinement both keep lime in front. History here changes the pour, not the statue.",
+    },
+    {
+      id: "rhi-2",
+      prompt: "What should you take from navy rum history when you build a ginger highball?",
+      options: [
+        "Any dark bottle is navy rum",
+        "Proof and weight that hold ginger and sugar — near 57% ABV still matters; the gunpowder story is folklore",
+        "You must use British-issued rum",
+        "Navy rum cannot be mixed with ginger beer",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The useful leftover is strength. Pour the proof; skip the campfire.",
+    },
+    {
+      id: "rhi-3",
+      prompt: "Why do Mai Tais and Jamaican punches so often use more than one rum?",
+      options: [
+        "Tiki bars were required to use five bottles",
+        "One rum rarely does every job — punch and tiki blends pair a frame with a funky fraction",
+        "Blending hides bad rum",
+        "Orgeat only works with agricole",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Jamaican pot-still rum was built to carry across a punch bowl. Tiki treated rum like a kitchen.",
+    },
+    {
+      id: "rhi-4",
+      prompt: "When does rum history earn a place in Learn?",
+      options: [
+        "Whenever there is a famous drinker to quote",
+        "Only when it changes what you pour",
+        "Only if you can recite a full timeline",
+        "Never — production is the only lesson",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A few true stories explain clean white, navy weight, or a funky blend. A timeline for its own sake does not.",
+    },
+  ],
+  "rum-learn-to-taste": [
+    {
+      id: "rlt-1",
+      prompt: "What’s the tasting order this lesson wants?",
+      options: [
+        "Name the style from the label, then sip to confirm",
+        "Nose, sip, write two words, then name the style",
+        "Mix it into a Daiquiri first so you can taste faster",
+        "Score it out of 100 before you smell it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smell it first. Then taste. Write two words — then name the style. Guessing early just trains you to confirm what you already believed.",
+    },
+    {
+      id: "rlt-2",
+      prompt: "You wrote “banana, solvent” before you looked at the label. What did you likely find?",
+      options: [
+        "A clean mixing white",
+        "A high-ester funky rum",
+        "Agricole blanc",
+        "Spiced rum, always",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Those two words are more useful than purple notes. Funky Jamaican-style rum smells like the punch bowl.",
+    },
+    {
+      id: "rlt-3",
+      prompt: "Mini-lab C: a Mai Tai with only aged rum vs the same drink plus a barspoon of funk. What are you training?",
+      options: [
+        "How to hide orgeat",
+        "Hearing the funky fraction as seasoning, not the whole pour",
+        "Whether gold rum is older",
+        "How to skip the lime",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The second drink is the lesson: frame first, funk on purpose.",
+    },
+    {
+      id: "rlt-4",
+      prompt: "A rum smells grassy and like fresh cane. Which personality did you find?",
+      options: [
+        "Spiced rum",
+        "Agricole",
+        "Navy-strength molasses rum, always",
+        "Caramel-colored mixing white",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Agricole often reads grassy, olive, and bright. If it smells like a field, believe it.",
+    },
+  ],
+  "rum-four-classics": [
+    {
+      id: "rfc-1",
+      prompt: "Your Daiquiri tastes like banana candy. What’s the first move?",
+      options: [
+        "Add more sugar",
+        "Change the rum — the 2:1:1 is a diagnostic, not the problem",
+        "Switch lime for lemon",
+        "Shake for a full minute",
+      ],
+      correctIndex: 1,
+      explanation:
+        "If the rum fights the lime, change the rum — not the template.",
+    },
+    {
+      id: "rfc-2",
+      prompt: "A Mojito tastes grassy-bitter and muddy. What’s the likely pair of mistakes?",
+      options: [
+        "Too much soda and too much ice",
+        "Shredded mint and a rum that’s too funky for a lengthened sour",
+        "Using white rum instead of spiced",
+        "Serving it up in a coupe",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Press mint; don’t shred it. A clean rum keeps soda bright.",
+    },
+    {
+      id: "rfc-3",
+      prompt: "You don’t have Gosling’s for a Dark ’n’ Stormy. What’s the honest home move?",
+      options: [
+        "Skip the drink — the name is the recipe",
+        "Pour an aged or navy-weight rum, call it a ginger highball, and keep the lesson: ginger needs weight",
+        "Use spiced rum and extra lime",
+        "Use a clean white — color doesn’t matter here either",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Gosling’s is the trademarked name. The template still teaches the pour.",
+    },
+    {
+      id: "rfc-4",
+      prompt: "A recipe only says “rum.” How do you choose?",
+      options: [
+        "Whatever is darkest",
+        "Pick the job the glass is doing — citrus-up wants clean white; ginger wants weight; tiki wants a blend",
+        "Always agricole",
+        "Always the tiki bottle",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Each classic trains a different judgment. Match the bottle to the job, not the word “rum.”",
     },
   ],
   "batching-and-hosting": [
@@ -1044,7 +1986,17 @@ export const TECHNIQUE_CHECKS: Record<string, LearnCheck[]> = {
 
 export function getGuideChecks(slug: string): LearnCheck[] {
   const resolved =
-    slug === "whiskey-labels-and-law" ? "spirit-labels-whiskey" : slug;
+    slug === "whiskey-labels-and-law"
+      ? "spirit-labels-whiskey"
+      : slug === "spirit-primer-gin"
+        ? "gin-family-buying"
+        : slug === "spirit-primer-rum"
+          ? "rum-family-buying"
+          : slug === "spirit-primer-whiskey"
+            ? "whiskey-family-buying"
+            : slug === "spirit-primer-agave"
+              ? "agave-family-buying"
+              : slug;
   return GUIDE_CHECKS[resolved] ?? [];
 }
 

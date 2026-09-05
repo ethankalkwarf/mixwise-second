@@ -13,7 +13,7 @@ Save into `public/learn/{slug}.webp`, then point `coverImage` in `lib/learnLibra
 | **When to shake vs stir** | `cocktail shaker tin close up home bar natural light` | Hands on a Boston tin, or shaker + mixing glass side by side | Neon club, flaming drinks, smile-to-camera bartender |
 | **Balance** | `tasting cocktail citrus syrup bitters ingredients flat lay` | Small samples / citrus / syrup / spirit — a tasting story | Four random colorful cocktails with no point |
 | **Garnish with intent** | `expressing citrus peel over cocktail twist garnish close up` | Peel expressed over a coupe/rocks; oils catching light | Strain pours, fruit piles, over-styled tiki props |
-| **Agave primer** | `margarita blanco tequila bottle lime salt natural light` | Margarita or Paloma with bottle + lime, product-first | Generic “summer party” spreads that aren’t agave |
+| **Agave path** | Commons field + lesson covers (done) — see `ATTRIBUTION.md` | Path stays on the Jalisco field; lessons use bottles, piñas, Paloma, mezcal lineup, Margarita | Generic “summer party” spreads that aren’t agave |
 | **Zero-proof** | `non alcoholic cocktail mocktail elegant glassware garnish` | Composed NA drink in real glassware | Kid punch, juice boxes, neon mocktail stock |
 
 ### Optional pack (icons)

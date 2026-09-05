@@ -3,6 +3,10 @@
  */
 
 import type { LearnPracticeDrink, LearnSection, LearnSource } from "@/lib/learnTypes";
+import { AGAVE_CURRICULUM_GUIDES } from "@/lib/learnGuidesAgave";
+import { GIN_CURRICULUM_GUIDES } from "@/lib/learnGuidesGin";
+import { RUM_CURRICULUM_GUIDES } from "@/lib/learnGuidesRum";
+import { WHISKEY_CURRICULUM_GUIDES } from "@/lib/learnGuidesWhiskey";
 
 export type LearnGuide = {
   slug: string;
@@ -16,9 +20,10 @@ export type LearnGuide = {
   accentClass: string;
   practice: LearnPracticeDrink[];
   bigIdea: string;
-  keyTakeaways: string[];
+  keyTakeaways?: string[];
   sections: LearnSection[];
-  deepDive: LearnSection[];
+  /** Omit on spirit curricula that keep everything in `sections`. */
+  deepDive?: LearnSection[];
   sources: LearnSource[];
 };
 
@@ -795,267 +800,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
       },
     ],
   },
-  {
-    slug: "spirit-primer-agave",
-    title: "Agave primer: tequila & mezcal",
-    eyebrow: "Spirits",
-    summary:
-      "Blanco, reposado, añejo, and mezcal — what changes in the glass and how to choose for Margaritas, Palomas, and spirit-forward serves.",
-    readingMinutes: 4,
-    topics: ["tequila", "mezcal", "agave", "margarita"],
-    coverImage: "/learn/spirit-primer-agave.webp",
-    coverAlt: "Blue agave field in Jalisco with mountains beyond",
-    accentClass: "from-terracotta/20 via-cream to-olive/15",
-    practice: [
-      {
-        slug: "margarita",
-        notice:
-          "Blanco 100% agave, fresh lime. If it tastes oaky-dessert, you used a reposado or añejo that wants a different template.",
-      },
-      {
-        slug: "paloma",
-        notice:
-          "A highball: packed ice, cold grapefruit lengthener last. Blanco still fits; loud mezcal can take over.",
-      },
-      {
-        slug: "mezcal-margarita",
-        notice:
-          "Start with Espadín. If smoke buries the lime, split with blanco tequila instead of pouring more citrus.",
-      },
-      {
-        slug: "tommy-s-margarita",
-        notice:
-          "Tequila, lime, agave syrup — no orange liqueur. This is the blanco-purity test. Mixto will taste flat here.",
-      },
-    ],
-    bigIdea:
-      "Agave spirits are defined by plant, process, and aging — choose blanco for brightness, oak-aged tequila for softness and spice, and mezcal for smoke and earth, always preferring 100% agave.",
-    keyTakeaways: [
-      "Blanco keeps bright agave and pepper — default for Margaritas and highballs.",
-      "Reposado and añejo add oak; use them when you want softness or Old Fashioned-style builds.",
-      "Mezcal’s smoke comes largely from pit-roasting agave; Espadín is the versatile starting point.",
-      "Buy 100% agave — mixtos taste flatter and behave worse in cocktails.",
-      "Match intensity: loud mezcal can overwhelm equal-parts drinks; restrained bottles play nicer with citrus.",
-    ],
-    sections: [
-      {
-        heading: "Categories that matter at home",
-        kind: "rule",
-        figure: "agave-ages",
-        body: [
-          "Blanco (unaged or briefly rested) keeps bright agave and pepper — ideal for Margaritas and highballs. Reposado softens with light oak. Añejo leans dessert-spice and works in Old Fashioned builds.",
-          "Mezcal adds smoke and earth. Espadín is the approachable workhorse; louder mezcals can dominate equal-parts drinks.",
-        ],
-      },
-      {
-        heading: "100% agave only",
-        kind: "mistakes",
-        body: [
-          "Mixto tequilas (up to 49% of fermentable sugars from sources other than agave) taste flatter and sweeter in cocktails. Look for “100% agave” on the label.",
-        ],
-      },
-      {
-        heading: "Matching drink to bottle",
-        body: [
-          "Bright citrus drinks want blanco or a restrained mezcal. Stirred vermouth drinks can handle reposado or softer mezcal. Spicy Margaritas still need a clean base — heat should come from chili, not harsh spirit.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Tequila aging categories, usefully",
-        body: [
-          "Mexican CRT categories, usefully: blanco is unaged or aged less than two months in oak (often also rested in stainless); reposado ages in oak from two months up to a year; añejo from one to three years; extra añejo longer than three. Oak adds vanilla, caramel, and spice while rounding raw pepper — it also mutes some fresh agave snap.",
-          "Tommy’s-style Margaritas (tequila, lime, agave syrup) showcase blanco purity. A reposado Margarita tastes rounder and dessert-adjacent; an añejo “Margarita” often wants less citrus sweetness and more Old Fashioned thinking.",
-        ],
-      },
-      {
-        heading: "Mezcal vs tequila — process, not just “smoke”",
-        kind: "tip",
-        body: [
-          "Most tequila (blue Weber agave, defined regions) is typically cooked in above-ground ovens or autoclaves. Traditional mezcal often roasts agave in earthen pits, which lays down the phenolic smoke people notice in the glass — though not every mezcal is aggressively smoky.",
-          "Espadín is the widely planted workhorse and a smart house mezcal. Other agaves (Tobalá, Tepeztate, etc.) can be floral, savory, or wild — beautiful neat, trickier when citrus and sugar compete. Start Espadín in cocktails; graduate to louder bottles when you know the template.",
-        ],
-      },
-      {
-        heading: "Additive-aware shopping (without paranoia)",
-        body: [
-          "Some commercial tequilas use permitted additives for smoothness and aroma. If a bottle tastes like vanilla candy or perfume more than cooked agave, it may not shine in a simple Margarita. Favor producers known for agave-forward profiles when the spirit is the drink’s backbone.",
-        ],
-      },
-    ],
-    sources: [
-      {
-        label: "Emma Janzen, Mezcal: The History, Craft & Cocktails of the World's Ultimate Artisanal Spirit",
-        note: "Accessible deep dive on mezcal production, agave varieties, and drinking culture.",
-      },
-      {
-        label: "Jim Meehan, Meehan's Bartender Manual",
-        note: "Agave spirits in a cocktail context — selection and classic serves.",
-      },
-      {
-        label: "Difford's Guide — Tequila & mezcal",
-        note: "Category overviews and cocktail applications.",
-        href: "https://www.diffordsguide.com/",
-      },
-      {
-        label: "IBA — Official cocktail references",
-        note: "Canonical specs for classics like the Margarita when you want a shared baseline.",
-        href: "https://iba-world.com/",
-      },
-    ],
-  },
-  {
-    slug: "spirit-primer-whiskey",
-    title: "Whiskey primer: bourbon, rye & beyond",
-    eyebrow: "Spirits",
-    summary:
-      "Bourbon, rye, Scotch, and Irish — how they differ, how American whiskey history shaped the classics, and which bottle to pour for Old Fashioneds, Manhattans, and whiskey sours.",
-    readingMinutes: 5,
-    topics: [
-      "whiskey",
-      "bourbon",
-      "rye",
-      "scotch",
-      "irish",
-      "history",
-      "old-fashioned",
-      "manhattan",
-    ],
-    coverImage: "/learn/spirit-primer-whiskey.webp",
-    coverAlt: "Charred oak whiskey barrels stacked in a quiet aging warehouse",
-    accentClass: "from-terracotta/25 via-cream to-olive/15",
-    practice: [
-      {
-        slug: "old-fashioned",
-        notice:
-          "Bourbon for round vanilla-oak; rye when you want spice and a drier finish. Measure sugar and bitters — taste before the peel.",
-      },
-      {
-        slug: "manhattan",
-        notice:
-          "Rye is the classic snap against sweet vermouth. Bourbon works, but the drink reads sweeter. Fridge the vermouth.",
-      },
-      {
-        slug: "whiskey-sour",
-        notice:
-          "Bourbon or a soft Irish blend both fit. Fresh lemon. If it tastes thin, check citrus and shake length before blaming the whiskey.",
-      },
-      {
-        slug: "boulevardier",
-        notice:
-          "Equal parts whiskey, Campari, sweet vermouth. Bourbon softens the bitter; rye keeps it lean. Stir cold.",
-      },
-    ],
-    bigIdea:
-      "Whiskey styles are not interchangeable seasoning — mash bill, cask, and history decide sweetness, spice, and smoke, so choose the bottle for the template you are pouring.",
-    keyTakeaways: [
-      "When a recipe says only “whiskey,” American tradition usually means bourbon or rye.",
-      "Bourbon (corn + new charred oak) is rounder — default for Old Fashioneds and many sours.",
-      "Rye is drier and spicier — the classic Manhattan and Sazerac spine; it nearly vanished after Prohibition and came back with the cocktail revival.",
-      "Blended Scotch and Irish blends are lighter mixing pours; peat is aroma, not a silent swap for bourbon.",
-      "Buy a solid ~45–50% ABV bottle you like neat — timid 40% whiskey disappears under sugar and citrus.",
-    ],
-    sections: [
-      {
-        heading: "Four styles that matter at home",
-        kind: "rule",
-        figure: "whiskey-styles",
-        body: [
-          "Bourbon is at least 51% corn and aged in new charred oak — vanilla, caramel, corn sweetness. It is the usual home pour for Old Fashioneds and whiskey sours. It may be made anywhere in the United States; Kentucky is tradition, not a legal requirement.",
-          "Rye is at least 51% rye grain — pepper, baking spice, a drier finish. Manhattans and Boulevardiers were written for that snap; bourbon softens them. US rye also ages in new charred oak, so it shares bourbon’s vanilla frame with a leaner grain center.",
-          "Scotch must be distilled and aged in Scotland (at least three years in oak). Blended Scotch is the cocktail workhorse — highballs, Rob Roy, Penicillin base. Heavily peated malt is seasoning — a float or rinse — unless the recipe wants smoke up front.",
-          "Irish whiskey is often lighter and softer, especially everyday blends (often triple-distilled). Single pot still — malted and unmalted barley, unique to Ireland — carries more body for stirred drinks; light blends shine in highballs and gentle sours.",
-        ],
-      },
-      {
-        heading: "How American whiskey history shows up in your glass",
-        body: [
-          "Nineteenth-century American bars poured mostly rye. The Manhattan (New York, 1870s–80s) and the Sazerac (New Orleans — cognac first, then rye) were built on that spice. The whiskey cocktail that became the Old Fashioned — spirit, sugar, bitters, water or ice — and the whiskey sour are the same era’s templates.",
-          "After Prohibition, bourbon’s corn economics and broader distribution made it the default supermarket whiskey. Rye nearly left the back bar. Mid-century American recipes that say only “whiskey” often silently assume bourbon.",
-          "The cocktail revival of the 2000s brought rye back because Manhattans and Sazeracs taste flabby when corn sweetness is the only whiskey in the glass. Reading a recipe’s era is often enough to choose a bottle.",
-        ],
-      },
-      {
-        heading: "Match the bottle to the template",
-        figure: "whiskey-drinks",
-        body: [
-          "Old fashioned family (spirit + sugar + bitters): bourbon for round oak, rye when you want spice without extra sweetness. Fruit muddled in the glass is a later restaurant habit — not the structure.",
-          "Manhattan family (whiskey + sweet vermouth + bitters): rye keeps vermouth from turning the drink into dessert; bourbon is a legitimate softer cousin. A Rob Roy is the same idea on Scotch.",
-          "Whiskey sour: bourbon or a friendly Irish blend. Peated Scotch will usually bury the lemon unless you are building a Penicillin-style drink on purpose.",
-          "If the line only says “whiskey,” pour bourbon or rye — not Scotch — unless the drink’s name or notes point elsewhere.",
-        ],
-      },
-      {
-        heading: "Proof and one good bottle",
-        kind: "tip",
-        body: [
-          "Mixing whiskey around 45–50% ABV holds up when sugar, citrus, or vermouth enter the glass. A shy 40% pour can taste thin the moment you add sweetener.",
-          "You do not need a whiskey library to start. One solid bourbon you enjoy neat covers Old Fashioneds and sours; add rye when Manhattans become a habit. Scotch and Irish can wait until a recipe names them.",
-        ],
-      },
-      {
-        heading: "Common swaps that quietly change the drink",
-        kind: "mistakes",
-        body: [
-          "Substituting bourbon for rye in a Manhattan is fine — call it what it is: rounder and sweeter, not “the same drink.”",
-          "Pouring peated Scotch into a standard whiskey sour usually tastes like smoke fighting lemon, not a clever upgrade.",
-          "Canadian whisky labeled “rye” is often a milder grain blend; it will not automatically taste like US straight rye.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Why American whiskey tastes of vanilla",
-        body: [
-          "New charred oak is load-bearing for bourbon and US rye: the char and fresh wood pull vanillin, caramelized sugars, and toasted notes into the spirit. Scotch and much Irish whiskey typically age in used barrels (often ex-bourbon or sherry), so oak reads softer and the grain and peat (if any) stay more visible.",
-          "That is why a bourbon Old Fashioned and a Scotch Rob Roy can share a template and still taste like different families — same bones, different wood and grain.",
-        ],
-      },
-      {
-        heading: "Scotch categories, usefully",
-        kind: "tip",
-        body: [
-          "Single malt: one distillery, malted barley, pot stills. Beautiful neat; in cocktails it can dominate unless the recipe wants that character.",
-          "Blended Scotch: malt whisky for flavor plus column-distilled grain whisky for lightness — the practical mixing pour for highballs and most vermouth drinks on Scotch.",
-          "Peat phenols are aromatic intensity, not proof. The Penicillin (Sam Ross) shakes lemon and honey-ginger with a gentler whisky, then floats or finishes with a smoky malt so smoke is perfume, not the entire palate.",
-        ],
-      },
-      {
-        heading: "Irish pot still vs the soft blend",
-        body: [
-          "Unmalted barley in the mash is the sensory signature of Irish single pot still whiskey — oilier, spicier, closer to a mixing whiskey that can stand up in stirred drinks.",
-          "Everyday Irish blends are often the lightest whiskey on a home shelf. They excel in highballs and gentle sours; they go slack in a rye Manhattan unless you choose a richer pot-still bottle.",
-        ],
-      },
-      {
-        heading: "Spelling, geography, and the shopping aisle",
-        body: [
-          "Ireland and the United States usually spell whiskey; Scotland (and often Canada and Japan) use whisky. The letter does not decide the cocktail — mash bill and cask do.",
-          "Japanese whisky and other world whiskeys can be excellent neat; for MixWise classics, start with the style the recipe’s era assumes, then experiment once the template tastes right.",
-        ],
-      },
-    ],
-    sources: [
-      {
-        label: "David Wondrich, Imbibe!",
-        note: "Historical context for 19th-century whiskey cocktails and the American bar.",
-      },
-      {
-        label: "Robert Simonson, The Old-Fashioned",
-        note: "How the whiskey cocktail became the Old Fashioned — structure over fruit salad.",
-      },
-      {
-        label: "Jim Meehan, Meehan's Bartender Manual",
-        note: "Whiskey selection and classic stirred/shaken serves in a modern bar context.",
-      },
-      {
-        label: "Difford's Guide — Whisky & whiskey",
-        note: "Category overviews and cocktail applications.",
-        href: "https://www.diffordsguide.com/",
-      },
-    ],
-  },
+  ...AGAVE_CURRICULUM_GUIDES,
+  ...WHISKEY_CURRICULUM_GUIDES,
   {
     slug: "spirit-labels-intro",
     title: "Spirit labels decoded",
@@ -1547,226 +1293,8 @@ export const LEARN_GUIDES: LearnGuide[] = [
     ],
   },
 
-  {
-    slug: "spirit-primer-gin",
-    title: "Gin primer: botanicals & classics",
-    eyebrow: "Spirits",
-    summary:
-      "London dry vs contemporary gin, why botanicals matter in Martinis and Negronis, and how to pick a bottle that still tastes like gin after tonic or vermouth.",
-    readingMinutes: 5,
-    topics: ["gin", "botanicals", "martini", "negroni", "g&t"],
-    coverImage: "/learn/spirit-primer-gin.webp",
-    coverAlt: "A gin and tonic with ice and lime, gin bottle softly blurred behind",
-    accentClass: "from-olive/25 via-cream to-forest/15",
-    practice: [
-      {
-        slug: "gin-and-tonic",
-        notice:
-          "London dry wants a dry tonic and a lean garnish. If the gin tastes soapy or candy-sweet neat, tonic will amplify it — not hide it.",
-      },
-      {
-        slug: "martini",
-        notice:
-          "Stir cold and dense. A juniper-forward gin keeps vermouth from turning the drink into perfume water.",
-      },
-      {
-        slug: "negroni",
-        notice:
-          "Equal parts. A soft contemporary gin can disappear under Campari; a classic London dry holds the bitter.",
-      },
-      {
-        slug: "last-word",
-        notice:
-          "Equal-parts sour with green Chartreuse. Loud gin is fine — the template already has volume.",
-      },
-    ],
-    bigIdea:
-      "Gin is a flavored spirit with a juniper legal spine — choose a bottle for how its botanicals behave under tonic, vermouth, or citrus, not for the prettiest bottle art.",
-    keyTakeaways: [
-      "Juniper must be perceptible for it to be gin; everything else is house style.",
-      "London dry is the reliable cocktail default — dry, juniper-led, no post-distillation sweetening.",
-      "Contemporary / new-wave gins can be citrus- or floral-forward — great neat or in G&Ts, riskier in Negronis.",
-      "Tonic is a lengthener with bitterness; it reveals gin character instead of covering flaws.",
-      "For Martinis and Negronis, buy a gin you like with a whisper of vermouth — not only with soda.",
-    ],
-    sections: [
-      {
-        heading: "What the law actually requires",
-        kind: "rule",
-        figure: "gin-styles",
-        body: [
-          "Gin is a distilled spirit flavored so that juniper is the predominant botanical character. That is the load-bearing rule — not “clear” and not “tastes like Christmas.”",
-          "Beyond juniper, producers build a botanical recipe: coriander, citrus peel, angelica, orris, and dozens of others. Those choices decide whether the gin reads piney, citrusy, floral, spicy, or soft.",
-        ],
-      },
-      {
-        heading: "London dry vs contemporary",
-        body: [
-          "London dry is a production style (not a geography requirement): distilled with botanicals, no sweetening after distillation beyond a tiny allowance, and a dry profile. It is the usual home pour for Martinis, Negronis, and classic G&Ts.",
-          "Contemporary gins often push citrus, cucumber, floral, or spice notes. They can make a brilliant highball and a muddy Negroni. Taste neat with a drop of water before you commit a whole bottle to equal-parts drinks.",
-        ],
-      },
-      {
-        heading: "Match the bottle to the template",
-        figure: "gin-drinks",
-        body: [
-          "Highball (G&T): almost any good gin works if tonic is cold and ice is packed. Soft gins need a leaner tonic; juniper bombs can handle a fuller one.",
-          "Martini family: juniper and structure matter — you are mostly tasting gin and a little wine. Soft floral gins can taste like cold cologne once vermouth is gone.",
-          "Negroni family: Campari is loud. Choose a gin that still reads as gin after equal parts bitter and sweet vermouth.",
-        ],
-      },
-      {
-        heading: "Common mistakes",
-        kind: "mistakes",
-        body: [
-          "Buying gin only for the G&T, then wondering why the Martini tastes hollow.",
-          "Treating “craft” or “small batch” as a quality score — those words are marketing, not London dry.",
-          "Using warm tonic and three cubes, then blaming the gin for a flat highball.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Old Tom, navy strength, and genever (useful footnotes)",
-        kind: "tip",
-        body: [
-          "Old Tom is a slightly sweeter historic style — useful in older recipes that assume a softer gin. Navy strength / overproof gin (often ~57% ABV) holds citrus and sugar in sours; it is not a silent swap for 40% London dry by the ounce.",
-          "Genever (Dutch) is malt-forward and closer to whiskey in some stirred drinks. It is a cousin, not a 1:1 London dry substitute.",
-        ],
-      },
-      {
-        heading: "Tonic is not neutral water",
-        body: [
-          "Quinine bitterness and sweetness vary wildly by brand. A “bad G&T” is often mismatched tonic or warm soda — not a bad gin. Taste tonic alone once so you know what you are lengthening with.",
-        ],
-      },
-    ],
-    sources: [
-      {
-        label: "Dave Broom, Gin: The Manual",
-        note: "Style maps and tasting language for modern gin.",
-      },
-      {
-        label: "Jim Meehan, Meehan's Bartender Manual",
-        note: "Gin in classic templates — Martini, Negroni, sour applications.",
-      },
-      {
-        label: "Difford's Guide — Gin",
-        note: "Category overview and cocktail applications.",
-        href: "https://www.diffordsguide.com/",
-      },
-    ],
-  },
-  {
-    slug: "spirit-primer-rum",
-    title: "Rum primer: from Daiquiri to Mojito",
-    eyebrow: "Spirits",
-    summary:
-      "White vs aged, clean Spanish-style vs funky Jamaican — how rum style changes a Daiquiri, Mojito, or highball, and which bottle to buy first.",
-    readingMinutes: 5,
-    topics: ["rum", "daiquiri", "mojito", "aging", "molasses"],
-    coverImage: "/learn/spirit-primer-rum.webp",
-    coverAlt: "A classic Daiquiri in a stemmed cocktail glass on dark wood",
-    accentClass: "from-terracotta/20 via-cream to-olive/15",
-    practice: [
-      {
-        slug: "daiquiri",
-        notice:
-          "Clean white or lightly aged rum, fresh lime, simple syrup. If it tastes like banana candy or varnish, the rum style is fighting the sour.",
-      },
-      {
-        slug: "mojito",
-        notice:
-          "Same acid-sweet skeleton as a Daiquiri, lengthened and muddled. A clean rum keeps mint bright; a heavy funk rum can taste muddy with soda.",
-      },
-      {
-        slug: "dark-n-stormy",
-        notice:
-          "Ginger beer wants a rum with enough body to stand up — often a richer aged or navy-style pour. Check the trademarked Gosling’s spec if you care about the classic name.",
-      },
-      {
-        slug: "mai-tai",
-        notice:
-          "Often a blend of rums. Start with a solid aged rum before chasing five bottles of tiki inventory.",
-      },
-    ],
-    bigIdea:
-      "Rum is not one flavor — molasses or cane, column or pot still, and aging decide whether a drink tastes clean-lime, caramel-oak, or funky-ester, so pick the style for the template.",
-    keyTakeaways: [
-      "A clean white rum is the Daiquiri and Mojito default — bright lime needs a quiet backbone.",
-      "Aged rum adds oak and caramel; great in stirred or richer drinks, heavier in a classic Daiquiri.",
-      "“Funky” Jamaican-style rums bring esters (banana, overripe fruit) — seasoning, not always the whole pour.",
-      "Color is not a legal age grade — some dark rums are colored; taste and producer notes beat bottle tint.",
-      "Buy one versatile white and one solid aged bottle before a tiki shelf.",
-    ],
-    sections: [
-      {
-        heading: "What rum is (usefully)",
-        kind: "rule",
-        figure: "rum-styles",
-        body: [
-          "Rum is distilled from sugarcane products — molasses or fresh cane juice — then often aged. Unlike bourbon, there is no single global mash-and-barrel law, so “rum” covers a wide range of production styles.",
-          "For cocktails, think in jobs: clean mixing rum for citrus, aged rum for body and oak, funky rum for aroma intensity.",
-        ],
-      },
-      {
-        heading: "White, gold, dark — and what they don’t guarantee",
-        body: [
-          "White / silver rum is often lightly aged and filtered for clarity — not necessarily unaged. It is the usual Daiquiri spine.",
-          "Gold and dark labels can mean oak time, caramel coloring, or both. Do not trust color alone. If a “dark” rum tastes mostly like sweet caramel syrup, it may fight a dry sour.",
-        ],
-      },
-      {
-        heading: "Match rum to the drink",
-        figure: "rum-drinks",
-        body: [
-          "Daiquiri / Mojito: clean white or restrained lightly aged rum. Fresh lime is the star.",
-          "Highballs (Dark ’n’ Stormy family): rum with enough weight for ginger spice.",
-          "Tiki / Mai Tai family: often blended — start simple, add funk as a fraction, not the whole pour, until you know the recipe.",
-        ],
-      },
-      {
-        heading: "Common mistakes",
-        kind: "mistakes",
-        body: [
-          "Using a heavily funky rum as a silent swap in a standard Daiquiri.",
-          "Assuming spiced rum equals aged rum — spice blends are a different product.",
-          "Building a Mojito with warm soda and shredded mint, then blaming the rum.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Spanish style, Jamaican funk, agricole (quick map)",
-        kind: "tip",
-        body: [
-          "Spanish-style (often column still, molasses) tends clean and versatile. Jamaican pot-still traditions can be high-ester and aromatic. Rhum agricole (cane juice, often French Caribbean) reads grassy and bright — beautiful, but a different Daiquiri.",
-          "You do not need all three to start. One clean white + one solid aged covers most MixWise rum recipes.",
-        ],
-      },
-      {
-        heading: "Proof still matters",
-        body: [
-          "Same rule as whiskey: ~40% rum can taste thin under sugar and citrus. A notch higher ABV holds a Daiquiri better. Overproof rums are tools — measure carefully.",
-        ],
-      },
-    ],
-    sources: [
-      {
-        label: "Martin Cate, Smuggler's Cove",
-        note: "Rum categories for drinks — pragmatic, cocktail-first.",
-      },
-      {
-        label: "Difford's Guide — Rum",
-        note: "Style overviews and classic applications.",
-        href: "https://www.diffordsguide.com/",
-      },
-      {
-        label: "Jim Meehan, Meehan's Bartender Manual",
-        note: "Rum in Daiquiris, Mojitos, and punch logic.",
-      },
-    ],
-  },
+  ...GIN_CURRICULUM_GUIDES,
+  ...RUM_CURRICULUM_GUIDES,
   {
     slug: "batching-and-hosting",
     title: "Batching for guests",
@@ -2390,9 +1918,16 @@ export const LEARN_GUIDES: LearnGuide[] = [
   },
 ];
 
+const LEARN_GUIDE_ALIASES: Record<string, string> = {
+  "whiskey-labels-and-law": "spirit-labels-whiskey",
+  "spirit-primer-agave": "agave-family-buying",
+  "spirit-primer-gin": "gin-family-buying",
+  "spirit-primer-rum": "rum-family-buying",
+  "spirit-primer-whiskey": "whiskey-family-buying",
+};
+
 export function getLearnGuide(slug: string): LearnGuide | undefined {
-  const resolved =
-    slug === "whiskey-labels-and-law" ? "spirit-labels-whiskey" : slug;
+  const resolved = LEARN_GUIDE_ALIASES[slug] ?? slug;
   return LEARN_GUIDES.find((g) => g.slug === resolved);
 }
 
