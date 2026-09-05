@@ -55,26 +55,24 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "rule",
         figure: "rum-styles",
         body: [
-          "Rum is not one flavor. Molasses or cane, pot or column, oak or none — the family is wide on purpose.",
-          "For cocktails, think in jobs: a clean mixing white for citrus, an aged rum for body, funk or agricole when a recipe asks.",
-          "Color on the shelf is a weak map. The drink is a better one.",
+          "Rum is distilled from sugarcane products — usually molasses, sometimes fresh cane juice — then often aged. Unlike bourbon, there is no single worldwide mash-and-barrel rulebook. Bottles labeled “rum” can taste as different as vodka and peated Scotch.",
+          "Buy for the drink you’re making: a clean mixing rum behind citrus, an aged rum when you want body and oak, a funky pot-still rum when you want more aroma. The Daiquiri is the quickest test — if the rum fights the lime, that bottle doesn’t belong in this drink.",
         ],
       },
       {
         heading: "White, gold, dark — what color does not guarantee",
         body: [
-          "White, gold, and dark on a rum label are not reliable age grades. Color can come from oak, caramel, or both.",
-          "A lot of the big mixing whites — Bacardi Superior included — spend time in oak, then get filtered until they look clear. Clear means filtered, not young.",
-          "Gold can be honest oak time or a tint. Near-black can be years in wood or a dose of coloring. Taste the bottle, then read the producer notes if you care.",
+          "A lot of the big mixing whites — Bacardi Superior included — spend time in oak, then get filtered until they look clear. Clear means filtered, not young. That light aging is why a good mixing white still feels soft under lime instead of sharp and thin.",
+          "Gold and dark are weaker signals. The color might be years in wood, a dose of caramel, heavy molasses character, or all three. Rum doesn’t police age statements the way Scotch does. If a near-black bottle mostly tastes like sweet syrup and heat, it will bully a dry Daiquiri no matter how serious the label looks.",
+          "Spiced rum is its own product — vanilla, spice, often sugar. Use it when you want those flavors. Don’t treat it as your aged Mai Tai bottle.",
         ],
       },
       {
         heading: "Two bottles to start",
         kind: "tip",
         body: [
-          "Start with one clean white mixing rum and one solid aged rum.",
-          "Add funky Jamaican, agricole, or overproof when a recipe names that job — not because the shelf looks unfinished.",
-          "The Daiquiri is a quick bottle test. If the rum fights the lime, that bottle doesn’t belong in this drink.",
+          "Start with one clean white mixing rum you like in a Daiquiri, plus one solid aged rum you like neat or in a ginger highball. That pair covers most MixWise rum recipes. Agricole, overproof, and Jamaican-style bottles are worth adding when recipes start asking for them.",
+          "Around 40% ABV can taste thin once sugar and citrus arrive. A notch higher holds a Daiquiri better.",
         ],
       },
       {
@@ -165,31 +163,30 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "rule",
         figure: "rum-production",
         body: [
-          "Five decisions sit between the field and the glass: what you ferment, how long, how you distill, how you age, and what you add at the end.",
-          "Learn those, and a new bottle is a set of choices — not a mood.",
+          "A few production choices sit between the field and the glass: what you ferment, how long it ferments, how you distill it, how you age it, and what you add at the end.",
+          "Those levers show up in the glass more honestly than the color on the label. Learn them, and a new bottle is a set of choices you can taste.",
         ],
       },
       {
         heading: "Molasses vs cane juice",
         body: [
           "Most rum starts as molasses, the leftover of sugar-making. It can be clean and versatile, or rich and sticky, depending on everything that follows.",
-          "Rhum agricole starts as fresh cane juice. It often reads grassy, olive, and bright. Beautiful — and a different Daiquiri than a Spanish-style white.",
+          "Rhum agricole starts as fresh cane juice. It often reads grassy, olive, and bright. Beautiful — and a different Daiquiri than a Spanish-style mixing white.",
         ],
       },
       {
         heading: "Ferment, still, and esters",
         body: [
-          "Yeast and time make aroma. Short, controlled ferments stay quiet. Long, wilder ferments build esters.",
+          "Yeast and time make aroma. Short, controlled ferments stay quiet. Long, wilder ferments build esters. Pot stills keep more of that aroma; column stills can refine toward a clean mixing rum. Many bottles are a blend of both.",
           "Push them hard and you get banana, pineapple, or a sharp solvent note. That smell was meant to carry across a punch bowl. In a Daiquiri, it usually buries the lime.",
-          "Pot stills keep more of that aroma. Column stills can refine toward a clean mixing rum. Many bottles are a blend of both.",
         ],
       },
       {
         heading: "Oak, climate, and what’s added",
         kind: "tip",
         body: [
-          "Heat and humidity in the tropics pull more from oak, faster, and lose more to the angels. A few years in Barbados is not a few years in Scotland.",
-          "Some producers add caramel or a little sugar after aging. That can read as kindness or as syrup. If a “dark” rum tastes mostly sweet, believe your tongue.",
+          "Heat and humidity in the tropics pull more from oak, faster, and lose more to the angels. A few years in Barbados is not a few years in a cooler warehouse.",
+          "Some producers add caramel or a little sugar after aging — dosage. That can read as softness or as syrup. If a “dark” rum tastes mostly sweet, believe your tongue.",
         ],
       },
       {
@@ -279,22 +276,22 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Two chapters of the Daiquiri",
         figure: "rum-history",
         body: [
-          "Jennings Cox, an American engineer at the Daiquirí mines in Cuba, is the usual documented start — rum, lime, and sugar as a practical sour, around the turn of the twentieth century. Details are debated; the template is not.",
+          "The usual documented start is Jennings Cox, an American engineer near the Daiquirí mines in Cuba, around the turn of the twentieth century: rum, lime, and sugar as a practical sour. Later retellings fill in details the contemporary record does not always lock down. The template is what survived.",
           "Constantino Ribalaigua Vert at El Floridita did not invent lime and rum. He refined the shake, the freeze, and the service until the Daiquiri became a house signature. That is the bottle test you still use: clean rum, bright lime.",
         ],
       },
       {
         heading: "Prohibition tourism, carefully",
         body: [
-          "When the United States went dry, Havana was wet. Americans drank at Floridita and elsewhere, then brought the sour home in memory and in print.",
-          "Hemingway drank there. He did not invent the Daiquiri. Don’t let the statue pick your rum.",
+          "When the United States went dry, Havana was wet. Americans drank at Floridita and elsewhere, then brought the sour home in memory and in print. The drinks that traveled were the ones that could be made again.",
+          "Hemingway drank there. That is documented nightlife, not authorship. He did not invent the Daiquiri.",
         ],
       },
       {
         heading: "Navy strength still matters",
         body: [
           "The Royal Navy issued rum for centuries. The useful leftover is strength: navy-proof rum sits near 57% ABV and holds ginger, sugar, and ice without going thin.",
-          "The gunpowder-won’t-wet story is folklore around an older proof system. Pour the proof; skip the campfire.",
+          "The story that gunpowder would still light if the rum was strong enough is folklore around an older proof system. Use the proof. Don’t treat the legend as a tasting method.",
         ],
       },
       {
@@ -309,7 +306,7 @@ export const RUM_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "tip",
         body: [
           "Islands that refined sugar had molasses to ferment. Places that distilled juice kept a grassy agricole character. Column stills later made clean mixing rum at scale.",
-          "That is not trivia. It is why a supermarket “white rum” and a Martinique blanc are not silent swaps.",
+          "That is why a supermarket “white rum” and a Martinique blanc are not silent swaps — the sugar economy showed up in the glass.",
         ],
       },
       {
