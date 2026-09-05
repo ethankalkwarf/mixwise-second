@@ -66,6 +66,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         body: [
           "Darker is not older, and older is not automatically better in a cocktail. Color can be char, time, or caramel. The drink cares about grain, cask, and proof.",
           "The legal words — bourbon, rye, straight, bottled-in-bond — live on the American whiskey labels lesson, in the Spirit labels decoded path. This lesson is about what you pour.",
+          "Ireland and the United States usually spell whiskey; Scotland often uses whisky. The letter does not decide the cocktail — mash and cask do.",
           "A famous bottle you like neat is not always the bottle the template wants. Save the allocated pour for a glass. Mix with something solid you will open again.",
         ],
       },
@@ -87,15 +88,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         ],
       },
     ],
-    deepDive: [
-      {
-        heading: "The letter on the label",
-        body: [
-          "Ireland and the United States usually spell whiskey. Scotland — and often Canada and Japan — use whisky. The letter does not decide the cocktail. Mash bill and cask do.",
-          "Japanese whisky and other world whiskeys can be excellent neat. For MixWise classics, start with the style the recipe’s era assumes. Experiment once the template tastes right.",
-        ],
-      },
-    ],
+    deepDive: [],
     sources: [
       {
         label: "American whiskey labels",
@@ -168,7 +161,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Mash bill and still",
         body: [
           "Mash bill is the grain recipe. Corn reads sweet. Rye reads spice and dry. Malted barley reads bread and, if it was dried over peat, smoke. Wheat reads soft. The legal floors — 51% corn for bourbon, 51% rye for rye — are the start of the flavor, not the whole story. The rest of the mash still matters.",
-          "Pot stills keep more of that grain character. Column stills can refine toward a lighter, cleaner spirit. Many bottles are a conversation between the two — especially blends.",
+          "Pot stills keep more of that grain character. Column stills can refine toward a lighter, cleaner spirit. Many bottles are a conversation between the two — especially blends. A mixing Scotch (Famous Grouse or Monkey Shoulder, or similar) is usually malt plus column grain; a single malt can dominate a cocktail. Irish pot still (Redbreast or similar) keeps unmalted-barley body; Jameson is the light blend.",
         ],
       },
       {
@@ -198,30 +191,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         ],
       },
     ],
-    deepDive: [
-      {
-        heading: "Scotch categories, usefully",
-        kind: "tip",
-        body: [
-          "Single malt: one distillery, malted barley, pot stills. Beautiful neat. In cocktails it can dominate unless the recipe wants that character.",
-          "Blended Scotch: malt whisky for flavor plus column-distilled grain whisky for lightness — the practical mixing pour for highballs and most vermouth drinks on Scotch. Famous Grouse or Monkey Shoulder, or similar mixing Scotches, cover that job.",
-          "Peat phenols are aromatic intensity, not a legal age or a proof. The Penicillin (Sam Ross) shakes lemon and honey-ginger with a gentler whisky, then floats a smoky malt — Laphroaig 10 or Ardbeg 10 — so smoke is perfume, not the entire palate.",
-        ],
-      },
-      {
-        heading: "Irish pot still vs the soft blend",
-        body: [
-          "Unmalted barley in the mash is the sensory signature of Irish single pot still whiskey — oilier, spicier, closer to a mixing whiskey that can stand up in stirred drinks. Redbreast, or similar, is that body.",
-          "Everyday Irish blends are often the lightest whiskey on a home shelf. Jameson excels in highballs and gentle sours. It goes slack in a rye Manhattan unless you choose a richer pot-still bottle.",
-        ],
-      },
-      {
-        heading: "The labels path, if you want the legal words",
-        body: [
-          "Mash floors, bonded whiskey, and what “straight” guarantees are shopping law. They live on American whiskey labels, in Spirit labels decoded. Come back here when you want the glass, not the statute.",
-        ],
-      },
-    ],
+    deepDive: [],
     sources: [
       {
         label: "American whiskey labels",
@@ -292,7 +262,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         body: [
           "American bars in the late 1800s poured mostly rye. The Manhattan — New York, 1870s–80s — is whiskey, sweet vermouth, and bitters built on that spice. Invention stories attached to hotels and banquets came later. The useful leftover is the pour: rye against vermouth.",
           "The Sazerac starts as a New Orleans cognac drink, named for a brand of cognac, not a whiskey. Rye became the usual pour as cognac supply and American taste shifted. Treat that as a careful succession, not a founding myth. Peychaud’s and an absinthe rinse are the documented seasoning. Cognac Sazeracs still exist; rye is the modern default.",
-          "The whiskey cocktail that became the Old Fashioned — spirit, sugar, bitters, water or ice — and the whiskey sour are the same era’s templates. Structure first. Fruit muddled in the glass is a later restaurant habit.",
+          "The whiskey cocktail that became the Old Fashioned — spirit, sugar, bitters, water or ice — and the whiskey sour are the same era’s templates. “Old-fashioned” was a call for that structure against later fancy builds. Fruit muddled in the glass is a later restaurant habit.",
         ],
       },
       {
@@ -327,21 +297,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         ],
       },
     ],
-    deepDive: [
-      {
-        heading: "Sazerac — documented succession",
-        body: [
-          "The name points to Sazerac de Forge cognac and a New Orleans coffee house. Rye took over as the house pour later. When you teach the drink, say that out loud. Then pour rye unless you mean the older cognac version.",
-        ],
-      },
-      {
-        heading: "Old Fashioned — the call, not the fruit",
-        kind: "tip",
-        body: [
-          "“Old-fashioned” began as a call for the whiskey cocktail the old way — spirit, sugar, bitters — against later fancy builds. Robert Simonson’s history is the useful shelf book. Muddled orange and cherry are a 20th-century service habit, not the structure.",
-        ],
-      },
-    ],
+    deepDive: [],
     sources: [
       {
         label: "David Wondrich, Imbibe!",
@@ -398,7 +354,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         kind: "rule",
         figure: "whiskey-tasting-protocol",
         body: [
-          "Smell first. Taste. Two words — then name the style. Guessing early just trains you to confirm what the label already told you.",
+          "Smell first. Taste. Two words — then name the style. “Vanilla, round” or “pepper, dry” will still help at the shelf next month. Guessing early just trains you to confirm what the label already told you.",
           "Neat, or with a few drops of water if it is hot. Same glass shape if you can. You are training a comparison, not hosting a party.",
         ],
       },
@@ -432,14 +388,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         ],
       },
     ],
-    deepDive: [
-      {
-        heading: "Two words beat tasting-note poetry",
-        body: [
-          "“Vanilla, round” or “pepper, dry” will still help you at the shelf next month. A stack of fruit names will not. Write the words. Then look at the label.",
-        ],
-      },
-    ],
+    deepDive: [],
     sources: [
       {
         label: "Jim Meehan, Meehan's Bartender Manual",
@@ -520,7 +469,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "When the recipe only says whiskey",
         kind: "tip",
         body: [
-          "Pour bourbon or rye unless the notes say otherwise. Scotch and Irish keep their own named drinks.",
+          "Pour bourbon or rye unless the notes say otherwise. Scotch and Irish keep their own named drinks. A Rob Roy is the Manhattan idea on Scotch — Famous Grouse or Monkey Shoulder, or similar. Name it honestly.",
           "Old Fashioned and sour: bourbon is the usual home default — Buffalo Trace, Maker’s Mark, or similar. Manhattan and Boulevardier: rye if you have it. Then taste, and keep the pour that fits the glass.",
         ],
       },
@@ -535,21 +484,7 @@ export const WHISKEY_CURRICULUM_GUIDES: LearnGuide[] = [
         ],
       },
     ],
-    deepDive: [
-      {
-        heading: "Rob Roy is not a silent Manhattan",
-        body: [
-          "Same vermouth idea, Scotch instead of rye. Famous Grouse or Monkey Shoulder, or similar, will do the job. The grain and the used cask change the drink. Name it honestly.",
-        ],
-      },
-      {
-        heading: "Why Sazerac is not classic #4 here",
-        kind: "tip",
-        body: [
-          "The Sazerac teaches succession and a rinse — history, not equal parts. Practice it after the history lesson. Keep this set to four judgments: structure, vermouth, lemon, bitter.",
-        ],
-      },
-    ],
+    deepDive: [],
     sources: [
       {
         label: "Robert Simonson, The Old-Fashioned",
