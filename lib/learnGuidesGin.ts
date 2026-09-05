@@ -15,8 +15,9 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
       "Gin is a flavored spirit with a juniper legal spine. Buy for how botanicals behave under tonic, vermouth, or citrus — not bottle art.",
     readingMinutes: 5,
     topics: ["gin", "botanicals", "london dry", "contemporary", "buying"],
-    coverImage: "/learn/spirit-primer-gin.webp",
-    coverAlt: "A gin and tonic with ice and lime, gin bottle softly blurred behind",
+    coverImage: "/learn/gin-family-buying.webp",
+    coverAlt:
+      "London dry gin bottles on a shop shelf — Gordon’s, Gilbey’s, Beefeater, Bombay Sapphire, Tanqueray",
     accentClass: ginAccent,
     practice: [
       {
@@ -118,8 +119,9 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
       "Base spirit, botanical recipe, and still choices explain why two gins drink differently in a Martini.",
     readingMinutes: 6,
     topics: ["gin", "production", "botanicals", "vapor infusion", "london dry", "navy strength"],
-    coverImage: "/learn/spirit-primer-gin.webp",
-    coverAlt: "A gin and tonic with ice and lime, gin bottle softly blurred behind",
+    coverImage: "/learn/gin-how-its-made.webp",
+    coverAlt:
+      "Brass manway on Gilbey’s copper gin still at Harlow Museum — where the botanical bill is locked in",
     accentClass: ginAccent,
     practice: [
       {
@@ -236,8 +238,9 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
       "A few true stories explain why a recipe wants London dry, vermouth judgment, or a louder gin — not a timeline for its own sake.",
     readingMinutes: 6,
     topics: ["gin", "history", "genever", "martini", "negroni", "tonic"],
-    coverImage: "/learn/equal-parts-bitters.webp",
-    coverAlt: "A Negroni in a rocks glass with orange peel",
+    coverImage: "/learn/gin-history-in-glass.webp",
+    coverAlt:
+      "Nineteenth-century lithograph of a London gin palace as a “temple of Juniper,” by C. J. Grant",
     accentClass: ginAccent,
     practice: [
       {
@@ -348,9 +351,9 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
     summary: "Styles are easiest to learn with your nose. A short protocol beats another shelf chart.",
     readingMinutes: 6,
     topics: ["gin", "tasting", "london dry", "contemporary", "vermouth", "tonic"],
-    coverImage: "/learn/spirit-labels-intro.webp",
+    coverImage: "/learn/gin-learn-to-taste.webp",
     coverAlt:
-      "Two bottles side by side — a tasting comparison starts with two glasses, not a chart",
+      "A gin tasting flight at Tales of the Cocktail — stemmed glasses on a marked mat, including Beefeater London and Plymouth",
     accentClass: ginAccent,
     practice: [
       {
@@ -442,8 +445,8 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
       "Each classic trains a different gin judgment — tonic reveal, vermouth structure, bitter equal parts, and volume.",
     readingMinutes: 7,
     topics: ["gin", "gin-and-tonic", "martini", "negroni", "last-word"],
-    coverImage: "/learn/spirit-primer-gin.webp",
-    coverAlt: "A gin and tonic with ice and lime, gin bottle softly blurred behind",
+    coverImage: "/learn/gin-four-classics.webp",
+    coverAlt: "A Last Word in a stemmed cocktail glass — pale green, condensation on the bowl",
     accentClass: ginAccent,
     practice: [
       {

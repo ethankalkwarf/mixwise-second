@@ -22,7 +22,15 @@
 | `vermouth-and-modifiers.webp` | Vermouth & modifiers (generated) |
 | `spirit-primer-agave.webp` | Agave primer |
 | `spirit-primer-whiskey.webp` | Whiskey path lessons 1–2 (rickhouse barrels) |
-| `spirit-primer-gin.webp` | Gin path + lessons 1, 2, and 5 (G&T — CC photo; see ATTRIBUTION.md) |
+| `spirit-primer-gin.webp` | Gin path cover + G&T / tonic-matching slides (CC photo; see ATTRIBUTION.md) |
+| `gin-family-buying.webp` | Gin lesson 1 — London dry bottles on a shop shelf |
+| `gin-how-its-made.webp` | Gin lesson 2 — Gilbey copper still manway |
+| `gin-history-in-glass.webp` | Gin lesson 3 — C. J. Grant “temple of Juniper” gin-palace lithograph |
+| `gin-learn-to-taste.webp` | Gin lesson 4 — Tales of the Cocktail gin sampler flight |
+| `gin-four-classics.webp` | Gin lesson 5 — Last Word raised |
+| `learn-gin-martini.webp` | Gin drinks figure — Dry Martini |
+| `learn-gin-last-word.webp` | Gin drinks figure — Last Word coupe |
+| `figure-gin-juniper.webp` | Gin history figure — Juniperus communis berries |
 | `spirit-primer-rum.webp` | Rum path + lessons 1 and 5 (Daiquiri — CC photo; see ATTRIBUTION.md) |
 | `rum-how-its-made.webp` | How rum is made (Foursquare warehouse — CC photo; see ATTRIBUTION.md) |
 | `rum-learn-to-taste.webp` | Learn to taste (side-by-side tot pour — OGL; see ATTRIBUTION.md) |
@@ -52,7 +60,9 @@ Old URL `/learn/guides/spirit-primer-whiskey` redirects to the path.
 ## Gin: from bottle to classics (course)
 Path: `/learn/paths/gin-primer` — family & buying → how it’s made → history in the glass → learn to taste → four classics.
 
-**Diagrams (SVG in LearnFigure):** `gin-styles`, `gin-production` (base → botanicals → distill → bottle), `gin-tasting-protocol` (nose → name). Photo pagers: `gin-drinks` (G&T, Martini, Negroni, Last Word) and `gin-history`.
+**Diagrams (SVG in LearnFigure):** `gin-styles`, `gin-production` (base → botanicals → distill → bottle), `gin-tasting-protocol` (nose → name).
+
+**Photo pagers:** `gin-drinks` (G&T, Martini, Negroni, Last Word coupe) and `gin-history` (Grant gin-palace lithograph, juniper berries, Negroni, G&T). Each lesson has its own Commons cover.
 
 Old URL `/learn/guides/spirit-primer-gin` redirects to the path.
 
