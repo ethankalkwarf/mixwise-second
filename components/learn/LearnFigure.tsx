@@ -229,6 +229,170 @@ function RumStylesDiagram() {
   );
 }
 
+function RumProductionDiagram() {
+  const steps = [
+    { n: "1", t: "Cane / molasses", d: "The base you smell later." },
+    { n: "2", t: "Ferment", d: "Time and yeast make esters." },
+    { n: "3", t: "Still", d: "Pot keeps aroma; column cleans." },
+    { n: "4", t: "Age", d: "Oak + climate do the work." },
+    { n: "5", t: "Bottle", d: "Filter, color, or sugar last." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        Color happens late. Taste starts with the first four steps.
+      </p>
+    </div>
+  );
+}
+
+function RumTastingProtocolDiagram() {
+  const steps = [
+    { n: "1", t: "Nose", d: "Smell it first — no sip yet." },
+    { n: "2", t: "Sip", d: "A little, then air." },
+    { n: "3", t: "Two words", d: "Write what you found." },
+    { n: "4", t: "Name", d: "Then name the style." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        Guessing the style first just trains you to confirm what you already believed.
+      </p>
+    </div>
+  );
+}
+
+function WhiskeyProductionDiagram() {
+  const steps = [
+    { n: "1", t: "Mash", d: "Corn, rye, malt — the grain you taste later." },
+    { n: "2", t: "Ferment", d: "Wash for the still." },
+    { n: "3", t: "Still", d: "Pot keeps character; column refines." },
+    { n: "4", t: "Cask", d: "New charred oak vs used barrels." },
+    { n: "5", t: "Bottle", d: "Proof, filter, then the glass." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        New charred oak is the vanilla split. Used casks leave grain and peat more visible.
+      </p>
+    </div>
+  );
+}
+
+function GinProductionDiagram() {
+  const steps = [
+    { n: "1", t: "Base", d: "Neutral grain — or a malt-forward cousin." },
+    { n: "2", t: "Botanicals", d: "Juniper first. The rest is house style." },
+    { n: "3", t: "Distill", d: "Steep or vapor — how aroma is pulled." },
+    { n: "4", t: "Bottle", d: "Water to proof. London dry stops here." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        The still and the botanical bill show up in a Martini more honestly than the label art.
+      </p>
+    </div>
+  );
+}
+
+function GinTastingProtocolDiagram() {
+  const steps = [
+    { n: "1", t: "Nose", d: "Smell it first — no sip yet." },
+    { n: "2", t: "Sip", d: "A little, then air." },
+    { n: "3", t: "Two words", d: "Write what you found." },
+    { n: "4", t: "Name", d: "London dry or contemporary." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        Old Tom and genever are footnotes. Guessing the style first just trains you to confirm the label.
+      </p>
+    </div>
+  );
+}
+
+function WhiskeyTastingProtocolDiagram() {
+  const steps = [
+    { n: "1", t: "Nose", d: "Smell it first — no sip yet." },
+    { n: "2", t: "Sip", d: "A little, then air." },
+    { n: "3", t: "Two words", d: "Write what you found." },
+    { n: "4", t: "Name", d: "Then name the style." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        Guessing the style first just trains you to confirm the label.
+      </p>
+    </div>
+  );
+}
+
 function EqualPartsDiagram() {
   const parts = [
     { label: "1 · Spirit", sub: "Gin or whiskey", color: FOREST },
@@ -536,13 +700,13 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
   },
   "whiskey-drinks": {
     kicker: "Whiskey templates",
-    title: "Three glasses that teach the category",
+    title: "Four glasses that teach the category",
     slides: [
       {
         src: "/learn/whiskey-deep-dive.webp",
         alt: "An Old Fashioned in a rocks glass with a large ice cube and orange peel",
         label: "Old Fashioned",
-        note: "Spirit + sugar + bitters — bourbon or rye",
+        note: "Spirit + sugar + bitters — bourbon round or rye snap",
       },
       {
         src: "/learn/learn-whiskey-manhattan.webp",
@@ -554,37 +718,103 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
         src: "/learn/learn-whiskey-sour.webp",
         alt: "A Whiskey Sour served up in a coupe with an egg-white foam head",
         label: "Whiskey Sour",
-        note: "Spirit + lemon + sweet — shake hard",
+        note: "Spirit + lemon + sweet — bourbon or Irish",
+      },
+      {
+        src: "/learn/equal-parts-bitters.webp",
+        alt: "A Campari equal-parts drink in a rocks glass with orange peel — the Boulevardier is this template on whiskey",
+        label: "Boulevardier",
+        note: "Equal parts whiskey, Campari, vermouth — bourbon softens, rye stays lean",
+      },
+    ],
+  },
+  "whiskey-history": {
+    kicker: "In the glass",
+    title: "History that changes what you pour",
+    slides: [
+      {
+        src: "/learn/learn-whiskey-manhattan.webp",
+        alt: "A Manhattan in a coupe with a cherry on a pick",
+        label: "Rye bars",
+        note: "Nineteenth-century American bars poured mostly rye — the Manhattan still wants that snap",
+      },
+      {
+        src: "/learn/whiskey-deep-dive.webp",
+        alt: "An Old Fashioned in a rocks glass with a large ice cube and orange peel",
+        label: "Bourbon default",
+        note: "After Prohibition, supermarket “whiskey” often meant bourbon",
+      },
+      {
+        src: "/learn/spirit-labels-scotch.webp",
+        alt: "Laphroaig bottle showing Islay single malt Scotch whisky",
+        label: "Separate families",
+        note: "Scotch and Irish keep their own drinks — not silent swaps for American whiskey",
       },
     ],
   },
   "gin-drinks": {
     kicker: "Gin templates",
-    title: "Three glasses that teach the category",
+    title: "Four glasses that teach the category",
     slides: [
       {
         src: "/learn/spirit-primer-gin.webp",
-        alt: "A gin and tonic in a highball with packed ice and lime",
+        alt: "A gin and tonic in a highball with packed ice, lime, and the bottle behind",
         label: "G&T",
-        note: "Highball — tonic reveals the gin",
+        note: "Packed ice and cold tonic reveal the botanical bill — they do not hide a soapy one",
       },
       {
-        src: "/learn/method-stir.webp",
-        alt: "Mixing glass with ice and a bar spoon for stirred drinks",
-        label: "Martini / Negroni",
-        note: "Stir — vermouth and bitter need silk",
+        src: "/learn/learn-gin-martini.webp",
+        alt: "A dry Martini in a V-glass with a lemon twist on a dark bar top",
+        label: "Martini",
+        note: "Mostly gin, a measured vermouth — juniper and structure, not cologne",
       },
       {
         src: "/learn/equal-parts-bitters.webp",
         alt: "A Negroni in a rocks glass with orange peel",
         label: "Negroni",
-        note: "Equal parts — gin must still read",
+        note: "Equal parts gin, Campari, sweet vermouth — the gin must still read",
+      },
+      {
+        src: "/learn/learn-gin-last-word.webp",
+        alt: "A Last Word in a cut coupe, pale green, with lime and Chartreuse behind",
+        label: "Last Word",
+        note: "Equal parts gin, green Chartreuse, maraschino, lime — volume is allowed",
+      },
+    ],
+  },
+  "gin-history": {
+    kicker: "In the glass",
+    title: "History that changes what you pour",
+    slides: [
+      {
+        src: "/learn/gin-history-in-glass.webp",
+        alt: "C. J. Grant lithograph: a London gin palace as a “temple of Juniper,” 19th century. Wellcome Collection",
+        label: "English gin palaces",
+        note: "C. J. Grant, 19th c. — when a classic says only “gin,” it usually means the drier English style, not genever",
+      },
+      {
+        src: "/learn/figure-gin-juniper.webp",
+        alt: "Ripe blue and unripe green Juniperus communis berries on the branch",
+        label: "Juniper traveled",
+        note: "The legal spine that survived genever → London dry. Everything else is house style",
+      },
+      {
+        src: "/learn/equal-parts-bitters.webp",
+        alt: "A Negroni in a rocks glass with orange peel",
+        label: "Equal-parts frame",
+        note: "Florence-era bones: gin must still read under Campari. Soft boom bottles often vanish",
+      },
+      {
+        src: "/learn/spirit-primer-gin.webp",
+        alt: "A gin and tonic in a highball with packed ice and lime",
+        label: "Tonic matching",
+        note: "Colonial highball habit, reframed: ice and tonic brand reveal the bottle — not a medicine story",
       },
     ],
   },
   "rum-drinks": {
     kicker: "Rum templates",
-    title: "Three glasses that teach the category",
+    title: "Four glasses that teach the category",
     slides: [
       {
         src: "/learn/spirit-primer-rum.webp",
@@ -603,6 +833,72 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
         alt: "A built highball with ice and lengthener",
         label: "Rum highball",
         note: "Ginger beer · packed ice",
+      },
+      {
+        src: "/learn/figure-rum-mai-tai.webp",
+        alt: "A Mai Tai in a rocks glass with Jamaican rum, agricole, orgeat, and lime",
+        label: "Mai Tai",
+        note: "Aged frame, then a funky fraction",
+      },
+    ],
+  },
+  "rum-color-myth": {
+    kicker: "Color is not a grade",
+    title: "Clear, gold, and dark are not age statements",
+    slides: [
+      {
+        src: "/learn/figure-rum-color-lineup.webp",
+        alt: "Seven Havana Club bottles on a shelf, from dark amber to filtered clear",
+        label: "Same house",
+        note: "Color runs the range. It still is not a legal age grade.",
+      },
+      {
+        src: "/learn/figure-rum-color-clear.webp",
+        alt: "A bottle of Bacardi Carta Blanca Superior white rum lying on a wooden table",
+        label: "Clear",
+        note: "Filtered after oak — clear means filtered, not young.",
+      },
+      {
+        src: "/learn/figure-rum-color-gold.webp",
+        alt: "Three Appleton Estate aged rums in the sand, gold to mahogany",
+        label: "Gold",
+        note: "Oak, caramel, or both. Gold is a weaker signal than the nose.",
+      },
+      {
+        src: "/learn/figure-rum-color-dark.webp",
+        alt: "Two dark Zacapa bottles and a tasting glass on a tiled bar",
+        label: "Dark",
+        note: "Near-black can be years in wood — or color and sugar. Taste it.",
+      },
+    ],
+  },
+  "rum-history": {
+    kicker: "In the glass",
+    title: "History that changes what you pour",
+    slides: [
+      {
+        src: "/learn/figure-rum-floridita.webp",
+        alt: "El Floridita neon sign in Havana reading La cuna del daiquiri",
+        label: "Two Daiquiri chapters",
+        note: "A camp sour, then a Havana bar that taught the shake",
+      },
+      {
+        src: "/learn/figure-rum-floridita-bar.webp",
+        alt: "Interior of El Floridita bar in Havana",
+        label: "Havana years",
+        note: "Prohibition tourism popularized the drink — it did not invent lime and rum",
+      },
+      {
+        src: "/learn/figure-rum-navy.webp",
+        alt: "Royal Navy sailors lining up for the daily rum ration aboard HMS King George V in 1940",
+        label: "Navy weight",
+        note: "Proof that holds ginger and sugar — not a gunpowder campfire story",
+      },
+      {
+        src: "/learn/figure-rum-sugarcane.webp",
+        alt: "Stone sugar-mill windmills at Betty's Hope plantation in Antigua, one still carrying sail arms",
+        label: "Cane and molasses",
+        note: "Mills crushed cane for sugar. Molasses was left to ferment. This is the sugar economy — not a tasting note, and not a brand.",
       },
     ],
   },
@@ -886,10 +1182,40 @@ const DIAGRAMS: Record<string, DiagramSpec> = {
     title: "Styles that change Martini and Negroni behavior",
     node: <GinStylesDiagram />,
   },
+  "gin-production": {
+    kicker: "How gin is made",
+    title: "Four levers from base to bottle",
+    node: <GinProductionDiagram />,
+  },
+  "gin-tasting-protocol": {
+    kicker: "How to taste",
+    title: "Nose → sip → two words → name",
+    node: <GinTastingProtocolDiagram />,
+  },
   "rum-styles": {
     kicker: "Rum",
     title: "Jobs in the glass — clean, aged, funky, agricole",
     node: <RumStylesDiagram />,
+  },
+  "rum-production": {
+    kicker: "How rum is made",
+    title: "Five levers from cane to glass",
+    node: <RumProductionDiagram />,
+  },
+  "rum-tasting-protocol": {
+    kicker: "How to taste",
+    title: "Nose → sip → two words → name",
+    node: <RumTastingProtocolDiagram />,
+  },
+  "whiskey-production": {
+    kicker: "How whiskey is made",
+    title: "Five levers from mash to glass",
+    node: <WhiskeyProductionDiagram />,
+  },
+  "whiskey-tasting-protocol": {
+    kicker: "How to taste",
+    title: "Nose → sip → two words → name",
+    node: <WhiskeyTastingProtocolDiagram />,
   },
   "equal-parts-grid": {
     kicker: "Equal parts",
