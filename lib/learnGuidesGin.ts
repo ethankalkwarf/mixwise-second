@@ -87,8 +87,8 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "Martini tastes hollow after you shopped only for a G&T → start with a juniper-led London dry (Beefeater, Tanqueray, or similar) you like with a whisper of vermouth; add Hendrick’s later for the highball fork.",
-          "Label says “craft” or “small batch” and you treated that as quality → ignore those words; shop London dry vs contemporary by how the botanicals behave under vermouth or tonic.",
+          "Martini tastes hollow after a G&T-only buy → start with a juniper-led London dry (Beefeater, Tanqueray, or similar) you like with a whisper of vermouth; add Hendrick’s later for the highball fork.",
+          "“Craft” or “small batch” treated as a quality score → ignore those words; shop London dry vs contemporary by how the botanicals behave under vermouth or tonic.",
           "G&T goes flat in two minutes → pack the glass with ice and use fridge-cold tonic before you change the gin.",
         ],
       },
@@ -204,7 +204,7 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "You bought from the illustration → read production clues instead: distilled botanicals, London dry rules, and proof.",
+          "Label art drove the buy → read production clues instead: distilled botanicals, London dry rules, and proof.",
           "Negroni tastes like Campari and wine → switch to a juniper-led London dry (Beefeater, Tanqueray, or similar); a vapor-infused floral such as Hendrick’s often disappears in equal parts.",
           "Navy-strength Last Word tastes hot → cut the pour or accept the extra density; Plymouth Navy Strength or Tanqueray export strength is not a silent 40% swap.",
         ],
@@ -312,8 +312,8 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "A hotel Martini story changed your pour → keep the template: Beefeater or Tanqueray, measured vermouth, stirred cold — origin names are legend.",
-          "G&T history lesson, flat drink → pack the ice and match the tonic (dry for London dry, leaner for Hendrick’s) before you reread the quinine story.",
+          "A hotel Martini story changed the pour → keep the template: Beefeater or Tanqueray, measured vermouth, stirred cold.",
+          "G&T tastes flat after the origin story → pack the ice and match the tonic (dry for London dry, leaner for Hendrick’s).",
           "Negroni from a newer floral bottle tastes hollow → pour a juniper-led London dry; Hendrick’s-style boom gins belong in the G&T, not equal parts.",
         ],
       },
@@ -401,9 +401,9 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "You named the style from the label first → smell, sip, write two words, then look — guessing early just confirms the sticker.",
-          "You called an aromatic gin “craft” → describe the bill instead: juniper-led (Beefeater / Tanqueray) vs cucumber-floral (Hendrick’s) — aroma is not a quality score.",
-          "Six bottles, no leftover → taste two pours (London dry vs Hendrick’s), write two words each, then stop.",
+          "Style named from the label before the glass → smell, sip, write two words, then look.",
+          "Aromatic gin written down as “craft” → describe the bill instead: juniper-led (Beefeater / Tanqueray) vs cucumber-floral (Hendrick’s).",
+          "Six bottles tasted in a rush, none remembered → taste two pours (London dry vs Hendrick’s), write two words each, then stop.",
         ],
       },
     ],
@@ -495,7 +495,7 @@ export const GIN_CURRICULUM_GUIDES: LearnGuide[] = [
         heading: "Common mistakes",
         kind: "mistakes",
         body: [
-          "Every gin drink asked the same bottle to do every job → pick a default per classic: Beefeater / Tanqueray for Martini and Negroni; Hendrick’s is an honest G&T fork; navy or export strength only when the Last Word wants density.",
+          "One bottle used for every gin drink → pick a default per classic: Beefeater / Tanqueray for Martini and Negroni; Hendrick’s is an honest G&T fork; navy or export strength only when the Last Word wants density.",
           "G&T dies in two minutes on a solid London dry → pack the ice and fridge the tonic before you change Beefeater or Tanqueray.",
           "Negroni tastes only of Campari → switch to a juniper-led London dry (Beefeater / Tanqueray or similar); Hendrick’s and other soft contemporaries often disappear in equal parts.",
         ],
