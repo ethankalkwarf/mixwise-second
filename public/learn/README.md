@@ -20,7 +20,16 @@
 | `balance-and-taste.webp` | Balance |
 | `garnish-with-intent.webp` | Garnish with intent |
 | `vermouth-and-modifiers.webp` | Vermouth & modifiers (generated) |
-| `spirit-primer-agave.webp` | Agave primer |
+| `spirit-primer-agave.webp` | Agave path cover — blue agave field (existing) |
+| `agave-family-buying.webp` | Agave lesson 1 — tequila bottles in front of aging barrels |
+| `agave-how-its-made.webp` | Agave lesson 2 — harvested piñas at a Jalisco distillery |
+| `agave-history-in-glass.webp` | Agave lesson 3 — Paloma (Mexico’s everyday highball) |
+| `agave-learn-to-taste.webp` | Agave lesson 4 — regional mezcal bottles for comparison |
+| `agave-four-classics.webp` | Agave lesson 5 — salt-rim Margaritas |
+| `learn-agave-margarita.webp` | Agave drinks / history figures — classic Margarita |
+| `learn-agave-paloma.webp` | Agave drinks / history figures — Paloma |
+| `figure-agave-pit.webp` | Agave process figure — earthen pit roast |
+| `figure-agave-crush.webp` | Agave process figure — tahona crush |
 | `spirit-primer-whiskey.webp` | Whiskey path lessons 1–2 (rickhouse barrels) |
 | `spirit-primer-gin.webp` | Gin path cover + G&T / tonic-matching slides (CC photo; see ATTRIBUTION.md) |
 | `gin-family-buying.webp` | Gin lesson 1 — London dry bottles on a shop shelf |
@@ -57,6 +66,15 @@ Path: `/learn/paths/whiskey-deep-dive` — family & buying → how it’s made �
 **Diagrams (SVG in LearnFigure):** `whiskey-styles`, `whiskey-production` (mash → bottle), `whiskey-tasting-protocol` (nose → name). Photo pagers: `whiskey-drinks` (OF, Manhattan, Sour, Boulevardier family) and `whiskey-history`.
 
 Old URL `/learn/guides/spirit-primer-whiskey` redirects to the path.
+
+## Agave: from bottle to classics (course)
+Path: `/learn/paths/agave-deep-dive` — family & buying → how it’s made → history in the glass → learn to taste → four classics.
+
+**Diagrams (SVG in LearnFigure):** `agave-ages` (CRT oak time), `agave-styles` (blanco / reposado / Espadín), `agave-production` (plant → still), `agave-tasting-protocol` (nose → name).
+
+**Photo pagers:** `agave-drinks` (Margarita, Paloma, Tommy’s, Mezcal Margarita), `agave-history` (sour habit, highball habit, mezcal’s rise, the plant), `agave-process` (field, piñas, pit, tahona). Each lesson has its own Commons cover.
+
+Old URL `/learn/guides/spirit-primer-agave` redirects to the path.
 
 ## Gin: from bottle to classics (course)
 Path: `/learn/paths/gin-primer` — family & buying → how it’s made → history in the glass → learn to taste → four classics.

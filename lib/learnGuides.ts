@@ -3,6 +3,7 @@
  */
 
 import type { LearnPracticeDrink, LearnSection, LearnSource } from "@/lib/learnTypes";
+import { AGAVE_CURRICULUM_GUIDES } from "@/lib/learnGuidesAgave";
 import { GIN_CURRICULUM_GUIDES } from "@/lib/learnGuidesGin";
 import { RUM_CURRICULUM_GUIDES } from "@/lib/learnGuidesRum";
 import { WHISKEY_CURRICULUM_GUIDES } from "@/lib/learnGuidesWhiskey";
@@ -799,116 +800,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       },
     ],
   },
-  {
-    slug: "spirit-primer-agave",
-    title: "Agave primer: tequila & mezcal",
-    eyebrow: "Spirits",
-    summary:
-      "Blanco, reposado, añejo, and mezcal — what changes in the glass and how to choose for Margaritas, Palomas, and spirit-forward serves.",
-    readingMinutes: 4,
-    topics: ["tequila", "mezcal", "agave", "margarita"],
-    coverImage: "/learn/spirit-primer-agave.webp",
-    coverAlt: "Blue agave field in Jalisco with mountains beyond",
-    accentClass: "from-terracotta/20 via-cream to-olive/15",
-    practice: [
-      {
-        slug: "margarita",
-        notice:
-          "Blanco 100% agave, fresh lime. If it tastes oaky-dessert, you used a reposado or añejo that wants a different template.",
-      },
-      {
-        slug: "paloma",
-        notice:
-          "A highball: packed ice, cold grapefruit lengthener last. Blanco still fits; loud mezcal can take over.",
-      },
-      {
-        slug: "mezcal-margarita",
-        notice:
-          "Start with Espadín. If smoke buries the lime, split with blanco tequila instead of pouring more citrus.",
-      },
-      {
-        slug: "tommy-s-margarita",
-        notice:
-          "Tequila, lime, agave syrup — no orange liqueur. This is the blanco-purity test. Mixto will taste flat here.",
-      },
-    ],
-    bigIdea:
-      "Agave spirits are defined by plant, process, and aging — choose blanco for brightness, oak-aged tequila for softness and spice, and mezcal for smoke and earth, always preferring 100% agave.",
-    keyTakeaways: [
-      "Blanco keeps bright agave and pepper — default for Margaritas and highballs.",
-      "Reposado and añejo add oak; use them when you want softness or Old Fashioned-style builds.",
-      "Mezcal’s smoke comes largely from pit-roasting agave; Espadín is the versatile starting point.",
-      "Buy 100% agave — mixtos taste flatter and behave worse in cocktails.",
-      "Match intensity: loud mezcal can overwhelm equal-parts drinks; restrained bottles play nicer with citrus.",
-    ],
-    sections: [
-      {
-        heading: "Categories that matter at home",
-        kind: "rule",
-        figure: "agave-ages",
-        body: [
-          "Blanco (unaged or briefly rested) keeps bright agave and pepper — ideal for Margaritas and highballs. Reposado softens with light oak. Añejo leans dessert-spice and works in Old Fashioned builds.",
-          "Mezcal adds smoke and earth. Espadín is the approachable workhorse; louder mezcals can dominate equal-parts drinks.",
-        ],
-      },
-      {
-        heading: "100% agave only",
-        kind: "mistakes",
-        body: [
-          "Mixto tequilas (up to 49% of fermentable sugars from sources other than agave) taste flatter and sweeter in cocktails. Look for “100% agave” on the label.",
-        ],
-      },
-      {
-        heading: "Matching drink to bottle",
-        body: [
-          "Bright citrus drinks want blanco or a restrained mezcal. Stirred vermouth drinks can handle reposado or softer mezcal. Spicy Margaritas still need a clean base — heat should come from chili, not harsh spirit.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Tequila aging categories, usefully",
-        body: [
-          "Mexican CRT categories, usefully: blanco is unaged or aged less than two months in oak (often also rested in stainless); reposado ages in oak from two months up to a year; añejo from one to three years; extra añejo longer than three. Oak adds vanilla, caramel, and spice while rounding raw pepper — it also mutes some fresh agave snap.",
-          "Tommy’s-style Margaritas (tequila, lime, agave syrup) showcase blanco purity. A reposado Margarita tastes rounder and dessert-adjacent; an añejo “Margarita” often wants less citrus sweetness and more Old Fashioned thinking.",
-        ],
-      },
-      {
-        heading: "Mezcal vs tequila — process, not just “smoke”",
-        kind: "tip",
-        body: [
-          "Most tequila (blue Weber agave, defined regions) is typically cooked in above-ground ovens or autoclaves. Traditional mezcal often roasts agave in earthen pits, which lays down the phenolic smoke people notice in the glass — though not every mezcal is aggressively smoky.",
-          "Espadín is the widely planted workhorse and a smart house mezcal. Other agaves (Tobalá, Tepeztate, etc.) can be floral, savory, or wild — beautiful neat, trickier when citrus and sugar compete. Start Espadín in cocktails; graduate to louder bottles when you know the template.",
-        ],
-      },
-      {
-        heading: "Additive-aware shopping (without paranoia)",
-        body: [
-          "Some commercial tequilas use permitted additives for smoothness and aroma. If a bottle tastes like vanilla candy or perfume more than cooked agave, it may not shine in a simple Margarita. Favor producers known for agave-forward profiles when the spirit is the drink’s backbone.",
-        ],
-      },
-    ],
-    sources: [
-      {
-        label: "Emma Janzen, Mezcal: The History, Craft & Cocktails of the World's Ultimate Artisanal Spirit",
-        note: "Accessible deep dive on mezcal production, agave varieties, and drinking culture.",
-      },
-      {
-        label: "Jim Meehan, Meehan's Bartender Manual",
-        note: "Agave spirits in a cocktail context — selection and classic serves.",
-      },
-      {
-        label: "Difford's Guide — Tequila & mezcal",
-        note: "Category overviews and cocktail applications.",
-        href: "https://www.diffordsguide.com/",
-      },
-      {
-        label: "IBA — Official cocktail references",
-        note: "Canonical specs for classics like the Margarita when you want a shared baseline.",
-        href: "https://iba-world.com/",
-      },
-    ],
-  },
+  ...AGAVE_CURRICULUM_GUIDES,
   ...WHISKEY_CURRICULUM_GUIDES,
   {
     slug: "spirit-labels-intro",
@@ -2028,6 +1920,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
 
 const LEARN_GUIDE_ALIASES: Record<string, string> = {
   "whiskey-labels-and-law": "spirit-labels-whiskey",
+  "spirit-primer-agave": "agave-family-buying",
   "spirit-primer-gin": "gin-family-buying",
   "spirit-primer-rum": "rum-family-buying",
   "spirit-primer-whiskey": "whiskey-family-buying",

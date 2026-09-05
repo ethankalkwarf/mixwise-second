@@ -20,6 +20,8 @@ MixWise Learn copy is ahead of its photography. Prefer **real DSLR / phone photo
 
 | Asset | Status | Prefer next |
 |-------|--------|-------------|
+| `spirit-primer-agave.webp` | Commons field (done) — agave path cover + process / history plant slides | Optional: dedicated Tommy’s rocks still (no orange liqueur bottles in frame) |
+| Agave lesson covers | Commons (done): barrel-room bottles, piñas, Paloma, regional mezcal lineup, salt-rim Margaritas | Dedicated Mezcal Margarita still; brick-oven tequila cook (vs pit) |
 | `spirit-primer-gin.webp` | Commons G&T (done) — path cover + G&T slides | Optional: packed-ice daylight G&T without bottle clutter |
 | Gin lesson covers | Commons (done): shop-shelf London drys, Gilbey still, Grant gin-palace lithograph, Tales tasting flight, Last Word | Dedicated Martini / Last Word stills already on `gin-drinks` |
 | `spirit-primer-rum.webp` | Commons Daiquiri (done) | Optional: coupe Daiquiri, cloudy pale |
@@ -28,7 +30,7 @@ MixWise Learn copy is ahead of its photography. Prefer **real DSLR / phone photo
 | `glassware-and-service.webp` | Commons chilled glass rows (done) | Coupe / rocks / highball trio, empty, no brand bottles |
 | `zero-proof-hosting.webp` | Commons mint highball (done) | Calmer NA highball / soft kitchen light |
 
-Already credited in `ATTRIBUTION.md`: labels, Whiskey Sour, Manhattan, Negroni, gin, rum, batching, citrus, glassware, zero-proof.
+Already credited in `ATTRIBUTION.md`: labels, Whiskey Sour, Manhattan, Negroni, gin, rum, agave, batching, citrus, glassware, zero-proof.
 
 ## Workflow
 

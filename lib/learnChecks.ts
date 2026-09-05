@@ -196,19 +196,274 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
         "Aperol is sweeter and less bitter. It’s a related aperitivo, not a stealth Campari. Taste and, if needed, trim the sweet vermouth.",
     },
   ],
-  "spirit-primer-agave": [
+  "agave-family-buying": [
     {
-      id: "spa-1",
-      prompt: "You want a bright, peppery Margarita. Which bottle belongs in the tin?",
+      id: "afb-1",
+      prompt: "The front label only says “tequila.” What should you assume until the back proves otherwise?",
       options: [
-        "Añejo",
-        "Blanco 100% agave (or a restrained mezcal)",
-        "Mixto tequila — the mix makes it mix better",
-        "Cream liqueur",
+        "It is automatically 100% agave",
+        "Assume mixto — 100% agave must be labeled; mixto can be as little as 51% agave sugars",
+        "It is mezcal by default",
+        "Color tells you the age grade",
       ],
       correctIndex: 1,
       explanation:
-        "Blanco keeps bright agave and pepper. Añejo leans oak and dessert; mixtos flatten the drink with other sugars.",
+        "If the bottle skips “100% agave,” treat it as mixto. Lime exposes other sugars fast.",
+    },
+    {
+      id: "afb-2",
+      prompt: "You’re stocking a first agave bottle for MixWise classics. Best move?",
+      options: [
+        "Five añejos before any blanco",
+        "One 100% agave blanco — Espolòn, Olmeca Altos, or similar — that you like in a Tommy’s",
+        "Only a wild-agave mezcal — it covers every template",
+        "Whatever has the most gold medals on the neck",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A solid 100% agave blanco covers Margaritas, Palomas, and Tommy’s. Reposado and mezcal wait until a recipe asks.",
+    },
+    {
+      id: "afb-3",
+      prompt: "A reposado Margarita tastes like dessert. What’s the honest read?",
+      options: [
+        "Reposado is always a silent upgrade",
+        "Oak is a job — blanco keeps a bright sour; reposado is for when you want softness",
+        "The lime will hide the oak",
+        "Añejo would be brighter",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Aging words are jobs, not prestige. Blanco is the cocktail default.",
+    },
+    {
+      id: "afb-4",
+      prompt: "You bought mezcal as “smoky tequila.” What’s the shelf correction?",
+      options: [
+        "They are the same denomination with a smoke switch",
+        "Mezcal is its own family — start with Espadín (Del Maguey Vida or similar), not a wild-agave trophy",
+        "All mezcal is illegal in Margaritas",
+        "Smoke means it is automatically better in a Paloma",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Different plant rules and process. Espadín is the cocktail workhorse.",
+    },
+  ],
+  "agave-how-its-made": [
+    {
+      id: "ahm-1",
+      prompt: "Why can two blancos at the same proof drink so differently in a Tommy’s?",
+      options: [
+        "They can’t — proof erases production",
+        "Plant, cook, crush, ferment, and still — plus any additives — show up under lime",
+        "The salt rim is the only variable",
+        "All tequila is cooked in a pit",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The piña, the oven, and the still are most of what you still hear under lime and agave syrup.",
+    },
+    {
+      id: "ahm-2",
+      prompt: "Where does most mezcal smoke actually come from?",
+      options: [
+        "A drop of liquid smoke after distillation",
+        "The pit roast — piñas cooked in an earthen oven, often under soil and leaves",
+        "Oak barrels, same as añejo tequila",
+        "Grapefruit soda",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Traditional mezcal often roasts in a pit. Tequila usually cooks above ground. Smoke is a cook, not a tequila setting.",
+    },
+    {
+      id: "ahm-3",
+      prompt: "A blanco smells like vanilla candy before it has seen a barrel. What’s the production story?",
+      options: [
+        "All blanco is aged in new oak",
+        "Permitted additives can add smoothness and aroma — fine legally; shaky in a Tommy’s if the plant disappears",
+        "Candy smell means it is automatically 100% agave",
+        "The still always adds vanilla",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Awareness, not paranoia. If perfume beats cooked agave, pick a more plant-forward bottle for sours.",
+    },
+    {
+      id: "ahm-4",
+      prompt: "Tequila cooked in a brick oven vs an autoclave. Honest leftover?",
+      options: [
+        "Autoclaves are illegal",
+        "Ovens often keep more roasted depth; autoclaves can taste cleaner — and sometimes thinner — in the glass",
+        "Both are pit roasts",
+        "Cook method never shows up under lime",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Above-ground cook is the tequila default. Speed and vessel change how much roasted agave you still taste.",
+    },
+  ],
+  "agave-history-in-glass": [
+    {
+      id: "ahi-1",
+      prompt: "A classic recipe says only “tequila.” Which history leftover should you pour?",
+      options: [
+        "Añejo, because older is always correct",
+        "A 100% agave blanco — Espolòn, Olmeca Altos, or similar — not mixto and not a wild mezcal",
+        "Whatever the Margarita founding-statue story names",
+        "Vodka — mid-century bars assumed it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Origin tales compete. Lime and salt pushed bars toward 100% agave blanco.",
+    },
+    {
+      id: "ahi-2",
+      prompt: "What should you take from Paloma history when you build one?",
+      options: [
+        "It is a skinny Margarita, so skip the ice",
+        "Mexico’s everyday tequila highball — packed ice, cold grapefruit lengthener last",
+        "It must be mezcal, because smoke is traditional",
+        "Shake it like a sour",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A highball habit, not a diet sour. Service changes the pour more than a founder story.",
+    },
+    {
+      id: "ahi-3",
+      prompt: "Why did Tommy’s stick as a home-bar lesson?",
+      options: [
+        "It is the 1930s original Margarita",
+        "Agave syrup instead of orange liqueur — a later correction that leaves the bottle nowhere to hide",
+        "It legally requires mixto",
+        "Salt must go in the tin",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Julio Bermejo’s spec is a purity test. Mixto and perfume-sweet blancos fail here first.",
+    },
+    {
+      id: "ahi-4",
+      prompt: "When does agave history earn a place in Learn?",
+      options: [
+        "Whenever there is a famous drinker to quote",
+        "Only when it changes the pour",
+        "Only if you can recite every Tijuana founding myth",
+        "Never — production is the only lesson",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Margarita sour habit, Paloma highball, Tommy’s purity test, mezcal’s bar-era rise. A timeline for its own sake does not.",
+    },
+  ],
+  "agave-learn-to-taste": [
+    {
+      id: "alt-1",
+      prompt: "What’s the tasting order this lesson wants?",
+      options: [
+        "Name the style from the label, then sip to confirm",
+        "Smell first, taste, write two words, then name the style",
+        "Mix it into a Margarita first so you can taste faster",
+        "Score it out of 100 before you smell it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Guessing early just trains you to confirm what the label already told you.",
+    },
+    {
+      id: "alt-2",
+      prompt: "You wrote “pepper, bright” before you looked at the label. What did you likely find?",
+      options: [
+        "A dessert-leaning reposado",
+        "A blanco such as Espolòn or Olmeca Altos",
+        "Añejo, always",
+        "A wild mezcal, always",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Those two words are more useful than a spice-rack paragraph. Blanco is the cocktail default.",
+    },
+    {
+      id: "alt-3",
+      prompt: "Mini-lab B: the same tiny sour, blanco then reposado. What are you training?",
+      options: [
+        "How to hide tired lime",
+        "Hearing which bottle stayed bright instead of turning into dessert",
+        "Whether darker tequila is older",
+        "How to skip the salt",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Same lime, two pours. Name which one kept the drink from oak-dessert.",
+    },
+    {
+      id: "alt-4",
+      prompt: "An Espadín already smells like a campfire before the lime goes in. What’s the move?",
+      options: [
+        "Add more citrus until the smoke disappears",
+        "Write it down — then decide if the sour can hold it, or split with blanco",
+        "Shake longer to hide the phenol",
+        "It will taste like blanco once it’s cold",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smell first. If smoke is already the whole story, more lime will not outrun the pit.",
+    },
+  ],
+  "agave-four-classics": [
+    {
+      id: "afc-1",
+      prompt: "Your Paloma dies in two minutes. The tequila is Espolòn or Olmeca Altos. What’s the first move?",
+      options: [
+        "Buy a more expensive tequila",
+        "Packed ice and fridge-cold grapefruit soda — warm, sparse ice is not a bad blanco",
+        "Switch to añejo",
+        "Shake it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Lengthener and ice reveal the bottle. They also ruin a solid blanco when they are warm and thin.",
+    },
+    {
+      id: "afc-2",
+      prompt: "Tonight’s Tommy’s tastes like perfume and sugar. Lime is fresh. What’s the likely bottle issue?",
+      options: [
+        "Espolòn is too agave-forward",
+        "Mixto or a candy-sweet additive bill — the spec has nowhere to hide",
+        "You should have used orange liqueur",
+        "Salt in the tin was required",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Tommy’s is the purity test. Change the 100% agave blanco before you rewrite the lime.",
+    },
+    {
+      id: "afc-3",
+      prompt: "You’re making Margaritas for a table. Which bottle is the safest default?",
+      options: [
+        "Añejo — guests expect oak",
+        "Espolòn, Olmeca Altos, or a similar 100% agave blanco",
+        "A wild mezcal poured at the same ounces with no adjustment",
+        "Mixto — orange liqueur will hide it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Orange liqueur is a flavor, not a cover. Blanco 100% agave is the sour default.",
+    },
+    {
+      id: "afc-4",
+      prompt: "A Mezcal Margarita tastes only of campfire. What’s the mezcal lesson?",
+      options: [
+        "Use less lime until the smoke vanishes too",
+        "This template is already loud — stay on cocktail-weight Espadín (Del Maguey Vida or similar) or split with blanco",
+        "Mezcal Margaritas require añejo tequila",
+        "Stir it so the smoke disappears",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smoke on purpose, after three quieter judgments. More citrus will not outrun the pit.",
     },
   ],
   "whiskey-family-buying": [
@@ -1739,7 +1994,9 @@ export function getGuideChecks(slug: string): LearnCheck[] {
           ? "rum-family-buying"
           : slug === "spirit-primer-whiskey"
             ? "whiskey-family-buying"
-            : slug;
+            : slug === "spirit-primer-agave"
+              ? "agave-family-buying"
+              : slug;
   return GUIDE_CHECKS[resolved] ?? [];
 }
 

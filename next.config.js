@@ -109,6 +109,11 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: '/learn/guides/spirit-primer-agave',
+        destination: '/learn/paths/agave-deep-dive',
+        permanent: true,
+      },
+      {
         source: '/brand/press',
         destination: '/brand/logos',
         permanent: true,

@@ -506,38 +506,38 @@ export const LEARN_PATHS: LearnPath[] = [
   },
   {
     slug: "agave-deep-dive",
-    title: "Agave primer: tequila & mezcal",
+    title: "Agave: from bottle to classics",
     eyebrow: "Spirits",
     summary:
-      "Choose blanco or mezcal, shake a Margarita, express citrus, then build a Paloma — garnish with intent, not extra fruit.",
-    estimatedMinutes: 15,
+      "Five short lessons — family and buying myth, how agave spirits are made, history that shows up in the glass, tasting styles, and four classics that teach. About 20 minutes.",
+    estimatedMinutes: 20,
     coverImage: "/learn/spirit-primer-agave.webp",
-    coverAlt: "Agave fields for tequila and mezcal",
+    coverAlt: "Blue agave field in Jalisco with mountains beyond",
     steps: [
       {
         type: "guide",
-        slug: "spirit-primer-agave",
-        why: "Blanco for brightness, oak when you want softness, mezcal when you want smoke — 100% agave.",
-      },
-      {
-        type: "method",
-        slug: "shake",
-        why: "A Margarita is a sour. Hard shake, fresh lime, stop when the tin hurts.",
-      },
-      {
-        type: "technique",
-        slug: "express",
-        why: "Lime or grapefruit oil on the surface beats another wedge in the glass.",
-      },
-      {
-        type: "method",
-        slug: "build",
-        why: "A Paloma is a highball: packed ice, cold lengthener last, brief stir.",
+        slug: "agave-family-buying",
+        why: "100% agave. Blanco for brightness; reposado for softness; mezcal when you want smoke.",
       },
       {
         type: "guide",
-        slug: "garnish-with-intent",
-        why: "Salt, peel, or nothing — match the aroma to the drink, don’t clutter it.",
+        slug: "agave-how-its-made",
+        why: "Plant, cook, crush, ferment, and still — including where mezcal’s smoke comes from.",
+      },
+      {
+        type: "guide",
+        slug: "agave-history-in-glass",
+        why: "History only when it changes the pour — Margarita and Paloma habits, then mezcal’s rise.",
+      },
+      {
+        type: "guide",
+        slug: "agave-learn-to-taste",
+        why: "Smell first, taste, write two words — then name blanco, reposado, or mezcal Espadín.",
+      },
+      {
+        type: "guide",
+        slug: "agave-four-classics",
+        why: "Margarita, Paloma, Tommy’s, Mezcal Margarita — each one trains a different judgment.",
       },
     ],
   },

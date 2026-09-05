@@ -122,6 +122,88 @@ function ExpressPeelDiagram() {
   );
 }
 
+function AgaveStylesDiagram() {
+  const bottles = [
+    { label: "Blanco", sub: "Pepper · bright", fill: "#F4EFE4" },
+    { label: "Reposado", sub: "Oak · soft", fill: "#E6C98A" },
+    { label: "Mezcal Espadín", sub: "Smoke · earth", fill: "#A85A32" },
+  ];
+  return (
+    <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      {bottles.map((b) => (
+        <div key={b.label}>
+          <Svg viewBox="0 0 70 110" className="w-full max-w-[72px] mx-auto h-auto">
+            <rect x="28" y="8" width="14" height="14" rx="2" fill={FOREST} />
+            <path
+              d="M24 22h22l4 10v60c0 6-5 10-15 10s-15-4-15-10V32l4-10Z"
+              fill={b.fill}
+              stroke={FOREST}
+              strokeWidth="1.8"
+            />
+          </Svg>
+          <PanelLabel>{b.label}</PanelLabel>
+          <PanelNote>{b.sub}</PanelNote>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AgaveProductionDiagram() {
+  const steps = [
+    { n: "1", t: "Plant", d: "Years in the ground. The piña is the sugar." },
+    { n: "2", t: "Cook", d: "Brick oven or pit — smoke starts here." },
+    { n: "3", t: "Crush", d: "Stone, mill, or shredder." },
+    { n: "4", t: "Ferment", d: "Time and yeast make aroma." },
+    { n: "5", t: "Still", d: "Pot keeps body; column cleans." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        Mezcal’s campfire is usually the pit roast. Additives, if any, arrive last.
+      </p>
+    </div>
+  );
+}
+
+function AgaveTastingProtocolDiagram() {
+  const steps = [
+    { n: "1", t: "Nose", d: "Smell it first — no sip yet." },
+    { n: "2", t: "Sip", d: "A little, then air." },
+    { n: "3", t: "Two words", d: "Write what you found." },
+    { n: "4", t: "Name", d: "Blanco, reposado, or Espadín." },
+  ];
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {steps.map((s) => (
+          <div key={s.n} className="text-center px-1">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-terracotta/10 text-terracotta font-mono text-sm font-bold mb-2">
+              {s.n}
+            </span>
+            <PanelLabel>{s.t}</PanelLabel>
+            <PanelNote>{s.d}</PanelNote>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-sage text-center mt-3 leading-snug">
+        Añejo and wild agaves are footnotes. Guessing the style first just trains you to confirm the label.
+      </p>
+    </div>
+  );
+}
+
 function AgaveAgesDiagram() {
   const bottles = [
     { label: "Blanco", sub: "< 2 mo", fill: "#F4EFE4" },
@@ -752,6 +834,96 @@ const PHOTO_FIGURES: Record<string, PhotoFigureSpec> = {
       },
     ],
   },
+  "agave-drinks": {
+    kicker: "Agave templates",
+    title: "Four glasses that teach the category",
+    slides: [
+      {
+        src: "/learn/learn-agave-margarita.webp",
+        alt: "A classic Margarita with lime and orange liqueur",
+        label: "Margarita",
+        note: "100% agave blanco + lime + orange liqueur — the liqueur is a flavor, not a cover for mixto",
+      },
+      {
+        src: "/learn/learn-agave-paloma.webp",
+        alt: "A Paloma in a tall glass with grapefruit",
+        label: "Paloma",
+        note: "Packed ice and cold grapefruit soda reveal the bottle — Mexico’s everyday highball",
+      },
+      {
+        src: "/learn/learn-agave-margarita.webp",
+        alt: "A shaken agave sour — Tommy’s uses the same bones with agave syrup instead of orange liqueur",
+        label: "Tommy’s",
+        note: "Agave syrup, no orange liqueur — the bottle has nowhere to hide",
+      },
+      {
+        src: "/learn/learn-agave-margarita.webp",
+        alt: "A shaken agave sour — a Mezcal Margarita uses the same bones with Espadín instead of tequila",
+        label: "Mezcal Margarita",
+        note: "Espadín first (Del Maguey Vida or similar) — split with blanco if smoke buries lime",
+      },
+    ],
+  },
+  "agave-process": {
+    kicker: "From plant to mash",
+    title: "Field, piña, pit, crush",
+    slides: [
+      {
+        src: "/learn/spirit-primer-agave.webp",
+        alt: "Blue agave field in Jalisco with mountains beyond",
+        label: "The plant",
+        note: "Years in the ground. The heart is the sugar — not a grain you harvest every season",
+      },
+      {
+        src: "/learn/agave-how-its-made.webp",
+        alt: "Harvested agave hearts stacked at a tequila distillery",
+        label: "Piñas",
+        note: "Leaves off, hearts piled for the oven. This is the mash",
+      },
+      {
+        src: "/learn/figure-agave-pit.webp",
+        alt: "Earthen pit lined with agave leaves for roasting piñas",
+        label: "Pit roast",
+        note: "Mezcal’s campfire usually starts here — not as a flavoring after the still",
+      },
+      {
+        src: "/learn/figure-agave-crush.webp",
+        alt: "Stone tahona mill crushing cooked agave in a brick pit",
+        label: "Crush",
+        note: "Stone, mill, or shredder. How you get the juice changes the body under lime",
+      },
+    ],
+  },
+  "agave-history": {
+    kicker: "In the glass",
+    title: "History that changes what you pour",
+    slides: [
+      {
+        src: "/learn/learn-agave-margarita.webp",
+        alt: "A classic Margarita — the sour habit that survived the founding stories",
+        label: "Sour habit",
+        note: "Origin tales compete. The leftover is a sour, usually with orange liqueur, on 100% agave blanco",
+      },
+      {
+        src: "/learn/learn-agave-paloma.webp",
+        alt: "A Paloma — Mexico’s everyday tequila highball",
+        label: "Highball habit",
+        note: "Not a skinny Margarita — packed ice, cold grapefruit lengthener last",
+      },
+      {
+        src: "/learn/agave-learn-to-taste.webp",
+        alt: "Mezcal bottles from different Mexican regions",
+        label: "Mezcal’s rise",
+        note: "Bar-era leftover: Espadín first. Wild agave is a neat pour until the template is right",
+      },
+      {
+        src: "/learn/spirit-primer-agave.webp",
+        alt: "Blue agave field in Jalisco",
+        label: "The plant",
+        note: "Years in the ground. If the bottle tastes like candy and heat, the plant already lost",
+      },
+    ],
+  },
   "gin-drinks": {
     kicker: "Gin templates",
     title: "Four glasses that teach the category",
@@ -1171,6 +1343,21 @@ const DIAGRAMS: Record<string, DiagramSpec> = {
     kicker: "Agave",
     title: "Oak time changes what the bottle can do",
     node: <AgaveAgesDiagram />,
+  },
+  "agave-styles": {
+    kicker: "Agave",
+    title: "Three pours that change Margarita behavior",
+    node: <AgaveStylesDiagram />,
+  },
+  "agave-production": {
+    kicker: "How agave spirits are made",
+    title: "Five levers from plant to bottle",
+    node: <AgaveProductionDiagram />,
+  },
+  "agave-tasting-protocol": {
+    kicker: "How to taste",
+    title: "Nose → sip → two words → name",
+    node: <AgaveTastingProtocolDiagram />,
   },
   "whiskey-styles": {
     kicker: "Whiskey",
