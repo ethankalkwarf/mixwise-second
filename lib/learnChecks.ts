@@ -446,23 +446,10 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
         "London dry is about how it’s made, not a protected London address. Many excellent London dry gins are made elsewhere.",
     },
   ],
-  "spirit-primer-rum": [
+  "rum-family-buying": [
     {
-      id: "rum-1",
-      prompt: "Your classic Daiquiri tastes like banana candy and solvent. What’s the best first diagnosis?",
-      options: [
-        "You needed more sugar",
-        "A high-ester “funky” rum is dominating a template that wants clean lime",
-        "Lime should have been lemon",
-        "You under-shook — always shake one full minute",
-      ],
-      correctIndex: 1,
-      explanation:
-        "Funky Jamaican-style rums are aromatic tools. In a standard Daiquiri they can overwhelm lime. Start cleaner; add funk as a fraction.",
-    },
-    {
-      id: "rum-2",
-      prompt: "A dark rum pours almost black. What does the color guarantee?",
+      id: "rfb-1",
+      prompt: "A rum pours almost black. What does the color guarantee?",
       options: [
         "At least 8 years in oak",
         "Nothing by itself — color can be oak, caramel, or both",
@@ -471,10 +458,23 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       ],
       correctIndex: 1,
       explanation:
-        "Rum lacks a single global aging label rule like Scotch age statements. Color is a weak signal — taste and producer notes matter more.",
+        "White, gold, and dark are not reliable age grades. Color can come from oak, caramel, or both.",
     },
     {
-      id: "rum-3",
+      id: "rfb-2",
+      prompt: "A mixing white looks crystal clear. What does that usually mean?",
+      options: [
+        "It was never in a barrel",
+        "Clear means filtered, not young — many big mixing whites, Bacardi Superior included, spend time in oak then get filtered",
+        "It is agricole blanc by definition",
+        "It is automatically too old for a Daiquiri",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A lot of the big mixing whites — Bacardi Superior included — spend time in oak, then get filtered until they look clear.",
+    },
+    {
+      id: "rfb-3",
       prompt: "You’re stocking a first rum shelf for MixWise classics. Best pair?",
       options: [
         "Five tiki bottles before any white rum",
@@ -484,7 +484,236 @@ export const GUIDE_CHECKS: Record<string, LearnCheck[]> = {
       ],
       correctIndex: 1,
       explanation:
-        "Clean white covers Daiquiri/Mojito; aged covers richer builds. Tiki depth can wait.",
+        "Clean white covers Daiquiri and Mojito; aged covers Dark ’n’ Stormy and Mai Tai. Funk and agricole can wait.",
+    },
+    {
+      id: "rfb-4",
+      prompt: "A recipe calls for aged rum. You only have a spiced rum. What’s the honest read?",
+      options: [
+        "Spiced rum is just aged rum with a better label",
+        "Spiced rum is a flavored product, not a synonym for aged rum",
+        "Spice automatically means navy strength",
+        "Use twice as much — the vanilla will act like oak",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Spiced rum is flavored. It will not silently do the job of an aged mixing rum.",
+    },
+  ],
+  "rum-how-its-made": [
+    {
+      id: "rhm-1",
+      prompt: "A Daiquiri smells like banana and solvent. What’s the production story?",
+      options: [
+        "The lime was Meyer instead of Persian",
+        "A high-ester ferment and pot-still rum is dominating a template that wants clean lime",
+        "You needed more sugar to hide the rum",
+        "All molasses rum tastes like that",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Push esters hard and you get banana, pineapple, or a sharp solvent note. That smell was meant to carry across a punch bowl. In a Daiquiri, it usually buries the lime.",
+    },
+    {
+      id: "rhm-2",
+      prompt: "Molasses rum vs rhum agricole — what actually changes in the glass?",
+      options: [
+        "Nothing — both are just rum",
+        "Agricole starts as cane juice and often reads grassy and bright; molasses rum is a different raw material",
+        "Agricole is legally darker",
+        "Molasses rum cannot be aged",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The base you ferment shows up later. Agricole blanc is usually unaged cane; a Spanish-style white is often a different drink.",
+    },
+    {
+      id: "rhm-3",
+      prompt: "Why can a few years in the tropics taste like more oak than the same years in a cooler warehouse?",
+      options: [
+        "Tropical labels lie about age",
+        "Heat and humidity pull more from oak, faster, and lose more to the angels",
+        "Caribbean barrels are always new charred oak, like bourbon",
+        "Cooler warehouses add caramel by law",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Climate is a production lever. The number of years is not a flavor score.",
+    },
+    {
+      id: "rhm-4",
+      prompt: "Which set of choices explains a bottle more honestly than “gold” on the label?",
+      options: [
+        "The price and the neck tag",
+        "Base, ferment, still, oak, and what’s added at bottling",
+        "Whether the glass is green or clear",
+        "The number of awards on the front",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Production choices show up in the glass more honestly than the color on the label.",
+    },
+  ],
+  "rum-history-in-glass": [
+    {
+      id: "rhi-1",
+      prompt: "Why does a classic Daiquiri still want a clean mixing white?",
+      options: [
+        "Hemingway invented it that way",
+        "The useful chapters are a camp sour, then a Havana bar that taught a clean shaken rum drink — lime first",
+        "Floridita used only agricole",
+        "White rum was cheaper during Prohibition",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Cox’s sour and Floridita’s refinement both keep lime in front. History here changes the pour, not the statue.",
+    },
+    {
+      id: "rhi-2",
+      prompt: "What should you take from navy rum history when you build a ginger highball?",
+      options: [
+        "Any dark bottle is navy rum",
+        "Proof and weight that hold ginger and sugar — near 57% ABV still matters; the gunpowder story is folklore",
+        "You must use British-issued rum",
+        "Navy rum cannot be mixed with ginger beer",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The useful leftover is strength. Pour the proof; skip the campfire.",
+    },
+    {
+      id: "rhi-3",
+      prompt: "Why do Mai Tais and Jamaican punches so often use more than one rum?",
+      options: [
+        "Tiki bars were required to use five bottles",
+        "One rum rarely does every job — punch and tiki blends pair a frame with a funky fraction",
+        "Blending hides bad rum",
+        "Orgeat only works with agricole",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Jamaican pot-still rum was built to carry across a punch bowl. Tiki treated rum like a kitchen.",
+    },
+    {
+      id: "rhi-4",
+      prompt: "When does rum history earn a place in Learn?",
+      options: [
+        "Whenever there is a famous drinker to quote",
+        "Only when it changes what you pour",
+        "Only if you can recite a full timeline",
+        "Never — production is the only lesson",
+      ],
+      correctIndex: 1,
+      explanation:
+        "A few true stories explain clean white, navy weight, or a funky blend. A timeline for its own sake does not.",
+    },
+  ],
+  "rum-learn-to-taste": [
+    {
+      id: "rlt-1",
+      prompt: "What’s the tasting order this lesson wants?",
+      options: [
+        "Name the style from the label, then sip to confirm",
+        "Nose, sip, write two words, then name the style",
+        "Mix it into a Daiquiri first so you can taste faster",
+        "Score it out of 100 before you smell it",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Smell it first. Then taste. Write two words — then name the style. Guessing early just trains you to confirm what you already believed.",
+    },
+    {
+      id: "rlt-2",
+      prompt: "You wrote “banana, solvent” before you looked at the label. What did you likely find?",
+      options: [
+        "A clean mixing white",
+        "A high-ester funky rum",
+        "Agricole blanc",
+        "Spiced rum, always",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Those two words are more useful than purple notes. Funky Jamaican-style rum smells like the punch bowl.",
+    },
+    {
+      id: "rlt-3",
+      prompt: "Mini-lab C: a Mai Tai with only aged rum vs the same drink plus a barspoon of funk. What are you training?",
+      options: [
+        "How to hide orgeat",
+        "Hearing the funky fraction as seasoning, not the whole pour",
+        "Whether gold rum is older",
+        "How to skip the lime",
+      ],
+      correctIndex: 1,
+      explanation:
+        "The second drink is the lesson: frame first, funk on purpose.",
+    },
+    {
+      id: "rlt-4",
+      prompt: "A rum smells grassy and like fresh cane. Which personality did you find?",
+      options: [
+        "Spiced rum",
+        "Agricole",
+        "Navy-strength molasses rum, always",
+        "Caramel-colored mixing white",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Agricole often reads grassy, olive, and bright. If it smells like a field, believe it.",
+    },
+  ],
+  "rum-four-classics": [
+    {
+      id: "rfc-1",
+      prompt: "Your Daiquiri tastes like banana candy. What’s the first move?",
+      options: [
+        "Add more sugar",
+        "Change the rum — the 2:1:1 is a diagnostic, not the problem",
+        "Switch lime for lemon",
+        "Shake for a full minute",
+      ],
+      correctIndex: 1,
+      explanation:
+        "If the rum fights the lime, change the rum — not the template.",
+    },
+    {
+      id: "rfc-2",
+      prompt: "A Mojito tastes grassy-bitter and muddy. What’s the likely pair of mistakes?",
+      options: [
+        "Too much soda and too much ice",
+        "Shredded mint and a rum that’s too funky for a lengthened sour",
+        "Using white rum instead of spiced",
+        "Serving it up in a coupe",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Press mint; don’t shred it. A clean rum keeps soda bright.",
+    },
+    {
+      id: "rfc-3",
+      prompt: "You don’t have Gosling’s for a Dark ’n’ Stormy. What’s the honest home move?",
+      options: [
+        "Skip the drink — the name is the recipe",
+        "Pour an aged or navy-weight rum, call it a ginger highball, and keep the lesson: ginger needs weight",
+        "Use spiced rum and extra lime",
+        "Use a clean white — color doesn’t matter here either",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Gosling’s is the trademarked name. The template still teaches the pour.",
+    },
+    {
+      id: "rfc-4",
+      prompt: "A recipe only says “rum.” How do you choose?",
+      options: [
+        "Whatever is darkest",
+        "Pick the job the glass is doing — citrus-up wants clean white; ginger wants weight; tiki wants a blend",
+        "Always agricole",
+        "Always the tiki bottle",
+      ],
+      correctIndex: 1,
+      explanation:
+        "Each classic trains a different judgment. Match the bottle to the job, not the word “rum.”",
     },
   ],
   "batching-and-hosting": [
@@ -1044,7 +1273,11 @@ export const TECHNIQUE_CHECKS: Record<string, LearnCheck[]> = {
 
 export function getGuideChecks(slug: string): LearnCheck[] {
   const resolved =
-    slug === "whiskey-labels-and-law" ? "spirit-labels-whiskey" : slug;
+    slug === "whiskey-labels-and-law"
+      ? "spirit-labels-whiskey"
+      : slug === "spirit-primer-rum"
+        ? "rum-family-buying"
+        : slug;
   return GUIDE_CHECKS[resolved] ?? [];
 }
 

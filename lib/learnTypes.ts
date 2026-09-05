@@ -33,8 +33,8 @@ export type LearnSource = {
 export type LearnLessonLayers = {
   /** One-sentence (or two) thesis the reader should remember */
   bigIdea: string;
-  /** 3–5 scannable takeaways */
-  keyTakeaways: string[];
+  /** 3–5 scannable takeaways. Omit or leave empty to hide the takeaways UI. */
+  keyTakeaways?: string[];
   /** Core lesson body */
   sections: LearnSection[];
   /** Optional deeper study — science, history, nuance */

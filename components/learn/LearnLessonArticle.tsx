@@ -28,6 +28,7 @@ export function LearnLessonArticle({ layers, midFigure, techniqueSlug, afterCore
   const hasDeep = (layers.deepDive?.length ?? 0) > 0;
   const hasSources = (layers.sources?.length ?? 0) > 0;
   const deepCount = layers.deepDive?.length ?? 0;
+  const takeaways = layers.keyTakeaways ?? [];
   const [deepOpen, setDeepOpen] = useState(false);
 
   return (
@@ -38,18 +39,18 @@ export function LearnLessonArticle({ layers, midFigure, techniqueSlug, afterCore
           <p className={LEARN_LEDE}>{layers.bigIdea}</p>
         </div>
 
-        {layers.keyTakeaways.length >= 2 ? (
+        {takeaways.length >= 2 ? (
           <LearnStepDeck
             kicker=""
-            title={`${layers.keyTakeaways.length} things to remember`}
-            steps={layers.keyTakeaways.map((item) => ({ title: "", body: item }))}
+            title={`${takeaways.length} things to remember`}
+            steps={takeaways.map((item) => ({ title: "", body: item }))}
             variant="takeaway"
           />
-        ) : (
+        ) : takeaways.length === 1 ? (
           <div>
             <p className={LEARN_LABEL}>Take with you</p>
             <ol className="space-y-3">
-              {layers.keyTakeaways.map((item, i) => (
+              {takeaways.map((item, i) => (
                 <li key={item.slice(0, 32)} className={`flex gap-3 ${LEARN_BODY}`}>
                   <span className="font-display text-lg !text-terracotta shrink-0 w-6 tabular-nums">
                     {i + 1}.
@@ -59,7 +60,7 @@ export function LearnLessonArticle({ layers, midFigure, techniqueSlug, afterCore
               ))}
             </ol>
           </div>
-        )}
+        ) : null}
       </header>
 
       {/* Core lesson — open flow, not a nested panel of panels */}

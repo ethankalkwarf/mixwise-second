@@ -3,6 +3,7 @@
  */
 
 import type { LearnPracticeDrink, LearnSection, LearnSource } from "@/lib/learnTypes";
+import { RUM_CURRICULUM_GUIDES } from "@/lib/learnGuidesRum";
 
 export type LearnGuide = {
   slug: string;
@@ -16,9 +17,9 @@ export type LearnGuide = {
   accentClass: string;
   practice: LearnPracticeDrink[];
   bigIdea: string;
-  keyTakeaways: string[];
+  keyTakeaways?: string[];
   sections: LearnSection[];
-  deepDive: LearnSection[];
+  deepDive?: LearnSection[];
   sources: LearnSource[];
 };
 
@@ -1657,116 +1658,7 @@ export const LEARN_GUIDES: LearnGuide[] = [
       },
     ],
   },
-  {
-    slug: "spirit-primer-rum",
-    title: "Rum primer: from Daiquiri to Mojito",
-    eyebrow: "Spirits",
-    summary:
-      "White vs aged, clean Spanish-style vs funky Jamaican — how rum style changes a Daiquiri, Mojito, or highball, and which bottle to buy first.",
-    readingMinutes: 5,
-    topics: ["rum", "daiquiri", "mojito", "aging", "molasses"],
-    coverImage: "/learn/spirit-primer-rum.webp",
-    coverAlt: "A classic Daiquiri in a stemmed cocktail glass on dark wood",
-    accentClass: "from-terracotta/20 via-cream to-olive/15",
-    practice: [
-      {
-        slug: "daiquiri",
-        notice:
-          "Clean white or lightly aged rum, fresh lime, simple syrup. If it tastes like banana candy or varnish, the rum style is fighting the sour.",
-      },
-      {
-        slug: "mojito",
-        notice:
-          "Same acid-sweet skeleton as a Daiquiri, lengthened and muddled. A clean rum keeps mint bright; a heavy funk rum can taste muddy with soda.",
-      },
-      {
-        slug: "dark-n-stormy",
-        notice:
-          "Ginger beer wants a rum with enough body to stand up — often a richer aged or navy-style pour. Check the trademarked Gosling’s spec if you care about the classic name.",
-      },
-      {
-        slug: "mai-tai",
-        notice:
-          "Often a blend of rums. Start with a solid aged rum before chasing five bottles of tiki inventory.",
-      },
-    ],
-    bigIdea:
-      "Rum is not one flavor — molasses or cane, column or pot still, and aging decide whether a drink tastes clean-lime, caramel-oak, or funky-ester, so pick the style for the template.",
-    keyTakeaways: [
-      "A clean white rum is the Daiquiri and Mojito default — bright lime needs a quiet backbone.",
-      "Aged rum adds oak and caramel; great in stirred or richer drinks, heavier in a classic Daiquiri.",
-      "“Funky” Jamaican-style rums bring esters (banana, overripe fruit) — seasoning, not always the whole pour.",
-      "Color is not a legal age grade — some dark rums are colored; taste and producer notes beat bottle tint.",
-      "Buy one versatile white and one solid aged bottle before a tiki shelf.",
-    ],
-    sections: [
-      {
-        heading: "What rum is (usefully)",
-        kind: "rule",
-        figure: "rum-styles",
-        body: [
-          "Rum is distilled from sugarcane products — molasses or fresh cane juice — then often aged. Unlike bourbon, there is no single global mash-and-barrel law, so “rum” covers a wide range of production styles.",
-          "For cocktails, think in jobs: clean mixing rum for citrus, aged rum for body and oak, funky rum for aroma intensity.",
-        ],
-      },
-      {
-        heading: "White, gold, dark — and what they don’t guarantee",
-        body: [
-          "White / silver rum is often lightly aged and filtered for clarity — not necessarily unaged. It is the usual Daiquiri spine.",
-          "Gold and dark labels can mean oak time, caramel coloring, or both. Do not trust color alone. If a “dark” rum tastes mostly like sweet caramel syrup, it may fight a dry sour.",
-        ],
-      },
-      {
-        heading: "Match rum to the drink",
-        figure: "rum-drinks",
-        body: [
-          "Daiquiri / Mojito: clean white or restrained lightly aged rum. Fresh lime is the star.",
-          "Highballs (Dark ’n’ Stormy family): rum with enough weight for ginger spice.",
-          "Tiki / Mai Tai family: often blended — start simple, add funk as a fraction, not the whole pour, until you know the recipe.",
-        ],
-      },
-      {
-        heading: "Common mistakes",
-        kind: "mistakes",
-        body: [
-          "Using a heavily funky rum as a silent swap in a standard Daiquiri.",
-          "Assuming spiced rum equals aged rum — spice blends are a different product.",
-          "Building a Mojito with warm soda and shredded mint, then blaming the rum.",
-        ],
-      },
-    ],
-    deepDive: [
-      {
-        heading: "Spanish style, Jamaican funk, agricole (quick map)",
-        kind: "tip",
-        body: [
-          "Spanish-style (often column still, molasses) tends clean and versatile. Jamaican pot-still traditions can be high-ester and aromatic. Rhum agricole (cane juice, often French Caribbean) reads grassy and bright — beautiful, but a different Daiquiri.",
-          "You do not need all three to start. One clean white + one solid aged covers most MixWise rum recipes.",
-        ],
-      },
-      {
-        heading: "Proof still matters",
-        body: [
-          "Same rule as whiskey: ~40% rum can taste thin under sugar and citrus. A notch higher ABV holds a Daiquiri better. Overproof rums are tools — measure carefully.",
-        ],
-      },
-    ],
-    sources: [
-      {
-        label: "Martin Cate, Smuggler's Cove",
-        note: "Rum categories for drinks — pragmatic, cocktail-first.",
-      },
-      {
-        label: "Difford's Guide — Rum",
-        note: "Style overviews and classic applications.",
-        href: "https://www.diffordsguide.com/",
-      },
-      {
-        label: "Jim Meehan, Meehan's Bartender Manual",
-        note: "Rum in Daiquiris, Mojitos, and punch logic.",
-      },
-    ],
-  },
+  ...RUM_CURRICULUM_GUIDES,
   {
     slug: "batching-and-hosting",
     title: "Batching for guests",
@@ -2390,9 +2282,13 @@ export const LEARN_GUIDES: LearnGuide[] = [
   },
 ];
 
+const LEARN_GUIDE_ALIASES: Record<string, string> = {
+  "whiskey-labels-and-law": "spirit-labels-whiskey",
+  "spirit-primer-rum": "rum-family-buying",
+};
+
 export function getLearnGuide(slug: string): LearnGuide | undefined {
-  const resolved =
-    slug === "whiskey-labels-and-law" ? "spirit-labels-whiskey" : slug;
+  const resolved = LEARN_GUIDE_ALIASES[slug] ?? slug;
   return LEARN_GUIDES.find((g) => g.slug === resolved);
 }
 

@@ -23,7 +23,11 @@
 | `spirit-primer-agave.webp` | Agave primer |
 | `spirit-primer-whiskey.webp` | Whiskey primer (rickhouse barrels) |
 | `spirit-primer-gin.webp` | Gin primer (G&T — CC photo; see ATTRIBUTION.md) |
-| `spirit-primer-rum.webp` | Rum primer (Daiquiri — CC photo; see ATTRIBUTION.md) |
+| `spirit-primer-rum.webp` | Rum path + family lesson (Daiquiri — CC photo; see ATTRIBUTION.md) |
+| `rum-four-classics.webp` | Four classics lesson (Mojito — CC photo; see ATTRIBUTION.md) |
+| `rum-how-its-made.webp` | How rum is made (Foursquare warehouse — CC photo; see ATTRIBUTION.md) |
+| `rum-learn-to-taste.webp` | Learn to taste (side-by-side tot pour — OGL; see ATTRIBUTION.md) |
+| `rum-history-in-glass.webp` | Rum history (Floridita sign — CC photo; see ATTRIBUTION.md) |
 | `whiskey-deep-dive.webp` | Whiskey primer path (Old Fashioned) |
 | `learn-whiskey-manhattan.webp` | Whiskey primer — Manhattan slide (CC photo; see ATTRIBUTION.md) |
 | `learn-whiskey-sour.webp` | Whiskey primer — Whiskey Sour slide (CC photo; see ATTRIBUTION.md) |
@@ -85,5 +89,16 @@ Soft daylight, cream/oak home-bar, shallow DOF, no humans/logos/text.
 | `figure-ice-crushed.webp` | Ice types — crushed |
 | `figure-method-shake.webp` | Shake vs stir — shake |
 | `figure-method-stir.webp` | Shake vs stir — stir |
+| `figure-rum-color-lineup.webp` | Rum color myth — Havana Club shelf (clear to dark) |
+| `figure-rum-color-clear.webp` | Rum color myth — Bacardi mixing white |
+| `figure-rum-color-gold.webp` | Rum color myth — Appleton aged gold-to-mahogany |
+| `figure-rum-color-dark.webp` | Rum color myth — dark solera pour |
+| `figure-rum-mai-tai.webp` | Rum classics — Mai Tai with split rum + orgeat |
+| `figure-rum-sugarcane.webp` | Rum history — Betty's Hope sugar mills, Antigua |
+| `figure-rum-floridita.webp` | Rum history — Floridita sign |
+| `figure-rum-floridita-bar.webp` | Rum history — Floridita interior |
+| `figure-rum-navy.webp` | Rum history — 1940 navy ration |
 
-Keep **diagrams** (ratios, balance bars, numbered how-tos, agave age bottles, NA architecture, tool glyphs) as SVG — photos help when the lesson is about a real object or place.
+Keep **diagrams** (ratios, balance bars, numbered how-tos, agave age bottles, NA architecture, tool glyphs, rum production levers, tasting protocol) as SVG — photos help when the lesson is about a real object or place.
+
+Rum curriculum figures: `rum-color-myth` (photo pager), `rum-history` (Floridita + navy + mill), `rum-drinks` (four classics). Diagrams: `rum-production`, `rum-tasting-protocol`, `rum-styles`.
